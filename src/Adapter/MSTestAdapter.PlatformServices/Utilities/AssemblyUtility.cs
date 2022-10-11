@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
 using System.Collections.Generic;
@@ -13,6 +12,8 @@ using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 /// <summary>
 /// Utility for assembly specific functionality.
@@ -229,6 +230,7 @@ internal class AssemblyUtility
                                                 appDomain,
                                                 assemblyResolverType,
                                                 new object[] { GetResolutionPaths() });
+
             // This has to be Load, otherwise Serialization of argument types will not work correctly.
             AssemblyLoadWorker worker =
                 (AssemblyLoadWorker)AppDomainUtilities.CreateInstance(appDomain, typeof(AssemblyLoadWorker), null);

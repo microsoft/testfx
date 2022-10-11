@@ -24,9 +24,9 @@
   <files>
     <!--DotNet-->
     <file src="TestFramework\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="contentFiles\any\any\Core" />
-    <file src="TestFramework.Extensions\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Core" />
+    <file src="TestFramework.Extensions\netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Core" />
     <file src="TestFramework.Extensions\net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\Desktop" />
-    <file src="TestFramework.Extensions\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\UWP" />
+    <file src="TestFramework.Extensions\uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\UWP" />
     <file src="TestFramework.Extensions\net*.0-windows*\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="contentFiles\any\any\Extensions\WinUI" />
 
     <!-- Icon -->

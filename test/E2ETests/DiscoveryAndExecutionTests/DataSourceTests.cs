@@ -1,12 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+using System.IO;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-using System.IO;
-
+namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 public class DataSourceTests : CLITestBase
 {
     private const string TestAssembly = "DataSourceTestProject.dll";
@@ -22,13 +21,13 @@ public class DataSourceTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.ContainsTestsPassed(testResults,
+        VerifyE2E.ContainsTestsPassed(
+            testResults,
             "CsvTestMethod (Data Row 0)",
-            "CsvTestMethod (Data Row 2)"
-        );
-        VerifyE2E.ContainsTestsFailed(testResults,
+            "CsvTestMethod (Data Row 2)");
+        VerifyE2E.ContainsTestsFailed(
+            testResults,
             "CsvTestMethod (Data Row 1)",
-            "CsvTestMethod (Data Row 3)"
-        );
+            "CsvTestMethod (Data Row 3)");
     }
 }

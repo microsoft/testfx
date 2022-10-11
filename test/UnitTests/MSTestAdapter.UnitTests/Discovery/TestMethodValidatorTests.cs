@@ -1,22 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Threading.Tasks;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+
 using Moq;
 
 using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 public class TestMethodValidatorTests : TestContainer
 {
     private readonly TestMethodValidator _testMethodValidator;
@@ -62,7 +63,7 @@ public class TestMethodValidatorTests : TestContainer
 
         _testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings);
 
-        Verify(1 == _warnings.Count);
+        Verify(_warnings.Count == 1);
         Verify(_warnings.Contains(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, "DummyTestClass", "DummyTestMethod")));
     }
 

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
-
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -17,6 +15,7 @@ using TestFramework.ForTestingMSTest;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class TestMethodFilterTests : TestContainer
 {
     public TestMethodFilterTests()
@@ -29,31 +28,31 @@ public class TestMethodFilterTests : TestContainer
     public void PropertyProviderForFullyQualifiedNamePropertyReturnFullyQualifiedNameTestProperty()
     {
         TestProperty property = TestMethodFilter.PropertyProvider("FullyQualifiedName");
-        Verify("FullyQualifiedName" == property.Label);
+        Verify(property.Label == "FullyQualifiedName");
     }
 
     public void PropertyProviderForClassNamePropertyReturnClassNameTestProperty()
     {
         TestProperty property = TestMethodFilter.PropertyProvider("ClassName");
-        Verify("ClassName" == property.Label);
+        Verify(property.Label == "ClassName");
     }
 
     public void PropertyProviderForNamePropertyReturnNameTestProperty()
     {
         TestProperty property = TestMethodFilter.PropertyProvider("Name");
-        Verify("Name" == property.Label);
+        Verify(property.Label == "Name");
     }
 
     public void PropertyProviderForTestCategoryPropertyReturnTestCategoryTestProperty()
     {
         TestProperty property = TestMethodFilter.PropertyProvider("TestCategory");
-        Verify("TestCategory" == property.Label);
+        Verify(property.Label == "TestCategory");
     }
 
     public void PropertyProviderForPriorityPropertyReturnPriorityTestProperty()
     {
         TestProperty property = TestMethodFilter.PropertyProvider("Priority");
-        Verify("Priority" == property.Label);
+        Verify(property.Label == "Priority");
     }
 
     public void PropertyProviderValueForInvalidTestCaseReturnsNull()
@@ -148,8 +147,8 @@ public class TestMethodFilterTests : TestContainer
 
         Verify(filterExpression is null);
         Verify(filterHasError);
-        Verify("DummyException" == recorder.Message);
-        Verify(TestMessageLevel.Error == recorder.TestMessageLevel);
+        Verify(recorder.Message == "DummyException");
+        Verify(recorder.TestMessageLevel == TestMessageLevel.Error);
     }
 
     /// <summary>
@@ -163,8 +162,8 @@ public class TestMethodFilterTests : TestContainer
 
         Verify(filterExpression is null);
         Verify(filterHasError);
-        Verify("DummyException" == recorder.Message);
-        Verify(TestMessageLevel.Error == recorder.TestMessageLevel);
+        Verify(recorder.Message == "DummyException");
+        Verify(recorder.TestMessageLevel == TestMessageLevel.Error);
     }
 
     [DummyTestClass]

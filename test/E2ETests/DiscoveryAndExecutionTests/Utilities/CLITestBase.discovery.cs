@@ -1,7 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTestV2.CLIAutomation;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Linq;
 
 using DiscoveryAndExecutionTests.Utilities;
 
@@ -11,15 +16,9 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Linq;
-
 using TestFramework.ForTestingMSTest;
 
+namespace Microsoft.MSTestV2.CLIAutomation;
 public partial class CLITestBase : TestContainer
 {
     internal ReadOnlyCollection<TestCase> DiscoverTests(string assemblyPath, string testCaseFilter = null)
@@ -55,14 +54,16 @@ public partial class CLITestBase : TestContainer
                         <DisableAppDomain>True</DisableAppDomain>   
                     </RunConfiguration>";
 
-        // var path = Path.GetDirectoryName(this.GetAssetFullPath(TestAssembly));
+        /*
+        var path = Path.GetDirectoryName(this.GetAssetFullPath(TestAssembly));
 
-        // runSettingxml += @"  
-        //         <MSTestV2>
-        //             <AssemblyResolution>
-        //                 <Directory path = """ + path + @""" />
-        //             </AssemblyResolution>
-        //         </MSTestV2>";
+        runSettingxml += @"
+                <MSTestV2>
+                    <AssemblyResolution>
+                        <Directory path = """ + path + @""" />
+                    </AssemblyResolution>
+                </MSTestV2>";
+        */
 
         if (captureDebugTraceValue)
         {
@@ -73,7 +74,6 @@ public partial class CLITestBase : TestContainer
         }
 
         runSettingxml += @"</RunSettings>";
-
 
         return MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
     }
@@ -160,6 +160,7 @@ public partial class CLITestBase : TestContainer
         }
 
         public IEnumerable<TestResult> GetFlattenedTestResults() => _testResults.SelectMany(i => i.Value);
+
         public IEnumerable<KeyValuePair<TestCase, List<TestResult>>> GetTestResults() => _testResults;
 
         public void RecordAttachments(IList<AttachmentSet> attachmentSets) => throw new NotImplementedException();

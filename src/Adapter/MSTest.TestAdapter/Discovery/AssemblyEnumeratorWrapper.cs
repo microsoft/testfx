@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,13 +11,15 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
+
 /// <summary>
 /// Enumerates through an assembly to get a set of test methods.
 /// </summary>
 internal class AssemblyEnumeratorWrapper
 {
     /// <summary>
-    /// Assembly name for UTF
+    /// Assembly name for UTF.
     /// </summary>
     private static readonly AssemblyName UnitTestFrameworkAssemblyName = typeof(TestMethodAttribute).GetTypeInfo().Assembly.GetName();
 
@@ -104,6 +104,7 @@ internal class AssemblyEnumeratorWrapper
     private static ICollection<UnitTestElement> GetTestsInIsolation(string fullFilePath, IRunSettings runSettings, out ICollection<string> warnings)
     {
         using var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null);
+
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var assemblyEnumerator = isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings }) as AssemblyEnumerator;
 

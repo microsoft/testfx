@@ -7,7 +7,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Enumeration for inheritance behavior, that can be used with both the <see cref="ClassInitializeAttribute"/> class
 /// and <see cref="ClassCleanupAttribute"/> class.
 /// Defines the behavior of the ClassInitialize and ClassCleanup methods of base classes.
-/// The type of the enumeration must match
+/// The type of the enumeration must match.
 /// </summary>
 public enum InheritanceBehavior
 {
@@ -19,5 +19,5 @@ public enum InheritanceBehavior
     /// <summary>
     /// Before each derived class.
     /// </summary>
-    BeforeEachDerivedClass
+    BeforeEachDerivedClass,
 }

@@ -1,19 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+
 using Moq;
 
 using TestFramework.ForTestingMSTest;
@@ -21,16 +21,15 @@ using TestFramework.ForTestingMSTest;
 using TestMethodV2 = Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
 public class TypeEnumeratorTests : TestContainer
 {
     private readonly Mock<ReflectHelper> _mockReflectHelper;
-
     private readonly Mock<TestMethodValidator> _mockTestMethodValidator;
     private readonly Mock<TypeValidator> _mockTypeValidator;
+    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     private ICollection<string> _warnings;
-
-    private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     public TypeEnumeratorTests()
     {
@@ -68,7 +67,7 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
-        Verify(0 == tests.Count);
+        Verify(tests.Count == 0);
     }
 
     #endregion
@@ -83,6 +82,7 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
+
         // DummyBaseTestClass declares BaseTestMethod directly so it should always be discovered.
         Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
     }
@@ -95,6 +95,7 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
+
         // DummyDerivedTestClass inherits DummyBaseTestClass from same assembly. BestTestMethod from DummyBaseTestClass should be discovered.
         Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
     }
@@ -108,6 +109,7 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
+
         // DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly. BestTestMethod from DummyRemoteBaseTestClass should be discovered by default.
         Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
     }
@@ -135,6 +137,7 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
+
         // DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly.
         // BestTestMethod from DummyRemoteBaseTestClass should be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = truem.
         Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
@@ -163,6 +166,7 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
+
         // DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly.
         // BestTestMethod from DummyRemoteBaseTestClass should not be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = false.
         Verify(tests.All(t => t.TestMethod.Name != "BaseTestMethod"));
@@ -178,10 +182,10 @@ public class TypeEnumeratorTests : TestContainer
         Verify(tests is not null);
 
         // DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.
-        Verify(1 == tests.Count(t => t.TestMethod.Name == "BaseTestMethod"));
+        Verify(tests.Count(t => t.TestMethod.Name == "BaseTestMethod") == 1);
 
         // DummyHidingTestClass declares BaseTestMethod directly so it should always be discovered.
-        Verify(1 == tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"));
+        Verify(tests.Count(t => t.TestMethod.Name == "DerivedTestMethod") == 1);
 
         // DummyHidingTestClass hides BaseTestMethod so declaring class should not be the base class
         Verify(!tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyBaseTestClass).FullName));
@@ -195,11 +199,12 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
+
         // DummyOverridingTestClass inherits BaseTestMethod so it should be discovered.
-        Verify(1 == tests.Count(t => t.TestMethod.Name == "BaseTestMethod"));
+        Verify(tests.Count(t => t.TestMethod.Name == "BaseTestMethod") == 1);
 
         // DummyOverridingTestClass overrides DerivedTestMethod directly so it should always be discovered.
-        Verify(1 == tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"));
+        Verify(tests.Count(t => t.TestMethod.Name == "DerivedTestMethod") == 1);
 
         // DummyOverridingTestClass inherits BaseTestMethod from DummyHidingTestClass specifically.
         Verify(typeof(DummyHidingTestClass).FullName
@@ -217,11 +222,12 @@ public class TypeEnumeratorTests : TestContainer
         var tests = typeEnumerator.Enumerate(out _warnings);
 
         Verify(tests is not null);
+
         // DummySecondHidingTestClass hides BaseTestMethod so it should be discovered.
-        Verify(1 == tests.Count(t => t.TestMethod.Name == "BaseTestMethod"));
+        Verify(tests.Count(t => t.TestMethod.Name == "BaseTestMethod") == 1);
 
         // DummySecondHidingTestClass hides DerivedTestMethod so it should be discovered.
-        Verify(1 == tests.Count(t => t.TestMethod.Name == "DerivedTestMethod"));
+        Verify(tests.Count(t => t.TestMethod.Name == "DerivedTestMethod") == 1);
 
         // DummySecondHidingTestClass hides all base test methods so declaring class should not be any base class.
         Verify(!tests.Any(t => t.TestMethod.DeclaringClassFullName == typeof(DummyBaseTestClass).FullName));
@@ -245,9 +251,9 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType"), true, _warnings);
 
         Verify(testElement is not null);
-        Verify("MethodWithVoidReturnType" == testElement.TestMethod.Name);
+        Verify(testElement.TestMethod.Name == "MethodWithVoidReturnType");
         Verify(typeof(DummyTestClass).FullName == testElement.TestMethod.FullClassName);
-        Verify("DummyAssemblyName" == testElement.TestMethod.AssemblyName);
+        Verify(testElement.TestMethod.AssemblyName == "DummyAssemblyName");
         Verify(!testElement.TestMethod.IsAsync);
     }
 
@@ -383,7 +389,7 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        Verify(1 == testElement.Priority);
+        Verify(testElement.Priority == 1);
     }
 
     public void GetTestFromMethodShouldSetDescription()
@@ -395,7 +401,7 @@ public class TypeEnumeratorTests : TestContainer
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify("Dummy description" == testElement.Description);
+        Verify(testElement.Description == "Dummy description");
     }
 
     public void GetTestFromMethodShouldSetWorkItemIds()
@@ -431,7 +437,7 @@ public class TypeEnumeratorTests : TestContainer
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify("234" == testElement.CssIteration);
+        Verify(testElement.CssIteration == "234");
     }
 
     public void GetTestFromMethodShouldSetCssProjectStructure()
@@ -443,7 +449,7 @@ public class TypeEnumeratorTests : TestContainer
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
-        Verify("ProjectStructure123" == testElement.CssProjectStructure);
+        Verify(testElement.CssProjectStructure == "ProjectStructure123");
     }
 
     public void GetTestFromMethodShouldSetDeploymentItemsToNullIfNotPresent()
@@ -512,7 +518,7 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        Verify("MethodWithVoidReturnType" == testElement.DisplayName);
+        Verify(testElement.DisplayName == "MethodWithVoidReturnType");
     }
 
     public void GetTestFromMethodShouldSetDisplayNameFromAttribute()
@@ -528,7 +534,7 @@ public class TypeEnumeratorTests : TestContainer
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
         Verify(testElement is not null);
-        Verify("Test method display name." == testElement.DisplayName);
+        Verify(testElement.DisplayName == "Test method display name.");
     }
 
     #endregion

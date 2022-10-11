@@ -1,12 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+using System.IO;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-using System.IO;
-
+namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 public class DataRowTests : CLITestBase
 {
     private const string TestAssembly = "DataRowTestProject.dll";
@@ -21,13 +20,13 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(
+            testResults,
             "DataRowTestMethod (BaseString1)",
             "DataRowTestMethod (BaseString2)",
             "DataRowTestMethod (BaseString3)",
             "DataRowTestMethod (DerivedString1)",
-            "DataRowTestMethod (DerivedString2)"
-        );
+            "DataRowTestMethod (DerivedString2)");
     }
 
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
@@ -40,10 +39,10 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(
+            testResults,
             "DataRowTestMethod (DerivedString1)",
-            "DataRowTestMethod (DerivedString2)"
-        );
+            "DataRowTestMethod (DerivedString2)");
     }
 
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
@@ -56,11 +55,11 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(
+            testResults,
             "DataRowTestMethodWithSomeOptionalParameters (123)",
             "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString1)",
-            "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString2,DerivedOptionalString3)"
-        );
+            "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString2,DerivedOptionalString3)");
     }
 
     public void DataRowsExecuteWithParamsArrayParameter()
@@ -73,12 +72,12 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(
+            testResults,
             "DataRowTestMethodWithParamsParameters (2)",
             "DataRowTestMethodWithParamsParameters (2,DerivedSingleParamsArg)",
             "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2)",
-            "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2,DerivedParamsArg3)"
-        );
+            "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2,DerivedParamsArg3)");
     }
 
     public void DataRowsFailWhenInvalidArgumentsProvided()
@@ -91,11 +90,11 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(
+            testResults,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
-            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)"
-        );
+            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
     }
 
     public void DataRowsShouldSerializeDoublesProperly()
@@ -108,10 +107,10 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(
+            testResults,
             "DataRowTestDouble (10.01,20.01)",
-            "DataRowTestDouble (10.02,20.02)"
-        );
+            "DataRowTestDouble (10.02,20.02)");
     }
 
     public void DataRowsShouldSerializeMixedTypesProperly()
@@ -124,9 +123,9 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(testResults,
-            "DataRowTestMixed (10,10,10,10,10,10,10,10)"
-        );
+        VerifyE2E.TestsPassed(
+            testResults,
+            "DataRowTestMixed (10,10,10,10,10,10,10,10)");
     }
 
     public void DataRowsShouldSerializeEnumsProperly()
@@ -139,12 +138,12 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(
+            testResults,
             "DataRowEnums ()",
             "DataRowEnums (Alfa)",
             "DataRowEnums (Beta)",
-            "DataRowEnums (Gamma)"
-        );
+            "DataRowEnums (Gamma)");
     }
 
     public void DataRowsShouldHandleNonSerializableValues()
@@ -157,14 +156,14 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        VerifyE2E.TestsDiscovered(testCases,
-            "DataRowNonSerializable"
-        );
+        VerifyE2E.TestsDiscovered(
+            testCases,
+            "DataRowNonSerializable");
 
-        VerifyE2E.TestsPassed(testResults,
+        VerifyE2E.TestsPassed(
+            testResults,
             "DataRowNonSerializable (System.String)",
             "DataRowNonSerializable (System.Int32)",
-            "DataRowNonSerializable (DataRowTestProject.DerivedClass)"
-        );
+            "DataRowNonSerializable (DataRowTestProject.DerivedClass)");
     }
 }

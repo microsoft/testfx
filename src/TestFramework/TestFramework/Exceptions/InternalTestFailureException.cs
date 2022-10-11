@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
 /// <summary>
-/// InternalTestFailureException class. Used to indicate internal failure for a test case
+/// InternalTestFailureException class. Used to indicate internal failure for a test case.
 /// </summary>
 /// <remarks>
 /// This class is only added to preserve source compatibility with the V1 framework.

@@ -2,10 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 using System.Collections.Generic;
 using System.Data.SqlClient;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
 ///      Utility classes to access databases, and to handle quoted strings etc for SQL Server.
@@ -36,7 +37,7 @@ internal sealed class SqlDataConnection : TestDataConnectionSql
             NameColumn = "TABLE_NAME",
             TableTypeColumn = "TABLE_TYPE",
             ValidTableTypes = new string[] { "VIEW", "BASE TABLE" },
-            InvalidSchemas = null
+            InvalidSchemas = null,
         };
         return new SchemaMetaData[] { data };
     }

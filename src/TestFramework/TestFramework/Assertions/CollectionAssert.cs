@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// A collection of helper classes to test various conditions associated
@@ -32,7 +32,7 @@ public sealed class CollectionAssert
     /// Users can use this to plug-in custom assertions through C# extension methods.
     /// For instance, the signature of a custom assertion provider could be "public static void AreEqualUnordered(this CollectionAssert customAssert, ICollection expected, ICollection actual)"
     /// Users could then use a syntax similar to the default assertions which in this case is "CollectionAssert.That.AreEqualUnordered(list1, list2);"
-    /// More documentation is at "https://github.com/Microsoft/testfx-docs".
+    /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
     /// </remarks>
     public static CollectionAssert That
     {
@@ -388,7 +388,7 @@ public sealed class CollectionAssert
     /// The collection expected to be a subset of <paramref name="superset"/>.
     /// </param>
     /// <param name="superset">
-    /// The collection expected to be a superset of <paramref name="subset"/>
+    /// The collection expected to be a superset of <paramref name="subset"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if an element in <paramref name="subset"/> is not found in
@@ -408,7 +408,7 @@ public sealed class CollectionAssert
     /// The collection expected to be a subset of <paramref name="superset"/>.
     /// </param>
     /// <param name="superset">
-    /// The collection expected to be a superset of <paramref name="subset"/>
+    /// The collection expected to be a superset of <paramref name="subset"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when an element in
@@ -433,7 +433,7 @@ public sealed class CollectionAssert
     /// The collection expected to be a subset of <paramref name="superset"/>.
     /// </param>
     /// <param name="superset">
-    /// The collection expected to be a superset of <paramref name="subset"/>
+    /// The collection expected to be a superset of <paramref name="subset"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when an element in
@@ -466,7 +466,7 @@ public sealed class CollectionAssert
     /// The collection expected not to be a subset of <paramref name="superset"/>.
     /// </param>
     /// <param name="superset">
-    /// The collection expected not to be a superset of <paramref name="subset"/>
+    /// The collection expected not to be a superset of <paramref name="subset"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if every element in <paramref name="subset"/> is also found in
@@ -486,7 +486,7 @@ public sealed class CollectionAssert
     /// The collection expected not to be a subset of <paramref name="superset"/>.
     /// </param>
     /// <param name="superset">
-    /// The collection expected not to be a superset of <paramref name="subset"/>
+    /// The collection expected not to be a superset of <paramref name="subset"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when every element in
@@ -511,7 +511,7 @@ public sealed class CollectionAssert
     /// The collection expected not to be a subset of <paramref name="superset"/>.
     /// </param>
     /// <param name="superset">
-    /// The collection expected not to be a superset of <paramref name="subset"/>
+    /// The collection expected not to be a superset of <paramref name="subset"/>.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when every element in
@@ -891,7 +891,7 @@ public sealed class CollectionAssert
         }
     }
 
-#endregion
+    #endregion
 
     #region AreEqual
 
@@ -1468,7 +1468,7 @@ public sealed class CollectionAssert
     }
 
     /// <summary>
-    /// compares the objects using object.Equals
+    /// compares the objects using object.Equals.
     /// </summary>
     private class ObjectComparer : IComparer
     {

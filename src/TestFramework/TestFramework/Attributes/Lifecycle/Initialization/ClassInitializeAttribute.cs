@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// The class initialize attribute.
@@ -13,7 +13,7 @@ public sealed class ClassInitializeAttribute : Attribute
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ClassInitializeAttribute"/> class.
-    /// ClassInitializeAttribute
+    /// ClassInitializeAttribute.
     /// </summary>
     public ClassInitializeAttribute()
     {
@@ -22,10 +22,10 @@ public sealed class ClassInitializeAttribute : Attribute
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ClassInitializeAttribute"/> class.
-    /// ClassInitializeAttribute
+    /// ClassInitializeAttribute.
     /// </summary>
     /// <param name="inheritanceBehavior">
-    /// Specifies the ClassInitialize Inheritance Behavior
+    /// Specifies the ClassInitialize Inheritance Behavior.
     /// </param>
     public ClassInitializeAttribute(InheritanceBehavior inheritanceBehavior)
     {
@@ -33,7 +33,7 @@ public sealed class ClassInitializeAttribute : Attribute
     }
 
     /// <summary>
-    /// Gets the Inheritance Behavior
+    /// Gets the Inheritance Behavior.
     /// </summary>
     public InheritanceBehavior InheritanceBehavior { get; private set; }
 }

@@ -4,13 +4,12 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-[assembly: Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternals]
-
-namespace DiscoverInternalsProject;
-
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+[assembly: Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternals]
+
+namespace DiscoverInternalsProject;
 [TestClass]
 internal class TopLevelInternalClass
 {

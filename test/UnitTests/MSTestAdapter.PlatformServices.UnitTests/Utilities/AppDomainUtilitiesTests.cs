@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NET462
-namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
-
 using System;
 using System.Xml;
 
@@ -11,6 +8,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 
 using TestFramework.ForTestingMSTest;
 
+#if NET462
+namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 public class AppDomainUtilitiesTests : TestContainer
 {
     private readonly TestableXmlUtilities _testableXmlUtilities;
@@ -86,7 +85,7 @@ public class AppDomainUtilitiesTests : TestContainer
         Verify(expected.Minor == version.Minor);
     }
 
-    #region Testable Implementations
+#region Testable Implementations
 
     internal class TestableXmlUtilities : XmlUtilities
     {
@@ -116,6 +115,6 @@ public class AppDomainUtilitiesTests : TestContainer
         }
     }
 
-#endregion
+    #endregion
 }
 #endif

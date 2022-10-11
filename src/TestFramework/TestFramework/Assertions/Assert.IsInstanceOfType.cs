@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Globalization;
 using System.Reflection;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// A collection of helper classes to test various conditions within
@@ -40,6 +40,7 @@ public sealed partial class Assert
     /// type and throws an exception if the generictype is not in the
     /// inheritance hierarchy of the object.
     /// </summary>
+    /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>(object value)
     {
         IsInstanceOfType(value, typeof(T), string.Empty, null);
@@ -76,6 +77,7 @@ public sealed partial class Assert
     /// type and throws an exception if the generictype is not in the
     /// inheritance hierarchy of the object.
     /// </summary>
+    /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>(object value, string message)
     {
         IsInstanceOfType(value, typeof(T), message, null);
@@ -132,6 +134,7 @@ public sealed partial class Assert
     /// type and throws an exception if the generictype is not in the
     /// inheritance hierarchy of the object.
     /// </summary>
+    /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>(object value, string message, params object[] parameters)
     {
         IsInstanceOfType(value, typeof(T), message, parameters);
@@ -163,6 +166,7 @@ public sealed partial class Assert
     /// type and throws an exception if the specified type is in the
     /// inheritance hierarchy of the object.
     /// </summary>
+    /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
     public static void IsNotInstanceOfType<T>(object value)
     {
         IsNotInstanceOfType(value, typeof(T), string.Empty, null);
@@ -199,6 +203,7 @@ public sealed partial class Assert
     /// type and throws an exception if the specified type is in the
     /// inheritance hierarchy of the object.
     /// </summary>
+    /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
     public static void IsNotInstanceOfType<T>(object value, string message)
     {
         IsNotInstanceOfType(value, typeof(T), message, null);
@@ -261,6 +266,7 @@ public sealed partial class Assert
     /// type and throws an exception if the specified type is in the
     /// inheritance hierarchy of the object.
     /// </summary>
+    /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
     public static void IsNotInstanceOfType<T>(object value, string message, params object[] parameters)
     {
         IsNotInstanceOfType(value, typeof(T), message, parameters);

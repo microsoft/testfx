@@ -1,16 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
 /// Listens for log messages and Debug.WriteLine
@@ -23,7 +24,7 @@ public class LogMessageListener : IDisposable
     private static ThreadSafeStringWriter s_redirectedDebugTrace;
 
     /// <summary>
-    /// Trace listener to capture Trace.WriteLines in the test cases
+    /// Trace listener to capture Trace.WriteLines in the test cases.
     /// </summary>
     private static ITraceListener s_traceListener;
     private readonly ThreadSafeStringWriter _redirectedStandardOutput;
@@ -90,17 +91,17 @@ public class LogMessageListener : IDisposable
     }
 
     /// <summary>
-    /// Gets logger output
+    /// Gets logger output.
     /// </summary>
     public string StandardOutput => _redirectedStandardOutput.ToString();
 
     /// <summary>
-    /// Gets 'Error' Output from the redirected stream
+    /// Gets 'Error' Output from the redirected stream.
     /// </summary>
     public string StandardError => _redirectedStandardError.ToString();
 
     /// <summary>
-    /// Gets 'Trace' Output from the redirected stream
+    /// Gets 'Trace' Output from the redirected stream.
     /// </summary>
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string DebugTrace

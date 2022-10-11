@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
-
 using System;
 using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 public partial class AssertTests
 {
     #region ThrowAssertFailed tests
@@ -138,12 +137,13 @@ public partial class AssertTests
 
     public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowOnNullAction()
     {
-        static void a()
+        static void A()
         {
             Task t = Assert.ThrowsExceptionAsync<ArgumentException>(null, null, null);
             t.Wait();
         }
-        var ex = VerifyThrows(a);
+
+        var ex = VerifyThrows(A);
 
         Verify(ex is not null);
 
@@ -155,12 +155,13 @@ public partial class AssertTests
 
     public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowOnNullMessage()
     {
-        static void a()
+        static void A()
         {
             Task t = Assert.ThrowsExceptionAsync<ArgumentException>(async () => { await Task.FromResult(true).ConfigureAwait(false); }, null, null);
             t.Wait();
         }
-        var ex = VerifyThrows(a);
+
+        var ex = VerifyThrows(A);
 
         Verify(ex is not null);
 

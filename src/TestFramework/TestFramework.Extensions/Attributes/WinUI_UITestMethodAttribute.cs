@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if WIN_UI
-namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
-
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -12,6 +10,8 @@ using System.Threading.Tasks;
 
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
 /// <summary>
 /// Execute test code in UI thread for Windows store apps.
@@ -188,7 +188,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     private static DispatcherQueue InitializeApplication(Type applicationType)
     {
         var tsc = new TaskCompletionSource<DispatcherQueue>();
-        void onApplicationInitialized(ApplicationInitializationCallbackParams e)
+        void OnApplicationInitialized(ApplicationInitializationCallbackParams e)
         {
             try
             {
@@ -206,10 +206,10 @@ public class UITestMethodAttribute : TestMethodAttribute
             }
         }
 
-        var treadStart = new ThreadStart(() => Application.Start(onApplicationInitialized));
+        var treadStart = new ThreadStart(() => Application.Start(OnApplicationInitialized));
         var uiThread = new Thread(treadStart)
         {
-            Name = "UI Thread for Tests"
+            Name = "UI Thread for Tests",
         };
         uiThread.Start();
         tsc.Task.Wait();

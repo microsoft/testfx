@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,6 +13,9 @@ using System.Security;
 using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+#if NETFRAMEWORK
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
 ///      Utility classes to access databases, and to handle quoted strings etc for XML data.
@@ -99,7 +99,7 @@ internal sealed class XmlDataConnection : TestDataConnection
         {
             DataSet dataSet = new()
             {
-                Locale = CultureInfo.CurrentCulture
+                Locale = CultureInfo.CurrentCulture,
             };
             string path = FixPath(_fileName) ?? Path.GetFullPath(_fileName);
             if (schemaOnly)

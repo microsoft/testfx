@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// Used to specify deployment item (file or directory) for per-test deployment.
@@ -14,7 +14,7 @@ using System;
 /// <example>
 /// [DeploymentItem("file1.xml")]
 /// [DeploymentItem("file2.xml", "DataFiles")]
-/// [DeploymentItem("bin\Debug")]
+/// [DeploymentItem("bin\Debug")].
 /// </example>
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = true)]
 #if WINDOWS_UWP || WIN_UI
@@ -37,7 +37,7 @@ public sealed class DeploymentItemAttribute : Attribute
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DeploymentItemAttribute"/> class
+    /// Initializes a new instance of the <see cref="DeploymentItemAttribute"/> class.
     /// </summary>
     /// <param name="path">The relative or absolute path to the file or directory to deploy. The path is relative to the build output directory. The item will be copied to the same directory as the deployed test assemblies.</param>
     /// <param name="outputDirectory">The path of the directory to which the items are to be copied. It can be either absolute or relative to the deployment directory. All files and directories identified by <paramref name="path"/> will be copied to this directory.</param>

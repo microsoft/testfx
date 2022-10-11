@@ -1,21 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
-
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 internal static class MethodInfoExtensions
 {
     /// <summary>
-    /// Verifies that the class initialize has the correct signature
+    /// Verifies that the class initialize has the correct signature.
     /// </summary>
     /// <param name="method">The method to verify.</param>
     /// <returns>True if the method has the right Assembly/Class initialize signature.</returns>
@@ -34,7 +34,7 @@ internal static class MethodInfoExtensions
     }
 
     /// <summary>
-    /// Verifies that the class cleanup has the correct signature
+    /// Verifies that the class cleanup has the correct signature.
     /// </summary>
     /// <param name="method">The method to verify.</param>
     /// <returns>True if the method has the right Assembly/Class cleanup signature.</returns>
@@ -50,7 +50,7 @@ internal static class MethodInfoExtensions
     }
 
     /// <summary>
-    /// Verifies that the test Initialize/cleanup has the correct signature
+    /// Verifies that the test Initialize/cleanup has the correct signature.
     /// </summary>
     /// <param name="method">The method to verify.</param>
     /// <returns>True if the method has the right test init/cleanup signature.</returns>
@@ -66,7 +66,7 @@ internal static class MethodInfoExtensions
     }
 
     /// <summary>
-    /// Verifies that the test method has the correct signature
+    /// Verifies that the test method has the correct signature.
     /// </summary>
     /// <param name="method">The method to verify.</param>
     /// <param name="ignoreParameterLength">Indicates whether parameter length is to be ignored.</param>

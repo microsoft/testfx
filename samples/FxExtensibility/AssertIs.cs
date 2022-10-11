@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTest.Extensibility.Samples;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MSTest.Extensibility.Samples;
 
 /// <summary>
 /// A grouping of Assert statements with similar functionality.
@@ -15,7 +15,7 @@ public class AssertIs
     /// </summary>
     /// <param name="number">A number.</param>
     /// <param name="divisor">Its proclaimed divisor.</param>
-    /// <returns>True if it is a divisor</returns>
+    /// <returns>True if it is a divisor.</returns>
     /// <exception cref="AssertFailedException">If it is not a divisor.</exception>
     public bool Divisor(int number, int divisor)
     {

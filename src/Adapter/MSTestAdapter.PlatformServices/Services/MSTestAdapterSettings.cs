@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !WINDOWS_UWP
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,6 +10,8 @@ using System.Xml;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
+#if !WINDOWS_UWP
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 public class MSTestAdapterSettings
 {
     /// <summary>
@@ -37,7 +36,7 @@ public class MSTestAdapterSettings
     public bool DeleteDeploymentDirectoryAfterTestRunIsComplete { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether the test source references are to deployed
+    /// Gets a value indicating whether the test source references are to deployed.
     /// </summary>
     public bool DeployTestSourceDependencies { get; private set; }
 
@@ -47,10 +46,10 @@ public class MSTestAdapterSettings
     protected List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
 
     /// <summary>
-    /// Convert the parameter xml to TestSettings
+    /// Convert the parameter xml to TestSettings.
     /// </summary>
     /// <param name="reader">Reader to load the settings from.</param>
-    /// <returns>An instance of the <see cref="MSTestAdapterSettings"/> class</returns>
+    /// <returns>An instance of the <see cref="MSTestAdapterSettings"/> class.</returns>
     public static MSTestAdapterSettings ToSettings(XmlReader reader)
     {
         ValidateArg.NotNull<XmlReader>(reader, "reader");
@@ -145,7 +144,7 @@ public class MSTestAdapterSettings
     /// <summary>
     /// Returns the array of path with recursive property true/false from comma separated paths
     /// for ex: paths = c:\a\b;e:\balh\foo;%SystemDrive%\SomeDirectory and recursive = true
-    /// it will return an list {{c:\a\b, true}, {e:\balh\foo, true}, {c:\somedirectory, true}}
+    /// it will return an list {{c:\a\b, true}, {e:\balh\foo, true}, {c:\somedirectory, true}}.
     /// </summary>
     /// <param name="baseDirectory">the base directory for relative path.</param>
     /// <returns>RecursiveDirectoryPath information.</returns>
@@ -171,7 +170,7 @@ public class MSTestAdapterSettings
     /// Gets the full path and expands any environment variables contained in the path.
     /// </summary>
     /// <param name="path">The path to be expanded.</param>
-    /// <param name="baseDirectory">The base directory for the path which is not rooted path</param>
+    /// <param name="baseDirectory">The base directory for the path which is not rooted path.</param>
     /// <returns>The expanded path.</returns>
     internal string ResolveEnvironmentVariableAndReturnFullPathIfExist(string path, string baseDirectory)
     {
@@ -244,7 +243,7 @@ public class MSTestAdapterSettings
     /// <summary>
     /// Verifies if a directory exists.
     /// </summary>
-    /// <param name="path">path</param>
+    /// <param name="path">path.</param>
     /// <returns>True if directory exists.</returns>
     /// <remarks>Only present for unit testing scenarios.</remarks>
     protected virtual bool DoesDirectoryExist(string path)
@@ -255,8 +254,8 @@ public class MSTestAdapterSettings
     /// <summary>
     /// Expands any environment variables in the path provided.
     /// </summary>
-    /// <param name="path">path</param>
-    /// <returns>expanded string</returns>
+    /// <param name="path">path.</param>
+    /// <returns>expanded string.</returns>
     /// <remarks>Only present for unit testing scenarios.</remarks>
     protected virtual string ExpandEnvironmentVariables(string path)
     {

@@ -2,13 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using System;
 using System.Security.Policy;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
 /// <summary>
-/// This interface is an abstraction over the AppDomain APIs
+/// This interface is an abstraction over the AppDomain APIs.
 /// </summary>
 internal interface IAppDomain
 {

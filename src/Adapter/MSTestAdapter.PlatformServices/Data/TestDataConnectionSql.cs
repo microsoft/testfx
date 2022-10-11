@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,18 +16,21 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
-using ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
-///  Data connections based on direct DB implementations all derive from this one
+///  Data connections based on direct DB implementations all derive from this one.
 /// </summary>
 internal class TestDataConnectionSql : TestDataConnection
 {
-    private string _quoteSuffix;
-    private string _quotePrefix;
     private readonly DbCommandBuilder _commandBuilder;
     private readonly DbConnection _connection;
     private readonly DbProviderFactory _factory;
+
+    private string _quoteSuffix;
+    private string _quotePrefix;
 
 #region Constructor
 
@@ -119,7 +120,7 @@ internal class TestDataConnectionSql : TestDataConnection
             NameColumn = "TABLE_NAME",
             TableTypeColumn = null,
             ValidTableTypes = null,
-            InvalidSchemas = null
+            InvalidSchemas = null,
         };
         return new SchemaMetaData[] { data };
     }
@@ -203,7 +204,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <summary>
     /// Take a possibly qualified name with at least minimal quoting
     /// and return a fully quoted string
-    /// Take care to only convert names that are of a recognized form
+    /// Take care to only convert names that are of a recognized form.
     /// </summary>
     /// <param name="tableName">The table name.</param>
     /// <returns>A fully quoted string.</returns>
@@ -225,10 +226,10 @@ internal class TestDataConnectionSql : TestDataConnection
 
     /// <summary>
     /// Take a possibly qualified name and break it down into an
-    /// array of identifiers unquoting any quoted names
+    /// array of identifiers unquoting any quoted names.
     /// </summary>
     /// <param name="name">A string.</param>
-    /// <returns>An array of unquoted parts, or null if the name fails to conform</returns>
+    /// <returns>An array of unquoted parts, or null if the name fails to conform.</returns>
     public string[] SplitName(string name)
     {
         List<string> parts = new();
@@ -316,11 +317,11 @@ internal class TestDataConnectionSql : TestDataConnection
     /// Take a list of unquoted name parts and join them into a
     /// qualified name. Either minimally quote (to the extent required
     /// to reliably split the name again) or fully quote, therefore made suitable
-    /// for a database query
+    /// for a database query.
     /// </summary>
     /// <param name="parts">Name parts.</param>
     /// <param name="fullyQuote">Should full quote.</param>
-    /// <returns>A qualified name</returns>
+    /// <returns>A qualified name.</returns>
     public string JoinAndQuoteName(string[] parts, bool fullyQuote)
     {
         int partCount = parts.Length;
@@ -393,7 +394,7 @@ internal class TestDataConnectionSql : TestDataConnection
     }
 
     /// <summary>
-    /// Find the first separator in a string
+    /// Find the first separator in a string.
     /// </summary>
     /// <param name="text">The string.</param>
     /// <param name="from">Index.</param>
@@ -406,11 +407,11 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <summary>
     /// Given a string and a position in that string, assumed
     /// to be the start of an identifier, find the end of that
-    /// identifier. Take into account quoting rules
+    /// identifier. Take into account quoting rules.
     /// </summary>
     /// <param name="text">The string.</param>
     /// <param name="start">start index.</param>
-    /// <returns>Position in string after end of identifier (may be off end of string)</returns>
+    /// <returns>Position in string after end of identifier (may be off end of string).</returns>
     private int FindIdentifierEnd(string text, int start)
     {
         // These routine assumes prefixes and suffixes
@@ -493,7 +494,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
     /// <summary>
     /// Returns list of data tables and views. Sorted.
-    /// Any errors, return an empty list
+    /// Any errors, return an empty list.
     /// </summary>
     /// <returns>List of sorted tables and views.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
@@ -613,7 +614,7 @@ internal class TestDataConnectionSql : TestDataConnection
                 null,               // Catalog (don't care)
                 targetSchema,       // Table schema
                 targetName,         // Table name
-                null
+                null,
             };             // Column name (don't care)
 
             DataTable columns = null;
@@ -656,7 +657,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
     /// <summary>
     /// Split a table name into schema and table name, providing default
-    /// schema if available
+    /// schema if available.
     /// </summary>
     /// <param name="name">The name.</param>
     /// <param name="schemaName">The schema name output.</param>
@@ -677,7 +678,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
     /// <summary>
     /// Returns qualified data table name, formatted for display in Data Table list or use in
-    /// code or test files. Note that this may not return a suitable string for SQL
+    /// code or test files. Note that this may not return a suitable string for SQL.
     /// </summary>
     /// <param name="tableSchema">Schema part of qualified table name. Quoted or not quoted.</param>
     /// <param name="tableName">Table name. Quoted or not quoted.</param>
@@ -699,7 +700,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
     /// <summary>
     /// Just a helper method to see if a string is in a string array
-    /// Note that the array can be null, this is treated as an empty array
+    /// Note that the array can be null, this is treated as an empty array.
     /// </summary>
     /// <param name="candidate">The string.</param>
     /// <param name="values">An array of values.</param>
@@ -746,9 +747,9 @@ internal class TestDataConnectionSql : TestDataConnection
 
     /// <summary>
     /// Classify a table schema as being hidden from the user
-    /// This helps to hide system tables such as INFORMATION_SCHEMA.COLUMNS
+    /// This helps to hide system tables such as INFORMATION_SCHEMA.COLUMNS.
     /// </summary>
-    /// <param name="tableSchema">A candidate table schema</param>
+    /// <param name="tableSchema">A candidate table schema.</param>
     /// <returns>True always.</returns>
     protected virtual bool IsUserSchema(string tableSchema)
     {
@@ -812,11 +813,11 @@ internal class TestDataConnectionSql : TestDataConnection
 
     /// <summary>
     /// Read a table from the connection, into a DataTable
-    /// Code used to be in UnitTestDataManager
+    /// Code used to be in UnitTestDataManager.
     /// </summary>
     /// <param name="tableName">The table name.</param>
     /// <param name="columns">Columns.</param>
-    /// <returns>new DataTable</returns>
+    /// <returns>new DataTable.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Un-tested. Leaving behavior as is.")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security", Justification = "Not passed in from the user.")]
 #pragma warning disable SA1202 // Elements must be ordered by access
@@ -825,6 +826,7 @@ internal class TestDataConnectionSql : TestDataConnection
     {
         using DbDataAdapter dataAdapter = Factory.CreateDataAdapter();
         using DbCommand command = Factory.CreateCommand();
+
         // We need to escape bad characters in table name like [Sheet1$] in Excel.
         // But if table name is quoted in terms of provider, don't touch it to avoid e.g. [dbo.tables.etc].
         string quotedTableName = PrepareNameForSql(tableName);
@@ -842,7 +844,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
         DataTable table = new()
         {
-            Locale = CultureInfo.InvariantCulture
+            Locale = CultureInfo.InvariantCulture,
         };
         dataAdapter.Fill(table);
 
@@ -891,7 +893,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
     /// <summary>
     /// When querying for tables, metadata varies quite a bit from DB to DB
-    /// This struct encapsulates those variations
+    /// This struct encapsulates those variations.
     /// </summary>
     protected struct SchemaMetaData
     {
@@ -923,7 +925,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// SqlOleDb.1: Data Source = Other,  Provider = Microsoft OLE DB Provider for Sql Server
     ///     Provider=SQLOLEDB;Data Source=SqlServer;Integrated Security=SSPI;Initial Catalog=DatabaseName
     /// SQLNCLI.1:  Data Source = Other,  Provider = Sql Native Client
-    ///     Provider=SQLNCLI.1;Data Source=SqlServer;Integrated Security=SSPI;Initial Catalog=DatabaseName
+    ///     Provider=SQLNCLI.1;Data Source=SqlServer;Integrated Security=SSPI;Initial Catalog=DatabaseName.
     /// </remarks>
     protected static class KnownOleDbProviderNames
     {
@@ -938,7 +940,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// </summary>
     /// <remarks>
     /// sqlsrv32.dll: Driver={SQL Server};Server=SqlServer;Database=DatabaseName;Trusted_Connection=yes
-    /// msorcl32.dll: Driver={Microsoft ODBC for Oracle};Server=OracleServer;Uid=user;Pwd=password
+    /// msorcl32.dll: Driver={Microsoft ODBC for Oracle};Server=OracleServer;Uid=user;Pwd=password.
     /// </remarks>
     protected static class KnownOdbcDrivers
     {

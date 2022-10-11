@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+
 using Moq;
-using MSTest.TestAdapter;
 
 using TestFramework.ForTestingMSTest;
 
-using TestPlatform.ObjectModel.Adapter;
-
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 public class MSTestExecutorTests : TestContainer
 {
     private readonly Mock<IRunContext> _mockRunContext;
@@ -38,7 +38,7 @@ public class MSTestExecutorTests : TestContainer
             testExecutor.GetType().GetCustomAttributes(typeof(ExtensionUriAttribute), false).Single() as
             ExtensionUriAttribute;
 
-        Verify(MSTest.TestAdapter.Constants.ExecutorUriString == extensionUriString.ExtensionUri);
+        Verify(extensionUriString.ExtensionUri == MSTest.TestAdapter.Constants.ExecutorUriString);
     }
 
     public void RunTestsShouldNotExecuteTestsIfTestSettingsIsGiven()

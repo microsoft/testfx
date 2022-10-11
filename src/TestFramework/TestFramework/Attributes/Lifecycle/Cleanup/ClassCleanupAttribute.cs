@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// The class cleanup attribute.
@@ -23,7 +23,7 @@ public sealed class ClassCleanupAttribute : Attribute
     /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
     /// </summary>
     /// <param name="inheritanceBehavior">
-    /// Specifies the ClassCleanup Inheritance Behavior
+    /// Specifies the ClassCleanup Inheritance Behavior.
     /// </param>
     public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior)
         : this(inheritanceBehavior, null)
@@ -47,7 +47,7 @@ public sealed class ClassCleanupAttribute : Attribute
     /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
     /// </summary>
     /// <param name="inheritanceBehavior">
-    /// Specifies the ClassCleanup Inheritance Behavior
+    /// Specifies the ClassCleanup Inheritance Behavior.
     /// </param>
     /// <param name="cleanupBehavior">
     /// Specifies the class clean-up behavior.
@@ -63,7 +63,7 @@ public sealed class ClassCleanupAttribute : Attribute
     /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
     /// </summary>
     /// <param name="inheritanceBehavior">
-    /// Specifies the ClassCleanup Inheritance Behavior
+    /// Specifies the ClassCleanup Inheritance Behavior.
     /// </param>
     /// <param name="cleanupBehavior">
     /// Specifies the class clean-up behavior.
@@ -77,7 +77,7 @@ public sealed class ClassCleanupAttribute : Attribute
     }
 
     /// <summary>
-    /// Gets the Inheritance Behavior
+    /// Gets the Inheritance Behavior.
     /// </summary>
     public InheritanceBehavior InheritanceBehavior { get; }
 

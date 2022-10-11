@@ -1,13 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace PlatformServices.Desktop.ComponentTests;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -15,6 +14,7 @@ using SampleFrameworkExtensions;
 
 using TestFramework.ForTestingMSTest;
 
+namespace PlatformServices.Desktop.ComponentTests;
 public class ReflectionUtilityTests : TestContainer
 {
     private readonly Assembly _testAsset;

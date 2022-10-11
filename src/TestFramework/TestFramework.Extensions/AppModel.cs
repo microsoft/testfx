@@ -1,15 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+
 #if WIN_UI
 #nullable enable
 #pragma warning disable SA1310 // Field names must not contain underscore
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
-
-using System;
-using System.Runtime.InteropServices;
-using System.Text;
 
 /// <summary>
 /// Provides package information about the application.
@@ -110,7 +110,7 @@ internal static class AppModel
             PackagePathType_Effective = 2,
             PackagePathType_MachineExternal = 3,
             PackagePathType_UserExternal = 4,
-            PackagePathType_EffectiveExternal = 5
+            PackagePathType_EffectiveExternal = 5,
         }
 
         [DllImport("kernel32.dll", ExactSpelling = true, CharSet = CharSet.Unicode)]

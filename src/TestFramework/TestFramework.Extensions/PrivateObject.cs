@@ -1,9 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,12 +8,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
+#if NETFRAMEWORK
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
+
 /// <summary>
-/// This class represents the live NON public INTERNAL object in the system
+/// This class represents the live NON public INTERNAL object in the system.
 /// </summary>
 public class PrivateObject
 {
-    #region Data
+#region Data
 
     // bind everything
     private const BindingFlags BindToEveryThing = BindingFlags.Default | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
@@ -28,16 +28,16 @@ public class PrivateObject
 
     private Dictionary<string, LinkedList<MethodInfo>> _methodCache; // automatically initialized to null
 
-    #endregion
+#endregion
 
-    #region Constructors
+#region Constructors
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PrivateObject"/> class that contains
-    /// the already existing object of the private class
+    /// the already existing object of the private class.
     /// </summary>
-    /// <param name="obj"> object that serves as starting point to reach the private members</param>
-    /// <param name="memberToAccess">the de-referencing string using . that points to the object to be retrieved as in m_X.m_Y.m_Z</param>
+    /// <param name="obj"> object that serves as starting point to reach the private members.</param>
+    /// <param name="memberToAccess">the de-referencing string using . that points to the object to be retrieved as in m_X.m_Y.m_Z.</param>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an object, so 'obj' seems reasonable")]
     public PrivateObject(object obj, string memberToAccess)
     {
@@ -64,9 +64,9 @@ public class PrivateObject
     /// Initializes a new instance of the <see cref="PrivateObject"/> class that wraps the
     /// specified type.
     /// </summary>
-    /// <param name="assemblyName">Name of the assembly</param>
-    /// <param name="typeName">fully qualified name</param>
-    /// <param name="args">Arguments to pass to the constructor</param>
+    /// <param name="assemblyName">Name of the assembly.</param>
+    /// <param name="typeName">fully qualified name.</param>
+    /// <param name="args">Arguments to pass to the constructor.</param>
     public PrivateObject(string assemblyName, string typeName, params object[] args)
         : this(assemblyName, typeName, null, args)
     {
@@ -76,10 +76,10 @@ public class PrivateObject
     /// Initializes a new instance of the <see cref="PrivateObject"/> class that wraps the
     /// specified type.
     /// </summary>
-    /// <param name="assemblyName">Name of the assembly</param>
-    /// <param name="typeName">fully qualified name</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get</param>
-    /// <param name="args">Arguments to pass to the constructor</param>
+    /// <param name="assemblyName">Name of the assembly.</param>
+    /// <param name="typeName">fully qualified name.</param>
+    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get.</param>
+    /// <param name="args">Arguments to pass to the constructor.</param>
     public PrivateObject(string assemblyName, string typeName, Type[] parameterTypes, object[] args)
         : this(Type.GetType(string.Format(CultureInfo.InvariantCulture, "{0}, {1}", typeName, assemblyName), false), parameterTypes, args)
     {
@@ -91,8 +91,8 @@ public class PrivateObject
     /// Initializes a new instance of the <see cref="PrivateObject"/> class that wraps the
     /// specified type.
     /// </summary>
-    /// <param name="type">type of the object to create</param>
-    /// <param name="args">Arguments to pass to the constructor</param>
+    /// <param name="type">type of the object to create.</param>
+    /// <param name="args">Arguments to pass to the constructor.</param>
     public PrivateObject(Type type, params object[] args)
         : this(type, null, args)
     {
@@ -103,9 +103,9 @@ public class PrivateObject
     /// Initializes a new instance of the <see cref="PrivateObject"/> class that wraps the
     /// specified type.
     /// </summary>
-    /// <param name="type">type of the object to create</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get</param>
-    /// <param name="args">Arguments to pass to the constructor</param>
+    /// <param name="type">type of the object to create.</param>
+    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get.</param>
+    /// <param name="args">Arguments to pass to the constructor.</param>
     public PrivateObject(Type type, Type[] parameterTypes, object[] args)
     {
         Helper.CheckParameterNotNull(type, "type", string.Empty);
@@ -145,7 +145,7 @@ public class PrivateObject
     /// Initializes a new instance of the <see cref="PrivateObject"/> class that wraps
     /// the given object.
     /// </summary>
-    /// <param name="obj">object to wrap</param>
+    /// <param name="obj">object to wrap.</param>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an object, so 'obj' seems reasonable")]
     public PrivateObject(object obj)
     {
@@ -157,8 +157,8 @@ public class PrivateObject
     /// Initializes a new instance of the <see cref="PrivateObject"/> class that wraps
     /// the given object.
     /// </summary>
-    /// <param name="obj">object to wrap</param>
-    /// <param name="type">PrivateType object</param>
+    /// <param name="obj">object to wrap.</param>
+    /// <param name="type">PrivateType object.</param>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an object, so 'obj' seems reasonable")]
     public PrivateObject(object obj, PrivateType type)
     {
@@ -167,10 +167,10 @@ public class PrivateObject
         _originalType = type.ReferencedType;
     }
 
-    #endregion
+#endregion
 
     /// <summary>
-    /// Gets or sets the target
+    /// Gets or sets the target.
     /// </summary>
     public object Target
     {
@@ -188,7 +188,7 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Gets the type of underlying object
+    /// Gets the type of underlying object.
     /// </summary>
     public Type RealType
     {
@@ -214,9 +214,9 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// returns the hash code of the target object
+    /// returns the hash code of the target object.
     /// </summary>
-    /// <returns>int representing hashcode of the target object</returns>
+    /// <returns>int representing hashcode of the target object.</returns>
     public override int GetHashCode()
     {
         Debug.Assert(_target != null, "target should not be null.");
@@ -224,9 +224,9 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Equals
+    /// Equals.
     /// </summary>
-    /// <param name="obj">Object with whom to compare</param>
+    /// <param name="obj">Object with whom to compare.</param>
     /// <returns>returns true if the objects are equal.</returns>
     public override bool Equals(object obj)
     {
@@ -247,11 +247,11 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Invokes the specified method
+    /// Invokes the specified method.
     /// </summary>
-    /// <param name="name">Name of the method</param>
+    /// <param name="name">Name of the method.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    /// <returns>Result of method call</returns>
+    /// <returns>Result of method call.</returns>
     public object Invoke(string name, params object[] args)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -259,117 +259,117 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Invokes the specified method
+    /// Invokes the specified method.
     /// </summary>
-    /// <param name="name">Name of the method</param>
+    /// <param name="name">Name of the method.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    /// <returns>Result of method call</returns>
+    /// <returns>Result of method call.</returns>
     public object Invoke(string name, Type[] parameterTypes, object[] args)
     {
         return Invoke(name, parameterTypes, args, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
-    /// Invokes the specified method
+    /// Invokes the specified method.
     /// </summary>
-    /// <param name="name">Name of the method</param>
+    /// <param name="name">Name of the method.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
-    /// <returns>Result of method call</returns>
+    /// <returns>Result of method call.</returns>
     public object Invoke(string name, Type[] parameterTypes, object[] args, Type[] typeArguments)
     {
         return Invoke(name, BindToEveryThing, parameterTypes, args, CultureInfo.InvariantCulture, typeArguments);
     }
 
     /// <summary>
-    /// Invokes the specified method
+    /// Invokes the specified method.
     /// </summary>
-    /// <param name="name">Name of the method</param>
+    /// <param name="name">Name of the method.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    /// <param name="culture">Culture info</param>
-    /// <returns>Result of method call</returns>
+    /// <param name="culture">Culture info.</param>
+    /// <returns>Result of method call.</returns>
     public object Invoke(string name, object[] args, CultureInfo culture)
     {
         return Invoke(name, null, args, culture);
     }
 
     /// <summary>
-    /// Invokes the specified method
+    /// Invokes the specified method.
     /// </summary>
-    /// <param name="name">Name of the method</param>
+    /// <param name="name">Name of the method.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    /// <param name="culture">Culture info</param>
-    /// <returns>Result of method call</returns>
+    /// <param name="culture">Culture info.</param>
+    /// <returns>Result of method call.</returns>
     public object Invoke(string name, Type[] parameterTypes, object[] args, CultureInfo culture)
     {
         return Invoke(name, BindToEveryThing, parameterTypes, args, culture);
     }
 
     /// <summary>
-    /// Invokes the specified method
+    /// Invokes the specified method.
     /// </summary>
-    /// <param name="name">Name of the method</param>
+    /// <param name="name">Name of the method.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    /// <returns>Result of method call</returns>
+    /// <returns>Result of method call.</returns>
     public object Invoke(string name, BindingFlags bindingFlags, params object[] args)
     {
         return Invoke(name, bindingFlags, null, args, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
-    /// Invokes the specified method
+    /// Invokes the specified method.
     /// </summary>
-    /// <param name="name">Name of the method</param>
+    /// <param name="name">Name of the method.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    /// <returns>Result of method call</returns>
+    /// <returns>Result of method call.</returns>
     public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args)
     {
         return Invoke(name, bindingFlags, parameterTypes, args, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
-    /// Invokes the specified method
+    /// Invokes the specified method.
     /// </summary>
-    /// <param name="name">Name of the method</param>
+    /// <param name="name">Name of the method.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    /// <param name="culture">Culture info</param>
-    /// <returns>Result of method call</returns>
+    /// <param name="culture">Culture info.</param>
+    /// <returns>Result of method call.</returns>
     public object Invoke(string name, BindingFlags bindingFlags, object[] args, CultureInfo culture)
     {
         return Invoke(name, bindingFlags, null, args, culture);
     }
 
     /// <summary>
-    /// Invokes the specified method
+    /// Invokes the specified method.
     /// </summary>
-    /// <param name="name">Name of the method</param>
+    /// <param name="name">Name of the method.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    /// <param name="culture">Culture info</param>
-    /// <returns>Result of method call</returns>
+    /// <param name="culture">Culture info.</param>
+    /// <returns>Result of method call.</returns>
     public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args, CultureInfo culture)
     {
         return Invoke(name, bindingFlags, parameterTypes, args, culture, null);
     }
 
     /// <summary>
-    /// Invokes the specified method
+    /// Invokes the specified method.
     /// </summary>
-    /// <param name="name">Name of the method</param>
+    /// <param name="name">Name of the method.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    /// <param name="culture">Culture info</param>
+    /// <param name="culture">Culture info.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
-    /// <returns>Result of method call</returns>
+    /// <returns>Result of method call.</returns>
     public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args, CultureInfo culture, Type[] typeArguments)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -428,10 +428,10 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Gets the array element using array of subscripts for each dimension
+    /// Gets the array element using array of subscripts for each dimension.
     /// </summary>
-    /// <param name="name">Name of the member</param>
-    /// <param name="indices">the indices of array</param>
+    /// <param name="name">Name of the member.</param>
+    /// <param name="indices">the indices of array.</param>
     /// <returns>An array of elements.</returns>
     public object GetArrayElement(string name, params int[] indices)
     {
@@ -440,11 +440,11 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Sets the array element using array of subscripts for each dimension
+    /// Sets the array element using array of subscripts for each dimension.
     /// </summary>
-    /// <param name="name">Name of the member</param>
-    /// <param name="value">Value to set</param>
-    /// <param name="indices">the indices of array</param>
+    /// <param name="name">Name of the member.</param>
+    /// <param name="value">Value to set.</param>
+    /// <param name="indices">the indices of array.</param>
     public void SetArrayElement(string name, object value, params int[] indices)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -452,11 +452,11 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Gets the array element using array of subscripts for each dimension
+    /// Gets the array element using array of subscripts for each dimension.
     /// </summary>
-    /// <param name="name">Name of the member</param>
+    /// <param name="name">Name of the member.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
-    /// <param name="indices">the indices of array</param>
+    /// <param name="indices">the indices of array.</param>
     /// <returns>An array of elements.</returns>
     public object GetArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
     {
@@ -466,12 +466,12 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Sets the array element using array of subscripts for each dimension
+    /// Sets the array element using array of subscripts for each dimension.
     /// </summary>
-    /// <param name="name">Name of the member</param>
+    /// <param name="name">Name of the member.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
-    /// <param name="value">Value to set</param>
-    /// <param name="indices">the indices of array</param>
+    /// <param name="value">Value to set.</param>
+    /// <param name="indices">the indices of array.</param>
     public void SetArrayElement(string name, BindingFlags bindingFlags, object value, params int[] indices)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -480,9 +480,9 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Get the field
+    /// Get the field.
     /// </summary>
-    /// <param name="name">Name of the field</param>
+    /// <param name="name">Name of the field.</param>
     /// <returns>The field.</returns>
     public object GetField(string name)
     {
@@ -491,10 +491,10 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Sets the field
+    /// Sets the field.
     /// </summary>
-    /// <param name="name">Name of the field</param>
-    /// <param name="value">value to set</param>
+    /// <param name="name">Name of the field.</param>
+    /// <param name="value">value to set.</param>
     public void SetField(string name, object value)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -502,9 +502,9 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Gets the field
+    /// Gets the field.
     /// </summary>
-    /// <param name="name">Name of the field</param>
+    /// <param name="name">Name of the field.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <returns>The field.</returns>
     public object GetField(string name, BindingFlags bindingFlags)
@@ -514,11 +514,11 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Sets the field
+    /// Sets the field.
     /// </summary>
-    /// <param name="name">Name of the field</param>
+    /// <param name="name">Name of the field.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
-    /// <param name="value">value to set</param>
+    /// <param name="value">value to set.</param>
     public void SetField(string name, BindingFlags bindingFlags, object value)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -526,9 +526,9 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Get the field or property
+    /// Get the field or property.
     /// </summary>
-    /// <param name="name">Name of the field or property</param>
+    /// <param name="name">Name of the field or property.</param>
     /// <returns>The field or property.</returns>
     public object GetFieldOrProperty(string name)
     {
@@ -537,10 +537,10 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Sets the field or property
+    /// Sets the field or property.
     /// </summary>
-    /// <param name="name">Name of the field or property</param>
-    /// <param name="value">value to set</param>
+    /// <param name="name">Name of the field or property.</param>
+    /// <param name="value">value to set.</param>
     public void SetFieldOrProperty(string name, object value)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -548,9 +548,9 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Gets the field or property
+    /// Gets the field or property.
     /// </summary>
-    /// <param name="name">Name of the field or property</param>
+    /// <param name="name">Name of the field or property.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <returns>The field or property.</returns>
     public object GetFieldOrProperty(string name, BindingFlags bindingFlags)
@@ -560,11 +560,11 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Sets the field or property
+    /// Sets the field or property.
     /// </summary>
-    /// <param name="name">Name of the field or property</param>
+    /// <param name="name">Name of the field or property.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
-    /// <param name="value">value to set</param>
+    /// <param name="value">value to set.</param>
     public void SetFieldOrProperty(string name, BindingFlags bindingFlags, object value)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -572,9 +572,9 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Gets the property
+    /// Gets the property.
     /// </summary>
-    /// <param name="name">Name of the property</param>
+    /// <param name="name">Name of the property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
     public object GetProperty(string name, params object[] args)
@@ -583,9 +583,9 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Gets the property
+    /// Gets the property.
     /// </summary>
-    /// <param name="name">Name of the property</param>
+    /// <param name="name">Name of the property.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
@@ -595,10 +595,10 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Set the property
+    /// Set the property.
     /// </summary>
-    /// <param name="name">Name of the property</param>
-    /// <param name="value">value to set</param>
+    /// <param name="name">Name of the property.</param>
+    /// <param name="value">value to set.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetProperty(string name, object value, params object[] args)
     {
@@ -606,11 +606,11 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Set the property
+    /// Set the property.
     /// </summary>
-    /// <param name="name">Name of the property</param>
+    /// <param name="name">Name of the property.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
-    /// <param name="value">value to set</param>
+    /// <param name="value">value to set.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetProperty(string name, Type[] parameterTypes, object value, object[] args)
     {
@@ -618,9 +618,9 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Gets the property
+    /// Gets the property.
     /// </summary>
-    /// <param name="name">Name of the property</param>
+    /// <param name="name">Name of the property.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
@@ -630,9 +630,9 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Gets the property
+    /// Gets the property.
     /// </summary>
-    /// <param name="name">Name of the property</param>
+    /// <param name="name">Name of the property.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
@@ -658,11 +658,11 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Sets the property
+    /// Sets the property.
     /// </summary>
-    /// <param name="name">Name of the property</param>
+    /// <param name="name">Name of the property.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
-    /// <param name="value">value to set</param>
+    /// <param name="value">value to set.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetProperty(string name, BindingFlags bindingFlags, object value, params object[] args)
     {
@@ -670,11 +670,11 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Sets the property
+    /// Sets the property.
     /// </summary>
-    /// <param name="name">Name of the property</param>
+    /// <param name="name">Name of the property.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
-    /// <param name="value">value to set</param>
+    /// <param name="value">value to set.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetProperty(string name, BindingFlags bindingFlags, object value, Type[] parameterTypes, object[] args)
@@ -701,12 +701,12 @@ public class PrivateObject
         }
     }
 
-    #region Private Helpers
+#region Private Helpers
 
     /// <summary>
-    /// Validate access string
+    /// Validate access string.
     /// </summary>
-    /// <param name="access"> access string</param>
+    /// <param name="access"> access string.</param>
     private static void ValidateAccessString(string access)
     {
         Helper.CheckParameterNotNull(access, "access", string.Empty);
@@ -726,13 +726,13 @@ public class PrivateObject
     }
 
     /// <summary>
-    /// Invokes the member
+    /// Invokes the member.
     /// </summary>
-    /// <param name="name">Name of the member</param>
-    /// <param name="bindingFlags">Additional attributes</param>
-    /// <param name="args">Arguments for the invocation</param>
-    /// <param name="culture">Culture</param>
-    /// <returns>Result of the invocation</returns>
+    /// <param name="name">Name of the member.</param>
+    /// <param name="bindingFlags">Additional attributes.</param>
+    /// <param name="args">Arguments for the invocation.</param>
+    /// <param name="culture">Culture.</param>
+    /// <returns>Result of the invocation.</returns>
     private object InvokeHelper(string name, BindingFlags bindingFlags, object[] args, CultureInfo culture)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
@@ -908,6 +908,6 @@ public class PrivateObject
         return methodCandidates;
     }
 
-    #endregion
+#endregion
 }
 #endif

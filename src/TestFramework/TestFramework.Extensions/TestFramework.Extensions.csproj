@@ -65,6 +65,15 @@
   <ItemGroup>
     <EmbeddedResource Condition=" '$(TargetFramework)' == '$(UwpMinimum)' " Update="Properties\Extension.UWP.rd.xml" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- API that is common to all frameworks that we build for. -->
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+    <!-- Framework specific API -->
+    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
   
   <!-- Remove this block when 6.0.10 is released -->
   <PropertyGroup>
@@ -89,6 +98,10 @@
     <KnownCrossgen2Pack Update="@(KnownCrossgen2Pack)">
       <Crossgen2PackVersion Condition="'%(TargetFramework)' == 'net6.0'">$(_Net60ServicingVersionOverride)</Crossgen2PackVersion>
     </KnownCrossgen2Pack>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="PublicAPI\net6.0-windows10.0.18362.0\" />
   </ItemGroup>
   <!-- /Remove this block when 6.0.10 is released -->
 

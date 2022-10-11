@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
 using System.Collections.Generic;
@@ -14,6 +13,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 internal class FileUtility
 {
     private readonly AssemblyUtility _assemblyUtility;
@@ -34,7 +34,7 @@ internal class FileUtility
     }
 
     /// <summary>
-    /// Replaces the invalid file/path characters from the parameter file name with '_'
+    /// Replaces the invalid file/path characters from the parameter file name with '_'.
     /// </summary>
     /// <param name="fileName"> The file Name. </param>
     /// <returns> The fileName devoid of any invalid characters. </returns>

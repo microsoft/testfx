@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System;
 using System.Linq;
 using System.Reflection;
@@ -12,23 +10,13 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
 /// <summary>
 /// This service is responsible for platform specific reflection operations.
 /// </summary>
 public class ReflectionOperations : IReflectionOperations
 {
-#if NETFRAMEWORK
-    private readonly ReflectionUtility _reflectionUtility;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ReflectionOperations"/> class.
-    /// </summary>
-    public ReflectionOperations()
-    {
-        _reflectionUtility = new ReflectionUtility();
-    }
-#endif
-
     /// <summary>
     /// Gets all the custom attributes adorned on a member.
     /// </summary>

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
-
 using System;
 using System.Diagnostics;
 using System.Globalization;
@@ -14,6 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class ThreadSafeStringWriterTests : TestContainer
 {
     private bool _task2flag;
@@ -38,6 +37,7 @@ public class ThreadSafeStringWriterTests : TestContainer
                 while (_task2flag != true && timeout.Elapsed < TimeSpan.FromSeconds(5))
                 {
                 }
+
                 stringWriter.WriteLine("content1");
                 stringWriter.WriteLine("content1");
                 stringWriter.WriteLine("content1");
@@ -89,6 +89,7 @@ public class ThreadSafeStringWriterTests : TestContainer
             using var stringWriter2 = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "debug");
             using var stringWriter3 = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out");
             using var stringWriter4 = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "debug");
+
             // Writing the data needs to run in a task, because that is how the writer is designed,
             // because we always run test in a task, so we must not setup the parent context, otherwise
             // it would capture output of all tests.

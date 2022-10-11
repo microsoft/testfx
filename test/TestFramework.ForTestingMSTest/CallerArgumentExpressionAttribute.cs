@@ -11,7 +11,7 @@ namespace System.Runtime.CompilerServices;
 internal sealed class CallerArgumentExpressionAttribute : Attribute
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="T:System.Runtime.CompilerServices.CallerArgumentExpressionAttribute" /> class.
+    /// Initializes a new instance of the <see cref="CallerArgumentExpressionAttribute"/> class.
     /// </summary>
     /// <param name="parameterName">The name of the targeted parameter.</param>
     public CallerArgumentExpressionAttribute(string parameterName) => ParameterName = parameterName;

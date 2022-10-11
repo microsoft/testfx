@@ -1,12 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace DiscoveryAndExecutionTests.Utilities;
-
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,6 +9,11 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+
+namespace DiscoveryAndExecutionTests.Utilities;
 internal static class TestCaseFilterFactory
 {
     private static readonly MethodInfo CachedGetMultiValueMethod = typeof(TestCaseFilterFactory).GetMethod(nameof(GetMultiValue), BindingFlags.Static | BindingFlags.NonPublic);
@@ -57,6 +56,7 @@ internal static class TestCaseFilterFactory
                         ops.Push(op);
                         continue;
                     }
+
                     MergeExpression(exp, ops.Pop());
                     continue;
 
@@ -78,6 +78,7 @@ internal static class TestCaseFilterFactory
                             throw new FormatException($"Invalid filter, missing parenthesis open: {filterString}");
                         }
                     }
+
                     ops.Pop();
                     continue;
 
@@ -126,6 +127,7 @@ internal static class TestCaseFilterFactory
         {
             throw new ArgumentException($"Unexpected operator: {op}", nameof(op));
         }
+
         if (exp.Count != 2)
         {
             throw new ArgumentException($"Unexpected expression tree: {exp.Count} elements, expected 2.", nameof(exp));
@@ -173,6 +175,7 @@ internal static class TestCaseFilterFactory
                         yield return token.ToString();
                         token.Clear();
                     }
+
                     yield return c.ToString();
                     continue;
 
@@ -258,7 +261,10 @@ internal static class TestCaseFilterFactory
 
     private static bool EqualsComparer(string[] values, string value)
     {
-        if (values == null) return false;
+        if (values == null)
+        {
+            return false;
+        }
 
         foreach (var v in values)
         {
@@ -273,7 +279,10 @@ internal static class TestCaseFilterFactory
 
     private static bool ContainsComparer(string[] values, string value)
     {
-        if (values == null) return false;
+        if (values == null)
+        {
+            return false;
+        }
 
         foreach (var v in values)
         {
@@ -326,7 +335,6 @@ internal static class TestCaseFilterFactory
         {
             expression = Expression.Not(expression);
         }
-
 
         var lambda = Expression.Lambda<Func<Func<string, object>, bool>>(expression, parameter);
 

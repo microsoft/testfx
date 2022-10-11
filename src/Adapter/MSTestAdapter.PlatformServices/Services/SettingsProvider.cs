@@ -1,17 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System.Collections.Generic;
 using System.Xml;
 
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-#if !WINDOWS_UWP
-using ISettingsProvider = Interface.ISettingsProvider;
-#endif
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
 /// Class to read settings from the runsettings xml for the desktop.
@@ -20,7 +16,7 @@ public class MSTestSettingsProvider : ISettingsProvider
 {
 #if !WINDOWS_UWP && !PORTABLE
     /// <summary>
-    /// Member variable for Adapter settings
+    /// Member variable for Adapter settings.
     /// </summary>
     private static MSTestAdapterSettings s_settings;
 

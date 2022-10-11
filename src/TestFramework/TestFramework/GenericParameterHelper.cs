@@ -1,19 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
 /// This class is designed to help user doing unit testing for types which uses generic types.
 /// GenericParameterHelper satisfies some common generic type constraints
 /// such as:
 /// 1. public default constructor
-/// 2. implements common interface: IComparable, IEnumerable
+/// 2. implements common interface: IComparable, IEnumerable.
 /// </summary>
 [SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix", Justification = "Compat reasons.")]
 
@@ -48,7 +48,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// Initializes a new instance of the <see cref="GenericParameterHelper"/> class that
     /// initializes the Data property to a user-supplied value.
     /// </summary>
-    /// <param name="data">Any integer value</param>
+    /// <param name="data">Any integer value.</param>
     public GenericParameterHelper(int data)
     {
         Data = data;
@@ -58,7 +58,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     #region Public Properties
 
     /// <summary>
-    /// Gets or sets the Data
+    /// Gets or sets the Data.
     /// </summary>
     public int Data
     {
@@ -70,9 +70,9 @@ public class GenericParameterHelper : IComparable, IEnumerable
     #region Object Overrides
 
     /// <summary>
-    /// Do the value comparison for two GenericParameterHelper object
+    /// Do the value comparison for two GenericParameterHelper object.
     /// </summary>
-    /// <param name="obj">object to do comparison with</param>
+    /// <param name="obj">object to do comparison with.</param>
     /// <returns>true if obj has the same value as 'this' GenericParameterHelper object.
     /// false otherwise.</returns>
     public override bool Equals(object obj)
@@ -122,7 +122,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// Returns an IEnumerator object whose length is derived from
     /// the Data property.
     /// </summary>
-    /// <returns>The IEnumerator object</returns>
+    /// <returns>The IEnumerator object.</returns>
     public IEnumerator GetEnumerator()
     {
         int size = Data % 10;

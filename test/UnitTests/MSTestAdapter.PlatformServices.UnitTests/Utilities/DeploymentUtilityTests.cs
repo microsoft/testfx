@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NET48
-namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,6 +19,8 @@ using MSTestAdapter.PlatformServices.Tests.Utilities;
 
 using TestFramework.ForTestingMSTest;
 
+#if !NET48
+namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 #pragma warning disable SA1649 // File name must match first type name
 public class DeploymentUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
@@ -56,7 +55,7 @@ public class DeploymentUtilityTests : TestContainer
         _mocktestExecutionRecorder = new Mock<ITestExecutionRecorder>();
     }
 
-    #region Deploy tests
+#region Deploy tests
 
     public void DeployShouldReturnFalseWhenNoDeploymentItemsOnTestCase()
     {
@@ -406,9 +405,9 @@ public class DeploymentUtilityTests : TestContainer
     }
 #endif
 
-    #endregion
+#endregion
 
-    #region private methods
+#region private methods
 
     private static TestCase GetTestCaseAndTestRunDirectories(string deploymentItemPath, string defaultDeploymentItemOutputDirectoryout, out TestRunDirectories testRunDirectories)
     {
@@ -417,7 +416,7 @@ public class DeploymentUtilityTests : TestContainer
                 {
                     new KeyValuePair<string, string>(
                         deploymentItemPath,
-                        defaultDeploymentItemOutputDirectoryout)
+                        defaultDeploymentItemOutputDirectoryout),
                 };
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         var currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -427,6 +426,6 @@ public class DeploymentUtilityTests : TestContainer
         return testCase;
     }
 
-    #endregion
+#endregion
 }
 #endif

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTestV2.CLIAutomation;
-
 using System;
 using System.IO;
 using System.Linq;
@@ -14,6 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using TestFramework.ForTestingMSTest;
 
+namespace Microsoft.MSTestV2.CLIAutomation;
 public partial class CLITestBase : TestContainer
 {
     private static VsTestConsoleWrapper s_vsTestConsoleWrapper;
@@ -64,7 +63,7 @@ public partial class CLITestBase : TestContainer
     /// <summary>
     /// Gets the path to <c>vstest.console.exe</c>.
     /// </summary>
-    /// <returns>Full path to <c>vstest.console.exe</c></returns>
+    /// <returns>Full path to <c>vstest.console.exe</c>.</returns>
     public string GetConsoleRunnerPath()
     {
         var vstestConsolePath = Path.Combine(Environment.CurrentDirectory, PackagesFolder, TestPlatformCLIPackageName, GetTestPlatformVersion(), VstestConsoleRelativePath);
@@ -185,7 +184,7 @@ public partial class CLITestBase : TestContainer
     /// Validates if the test results contains the specified set of failed tests.
     /// </summary>
     /// <param name="source">The test container.</param>
-    /// <param name="validateStackTraceInfo">Validates the existence of stack trace when set to true</param>
+    /// <param name="validateStackTraceInfo">Validates the existence of stack trace when set to true.</param>
     /// <param name="failedTests">Set of failed tests.</param>
     /// <remarks>
     /// Provide the full test name similar to this format SampleTest.TestCode.TestMethodFailed.

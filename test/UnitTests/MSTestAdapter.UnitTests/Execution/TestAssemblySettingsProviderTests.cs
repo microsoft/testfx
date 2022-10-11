@@ -1,20 +1,21 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
-
 using System;
 using System.Reflection;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+
 using Moq;
 
 using TestFramework.ForTestingMSTest;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class TestAssemblySettingsProviderTests : TestContainer
 {
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
@@ -53,7 +54,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         var settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Verify(-1 == settings.Workers);
+        Verify(settings.Workers == -1);
     }
 
     public void GetSettingsShouldSetParallelWorkers()
@@ -72,7 +73,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         var settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Verify(10 == settings.Workers);
+        Verify(settings.Workers == 10);
     }
 
     public void GetSettingsShouldSetParallelWorkersToProcessorCountIfZero()
@@ -106,7 +107,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         var settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Verify(UTF.ExecutionScope.ClassLevel == settings.Scope);
+        Verify(settings.Scope == UTF.ExecutionScope.ClassLevel);
     }
 
     public void GetSettingsShouldSetParallelScope()
@@ -125,7 +126,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         var settings = TestAssemblySettingsProvider.GetSettings("Foo");
 
         // Assert.
-        Verify(UTF.ExecutionScope.MethodLevel == settings.Scope);
+        Verify(settings.Scope == UTF.ExecutionScope.MethodLevel);
     }
 
     public void GetSettingsShouldSetCanParallelizeAssemblyToTrueByDefault()

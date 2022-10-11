@@ -1,9 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NET462
-namespace MSTestAdapter.PlatformServices.Tests.Services;
-
 using System;
 using System.Reflection;
 
@@ -11,6 +8,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
+#if !NET462
+namespace MSTestAdapter.PlatformServices.Tests.Services;
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 public class DiaSessionOperationsTests : TestContainer
 {
@@ -108,7 +107,7 @@ out string fileName);
         out int minLineNumber,
         out string fileName);
 
-        Verify(-1 == minLineNumber);
+        Verify(minLineNumber == -1);
         Verify(fileName is null);
     }
 
@@ -130,7 +129,7 @@ out string fileName);
             out int minLineNumber,
             out string fileName);
 
-            Verify(86 == minLineNumber);
+            Verify(minLineNumber == 86);
             Verify(fileName is null);
         }
         finally
@@ -157,7 +156,7 @@ out string fileName);
             out int minLineNumber,
             out string fileName);
 
-            Verify(-1 == minLineNumber);
+            Verify(minLineNumber == -1);
             Verify(navigationData.FileName == fileName);
         }
         finally

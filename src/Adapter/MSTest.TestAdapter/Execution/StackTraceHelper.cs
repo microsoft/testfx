@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,6 +9,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 /// <summary>
 /// Provides helper methods to parse stack trace.
@@ -103,7 +103,7 @@ internal static class StackTraceHelper
     }
 
     /// <summary>
-    /// Removes all stack frames that refer to Microsoft.VisualStudio.TestTools.UnitTesting.Assertion
+    /// Removes all stack frames that refer to Microsoft.VisualStudio.TestTools.UnitTesting.Assertion.
     /// </summary>
     /// <param name="stackTrace">
     /// The stack Trace.
@@ -140,7 +140,7 @@ internal static class StackTraceHelper
 
     /// <summary>
     /// Gets the exception messages, including the messages for all inner exceptions
-    /// recursively
+    /// recursively.
     /// </summary>
     /// <param name="ex">
     /// The exception.
@@ -184,7 +184,7 @@ internal static class StackTraceHelper
     }
 
     /// <summary>
-    /// Create stack trace information
+    /// Create stack trace information.
     /// </summary>
     /// <param name="ex">
     /// The exception.
@@ -219,7 +219,7 @@ internal static class StackTraceHelper
     }
 
     /// <summary>
-    /// Returns whether the parameter stackFrame has reference to UTF
+    /// Returns whether the parameter stackFrame has reference to UTF.
     /// </summary>
     /// <param name="stackFrame">
     /// The stack Frame.

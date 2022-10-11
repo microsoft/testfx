@@ -1,22 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 public partial class AssertTests
 {
     public void InstanceOfTypeShouldFailWhenValueIsNull()
     {
-        static void action() => Assert.IsInstanceOfType(null, typeof(AssertTests));
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.IsInstanceOfType(null, typeof(AssertTests));
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void InstanceOfTypeShouldFailWhenTypeIsNull()
     {
-        static void action() => Assert.IsInstanceOfType(5, null);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.IsInstanceOfType(5, null);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -37,8 +37,8 @@ public partial class AssertTests
 
     public void InstanceNotOfTypeShouldFailWhenTypeIsNull()
     {
-        static void action() => Assert.IsNotInstanceOfType(5, null);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.IsNotInstanceOfType(5, null);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -55,8 +55,8 @@ public partial class AssertTests
     [TestMethod]
     public void IsInstanceOfTypeUsingGenericType_WhenValueIsNull_Fails()
     {
-        static void action() => Assert.IsInstanceOfType<AssertTests>(null);
-        var ex = VerifyThrows(action);
+        static void Action() => Assert.IsInstanceOfType<AssertTests>(null);
+        var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 

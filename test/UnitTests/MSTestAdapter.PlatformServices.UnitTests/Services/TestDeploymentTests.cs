@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace MSTestAdapter.PlatformServices.Tests.Services;
-
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -23,6 +21,7 @@ using MSTestAdapter.PlatformServices.Tests.Utilities;
 
 using TestFramework.ForTestingMSTest;
 
+namespace MSTestAdapter.PlatformServices.Tests.Services;
 public class TestDeploymentTests : TestContainer
 {
     private const string DefaultDeploymentItemPath = @"c:\temp";
@@ -63,13 +62,13 @@ public class TestDeploymentTests : TestContainer
         {
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory)
+                DefaultDeploymentItemOutputDirectory),
         };
         var classLevelDeploymentItems = new[]
         {
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath + "\\temp2",
-                DefaultDeploymentItemOutputDirectory)
+                DefaultDeploymentItemOutputDirectory),
         };
         var memberInfo =
             typeof(TestDeploymentTests).GetMethod(
@@ -88,7 +87,7 @@ public class TestDeploymentTests : TestContainer
                 DefaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath + "\\temp2",
-                DefaultDeploymentItemOutputDirectory)
+                DefaultDeploymentItemOutputDirectory),
         };
 
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems));
@@ -185,7 +184,7 @@ public class TestDeploymentTests : TestContainer
         {
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory)
+                DefaultDeploymentItemOutputDirectory),
         };
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvparray);
 
@@ -263,7 +262,7 @@ public class TestDeploymentTests : TestContainer
                 {
                     new KeyValuePair<string, string>(
                         DefaultDeploymentItemPath,
-                        DefaultDeploymentItemOutputDirectory)
+                        DefaultDeploymentItemOutputDirectory),
                 };
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         var testDeployment = new TestDeployment(
@@ -330,7 +329,7 @@ public class TestDeploymentTests : TestContainer
             {
                 TestContextPropertyStrings.TestLogsDir,
                 applicationBaseDirectory
-            }
+            },
         };
         Verify(properties is not null);
         Verify(expectedProperties.SequenceEqual(properties));
@@ -388,7 +387,7 @@ public class TestDeploymentTests : TestContainer
             {
                 TestContextPropertyStrings.TestLogsDir,
                 testRunDirectories.InMachineNameDirectory
-            }
+            },
         };
 
         Verify(properties is not null);
@@ -447,7 +446,7 @@ public class TestDeploymentTests : TestContainer
             {
                 TestContextPropertyStrings.TestLogsDir,
                 testRunDirectories.InMachineNameDirectory
-            }
+            },
         };
 
         Verify(properties is not null);
@@ -481,7 +480,7 @@ public class TestDeploymentTests : TestContainer
         {
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory)
+                DefaultDeploymentItemOutputDirectory),
         };
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
 

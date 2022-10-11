@@ -5,16 +5,40 @@
   <Import Project="$(RepoRoot)scripts\build\TestFx.Sign.targets" Condition=" '$(TestFxSigningTargetsImported)' != 'true' " />
 
   <!-- StyleCop settings. -->
-  <!-- TODO: Re-enable Stylecop analyzers in repo
-  <ItemGroup Condition=" '$(ShouldEnableStyleCop)' != 'false' and '$(IsVsixProj)' != 'true'">
+  <PropertyGroup Condition=" '$(ShouldEnableStyleCop)' != 'false' and '$(IsVsixProj)' != 'true' ">
+    <!--
+      Make sure any documentation comments which are included in code get checked for syntax during the build, but do
+      not report warnings for missing comments.
+
+      CS1573: Parameter 'parameter' has no matching param tag in the XML comment for 'parameter' (but other parameters do)
+      CS1591: Missing XML comment for publicly visible type or member 'Type_or_Member'
+    -->
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>$(NoWarn),1573,1591,1712</NoWarn>
+</PropertyGroup>
+  <ItemGroup Condition=" '$(ShouldEnableStyleCop)' != 'false' and '$(IsVsixProj)' != 'true' ">
     <AdditionalFiles Include="$(RepoRoot)scripts\build\stylecop.json">
       <Link>stylecop.json</Link>
     </AdditionalFiles>
 
-    <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\Newtonsoft.Json.dll" />
-    <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.CodeFixes.dll" />
-    <Analyzer Include="$(NuGetPackageRoot)\StyleCop.Analyzers\$(StyleCopAnalyzersVersion)\analyzers\dotnet\cs\StyleCop.Analyzers.dll" />
-  </ItemGroup>-->
+    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!--
+    Include PublicApi analyzers into all projects that are in our src directory, this can't use TestProject == true
+    because some projects in test are not tests, but we don't want to analyze those for public apis, because we
+    don't ship them.
+    Use relative path between the project and the root to avoid including the analyzer if the path above the root contains 'src' (e.g. C:\src\vstest).
+  -->
+  <ItemGroup Condition="$([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src/')) OR $([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src\'))">
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(RoslynPublicApiAnalyzersVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 
   <!-- WARNING remove this when SDK-style project conversion is being done. -->
   <!--

@@ -27,7 +27,10 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
     {
         if (Environment.GetEnvironmentVariable("MSTEST_TEST_DEBUG_DISCOVERTESTS") == "1")
         {
-            if (!Debugger.IsAttached) Debugger.Launch();
+            if (!Debugger.IsAttached)
+            {
+                Debugger.Launch();
+            }
         }
 
         foreach (var testCase in DiscoverTests(sources, logger))
@@ -45,7 +48,10 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
     {
         if (Environment.GetEnvironmentVariable("MSTEST_TEST_DEBUG_RUNTESTS") == "1")
         {
-            if (!Debugger.IsAttached) Debugger.Launch();
+            if (!Debugger.IsAttached)
+            {
+                Debugger.Launch();
+            }
         }
 
         _testRunCancellationTokenSource = new CancellationTokenSource();
@@ -106,7 +112,10 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
     {
         if (Environment.GetEnvironmentVariable("MSTEST_DEBUG_RUNTESTS") == "1")
         {
-            if (!Debugger.IsAttached) Debugger.Launch();
+            if (!Debugger.IsAttached)
+            {
+                Debugger.Launch();
+            }
         }
 
         var testCases = DiscoverTests(sources, frameworkHandle);
@@ -134,7 +143,10 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
         while (typeInfo != null)
         {
             if (typeInfo == typeof(TestContainer))
+            {
                 return true;
+            }
+
             typeInfo = typeInfo.BaseType;
         }
 
@@ -160,7 +172,6 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
                 IsTestContainer(typeInfo));
 
             // TODO: Fail if no container?
-
             foreach (var testContainerType in assemblyTestContainerTypes)
             {
                 LogMessage(logger, TestMessageLevel.Informational,
@@ -172,7 +183,6 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
                     && memberInfo.GetParameters().Length == 0);
 
                 // TODO: Fail if no public method?
-
                 foreach (var publicMethod in testContainerPublicMethods)
                 {
                     LogMessage(logger, TestMessageLevel.Informational, $"Found test '{publicMethod.Name}'");
@@ -195,6 +205,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
 
             testContainerType = assembly.DefinedTypes.Single(typeInfo =>
                 testCase.FullyQualifiedName.StartsWith(typeInfo.FullName, StringComparison.Ordinal));
+
             // Is it better to use Activator.CreateInstance?
             setupMethod = testContainerType.DeclaredConstructors.Single(ctorInfo =>
                 ctorInfo.IsPublic
@@ -285,6 +296,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
             var realException = ex.InnerException ?? ex;
             LogMessage(logger, TestMessageLevel.Error, $"Error during test teardown: {realException}");
             testResult.Outcome = TestOutcome.Failed;
+
             // TODO: It's possible there is already some error message + stack trace. We should merge instead of override.
             testResult.ErrorMessage = $"Error during test teardown: {realException.Message}";
             testResult.ErrorStackTrace = realException.StackTrace;

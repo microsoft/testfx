@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
 using System.Collections.Generic;
@@ -15,6 +14,8 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 /// <summary>
 /// The deployment utility.
@@ -110,7 +111,7 @@ internal class DeploymentItemUtility
     }
 
     /// <summary>
-    /// Returns whether there are any deployment items defined on the test
+    /// Returns whether there are any deployment items defined on the test.
     /// </summary>
     /// <param name="testCase"> The test Case. </param>
     /// <returns> True if has deployment items.</returns>
@@ -224,7 +225,7 @@ internal class DeploymentItemUtility
     }
 
     /// <summary>
-    /// Returns the deployment items defined on the test
+    /// Returns the deployment items defined on the test.
     /// </summary>
     /// <param name="testCase"> The test Case. </param>
     /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>. </returns>

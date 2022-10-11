@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
-
 using System;
 using System.Linq;
 using System.Reflection;
@@ -15,14 +13,15 @@ using TestFramework.ForTestingMSTest;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class UnitTestResultTest : TestContainer
 {
     public void UnitTestResultConstrutorWithOutcomeAndErrorMessageShouldSetRequiredFields()
     {
         UnitTestResult result = new(UnitTestOutcome.Error, "DummyMessage");
 
-        Verify(UnitTestOutcome.Error == result.Outcome);
-        Verify("DummyMessage" == result.ErrorMessage);
+        Verify(result.Outcome == UnitTestOutcome.Error);
+        Verify(result.ErrorMessage == "DummyMessage");
     }
 
     public void UnitTestResultConstrutorWithTestFailedExceptionShouldSetRequiredFields()
@@ -32,12 +31,12 @@ public class UnitTestResultTest : TestContainer
 
         UnitTestResult result = new(ex);
 
-        Verify(UnitTestOutcome.Error == result.Outcome);
-        Verify("DummyMessage" == result.ErrorMessage);
-        Verify("trace" == result.ErrorStackTrace);
-        Verify("filePath" == result.ErrorFilePath);
-        Verify(2 == result.ErrorLineNumber);
-        Verify(3 == result.ErrorColumnNumber);
+        Verify(result.Outcome == UnitTestOutcome.Error);
+        Verify(result.ErrorMessage == "DummyMessage");
+        Verify(result.ErrorStackTrace == "trace");
+        Verify(result.ErrorFilePath == "filePath");
+        Verify(result.ErrorLineNumber == 2);
+        Verify(result.ErrorColumnNumber == 3);
     }
 
     public void ToTestResultShouldReturnConvertedTestResultWithFieldsSet()
@@ -48,7 +47,7 @@ public class UnitTestResultTest : TestContainer
         UnitTestResult result = new(ex)
         {
             DisplayName = "DummyDisplayName",
-            Duration = dummyTimeSpan
+            Duration = dummyTimeSpan,
         };
 
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
@@ -68,21 +67,21 @@ public class UnitTestResultTest : TestContainer
 
         // Validate
         Verify(testCase == testResult.TestCase);
-        Verify("DummyDisplayName" == testResult.DisplayName);
+        Verify(testResult.DisplayName == "DummyDisplayName");
         Verify(dummyTimeSpan == testResult.Duration);
-        Verify(TestOutcome.Failed == testResult.Outcome);
-        Verify("DummyMessage" == testResult.ErrorMessage);
-        Verify("DummyStackTrace" == testResult.ErrorStackTrace);
+        Verify(testResult.Outcome == TestOutcome.Failed);
+        Verify(testResult.ErrorMessage == "DummyMessage");
+        Verify(testResult.ErrorStackTrace == "DummyStackTrace");
         Verify(startTime == testResult.StartTime);
         Verify(endTime == testResult.EndTime);
-        Verify(0 == testResult.Messages.Count);
+        Verify(testResult.Messages.Count == 0);
     }
 
     public void ToTestResultForUniTestResultWithStandardOutShouldReturnTestResultWithStdOutMessage()
     {
         UnitTestResult result = new()
         {
-            StandardOut = "DummyOutput"
+            StandardOut = "DummyOutput",
         };
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
         string runSettingxml =
@@ -101,7 +100,7 @@ public class UnitTestResultTest : TestContainer
     {
         UnitTestResult result = new()
         {
-            DebugTrace = "DummyDebugTrace"
+            DebugTrace = "DummyDebugTrace",
         };
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
         string runSettingxml =

@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
-
 using System;
 using System.Collections.Generic;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -12,6 +11,7 @@ using TestFramework.ForTestingMSTest;
 
 using TestAdapterConstants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class TcmTestPropertiesProviderTests : TestContainer
 {
     private readonly TestProperty[] _tcmKnownProperties = new TestProperty[]
@@ -30,13 +30,13 @@ public class TcmTestPropertiesProviderTests : TestContainer
         TestAdapterConstants.TestCaseIdProperty,
         TestAdapterConstants.TestConfigurationIdProperty,
         TestAdapterConstants.TestConfigurationNameProperty,
-        TestAdapterConstants.TestPointIdProperty
+        TestAdapterConstants.TestPointIdProperty,
     };
 
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIsNull()
     {
         var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(null);
-        Verify(0 == tcmProperties.Count);
+        Verify(tcmProperties.Count == 0);
     }
 
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIdIsZero()
@@ -47,12 +47,12 @@ public class TcmTestPropertiesProviderTests : TestContainer
             32, 534, 5, "sample build directory", "sample build flavor",
             "132456", "sample build platform", "http://sampleBuildUri/",
             "http://samplecollectionuri/", "sample team project", false,
-            0, 54, "sample configuration name", 345
+            0, 54, "sample configuration name", 345,
         };
         SetTestCaseProperties(testCase, propertiesValue);
 
         var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
-        Verify(0 == tcmProperties.Count);
+        Verify(tcmProperties.Count == 0);
     }
 
     public void GetTcmPropertiesShouldGetAllPropertiesFromTestCase()
@@ -63,7 +63,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             32, 534, 5, "sample build directory", "sample build flavor",
             "132456", "sample build platform", "http://sampleBuildUri/",
             "http://samplecollectionuri/", "sample team project", false,
-            1401, 54, "sample configuration name", 345
+            1401, 54, "sample configuration name", 345,
         };
         SetTestCaseProperties(testCase, propertiesValue);
 
@@ -81,7 +81,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             32, 534, 5, "sample build directory", "sample build flavor",
             "132456", "sample build platform", "http://sampleBuildUri/",
             "http://samplecollectionuri/", "sample team project", false,
-            1401, 54, "sample configuration name", 345
+            1401, 54, "sample configuration name", 345,
         };
         SetTestCaseProperties(testCase1, propertiesValue1);
         var tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
@@ -94,7 +94,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             33, 535, 6, "sample build directory 2", "sample build flavor 2",
             "132457", "sample build platform 2", "http://sampleBuildUri2/",
             "http://samplecollectionuri2/", "sample team project", true,
-            1403, 55, "sample configuration name 2", 346
+            1403, 55, "sample configuration name 2", 346,
         };
         SetTestCaseProperties(testCase2, propertiesValue2);
         var tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
@@ -110,7 +110,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             32, 534, 5, "sample build directory", "sample build flavor",
             "132456", "sample build platform", "http://sampleBuildUri/",
             "http://samplecollectionuri/", "sample team project", false,
-            1401, 54, "sample configuration name", 345
+            1401, 54, "sample configuration name", 345,
         };
         SetTestCaseProperties(testCase1, propertiesValue1);
         var tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
@@ -123,7 +123,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             33, 535, 6, "sample build directory 2", "sample build flavor 2",
             "132457", "sample build platform 2", "http://sampleBuildUri2/",
             "http://samplecollectionuri2/", "sample team project", true,
-            1403, 55, "sample configuration name 2", 346
+            1403, 55, "sample configuration name 2", 346,
         };
         SetTestCaseProperties(testCase2, propertiesValue2);
         var tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
@@ -136,7 +136,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             34, 536, 7, "sample build directory 3", "sample build flavor 3",
             "132458", "sample build platform 3", "http://sampleBuildUri3/",
             "http://samplecollectionuri3/", "sample team project2", true,
-            1404, 55, "sample configuration name 3", 347
+            1404, 55, "sample configuration name 3", 347,
         };
         SetTestCaseProperties(testCase3, propertiesValue3);
         var tcmProperties3 = TcmTestPropertiesProvider.GetTcmProperties(testCase3);

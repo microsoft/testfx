@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -18,6 +16,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensi
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
 /// The platform service that provides values from data source when data driven tests are run.
@@ -40,7 +40,7 @@ public class TestDataSource : ITestDataSource
         // for unit tests this means looking at the location of the test itself
         List<string> dataFolders = new()
         {
-            Path.GetDirectoryName(new Uri(testMethodInfo.MethodInfo.Module.Assembly.CodeBase).LocalPath)
+            Path.GetDirectoryName(new Uri(testMethodInfo.MethodInfo.Module.Assembly.CodeBase).LocalPath),
         };
 
         List<UTF.TestResult> dataRowResults = new();
@@ -100,7 +100,7 @@ public class TestDataSource : ITestDataSource
 
 #if NETFRAMEWORK
     /// <summary>
-    /// Get permutations for data row access
+    /// Get permutations for data row access.
     /// </summary>
     /// <param name="dataAccessMethod">The data access method.</param>
     /// <param name="length">Number of permutations.</param>

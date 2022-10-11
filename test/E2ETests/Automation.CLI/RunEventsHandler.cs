@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTestV2.CLIAutomation;
-
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
@@ -10,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
+namespace Microsoft.MSTestV2.CLIAutomation;
 public class RunEventsHandler : ITestRunEventsHandler
 {
     private readonly List<TestResult> _passedTests = new();

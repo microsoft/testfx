@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
 using System;
 using System.Diagnostics;
@@ -11,6 +10,7 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 internal class XmlUtilities
 {
     private const string XmlNamespace = "urn:schemas-microsoft-com:asm.v1";

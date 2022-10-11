@@ -1,12 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+using System.IO;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-using System.IO;
-
+namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 public class FSharpTestProjectTests : CLITestBase
 {
     private const string TestAssembly = "FSharpTestProject.dll";

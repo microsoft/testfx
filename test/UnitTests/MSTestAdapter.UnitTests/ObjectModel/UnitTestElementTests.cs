@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MSTest.TestAdapter;
-using MSTest.TestAdapter.ObjectModel;
+
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
 public class UnitTestElementTests : TestContainer
 {
     private readonly TestMethod _testMethod;
@@ -38,28 +38,28 @@ public class UnitTestElementTests : TestContainer
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify("C.M" == testCase.FullyQualifiedName);
+        Verify(testCase.FullyQualifiedName == "C.M");
     }
 
     public void ToTestCaseShouldSetExecutorUri()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(Constants.ExecutorUri == testCase.ExecutorUri);
+        Verify(testCase.ExecutorUri == Constants.ExecutorUri);
     }
 
     public void ToTestCaseShouldSetAssemblyName()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify("A" == testCase.Source);
+        Verify(testCase.Source == "A");
     }
 
     public void ToTestCaseShouldSetDisplayName()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify("M" == testCase.DisplayName);
+        Verify(testCase.DisplayName == "M");
     }
 
     public void ToTestCaseShouldSetDisplayNameIfPresent()
@@ -67,14 +67,14 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.DisplayName = "Display Name";
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify("Display Name" == testCase.DisplayName);
+        Verify(testCase.DisplayName == "Display Name");
     }
 
     public void ToTestCaseShouldSetTestClassNameProperty()
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify("C" == testCase.GetPropertyValue(Constants.TestClassNameProperty) as string);
+        Verify(testCase.GetPropertyValue(Constants.TestClassNameProperty) as string == "C");
     }
 
     public void ToTestCaseShouldSetDeclaringClassNameIfPresent()
@@ -87,7 +87,7 @@ public class UnitTestElementTests : TestContainer
         _testMethod.DeclaringClassFullName = "DC";
         testCase = _unitTestElement.ToTestCase();
 
-        Verify("DC" == testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) as string);
+        Verify(testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) as string == "DC");
     }
 
     public void ToTestCaseShouldSetIsAsyncProperty()
@@ -95,12 +95,12 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.IsAsync = true;
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(true == (bool)testCase.GetPropertyValue(Constants.AsyncTestProperty));
+        Verify((bool)testCase.GetPropertyValue(Constants.AsyncTestProperty) == true);
 
         _unitTestElement.IsAsync = false;
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(false == (bool)testCase.GetPropertyValue(Constants.AsyncTestProperty));
+        Verify((bool)testCase.GetPropertyValue(Constants.AsyncTestProperty) == false);
     }
 
     public void ToTestCaseShouldSetTestCategoryIfPresent()
@@ -126,12 +126,12 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.Priority = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(0 == (int)testCase.GetPropertyValue(Constants.PriorityProperty));
+        Verify((int)testCase.GetPropertyValue(Constants.PriorityProperty) == 0);
 
         _unitTestElement.Priority = 1;
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(1 == (int)testCase.GetPropertyValue(Constants.PriorityProperty));
+        Verify((int)testCase.GetPropertyValue(Constants.PriorityProperty) == 1);
     }
 
     public void ToTestCaseShouldSetTraitsIfPresent()
@@ -139,15 +139,15 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.Traits = null;
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(0 == testCase.Traits.Count());
+        Verify(testCase.Traits.Count() == 0);
 
         var trait = new TestPlatform.ObjectModel.Trait("trait", "value");
         _unitTestElement.Traits = new TestPlatform.ObjectModel.Trait[] { trait };
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(1 == testCase.Traits.Count());
-        Verify("trait" == testCase.Traits.ToArray()[0].Name);
-        Verify("value" == testCase.Traits.ToArray()[0].Value);
+        Verify(testCase.Traits.Count() == 1);
+        Verify(testCase.Traits.ToArray()[0].Name == "trait");
+        Verify(testCase.Traits.ToArray()[0].Value == "value");
     }
 
     public void ToTestCaseShouldSetPropertiesIfPresent()
@@ -159,9 +159,9 @@ public class UnitTestElementTests : TestContainer
 
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify("12" == testCase.GetPropertyValue(Constants.CssIterationProperty) as string);
-        Verify("ProjectStructure" == testCase.GetPropertyValue(Constants.CssProjectStructureProperty) as string);
-        Verify("I am a dummy test" == testCase.GetPropertyValue(Constants.DescriptionProperty) as string);
+        Verify(testCase.GetPropertyValue(Constants.CssIterationProperty) as string == "12");
+        Verify(testCase.GetPropertyValue(Constants.CssProjectStructureProperty) as string == "ProjectStructure");
+        Verify(testCase.GetPropertyValue(Constants.DescriptionProperty) as string == "I am a dummy test");
         Verify(new string[] { "2312", "22332" }.SequenceEqual((string[])testCase.GetPropertyValue(Constants.WorkItemIdsProperty)));
     }
 
