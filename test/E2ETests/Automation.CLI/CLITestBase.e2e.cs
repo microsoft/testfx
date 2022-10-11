@@ -17,7 +17,8 @@ public partial class CLITestBase : TestContainer
 {
     private static VsTestConsoleWrapper s_vsTestConsoleWrapper;
     private DiscoveryEventsHandler _discoveryEventsHandler;
-    protected RunEventsHandler _runEventsHandler;
+
+    protected RunEventsHandler RunEventsHandler { get; set; }
 
     public CLITestBase()
     {
@@ -50,13 +51,13 @@ public partial class CLITestBase : TestContainer
     {
         ExpandTestSourcePaths(sources);
 
-        _runEventsHandler = new RunEventsHandler();
+        RunEventsHandler = new RunEventsHandler();
         string runSettingXml = GetRunSettingXml(runSettings, GetTestAdapterPath(), targetFramework);
 
-        s_vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, _runEventsHandler);
-        if (_runEventsHandler.Errors.Any())
+        s_vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, RunEventsHandler);
+        if (RunEventsHandler.Errors.Any())
         {
-            throw new Exception($"Run failed with {_runEventsHandler.Errors.Count} errors:{Environment.NewLine}{string.Join(Environment.NewLine, _runEventsHandler.Errors)}");
+            throw new Exception($"Run failed with {RunEventsHandler.Errors.Count} errors:{Environment.NewLine}{string.Join(Environment.NewLine, RunEventsHandler.Errors)}");
         }
     }
 
@@ -104,7 +105,7 @@ public partial class CLITestBase : TestContainer
     public void ValidatePassedTestsCount(int expectedPassedTestsCount)
     {
         // Make sure only expected number of tests passed and not more.
-        Assert.AreEqual(expectedPassedTestsCount, _runEventsHandler.PassedTests.Count);
+        Assert.AreEqual(expectedPassedTestsCount, RunEventsHandler.PassedTests.Count);
     }
 
     /// <summary>
@@ -129,7 +130,7 @@ public partial class CLITestBase : TestContainer
     public void ValidateFailedTestsCount(int expectedFailedTestsCount)
     {
         // Make sure only expected number of tests failed and not more.
-        Assert.AreEqual(expectedFailedTestsCount, _runEventsHandler.FailedTests.Count);
+        Assert.AreEqual(expectedFailedTestsCount, RunEventsHandler.FailedTests.Count);
     }
 
     /// <summary>
@@ -140,7 +141,7 @@ public partial class CLITestBase : TestContainer
     public void ValidateSkippedTests(params string[] skippedTests)
     {
         // Make sure only expected number of tests skipped and not more.
-        Assert.AreEqual(skippedTests.Length, _runEventsHandler.SkippedTests.Count);
+        Assert.AreEqual(skippedTests.Length, RunEventsHandler.SkippedTests.Count);
 
         ValidateSkippedTestsContain(skippedTests);
     }
@@ -153,9 +154,9 @@ public partial class CLITestBase : TestContainer
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
     public void ValidatePassedTestsContain(params string[] passedTests)
     {
-        var passedTestResults = _runEventsHandler.PassedTests;
-        var failedTestResults = _runEventsHandler.FailedTests;
-        var skippedTestsResults = _runEventsHandler.SkippedTests;
+        var passedTestResults = RunEventsHandler.PassedTests;
+        var failedTestResults = RunEventsHandler.FailedTests;
+        var skippedTestsResults = RunEventsHandler.SkippedTests;
 
         foreach (var test in passedTests)
         {
@@ -195,7 +196,7 @@ public partial class CLITestBase : TestContainer
     {
         foreach (var test in failedTests)
         {
-            var testFound = _runEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName) ||
+            var testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName) ||
                        test.Equals(f.DisplayName));
             Assert.IsNotNull(testFound, "Test '{0}' does not appear in failed tests list.", test);
 
@@ -223,7 +224,7 @@ public partial class CLITestBase : TestContainer
     {
         foreach (var test in skippedTests)
         {
-            var testFound = _runEventsHandler.SkippedTests.Any(s => test.Equals(s.TestCase.FullyQualifiedName) ||
+            var testFound = RunEventsHandler.SkippedTests.Any(s => test.Equals(s.TestCase.FullyQualifiedName) ||
                        test.Equals(s.DisplayName));
             Assert.IsTrue(testFound, "Test '{0}' does not appear in skipped tests list.", test);
         }
@@ -232,8 +233,8 @@ public partial class CLITestBase : TestContainer
     public void ValidateTestRunTime(int thresholdTime)
     {
         Assert.IsTrue(
-            _runEventsHandler.ElapsedTimeInRunningTests >= 0 && _runEventsHandler.ElapsedTimeInRunningTests < thresholdTime,
-            $"Test Run was expected to not exceed {thresholdTime} but it took {_runEventsHandler.ElapsedTimeInRunningTests}");
+            RunEventsHandler.ElapsedTimeInRunningTests >= 0 && RunEventsHandler.ElapsedTimeInRunningTests < thresholdTime,
+            $"Test Run was expected to not exceed {thresholdTime} but it took {RunEventsHandler.ElapsedTimeInRunningTests}");
     }
 
     /// <summary>

@@ -23,12 +23,13 @@ public class SuiteLifeCycleTests : CLITestBase
     private void ValidateTestRunLifecycle(string targetFramework)
     {
         InvokeVsTestForExecution(new[] { targetFramework + "\\" + Assembly }, targetFramework: targetFramework);
-        Verify(_runEventsHandler.PassedTests.Count == 3);
+        Verify(RunEventsHandler.PassedTests.Count == 3);
 
-        foreach (var testMethod in _runEventsHandler.PassedTests)
+        foreach (var testMethod in RunEventsHandler.PassedTests)
         {
             Verify(testMethod.Outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-            // Class cleanup doesn't appear in the logs because it's happing after retrieving the result. 
+
+            // Class cleanup doesn't appear in the logs because it's happing after retrieving the result.
             if (targetFramework == "net462")
             {
                 Verify(testMethod.Messages.Single().Text.Contains(
