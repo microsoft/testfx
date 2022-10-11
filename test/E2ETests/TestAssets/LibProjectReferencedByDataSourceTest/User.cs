@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace DataSourceTestProject.ITestDataSourceTests;
+namespace LibProjectReferencedByDataSourceTest;
 
 public class User
 {
@@ -12,14 +12,14 @@ public class User
 
 public class UserService
 {
-    public User ParseUserDatas(string datas)
+    public User ParseUserData(string data)
     {
-        var splittedDatas = datas.Split(';');
+        var splittedData = data.Split(';');
 
         return new User()
         {
-            FirstName = splittedDatas[0],
-            LastName = splittedDatas[1]
+            FirstName = splittedData[0],
+            LastName = splittedData[1]
         };
     }
 }

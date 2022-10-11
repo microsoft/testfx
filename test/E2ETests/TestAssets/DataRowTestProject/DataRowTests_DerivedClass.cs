@@ -1,14 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 using System;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataRowTestProject;
+
 [TestClass]
-public class DerivedClass : BaseClass
+public class DataRowTests_DerivedClass : DataRowTests_BaseClass
 {
     [TestCategory("DataRowSimple")]
     [TestMethod]
@@ -99,7 +99,7 @@ public class DerivedClass : BaseClass
     [TestMethod]
     [DataRow(typeof(string))]
     [DataRow(typeof(int))]
-    [DataRow(typeof(DerivedClass))]
+    [DataRow(typeof(DataRowTests_DerivedClass))]
     public void DataRowNonSerializable(Type type)
     {
         Assert.IsTrue(true);

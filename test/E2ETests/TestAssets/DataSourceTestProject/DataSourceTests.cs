@@ -1,20 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using System;
+namespace DataSourceTestProject;
 
-namespace DataSourceTestProject.ITestDataSourceTests;
 [TestClass]
-public class DataRowTests_Regular
+public class DataSourceTests
 {
-    public TestContext TestContext
-    {
-        get;
-        set;
-    }
+    public TestContext TestContext { get; set; }
 
     [TestMethod, DataSource("Microsoft.VisualStudio.TestTools.DataSource.CSV", "|DataDirectory|\\a.csv", "a#csv", DataAccessMethod.Sequential)]
     public void CsvTestMethod()
