@@ -18,7 +18,7 @@ public partial class CLITestBase : TestContainer
     private static VsTestConsoleWrapper s_vsTestConsoleWrapper;
     private DiscoveryEventsHandler _discoveryEventsHandler;
 
-    protected RunEventsHandler RunEventsHandler { get; set; }
+    protected RunEventsHandler RunEventsHandler { get; private set; }
 
     public CLITestBase()
     {
