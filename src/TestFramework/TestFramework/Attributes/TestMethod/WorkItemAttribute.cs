@@ -23,5 +23,5 @@ public sealed class WorkItemAttribute : Attribute
     /// <summary>
     /// Gets the Id to a work item associated.
     /// </summary>
-    public int Id { get; private set; }
+    public int Id { get; }
 }

@@ -6,7 +6,6 @@ using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
@@ -114,45 +113,51 @@ internal class UnitTestDiscoverer
                     continue;
                 }
 
-                if (shouldCollectSourceInformation)
+                if (!shouldCollectSourceInformation)
                 {
-                    string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
+                    discoverySink.SendTestCase(testCase);
+                    continue;
+                }
 
-                    if (!navigationSessions.TryGetValue(testSource, out var testNavigationSession))
-                    {
-                        testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
-                        navigationSessions.Add(testSource, testNavigationSession);
-                    }
+                string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
 
-                    if (testNavigationSession != null)
-                    {
-                        var className = testElement.TestMethod.DeclaringClassFullName
-                                        ?? testElement.TestMethod.FullClassName;
+                if (!navigationSessions.TryGetValue(testSource, out var testNavigationSession))
+                {
+                    testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
+                    navigationSessions.Add(testSource, testNavigationSession);
+                }
 
-                        var methodName = testElement.TestMethod.Name;
+                if (testNavigationSession == null)
+                {
+                    discoverySink.SendTestCase(testCase);
+                    continue;
+                }
 
-                        // If it is async test method use compiler generated type and method name for navigation data.
-                        if (!string.IsNullOrEmpty(testElement.AsyncTypeName))
-                        {
-                            className = testElement.AsyncTypeName;
+                var className = testElement.TestMethod.DeclaringClassFullName
+                                ?? testElement.TestMethod.FullClassName;
 
-                            // compiler generated method name is "MoveNext".
-                            methodName = "MoveNext";
-                        }
+                var methodName = testElement.TestMethod.Name;
 
-                        PlatformServiceProvider.Instance.FileOperations.GetNavigationData(
-                            testNavigationSession,
-                            className,
-                            methodName,
-                            out var minLineNumber,
-                            out var fileName);
+                // If it is async test method use compiler generated type and method name for navigation data.
+                if (!string.IsNullOrEmpty(testElement.AsyncTypeName))
+                {
+                    className = testElement.AsyncTypeName;
 
-                        if (!string.IsNullOrEmpty(fileName))
-                        {
-                            testCase.LineNumber = minLineNumber;
-                            testCase.CodeFilePath = fileName;
-                        }
-                    }
+                    // compiler generated method name is "MoveNext".
+                    methodName = "MoveNext";
+                }
+
+                PlatformServiceProvider.Instance.FileOperations.GetNavigationData(
+                    testNavigationSession,
+                    className,
+                    methodName,
+                    out var minLineNumber,
+                    out var fileName);
+
+                if (!string.IsNullOrEmpty(fileName))
+                {
+                    testCase.LineNumber = minLineNumber;
+                    testCase.CodeFilePath = fileName;
                 }
 
                 discoverySink.SendTestCase(testCase);

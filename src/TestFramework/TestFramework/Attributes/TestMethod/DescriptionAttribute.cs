@@ -23,5 +23,5 @@ public sealed class DescriptionAttribute : Attribute
     /// <summary>
     /// Gets the description of a test.
     /// </summary>
-    public string Description { get; private set; }
+    public string Description { get; }
 }

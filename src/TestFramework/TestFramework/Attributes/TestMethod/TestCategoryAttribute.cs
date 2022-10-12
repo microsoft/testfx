@@ -14,8 +14,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [SuppressMessage("Microsoft.Design", "CA1019:DefineAccessorsForAttributeArguments", Justification = "The TestCategories accessor property exposes the testCategory argument.")]
 public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
 {
-    private readonly IList<string> _testCategories;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="TestCategoryAttribute"/> class and applies the category to the test.
     /// </summary>
@@ -28,14 +26,11 @@ public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
         {
             testCategory,
         };
-        _testCategories = categories;
+        TestCategories = categories;
     }
 
     /// <summary>
     /// Gets the test categories that has been applied to the test.
     /// </summary>
-    public override IList<string> TestCategories
-    {
-        get { return _testCategories; }
-    }
+    public override IList<string> TestCategories { get; }
 }

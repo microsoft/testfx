@@ -31,8 +31,5 @@ public abstract class TestCategoryBaseAttribute : Attribute
     /// <summary>
     /// Gets the test category that has been applied to the test.
     /// </summary>
-    public abstract IList<string> TestCategories
-    {
-        get;
-    }
+    public abstract IList<string> TestCategories { get; }
 }

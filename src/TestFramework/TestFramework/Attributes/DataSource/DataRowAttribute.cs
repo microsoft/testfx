@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -38,7 +37,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// <summary>
     /// Gets data for calling test method.
     /// </summary>
-    public object[] Data { get; private set; }
+    public object[] Data { get; }
 
     /// <summary>
     /// Gets or sets display name in test results for customization.
@@ -58,12 +57,10 @@ public class DataRowAttribute : Attribute, ITestDataSource
         {
             return DisplayName;
         }
-        else
+
+        if (data != null)
         {
-            if (data != null)
-            {
-                return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data.AsEnumerable()));
-            }
+            return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data));
         }
 
         return null;

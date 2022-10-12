@@ -33,26 +33,28 @@ public class Logger
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public static void LogMessage(string format, params object[] args)
     {
-        if (OnLogMessage != null)
+        if (OnLogMessage == null)
         {
-            if (format == null)
+            return;
+        }
+
+        if (format == null)
+        {
+            throw new ArgumentNullException(nameof(format));
+        }
+
+        string message = string.Format(CultureInfo.InvariantCulture, format, args);
+
+        // Making sure all event handlers are called in sync on same thread.
+        foreach (var invoker in OnLogMessage.GetInvocationList())
+        {
+            try
             {
-                throw new ArgumentNullException(nameof(format));
+                invoker.GetMethodInfo().Invoke(invoker.Target, new object[] { message });
             }
-
-            string message = string.Format(CultureInfo.InvariantCulture, format, args);
-
-            // Making sure all event handlers are called in sync on same thread.
-            foreach (var invoker in OnLogMessage.GetInvocationList())
+            catch (Exception)
             {
-                try
-                {
-                    invoker.GetMethodInfo().Invoke(invoker.Target, new object[] { message });
-                }
-                catch (Exception)
-                {
-                    // Catch and ignore all exceptions thrown by event handlers.
-                }
+                // Catch and ignore all exceptions thrown by event handlers.
             }
         }
     }

@@ -174,9 +174,10 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
 
             return method.Invoke(null, new object[] { methodInfo, data }) as string;
         }
-        else if (data != null)
+
+        if (data != null)
         {
-            return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data.AsEnumerable()));
+            return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data));
         }
 
         return null;

@@ -75,17 +75,17 @@ public class TestMethodInfo : ITestMethod
     /// <summary>
     /// Gets testMethod referred by this object.
     /// </summary>
-    internal MethodInfo TestMethod { get; private set; }
+    internal MethodInfo TestMethod { get; }
 
     /// <summary>
     /// Gets the parent class Info object.
     /// </summary>
-    internal TestClassInfo Parent { get; private set; }
+    internal TestClassInfo Parent { get; }
 
     /// <summary>
     /// Gets the options for the test method in this environment.
     /// </summary>
-    internal TestMethodOptions TestMethodOptions { get; private set; }
+    internal TestMethodOptions TestMethodOptions { get; }
 
     public Attribute[] GetAllAttributes(bool inherit)
     {
@@ -95,7 +95,7 @@ public class TestMethodInfo : ITestMethod
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
         => ReflectHelper.GetAttributes<TAttributeType>(TestMethod, inherit)
-        ?? EmptyHolder<TAttributeType>.Array;
+        ?? Array.Empty<TAttributeType>();
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
@@ -148,23 +148,16 @@ public class TestMethodInfo : ITestMethod
 
     internal void SetArguments(object[] arguments)
     {
-        if (arguments == null)
-        {
-            _arguments = null;
-        }
-        else
-        {
-            _arguments = ResolveArguments(arguments);
-        }
+        _arguments = arguments == null ? null : ResolveArguments(arguments);
     }
 
     internal object[] ResolveArguments(object[] arguments)
     {
-        ParameterInfo[] parameterInfos = TestMethod.GetParameters();
+        ParameterInfo[] parametersInfo = TestMethod.GetParameters();
         int requiredParameterCount = 0;
         bool hasParamsValue = false;
         object paramsValues = null;
-        foreach (var parameter in parameterInfos)
+        foreach (var parameter in parametersInfo)
         {
             // If this is a params array parameter, create an instance to
             // populate with any extra values provided. Don't increment
@@ -185,24 +178,24 @@ public class TestMethodInfo : ITestMethod
         // If all the parameters are required, we have fewer arguments
         // supplied than required, or more arguments than the method takes
         // and it doesn't have a params parameter don't try and resolve anything
-        if (requiredParameterCount == parameterInfos.Length ||
+        if (requiredParameterCount == parametersInfo.Length ||
             arguments.Length < requiredParameterCount ||
-            (!hasParamsValue && arguments.Length > parameterInfos.Length))
+            (!hasParamsValue && arguments.Length > parametersInfo.Length))
         {
             return arguments;
         }
 
-        object[] newParameters = new object[parameterInfos.Length];
+        object[] newParameters = new object[parametersInfo.Length];
         for (int argumentIndex = 0; argumentIndex < arguments.Length; argumentIndex++)
         {
             // We have reached the end of the regular parameters and any additional
             // values will go in a params array
-            if (argumentIndex >= parameterInfos.Length - 1 && hasParamsValue)
+            if (argumentIndex >= parametersInfo.Length - 1 && hasParamsValue)
             {
                 // If this is the params parameter, instantiate a new object of that type
-                if (argumentIndex == parameterInfos.Length - 1)
+                if (argumentIndex == parametersInfo.Length - 1)
                 {
-                    paramsValues = Activator.CreateInstance(parameterInfos[argumentIndex].ParameterType, new object[] { arguments.Length - argumentIndex });
+                    paramsValues = Activator.CreateInstance(parametersInfo[argumentIndex].ParameterType, new object[] { arguments.Length - argumentIndex });
                     newParameters[argumentIndex] = paramsValues;
                 }
 
@@ -210,7 +203,7 @@ public class TestMethodInfo : ITestMethod
                 // set the values as a generic array
                 if (paramsValues is Array paramsArray)
                 {
-                    paramsArray.SetValue(arguments[argumentIndex], argumentIndex - (parameterInfos.Length - 1));
+                    paramsArray.SetValue(arguments[argumentIndex], argumentIndex - (parametersInfo.Length - 1));
                 }
             }
             else
@@ -221,17 +214,17 @@ public class TestMethodInfo : ITestMethod
 
         // If arguments supplied are less than total possible arguments set
         // the values supplied to the default values for those parameters
-        for (int parameterNotProvidedIndex = arguments.Length; parameterNotProvidedIndex < parameterInfos.Length; parameterNotProvidedIndex++)
+        for (int parameterNotProvidedIndex = arguments.Length; parameterNotProvidedIndex < parametersInfo.Length; parameterNotProvidedIndex++)
         {
             // If this is the params parameters, set it to an empty
             // array of that type as DefaultValue is DBNull
-            if (hasParamsValue && parameterNotProvidedIndex == parameterInfos.Length - 1)
+            if (hasParamsValue && parameterNotProvidedIndex == parametersInfo.Length - 1)
             {
-                newParameters[parameterNotProvidedIndex] = Activator.CreateInstance(parameterInfos[parameterNotProvidedIndex].ParameterType, 0);
+                newParameters[parameterNotProvidedIndex] = Activator.CreateInstance(parametersInfo[parameterNotProvidedIndex].ParameterType, 0);
             }
             else
             {
-                newParameters[parameterNotProvidedIndex] = parameterInfos[parameterNotProvidedIndex].DefaultValue;
+                newParameters[parameterNotProvidedIndex] = parametersInfo[parameterNotProvidedIndex].DefaultValue;
             }
         }
 
@@ -351,47 +344,45 @@ public class TestMethodInfo : ITestMethod
         // if the user specified an expected exception, we need to check if this
         // exception was thrown. If it was thrown, we should pass the test. In
         // case a different exception was thrown, the test is seen as failure
-        if (TestMethodOptions.ExpectedException != null)
+        if (TestMethodOptions.ExpectedException == null)
         {
-            Exception exceptionFromVerify;
-            try
-            {
-                // If the expected exception attribute's Verify method returns, then it
-                // considers this exception as expected, so the test passed
-                TestMethodOptions.ExpectedException.Verify(realException);
-                return true;
-            }
-            catch (Exception verifyEx)
-            {
-                var isTargetInvocationError = verifyEx is TargetInvocationException;
-                if (isTargetInvocationError && verifyEx.InnerException != null)
-                {
-                    exceptionFromVerify = verifyEx.InnerException;
-                }
-                else
-                {
-                    // Verify threw an exception, so the expected exception attribute does not
-                    // consider this exception to be expected. Include the exception message in
-                    // the test result.
-                    exceptionFromVerify = verifyEx;
-                }
-            }
+            return false;
+        }
 
-            // See if the verification exception (thrown by the expected exception
-            // attribute's Verify method) is an AssertInconclusiveException. If so, set
-            // the test outcome to Inconclusive.
-            result.TestFailureException = new TestFailedException(
-                exceptionFromVerify is UTF.AssertInconclusiveException
-                    ? ObjectModelUnitTestOutcome.Inconclusive
-                    : ObjectModelUnitTestOutcome.Failed,
-                exceptionFromVerify.TryGetMessage(),
-                realException.TryGetStackTraceInformation());
-            return false;
-        }
-        else
+        Exception exceptionFromVerify;
+        try
         {
-            return false;
+            // If the expected exception attribute's Verify method returns, then it
+            // considers this exception as expected, so the test passed
+            TestMethodOptions.ExpectedException.Verify(realException);
+            return true;
         }
+        catch (Exception verifyEx)
+        {
+            var isTargetInvocationError = verifyEx is TargetInvocationException;
+            if (isTargetInvocationError && verifyEx.InnerException != null)
+            {
+                exceptionFromVerify = verifyEx.InnerException;
+            }
+            else
+            {
+                // Verify threw an exception, so the expected exception attribute does not
+                // consider this exception to be expected. Include the exception message in
+                // the test result.
+                exceptionFromVerify = verifyEx;
+            }
+        }
+
+        // See if the verification exception (thrown by the expected exception
+        // attribute's Verify method) is an AssertInconclusiveException. If so, set
+        // the test outcome to Inconclusive.
+        result.TestFailureException = new TestFailedException(
+            exceptionFromVerify is UTF.AssertInconclusiveException
+                ? ObjectModelUnitTestOutcome.Inconclusive
+                : ObjectModelUnitTestOutcome.Failed,
+            exceptionFromVerify.TryGetMessage(),
+            realException.TryGetStackTraceInformation());
+        return false;
     }
 
     private static Exception GetRealException(Exception ex)
@@ -422,49 +413,45 @@ public class TestMethodInfo : ITestMethod
     {
         Debug.Assert(ex != null, "exception should not be null.");
 
-        var isTargetInvocationException = ex is TargetInvocationException;
-        if (isTargetInvocationException && ex.InnerException == null)
+        string errorMessage;
+        if (ex is TargetInvocationException && ex.InnerException == null)
         {
-            var errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_FailedToGetTestMethodException, className, methodName);
+            errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_FailedToGetTestMethodException, className, methodName);
             return new TestFailedException(ObjectModelUnitTestOutcome.Error, errorMessage);
         }
 
         // Get the real exception thrown by the test method
         Exception realException = GetRealException(ex);
-        var outcome = UTF.UnitTestOutcome.Failed;
-
-        if (realException.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var exceptionStackTraceInfo))
+        if (realException.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out var exceptionMessage, out var exceptionStackTraceInfo))
         {
             return new TestFailedException(outcome.ToUnitTestOutcome(), exceptionMessage, exceptionStackTraceInfo, realException);
         }
-        else
+
+        errorMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_TestMethodThrows,
+            className,
+            methodName,
+            StackTraceHelper.GetExceptionMessage(realException));
+
+        // Handle special case of UI objects in TestMethod to suggest UITestMethod
+        if (realException.HResult == -2147417842)
         {
-            string errorMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                Resource.UTA_TestMethodThrows,
-                className,
-                methodName,
-                StackTraceHelper.GetExceptionMessage(realException));
-
-            // Handle special case of UI objects in TestMethod to suggest UITestMethod
-            if (realException.HResult == -2147417842)
-            {
-                errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_WrongThread, errorMessage);
-            }
-
-            StackTraceInformation stackTrace = null;
-
-            // For ThreadAbortException (that can be thrown only by aborting a thread as there's no public constructor)
-            // there's no inner exception and exception itself contains reflection-related stack trace
-            // (_RuntimeMethodHandle.InvokeMethodFast <- _RuntimeMethodHandle.Invoke <- UnitTestExecuter.RunTestMethod)
-            // which has no meaningful info for the user. Thus, we do not show call stack for ThreadAbortException.
-            if (realException.GetType().Name != "ThreadAbortException")
-            {
-                stackTrace = StackTraceHelper.GetStackTraceInformation(realException);
-            }
-
-            return new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, stackTrace, realException);
+            errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_WrongThread, errorMessage);
         }
+
+        StackTraceInformation stackTrace = null;
+
+        // For ThreadAbortException (that can be thrown only by aborting a thread as there's no public constructor)
+        // there's no inner exception and exception itself contains reflection-related stack trace
+        // (_RuntimeMethodHandle.InvokeMethodFast <- _RuntimeMethodHandle.Invoke <- UnitTestExecuter.RunTestMethod)
+        // which has no meaningful info for the user. Thus, we do not show call stack for ThreadAbortException.
+        if (realException.GetType().Name != "ThreadAbortException")
+        {
+            stackTrace = StackTraceHelper.GetStackTraceInformation(realException);
+        }
+
+        return new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, stackTrace, realException);
     }
 
     /// <summary>
@@ -772,10 +759,5 @@ public class TestMethodInfo : ITestMethod
             TestResult timeoutResult = new() { Outcome = UTF.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, errorMessage) };
             return timeoutResult;
         }
-    }
-
-    private static class EmptyHolder<T>
-    {
-        internal static readonly T[] Array = System.Array.Empty<T>();
     }
 }

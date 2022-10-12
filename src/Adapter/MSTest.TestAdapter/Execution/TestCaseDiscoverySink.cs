@@ -25,7 +25,7 @@ internal class TestCaseDiscoverySink : ITestCaseDiscoverySink
     /// <summary>
     /// Gets the tests.
     /// </summary>
-    public ICollection<TestCase> Tests { get; private set; }
+    public ICollection<TestCase> Tests { get; }
 
     /// <summary>
     /// Sends the test case.
