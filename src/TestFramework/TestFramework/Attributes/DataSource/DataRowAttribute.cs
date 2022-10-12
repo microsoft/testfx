@@ -37,7 +37,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// <summary>
     /// Gets data for calling test method.
     /// </summary>
-    public object[] Data { get; }
+    public object[] Data { get; private set; }
 
     /// <summary>
     /// Gets or sets display name in test results for customization.
@@ -57,10 +57,12 @@ public class DataRowAttribute : Attribute, ITestDataSource
         {
             return DisplayName;
         }
-
-        if (data != null)
+        else
         {
-            return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data));
+            if (data != null)
+            {
+                return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data.AsEnumerable()));
+            }
         }
 
         return null;
