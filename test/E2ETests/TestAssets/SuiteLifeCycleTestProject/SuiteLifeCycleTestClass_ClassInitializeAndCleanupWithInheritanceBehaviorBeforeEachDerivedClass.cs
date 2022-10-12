@@ -26,7 +26,7 @@ public class SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBeh
         s_testContext.WriteLine("Ctor was called");
     }
 
-    [ClassInitialize(InheritanceBehavior.None)]
+    [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void ClassInitialize(TestContext testContext)
     {
         s_testContext = testContext;
