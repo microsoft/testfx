@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 internal class TypeEnumerator
 {
     private readonly Type _type;
-    private readonly string _assemblyName;
+    private readonly string _assemblyFilePath;
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
     private readonly TestIdGenerationStrategy _testIdGenerationStrategy;
@@ -32,15 +32,15 @@ internal class TypeEnumerator
     /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
     /// </summary>
     /// <param name="type"> The reflected type. </param>
-    /// <param name="assemblyName"> The name of the assembly being reflected. </param>
+    /// <param name="assemblyFilePath"> The name of the assembly being reflected. </param>
     /// <param name="reflectHelper"> An instance to reflection helper for type information. </param>
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
     /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
-    internal TypeEnumerator(Type type, string assemblyName, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, TestIdGenerationStrategy testIdGenerationStrategy)
     {
         _type = type;
-        _assemblyName = assemblyName;
+        _assemblyFilePath = assemblyFilePath;
         _reflectHelper = reflectHelper;
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
@@ -137,7 +137,7 @@ internal class TypeEnumerator
         // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.
         var isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
 
-        var testMethod = new TestMethod(method, method.Name, _type.FullName, _assemblyName, isAsync, _testIdGenerationStrategy);
+        var testMethod = new TestMethod(method, method.Name, _type.FullName, _assemblyFilePath, isAsync, _testIdGenerationStrategy);
 
         if (!method.DeclaringType.FullName.Equals(_type.FullName))
         {

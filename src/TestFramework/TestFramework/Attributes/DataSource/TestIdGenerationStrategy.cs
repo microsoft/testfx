@@ -18,7 +18,7 @@ public enum TestIdGenerationStrategy
     Legacy = 1,
 
     /// <summary>
-    /// Uses the test display name to generate the test ID.
+    /// Uses a combination of executor ID, file name, fully qualified name and display name to generate the test ID.
     /// </summary>
     /// <remarks>
     /// This is the default behavior between versions 2.2.4 and 3.0.0.
@@ -26,10 +26,10 @@ public enum TestIdGenerationStrategy
     DisplayName = 2,
 
     /// <summary>
-    /// Uses a combination of test display name and test data to generate the test ID.
+    /// Uses a combination of executor ID, file path, assembly name, method fully qualified name and serialized data (values and their fully qualified type) to generate the test ID.
     /// </summary>
     /// <remarks>
     /// This is the default behavior starting with version 3.0.0.
     /// </remarks>
-    Data = 3,
+    FullyQualifiedTest = 3,
 }

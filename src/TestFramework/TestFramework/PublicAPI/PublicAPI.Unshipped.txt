@@ -2,7 +2,7 @@
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(params object[] data) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(params object[] data) -> void
 ﻿Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy.Data = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
+Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy.FullyQualifiedTest = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
 Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy.DisplayName = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
 Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy.Legacy = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
 Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategyAttribute

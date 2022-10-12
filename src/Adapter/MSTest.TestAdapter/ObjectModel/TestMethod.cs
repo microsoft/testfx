@@ -55,7 +55,7 @@ public sealed class TestMethod : ITestMethod
         hierarchy[HierarchyConstants.Levels.TestGroupIndex] = name;
 
         _hierarchy = new ReadOnlyCollection<string>(hierarchy);
-        TestIdGenerationStrategy = TestIdGenerationStrategy.Data;
+        TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualifiedTest;
     }
 
     internal TestMethod(string name, string fullClassName, string assemblyName, bool isAsync,

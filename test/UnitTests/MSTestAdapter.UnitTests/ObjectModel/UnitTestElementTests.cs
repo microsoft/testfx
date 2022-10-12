@@ -5,10 +5,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using TestFramework.ForTestingMSTest;
+
+using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
 public class UnitTestElementTests : TestContainer
@@ -181,6 +184,148 @@ public class UnitTestElementTests : TestContainer
         testCase = _unitTestElement.ToTestCase();
 
         Verify(_unitTestElement.DeploymentItems.SequenceEqual(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as KeyValuePair<string, string>[]));
+    }
+
+    public void ToTestCase_WhenStrategyIsLegacy_UsesDefaultTestCaseId()
+    {
+        var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestTools.UnitTesting.TestIdGenerationStrategy.Legacy)).ToTestCase();
+        Verify(new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source).Id == testCase.Id);
+    }
+
+    public void ToTestCase_WhenStrategyIsDisplayName_DoesNotUseDefaultTestCaseId()
+    {
+        var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestTools.UnitTesting.TestIdGenerationStrategy.DisplayName)).ToTestCase();
+        Verify(new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source).Id != testCase.Id);
+    }
+
+    public void ToTestCase_WhenStrategyIsData_DoesNotUseDefaultTestCaseId()
+    {
+        var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.FullyQualifiedTest)).ToTestCase();
+        Verify(new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source).Id != testCase.Id);
+    }
+
+    public void ToTestCase_WhenStrategyIsDisplayName_ExamplesOfTestCaseIdUniqueness()
+    {
+        var testIdStrategy = TestIdGenerationStrategy.DisplayName;
+        var testCases = new[]
+        {
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy))
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyOtherMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy))
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyOtherProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy))
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyOtherAssembly", false, testIdStrategy))
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
+                {
+                    DataType = DynamicDataType.DataSourceAttribute,
+                })
+            {
+                DisplayName = "SomeDisplayName",
+            }
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
+                {
+                    DataType = DynamicDataType.ITestDataSource,
+                })
+            {
+                DisplayName = "SomeOtherDisplayName",
+            }
+            .ToTestCase(),
+        };
+
+        Verify(testCases.Select(tc => tc.Id.ToString()).Distinct().Count() == testCases.Length);
+    }
+
+    public void ToTestCase_WhenStrategyIsDisplayName_ExamplesOfTestCaseIdCollision()
+    {
+        var testIdStrategy = TestIdGenerationStrategy.DisplayName;
+        var testCases = new[]
+        {
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
+                {
+                    DataType = DynamicDataType.DataSourceAttribute,
+                })
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
+                {
+                    DataType = DynamicDataType.DataSourceAttribute,
+                    SerializedData = new[] { "1", },
+                })
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
+                {
+                    DataType = DynamicDataType.DataSourceAttribute,
+                    SerializedData = new[] { "2", },
+                })
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
+                {
+                    DataType = DynamicDataType.ITestDataSource,
+                    SerializedData = new[] { "1", },
+                })
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
+                {
+                    DataType = DynamicDataType.ITestDataSource,
+                    SerializedData = new[] { "2", },
+                })
+            .ToTestCase(),
+        };
+
+        Verify(testCases.Select(tc => tc.Id.ToString()).Distinct().Count() == 1);
+    }
+
+    public void ToTestCase_WhenStrategyIsFullyQualifiedTest_ExamplesOfTestCaseIdUniqueness()
+    {
+        var testIdStrategy = TestIdGenerationStrategy.FullyQualifiedTest;
+        var testCases = new[]
+        {
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy))
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyOtherMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy))
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyOtherProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy))
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyOtherAssembly", false, testIdStrategy))
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
+                {
+                    SerializedData = new[] { "System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[]", },
+                })
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
+                {
+                    SerializedData = new[] { "System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1]", },
+                })
+            .ToTestCase(),
+            new UnitTestElement(
+                new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
+                {
+                    SerializedData = new[] { "System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1,1]", },
+                })
+            .ToTestCase(),
+        };
+
+        Verify(testCases.Select(tc => tc.Id.ToString()).Distinct().Count() == testCases.Length);
     }
 
     #endregion

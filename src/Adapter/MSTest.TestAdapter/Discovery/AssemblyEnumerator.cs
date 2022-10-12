@@ -95,7 +95,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var types = GetTypes(assembly, assemblyFileName, warningMessages);
         var discoverInternals = assembly.GetCustomAttribute<DiscoverInternalsAttribute>() != null;
         var testIdGenerationStrategy = assembly.GetCustomAttribute<TestIdGenerationStrategyAttribute>()?.Strategy
-            ?? TestIdGenerationStrategy.Data;
+            ?? TestIdGenerationStrategy.FullyQualifiedTest;
 
         var testDataSourceDiscovery = assembly.GetCustomAttribute<TestDataSourceDiscoveryAttribute>()?.DiscoveryOption
             ?? (testIdGenerationStrategy == TestIdGenerationStrategy.Legacy
