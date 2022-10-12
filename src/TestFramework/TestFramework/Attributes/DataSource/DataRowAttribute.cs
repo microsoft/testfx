@@ -18,34 +18,21 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
     /// </summary>
-    public DataRowAttribute()
-    {
-        Data = Array.Empty<object>();
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
-    /// </summary>
-    /// <param name="data1"> The data object. </param>
-    public DataRowAttribute(object data1)
+    /// <param name="data"> The data object. </param>
+    public DataRowAttribute(object data)
     {
         // Need to have this constructor explicitly to fix a CLS compliance error.
-        Data = new object[] { data1 };
+        Data = new object[] { data };
     }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
     /// </summary>
-    /// <param name="data1"> A data object. </param>
-    /// <param name="moreData"> More data. </param>
-    public DataRowAttribute(object data1, params object[] moreData)
+    /// <param name="data"> More data. </param>
+    public DataRowAttribute(params object[] data)
     {
         // This actually means that the user wants to pass in a 'null' value to the test method.
-        moreData ??= new object[] { null };
-
-        Data = new object[moreData.Length + 1];
-        Data[0] = data1;
-        Array.Copy(moreData, 0, Data, 1, moreData.Length);
+        Data = data ?? new object[] { null };
     }
 
     /// <summary>

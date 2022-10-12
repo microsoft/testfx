@@ -1,1 +1,2 @@
-﻿
+﻿Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object data) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(params object[] data) -> void
