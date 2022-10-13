@@ -79,7 +79,7 @@ public partial class CLITestBase : TestContainer
     /// <param name="settingsXml">RunSettings provided for discovery/execution.</param>
     /// <param name="testAdapterPath">Full path to TestAdapter.</param>
     /// <returns>RunSettingXml as string.</returns>
-    protected string GetRunSettingXml(string settingsXml, string testAdapterPath)
+    protected string GetRunSettingXml(string settingsXml, string testAdapterPath, string targetFramework = "")
     {
         if (string.IsNullOrEmpty(settingsXml))
         {
@@ -93,7 +93,7 @@ public partial class CLITestBase : TestContainer
         }
 
         XmlElement root = doc.DocumentElement;
-        RunConfiguration runConfiguration = new(testAdapterPath);
+        RunConfiguration runConfiguration = new(Path.Combine(testAdapterPath, targetFramework));
         XmlElement runConfigElement = runConfiguration.ToXml();
         if (root[runConfiguration.SettingsName] == null)
         {
