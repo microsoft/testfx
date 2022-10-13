@@ -32,7 +32,7 @@ public class SuiteLifeCycleTests : CLITestBase
         foreach (var testMethod in RunEventsHandler.PassedTests)
         {
             Verify(testMethod.Outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-            var isTestMethodMessageContains = (string s) => { return testMethod.Messages.Single().Text.Contains(s); };
+            var isTestMethodMessageContains = (string s) => testMethod.Messages.Single().Text.Contains(s);
             assemblyInitCalledCount += isTestMethodMessageContains("AssemblyInit was called") ? 1 : 0;
             classCleanupCalledCount += isTestMethodMessageContains("ClassCleanup was called") ? 1 : 0;
             assemblyCleanupCalledCount += isTestMethodMessageContains("AssemblyCleanup was called") ? 1 : 0;
