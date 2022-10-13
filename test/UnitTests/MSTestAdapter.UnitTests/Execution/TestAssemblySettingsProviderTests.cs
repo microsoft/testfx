@@ -6,7 +6,6 @@ using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 using Moq;
@@ -19,8 +18,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class TestAssemblySettingsProviderTests : TestContainer
 {
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
-    private readonly Mock<ReflectHelper> _mockReflectHelper;
-    private readonly TestAssemblySettingsProvider _testAssemblySettingProvider;
 
     public TestAssemblySettingsProviderTests()
     {
@@ -28,9 +25,6 @@ public class TestAssemblySettingsProviderTests : TestContainer
         _testablePlatformServiceProvider.SetupMockReflectionOperations();
 
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
-
-        _mockReflectHelper = new Mock<ReflectHelper>();
-        _testAssemblySettingProvider = new TestAssemblySettingsProvider(_mockReflectHelper.Object);
     }
 
     protected override void Dispose(bool disposing)

@@ -9,13 +9,11 @@ using System.Linq;
 using System.Reflection;
 using System.Security;
 
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using TPOM = Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -197,38 +195,36 @@ internal class UnitTestRunner : MarshalByRefObject
     {
         bool shouldRunClassCleanup = false;
         _classCleanupManager?.MarkTestComplete(testMethodInfo, testMethod, out shouldRunClassCleanup);
-        if (shouldRunClassCleanup)
+        if (!shouldRunClassCleanup)
         {
-            string cleanupLogs = string.Empty;
-            string cleanupTrace = string.Empty;
-            string cleanupErrorLogs = string.Empty;
+            return;
+        }
 
+        try
+        {
+            using LogMessageListener logListener =
+                new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
             try
             {
-                using LogMessageListener logListener =
-                    new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
-                try
-                {
-                    // Class cleanup can throw exceptions in which case we need to ensure that we fail the test.
-                    testMethodInfo.Parent.RunClassCleanup(ClassCleanupBehavior.EndOfClass);
-                }
-                finally
-                {
-                    cleanupLogs = logListener.StandardOutput;
-                    cleanupTrace = logListener.DebugTrace;
-                    cleanupErrorLogs = logListener.StandardError;
-                    var lastResult = results[results.Length - 1];
-                    lastResult.StandardOut += cleanupLogs;
-                    lastResult.StandardError += cleanupErrorLogs;
-                    lastResult.DebugTrace += cleanupTrace;
-                }
+                // Class cleanup can throw exceptions in which case we need to ensure that we fail the test.
+                testMethodInfo.Parent.RunClassCleanup(ClassCleanupBehavior.EndOfClass);
             }
-            catch (Exception e)
+            finally
             {
-                results[results.Length - 1].Outcome = ObjectModel.UnitTestOutcome.Failed;
-                results[results.Length - 1].ErrorMessage = e.Message;
-                results[results.Length - 1].ErrorStackTrace = e.StackTrace;
+                string cleanupLogs = logListener.StandardOutput;
+                string cleanupTrace = logListener.DebugTrace;
+                string cleanupErrorLogs = logListener.StandardError;
+                var lastResult = results[results.Length - 1];
+                lastResult.StandardOut += cleanupLogs;
+                lastResult.StandardError += cleanupErrorLogs;
+                lastResult.DebugTrace += cleanupTrace;
             }
+        }
+        catch (Exception e)
+        {
+            results[results.Length - 1].Outcome = ObjectModel.UnitTestOutcome.Failed;
+            results[results.Length - 1].ErrorMessage = e.Message;
+            results[results.Length - 1].ErrorStackTrace = e.StackTrace;
         }
     }
 

@@ -33,5 +33,5 @@ public sealed class IgnoreAttribute : Attribute
     /// <summary>
     /// Gets the owner.
     /// </summary>
-    public string IgnoreMessage { get; private set; }
+    public string IgnoreMessage { get; }
 }

@@ -121,7 +121,9 @@ All the tests in the testfx repo can be run via the `Visual Studio Test Explorer
 A specific type of tests can be run by providing a search filter in the Test Explorer window.
 For instance to run unit tests use `project:"Unit"`. For running smoke tests, use the `project:"Smoke"` filter.
 
-### Running tests with command line(CLI)
+![image](https://user-images.githubusercontent.com/11340282/194912284-88718bb6-ce20-492a-adab-15d032f6bb45.png)
+
+### Running tests with command line (CLI)
 
 To execute tests via command line, run the following command:
 

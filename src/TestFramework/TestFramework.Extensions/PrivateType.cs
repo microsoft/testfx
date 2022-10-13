@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
+
 using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 
-#if NETFRAMEWORK
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -181,40 +182,38 @@ public class PrivateType
     public object InvokeStatic(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args, CultureInfo culture, Type[] typeArguments)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        if (parameterTypes != null)
-        {
-            MethodInfo member = _type.GetMethod(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, parameterTypes, null);
-            if (member == null)
-            {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
-            }
-
-            try
-            {
-                if (member.IsGenericMethodDefinition)
-                {
-                    MethodInfo constructed = member.MakeGenericMethod(typeArguments);
-                    return constructed.Invoke(null, bindingFlags, null, args, culture);
-                }
-                else
-                {
-                    return member.Invoke(null, bindingFlags, null, args, culture);
-                }
-            }
-            catch (TargetInvocationException e)
-            {
-                Debug.Assert(e.InnerException != null, "Inner Exception should not be null.");
-                if (e.InnerException != null)
-                {
-                    throw e.InnerException;
-                }
-
-                throw;
-            }
-        }
-        else
+        if (parameterTypes == null)
         {
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
+        }
+
+        MethodInfo member = _type.GetMethod(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, parameterTypes, null);
+        if (member == null)
+        {
+            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
+        }
+
+        try
+        {
+            if (member.IsGenericMethodDefinition)
+            {
+                MethodInfo constructed = member.MakeGenericMethod(typeArguments);
+                return constructed.Invoke(null, bindingFlags, null, args, culture);
+            }
+            else
+            {
+                return member.Invoke(null, bindingFlags, null, args, culture);
+            }
+        }
+        catch (TargetInvocationException e)
+        {
+            Debug.Assert(e.InnerException != null, "Inner Exception should not be null.");
+            if (e.InnerException != null)
+            {
+                throw e.InnerException;
+            }
+
+            throw;
         }
     }
 
@@ -431,20 +430,18 @@ public class PrivateType
     public object GetStaticProperty(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        if (parameterTypes != null)
-        {
-            PropertyInfo pi = _type.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null);
-            if (pi == null)
-            {
-                throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
-            }
-
-            return pi.GetValue(null, args);
-        }
-        else
+        if (parameterTypes == null)
         {
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.GetProperty, args, null);
         }
+
+        PropertyInfo pi = _type.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null);
+        if (pi == null)
+        {
+            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
+        }
+
+        return pi.GetValue(null, args);
     }
 
     /// <summary>

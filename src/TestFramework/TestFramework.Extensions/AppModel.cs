@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if WIN_UI
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-#if WIN_UI
 #nullable enable
 #pragma warning disable SA1310 // Field names must not contain underscore
 

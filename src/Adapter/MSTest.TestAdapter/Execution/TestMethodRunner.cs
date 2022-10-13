@@ -7,7 +7,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
@@ -43,11 +42,6 @@ internal class TestMethodRunner
     /// Specifies whether debug traces should be captured or not.
     /// </summary>
     private readonly bool _captureDebugTraces;
-
-    /// <summary>
-    /// Helper for reflection API's.
-    /// </summary>
-    private readonly ReflectHelper _reflectHelper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestMethodRunner"/> class.
@@ -97,7 +91,6 @@ internal class TestMethodRunner
         _test = testMethod;
         _testContext = testContext;
         _captureDebugTraces = captureDebugTraces;
-        _reflectHelper = reflectHelper;
     }
 
     /// <summary>

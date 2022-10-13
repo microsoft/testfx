@@ -10,18 +10,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 internal class TestAssemblySettingsProvider : MarshalByRefObject
 {
-    private readonly ReflectHelper _reflectHelper;
-
-    public TestAssemblySettingsProvider()
-        : this(ReflectHelper.Instance)
-    {
-    }
-
-    internal TestAssemblySettingsProvider(ReflectHelper reflectHelper)
-    {
-        _reflectHelper = reflectHelper;
-    }
-
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>

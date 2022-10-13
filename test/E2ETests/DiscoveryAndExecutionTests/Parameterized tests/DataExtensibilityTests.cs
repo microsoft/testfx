@@ -6,7 +6,7 @@ using System.IO;
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
-public class TestDataSourceExtensibilityTests : CLITestBase
+public class DataExtensibilityTests : CLITestBase
 {
     private const string TestAssembly = "FxExtensibilityTestProject.dll";
 

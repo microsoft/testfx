@@ -14,8 +14,7 @@ public static class UnitTestOutcomeExtensions
     /// <param name="frameworkTestOutcome">The test framework's UnitTestOutcome object.</param>
     /// <returns>The adapter's UnitTestOutcome object.</returns>
     public static UnitTestOutcome ToUnitTestOutcome(this UTF.UnitTestOutcome frameworkTestOutcome)
-    {
-        UnitTestOutcome outcome = frameworkTestOutcome switch
+        => frameworkTestOutcome switch
         {
             UTF.UnitTestOutcome.Failed => UnitTestOutcome.Failed,
             UTF.UnitTestOutcome.Inconclusive => UnitTestOutcome.Inconclusive,
@@ -25,8 +24,6 @@ public static class UnitTestOutcomeExtensions
             UTF.UnitTestOutcome.NotRunnable => UnitTestOutcome.NotRunnable,
             _ => UnitTestOutcome.Error,
         };
-        return outcome;
-    }
 
     /// <summary>
     /// Returns more important outcome of two.

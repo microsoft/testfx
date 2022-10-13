@@ -3,13 +3,14 @@
 
 using System;
 using System.Collections.Generic;
+
+#if NETFRAMEWORK
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 
-#if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 #endif

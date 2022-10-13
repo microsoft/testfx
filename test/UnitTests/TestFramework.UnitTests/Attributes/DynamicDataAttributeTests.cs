@@ -243,7 +243,7 @@ public class DynamicDataAttributeTests : TestContainer
         Verify(displayName is null);
     }
 
-    public void GetDisplayNameShouldThrowIfDataHasNullValues()
+    public void GetDisplayNameHandlesNullValues()
     {
         var data = new string[] { "value1", "value2", null };
         var data1 = new string[] { null, "value1", "value2" };

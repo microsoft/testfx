@@ -4,9 +4,31 @@
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTestAdapter.Smoke.E2ETests;
-public class CustomTestExecutionExtensibilityTests : CLITestBase
+public class DataExtensibilityTests : CLITestBase
 {
     private const string TestAssembly = "FxExtensibilityTestProject.dll";
+
+    public void ExecuteTestDataSourceExtensibilityTests()
+    {
+        InvokeVsTestForExecution(new string[] { TestAssembly });
+        ValidatePassedTestsContain("CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
+    }
+
+    public void ExecuteDynamicDataExtensibilityTests()
+    {
+        InvokeVsTestForExecution(new string[] { TestAssembly });
+        ValidatePassedTestsContain(
+            "DynamicDataTestMethod1 (string,2,True)",
+            "DynamicDataTestMethod2 (string,4,True)",
+            "DynamicDataTestMethod3 (string,2,True)",
+            "DynamicDataTestMethod3 (string,4,True)");
+
+        ValidatePassedTestsContain(
+            "DynamicDataTestMethod4 (string,2,True)",
+            "DynamicDataTestMethod5 (string,4,True)",
+            "DynamicDataTestMethod6 (string,2,True)",
+            "DynamicDataTestMethod6 (string,4,True)");
+    }
 
     public void ExecuteCustomTestExtensibilityTests()
     {
