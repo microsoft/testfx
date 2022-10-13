@@ -177,7 +177,11 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
 
         if (data != null)
         {
-            return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data));
+            // We want to force call to `data.AsEnumerable()` to ensure that objects are casted to strings (using ToString())
+            // so that null do appear as "null". If you remove the call, and do string.Join(",", new object[] { null, "a" }),
+            // you will get empty string while with the call you will get "null,a".
+            return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,
+                string.Join(",", data.AsEnumerable()));
         }
 
         return null;
