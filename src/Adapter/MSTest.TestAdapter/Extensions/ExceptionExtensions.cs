@@ -3,7 +3,6 @@
 
 using System;
 using System.Globalization;
-using System.Text;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -72,19 +71,18 @@ internal static class ExceptionExtensions
     {
         if (exception is UTF.UnitTestAssertException)
         {
-            outcome = exception is UTF.AssertInconclusiveException ?
-                        UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed;
+            outcome = exception is UTF.AssertInconclusiveException
+                ? UTF.UnitTestOutcome.Inconclusive
+                : UTF.UnitTestOutcome.Failed;
 
             exceptionMessage = exception.TryGetMessage();
             exceptionStackTrace = exception.TryGetStackTraceInformation();
             return true;
         }
-        else
-        {
-            outcome = UTF.UnitTestOutcome.Failed;
-            exceptionMessage = null;
-            exceptionStackTrace = null;
-            return false;
-        }
+
+        outcome = UTF.UnitTestOutcome.Failed;
+        exceptionMessage = null;
+        exceptionStackTrace = null;
+        return false;
     }
 }

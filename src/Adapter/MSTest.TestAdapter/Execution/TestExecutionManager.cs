@@ -451,26 +451,28 @@ public class TestExecutionManager
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]
     private void CacheSessionParameters(IRunContext runContext, ITestExecutionRecorder testExecutionRecorder)
     {
-        if (!string.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))
+        if (string.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))
         {
-            try
+            return;
+        }
+
+        try
+        {
+            var testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
+            if (testRunParameters != null)
             {
-                var testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
-                if (testRunParameters != null)
+                // Clear sessionParameters to prevent key collisions of test run parameters in case
+                // "Keep Test Execution Engine Alive" is selected in VS.
+                _sessionParameters.Clear();
+                foreach (var kvp in testRunParameters)
                 {
-                    // Clear sessionParameters to prevent key collisions of test run parameters in case
-                    // "Keep Test Execution Engine Alive" is selected in VS.
-                    _sessionParameters.Clear();
-                    foreach (var kvp in testRunParameters)
-                    {
-                        _sessionParameters.Add(kvp);
-                    }
+                    _sessionParameters.Add(kvp);
                 }
             }
-            catch (Exception ex)
-            {
-                testExecutionRecorder.SendMessage(TestMessageLevel.Error, ex.Message);
-            }
+        }
+        catch (Exception ex)
+        {
+            testExecutionRecorder.SendMessage(TestMessageLevel.Error, ex.Message);
         }
     }
 

@@ -1,9 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
+
 using System.Configuration;
 
-#if NETFRAMEWORK
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -67,10 +68,7 @@ public sealed class DataSourceElement : ConfigurationElement
     /// <summary>
     /// Gets the key name.
     /// </summary>
-    internal string Key
-    {
-        get { return Name; }
-    }
+    internal string Key => Name;
 
     /// <summary>
     /// Gets the configuration properties.

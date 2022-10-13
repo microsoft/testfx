@@ -23,5 +23,5 @@ public sealed class CssProjectStructureAttribute : Attribute
     /// <summary>
     /// Gets the CSS Project Structure URI.
     /// </summary>
-    public string CssProjectStructure { get; private set; }
+    public string CssProjectStructure { get; }
 }

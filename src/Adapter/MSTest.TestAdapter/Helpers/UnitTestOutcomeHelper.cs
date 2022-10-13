@@ -4,8 +4,6 @@
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 internal static class UnitTestOutcomeHelper
 {
@@ -16,45 +14,14 @@ internal static class UnitTestOutcomeHelper
     /// <param name="currentSettings">Current MSTest settings.</param>
     /// <returns>The Test platforms outcome.</returns>
     internal static TestOutcome ToTestOutcome(UnitTestOutcome unitTestOutcome, MSTestSettings currentSettings)
-    {
-        switch (unitTestOutcome)
+        => unitTestOutcome switch
         {
-            case UnitTestOutcome.Passed:
-                return TestOutcome.Passed;
-
-            case UnitTestOutcome.Failed:
-            case UnitTestOutcome.Error:
-            case UnitTestOutcome.Timeout:
-                return TestOutcome.Failed;
-
-            case UnitTestOutcome.NotRunnable:
-                {
-                    if (currentSettings.MapNotRunnableToFailed)
-                    {
-                        return TestOutcome.Failed;
-                    }
-
-                    return TestOutcome.None;
-                }
-
-            case UnitTestOutcome.Ignored:
-                return TestOutcome.Skipped;
-
-            case UnitTestOutcome.Inconclusive:
-                {
-                    if (currentSettings.MapInconclusiveToFailed)
-                    {
-                        return TestOutcome.Failed;
-                    }
-
-                    return TestOutcome.Skipped;
-                }
-
-            case UnitTestOutcome.NotFound:
-                return TestOutcome.NotFound;
-
-            default:
-                return TestOutcome.None;
-        }
-    }
+            UnitTestOutcome.Passed => TestOutcome.Passed,
+            UnitTestOutcome.Failed or UnitTestOutcome.Error or UnitTestOutcome.Timeout => TestOutcome.Failed,
+            UnitTestOutcome.NotRunnable => currentSettings.MapNotRunnableToFailed ? TestOutcome.Failed : TestOutcome.None,
+            UnitTestOutcome.Ignored => TestOutcome.Skipped,
+            UnitTestOutcome.Inconclusive => currentSettings.MapInconclusiveToFailed ? TestOutcome.Failed : TestOutcome.Skipped,
+            UnitTestOutcome.NotFound => TestOutcome.NotFound,
+            _ => TestOutcome.None,
+        };
 }

@@ -23,5 +23,5 @@ public sealed class CssIterationAttribute : Attribute
     /// <summary>
     /// Gets the CSS Iteration URI.
     /// </summary>
-    public string CssIteration { get; private set; }
+    public string CssIteration { get; }
 }

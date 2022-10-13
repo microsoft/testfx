@@ -23,14 +23,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 // GenericParameterHelper in full CLR version also implements ICloneable, but we don't have ICloneable in core CLR
 public class GenericParameterHelper : IComparable, IEnumerable
 {
-    #region Private Fields
     private static readonly Random Randomizer = new();
-    private int _data;
     private IList _ienumerableStore;
-
-    #endregion
-
-    #region Constructors
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GenericParameterHelper"/> class that
@@ -53,21 +47,11 @@ public class GenericParameterHelper : IComparable, IEnumerable
     {
         Data = data;
     }
-    #endregion
-
-    #region Public Properties
 
     /// <summary>
     /// Gets or sets the Data.
     /// </summary>
-    public int Data
-    {
-        get { return _data; }
-        set { _data = value; }
-    }
-    #endregion
-
-    #region Object Overrides
+    public int Data { get; set; }
 
     /// <summary>
     /// Do the value comparison for two GenericParameterHelper object.
@@ -90,9 +74,6 @@ public class GenericParameterHelper : IComparable, IEnumerable
     {
         return Data.GetHashCode();
     }
-    #endregion
-
-    #region IComparable Members
 
     /// <summary>
     /// Compares the data of the two <see cref="GenericParameterHelper"/> objects.
@@ -113,10 +94,6 @@ public class GenericParameterHelper : IComparable, IEnumerable
 
         throw new NotSupportedException("GenericParameterHelper object is designed to compare objects of GenericParameterHelper type only.");
     }
-
-    #endregion
-
-    #region IEnumerable Members
 
     /// <summary>
     /// Returns an IEnumerator object whose length is derived from
@@ -139,10 +116,6 @@ public class GenericParameterHelper : IComparable, IEnumerable
         return _ienumerableStore.GetEnumerator();
     }
 
-    #endregion
-
-    #region ICloneable Members
-
     /// <summary>
     /// Returns a GenericParameterHelper object that is equal to
     /// the current object.
@@ -150,9 +123,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// <returns>The cloned object.</returns>
     public object Clone()
     {
-        GenericParameterHelper clone = new() { _data = _data };
+        GenericParameterHelper clone = new() { Data = Data };
         return clone;
     }
-
-    #endregion
 }

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -8,7 +9,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
-#if NETFRAMEWORK
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -16,7 +16,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public class PrivateObject
 {
-#region Data
+    #region Data
 
     // bind everything
     private const BindingFlags BindToEveryThing = BindingFlags.Default | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public;
@@ -28,9 +28,9 @@ public class PrivateObject
 
     private Dictionary<string, LinkedList<MethodInfo>> _methodCache; // automatically initialized to null
 
-#endregion
+    #endregion
 
-#region Constructors
+    #region Constructors
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PrivateObject"/> class that contains
@@ -167,7 +167,7 @@ public class PrivateObject
         _originalType = type.ReferencedType;
     }
 
-#endregion
+    #endregion
 
     /// <summary>
     /// Gets or sets the target.
@@ -233,14 +233,8 @@ public class PrivateObject
         if (this != obj)
         {
             Debug.Assert(_target != null, "target should not be null.");
-            if (typeof(PrivateObject) == obj?.GetType())
-            {
-                return _target.Equals(((PrivateObject)obj)._target);
-            }
-            else
-            {
-                return false;
-            }
+            return typeof(PrivateObject) == obj?.GetType()
+                && _target.Equals(((PrivateObject)obj)._target);
         }
 
         return true;
@@ -373,57 +367,55 @@ public class PrivateObject
     public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args, CultureInfo culture, Type[] typeArguments)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        if (parameterTypes != null)
-        {
-            bindingFlags |= BindToEveryThing | BindingFlags.Instance;
-
-            // Fix up the parameter types
-            MethodInfo member = _originalType.GetMethod(name, bindingFlags, null, parameterTypes, null);
-
-            // If the method was not found and type arguments were provided for generic parameters,
-            // attempt to look up a generic method.
-            if ((member == null) && (typeArguments != null))
-            {
-                // This method may contain generic parameters...if so, the previous call to
-                // GetMethod() will fail because it doesn't fully support generic parameters.
-
-                // Look in the method cache to see if there is a generic method
-                // on the incoming type that contains the correct signature.
-                member = GetGenericMethodFromCache(name, parameterTypes, typeArguments, bindingFlags, null);
-            }
-
-            if (member == null)
-            {
-                throw new ArgumentException(
-                    string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
-            }
-
-            try
-            {
-                if (member.IsGenericMethodDefinition)
-                {
-                    MethodInfo constructed = member.MakeGenericMethod(typeArguments);
-                    return constructed.Invoke(_target, bindingFlags, null, args, culture);
-                }
-                else
-                {
-                    return member.Invoke(_target, bindingFlags, null, args, culture);
-                }
-            }
-            catch (TargetInvocationException e)
-            {
-                Debug.Assert(e.InnerException != null, "Inner exception should not be null.");
-                if (e.InnerException != null)
-                {
-                    throw e.InnerException;
-                }
-
-                throw;
-            }
-        }
-        else
+        if (parameterTypes == null)
         {
             return InvokeHelper(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
+        }
+
+        bindingFlags |= BindToEveryThing | BindingFlags.Instance;
+
+        // Fix up the parameter types
+        MethodInfo member = _originalType.GetMethod(name, bindingFlags, null, parameterTypes, null);
+
+        // If the method was not found and type arguments were provided for generic parameters,
+        // attempt to look up a generic method.
+        if ((member == null) && (typeArguments != null))
+        {
+            // This method may contain generic parameters...if so, the previous call to
+            // GetMethod() will fail because it doesn't fully support generic parameters.
+
+            // Look in the method cache to see if there is a generic method
+            // on the incoming type that contains the correct signature.
+            member = GetGenericMethodFromCache(name, parameterTypes, typeArguments, bindingFlags, null);
+        }
+
+        if (member == null)
+        {
+            throw new ArgumentException(
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
+        }
+
+        try
+        {
+            if (member.IsGenericMethodDefinition)
+            {
+                MethodInfo constructed = member.MakeGenericMethod(typeArguments);
+                return constructed.Invoke(_target, bindingFlags, null, args, culture);
+            }
+            else
+            {
+                return member.Invoke(_target, bindingFlags, null, args, culture);
+            }
+        }
+        catch (TargetInvocationException e)
+        {
+            Debug.Assert(e.InnerException != null, "Inner exception should not be null.");
+            if (e.InnerException != null)
+            {
+                throw e.InnerException;
+            }
+
+            throw;
         }
     }
 
@@ -640,21 +632,19 @@ public class PrivateObject
     public object GetProperty(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args)
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
-        if (parameterTypes != null)
-        {
-            PropertyInfo pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
-            if (pi == null)
-            {
-                throw new ArgumentException(
-                    string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
-            }
-
-            return pi.GetValue(_target, args);
-        }
-        else
+        if (parameterTypes == null)
         {
             return InvokeHelper(name, bindingFlags | BindingFlags.GetProperty, args, null);
         }
+
+        PropertyInfo pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
+        if (pi == null)
+        {
+            throw new ArgumentException(
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
+        }
+
+        return pi.GetValue(_target, args);
     }
 
     /// <summary>
@@ -681,27 +671,26 @@ public class PrivateObject
     {
         Helper.CheckParameterNotNull(name, "name", string.Empty);
 
-        if (parameterTypes != null)
-        {
-            PropertyInfo pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
-            if (pi == null)
-            {
-                throw new ArgumentException(
-                    string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
-            }
-
-            pi.SetValue(_target, value, args);
-        }
-        else
+        if (parameterTypes == null)
         {
             object[] pass = new object[(args?.Length ?? 0) + 1];
             pass[0] = value;
             args?.CopyTo(pass, 1);
             InvokeHelper(name, bindingFlags | BindingFlags.SetProperty, pass, null);
+            return;
         }
+
+        PropertyInfo pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
+        if (pi == null)
+        {
+            throw new ArgumentException(
+                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
+        }
+
+        pi.SetValue(_target, value, args);
     }
 
-#region Private Helpers
+    #region Private Helpers
 
     /// <summary>
     /// Validate access string.
@@ -771,18 +760,20 @@ public class PrivateObject
 
         foreach (MethodInfo member in members)
         {
-            if (member.IsGenericMethod || member.IsGenericMethodDefinition)
+            if (!member.IsGenericMethod && !member.IsGenericMethodDefinition)
             {
-                // automatically initialized to null
-                if (!GenericMethodCache.TryGetValue(member.Name, out LinkedList<MethodInfo> listByName))
-                {
-                    listByName = new LinkedList<MethodInfo>();
-                    GenericMethodCache.Add(member.Name, listByName);
-                }
-
-                Debug.Assert(listByName != null, "list should not be null.");
-                listByName.AddLast(member);
+                continue;
             }
+
+            // automatically initialized to null
+            if (!GenericMethodCache.TryGetValue(member.Name, out LinkedList<MethodInfo> listByName))
+            {
+                listByName = new LinkedList<MethodInfo>();
+                GenericMethodCache.Add(member.Name, listByName);
+            }
+
+            Debug.Assert(listByName != null, "list should not be null.");
+            listByName.AddLast(member);
         }
     }
 
@@ -808,24 +799,24 @@ public class PrivateObject
         MethodInfo[] finalCandidates = new MethodInfo[methodCandidates.Count];
         methodCandidates.CopyTo(finalCandidates, 0);
 
-        if ((parameterTypes != null) && (parameterTypes.Length == 0))
+        if (parameterTypes == null || parameterTypes.Length != 0)
         {
-            for (int i = 0; i < finalCandidates.Length; i++)
-            {
-                MethodInfo methodInfo = finalCandidates[i];
-
-                if (!RuntimeTypeHelper.CompareMethodSigAndName(methodInfo, finalCandidates[0]))
-                {
-                    throw new AmbiguousMatchException();
-                }
-            }
-
-            // All the methods have the exact same name and sig so return the most derived one.
-            return RuntimeTypeHelper.FindMostDerivedNewSlotMeth(finalCandidates, finalCandidates.Length) as MethodInfo;
+            // Now that we have a preliminary list of candidates, select the most appropriate one.
+            return RuntimeTypeHelper.SelectMethod(bindingFlags, finalCandidates, parameterTypes, modifiers) as MethodInfo;
         }
 
-        // Now that we have a preliminary list of candidates, select the most appropriate one.
-        return RuntimeTypeHelper.SelectMethod(bindingFlags, finalCandidates, parameterTypes, modifiers) as MethodInfo;
+        for (int i = 0; i < finalCandidates.Length; i++)
+        {
+            MethodInfo methodInfo = finalCandidates[i];
+
+            if (!RuntimeTypeHelper.CompareMethodSigAndName(methodInfo, finalCandidates[0]))
+            {
+                throw new AmbiguousMatchException();
+            }
+        }
+
+        // All the methods have the exact same name and sig so return the most derived one.
+        return RuntimeTypeHelper.FindMostDerivedNewSlotMeth(finalCandidates, finalCandidates.Length) as MethodInfo;
     }
 
     private LinkedList<MethodInfo> GetMethodCandidates(string methodName, Type[] parameterTypes, Type[] typeArguments, BindingFlags bindingFlags, ParameterModifier[] modifiers)
@@ -846,10 +837,7 @@ public class PrivateObject
         foreach (MethodInfo candidate in methods)
         {
             bool paramMatch = true;
-            ParameterInfo[] candidateParams = null;
             Type[] genericArgs = candidate.GetGenericArguments();
-            Type sourceParameterType = null;
-
             if (genericArgs.Length != typeArguments.Length)
             {
                 continue;
@@ -858,56 +846,54 @@ public class PrivateObject
             // Since we can't just get the correct MethodInfo from Reflection,
             // we will just match the number of parameters, their order, and their type
             var methodCandidate = candidate;
-            candidateParams = methodCandidate.GetParameters();
+            ParameterInfo[] candidateParams = methodCandidate.GetParameters();
 
             if (candidateParams.Length != parameterTypes.Length)
             {
                 continue;
             }
 
-            // Exact binding
-            if ((bindingFlags & BindingFlags.ExactBinding) != 0)
-            {
-                int i = 0;
-
-                foreach (ParameterInfo candidateParam in candidateParams)
-                {
-                    sourceParameterType = parameterTypes[i++];
-
-                    if (candidateParam.ParameterType.ContainsGenericParameters)
-                    {
-                        // Since we have a generic parameter here, just make sure the IsArray matches.
-                        if (candidateParam.ParameterType.IsArray != sourceParameterType.IsArray)
-                        {
-                            paramMatch = false;
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        if (candidateParam.ParameterType != sourceParameterType)
-                        {
-                            paramMatch = false;
-                            break;
-                        }
-                    }
-                }
-
-                if (paramMatch)
-                {
-                    methodCandidates.AddLast(methodCandidate);
-                    continue;
-                }
-            }
-            else
+            if ((bindingFlags & BindingFlags.ExactBinding) == 0)
             {
                 methodCandidates.AddLast(methodCandidate);
+                continue;
+            }
+
+            // Exact binding
+            int i = 0;
+
+            foreach (ParameterInfo candidateParam in candidateParams)
+            {
+                Type sourceParameterType = parameterTypes[i++];
+                if (candidateParam.ParameterType.ContainsGenericParameters)
+                {
+                    // Since we have a generic parameter here, just make sure the IsArray matches.
+                    if (candidateParam.ParameterType.IsArray != sourceParameterType.IsArray)
+                    {
+                        paramMatch = false;
+                        break;
+                    }
+                }
+                else
+                {
+                    if (candidateParam.ParameterType != sourceParameterType)
+                    {
+                        paramMatch = false;
+                        break;
+                    }
+                }
+            }
+
+            if (paramMatch)
+            {
+                methodCandidates.AddLast(methodCandidate);
+                continue;
             }
         }
 
         return methodCandidates;
     }
 
-#endregion
+    #endregion
 }
 #endif

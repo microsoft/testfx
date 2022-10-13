@@ -38,7 +38,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// <summary>
     /// Gets data for calling test method.
     /// </summary>
-    public object[] Data { get; private set; }
+    public object[] Data { get; }
 
     /// <summary>
     /// Gets or sets display name in test results for customization.
@@ -58,12 +58,14 @@ public class DataRowAttribute : Attribute, ITestDataSource
         {
             return DisplayName;
         }
-        else
+
+        if (data != null)
         {
-            if (data != null)
-            {
-                return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name, string.Join(",", data.AsEnumerable()));
-            }
+            // We want to force call to `data.AsEnumerable()` to ensure that objects are casted to strings (using ToString())
+            // so that null do appear as "null". If you remove the call, and do string.Join(",", new object[] { null, "a" }),
+            // you will get empty string while with the call you will get "null,a".
+            return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,
+                string.Join(",", data.AsEnumerable()));
         }
 
         return null;
