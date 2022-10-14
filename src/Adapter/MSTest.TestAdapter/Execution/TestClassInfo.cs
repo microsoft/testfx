@@ -303,7 +303,8 @@ public class TestClassInfo
                     finally
                     {
                         IsClassInitializeExecuted = true;
-                        (testContext as ITestContext).ClearDiagnosticMessages();
+                        Debug.Assert(testContext is ITestContext, "TestContext is null.");
+                        (testContext as ITestContext)?.ClearDiagnosticMessages();
                     }
                 }
             }
