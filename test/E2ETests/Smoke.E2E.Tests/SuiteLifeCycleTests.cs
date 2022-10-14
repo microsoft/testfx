@@ -23,9 +23,10 @@ public class SuiteLifeCycleTests : CLITestBase
     private void ValidateTestRunLifecycle(string targetFramework)
     {
         InvokeVsTestForExecution(new[] { targetFramework + "\\" + Assembly }, targetFramework: targetFramework);
-        Verify(RunEventsHandler.PassedTests.Count == 15);  // the inherit class tests are called twice
+        Verify(RunEventsHandler.PassedTests.Count == 15);  // The inherit class tests are called twice.
 
         int assemblyInitCalledCount = 0;
+        int classInitCalledCount = 0;
         int classCleanupCalledCount = 0;
         int assemblyCleanupCalledCount = 0;
 
@@ -36,21 +37,20 @@ public class SuiteLifeCycleTests : CLITestBase
             assemblyInitCalledCount += isTestMethodMessageContains("AssemblyInit was called") ? 1 : 0;
             classCleanupCalledCount += isTestMethodMessageContains("ClassCleanup was called") ? 1 : 0;
             assemblyCleanupCalledCount += isTestMethodMessageContains("AssemblyCleanup was called") ? 1 : 0;
+            classInitCalledCount += isTestMethodMessageContains("ClassInitialize was called") ? 1 : 0;
         }
 
-        Verify(assemblyInitCalledCount == 1);
-
-        // Assembly and Class cleanup don't appear in the logs because they happen after retrieving the result.
-        // TODO: https://github.com/microsoft/testfx/issues/1328
+        // Assembly and Class init/cleanup logs don't appear in the tests' results.
         Verify(classCleanupCalledCount == 0);
         Verify(assemblyCleanupCalledCount == 0);
+        Verify(assemblyInitCalledCount == 0);
+        Verify(classInitCalledCount == 0);
 
         var caseClassCleanupWithCleanupBehaviorEndOfAssembly = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_ClassCleanupWithCleanupBehaviorEndOfAssembly"));
         Verify(caseClassCleanupWithCleanupBehaviorEndOfAssembly.Outcome == Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
         Verify(caseClassCleanupWithCleanupBehaviorEndOfAssembly.Messages.Single().Text.Contains(
             targetFramework == "net6.0" ?
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -60,7 +60,6 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             :
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -73,7 +72,6 @@ public class SuiteLifeCycleTests : CLITestBase
         Verify(caseClassCleanupWithCleanupBehaviorEndOfClass.Messages.Single().Text.Contains(
             targetFramework == "net6.0" ?
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -83,7 +81,6 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             :
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -96,7 +93,6 @@ public class SuiteLifeCycleTests : CLITestBase
         Verify(caseClassInitializeWithInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupWithInheritanceBehaviorNone.Messages.Single().Text.Contains(
             targetFramework == "net6.0" ?
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -106,7 +102,6 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             :
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -119,7 +114,6 @@ public class SuiteLifeCycleTests : CLITestBase
         Verify(caseClassInitializeWithInheritanceBehaviorNoneAndClassCleanupWithInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Contains(
             targetFramework == "net6.0" ?
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -129,7 +123,6 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             :
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -142,7 +135,6 @@ public class SuiteLifeCycleTests : CLITestBase
         Verify(caseClassCleanupWithNoProperty.Messages.Single().Text.Contains(
             targetFramework == "net6.0" ?
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -152,7 +144,6 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             :
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -165,8 +156,6 @@ public class SuiteLifeCycleTests : CLITestBase
         Verify(caseInheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Contains(
             targetFramework == "net6.0" ?
             """
-            ClassInitialize was called
-            Derived ClassInitialize was called
             Ctor was called
             Derived class Ctor was called
             TestInitialize was called
@@ -179,8 +168,6 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             :
             """
-            ClassInitialize was called
-            Derived ClassInitialize was called
             Ctor was called
             Derived class Ctor was called
             TestInitialize was called
@@ -224,7 +211,6 @@ public class SuiteLifeCycleTests : CLITestBase
         Verify(caseInheritClassWithCleanupInheritanceBehaviorNone.Messages.Single().Text.Contains(
             targetFramework == "net6.0" ?
             """
-            Derived ClassInitialize was called
             Ctor was called
             Derived class Ctor was called
             TestInitialize was called
@@ -237,7 +223,6 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             :
             """
-            Derived ClassInitialize was called
             Ctor was called
             Derived class Ctor was called
             TestInitialize was called
@@ -281,7 +266,6 @@ public class SuiteLifeCycleTests : CLITestBase
         Verify(caseClassInitializeAndCleanupWithInheritanceBehaviorNone.Messages.Single().Text.Contains(
             targetFramework == "net6.0" ?
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -291,7 +275,6 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             :
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -304,7 +287,6 @@ public class SuiteLifeCycleTests : CLITestBase
         Verify(caseClassInitializeAndCleanupWithInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Contains(
             targetFramework == "net6.0" ?
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -314,7 +296,6 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             :
             """
-            ClassInitialize was called
             Ctor was called
             TestInitialize was called
             TestMethod was called
@@ -327,7 +308,6 @@ public class SuiteLifeCycleTests : CLITestBase
         Verify(caseInheritClassWithClassInitializeInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupInheritanceBehaviorNone.Messages.Single().Text.Contains(
             targetFramework == "net6.0" ?
             """
-            Derived ClassInitialize was called
             Ctor was called
             Derived class Ctor was called
             TestInitialize was called
@@ -340,7 +320,6 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             :
             """
-            Derived ClassInitialize was called
             Ctor was called
             Derived class Ctor was called
             TestInitialize was called
@@ -384,7 +363,6 @@ public class SuiteLifeCycleTests : CLITestBase
         Verify(caseInheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Contains(
             targetFramework == "net6.0" ?
             """
-            Derived ClassInitialize was called
             Ctor was called
             Derived class Ctor was called
             TestInitialize was called
@@ -397,7 +375,6 @@ public class SuiteLifeCycleTests : CLITestBase
             """
             :
             """
-            Derived ClassInitialize was called
             Ctor was called
             Derived class Ctor was called
             TestInitialize was called
