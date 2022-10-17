@@ -1,20 +1,30 @@
-# RFC 006- DynamicData Attribute for Data Driven Tests
+# RFC 006 - DynamicData Attribute for Data Driven Tests
+
+- [x] Approved in principle
+- [x] Under discussion
+- [x] Implementation
+- [x] Shipped
 
 ## Summary
+
 This details the MSTest V2 framework attribute "DynamicData" for data driven tests where test data can be declared as properties or in methods and can be shared between more than one test cases.
 
 ## Motivation
+
 Often times, data driven tests use shared test data that can be declared as properties or in methods. User can use `DataRow` for declaring inline data, but it can't be shared. Test framework should provide feature so that test data can be declared as property or in method and can be easily used by multiple tests.
 
 ## Detailed Design
 
 ### Requirements
+
 1. Test data can be declared as properties or in methods and can be reused by multiple test cases.
 
 ### Proposed solution
+
 Here is a solution that meets the above requirements:
 
 A static property or a static method having test data should be declared as below:
+
 ```csharp
 [TestClass]
 public class UnitTests
@@ -69,6 +79,7 @@ In case, the property or method exists in a class other than the test class, an 
 
 [DynamicData("ReusableTestDataMethod", typeOf(UnitTests), DynamicDataSourceType.Method)]
 ```
+
 Please note that Enum `DynamicDataSourceType` is used to specify whether test data source is a property or method.
 Data source is considered as property by default.
 
@@ -84,12 +95,17 @@ public static string GetCustomDynamicDataDisplayName(MethodInfo methodInfo, obje
 [DynamicData("ReusableTestDataProperty", DynamicDataDisplayName = "GetCustomDynamicDataDisplayName")]
 ```
 
-`DynamicDataDisplayNameDeclaringType` should be used in cases where the dynamic data display name method exists in a class other than the test class 
+`DynamicDataDisplayNameDeclaringType` should be used in cases where the dynamic data display name method exists in a class other than the test class
 
 ```csharp
 [DynamicData("ReusableTestDataMethod", DynamicDataDisplayName = "GetCustomDynamicDataDisplayName", DynamicDataDisplayNameDeclaringType = typeOf(UnitTests))]
 ```
 
 ### Benefits of using DynamicData attribute
+
 1. More than one tests can use the same test data, if required.
 2. Changes in the shared test data can be scoped to single place.
+
+## Unresolved questions
+
+None.
