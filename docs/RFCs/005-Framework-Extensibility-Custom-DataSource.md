@@ -1,21 +1,31 @@
-# RFC 005- Framework Extensibility for Custom Test Data Source
+# RFC 005 - Framework Extensibility for Custom Test Data Source
+
+- [x] Approved in principle
+- [x] Under discussion
+- [x] Implementation
+- [x] Shipped
 
 ## Summary
+
 This details the MSTest V2 framework extensibility for specifying custom data source for data driven tests.
 
 ## Motivation
+
 Often times, custom data sources are required for data driven tests. User should be able to leverage test framework extensibility to provide custom data sources for test execution.
 
 ## Detailed Design
 
 ### Requirements
-1. A custom data source can be used by multiple test cases. 
+
+1. A custom data source can be used by multiple test cases.
 2. A test case can have multiple data sources.
 
 ### Proposed solution
+
 Here is a solution for using custom data source in data driven tests.
 
 The test framework should define an interface class `ITestDataSource` which can be extended to get data from custom data source.
+
 ```csharp
 public interface ITestDataSource
 {
@@ -32,6 +42,7 @@ public interface ITestDataSource
 ```
 
 Here is how the test methods are decorated with concrete implementation of `ITestDataSource`:
+
 ```csharp
 public class CustomTestDataSourceAttribute : Attribute, ITestDataSource
 {
@@ -66,10 +77,12 @@ public void TestMethod1(int a, int b, int c)
     Assert.AreEqual(0, c % 3);
 }
 ```
+
 In a similar way, multiple test methods can be decorated with same data source.
 A test method can also be decorated with multiple data sources.
 
 Users can customize the display name of tests in test results by overriding `GetDisplayName()` method.
+
 ```csharp
 public override string GetDisplayName(MethodInfo methodInfo, object[] data)
 {
@@ -78,18 +91,26 @@ public override string GetDisplayName(MethodInfo methodInfo, object[] data)
 ```
 
 The display name of tests in the above example would appear as :
-```
+
+```shell
 MyFavMSTestV2Test (1,2,3)
 MyFavMSTestV2Test (4,5,6)
 ```
 
-###  Discovery of `ITestDataSource` attributes
+### Discovery of `ITestDataSource` attributes
+
 The MSTest v2 framework, on discovering a `TestMethod`, probes additional attributes. On finding attributes inheriting from `ITestDataSource`, the framework invokes `GetData()` to fetch test data and iteratively invokes the test method with the test data as arguments.
 
 ### Benefits of using `ITestDataSource`
+
 1. Users can extend `ITestDataSource` to support custom data sources.
 2. Multiple tests can reuse the test data defined in the same data source.
 3. A test case can use multiple test data sources.
 
 ### Remarks
+
 When implementing a custom `ITestDataSource` (attribute), the `GetData()` method should not return an empty sequence, otherwise the test(s) using this data source attribute will always fail.
+
+## Unresolved questions
+
+None.
