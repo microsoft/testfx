@@ -1,4 +1,6 @@
 # RFC 009 - Deployment Item Attribute for Net Core
+<!-- markdownlint-disable-file MD024 -->
+<!-- markdownlint-disable-file MD033 -->
 
 - [x] Approved in principle
 - [x] Under discussion
@@ -39,18 +41,18 @@ Many a times, a test author takes dependency on certain files(like .dll, .xml, .
 ## Example
 
 ```csharp
-    [TestClass]
-    [DeploymentItem(@"C:\classLevelDepItem.xml")]   //absolute path
-    public class UnitTest1
+[TestClass]
+[DeploymentItem(@"C:\classLevelDepItem.xml")]   //absolute path
+public class UnitTest1
+{
+    [TestMethod]
+    [DeploymentItem(@"..\..\methodLevelDepItem1.xml")]   //relative path
+    [DeploymentItem(@"C:\DataFiles\methodLevelDepItem2.xml", "DataFiles")]   //custom output path
+    public void TestMethod1()
     {
-        [TestMethod]
-        [DeploymentItem(@"..\..\methodLevelDepItem1.xml")]   //relative path
-        [DeploymentItem(@"C:\DataFiles\methodLevelDepItem2.xml", "DataFiles")]   //custom output path
-        public void TestMethod1()
-        {
-            String textFromFile = File.ReadAllText("classLevelDepItem.xml");
-        }
+        String textFromFile = File.ReadAllText("classLevelDepItem.xml");
     }
+}
 ```
 
 ## Behavior Changes wrt FullFramework

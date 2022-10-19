@@ -62,3 +62,12 @@ jobs:
       testResultsFormat: VSTest
       testResultsFiles: '**\*.trx'
     condition: succeededOrFailed()
+
+- job: Markdownlint
+  pool:
+      vmImage: ubuntu-22.04
+  steps:
+    - script: sudo npm install -g markdownlint-cli@0.32.2
+      displayName: Install markdownlint-cli
+    - script: markdownlint '**/*.md'
+      displayName: Run markdownlint
