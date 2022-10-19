@@ -1,5 +1,11 @@
 # MSTest Documentation
 
+The following official [learn.microsoft.com website](https://learn.microsoft.com/visualstudio/test/unit-test-basics) contains all the information about writing unit tests, unit test frameworks, integration with CLI and Visual Studio.
+
+This [blog post](https://devblogs.microsoft.com/devops/mstest-v2-now-and-ahead/) announce the vision for MSTest V2.
+
+For API documentation refer [here](https://docs.microsoft.com/dotnet/api/microsoft.visualstudio.testtools.unittesting).
+
 ## Contributing
 
 - See [CONTRIBUTING.md](../CONTRIBUTING.md) for details about how you can contribute.
