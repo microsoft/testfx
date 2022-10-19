@@ -2,3 +2,6 @@
 SECURITY.md
 eng/**/*.md
 tools/**/*.md
+
+# Ignore release history file
+docs/releases.md

@@ -16,7 +16,7 @@ See [Documentation](docs/README.md) for full documentation about how to contribu
 
 |            | Framework | Adapter |
 |:----------:|:----------------:|:------------------:|
-|**NuGet** <br> (official)  |[![#](https://img.shields.io/nuget/v/mstest.testframework.svg?style=flat)](http://www.nuget.org/packages/MSTest.TestFramework/)|[![#](https://img.shields.io/nuget/v/mstest.testadapter.svg?style=flat)](http://www.nuget.org/packages/MSTest.TestAdapter/)|
+|**NuGet** (official)  |[![#](https://img.shields.io/nuget/v/mstest.testframework.svg?style=flat)](http://www.nuget.org/packages/MSTest.TestFramework/)|[![#](https://img.shields.io/nuget/v/mstest.testadapter.svg?style=flat)](http://www.nuget.org/packages/MSTest.TestAdapter/)|
 
 ## Continuous Integration Status
 
