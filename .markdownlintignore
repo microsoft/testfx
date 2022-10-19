@@ -1,0 +1,4 @@
+# Ignore md files we are not in control of.
+SECURITY.md
+eng/**/*.md
+tools/**/*.md

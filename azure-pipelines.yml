@@ -67,7 +67,7 @@ jobs:
   pool:
       vmImage: ubuntu-22.04
   steps:
-    - script: sudo npm install -g markdownlint-cli@0.31.1
+    - script: sudo npm install -g markdownlint-cli@0.32.2
       displayName: Install markdownlint-cli
-    - script: markdownlint '**/*.md' -i 'eng/**/*.md' -i 'tools/**/*.md' -i 'Security.md'
+    - script: markdownlint '**/*.md'
       displayName: Run markdownlint
