@@ -218,6 +218,7 @@ internal class TestMethodRunner
         if (isDataDriven)
         {
             // In legacy scenario
+#pragma warning disable CS0618 // Type or member is obsolete
             if (_test.TestIdGenerationStrategy == UTF.TestIdGenerationStrategy.Legacy)
             {
                 parentStopwatch.Stop();
@@ -230,6 +231,7 @@ internal class TestMethodRunner
 
                 results = UpdateResultsWithParentInfo(results, parentResult);
             }
+#pragma warning restore CS0618 // Type or member is obsolete
             else
             {
                 results = UpdateResultsWithParentInfo(results);

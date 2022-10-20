@@ -75,7 +75,9 @@ internal static class TestCaseExtensions
         var isAsync = (testCase.GetPropertyValue(Constants.AsyncTestProperty) as bool?) ?? false;
         var testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
         var name = testCase.GetTestName(testClassName);
-        var testIdGenerationStrategy = (TestIdGenerationStrategy)testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty, (int)TestIdGenerationStrategy.DisplayName);
+        var testIdGenerationStrategy = (TestIdGenerationStrategy)testCase.GetPropertyValue(
+            Constants.TestIdGenerationStrategyProperty,
+            (int)TestIdGenerationStrategy.FullyQualifiedTest);
 
         TestMethod testMethod = testCase.ContainsManagedMethodAndType()
             ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName, source, isAsync, testIdGenerationStrategy)

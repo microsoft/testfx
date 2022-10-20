@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -15,6 +17,7 @@ public enum TestIdGenerationStrategy
     /// This option is incompatible with <see cref="TestDataSourceDiscoveryOption.DuringDiscovery"/> option of <see cref="TestDataSourceDiscoveryAttribute"/> and will be ignored.
     /// This was the default option until version 2.2.3.
     /// </remarks>
+    [Obsolete("This strategy is provided to reduce impact on existing users. It will be removed in a future release.")]
     Legacy = 1,
 
     /// <summary>
@@ -23,6 +26,7 @@ public enum TestIdGenerationStrategy
     /// <remarks>
     /// This is the default behavior between versions 2.2.4 and 3.0.0.
     /// </remarks>
+    [Obsolete("This strategy is provided to reduce impact on existing users. It will be removed in a future release.")]
     DisplayName = 2,
 
     /// <summary>

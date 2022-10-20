@@ -1,11 +1,9 @@
 ﻿Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object data) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(params object[] data) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(params object[] data) -> void
-﻿Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy.FullyQualifiedTest = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
+Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
 Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy.DisplayName = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
+Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy.FullyQualifiedTest = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
 Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy.Legacy = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
 Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategyAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategyAttribute.Strategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
-Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategyAttribute.TestIdGenerationStrategyAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy strategy) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategyAttribute.TestIdGenerationStrategyAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy strategy) -> void

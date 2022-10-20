@@ -549,16 +549,15 @@ public class TypeEnumeratorTests : TestContainer
             rh => rh.IsMethodDeclaredInSameAssemblyAsType(It.IsAny<MethodInfo>(), It.IsAny<Type>())).Returns(isMethodFromSameAssembly);
     }
 
-    private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName, TestIdGenerationStrategy idGenerationStrategy = TestIdGenerationStrategy.DisplayName)
-    {
-        return new(
+    private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName,
+        TestIdGenerationStrategy idGenerationStrategy = TestIdGenerationStrategy.FullyQualifiedTest)
+        => new(
             type,
             assemblyName,
             _mockReflectHelper.Object,
             _mockTypeValidator.Object,
             _mockTestMethodValidator.Object,
             idGenerationStrategy);
-    }
 
     #endregion
 }

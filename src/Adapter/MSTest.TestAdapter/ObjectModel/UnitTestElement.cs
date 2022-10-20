@@ -232,6 +232,7 @@ internal class UnitTestElement
     {
         switch (TestMethod.TestIdGenerationStrategy)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             case TestIdGenerationStrategy.Legacy:
                 // Legacy Id generation is to rely on default ID generation of TestCase from TestPlatform.
                 break;
@@ -248,6 +249,7 @@ internal class UnitTestElement
 
                 testCase.Id = GenerateDisplayNameStrategyTestId(testCase, filePath);
                 break;
+#pragma warning restore CS0618 // Type or member is obsolete
 
             case TestIdGenerationStrategy.FullyQualifiedTest:
                 testCase.Id = GenerateSerializedDataStrategyTestId();

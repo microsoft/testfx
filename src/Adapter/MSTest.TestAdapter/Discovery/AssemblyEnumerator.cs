@@ -98,9 +98,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
             ?? TestIdGenerationStrategy.FullyQualifiedTest;
 
         var testDataSourceDiscovery = assembly.GetCustomAttribute<TestDataSourceDiscoveryAttribute>()?.DiscoveryOption
+#pragma warning disable CS0618 // Type or member is obsolete
             ?? (testIdGenerationStrategy == TestIdGenerationStrategy.Legacy
                 ? TestDataSourceDiscoveryOption.DuringExecution
                 : TestDataSourceDiscoveryOption.DuringDiscovery);
+#pragma warning restore CS0618 // Type or member is obsolete
         foreach (var type in types)
         {
             if (type == null)
@@ -369,26 +371,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (var dataSource in testDataSources)
         {
             var data = dataSource.GetData(methodInfo);
-            var discoveredTests = new Dictionary<string, UnitTestElement>();
-            var discoveredIndex = new Dictionary<string, int>();
-            var serializationFailed = false;
             var index = 0;
 
             foreach (var d in data)
             {
                 var discoveredTest = test.Clone();
                 discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
-
-                // if we have a duplicate test name don't expand the test, bail out.
-                if (discoveredTests.TryGetValue(discoveredTest.DisplayName, out var firstTestSeen))
-                {
-                    var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstTestSeen, index, discoveredTest.DisplayName);
-                    warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
-
-                    serializationFailed = true;
-                    break;
-                }
 
                 try
                 {
@@ -397,27 +385,17 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
                 catch (SerializationException)
                 {
-                    var firstIndexSeen = discoveredIndex[discoveredTest.DisplayName];
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
                     warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
 
-                    serializationFailed = true;
+                    // Serialization failed for the type, bail out.
+                    tests.Add(test);
                     break;
                 }
 
-                discoveredTests[discoveredTest.DisplayName] = discoveredTest;
-                discoveredIndex[discoveredTest.DisplayName] = index++;
+                tests.Add(discoveredTest);
             }
-
-            // Serialization failed for the type, bail out.
-            if (serializationFailed)
-            {
-                tests.Add(test);
-                break;
-            }
-
-            tests.AddRange(discoveredTests.Values);
         }
 
         return true;

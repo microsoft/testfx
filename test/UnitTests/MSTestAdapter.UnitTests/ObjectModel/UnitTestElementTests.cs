@@ -186,15 +186,17 @@ public class UnitTestElementTests : TestContainer
         Verify(_unitTestElement.DeploymentItems.SequenceEqual(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as KeyValuePair<string, string>[]));
     }
 
+    [Obsolete("Remove test case when enum entry is removed")]
     public void ToTestCase_WhenStrategyIsLegacy_UsesDefaultTestCaseId()
     {
-        var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestTools.UnitTesting.TestIdGenerationStrategy.Legacy)).ToTestCase();
+        var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.Legacy)).ToTestCase();
         Verify(new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source).Id == testCase.Id);
     }
 
+    [Obsolete("Remove test case when enum entry is removed")]
     public void ToTestCase_WhenStrategyIsDisplayName_DoesNotUseDefaultTestCaseId()
     {
-        var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestTools.UnitTesting.TestIdGenerationStrategy.DisplayName)).ToTestCase();
+        var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.DisplayName)).ToTestCase();
         Verify(new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source).Id != testCase.Id);
     }
 
@@ -204,6 +206,7 @@ public class UnitTestElementTests : TestContainer
         Verify(new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source).Id != testCase.Id);
     }
 
+    [Obsolete("Remove test case when enum entry is removed")]
     public void ToTestCase_WhenStrategyIsDisplayName_ExamplesOfTestCaseIdUniqueness()
     {
         var testIdStrategy = TestIdGenerationStrategy.DisplayName;
@@ -244,6 +247,7 @@ public class UnitTestElementTests : TestContainer
         Verify(testCases.Select(tc => tc.Id.ToString()).Distinct().Count() == testCases.Length);
     }
 
+    [Obsolete("Remove test case when enum entry is removed")]
     public void ToTestCase_WhenStrategyIsDisplayName_ExamplesOfTestCaseIdCollision()
     {
         var testIdStrategy = TestIdGenerationStrategy.DisplayName;

@@ -418,15 +418,14 @@ internal class TestableAssemblyEnumerator : AssemblyEnumerator
             reflectHelper.Object,
             typeValidator.Object,
             testMethodValidator.Object,
-            TestIdGenerationStrategy.DisplayName);
+            TestIdGenerationStrategy.FullyQualifiedTest);
     }
 
     internal Mock<TypeEnumerator> MockTypeEnumerator { get; set; }
 
-    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
-    {
-        return MockTypeEnumerator.Object;
-    }
+    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals,
+        TestIdGenerationStrategy testIdGenerationStrategy)
+        => MockTypeEnumerator.Object;
 }
 
 #endregion
