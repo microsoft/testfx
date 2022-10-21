@@ -74,35 +74,5 @@
     <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
   </ItemGroup>
-  
-  <!-- Remove this block when 6.0.10 is released -->
-  <PropertyGroup>
-    <_Net60ServicingVersionOverride>6.0.9</_Net60ServicingVersionOverride>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <KnownFrameworkReference Update="@(KnownFrameworkReference)">
-      <TargetingPackVersion Condition="'%(TargetFramework)' == 'net6.0'">$(_Net60ServicingVersionOverride)</TargetingPackVersion>
-
-      <LatestRuntimeFrameworkVersion Condition="'%(TargetFramework)' == 'net6.0'">$(_Net60ServicingVersionOverride)</LatestRuntimeFrameworkVersion>
-    </KnownFrameworkReference>
-
-    <KnownRuntimePack Update="@(KnownRuntimePack)">
-      <LatestRuntimeFrameworkVersion Condition="'%(TargetFramework)' == 'net6.0'">$(_Net60ServicingVersionOverride)</LatestRuntimeFrameworkVersion>
-
-    </KnownRuntimePack>
-    <KnownAppHostPack Update="@(KnownAppHostPack)">
-      <AppHostPackVersion Condition="'%(TargetFramework)' == 'net6.0'">$(_Net60ServicingVersionOverride)</AppHostPackVersion>
-
-    </KnownAppHostPack>
-    <KnownCrossgen2Pack Update="@(KnownCrossgen2Pack)">
-      <Crossgen2PackVersion Condition="'%(TargetFramework)' == 'net6.0'">$(_Net60ServicingVersionOverride)</Crossgen2PackVersion>
-    </KnownCrossgen2Pack>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="PublicAPI\net6.0-windows10.0.18362.0\" />
-  </ItemGroup>
-  <!-- /Remove this block when 6.0.10 is released -->
 
 </Project>
