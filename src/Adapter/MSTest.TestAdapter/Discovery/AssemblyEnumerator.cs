@@ -301,7 +301,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // when dataSourceAttributes.Length == 1
         try
         {
-            return ProcessDataSourceTests(test, testMethodInfo, testContext, tests);
+            return TryProcessDataSourceTests(test, testMethodInfo, testContext, tests);
         }
         catch (Exception ex)
         {
@@ -311,7 +311,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
+    private static bool TryProcessDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
     {
         var dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(testMethodInfo, testContext);
         if (dataRows == null || !dataRows.Any())
@@ -356,7 +356,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         try
         {
-            return ProcessTestDataSourceTests(test, (MethodInfo)methodInfo, testDataSources, tests);
+            return ProcessTestDataSourceTests(test, methodInfo, testDataSources, tests);
         }
         catch (Exception ex)
         {
@@ -366,7 +366,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, FrameworkITestDataSource[] testDataSources, List<UnitTestElement> tests)
+    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, FrameworkITestDataSource[] testDataSources,
+        List<UnitTestElement> tests)
     {
         foreach (var dataSource in testDataSources)
         {
@@ -383,18 +384,19 @@ internal class AssemblyEnumerator : MarshalByRefObject
                     discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
                     discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
                 }
-                catch (SerializationException)
+                catch (SerializationException ex)
                 {
+                    _ = ex;
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
                     warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
 
                     // Serialization failed for the type, bail out.
-                    tests.Add(test);
-                    break;
+                    return false;
                 }
 
                 tests.Add(discoveredTest);
+                index++;
             }
         }
 

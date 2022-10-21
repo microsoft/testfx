@@ -151,15 +151,16 @@ internal class TypeEnumerator
                     method.DeclaringType.GetTypeInfo().Assembly);
         }
 
-        var testElement = new UnitTestElement(testMethod);
-
-        // Get compiler generated type name for async test method (either void returning or task returning).
-        var asyncTypeName = method.GetAsyncTypeName();
-        testElement.AsyncTypeName = asyncTypeName;
-
-        testElement.TestCategory = _reflectHelper.GetCategories(method, _type);
-
-        testElement.DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type);
+        var testElement = new UnitTestElement(testMethod)
+        {
+            // Get compiler generated type name for async test method (either void returning or task returning).
+            AsyncTypeName = method.GetAsyncTypeName(),
+            TestCategory = _reflectHelper.GetCategories(method, _type),
+            DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
+            Priority = _reflectHelper.GetPriority(method),
+            Ignored = _reflectHelper.IsAttributeDefined(method, typeof(IgnoreAttribute), false),
+            DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
+        };
 
         var traits = _reflectHelper.GetTestPropertiesAsTraits(method);
 
@@ -168,8 +169,6 @@ internal class TypeEnumerator
         {
             traits = traits.Concat(new[] { ownerTrait });
         }
-
-        testElement.Priority = _reflectHelper.GetPriority(method);
 
         var priorityTrait = _reflectHelper.GetTestPriorityAsTraits(testElement.Priority);
         if (priorityTrait != null)
@@ -199,11 +198,6 @@ internal class TypeEnumerator
         {
             testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString()).ToArray();
         }
-
-        testElement.Ignored = _reflectHelper.IsAttributeDefined(method, typeof(IgnoreAttribute), false);
-
-        // Get Deployment items if any.
-        testElement.DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings);
 
         // get DisplayName from TestMethodAttribute
         var testMethodAttribute = _reflectHelper.GetCustomAttribute(method, typeof(TestMethodAttribute)) as TestMethodAttribute;

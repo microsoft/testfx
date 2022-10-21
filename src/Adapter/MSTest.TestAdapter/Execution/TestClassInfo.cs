@@ -303,7 +303,6 @@ public class TestClassInfo
                     finally
                     {
                         IsClassInitializeExecuted = true;
-                        Debug.Assert(testContext is ITestContext, "Test context doesn't implement ITestContext.");
                         (testContext as ITestContext)?.ClearDiagnosticMessages();
                     }
                 }

@@ -189,21 +189,40 @@ public class UnitTestElementTests : TestContainer
     [Obsolete("Remove test case when enum entry is removed")]
     public void ToTestCase_WhenStrategyIsLegacy_UsesDefaultTestCaseId()
     {
-        var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.Legacy)).ToTestCase();
-        Verify(new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source).Id == testCase.Id);
+        foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType)))
+        {
+            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.Legacy) { DataType = dataType }).ToTestCase();
+            var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
+            Verify(expectedTestCase.Id == testCase.Id);
+        }
     }
 
     [Obsolete("Remove test case when enum entry is removed")]
     public void ToTestCase_WhenStrategyIsDisplayName_DoesNotUseDefaultTestCaseId()
     {
-        var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.DisplayName)).ToTestCase();
-        Verify(new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source).Id != testCase.Id);
+        foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType)))
+        {
+            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.DisplayName) { DataType = dataType }).ToTestCase();
+            var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
+            if (dataType == DynamicDataType.None)
+            {
+                Verify(expectedTestCase.Id == testCase.Id);
+            }
+            else
+            {
+                Verify(expectedTestCase.Id != testCase.Id);
+            }
+        }
     }
 
     public void ToTestCase_WhenStrategyIsData_DoesNotUseDefaultTestCaseId()
     {
-        var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.FullyQualifiedTest)).ToTestCase();
-        Verify(new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source).Id != testCase.Id);
+        foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType)))
+        {
+            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.FullyQualifiedTest) { DataType = dataType }).ToTestCase();
+            var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
+            Verify(expectedTestCase.Id != testCase.Id);
+        }
     }
 
     [Obsolete("Remove test case when enum entry is removed")]
