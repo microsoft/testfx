@@ -85,7 +85,7 @@ public class FileOperations : IFileOperations
         // Depend on Assembly Load failures instead of this validation.
         return true;
 #elif NETFRAMEWORK
-        return (SafeInvoke<bool>(() => File.Exists(assemblyFileName)) as bool?) ?? false;
+        return (SafeInvoke(() => File.Exists(assemblyFileName)) as bool?) ?? false;
 #elif WINDOWS_UWP
         var fileExists = false;
 
@@ -121,7 +121,7 @@ public class FileOperations : IFileOperations
 #elif NETFRAMEWORK
         var messageFormatOnException =
             string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
-        return SafeInvoke<DiaSession>(() => new DiaSession(source), messageFormatOnException) as DiaSession;
+        return SafeInvoke(() => new DiaSession(source), messageFormatOnException) as DiaSession;
 #endif
     }
 
@@ -186,7 +186,7 @@ public class FileOperations : IFileOperations
         return Path.Combine(packagePath, assemblyFileName);
 #elif NETFRAMEWORK
 
-        return (SafeInvoke<string>(() => Path.GetFullPath(assemblyFileName)) as string) ?? assemblyFileName;
+        return (SafeInvoke(() => Path.GetFullPath(assemblyFileName)) as string) ?? assemblyFileName;
 #endif
     }
 

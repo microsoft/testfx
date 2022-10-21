@@ -12,7 +12,7 @@ using TestFramework.ForTestingMSTest;
 namespace MSTestAdapter.PlatformServices.UnitTests;
 public class DesktopTestSourceTests : TestContainer
 {
-    private TestSource _testSource;
+    private readonly TestSource _testSource;
 
     public DesktopTestSourceTests()
     {

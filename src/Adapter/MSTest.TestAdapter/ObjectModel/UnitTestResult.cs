@@ -9,8 +9,6 @@ using System.Globalization;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 [Serializable]
 [DebuggerDisplay("{DisplayName} ({Outcome})")]
@@ -164,9 +162,9 @@ public class UnitTestResult
             EndTime = endTime,
         };
 
-        testResult.SetPropertyValue<Guid>(Constants.ExecutionIdProperty, ExecutionId);
-        testResult.SetPropertyValue<Guid>(Constants.ParentExecIdProperty, ParentExecId);
-        testResult.SetPropertyValue<int>(Constants.InnerResultsCountProperty, InnerResultsCount);
+        testResult.SetPropertyValue(Constants.ExecutionIdProperty, ExecutionId);
+        testResult.SetPropertyValue(Constants.ParentExecIdProperty, ParentExecId);
+        testResult.SetPropertyValue(Constants.InnerResultsCountProperty, InnerResultsCount);
 
         if (!string.IsNullOrEmpty(StandardOut))
         {
@@ -182,8 +180,8 @@ public class UnitTestResult
 
         if (!string.IsNullOrEmpty(DebugTrace))
         {
-            string debugTraceMessagesinStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.DebugTraceBanner, DebugTrace);
-            TestResultMessage debugTraceMessage = new(TestResultMessage.StandardOutCategory, debugTraceMessagesinStdOut);
+            string debugTraceMessagesInStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.DebugTraceBanner, DebugTrace);
+            TestResultMessage debugTraceMessage = new(TestResultMessage.StandardOutCategory, debugTraceMessagesInStdOut);
             testResult.Messages.Add(debugTraceMessage);
         }
 

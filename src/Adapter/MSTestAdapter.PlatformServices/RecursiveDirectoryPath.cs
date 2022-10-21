@@ -9,10 +9,10 @@ using System.Security;
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
-/// Mstest settings in runsettings look like this
+/// MSTest settings in runsettings look like this
 ///  <MSTestV2>
 ///     <AssemblyResolution>
-///         <Directory path= "% HOMEDRIVE %\direvtory " includeSubDirectories = "true" />
+///         <Directory path= "% HOMEDRIVE %\directory " includeSubDirectories = "true" />
 ///         <Directory path= "C:\windows" includeSubDirectories = "false" />
 ///         <Directory path= ".\DirectoryName" />  ...// by default includeSubDirectories is false
 ///     </AssemblyResolution>

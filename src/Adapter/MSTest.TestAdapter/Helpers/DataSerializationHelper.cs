@@ -90,8 +90,8 @@ internal static class DataSerializationHelper
 
             var serializer = GetSerializer(assemblyQualifiedName);
 
-            var serialzedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
-            using var memoryStream = new MemoryStream(serialzedDataBytes);
+            var serializedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
+            using var memoryStream = new MemoryStream(serializedDataBytes);
             data[i] = serializer.ReadObject(memoryStream);
         }
 

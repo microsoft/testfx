@@ -34,9 +34,10 @@ public class DeploymentUtilityTests : TestContainer
     private readonly Mock<FileUtility> _mockFileUtility;
     private readonly Mock<AssemblyUtility> _mockAssemblyUtility;
     private readonly Mock<IRunContext> _mockRunContext;
-    private readonly Mock<ITestExecutionRecorder> _mocktestExecutionRecorder;
+    private readonly Mock<ITestExecutionRecorder> _mockTestExecutionRecorder;
 
     private readonly DeploymentUtility _deploymentUtility;
+
     private IList<string> _warnings;
 
     public DeploymentUtilityTests()
@@ -52,14 +53,14 @@ public class DeploymentUtilityTests : TestContainer
             _mockFileUtility.Object);
 
         _mockRunContext = new Mock<IRunContext>();
-        _mocktestExecutionRecorder = new Mock<ITestExecutionRecorder>();
+        _mockTestExecutionRecorder = new Mock<ITestExecutionRecorder>();
     }
 
-#region Deploy tests
+    #region Deploy tests
 
     public void DeployShouldReturnFalseWhenNoDeploymentItemsOnTestCase()
     {
-        var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), "A");
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, null);
         var testRunDirectories = new TestRunDirectories(RootDeploymentDirectory);
 
@@ -79,7 +80,7 @@ public class DeploymentUtilityTests : TestContainer
                 new List<TestCase> { testCase },
                 testCase.Source,
                 _mockRunContext.Object,
-                _mocktestExecutionRecorder.Object,
+                _mockTestExecutionRecorder.Object,
                 testRunDirectories));
     }
 
@@ -104,7 +105,7 @@ public class DeploymentUtilityTests : TestContainer
                 new List<TestCase> { testCase },
                 testCase.Source,
                 _mockRunContext.Object,
-                _mocktestExecutionRecorder.Object,
+                _mockTestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
@@ -149,7 +150,7 @@ public class DeploymentUtilityTests : TestContainer
                 new List<TestCase> { testCase },
                 testCase.Source,
                 _mockRunContext.Object,
-                _mocktestExecutionRecorder.Object,
+                _mockTestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
@@ -186,7 +187,7 @@ public class DeploymentUtilityTests : TestContainer
                 new List<TestCase> { testCase },
                 testCase.Source,
                 _mockRunContext.Object,
-                _mocktestExecutionRecorder.Object,
+                _mockTestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
@@ -228,7 +229,7 @@ public class DeploymentUtilityTests : TestContainer
                 new List<TestCase> { testCase },
                 testCase.Source,
                 _mockRunContext.Object,
-                _mocktestExecutionRecorder.Object,
+                _mockTestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
@@ -243,7 +244,7 @@ public class DeploymentUtilityTests : TestContainer
             Times.Never);
 
         // Verify the warning.
-        _mocktestExecutionRecorder.Verify(
+        _mockTestExecutionRecorder.Verify(
             ter =>
             ter.SendMessage(
                 TestMessageLevel.Warning,
@@ -284,7 +285,7 @@ public class DeploymentUtilityTests : TestContainer
                 new List<TestCase> { testCase },
                 testCase.Source,
                 _mockRunContext.Object,
-                _mocktestExecutionRecorder.Object,
+                _mockTestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
@@ -328,7 +329,7 @@ public class DeploymentUtilityTests : TestContainer
                 new List<TestCase> { testCase },
                 testCase.Source,
                 _mockRunContext.Object,
-                _mocktestExecutionRecorder.Object,
+                _mockTestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
@@ -383,7 +384,7 @@ public class DeploymentUtilityTests : TestContainer
                 new List<TestCase> { testCase },
                 testCase.Source,
                 _mockRunContext.Object,
-                _mocktestExecutionRecorder.Object,
+                _mockTestExecutionRecorder.Object,
                 testRunDirectories));
 
         // Assert.
@@ -405,19 +406,19 @@ public class DeploymentUtilityTests : TestContainer
     }
 #endif
 
-#endregion
+    #endregion
 
-#region private methods
+    #region private methods
 
-    private static TestCase GetTestCaseAndTestRunDirectories(string deploymentItemPath, string defaultDeploymentItemOutputDirectoryout, out TestRunDirectories testRunDirectories)
+    private static TestCase GetTestCaseAndTestRunDirectories(string deploymentItemPath, string defaultDeploymentItemOutputDirectoryOut, out TestRunDirectories testRunDirectories)
     {
-        var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
+        var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
         var kvpArray = new[]
-                {
-                    new KeyValuePair<string, string>(
-                        deploymentItemPath,
-                        defaultDeploymentItemOutputDirectoryout),
-                };
+        {
+            new KeyValuePair<string, string>(
+                deploymentItemPath,
+                defaultDeploymentItemOutputDirectoryOut),
+        };
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         var currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
@@ -426,6 +427,6 @@ public class DeploymentUtilityTests : TestContainer
         return testCase;
     }
 
-#endregion
+    #endregion
 }
 #endif

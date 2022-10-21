@@ -14,12 +14,12 @@ internal enum DynamicDataType : int
     None = 0,
 
     /// <summary>
-    /// Dynamic data from <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute"/>.
+    /// Dynamic data from <see cref="TestTools.UnitTesting.DataSourceAttribute"/>.
     /// </summary>
     DataSourceAttribute = 1,
 
     /// <summary>
-    /// Dynamic data from <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource"/>.
+    /// Dynamic data from <see cref="TestTools.UnitTesting.ITestDataSource"/>.
     /// </summary>
     ITestDataSource = 2,
 }

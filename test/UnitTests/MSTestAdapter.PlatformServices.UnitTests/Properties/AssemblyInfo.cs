@@ -8,19 +8,19 @@ using System.Runtime.InteropServices;
 using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 // Custom attributes for tests.
-[assembly: ReflectionUtilityTests.DummyAAttribute("a1")]
-[assembly: ReflectionUtilityTests.DummyAAttribute("a2")]
+[assembly: ReflectionUtilityTests.DummyA("a1")]
+[assembly: ReflectionUtilityTests.DummyA("a2")]
 #endif
 
 #if NETCOREAPP
 using MSTestAdapter.PlatformServices.Tests.Services;
 using MSTestAdapter.PlatformServices.Tests.Utilities;
 
-[assembly: ReflectionUtilityTests.DummyAAttribute("a1")]
-[assembly: ReflectionUtilityTests.DummyAAttribute("a2")]
+[assembly: ReflectionUtilityTests.DummyA("a1")]
+[assembly: ReflectionUtilityTests.DummyA("a2")]
 
-[assembly: ReflectionOperationsTests.DummyAAttribute("a1")]
-[assembly: ReflectionOperationsTests.DummyAAttribute("a2")]
+[assembly: ReflectionOperationsTests.DummyA("a1")]
+[assembly: ReflectionOperationsTests.DummyA("a2")]
 #endif
 
 // General Information about an assembly is controlled through the following

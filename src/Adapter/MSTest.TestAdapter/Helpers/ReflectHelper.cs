@@ -49,7 +49,7 @@ internal class ReflectHelper : MarshalByRefObject
             throw new ArgumentNullException(nameof(attributeType));
         }
 
-        Debug.Assert(attributeType != null, "attrbiuteType should not be null.");
+        Debug.Assert(attributeType != null, "attributeType should not be null.");
 
         // Get attributes defined on the member from the cache.
         Dictionary<string, object> attributes = GetAttributes(memberInfo, inherit);
@@ -128,7 +128,7 @@ internal class ReflectHelper : MarshalByRefObject
         // Try to find the attribute that is derived from baseAttrType.
         foreach (object attribute in attributes.Values)
         {
-            Debug.Assert(attribute != null, $"{nameof(ReflectHelper)}.{nameof(GetAttributes)}: internal error: wrong value in the attrs dictionary.");
+            Debug.Assert(attribute != null, $"{nameof(ReflectHelper)}.{nameof(GetAttributes)}: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
             if (attributeType.GetTypeInfo().IsSubclassOf(baseAttributeType))
@@ -607,7 +607,7 @@ internal class ReflectHelper : MarshalByRefObject
         // Try to find the attribute that is derived from baseAttrType.
         foreach (object attribute in attributes.Values)
         {
-            Debug.Assert(attribute != null, "ReflectHeler.DefinesAttributeDerivedFrom: internal error: wrong value in the attrs dictionary.");
+            Debug.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
             if (attributeType.Equals(typeof(TAttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttributeType)))
@@ -638,7 +638,7 @@ internal class ReflectHelper : MarshalByRefObject
         // Try to find the attribute that is derived from baseAttrType.
         foreach (object attribute in attributes)
         {
-            Debug.Assert(attribute != null, "ReflectHeler.DefinesAttributeDerivedFrom: internal error: wrong value in the attrs dictionary.");
+            Debug.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
             if (attributeType.Equals(typeof(TAttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttributeType)))
@@ -726,8 +726,8 @@ internal class ReflectHelper : MarshalByRefObject
 
                 foreach (object customAttribute in customAttributesArray)
                 {
-                    Type attrType = customAttribute.GetType();
-                    attributes[attrType.AssemblyQualifiedName] = customAttribute;
+                    Type attributeType = customAttribute.GetType();
+                    attributes[attributeType.AssemblyQualifiedName] = customAttribute;
                 }
 
                 _attributeCache.Add(memberInfo, attributes);

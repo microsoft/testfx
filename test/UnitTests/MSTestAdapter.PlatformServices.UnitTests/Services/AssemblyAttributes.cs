@@ -3,5 +3,5 @@
 
 using MSTestAdapter.PlatformServices.Tests.Services;
 
-[assembly: ReflectionOperationsTests.DummyAAttribute("a1")]
-[assembly: ReflectionOperationsTests.DummyAAttribute("a2")]
+[assembly: ReflectionOperationsTests.DummyA("a1")]
+[assembly: ReflectionOperationsTests.DummyA("a2")]

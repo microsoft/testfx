@@ -283,13 +283,13 @@ public class TestExecutionManager
                 string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
 
             // Create test sets for execution, we can execute them in parallel based on parallel settings
-            IEnumerable<IGrouping<bool, TestCase>> testsets = Enumerable.Empty<IGrouping<bool, TestCase>>();
+            IEnumerable<IGrouping<bool, TestCase>> testSets = Enumerable.Empty<IGrouping<bool, TestCase>>();
 
             // Parallel and not parallel sets.
-            testsets = testsToRun.GroupBy(t => t.GetPropertyValue<bool>(TestAdapter.Constants.DoNotParallelizeProperty, false));
+            testSets = testsToRun.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, false));
 
-            var parallelizableTestSet = testsets.FirstOrDefault(g => g.Key == false);
-            var nonparallelizableTestSet = testsets.FirstOrDefault(g => g.Key == true);
+            var parallelizableTestSet = testSets.FirstOrDefault(g => g.Key == false);
+            var nonParallelizableTestSet = testSets.FirstOrDefault(g => g.Key == true);
 
             if (parallelizableTestSet != null)
             {
@@ -324,7 +324,7 @@ public class TestExecutionManager
 
                                 if (queue.TryDequeue(out IEnumerable<TestCase> testSet))
                                 {
-                                    ExecuteTestsWithTestRunner(testSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
+                                    ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
                                 }
                             }
                         },
@@ -337,14 +337,14 @@ public class TestExecutionManager
             }
 
             // Queue the non parallel set
-            if (nonparallelizableTestSet != null)
+            if (nonParallelizableTestSet != null)
             {
-                ExecuteTestsWithTestRunner(nonparallelizableTestSet, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
+                ExecuteTestsWithTestRunner(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner);
             }
         }
         else
         {
-            ExecuteTestsWithTestRunner(testsToRun, runContext, frameworkHandle, source, sourceLevelParameters, testRunner);
+            ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
         }
 
         RunCleanup(frameworkHandle, testRunner);
@@ -371,7 +371,6 @@ public class TestExecutionManager
 
     private void ExecuteTestsWithTestRunner(
         IEnumerable<TestCase> tests,
-        IRunContext runContext,
         ITestExecutionRecorder testExecutionRecorder,
         string source,
         IDictionary<string, object> sourceLevelParameters,

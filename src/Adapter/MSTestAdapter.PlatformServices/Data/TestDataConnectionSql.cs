@@ -622,7 +622,7 @@ internal class TestDataConnectionSql : TestDataConnection
             {
                 columns = Connection.GetSchema("Columns", restrictions);
             }
-            catch (System.NotSupportedException e)
+            catch (NotSupportedException e)
             {
                 WriteDiagnostics("GetColumns for {0} failed to get column metadata, exception {1}", tableName, e);
             }
@@ -818,8 +818,8 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <param name="tableName">The table name.</param>
     /// <param name="columns">Columns.</param>
     /// <returns>new DataTable.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Un-tested. Leaving behavior as is.")]
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security", Justification = "Not passed in from the user.")]
+    [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Un-tested. Leaving behavior as is.")]
+    [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security", Justification = "Not passed in from the user.")]
 #pragma warning disable SA1202 // Elements must be ordered by access
     public override DataTable ReadTable(string tableName, IEnumerable columns)
 #pragma warning restore SA1202 // Elements must be ordered by access
@@ -877,7 +877,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
 #endregion
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2215:Dispose methods should call base class dispose", Justification = "Un-tested. Just preserving behavior.")]
+    [SuppressMessage("Microsoft.Usage", "CA2215:Dispose methods should call base class dispose", Justification = "Un-tested. Just preserving behavior.")]
 #pragma warning disable SA1202 // Elements must be ordered by access
     public override void Dispose()
 #pragma warning restore SA1202 // Elements must be ordered by access
