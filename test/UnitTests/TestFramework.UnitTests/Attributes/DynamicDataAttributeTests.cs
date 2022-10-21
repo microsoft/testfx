@@ -7,16 +7,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-using global::TestFramework.ForTestingMSTest;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
 public class DynamicDataAttributeTests : TestContainer
 {
-    private DummyTestClass _dummyTestClass;
+    private readonly DummyTestClass _dummyTestClass;
+    private readonly MethodInfo _testMethodInfo;
     private DynamicDataAttribute _dynamicDataAttribute;
-    private MethodInfo _testMethodInfo;
 
     public DynamicDataAttributeTests()
     {
@@ -46,7 +45,7 @@ public class DynamicDataAttributeTests : TestContainer
         Verify(data.ToList().Count == 2);
     }
 
-    public void GetDataShouldReadDataFromPropertyInDifferntClass()
+    public void GetDataShouldReadDataFromPropertyInDifferentClass()
     {
         var methodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
         _dynamicDataAttribute = new DynamicDataAttribute("ReusableTestDataProperty2", typeof(DummyTestClass2));

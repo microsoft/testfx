@@ -288,7 +288,7 @@ public class TestMethodInfo : ITestMethod
 
                 if (result.Outcome != UTF.UnitTestOutcome.Passed)
                 {
-                    if (ex is UTF.AssertInconclusiveException || ex.InnerException is UTF.AssertInconclusiveException)
+                    if (ex is AssertInconclusiveException || ex.InnerException is AssertInconclusiveException)
                     {
                         result.Outcome = UTF.UnitTestOutcome.Inconclusive;
                     }
@@ -377,7 +377,7 @@ public class TestMethodInfo : ITestMethod
         // attribute's Verify method) is an AssertInconclusiveException. If so, set
         // the test outcome to Inconclusive.
         result.TestFailureException = new TestFailedException(
-            exceptionFromVerify is UTF.AssertInconclusiveException
+            exceptionFromVerify is AssertInconclusiveException
                 ? ObjectModelUnitTestOutcome.Inconclusive
                 : ObjectModelUnitTestOutcome.Failed,
             exceptionFromVerify.TryGetMessage(),

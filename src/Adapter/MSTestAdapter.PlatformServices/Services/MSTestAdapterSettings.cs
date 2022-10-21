@@ -52,7 +52,7 @@ public class MSTestAdapterSettings
     /// <returns>An instance of the <see cref="MSTestAdapterSettings"/> class.</returns>
     public static MSTestAdapterSettings ToSettings(XmlReader reader)
     {
-        ValidateArg.NotNull<XmlReader>(reader, "reader");
+        ValidateArg.NotNull(reader, "reader");
 
         // Expected format of the xml is: -
         //
@@ -264,7 +264,7 @@ public class MSTestAdapterSettings
 
     private void ReadAssemblyResolutionPath(XmlReader reader)
     {
-        ValidateArg.NotNull<XmlReader>(reader, "reader");
+        ValidateArg.NotNull(reader, "reader");
 
         // Expected format of the xml is: -
         //

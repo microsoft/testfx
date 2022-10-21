@@ -7,7 +7,7 @@ using System.Runtime.Serialization;
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[assembly: Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternals]
+[assembly: DiscoverInternals]
 
 namespace DiscoverInternalsProject;
 [TestClass]

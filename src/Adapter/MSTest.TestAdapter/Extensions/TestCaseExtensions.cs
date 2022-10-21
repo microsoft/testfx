@@ -8,8 +8,6 @@ using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
 /// <summary>
@@ -153,15 +151,15 @@ internal static class TestCaseExtensions
 
     internal static string GetManagedType(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedTypeProperty, null);
 
-    internal static void SetManagedType(this TestCase testCase, string value) => testCase.SetPropertyValue<string>(ManagedTypeProperty, value);
+    internal static void SetManagedType(this TestCase testCase, string value) => testCase.SetPropertyValue(ManagedTypeProperty, value);
 
     internal static string GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
 
-    internal static void SetManagedMethod(this TestCase testCase, string value) => testCase.SetPropertyValue<string>(ManagedMethodProperty, value);
+    internal static void SetManagedMethod(this TestCase testCase, string value) => testCase.SetPropertyValue(ManagedMethodProperty, value);
 
     internal static bool ContainsManagedMethodAndType(this TestCase testCase) => !string.IsNullOrWhiteSpace(testCase.GetManagedMethod()) && !string.IsNullOrWhiteSpace(testCase.GetManagedType());
 
     internal static string[] GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
 
-    internal static void SetHierarchy(this TestCase testCase, params string[] value) => testCase.SetPropertyValue<string[]>(HierarchyProperty, value);
+    internal static void SetHierarchy(this TestCase testCase, params string[] value) => testCase.SetPropertyValue(HierarchyProperty, value);
 }

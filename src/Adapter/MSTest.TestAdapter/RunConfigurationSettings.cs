@@ -96,7 +96,7 @@ public class RunConfigurationSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static RunConfigurationSettings ToSettings(XmlReader reader)
     {
-        ValidateArg.NotNull<XmlReader>(reader, "reader");
+        ValidateArg.NotNull(reader, "reader");
 
         // Expected format of the xml is: -
         //

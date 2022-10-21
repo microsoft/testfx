@@ -99,7 +99,7 @@ internal class DeploymentItem
     /// </summary>
     internal DeploymentItemOriginType OriginType { get; private set; }
 
-#region Object - overrides
+    #region Object - overrides
 
     /// <summary>
     /// Equals implementation.
@@ -145,6 +145,6 @@ internal class DeploymentItem
                 string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItemWithOutputDirectory, SourcePath, RelativeOutputDirectory);
     }
 
-#endregion
+    #endregion
 }
 #endif

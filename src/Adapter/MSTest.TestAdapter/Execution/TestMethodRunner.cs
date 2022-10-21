@@ -99,10 +99,10 @@ internal class TestMethodRunner
     /// <returns>The test results.</returns>
     internal UnitTestResult[] Execute()
     {
-        string initLogs = string.Empty;
-        string initTrace = string.Empty;
-        string initErrorLogs = string.Empty;
-        string inittestContextMessages = string.Empty;
+        string initializationLogs = string.Empty;
+        string initializationTrace = string.Empty;
+        string initializationErrorLogs = string.Empty;
+        string initializationTestContextMessages = string.Empty;
 
         UnitTestResult[] result = null;
 
@@ -119,10 +119,10 @@ internal class TestMethodRunner
                 }
                 finally
                 {
-                    initLogs = logListener.GetAndClearStandardOutput();
-                    initTrace = logListener.GetAndClearDebugTrace();
-                    initErrorLogs = logListener.GetAndClearStandardError();
-                    inittestContextMessages = _testContext.GetAndClearDiagnosticMessages();
+                    initializationLogs = logListener.GetAndClearStandardOutput();
+                    initializationTrace = logListener.GetAndClearDebugTrace();
+                    initializationErrorLogs = logListener.GetAndClearStandardError();
+                    initializationTestContextMessages = _testContext.GetAndClearDiagnosticMessages();
                 }
             }
 
@@ -154,10 +154,10 @@ internal class TestMethodRunner
         finally
         {
             var firstResult = result[0];
-            firstResult.StandardOut = initLogs + firstResult.StandardOut;
-            firstResult.StandardError = initErrorLogs + firstResult.StandardError;
-            firstResult.DebugTrace = initTrace + firstResult.DebugTrace;
-            firstResult.TestContextMessages = inittestContextMessages + firstResult.TestContextMessages;
+            firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
+            firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
+            firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
+            firstResult.TestContextMessages = initializationTestContextMessages + firstResult.TestContextMessages;
         }
 
         return result;

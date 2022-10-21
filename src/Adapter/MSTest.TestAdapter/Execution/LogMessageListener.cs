@@ -30,7 +30,7 @@ public class LogMessageListener : IDisposable
     private readonly bool _captureDebugTraces;
 
     /// <summary>
-    /// Trace listener Manager to perform operation on tracelistener objects.
+    /// Trace listener Manager to perform operation on trace listener objects.
     /// </summary>
     private ITraceListenerManager _traceListenerManager;
     private bool _isDisposed;

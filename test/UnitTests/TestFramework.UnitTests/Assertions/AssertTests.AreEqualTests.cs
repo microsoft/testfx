@@ -3,9 +3,8 @@
 
 using System.Globalization;
 
-using global::TestFramework.ForTestingMSTest;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
 public partial class AssertTests : TestContainer
@@ -174,7 +173,7 @@ public partial class AssertTests : TestContainer
         var actual = "I";
         var englishCulture = new CultureInfo("en-EN");
 
-        // Will ignore case and won't make exeption.
+        // Will ignore case and won't make exception.
         Assert.AreEqual(expected, actual, true, englishCulture);
     }
 

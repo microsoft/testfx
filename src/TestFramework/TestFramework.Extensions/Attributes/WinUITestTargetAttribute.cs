@@ -8,7 +8,7 @@ using System.Globalization;
 namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
 /// <summary>
-/// Specifies <see cref="Microsoft.UI.Xaml.Application" /> derived class to run UI tests on.
+/// Specifies <see cref="UI.Xaml.Application" /> derived class to run UI tests on.
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
 public class WinUITestTargetAttribute : Attribute
@@ -17,7 +17,7 @@ public class WinUITestTargetAttribute : Attribute
     /// Initializes a new instance of the <see cref="WinUITestTargetAttribute"/> class.
     /// </summary>
     /// <param name="applicationType">
-    /// Specifies <see cref="Microsoft.UI.Xaml.Application" /> derived class to run UI tests on.
+    /// Specifies <see cref="UI.Xaml.Application" /> derived class to run UI tests on.
     /// </param>
     public WinUITestTargetAttribute(Type applicationType)
     {
@@ -35,7 +35,7 @@ public class WinUITestTargetAttribute : Attribute
     }
 
     /// <summary>
-    /// Gets the <see cref="Microsoft.UI.Xaml.Application" /> class.
+    /// Gets the <see cref="UI.Xaml.Application" /> class.
     /// </summary>
     public Type ApplicationType { get; }
 }

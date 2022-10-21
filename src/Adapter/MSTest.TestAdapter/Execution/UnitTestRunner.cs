@@ -58,7 +58,7 @@ internal class UnitTestRunner : MarshalByRefObject
         _typeCache = new TypeCache(reflectHelper);
 
         // Populate the settings into the domain(Desktop workflow) performing discovery.
-        // This would just be resettings the settings to itself in non desktop workflows.
+        // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
     }
 
@@ -85,7 +85,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <param name="classCleanupLifecycle">The assembly level class cleanup lifecycle.</param>
     internal void InitializeClassCleanupManager(ICollection<UnitTestElement> testsToRun, int? classCleanupLifecycle)
     {
-        // We can't transport the enum across AppDomain boundaries because of backwards and forwards compatibility.
+        // We can't transport the Enum across AppDomain boundaries because of backwards and forwards compatibility.
         // So we're converting here if we can, or falling back to the default.
         var lifecycle = ClassCleanupBehavior.EndOfAssembly;
         if (classCleanupLifecycle != null && Enum.IsDefined(typeof(ClassCleanupBehavior), classCleanupLifecycle))
@@ -143,7 +143,8 @@ internal class UnitTestRunner : MarshalByRefObject
                 return notRunnableResult;
             }
 
-            var result = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces, _reflectHelper).Execute();
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces, _reflectHelper);
+            var result = testMethodRunner.Execute();
             RunClassCleanupIfEndOfClass(testMethodInfo, testMethod, result);
             return result;
         }
@@ -268,9 +269,9 @@ internal class UnitTestRunner : MarshalByRefObject
 
         string ignoreMessage = null;
         var isIgnoreAttributeOnClass =
-            _reflectHelper.IsAttributeDefined(testMethodInfo.Parent.ClassType, typeof(UTF.IgnoreAttribute), false);
+            _reflectHelper.IsAttributeDefined(testMethodInfo.Parent.ClassType, typeof(IgnoreAttribute), false);
         var isIgnoreAttributeOnMethod =
-            _reflectHelper.IsAttributeDefined(testMethodInfo.TestMethod, typeof(UTF.IgnoreAttribute), false);
+            _reflectHelper.IsAttributeDefined(testMethodInfo.TestMethod, typeof(IgnoreAttribute), false);
 
         if (isIgnoreAttributeOnClass)
         {

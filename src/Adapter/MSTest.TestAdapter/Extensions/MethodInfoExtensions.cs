@@ -148,7 +148,7 @@ internal static class MethodInfoExtensions
     {
         var methodParameters = methodInfo.GetParameters();
 
-        // check if testmethod expected parameter values but no testdata was provided,
+        // check if test method expected parameter values but no test data was provided,
         // throw error with appropriate message.
         if (methodParameters != null && methodParameters.Length > 0 && parameters == null)
         {

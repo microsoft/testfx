@@ -4,9 +4,8 @@
 using System;
 using System.Text.RegularExpressions;
 
-using global::TestFramework.ForTestingMSTest;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
 public class StringAssertTests : TestContainer

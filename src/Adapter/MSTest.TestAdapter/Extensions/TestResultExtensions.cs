@@ -19,23 +19,15 @@ public static class TestResultExtensions
 
         for (int i = 0; i < testResults.Length; ++i)
         {
-            UnitTestResult unitTestResult = null;
             UnitTestOutcome outcome = testResults[i].Outcome.ToUnitTestOutcome();
 
-            if (testResults[i].TestFailureException != null)
-            {
-                unitTestResult =
-                    new UnitTestResult(
-                        new TestFailedException(
-                            outcome,
-                            testResults[i].TestFailureException.TryGetMessage(),
-                            testResults[i].TestFailureException is TestFailedException testException ? testException.StackTraceInformation : testResults[i].TestFailureException.TryGetStackTraceInformation()));
-            }
-            else
-            {
-                unitTestResult = new UnitTestResult { Outcome = outcome };
-            }
-
+            UnitTestResult unitTestResult = testResults[i].TestFailureException != null
+                ? new UnitTestResult(
+                    new TestFailedException(
+                        outcome,
+                        testResults[i].TestFailureException.TryGetMessage(),
+                        testResults[i].TestFailureException is TestFailedException testException ? testException.StackTraceInformation : testResults[i].TestFailureException.TryGetStackTraceInformation()))
+                : new UnitTestResult { Outcome = outcome };
             unitTestResult.StandardOut = testResults[i].LogOutput;
             unitTestResult.StandardError = testResults[i].LogError;
             unitTestResult.DebugTrace = testResults[i].DebugTrace;

@@ -47,7 +47,7 @@ public class TestClassInfo
         Debug.Assert(type != null, "Type should not be null");
         Debug.Assert(constructor != null, "Constructor should not be null");
         Debug.Assert(parent != null, "Parent should not be null");
-        Debug.Assert(classAttribute != null, "ClassAtribute should not be null");
+        Debug.Assert(classAttribute != null, "ClassAttribute should not be null");
 
         ClassType = type;
         Constructor = constructor;
@@ -263,7 +263,7 @@ public class TestClassInfo
         if (!IsClassInitializeExecuted)
         {
             // Acquiring a lock is usually a costly operation which does not need to be
-            // performed every time if the class init is already executed.
+            // performed every time if the class initialization is already executed.
             lock (_testClassExecuteSyncObject)
             {
                 // Perform a check again.
@@ -346,7 +346,7 @@ public class TestClassInfo
     /// <summary>
     /// Run class cleanup methods.
     /// </summary>
-    /// <param name="classCleanupLifecycle">The current lifecyle position that ClassCleanup is executing from.</param>
+    /// <param name="classCleanupLifecycle">The current lifecycle position that ClassCleanup is executing from.</param>
     /// <returns>
     /// Any exception that can be thrown as part of a class cleanup as warning messages.
     /// </returns>

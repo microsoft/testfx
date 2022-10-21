@@ -297,7 +297,7 @@ public class MSTestSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static MSTestSettings ToSettings(XmlReader reader)
     {
-        ValidateArg.NotNull<XmlReader>(reader, "reader");
+        ValidateArg.NotNull(reader, "reader");
 
         // Expected format of the xml is: -
         //
@@ -555,19 +555,19 @@ public class MSTestSettings
     private static bool TryParseEnum<T>(string value, out T result)
         where T : struct, Enum
     {
-        return Enum.TryParse<T>(value, true, out result) && Enum.IsDefined(typeof(T), result);
+        return Enum.TryParse(value, true, out result) && Enum.IsDefined(typeof(T), result);
     }
 
     private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings)
     {
-        var runconfigElement = XDocument.Parse(runsettingsXml)?.Element("RunSettings")?.Element("RunConfiguration");
+        var runConfigElement = XDocument.Parse(runsettingsXml)?.Element("RunSettings")?.Element("RunConfiguration");
 
-        if (runconfigElement == null)
+        if (runConfigElement == null)
         {
             return;
         }
 
-        var disableParallelizationString = runconfigElement.Element("DisableParallelization")?.Value;
+        var disableParallelizationString = runConfigElement.Element("DisableParallelization")?.Value;
         if (bool.TryParse(disableParallelizationString, out bool disableParallelization))
         {
             settings.DisableParallelization = disableParallelization;

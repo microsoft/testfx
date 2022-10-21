@@ -108,9 +108,9 @@ public class TestDeploymentTests : TestContainer
 
     public void CleanupShouldNotDeleteDirectoriesIfRunSettingsSpecifiesSo()
     {
-        string runSettingxml =
+        string runSettingXml =
             "<DeleteDeploymentDirectoryAfterTestRunIsComplete>False</DeleteDeploymentDirectoryAfterTestRunIsComplete>";
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
@@ -180,22 +180,22 @@ public class TestDeploymentTests : TestContainer
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseButHasDeploymentItems()
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
-        var kvparray = new[]
+        var kvpArray = new[]
         {
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
                 DefaultDeploymentItemOutputDirectory),
         };
-        testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvparray);
+        testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
 
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
-        string runSettingxml =
+        string runSettingXml =
              "<DeploymentEnabled>False</DeploymentEnabled>";
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
@@ -216,9 +216,9 @@ public class TestDeploymentTests : TestContainer
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
-        string runSettingxml =
+        string runSettingXml =
             "<DeploymentEnabled>False</DeploymentEnabled>";
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
@@ -239,9 +239,9 @@ public class TestDeploymentTests : TestContainer
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
-        string runSettingxml =
+        string runSettingXml =
             "<DeploymentEnabled>True</DeploymentEnabled>";
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
@@ -270,9 +270,9 @@ public class TestDeploymentTests : TestContainer
             new DeploymentUtility(),
             _mockFileUtility.Object);
 
-        string runSettingxml =
+        string runSettingXml =
             "<DeploymentEnabled>True</DeploymentEnabled>";
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);

@@ -133,7 +133,7 @@ public class TestAssemblyInfo
         if (!IsAssemblyInitializeExecuted)
         {
             // Acquiring a lock is usually a costly operation which does not need to be
-            // performed every time if the assembly init is already executed.
+            // performed every time if the assembly initialization is already executed.
             lock (_assemblyInfoExecuteSyncObject)
             {
                 // Perform a check again.

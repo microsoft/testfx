@@ -51,7 +51,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     public AssemblyEnumerator(MSTestSettings settings)
     {
         // Populate the settings into the domain(Desktop workflow) performing discovery.
-        // This would just be resettings the settings to itself in non desktop workflows.
+        // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
     }
 
@@ -122,7 +122,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var types = new List<Type>();
         try
         {
-            types.AddRange(assembly.DefinedTypes.Select(typeinfo => typeinfo.AsType()));
+            types.AddRange(assembly.DefinedTypes.Select(typeInfo => typeInfo.AsType()));
         }
         catch (ReflectionTypeLoadException ex)
         {
@@ -282,7 +282,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         if (dataSourceAttributes.Length > 1)
         {
             var message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateDataSourceAttribute_MoreThenOneDefined, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, dataSourceAttributes.Length);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumarator: {message}");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumerator: {message}");
             throw new InvalidOperationException(message);
         }
 
@@ -294,7 +294,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         catch (Exception ex)
         {
             var message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, ex);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumarator: {message}");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumerator: {message}");
             return false;
         }
     }
@@ -349,7 +349,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         catch (Exception ex)
         {
             var message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, ex);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumarator: {message}");
+            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumerator: {message}");
             return false;
         }
     }
@@ -374,7 +374,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstTestSeen, index, discoveredTest.DisplayName);
                     warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumarator: {warning}");
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
 
                     serializationFailed = true;
                     break;
@@ -390,7 +390,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                     var firstIndexSeen = discoveredIndex[discoveredTest.DisplayName];
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
                     warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumarator: {warning}");
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
 
                     serializationFailed = true;
                     break;

@@ -61,21 +61,21 @@ public class OutputTests : CLITestBase
     private static readonly Func<TestResultMessage, bool> IsStandardOutputMessage = m => m.Category == "StdOutMsgs" && !m.Text.StartsWith("\n\nDebug Trace:\n");
     private static readonly Func<TestResultMessage, bool> IsStandardErrorMessage = m => m.Category == "StdErrMsgs";
 
-    private static void ValidateOutputsAreNotMixed(ReadOnlyCollection<OM.TestResult> testResults, string methodName, string[] shouldNotContain)
+    private static void ValidateOutputsAreNotMixed(ReadOnlyCollection<TestResult> testResults, string methodName, string[] shouldNotContain)
     {
         ValidateOutputIsNotMixed(testResults, methodName, shouldNotContain, IsStandardOutputMessage);
         ValidateOutputIsNotMixed(testResults, methodName, shouldNotContain, IsStandardErrorMessage);
         ValidateOutputIsNotMixed(testResults, methodName, shouldNotContain, IsDebugMessage);
     }
 
-    private static void ValidateInitializationsAndCleanups(ReadOnlyCollection<OM.TestResult> testResults)
+    private static void ValidateInitializationsAndCleanups(ReadOnlyCollection<TestResult> testResults)
     {
         ValidateInitializeAndCleanup(testResults, IsStandardOutputMessage);
         ValidateInitializeAndCleanup(testResults, IsStandardErrorMessage);
         ValidateInitializeAndCleanup(testResults, IsDebugMessage);
     }
 
-    private static void ValidateOutputIsNotMixed(ReadOnlyCollection<OM.TestResult> testResults, string methodName, string[] shouldNotContain, Func<TestResultMessage, bool> messageFilter)
+    private static void ValidateOutputIsNotMixed(ReadOnlyCollection<TestResult> testResults, string methodName, string[] shouldNotContain, Func<TestResultMessage, bool> messageFilter)
     {
         // Make sure that the output between methods is not mixed. And that every method has test initialize and cleanup.
         var testMethod = testResults.Single(t => t.DisplayName == methodName);
@@ -93,7 +93,7 @@ public class OutputTests : CLITestBase
         Verify(!new Regex(string.Join("|", shouldNotContain)).IsMatch(message.Text));
     }
 
-    private static void ValidateInitializeAndCleanup(ReadOnlyCollection<OM.TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
+    private static void ValidateInitializeAndCleanup(ReadOnlyCollection<TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
     {
         // It is not deterministic where the class initialize and class cleanup will run, so we look at all tests, to make sure it is includes somewhere.
         var output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));

@@ -28,7 +28,7 @@ public class ReflectionOperations : IReflectionOperations
 #if NETFRAMEWORK
         return ReflectionUtility.GetCustomAttributes(memberInfo, inherit);
 #else
-        return memberInfo.GetCustomAttributes(inherit).ToArray<object>();
+        return memberInfo.GetCustomAttributes(inherit).ToArray();
 #endif
     }
 
@@ -44,7 +44,7 @@ public class ReflectionOperations : IReflectionOperations
 #if NETFRAMEWORK
         return ReflectionUtility.GetCustomAttributes(memberInfo, type, inherit);
 #else
-        return memberInfo.GetCustomAttributes(type, inherit).ToArray<object>();
+        return memberInfo.GetCustomAttributes(type, inherit).ToArray();
 #endif
     }
 

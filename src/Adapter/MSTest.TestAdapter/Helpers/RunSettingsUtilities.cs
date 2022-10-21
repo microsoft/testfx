@@ -38,7 +38,7 @@ internal class RunSettingsUtilities
     /// <remarks>If there is no test run parameters section defined in the settingsxml a blank dictionary is returned.</remarks>
     internal static Dictionary<string, object> GetTestRunParameters(string settingsXml)
     {
-        var nodeValue = GetNodeValue(settingsXml, TestAdapter.Constants.TestRunParametersName, TestRunParameters.FromXml);
+        var nodeValue = GetNodeValue(settingsXml, Constants.TestRunParametersName, TestRunParameters.FromXml);
         if (nodeValue == default(Dictionary<string, object>))
         {
             // Return default.
