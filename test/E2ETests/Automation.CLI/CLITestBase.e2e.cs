@@ -200,17 +200,18 @@ public partial class CLITestBase : TestContainer
                        test.Equals(f.DisplayName));
             Assert.IsNotNull(testFound, "Test '{0}' does not appear in failed tests list.", test);
 
-            // Skipping this check for x64 as of now. https://github.com/Microsoft/testfx/issues/60 should fix this.
-            if (source.IndexOf("x64") == -1 && validateStackTraceInfo)
+            if (!validateStackTraceInfo)
             {
-                if (string.IsNullOrWhiteSpace(testFound.ErrorStackTrace))
-                {
-                    Assert.Fail($"The test failure {testFound.DisplayName ?? testFound.TestCase.FullyQualifiedName} with message {testFound.ErrorMessage} lacks stacktrace.");
-                }
-
-                // Verify stack information as well.
-                Assert.IsTrue(testFound.ErrorStackTrace.Contains(GetTestMethodName(test)), "No stack trace for failed test: {0}", test);
+                continue;
             }
+
+            if (string.IsNullOrWhiteSpace(testFound.ErrorStackTrace))
+            {
+                Assert.Fail($"The test failure {testFound.DisplayName ?? testFound.TestCase.FullyQualifiedName} with message {testFound.ErrorMessage} lacks stacktrace.");
+            }
+
+            // Verify stack information as well.
+            Assert.IsTrue(testFound.ErrorStackTrace.Contains(GetTestMethodName(test)), "No stack trace for failed test: {0}", test);
         }
     }
 
