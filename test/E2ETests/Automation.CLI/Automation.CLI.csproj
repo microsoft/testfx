@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
   </ItemGroup>
 
   <ItemGroup>

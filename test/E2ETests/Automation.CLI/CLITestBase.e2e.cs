@@ -6,9 +6,10 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
+using FluentAssertions;
+
 using Microsoft.TestPlatform.VsTestConsole.TranslationLayer;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using TestFramework.ForTestingMSTest;
 
@@ -69,7 +70,7 @@ public partial class CLITestBase : TestContainer
     {
         var vstestConsolePath = Path.Combine(Environment.CurrentDirectory, PackagesFolder, TestPlatformCLIPackageName, GetTestPlatformVersion(), VstestConsoleRelativePath);
 
-        Assert.IsTrue(File.Exists(vstestConsolePath), "GetConsoleRunnerPath: Path not found: {0}", vstestConsolePath);
+        File.Exists(vstestConsolePath).Should().BeTrue("GetConsoleRunnerPath: Path not found: {0}", vstestConsolePath);
 
         return vstestConsolePath;
     }
@@ -84,11 +85,11 @@ public partial class CLITestBase : TestContainer
         {
             var flag = _discoveryEventsHandler.Tests.Contains(test)
                        || _discoveryEventsHandler.Tests.Contains(GetTestMethodName(test));
-            Assert.IsTrue(flag, "Test '{0}' does not appear in discovered tests list.", test);
+            flag.Should().BeTrue("Test '{0}' does not appear in discovered tests list.", test);
         }
 
         // Make sure only expected number of tests are discovered and not more.
-        Assert.AreEqual(discoveredTestsList.Length, _discoveryEventsHandler.Tests.Count);
+        discoveredTestsList.Should().HaveSameCount(_discoveryEventsHandler.Tests);
     }
 
     /// <summary>
@@ -105,7 +106,7 @@ public partial class CLITestBase : TestContainer
     public void ValidatePassedTestsCount(int expectedPassedTestsCount)
     {
         // Make sure only expected number of tests passed and not more.
-        Assert.AreEqual(expectedPassedTestsCount, RunEventsHandler.PassedTests.Count);
+        RunEventsHandler.PassedTests.Should().HaveCount(expectedPassedTestsCount);
     }
 
     /// <summary>
@@ -130,7 +131,7 @@ public partial class CLITestBase : TestContainer
     public void ValidateFailedTestsCount(int expectedFailedTestsCount)
     {
         // Make sure only expected number of tests failed and not more.
-        Assert.AreEqual(expectedFailedTestsCount, RunEventsHandler.FailedTests.Count);
+        RunEventsHandler.FailedTests.Should().HaveCount(expectedFailedTestsCount);
     }
 
     /// <summary>
@@ -141,7 +142,7 @@ public partial class CLITestBase : TestContainer
     public void ValidateSkippedTests(params string[] skippedTests)
     {
         // Make sure only expected number of tests skipped and not more.
-        Assert.AreEqual(skippedTests.Length, RunEventsHandler.SkippedTests.Count);
+        RunEventsHandler.SkippedTests.Should().HaveSameCount(skippedTests);
 
         ValidateSkippedTestsContain(skippedTests);
     }
@@ -160,11 +161,6 @@ public partial class CLITestBase : TestContainer
 
         foreach (var test in passedTests)
         {
-            var testFound = passedTestResults.Any(
-                p => test.Equals(p.TestCase?.FullyQualifiedName)
-                     || test.Equals(p.DisplayName)
-                     || test.Equals(p.TestCase.DisplayName));
-
             var isFailed = failedTestResults.Any(
                 p => test.Equals(p.TestCase?.FullyQualifiedName)
                      || test.Equals(p.DisplayName)
@@ -177,7 +173,11 @@ public partial class CLITestBase : TestContainer
 
             var failedOrSkippedMessage = isFailed ? " (Test failed)" : isSkipped ? " (Test skipped)" : string.Empty;
 
-            Assert.IsTrue(testFound, "Test '{0}' does not appear in passed tests list." + failedOrSkippedMessage, test);
+            passedTestResults.Should().Contain(
+                p => test.Equals(p.TestCase.FullyQualifiedName)
+                     || test.Equals(p.DisplayName)
+                     || test.Equals(p.TestCase.DisplayName),
+                $"Test '{test}' does not appear in passed tests list." + failedOrSkippedMessage);
         }
     }
 
@@ -198,18 +198,15 @@ public partial class CLITestBase : TestContainer
         {
             var testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName) ||
                        test.Equals(f.DisplayName));
-            Assert.IsNotNull(testFound, "Test '{0}' does not appear in failed tests list.", test);
+            testFound.Should().NotBeNull("Test '{0}' does not appear in failed tests list.", test);
 
             // Skipping this check for x64 as of now. https://github.com/Microsoft/testfx/issues/60 should fix this.
             if (source.IndexOf("x64") == -1 && validateStackTraceInfo)
             {
-                if (string.IsNullOrWhiteSpace(testFound.ErrorStackTrace))
-                {
-                    Assert.Fail($"The test failure {testFound.DisplayName ?? testFound.TestCase.FullyQualifiedName} with message {testFound.ErrorMessage} lacks stacktrace.");
-                }
+                testFound.ErrorStackTrace.Should().NotBeNullOrWhiteSpace($"The test failure {testFound.DisplayName ?? testFound.TestCase.FullyQualifiedName} with message {testFound.ErrorMessage} lacks stacktrace.");
 
                 // Verify stack information as well.
-                Assert.IsTrue(testFound.ErrorStackTrace.Contains(GetTestMethodName(test)), "No stack trace for failed test: {0}", test);
+                testFound.ErrorStackTrace.Should().Contain(GetTestMethodName(test), "No stack trace for failed test: {0}", test);
             }
         }
     }
@@ -224,17 +221,16 @@ public partial class CLITestBase : TestContainer
     {
         foreach (var test in skippedTests)
         {
-            var testFound = RunEventsHandler.SkippedTests.Any(s => test.Equals(s.TestCase.FullyQualifiedName) ||
-                       test.Equals(s.DisplayName));
-            Assert.IsTrue(testFound, "Test '{0}' does not appear in skipped tests list.", test);
+            RunEventsHandler.SkippedTests.Should().Contain(
+                s => test.Equals(s.TestCase.FullyQualifiedName) || test.Equals(s.DisplayName),
+                "Test '{0}' does not appear in skipped tests list.", test);
         }
     }
 
     public void ValidateTestRunTime(int thresholdTime)
     {
-        Assert.IsTrue(
-            RunEventsHandler.ElapsedTimeInRunningTests >= 0 && RunEventsHandler.ElapsedTimeInRunningTests < thresholdTime,
-            $"Test Run was expected to not exceed {thresholdTime} but it took {RunEventsHandler.ElapsedTimeInRunningTests}");
+        var time = RunEventsHandler.ElapsedTimeInRunningTests >= 0 && RunEventsHandler.ElapsedTimeInRunningTests < thresholdTime;
+        time.Should().BeTrue($"Test Run was expected to not exceed {thresholdTime} but it took {RunEventsHandler.ElapsedTimeInRunningTests}");
     }
 
     /// <summary>

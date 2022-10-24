@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
+using FluentAssertions;
+
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
@@ -40,7 +42,7 @@ public class OutputTests : CLITestBase
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
-        Verify(testResults.Count == 3);
+        testResults.Should().HaveCount(3);
 
         // TODO: Re-enable this once we figure out how to make that pass in our CI pipeline.
         /*
@@ -81,24 +83,23 @@ public class OutputTests : CLITestBase
         var testMethod = testResults.Single(t => t.DisplayName == methodName);
 
         // Test method {methodName} was not found.
-        Verify(testMethod is not null);
+        testMethod.Should().NotBeNull();
         var message = testMethod.Messages.SingleOrDefault(messageFilter);
 
         // Message for {testMethod.DisplayName} was not found. All messages: { string.Join(Environment.NewLine, testMethod.Messages.Select(m => $"{m.Category} - {m.Text}")) }
-        Verify(message is not null);
-        Verify(new Regex(methodName).IsMatch(message.Text));
-        Verify(new Regex(methodName).IsMatch(message.Text));
-        Verify(new Regex("TestInitialize").IsMatch(message.Text));
-        Verify(new Regex("TestCleanup").IsMatch(message.Text));
-        Verify(!new Regex(string.Join("|", shouldNotContain)).IsMatch(message.Text));
+        message.Should().NotBeNull();
+        message.Text.Should().Match(methodName);
+        message.Text.Should().Match("TestInitialize");
+        message.Text.Should().Match("TestCleanup");
+        message.Text.Should().NotMatch(string.Join("|", shouldNotContain));
     }
 
     private static void ValidateInitializeAndCleanup(ReadOnlyCollection<TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
     {
         // It is not deterministic where the class initialize and class cleanup will run, so we look at all tests, to make sure it is includes somewhere.
         var output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));
-        Verify(output is not null);
-        Verify(new Regex("ClassInitialize").IsMatch(output));
-        Verify(new Regex("ClassCleanup").IsMatch(output));
+        output.Should().NotBeNull();
+        output.Should().Match("ClassInitialize");
+        output.Should().Match("ClassCleanup");
     }
 }

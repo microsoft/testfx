@@ -7,6 +7,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+using FluentAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -45,11 +47,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(2);
 
         var expectedAttributes = new string[] { "TestCategory : base", "Owner : base" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
@@ -58,11 +60,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(2);
 
         var expectedAttributes = new string[] { "TestCategory : derived", "Owner : derived" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
@@ -71,12 +73,12 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 3);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(3);
 
         // Notice that the Owner on the base method does not show up since it can only be defined once.
         var expectedAttributes = new string[] { "TestCategory : derived", "TestCategory : base", "Owner : derived" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
@@ -85,11 +87,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(1);
 
         var expectedAttributes = new string[] { "TestCategory : ba" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
@@ -98,11 +100,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(1);
 
         var expectedAttributes = new string[] { "TestCategory : a" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
@@ -111,11 +113,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(2);
 
         var expectedAttributes = new string[] { "TestCategory : a", "TestCategory : ba" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributes()
@@ -124,11 +126,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(1);
 
         var expectedAttributes = new string[] { "TestCategory : base" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
@@ -137,11 +139,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(1);
 
         var expectedAttributes = new string[] { "TestCategory : derived" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
@@ -151,11 +153,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), true);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(2);
 
         var expectedAttributes = new string[] { "TestCategory : derived", "TestCategory : base", };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()
@@ -164,11 +166,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, null, true);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 3);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(3);
 
         var expectedAttributes = new string[] { "Duration : superfast", "TestCategory : base", "Owner : base" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIncludingUserDefinedAttributes()
@@ -177,11 +179,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestPropertyAttribute), true);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(1);
 
         var expectedAttributes = new string[] { "Duration : superfast" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesShouldReturnArrayAttributesAsWell()
@@ -190,11 +192,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(CategoryArrayAttribute), true);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(1);
 
         var expectedAttributes = new string[] { "CategoryAttribute : foo,foo2" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributes()
@@ -203,11 +205,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, typeof(TestCategoryAttribute), false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(1);
 
         var expectedAttributes = new string[] { "TestCategory : ba" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
@@ -216,11 +218,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, typeof(TestCategoryAttribute), false);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(1);
 
         var expectedAttributes = new string[] { "TestCategory : a" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
@@ -229,11 +231,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(TestCategoryAttribute), true);
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(2);
 
         var expectedAttributes = new string[] { "TestCategory : a", "TestCategory : ba" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
@@ -242,11 +244,11 @@ public class ReflectionUtilityTests : TestContainer
 
         var attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(TestCategoryAttribute));
 
-        Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        attributes.Should().NotBeNull();
+        attributes.Should().HaveCount(2);
 
         var expectedAttributes = new string[] { "TestCategory : a1", "TestCategory : a2" };
-        Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
+        GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
     private Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)

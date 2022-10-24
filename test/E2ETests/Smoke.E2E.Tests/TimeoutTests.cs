@@ -4,6 +4,8 @@
 using System.Collections.Generic;
 using System.IO;
 
+using FluentAssertions;
+
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTestAdapter.Smoke.E2ETests;
@@ -44,6 +46,6 @@ public class TimeoutTests : CLITestBase
 
         // We should find the <TargetFramework>/TimeoutTestOutput.txt file, as it's our way to validate
         // that when the timeout expires it cancels the test context token.
-        Verify(File.Exists(GetAssetFullPath(targetFramework + "\\" + "TimeoutTestOutput.txt")));
+        File.Exists(GetAssetFullPath(targetFramework + "\\" + "TimeoutTestOutput.txt")).Should().BeTrue();
     }
 }
