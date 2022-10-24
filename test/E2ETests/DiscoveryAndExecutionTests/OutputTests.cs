@@ -88,10 +88,10 @@ public class OutputTests : CLITestBase
 
         // Message for {testMethod.DisplayName} was not found. All messages: { string.Join(Environment.NewLine, testMethod.Messages.Select(m => $"{m.Category} - {m.Text}")) }
         message.Should().NotBeNull();
-        message.Text.Should().Match(methodName);
-        message.Text.Should().Match("TestInitialize");
-        message.Text.Should().Match("TestCleanup");
-        message.Text.Should().NotMatch(string.Join("|", shouldNotContain));
+        message.Text.Should().Contain(methodName);
+        message.Text.Should().Contain("TestInitialize");
+        message.Text.Should().Contain("TestCleanup");
+        message.Text.Should().NotContainAny(shouldNotContain);
     }
 
     private static void ValidateInitializeAndCleanup(ReadOnlyCollection<TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
@@ -99,7 +99,7 @@ public class OutputTests : CLITestBase
         // It is not deterministic where the class initialize and class cleanup will run, so we look at all tests, to make sure it is includes somewhere.
         var output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));
         output.Should().NotBeNull();
-        output.Should().Match("ClassInitialize");
-        output.Should().Match("ClassCleanup");
+        output.Should().Contain("ClassInitialize");
+        output.Should().Contain("ClassCleanup");
     }
 }
