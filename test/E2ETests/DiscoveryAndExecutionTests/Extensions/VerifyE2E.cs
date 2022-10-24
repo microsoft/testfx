@@ -4,10 +4,10 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using FluentAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
-using TestContainer = TestFramework.ForTestingMSTest.TestContainer;
 
 namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 public static class VerifyE2E
@@ -31,25 +31,25 @@ public static class VerifyE2E
         => ContainsTestsDiscovered(actualTests, expectedTests, false);
 
     public static void TestsPassed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
-        => ContainsExpectedTestsWithOutcome(actual, testCases, TestOutcome.Passed, expectedTests, true, settings);
+        => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests, true);
 
     public static void TestsPassed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests, true);
 
     public static void TestsFailed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
-      => ContainsExpectedTestsWithOutcome(actual, testCases, TestOutcome.Failed, expectedTests, true, settings);
+      => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests, true);
 
     public static void TestsFailed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests, true);
 
     public static void ContainsTestsPassed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
-        => ContainsExpectedTestsWithOutcome(actual, testCases, TestOutcome.Passed, expectedTests, false, settings);
+        => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests, false);
 
     public static void ContainsTestsPassed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Passed, expectedTests);
 
     public static void ContainsTestsFailed(IEnumerable<TestResult> actual, IEnumerable<TestCase> testCases, IEnumerable<string> expectedTests, MSTestSettings settings = null)
-        => ContainsExpectedTestsWithOutcome(actual, testCases, TestOutcome.Failed, expectedTests, false, settings);
+        => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests, false);
 
     public static void ContainsTestsFailed(IEnumerable<TestResult> actual, params string[] expectedTests)
         => ContainsExpectedTestsWithOutcome(actual, TestOutcome.Failed, expectedTests);
@@ -58,89 +58,54 @@ public static class VerifyE2E
     {
         if (matchCount)
         {
-            var expectedCount = discoveredTests.Count();
-            var outcomedCount = expectedTests.Count();
-
-            AssertDiscoveryCount(outcomedCount, expectedCount);
+            discoveredTests.Should().HaveSameCount(expectedTests);
         }
 
         foreach (var test in expectedTests)
         {
-            var testFound = discoveredTests.Any(
+            // Test Discovery run was expecting to discover \"{test}\", but it has not discovered.
+            discoveredTests.Should().Contain(
                 p => test.Equals(p.FullyQualifiedName)
                      || test.Equals(p.DisplayName)
                      || test.Equals(p.DisplayName));
-
-            // Test Discovery run was expecting to discover \"{test}\", but it has not discovered.
-            TestContainer.Verify(testFound);
         }
     }
 
-    private static void ContainsExpectedTestsWithOutcome(IEnumerable<TestResult> outcomedTests, IEnumerable<TestCase> testCases, TestOutcome expectedOutcome, IEnumerable<string> expectedTests, bool matchCount = false, MSTestSettings settings = null)
+    private static void ContainsExpectedTestsWithOutcome(IEnumerable<TestResult> tests, TestOutcome expectedOutcome,
+        IEnumerable<string> expectedTests, bool matchCount = false)
     {
         if (matchCount)
         {
             var expectedCount = expectedTests.Count();
-            AssertOutcomeCount(outcomedTests, expectedOutcome, expectedCount);
+            AssertOutcomeCount(tests, expectedOutcome, expectedCount);
         }
 
         foreach (var test in expectedTests)
         {
-            var testFound = outcomedTests.Any(
-                p => test.Equals(p.TestCase?.FullyQualifiedName)
+            tests.Should().Contain(
+                p => test.Equals(p.TestCase.FullyQualifiedName)
                      || test.Equals(p.DisplayName)
                      || test.Equals(p.TestCase.DisplayName));
-
-            TestContainer.Verify(testFound);
         }
     }
 
-    private static void ContainsExpectedTestsWithOutcome(IEnumerable<TestResult> outcomedTests, TestOutcome expectedOutcome, string[] expectedTests, bool matchCount = false)
+    private static void ContainsExpectedTestsWithOutcome(IEnumerable<TestResult> tests, TestOutcome expectedOutcome,
+        string[] expectedTests, bool matchCount = false)
     {
         if (matchCount)
         {
             var expectedCount = expectedTests.Length;
-            AssertOutcomeCount(outcomedTests, expectedOutcome, expectedCount);
+            AssertOutcomeCount(tests, expectedOutcome, expectedCount);
         }
 
         foreach (var test in expectedTests)
         {
-            var testFound = outcomedTests.Any(p => p.DisplayName == test);
-
-            TestContainer.Verify(testFound);
+            tests.Should().Contain(p => p.DisplayName == test);
         }
-    }
-
-    private static string GetOutcomeAssertString(string testName, TestOutcome outcome)
-    {
-        return outcome switch
-        {
-            TestOutcome.None => $"\"{testName}\" does not have TestOutcome.None outcome.",
-            TestOutcome.Passed => $"\"{testName}\" does not appear in passed tests list.",
-            TestOutcome.Failed => $"\"{testName}\" does not appear in failed tests list.",
-            TestOutcome.Skipped => $"\"{testName}\" does not appear in skipped tests list.",
-            TestOutcome.NotFound => $"\"{testName}\" does not appear in not found tests list.",
-            _ => string.Empty,
-        };
     }
 
     private static void AssertOutcomeCount(IEnumerable<TestResult> actual, TestOutcome expectedOutcome, int expectedCount)
     {
-        var outcomedTests = actual.Where(i => i.Outcome == expectedOutcome);
-        var actualCount = outcomedTests.Count();
-
-        AssertOutcomeCount(actualCount, expectedCount);
-    }
-
-    private static void AssertOutcomeCount(int actualCount, int expectedCount)
-    {
-        // Test run expected to contain {expectedCount} tests, but ran {actualCount}.
-        TestContainer.Verify(expectedCount == actualCount);
-    }
-
-    private static void AssertDiscoveryCount(int actualCount, int expectedCount)
-    {
-        // Test discovery expected to contain {expectedCount} tests, but ran {actualCount}.
-        TestContainer.Verify(expectedCount == actualCount);
+        actual.Where(i => i.Outcome == expectedOutcome).Should().HaveCount(expectedCount);
     }
 }

@@ -5,6 +5,8 @@ using System;
 using System.IO;
 using System.Xml;
 
+using FluentAssertions;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.MSTestV2.CLIAutomation;
@@ -61,7 +63,7 @@ public partial class CLITestBase : TestContainer
         var assetPath = Path.GetFullPath(Path.Combine(GetAssetFolderPath(), assetName));
 
         // GetTestAsset: Path not found.
-        Verify(File.Exists(assetPath));
+        File.Exists(assetPath).Should().BeTrue();
         return assetPath;
     }
 

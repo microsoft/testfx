@@ -5,6 +5,8 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 
+using FluentAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -21,7 +23,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
     public void ParentDomainShouldHonorSearchDirectoriesSpecifiedInRunsettings()
     {
-        string runSettingxml =
+        string runSettingXml =
         @"<RunSettings>
                 <RunConfiguration>
                     <DisableAppDomain>True</DisableAppDomain>
@@ -36,7 +38,7 @@ public class DesktopTestSourceHostTests : TestContainer
              </RunSettings>";
 
         var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
-        _testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingxml).Object, null);
+        _testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingXml).Object, null);
         _testSourceHost.SetupHost();
 
         // Loading SampleProjectForAssemblyResolution.dll should not throw.
@@ -46,7 +48,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
     public void ChildDomainResolutionPathsShouldHaveSearchDirectoriesSpecifiedInRunsettings()
     {
-        string runSettingxml =
+        string runSettingXml =
         @"<RunSettings>
                 <RunConfiguration>
                     <DisableAppDomain>False</DisableAppDomain>
@@ -61,7 +63,7 @@ public class DesktopTestSourceHostTests : TestContainer
              </RunSettings>";
 
         var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
-        _testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingxml).Object, null);
+        _testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingXml).Object, null);
         _testSourceHost.SetupHost();
 
         var assemblyResolution = "ComponentTests\\SampleProjectForAssemblyResolution.dll";
@@ -80,11 +82,11 @@ public class DesktopTestSourceHostTests : TestContainer
         _testSourceHost.SetupHost();
 
         // Check that child appdomain was indeed created
-        Verify(_testSourceHost.AppDomain is not null);
+        _testSourceHost.AppDomain.Should().NotBeNull();
         _testSourceHost.Dispose();
 
         // Check that child-appdomain is now unloaded.
-        Verify(_testSourceHost.AppDomain is null);
+        _testSourceHost.AppDomain.Should().BeNull();
     }
 
     private static string GetTestAssemblyPath(string assemblyName)
@@ -95,12 +97,12 @@ public class DesktopTestSourceHostTests : TestContainer
         return Path.Combine(testAssetPath, assemblyName);
     }
 
-    private static Mock<IRunSettings> GetMockedIRunSettings(string runSettingxml)
+    private static Mock<IRunSettings> GetMockedIRunSettings(string runSettingXml)
     {
         var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingXml);
 
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         reader.ReadToFollowing("MSTestV2");
