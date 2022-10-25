@@ -22,7 +22,6 @@ public class DataSourceTests : CLITestBase
             "CsvTestMethod (Data Row 2)");
 
         ValidateFailedTests(
-            TestAssembly,
             "CsvTestMethod (Data Row 1)",
             "CsvTestMethod (Data Row 3)");
     }

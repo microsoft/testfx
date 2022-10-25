@@ -28,7 +28,6 @@ public class ParallelExecutionTests : CLITestBase
             "ParallelMethodsTestProject.UnitTest2.IsolatedTest");
 
         ValidateFailedTests(
-            MethodParallelTestAssembly,
             "ParallelMethodsTestProject.UnitTest1.SimpleTest12",
             "ParallelMethodsTestProject.UnitTest2.SimpleTest22");
     }
@@ -49,7 +48,6 @@ public class ParallelExecutionTests : CLITestBase
             "ParallelClassesTestProject.UnitTest2.IsolatedTest");
 
         ValidateFailedTests(
-            MethodParallelTestAssembly,
             "ParallelClassesTestProject.UnitTest1.SimpleTest12",
             "ParallelClassesTestProject.UnitTest2.SimpleTest22",
             "ParallelClassesTestProject.UnitTest3.SimpleTest32");
@@ -80,7 +78,6 @@ public class ParallelExecutionTests : CLITestBase
             "DoNotParallelizeTestProject.UnitTest2.SimpleTest21");
 
         ValidateFailedTestsContain(
-            DoNotParallelizeTestAssembly,
             true,
             "DoNotParallelizeTestProject.UnitTest1.SimpleTest12",
             "DoNotParallelizeTestProject.UnitTest2.SimpleTest22");

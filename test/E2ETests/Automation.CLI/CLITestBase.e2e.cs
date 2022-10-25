@@ -112,16 +112,15 @@ public partial class CLITestBase : TestContainer
     /// <summary>
     /// Validates if the test results have the specified set of failed tests.
     /// </summary>
-    /// <param name="source">The test container.</param>
     /// <param name="failedTests">Set of failed tests.</param>
     /// <remarks>
     /// Provide the full test name similar to this format SampleTest.TestCode.TestMethodFailed.
     /// Also validates whether these tests have stack trace info.
     /// </remarks>
-    public void ValidateFailedTests(string source, params string[] failedTests)
+    public void ValidateFailedTests(params string[] failedTests)
     {
         ValidateFailedTestsCount(failedTests.Length);
-        ValidateFailedTestsContain(source, true, failedTests);
+        ValidateFailedTestsContain(true, failedTests);
     }
 
     /// <summary>
@@ -184,7 +183,6 @@ public partial class CLITestBase : TestContainer
     /// <summary>
     /// Validates if the test results contains the specified set of failed tests.
     /// </summary>
-    /// <param name="source">The test container.</param>
     /// <param name="validateStackTraceInfo">Validates the existence of stack trace when set to true.</param>
     /// <param name="failedTests">Set of failed tests.</param>
     /// <remarks>
@@ -192,7 +190,7 @@ public partial class CLITestBase : TestContainer
     /// Also validates whether these tests have stack trace info.
     /// </remarks>
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-    public void ValidateFailedTestsContain(string source, bool validateStackTraceInfo, params string[] failedTests)
+    public void ValidateFailedTestsContain(bool validateStackTraceInfo, params string[] failedTests)
     {
         foreach (var test in failedTests)
         {
@@ -205,10 +203,13 @@ public partial class CLITestBase : TestContainer
                 continue;
             }
 
-            testFound.ErrorStackTrace.Should().NotBeNullOrWhiteSpace($"The test failure {testFound.DisplayName ?? testFound.TestCase.FullyQualifiedName} with message {testFound.ErrorMessage} lacks stacktrace.");
+            testFound.ErrorStackTrace.Should().NotBeNullOrWhiteSpace($"The test failure {testFound.DisplayName ?? testFound.TestCase.FullyQualifiedName} with message {testFound.ErrorMessage} lacks stack trace.");
 
-            // Verify stack information as well.
-            testFound.ErrorStackTrace.Should().Contain(GetTestMethodName(test), "No stack trace for failed test: {0}", test);
+            // If test name is not empty, verify stack information as well.
+            if (GetTestMethodName(test) is { Length: > 0 } testMethodName)
+            {
+                testFound.ErrorStackTrace.Should().Contain(testMethodName, "No stack trace for failed test: {0}", test);
+            }
         }
     }
 
