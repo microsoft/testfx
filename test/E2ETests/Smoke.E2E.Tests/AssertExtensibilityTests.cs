@@ -16,7 +16,6 @@ public class AssertExtensibilityTests : CLITestBase
             "FxExtensibilityTestProject.AssertExTest.ChainedAssertExtensionTest");
 
         ValidateFailedTestsContain(
-            TestAssembly,
             true,
             "FxExtensibilityTestProject.AssertExTest.BasicFailingAssertExtensionTest",
             "FxExtensibilityTestProject.AssertExTest.ChainedFailingAssertExtensionTest");

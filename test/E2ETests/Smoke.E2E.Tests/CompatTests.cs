@@ -33,12 +33,10 @@ public class CompatTests : CLITestBase
             "SampleUnitTestProject.UnitTest1.PassingTest");
 
         ValidateFailedTestsContain(
-            OldAdapterTestProject,
             true,
             "CompatTestProject.UnitTest1.FailingTest");
 
         ValidateFailedTestsContain(
-            LatestAdapterTestProject,
             true,
             "SampleUnitTestProject.UnitTest1.FailingTest");
 

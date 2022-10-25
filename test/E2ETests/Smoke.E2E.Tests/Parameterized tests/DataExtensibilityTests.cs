@@ -44,7 +44,6 @@ public class DataExtensibilityTests : CLITestBase
             "CustomTestClass1 - Execution number 4",
             "CustomTestClass1 - Execution number 5");
         ValidateFailedTestsContain(
-            TestAssembly,
             true,
             "CustomTestMethod1 - Execution number 3",
             "CustomTestClass1 - Execution number 3");
@@ -60,7 +59,6 @@ public class DataExtensibilityTests : CLITestBase
             "CustomTestMethod2 (B)");
         ValidateFailedTestsCount(6);
         ValidateFailedTestsContain(
-            TestAssembly,
             true,
             "CustomTestMethod2 (A)",
             "CustomTestMethod2 (A)",

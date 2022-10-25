@@ -77,7 +77,7 @@ public class DesktopCSharpCLITests : CLITestBase
     {
         InvokeVsTestForExecution(sources, runSettings);
         ValidatePassedTests("SampleUnitTestProject.UnitTest1.PassingTest");
-        ValidateFailedTests(sources[0], "SampleUnitTestProject.UnitTest1.FailingTest");
+        ValidateFailedTests("SampleUnitTestProject.UnitTest1.FailingTest");
         ValidateSkippedTests("SampleUnitTestProject.UnitTest1.SkippingTest");
     }
 }
