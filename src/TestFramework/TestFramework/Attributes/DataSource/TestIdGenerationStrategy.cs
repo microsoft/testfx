@@ -18,7 +18,7 @@ public enum TestIdGenerationStrategy
     /// This was the default option until version 2.2.3.
     /// </remarks>
     [Obsolete("This strategy is provided to reduce impact on existing users. It will be removed in a future release.")]
-    Legacy = 1,
+    Legacy = 0,
 
     /// <summary>
     /// Uses a combination of executor ID, file name, fully qualified name and display name to generate the test ID.
@@ -27,7 +27,7 @@ public enum TestIdGenerationStrategy
     /// This is the default behavior between versions 2.2.4 and 3.0.0.
     /// </remarks>
     [Obsolete("This strategy is provided to reduce impact on existing users. It will be removed in a future release.")]
-    DisplayName = 2,
+    DisplayName = 1,
 
     /// <summary>
     /// Uses a combination of executor ID, file path, assembly name, method fully qualified name and serialized data (values and their fully qualified type) to generate the test ID.
@@ -35,5 +35,5 @@ public enum TestIdGenerationStrategy
     /// <remarks>
     /// This is the default behavior starting with version 3.0.0.
     /// </remarks>
-    FullyQualifiedTest = 3,
+    FullyQualifiedTest = 2,
 }

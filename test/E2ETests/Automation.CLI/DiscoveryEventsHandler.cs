@@ -13,12 +13,12 @@ public class DiscoveryEventsHandler : ITestDiscoveryEventsHandler
     /// <summary>
     /// Gets a list of Discovered tests.
     /// </summary>
-    public IList<string> Tests { get; private set; }
+    public List<string> Tests { get; } = new List<string>();
 
-    public DiscoveryEventsHandler()
-    {
-        Tests = new List<string>();
-    }
+    /// <summary>
+    /// Gets the list of messages received from the discovery process.
+    /// </summary>
+    public List<string> Messages { get; } = new List<string>();
 
     public void HandleDiscoveredTests(IEnumerable<TestCase> discoveredTestCases)
     {
@@ -44,7 +44,8 @@ public class DiscoveryEventsHandler : ITestDiscoveryEventsHandler
 
     public void HandleLogMessage(TestMessageLevel level, string message)
     {
-        switch ((TestMessageLevel)level)
+        Messages.Add($"[{level}]: {message}");
+        switch (level)
         {
             case TestMessageLevel.Informational:
                 EqtTrace.Info(message);

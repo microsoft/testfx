@@ -30,7 +30,9 @@ public partial class TestId : CLITestBase
             "DataRowArraysTests (0,System.Int32[])",
             "DataRowArraysTests (0,System.Int32[])",
             "DataRowArraysTests (0,System.Int32[])");
-        testResults.Should().OnlyContain(x => x.TestCase.Id.ToString() == "693508a2-b678-55e9-5e15-9d4999d7dd1f");
+
+        // We cannot assert the expected guid as it is path dependent
+        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
     public void TestIdUniqueness_DataRowString_DisplayNameStrategy()
@@ -50,14 +52,10 @@ public partial class TestId : CLITestBase
             "DataRowStringTests ()",
             "DataRowStringTests ( )",
             "DataRowStringTests (  )");
-        var expectedTestIds = new[]
-        {
-            "6efe619f-4f82-57d2-201b-299111dd78a3",
-            "d8bbcca2-64ee-26ff-23d3-5a715eabb814",
-            "3bf86c48-252b-edc3-290e-67867e1e1c2b",
-            "d8bbcca2-64ee-26ff-23d3-5a715eabb814",
-        };
-        testResults.Select(x => x.TestCase.Id.ToString()).Should().BeEquivalentTo(expectedTestIds);
+
+        // We cannot assert the expected guid as it is path dependent.
+        // First two display names are equals so we have the same ID for them
+        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().HaveCount(3);
     }
     #endregion // DataRow tests
 
@@ -78,7 +76,9 @@ public partial class TestId : CLITestBase
             "DynamicDataArraysTests (0,System.Int32[])",
             "DynamicDataArraysTests (0,System.Int32[])",
             "DynamicDataArraysTests (0,System.Int32[])");
-        testResults.Should().OnlyContain(x => x.TestCase.Id.ToString() == "f082cd61-c63f-c62f-8ee4-25521f65b4cc");
+
+        // We cannot assert the expected guid as it is path dependent
+        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
     public void TestIdUniqueness_DynamicDataTuple_DisplayNameStrategy()
@@ -96,12 +96,9 @@ public partial class TestId : CLITestBase
             testResults,
             "DynamicDataTuplesTests ((1, text, True))",
             "DynamicDataTuplesTests ((1, text, False))");
-        var expectedTestIds = new[]
-        {
-            "f67bc110-9e34-6035-3f9b-967dcf628fc4",
-            "69f33ebc-b11c-76c7-d029-73b73ed6f9aa",
-        };
-        testResults.Select(x => x.TestCase.Id.ToString()).Should().BeEquivalentTo(expectedTestIds);
+
+        // We cannot assert the expected guid as it is path dependent
+        testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
     public void TestIdUniqueness_DynamicDataGenericCollections_DisplayNameStrategy()
@@ -121,7 +118,9 @@ public partial class TestId : CLITestBase
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])",
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])",
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])");
-        testResults.Should().OnlyContain(x => x.TestCase.Id.ToString() == "362ad6f0-9c6a-0787-77a5-3823ba94355b");
+
+        // We cannot assert the expected guid as it is path dependent
+        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
     #endregion // DynamicData tests
 
@@ -142,7 +141,9 @@ public partial class TestId : CLITestBase
             "Custom name",
             "Custom name",
             "Custom name");
-        testResults.Should().OnlyContain(x => x.TestCase.Id.ToString() == "8921bd6a-c547-6b55-d551-faa731013c63");
+
+        // We cannot assert the expected guid as it is path dependent
+        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
     public void TestIdUniqueness_TestDataSourceTuples_DisplayNameStrategy()
@@ -160,7 +161,9 @@ public partial class TestId : CLITestBase
             testResults,
             "Custom name",
             "Custom name");
-        testResults.Should().OnlyContain(x => x.TestCase.Id.ToString() == "090538bc-78df-8243-f445-48496976c89e");
+
+        // We cannot assert the expected guid as it is path dependent
+        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
     public void TestIdUniqueness_TestDataSourceGenericCollections_DisplayNameStrategy()
@@ -180,7 +183,9 @@ public partial class TestId : CLITestBase
             "Custom name",
             "Custom name",
             "Custom name");
-        testResults.Should().OnlyContain(x => x.TestCase.Id.ToString() == "a6f8a841-425a-a767-84a1-3ffb8854a21d");
+
+        // We cannot assert the expected guid as it is path dependent
+        testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
     #endregion // TestDataSource tests
 }
