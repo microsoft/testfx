@@ -3,6 +3,8 @@
 
 using System.Linq;
 
+using FluentAssertions;
+
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 
@@ -34,8 +36,7 @@ public partial class TestId : CLITestBase
             "4777c91d-ed1d-2376-8574-02290eb6ea2a",
             "c467510c-2b09-ada5-dd57-0a063a265324",
         };
-        var unionOfIds = testResults.Select(x => x.TestCase.Id.ToString()).Union(expectedTestIds).ToList();
-        Verify(unionOfIds.Count == expectedTestIds.Length);
+        testResults.Select(x => x.TestCase.Id.ToString()).Should().BeEquivalentTo(expectedTestIds);
     }
 
     public void TestIdUniqueness_DataRowString_FullyQualifiedTestStrategy()
@@ -62,8 +63,7 @@ public partial class TestId : CLITestBase
             "3c77645c-44b5-532b-6a9d-856885c7d1e0",
             "5ebfafcd-fb75-8d90-79af-92c179b0d786",
         };
-        var unionOfIds = testResults.Select(x => x.TestCase.Id.ToString()).Union(expectedTestIds).ToList();
-        Verify(unionOfIds.Count == expectedTestIds.Length);
+        testResults.Select(x => x.TestCase.Id.ToString()).Should().BeEquivalentTo(expectedTestIds);
     }
     #endregion // DataRow tests
 
@@ -90,8 +90,7 @@ public partial class TestId : CLITestBase
             "320385c0-b17d-33cf-75f6-674e9a4fa267",
             "c883fef3-9f68-4eff-4ad2-4fee93d7d8ec",
         };
-        var unionOfIds = testResults.Select(x => x.TestCase.Id.ToString()).Union(expectedTestIds).ToList();
-        Verify(unionOfIds.Count == expectedTestIds.Length);
+        testResults.Select(x => x.TestCase.Id.ToString()).Should().BeEquivalentTo(expectedTestIds);
     }
 
     public void TestIdUniqueness_DynamicDataTuple_FullyQualifiedTestStrategy()
@@ -114,8 +113,7 @@ public partial class TestId : CLITestBase
             "5b908b4b-1983-a6e3-af64-6da9dac50407",
             "ce1edae0-e539-cd40-7d6b-954b8a98d694",
         };
-        var unionOfIds = testResults.Select(x => x.TestCase.Id.ToString()).Union(expectedTestIds).ToList();
-        Verify(unionOfIds.Count == expectedTestIds.Length);
+        testResults.Select(x => x.TestCase.Id.ToString()).Should().BeEquivalentTo(expectedTestIds);
     }
 
     public void TestIdUniqueness_DynamicDataGenericCollections_FullyQualifiedTestStrategy()
@@ -142,8 +140,7 @@ public partial class TestId : CLITestBase
             "821b7b00-b628-9cab-eba3-aa533f8229fe",
             "12d006d1-e3b7-0e29-76e1-19827fc2becf",
         };
-        var unionOfIds = testResults.Select(x => x.TestCase.Id.ToString()).Union(expectedTestIds).ToList();
-        Verify(unionOfIds.Count == expectedTestIds.Length);
+        testResults.Select(x => x.TestCase.Id.ToString()).Should().BeEquivalentTo(expectedTestIds);
     }
     #endregion // DynamicData tests
 
@@ -170,8 +167,7 @@ public partial class TestId : CLITestBase
             "7d7a395e-eed3-6b79-6fd8-805bcca513e4",
             "4f9ce31d-8c45-6807-719c-87cb01ebd6b6",
         };
-        var unionOfIds = testResults.Select(x => x.TestCase.Id.ToString()).Union(expectedTestIds).ToList();
-        Verify(unionOfIds.Count == expectedTestIds.Length);
+        testResults.Select(x => x.TestCase.Id.ToString()).Should().BeEquivalentTo(expectedTestIds);
     }
 
     public void TestIdUniqueness_TestDataSourceTuples_FullyQualifiedTestStrategy()
@@ -194,8 +190,7 @@ public partial class TestId : CLITestBase
             "aee40850-f6a6-a0dd-3730-4869fc3c6b5f",
             "b03431d7-3486-4301-39d0-2d8d576a5c0c",
         };
-        var unionOfIds = testResults.Select(x => x.TestCase.Id.ToString()).Union(expectedTestIds).ToList();
-        Verify(unionOfIds.Count == expectedTestIds.Length);
+        testResults.Select(x => x.TestCase.Id.ToString()).Should().BeEquivalentTo(expectedTestIds);
     }
 
     public void TestIdUniqueness_TestDataSourceGenericCollections_FullyQualifiedTestStrategy()
@@ -222,8 +217,7 @@ public partial class TestId : CLITestBase
             "bd43580d-1e18-662a-70c0-5845a777928d",
             "d98cc584-2ff2-543e-f4f2-1d8ec9d8c54c",
         };
-        var unionOfIds = testResults.Select(x => x.TestCase.Id.ToString()).Union(expectedTestIds).ToList();
-        Verify(unionOfIds.Count == expectedTestIds.Length);
+        testResults.Select(x => x.TestCase.Id.ToString()).Should().BeEquivalentTo(expectedTestIds);
     }
     #endregion // TestDataSource tests
 }
