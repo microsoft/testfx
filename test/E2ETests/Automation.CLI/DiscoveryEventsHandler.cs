@@ -34,7 +34,7 @@ public class DiscoveryEventsHandler : ITestDiscoveryEventsHandler
         {
             foreach (TestCase testCase in discoveredTestCases)
             {
-                Tests.Add(testCase.FullyQualifiedName);
+                _testsBuilder.Add(testCase.FullyQualifiedName);
             }
         }
     }
