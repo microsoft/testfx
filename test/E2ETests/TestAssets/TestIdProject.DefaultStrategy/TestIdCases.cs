@@ -16,11 +16,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 #pragma warning disable CS0618 // Type or member is obsolete
 [assembly: TestIdGenerationStrategy(TestIdGenerationStrategy.DisplayName)]
 #pragma warning restore CS0618 // Type or member is obsolete
-#elif FULLY_QUALIFIED_TEST_ID
+#elif FULLY_QUALIFIED_ID
 [assembly: TestIdGenerationStrategy(TestIdGenerationStrategy.FullyQualified)]
 #endif
 
-namespace TestIdProject.LegacyStrategy;
+namespace TestIdProject;
 
 [TestClass]
 public class TestIdCases
@@ -39,7 +39,7 @@ public class TestIdCases
     [DataRow("")]
     [DataRow(" ")] // space
     [DataRow("  ")] // tab
-    public void DataRowStringTests(string parameter)
+    public void DataRowStringTests(string _)
     {
     }
 
@@ -62,7 +62,7 @@ public class TestIdCases
 
     [DataTestMethod]
     [DynamicData(nameof(TuplesData))]
-    public void DynamicDataTuplesTests((int i, string s, bool b) tuple)
+    public void DynamicDataTuplesTests((int i, string s, bool b) _)
     {
     }
 
@@ -77,7 +77,7 @@ public class TestIdCases
 
     [DataTestMethod]
     [DynamicData(nameof(GenericCollectionsData))]
-    public void DynamicDataGenericCollectionsTests(List<int> ints, List<string> strings, List<bool> bools)
+    public void DynamicDataGenericCollectionsTests(List<int> _, List<string> __, List<bool> ___)
     {
     }
 
@@ -108,7 +108,7 @@ public class TestIdCases
 
     [DataTestMethod]
     [TuplesDataSource]
-    public void TestDataSourceTuplesTests((int i, string s, bool b) tuple)
+    public void TestDataSourceTuplesTests((int i, string s, bool b) _)
     {
     }
 
@@ -121,7 +121,7 @@ public class TestIdCases
 
     [DataTestMethod]
     [GenericCollectionsDataSource]
-    public void TestDataSourceGenericCollectionsTests(List<int> ints, List<string> strings, List<bool> bools)
+    public void TestDataSourceGenericCollectionsTests(List<int> _, List<string> __, List<bool> ___)
     {
     }
 

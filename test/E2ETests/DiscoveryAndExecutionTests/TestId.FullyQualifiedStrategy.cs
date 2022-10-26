@@ -11,12 +11,12 @@ using Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 namespace DiscoveryAndExecutionTests;
 public partial class TestId : CLITestBase
 {
-    private const string FullyQualifiedTestStrategyDll = "TestIdProject.FullyQualifiedTestStrategy.dll";
+    private const string FullyQualifiedStrategyDll = "TestIdProject.FullyQualifiedStrategy.dll";
 
-    public void TestIdUniqueness_DataRowArray_FullyQualifiedTestStrategy()
+    public void TestIdUniqueness_DataRowArray_FullyQualifiedStrategy()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(FullyQualifiedTestStrategyDll);
+        var assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowArraysTests");
@@ -34,10 +34,10 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_DataRowString_FullyQualifiedTestStrategy()
+    public void TestIdUniqueness_DataRowString_FullyQualifiedStrategy()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(FullyQualifiedTestStrategyDll);
+        var assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowStringTests");
@@ -56,10 +56,10 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_DynamicDataArrays_FullyQualifiedTestStrategy()
+    public void TestIdUniqueness_DynamicDataArrays_FullyQualifiedStrategy()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(FullyQualifiedTestStrategyDll);
+        var assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataArraysTests");
@@ -77,10 +77,10 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_DynamicDataTuple_FullyQualifiedTestStrategy()
+    public void TestIdUniqueness_DynamicDataTuple_FullyQualifiedStrategy()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(FullyQualifiedTestStrategyDll);
+        var assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataTuplesTests");
@@ -97,10 +97,10 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_DynamicDataGenericCollections_FullyQualifiedTestStrategy()
+    public void TestIdUniqueness_DynamicDataGenericCollections_FullyQualifiedStrategy()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(FullyQualifiedTestStrategyDll);
+        var assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataGenericCollectionsTests");
@@ -119,10 +119,10 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_TestDataSourceArrays_FullyQualifiedTestStrategy()
+    public void TestIdUniqueness_TestDataSourceArrays_FullyQualifiedStrategy()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(FullyQualifiedTestStrategyDll);
+        var assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceArraysTests");
@@ -140,10 +140,10 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_TestDataSourceTuples_FullyQualifiedTestStrategy()
+    public void TestIdUniqueness_TestDataSourceTuples_FullyQualifiedStrategy()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(FullyQualifiedTestStrategyDll);
+        var assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceTuplesTests");
@@ -160,10 +160,10 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_TestDataSourceGenericCollections_FullyQualifiedTestStrategy()
+    public void TestIdUniqueness_TestDataSourceGenericCollections_FullyQualifiedStrategy()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(FullyQualifiedTestStrategyDll);
+        var assemblyPath = GetAssetFullPath(FullyQualifiedStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceGenericCollectionsTests");

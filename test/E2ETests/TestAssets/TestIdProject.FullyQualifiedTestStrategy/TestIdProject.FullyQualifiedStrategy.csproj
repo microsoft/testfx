@@ -5,7 +5,7 @@
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(RepoRoot)artifacts\TestAssets\</OutputPath>
-    <DefineConstants>$(DefineConstants);FULLY_QUALIFIED_TEST_ID</DefineConstants>
+    <DefineConstants>$(DefineConstants);FULLY_QUALIFIED_ID</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
