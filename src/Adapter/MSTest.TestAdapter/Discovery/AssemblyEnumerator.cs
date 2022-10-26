@@ -95,10 +95,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var types = GetTypes(assembly, assemblyFileName, warningMessages);
         var discoverInternals = assembly.GetCustomAttribute<DiscoverInternalsAttribute>() != null;
         var testIdGenerationStrategy = assembly.GetCustomAttribute<TestIdGenerationStrategyAttribute>()?.Strategy
-            ?? TestIdGenerationStrategy.FullyQualifiedTest;
+            ?? TestIdGenerationStrategy.FullyQualified;
 
         var testDataSourceDiscovery = assembly.GetCustomAttribute<TestDataSourceDiscoveryAttribute>()?.DiscoveryOption
 #pragma warning disable CS0618 // Type or member is obsolete
+
+            // When using legacy strategy, there is no point in trying to "read" data during discovery
+            // as the ID generator will ignore it.
             ?? (testIdGenerationStrategy == TestIdGenerationStrategy.Legacy
                 ? TestDataSourceDiscoveryOption.DuringExecution
                 : TestDataSourceDiscoveryOption.DuringDiscovery);
@@ -372,12 +375,28 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (var dataSource in testDataSources)
         {
             var data = dataSource.GetData(methodInfo);
+            var testDisplayNameFirstSeen = new Dictionary<string, int>();
+            var discoveredTests = new List<UnitTestElement>();
             var index = 0;
 
             foreach (var d in data)
             {
                 var discoveredTest = test.Clone();
                 discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
+
+                // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
+#pragma warning disable CS0618 // Type or member is obsolete
+                if (test.TestMethod.TestIdGenerationStrategy == TestIdGenerationStrategy.DisplayName
+                    && testDisplayNameFirstSeen.TryGetValue(discoveredTest.DisplayName, out var firstIndexSeen))
+                {
+                    var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstIndexSeen, index, discoveredTest.DisplayName);
+                    warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
+                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
+
+                    // Duplicated display name so bail out. Caller will handle adding the original test.
+                    return false;
+                }
+#pragma warning restore CS0618 // Type or member is obsolete
 
                 try
                 {
@@ -386,18 +405,21 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
                 catch (SerializationException ex)
                 {
-                    _ = ex;
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
+                    warning += Environment.NewLine;
+                    warning += ex.ToString();
                     warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
 
-                    // Serialization failed for the type, bail out.
+                    // Serialization failed for the type, bail out. Caller will handle adding the original test.
                     return false;
                 }
 
-                tests.Add(discoveredTest);
-                index++;
+                discoveredTests.Add(discoveredTest);
+                testDisplayNameFirstSeen[discoveredTest.DisplayName] = index++;
             }
+
+            tests.AddRange(discoveredTests);
         }
 
         return true;

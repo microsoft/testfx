@@ -35,5 +35,5 @@ public enum TestIdGenerationStrategy
     /// <remarks>
     /// This is the default behavior starting with version 3.0.0.
     /// </remarks>
-    FullyQualifiedTest = 2,
+    FullyQualified = 2,
 }

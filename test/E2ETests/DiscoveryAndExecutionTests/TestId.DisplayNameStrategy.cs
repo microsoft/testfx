@@ -13,7 +13,6 @@ public partial class TestId : CLITestBase
 {
     private const string DisplayNameStrategyDll = "TestIdProject.DisplayNameStrategy.dll";
 
-    #region DataRow tests
     public void TestIdUniqueness_DataRowArray_DisplayNameStrategy()
     {
         // Arrange
@@ -31,7 +30,7 @@ public partial class TestId : CLITestBase
             "DataRowArraysTests (0,System.Int32[])",
             "DataRowArraysTests (0,System.Int32[])");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
@@ -53,13 +52,11 @@ public partial class TestId : CLITestBase
             "DataRowStringTests ( )",
             "DataRowStringTests (  )");
 
-        // We cannot assert the expected guid as it is path dependent.
+        // We cannot assert the expected ID as it is path dependent.
         // First two display names are equals so we have the same ID for them
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().HaveCount(3);
     }
-    #endregion // DataRow tests
 
-    #region DynamicData tests
     public void TestIdUniqueness_DynamicDataArrays_DisplayNameStrategy()
     {
         // Arrange
@@ -77,7 +74,7 @@ public partial class TestId : CLITestBase
             "DynamicDataArraysTests (0,System.Int32[])",
             "DynamicDataArraysTests (0,System.Int32[])");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
@@ -97,7 +94,7 @@ public partial class TestId : CLITestBase
             "DynamicDataTuplesTests ((1, text, True))",
             "DynamicDataTuplesTests ((1, text, False))");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
@@ -119,12 +116,10 @@ public partial class TestId : CLITestBase
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])",
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
-    #endregion // DynamicData tests
 
-    #region TestDataSource tests
     public void TestIdUniqueness_TestDataSourceArrays_DisplayNameStrategy()
     {
         // Arrange
@@ -142,7 +137,7 @@ public partial class TestId : CLITestBase
             "Custom name",
             "Custom name");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
@@ -162,7 +157,7 @@ public partial class TestId : CLITestBase
             "Custom name",
             "Custom name");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
@@ -184,8 +179,7 @@ public partial class TestId : CLITestBase
             "Custom name",
             "Custom name");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
-    #endregion // TestDataSource tests
 }

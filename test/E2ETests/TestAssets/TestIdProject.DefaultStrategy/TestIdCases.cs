@@ -17,7 +17,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [assembly: TestIdGenerationStrategy(TestIdGenerationStrategy.DisplayName)]
 #pragma warning restore CS0618 // Type or member is obsolete
 #elif FULLY_QUALIFIED_TEST_ID
-[assembly: TestIdGenerationStrategy(TestIdGenerationStrategy.FullyQualifiedTest)]
+[assembly: TestIdGenerationStrategy(TestIdGenerationStrategy.FullyQualified)]
 #endif
 
 namespace TestIdProject.LegacyStrategy;

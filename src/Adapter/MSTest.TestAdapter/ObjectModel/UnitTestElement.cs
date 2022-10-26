@@ -243,15 +243,16 @@ internal class UnitTestElement
                 {
                     filePath = Path.GetFileName(filePath);
                 }
-                catch
+                catch (ArgumentException)
                 {
+                    // In case path contains invalid characters.
                 }
 
                 testCase.Id = GenerateDisplayNameStrategyTestId(testCase, filePath);
                 break;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-            case TestIdGenerationStrategy.FullyQualifiedTest:
+            case TestIdGenerationStrategy.FullyQualified:
                 testCase.Id = GenerateSerializedDataStrategyTestId();
                 break;
 

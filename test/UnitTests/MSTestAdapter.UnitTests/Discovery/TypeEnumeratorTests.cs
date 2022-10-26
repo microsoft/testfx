@@ -550,7 +550,7 @@ public class TypeEnumeratorTests : TestContainer
     }
 
     private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName,
-        TestIdGenerationStrategy idGenerationStrategy = TestIdGenerationStrategy.FullyQualifiedTest)
+        TestIdGenerationStrategy idGenerationStrategy = TestIdGenerationStrategy.FullyQualified)
         => new(
             type,
             assemblyName,

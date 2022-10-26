@@ -77,7 +77,7 @@ internal static class TestCaseExtensions
         var name = testCase.GetTestName(testClassName);
         var testIdGenerationStrategy = (TestIdGenerationStrategy)testCase.GetPropertyValue(
             Constants.TestIdGenerationStrategyProperty,
-            (int)TestIdGenerationStrategy.FullyQualifiedTest);
+            (int)TestIdGenerationStrategy.FullyQualified);
 
         TestMethod testMethod = testCase.ContainsManagedMethodAndType()
             ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName, source, isAsync, testIdGenerationStrategy)

@@ -13,7 +13,6 @@ public partial class TestId : CLITestBase
 {
     private const string LegacyStrategyDll = "TestIdProject.LegacyStrategy.dll";
 
-    #region DataRow tests
     public void TestIdUniqueness_DataRowArray_LegacyStrategy()
     {
         // Arrange
@@ -31,7 +30,7 @@ public partial class TestId : CLITestBase
             "DataRowArraysTests (0,System.Int32[])",
             "DataRowArraysTests (0,System.Int32[])");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
@@ -53,12 +52,10 @@ public partial class TestId : CLITestBase
             "DataRowStringTests ( )",
             "DataRowStringTests (  )");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
-    #endregion // DataRow tests
 
-    #region DynamicData tests
     public void TestIdUniqueness_DynamicDataArrays_LegacyStrategy()
     {
         // Arrange
@@ -76,7 +73,7 @@ public partial class TestId : CLITestBase
             "DynamicDataArraysTests (0,System.Int32[])",
             "DynamicDataArraysTests (0,System.Int32[])");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
@@ -96,7 +93,7 @@ public partial class TestId : CLITestBase
             "DynamicDataTuplesTests ((1, text, True))",
             "DynamicDataTuplesTests ((1, text, False))");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
@@ -118,12 +115,10 @@ public partial class TestId : CLITestBase
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])",
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
-    #endregion // DynamicData tests
 
-    #region TestDataSource tests
     public void TestIdUniqueness_TestDataSourceArrays_LegacyStrategy()
     {
         // Arrange
@@ -141,7 +136,7 @@ public partial class TestId : CLITestBase
             "Custom name",
             "Custom name");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
@@ -161,7 +156,7 @@ public partial class TestId : CLITestBase
             "Custom name",
             "Custom name");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
@@ -183,8 +178,7 @@ public partial class TestId : CLITestBase
             "Custom name",
             "Custom name");
 
-        // We cannot assert the expected guid as it is path dependent
+        // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
-    #endregion // TestDataSource tests
 }

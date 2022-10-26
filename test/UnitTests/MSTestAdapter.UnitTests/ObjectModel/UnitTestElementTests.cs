@@ -219,7 +219,7 @@ public class UnitTestElementTests : TestContainer
     {
         foreach (DynamicDataType dataType in Enum.GetValues(typeof(DynamicDataType)))
         {
-            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.FullyQualifiedTest) { DataType = dataType }).ToTestCase();
+            var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.FullyQualified) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
             Verify(expectedTestCase.Id != testCase.Id);
         }
@@ -313,7 +313,7 @@ public class UnitTestElementTests : TestContainer
 
     public void ToTestCase_WhenStrategyIsFullyQualifiedTest_ExamplesOfTestCaseIdUniqueness()
     {
-        var testIdStrategy = TestIdGenerationStrategy.FullyQualifiedTest;
+        var testIdStrategy = TestIdGenerationStrategy.FullyQualified;
         var testCases = new[]
         {
             new UnitTestElement(

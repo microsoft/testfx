@@ -418,7 +418,7 @@ internal class TestableAssemblyEnumerator : AssemblyEnumerator
             reflectHelper.Object,
             typeValidator.Object,
             testMethodValidator.Object,
-            TestIdGenerationStrategy.FullyQualifiedTest);
+            TestIdGenerationStrategy.FullyQualified);
     }
 
     internal Mock<TypeEnumerator> MockTypeEnumerator { get; set; }
