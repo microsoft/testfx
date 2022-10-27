@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 
@@ -167,7 +166,6 @@ internal class TestMethodRunner
     /// Runs the test method.
     /// </summary>
     /// <returns>The test results.</returns>
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     internal UnitTestResult[] RunTestMethod()
     {
         Debug.Assert(_test != null, "Test should not be null.");
@@ -175,6 +173,7 @@ internal class TestMethodRunner
 
         List<UTF.TestResult> results = new();
         var isDataDriven = false;
+        var parentStopwatch = Stopwatch.StartNew();
 
         if (_testMethodInfo.TestMethodOptions.Executor != null)
         {
@@ -215,19 +214,47 @@ internal class TestMethodRunner
         var aggregateOutcome = GetAggregateOutcome(results);
         _testContext.SetOutcome(aggregateOutcome);
 
-        // Set a result in case no result is present.
-        if (!results.Any())
-        {
-            results.Add(new UTF.TestResult() { Outcome = aggregateOutcome, TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult) });
-        }
-
         // In case of data driven, set parent info in results.
         if (isDataDriven)
         {
-            results = UpdateResultsWithParentInfo(results, Guid.NewGuid());
+            // In legacy scenario
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (_test.TestIdGenerationStrategy == UTF.TestIdGenerationStrategy.Legacy)
+            {
+                parentStopwatch.Stop();
+                var parentResult = new UTF.TestResult
+                {
+                    Outcome = aggregateOutcome,
+                    Duration = parentStopwatch.Elapsed,
+                    ExecutionId = Guid.NewGuid(),
+                };
+
+                results = UpdateResultsWithParentInfo(results, parentResult);
+            }
+#pragma warning restore CS0618 // Type or member is obsolete
+            else
+            {
+                results = UpdateResultsWithParentInfo(results);
+            }
         }
 
-        return results.ToArray().ToUnitTestResults();
+        // Set a result in case no result is present.
+        if (results.Count == 0)
+        {
+            UTF.TestResult emptyResult = new()
+            {
+                Outcome = aggregateOutcome,
+                TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult),
+            };
+
+            results.Add(emptyResult);
+        }
+
+        var unitTestResults = results
+            .ToArray()
+            .ToUnitTestResults();
+
+        return unitTestResults;
     }
 
     private bool ExecuteDataSourceBasedTests(List<UTF.TestResult> results)
@@ -401,7 +428,7 @@ internal class TestMethodRunner
     private static UTF.UnitTestOutcome GetAggregateOutcome(List<UTF.TestResult> results)
     {
         // In case results are not present, set outcome as unknown.
-        if (!results.Any())
+        if (results.Count == 0)
         {
             return UTF.UnitTestOutcome.Unknown;
         }
@@ -421,12 +448,11 @@ internal class TestMethodRunner
     /// Add parent results as first result in updated result.
     /// </summary>
     /// <param name="results">Results.</param>
-    /// <param name="executionId">Current execution id.</param>
     /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
-    private static List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results, Guid executionId)
+    private static List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results)
     {
         // Return results in case there are no results.
-        if (!results.Any())
+        if (results.Count == 0)
         {
             return results;
         }
@@ -437,7 +463,39 @@ internal class TestMethodRunner
         foreach (var result in results)
         {
             result.ExecutionId = Guid.NewGuid();
-            result.ParentExecId = executionId;
+            result.ParentExecId = Guid.NewGuid();
+
+            updatedResults.Add(result);
+        }
+
+        return updatedResults;
+    }
+
+    /// <summary>
+    /// Updates given results with parent info if results are greater than 1.
+    /// Add parent results as first result in updated result.
+    /// </summary>
+    /// <param name="results">Results.</param>
+    /// <param name="parentResult">Parent results.</param>
+    /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
+    private static List<UTF.TestResult> UpdateResultsWithParentInfo(
+        List<UTF.TestResult> results,
+        UTF.TestResult parentResult)
+    {
+        // Return results in case there are no results.
+        if (results.Count == 0)
+        {
+            return results;
+        }
+
+        // UpdatedResults contain parent result at first position and remaining results has parent info updated.
+        List<UTF.TestResult> updatedResults = new() { parentResult };
+
+        foreach (var result in results)
+        {
+            result.ExecutionId = Guid.NewGuid();
+            result.ParentExecId = parentResult.ExecutionId;
+            parentResult.InnerResultsCount++;
 
             updatedResults.Add(result);
         }

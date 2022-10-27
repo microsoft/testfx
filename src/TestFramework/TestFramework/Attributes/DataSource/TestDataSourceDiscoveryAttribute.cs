@@ -6,7 +6,7 @@ using System;
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Specifies how to discover ITestDataSource tests.
+/// Specifies how to discover <see cref="ITestDataSource"/> tests.
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = false)]
 public class TestDataSourceDiscoveryAttribute : Attribute
@@ -15,7 +15,7 @@ public class TestDataSourceDiscoveryAttribute : Attribute
     /// Initializes a new instance of the <see cref="TestDataSourceDiscoveryAttribute"/> class.
     /// </summary>
     /// <param name="discoveryOption">
-    /// Sets which <see cref="TestDataSourceDiscoveryOption"/> to use when discovering ITestDataSource tests.
+    /// The <see cref="TestDataSourceDiscoveryOption"/> to use when discovering <see cref="ITestDataSource"/> tests.
     /// </param>
     public TestDataSourceDiscoveryAttribute(TestDataSourceDiscoveryOption discoveryOption)
     {
@@ -23,7 +23,7 @@ public class TestDataSourceDiscoveryAttribute : Attribute
     }
 
     /// <summary>
-    /// Gets specified discovery option.
+    /// Gets the discovery option.
     /// </summary>
     public TestDataSourceDiscoveryOption DiscoveryOption { get; }
 }

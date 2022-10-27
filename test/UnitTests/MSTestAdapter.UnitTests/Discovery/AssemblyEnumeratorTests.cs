@@ -15,6 +15,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
 
@@ -376,13 +377,19 @@ public class AssemblyEnumeratorTests : TestContainer
         // actual return value is irrelevant for these tests.
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
-                typeof(Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalsAttribute),
+                typeof(DiscoverInternalsAttribute),
                 true))
             .Returns(Array.Empty<Attribute>());
 
         mockAssembly
             .Setup(a => a.GetCustomAttributes(
-                typeof(Microsoft.VisualStudio.TestTools.UnitTesting.TestDataSourceDiscoveryAttribute),
+                typeof(TestDataSourceDiscoveryAttribute),
+                true))
+            .Returns(Array.Empty<Attribute>());
+
+        mockAssembly
+            .Setup(a => a.GetCustomAttributes(
+                typeof(TestIdGenerationStrategyAttribute),
                 true))
             .Returns(Array.Empty<Attribute>());
 
@@ -410,15 +417,15 @@ internal class TestableAssemblyEnumerator : AssemblyEnumerator
             "DummyAssembly",
             reflectHelper.Object,
             typeValidator.Object,
-            testMethodValidator.Object);
+            testMethodValidator.Object,
+            TestIdGenerationStrategy.FullyQualified);
     }
 
     internal Mock<TypeEnumerator> MockTypeEnumerator { get; set; }
 
-    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals)
-    {
-        return MockTypeEnumerator.Object;
-    }
+    internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals,
+        TestIdGenerationStrategy testIdGenerationStrategy)
+        => MockTypeEnumerator.Object;
 }
 
 #endregion

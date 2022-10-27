@@ -22,26 +22,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 internal class TypeEnumerator
 {
     private readonly Type _type;
-    private readonly string _assemblyName;
+    private readonly string _assemblyFilePath;
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
+    private readonly TestIdGenerationStrategy _testIdGenerationStrategy;
     private readonly ReflectHelper _reflectHelper;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TypeEnumerator"/> class.
     /// </summary>
     /// <param name="type"> The reflected type. </param>
-    /// <param name="assemblyName"> The name of the assembly being reflected. </param>
+    /// <param name="assemblyFilePath"> The name of the assembly being reflected. </param>
     /// <param name="reflectHelper"> An instance to reflection helper for type information. </param>
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
-    internal TypeEnumerator(Type type, string assemblyName, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator)
+    /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
+    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, TestIdGenerationStrategy testIdGenerationStrategy)
     {
         _type = type;
-        _assemblyName = assemblyName;
+        _assemblyFilePath = assemblyFilePath;
         _reflectHelper = reflectHelper;
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
+        _testIdGenerationStrategy = testIdGenerationStrategy;
     }
 
     /// <summary>
@@ -87,7 +90,9 @@ internal class TypeEnumerator
             if (_testMethodValidator.IsValidTestMethod(method, _type, warnings))
             {
                 foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.Name);
-                tests.Add(GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings));
+                var testMethod = GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings);
+
+                tests.Add(testMethod);
             }
         }
 
@@ -132,7 +137,7 @@ internal class TypeEnumerator
         // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.
         var isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
 
-        var testMethod = new TestMethod(method, method.Name, _type.FullName, _assemblyName, isAsync);
+        var testMethod = new TestMethod(method, method.Name, _type.FullName, _assemblyFilePath, isAsync, _testIdGenerationStrategy);
 
         if (!method.DeclaringType.FullName.Equals(_type.FullName))
         {
@@ -146,15 +151,16 @@ internal class TypeEnumerator
                     method.DeclaringType.GetTypeInfo().Assembly);
         }
 
-        var testElement = new UnitTestElement(testMethod);
-
-        // Get compiler generated type name for async test method (either void returning or task returning).
-        var asyncTypeName = method.GetAsyncTypeName();
-        testElement.AsyncTypeName = asyncTypeName;
-
-        testElement.TestCategory = _reflectHelper.GetCategories(method, _type);
-
-        testElement.DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type);
+        var testElement = new UnitTestElement(testMethod)
+        {
+            // Get compiler generated type name for async test method (either void returning or task returning).
+            AsyncTypeName = method.GetAsyncTypeName(),
+            TestCategory = _reflectHelper.GetCategories(method, _type),
+            DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
+            Priority = _reflectHelper.GetPriority(method),
+            Ignored = _reflectHelper.IsAttributeDefined(method, typeof(IgnoreAttribute), false),
+            DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
+        };
 
         var traits = _reflectHelper.GetTestPropertiesAsTraits(method);
 
@@ -163,8 +169,6 @@ internal class TypeEnumerator
         {
             traits = traits.Concat(new[] { ownerTrait });
         }
-
-        testElement.Priority = _reflectHelper.GetPriority(method);
 
         var priorityTrait = _reflectHelper.GetTestPriorityAsTraits(testElement.Priority);
         if (priorityTrait != null)
@@ -194,11 +198,6 @@ internal class TypeEnumerator
         {
             testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString()).ToArray();
         }
-
-        testElement.Ignored = _reflectHelper.IsAttributeDefined(method, typeof(IgnoreAttribute), false);
-
-        // Get Deployment items if any.
-        testElement.DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings);
 
         // get DisplayName from TestMethodAttribute
         var testMethodAttribute = _reflectHelper.GetCustomAttribute(method, typeof(TestMethodAttribute)) as TestMethodAttribute;

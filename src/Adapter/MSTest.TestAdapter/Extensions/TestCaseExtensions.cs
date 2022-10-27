@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
@@ -74,17 +75,13 @@ internal static class TestCaseExtensions
         var isAsync = (testCase.GetPropertyValue(Constants.AsyncTestProperty) as bool?) ?? false;
         var testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
         var name = testCase.GetTestName(testClassName);
+        var testIdGenerationStrategy = (TestIdGenerationStrategy)testCase.GetPropertyValue(
+            Constants.TestIdGenerationStrategyProperty,
+            (int)TestIdGenerationStrategy.FullyQualified);
 
-        TestMethod testMethod;
-        if (testCase.ContainsManagedMethodAndType())
-        {
-            testMethod = new TestMethod(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName, source, isAsync);
-        }
-        else
-        {
-            testMethod = new TestMethod(name, testClassName, source, isAsync);
-        }
-
+        TestMethod testMethod = testCase.ContainsManagedMethodAndType()
+            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName, source, isAsync, testIdGenerationStrategy)
+            : new(name, testClassName, source, isAsync, testIdGenerationStrategy);
         var dataType = (DynamicDataType)testCase.GetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
         {

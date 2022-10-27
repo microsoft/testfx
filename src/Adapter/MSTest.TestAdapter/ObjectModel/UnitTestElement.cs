@@ -11,6 +11,7 @@ using System.Linq;
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
@@ -125,12 +126,12 @@ internal class UnitTestElement
     internal TestCase ToTestCase()
     {
         // This causes compatibility problems with older runners.
-        // string fullName = this.TestMethod.HasManagedMethodAndTypeProperties
+        // string testFullName = this.TestMethod.HasManagedMethodAndTypeProperties
         //                 ? string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.ManagedTypeName, this.TestMethod.ManagedMethodName)
         //                 : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
-        var fullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", TestMethod.FullClassName, TestMethod.Name);
+        var testFullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", TestMethod.FullClassName, TestMethod.Name);
 
-        TestCase testCase = new(fullName, TestAdapter.Constants.ExecutorUri, TestMethod.AssemblyName)
+        TestCase testCase = new(testFullName, Constants.ExecutorUri, TestMethod.AssemblyName)
         {
             DisplayName = GetDisplayName(),
         };
@@ -139,11 +140,11 @@ internal class UnitTestElement
         {
             testCase.SetPropertyValue(TestCaseExtensions.ManagedTypeProperty, TestMethod.ManagedTypeName);
             testCase.SetPropertyValue(TestCaseExtensions.ManagedMethodProperty, TestMethod.ManagedMethodName);
-            testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, TestMethod.ManagedTypeName);
+            testCase.SetPropertyValue(Constants.TestClassNameProperty, TestMethod.ManagedTypeName);
         }
         else
         {
-            testCase.SetPropertyValue(TestAdapter.Constants.TestClassNameProperty, TestMethod.FullClassName);
+            testCase.SetPropertyValue(Constants.TestClassNameProperty, TestMethod.FullClassName);
         }
 
         var hierarchy = TestMethod.Hierarchy;
@@ -155,25 +156,25 @@ internal class UnitTestElement
         // Set declaring type if present so the correct method info can be retrieved
         if (TestMethod.DeclaringClassFullName != null)
         {
-            testCase.SetPropertyValue(TestAdapter.Constants.DeclaringClassNameProperty, TestMethod.DeclaringClassFullName);
+            testCase.SetPropertyValue(Constants.DeclaringClassNameProperty, TestMethod.DeclaringClassFullName);
         }
 
         // Many of the tests will not be async, so there is no point in sending extra data
         if (IsAsync)
         {
-            testCase.SetPropertyValue(TestAdapter.Constants.AsyncTestProperty, IsAsync);
+            testCase.SetPropertyValue(Constants.AsyncTestProperty, IsAsync);
         }
 
         // Set only if some test category is present
         if (TestCategory != null && TestCategory.Length > 0)
         {
-            testCase.SetPropertyValue(TestAdapter.Constants.TestCategoryProperty, TestCategory);
+            testCase.SetPropertyValue(Constants.TestCategoryProperty, TestCategory);
         }
 
         // Set priority if present
         if (Priority != null)
         {
-            testCase.SetPropertyValue(TestAdapter.Constants.PriorityProperty, Priority.Value);
+            testCase.SetPropertyValue(Constants.PriorityProperty, Priority.Value);
         }
 
         if (Traits != null)
@@ -183,34 +184,34 @@ internal class UnitTestElement
 
         if (!string.IsNullOrEmpty(CssIteration))
         {
-            testCase.SetPropertyValue(TestAdapter.Constants.CssIterationProperty, CssIteration);
+            testCase.SetPropertyValue(Constants.CssIterationProperty, CssIteration);
         }
 
         if (!string.IsNullOrEmpty(CssProjectStructure))
         {
-            testCase.SetPropertyValue(TestAdapter.Constants.CssProjectStructureProperty, CssProjectStructure);
+            testCase.SetPropertyValue(Constants.CssProjectStructureProperty, CssProjectStructure);
         }
 
         if (!string.IsNullOrEmpty(Description))
         {
-            testCase.SetPropertyValue(TestAdapter.Constants.DescriptionProperty, Description);
+            testCase.SetPropertyValue(Constants.DescriptionProperty, Description);
         }
 
         if (WorkItemIds != null)
         {
-            testCase.SetPropertyValue(TestAdapter.Constants.WorkItemIdsProperty, WorkItemIds);
+            testCase.SetPropertyValue(Constants.WorkItemIdsProperty, WorkItemIds);
         }
 
         // The list of items to deploy before running this test.
         if (DeploymentItems != null && DeploymentItems.Length > 0)
         {
-            testCase.SetPropertyValue(TestAdapter.Constants.DeploymentItemsProperty, DeploymentItems);
+            testCase.SetPropertyValue(Constants.DeploymentItemsProperty, DeploymentItems);
         }
 
         // Set the Do not parallelize state if present
         if (DoNotParallelize)
         {
-            testCase.SetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, DoNotParallelize);
+            testCase.SetPropertyValue(Constants.DoNotParallelizeProperty, DoNotParallelize);
         }
 
         // Store resolved data if any
@@ -218,22 +219,65 @@ internal class UnitTestElement
         {
             var data = TestMethod.SerializedData;
 
-            testCase.SetPropertyValue(TestAdapter.Constants.TestDynamicDataTypeProperty, (int)TestMethod.DataType);
-            testCase.SetPropertyValue(TestAdapter.Constants.TestDynamicDataProperty, data);
+            testCase.SetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)TestMethod.DataType);
+            testCase.SetPropertyValue(Constants.TestDynamicDataProperty, data);
         }
 
-        string fileName = testCase.Source;
+        SetTestCaseId(testCase, testFullName);
+
+        return testCase;
+    }
+
+    private void SetTestCaseId(TestCase testCase, string testFullName)
+    {
+        switch (TestMethod.TestIdGenerationStrategy)
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            case TestIdGenerationStrategy.Legacy:
+                // Legacy Id generation is to rely on default ID generation of TestCase from TestPlatform.
+                break;
+
+            case TestIdGenerationStrategy.DisplayName:
+                testCase.Id = GenerateDisplayNameStrategyTestId(testCase);
+                break;
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            case TestIdGenerationStrategy.FullyQualified:
+                testCase.Id = GenerateSerializedDataStrategyTestId(testFullName);
+                break;
+
+            default:
+                throw new NotSupportedException($"Requested test ID generation strategy '{TestMethod.TestIdGenerationStrategy}' is not supported.");
+        }
+    }
+
+    private Guid GenerateDisplayNameStrategyTestId(TestCase testCase)
+    {
+        var idProvider = new TestIdProvider();
+        idProvider.AppendString(testCase.ExecutorUri.ToString());
+
+        // Below comment is copied over from Test Platform.
+        // If source is a file name then just use the filename for the identifier since the file might have moved between
+        // discovery and execution (in appx mode for example). This is not elegant because the Source contents should be
+        // a black box to the framework.
+        // For example in the database adapter case this is not a file path.
+        // As discussed with team, we found no scenario for netcore, & fullclr where the Source is not present where ID
+        // is generated, which means we would always use FileName to generate ID. In cases where somehow Source Path
+        // contained garbage character the API Path.GetFileName() we are simply returning original input.
+        // For UWP where source during discovery, & during execution can be on different machine, in such case we should
+        // always use Path.GetFileName().
+        string filePath = testCase.Source;
         try
         {
-            fileName = Path.GetFileName(fileName);
+            filePath = Path.GetFileName(filePath);
         }
-        catch
+        catch (ArgumentException)
         {
+            // In case path contains invalid characters.
         }
 
-        var idProvider = new TestIdProvider();
-        idProvider.AppendString(testCase.ExecutorUri?.ToString());
-        idProvider.AppendString(fileName);
+        idProvider.AppendString(filePath);
+
         if (TestMethod.HasManagedMethodAndTypeProperties)
         {
             idProvider.AppendString(TestMethod.ManagedTypeName);
@@ -249,9 +293,47 @@ internal class UnitTestElement
             idProvider.AppendString(testCase.DisplayName);
         }
 
-        testCase.Id = idProvider.GetId();
+        return idProvider.GetId();
+    }
 
-        return testCase;
+    private Guid GenerateSerializedDataStrategyTestId(string testFullName)
+    {
+        var idProvider = new TestIdProvider();
+
+        idProvider.AppendString(Constants.ExecutorUriString);
+
+        // Below comment is copied over from Test Platform.
+        // If source is a file name then just use the filename for the identifier since the file might have moved between
+        // discovery and execution (in appx mode for example). This is not elegant because the Source contents should be
+        // a black box to the framework.
+        // For example in the database adapter case this is not a file path.
+        // As discussed with team, we found no scenario for netcore, & fullclr where the Source is not present where ID
+        // is generated, which means we would always use FileName to generate ID. In cases where somehow Source Path
+        // contained garbage character the API Path.GetFileName() we are simply returning original input.
+        // For UWP where source during discovery, & during execution can be on different machine, in such case we should
+        // always use Path.GetFileName().
+        string fileNameOrFilePath = TestMethod.AssemblyName;
+        try
+        {
+            fileNameOrFilePath = Path.GetFileName(fileNameOrFilePath);
+        }
+        catch (ArgumentException)
+        {
+            // In case path contains invalid characters.
+        }
+
+        idProvider.AppendString(fileNameOrFilePath);
+        idProvider.AppendString(testFullName);
+
+        if (TestMethod.SerializedData != null)
+        {
+            foreach (var item in TestMethod.SerializedData)
+            {
+                idProvider.AppendString(item ?? "null");
+            }
+        }
+
+        return idProvider.GetId();
     }
 
     private string GetDisplayName()

@@ -95,18 +95,4 @@ public class DataExtensibilityTests : CLITestBase
             "CustomTestMethod2 (C)",
             "CustomTestMethod2 (C)");
     }
-
-    public void BailOutWhenDuplicateTestDisplayName()
-    {
-        // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
-
-        // Act
-        var testCases = DiscoverTests(assemblyPath, "Name~DynamicDataDiscoveryBailOutTestMethod1");
-        var testResults = RunTests(assemblyPath, testCases);
-
-        // Assert
-        VerifyE2E.TestsDiscovered(testCases, "FxExtensibilityTestProject.DynamicDataDiscoveryBailOutTests.DynamicDataDiscoveryBailOutTestMethod1");
-        VerifyE2E.PassedTestCount(testResults, 3);
-    }
 }

@@ -16,8 +16,9 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
+using FrameworkITestDataSource = Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 
@@ -92,9 +93,19 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
         var types = GetTypes(assembly, assemblyFileName, warningMessages);
-        var discoverInternals = assembly.GetCustomAttribute<UTF.DiscoverInternalsAttribute>() != null;
-        var testDataSourceDiscovery = assembly.GetCustomAttribute<UTF.TestDataSourceDiscoveryAttribute>()?.DiscoveryOption ?? UTF.TestDataSourceDiscoveryOption.DuringDiscovery;
+        var discoverInternals = assembly.GetCustomAttribute<DiscoverInternalsAttribute>() != null;
+        var testIdGenerationStrategy = assembly.GetCustomAttribute<TestIdGenerationStrategyAttribute>()?.Strategy
+            ?? TestIdGenerationStrategy.FullyQualified;
 
+        var testDataSourceDiscovery = assembly.GetCustomAttribute<TestDataSourceDiscoveryAttribute>()?.DiscoveryOption
+#pragma warning disable CS0618 // Type or member is obsolete
+
+            // When using legacy strategy, there is no point in trying to "read" data during discovery
+            // as the ID generator will ignore it.
+            ?? (testIdGenerationStrategy == TestIdGenerationStrategy.Legacy
+                ? TestDataSourceDiscoveryOption.DuringExecution
+                : TestDataSourceDiscoveryOption.DuringDiscovery);
+#pragma warning restore CS0618 // Type or member is obsolete
         foreach (var type in types)
         {
             if (type == null)
@@ -102,7 +113,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            var testsInType = DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages, discoverInternals, testDataSourceDiscovery);
+            var testsInType = DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages,
+                discoverInternals, testDataSourceDiscovery, testIdGenerationStrategy);
             tests.AddRange(testsInType);
         }
 
@@ -189,16 +201,19 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The reflected assembly name.</param>
     /// <param name="discoverInternals">True to discover test classes which are declared internal in
     /// addition to test classes which are declared public.</param>
+    /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
     /// <returns>a TypeEnumerator instance.</returns>
-    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals = false)
+    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
     {
         var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
         var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
 
-        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator);
+        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
     }
 
-    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly, Type type, List<string> warningMessages, bool discoverInternals = false, UTF.TestDataSourceDiscoveryOption discoveryOption = UTF.TestDataSourceDiscoveryOption.DuringExecution)
+    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly,
+        Type type, List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
+        TestIdGenerationStrategy testIdGenerationStrategy)
     {
         var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
         sourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(sourceLevelParameters)
@@ -211,9 +226,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             typeFullName = type.FullName;
-            var testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals);
+            var testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
             var unitTestCases = testTypeEnumerator.Enumerate(out var warningsFromTypeEnumerator);
-            var typeIgnored = ReflectHelper.IsAttributeDefined(type, typeof(UTF.IgnoreAttribute), false);
+            var typeIgnored = ReflectHelper.IsAttributeDefined(type, typeof(IgnoreAttribute), false);
 
             if (warningsFromTypeEnumerator != null)
             {
@@ -224,7 +239,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             {
                 foreach (var test in unitTestCases)
                 {
-                    if (discoveryOption == UTF.TestDataSourceDiscoveryOption.DuringDiscovery)
+                    if (discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
                     {
                         if (DynamicDataAttached(sourceLevelParameters, assembly, test, tests))
                         {
@@ -273,7 +288,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
     private static bool TryProcessDataSource(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
     {
-        var dataSourceAttributes = ReflectHelper.GetAttributes<UTF.DataSourceAttribute>(testMethodInfo.MethodInfo, false);
+        var dataSourceAttributes = ReflectHelper.GetAttributes<DataSourceAttribute>(testMethodInfo.MethodInfo, false);
         if (dataSourceAttributes == null)
         {
             return false;
@@ -286,10 +301,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
             throw new InvalidOperationException(message);
         }
 
-        // dataSourceAttributes.Length == 1
+        // when dataSourceAttributes.Length == 1
         try
         {
-            return ProcessDataSourceTests(test, testMethodInfo, testContext, tests);
+            return TryProcessDataSourceTests(test, testMethodInfo, testContext, tests);
         }
         catch (Exception ex)
         {
@@ -299,7 +314,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
+    private static bool TryProcessDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
     {
         var dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(testMethodInfo, testContext);
         if (dataRows == null || !dataRows.Any())
@@ -336,7 +351,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
     {
         var methodInfo = testMethodInfo.MethodInfo;
-        var testDataSources = ReflectHelper.GetAttributes<Attribute>(methodInfo, false)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
+        var testDataSources = ReflectHelper.GetAttributes<Attribute>(methodInfo, false)?.Where(a => a is FrameworkITestDataSource).OfType<FrameworkITestDataSource>().ToArray();
         if (testDataSources == null || testDataSources.Length == 0)
         {
             return false;
@@ -344,7 +359,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         try
         {
-            return ProcessTestDataSourceTests(test, (MethodInfo)methodInfo, testDataSources, tests);
+            return ProcessTestDataSourceTests(test, methodInfo, testDataSources, tests);
         }
         catch (Exception ex)
         {
@@ -354,14 +369,14 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, UTF.ITestDataSource[] testDataSources, List<UnitTestElement> tests)
+    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, FrameworkITestDataSource[] testDataSources,
+        List<UnitTestElement> tests)
     {
         foreach (var dataSource in testDataSources)
         {
             var data = dataSource.GetData(methodInfo);
-            var discoveredTests = new Dictionary<string, UnitTestElement>();
-            var discoveredIndex = new Dictionary<string, int>();
-            var serializationFailed = false;
+            var testDisplayNameFirstSeen = new Dictionary<string, int>();
+            var discoveredTests = new List<UnitTestElement>();
             var index = 0;
 
             foreach (var d in data)
@@ -369,45 +384,42 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 var discoveredTest = test.Clone();
                 discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, d) ?? discoveredTest.DisplayName;
 
-                // if we have a duplicate test name don't expand the test, bail out.
-                if (discoveredTests.TryGetValue(discoveredTest.DisplayName, out var firstTestSeen))
+                // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
+#pragma warning disable CS0618 // Type or member is obsolete
+                if (test.TestMethod.TestIdGenerationStrategy == TestIdGenerationStrategy.DisplayName
+                    && testDisplayNameFirstSeen.TryGetValue(discoveredTest.DisplayName, out var firstIndexSeen))
                 {
-                    var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstTestSeen, index, discoveredTest.DisplayName);
+                    var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstIndexSeen, index, discoveredTest.DisplayName);
                     warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
 
-                    serializationFailed = true;
-                    break;
+                    // Duplicated display name so bail out. Caller will handle adding the original test.
+                    return false;
                 }
+#pragma warning restore CS0618 // Type or member is obsolete
 
                 try
                 {
                     discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(d);
                     discoveredTest.TestMethod.DataType = DynamicDataType.ITestDataSource;
                 }
-                catch (SerializationException)
+                catch (SerializationException ex)
                 {
-                    var firstIndexSeen = discoveredIndex[discoveredTest.DisplayName];
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
+                    warning += Environment.NewLine;
+                    warning += ex.ToString();
                     warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
 
-                    serializationFailed = true;
-                    break;
+                    // Serialization failed for the type, bail out. Caller will handle adding the original test.
+                    return false;
                 }
 
-                discoveredTests[discoveredTest.DisplayName] = discoveredTest;
-                discoveredIndex[discoveredTest.DisplayName] = index++;
+                discoveredTests.Add(discoveredTest);
+                testDisplayNameFirstSeen[discoveredTest.DisplayName] = index++;
             }
 
-            // Serialization failed for the type, bail out.
-            if (serializationFailed)
-            {
-                tests.Add(test);
-                break;
-            }
-
-            tests.AddRange(discoveredTests.Values);
+            tests.AddRange(discoveredTests);
         }
 
         return true;

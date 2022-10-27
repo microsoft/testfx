@@ -1,7 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
@@ -10,41 +13,53 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 namespace Microsoft.MSTestV2.CLIAutomation;
 public class DiscoveryEventsHandler : ITestDiscoveryEventsHandler
 {
+    private readonly ImmutableArray<string>.Builder _testsBuilder = ImmutableArray.CreateBuilder<string>();
+    private readonly ImmutableDictionary<TestMessageLevel, ImmutableArray<string?>.Builder>.Builder _messagesBuilder = ImmutableDictionary.CreateBuilder<TestMessageLevel, ImmutableArray<string?>.Builder>();
+    private ImmutableArray<string>? _tests;
+    private ImmutableDictionary<TestMessageLevel, ImmutableArray<string?>>? _messages;
+
     /// <summary>
     /// Gets a list of Discovered tests.
     /// </summary>
-    public IList<string> Tests { get; private set; }
+    public ImmutableArray<string> Tests => _tests ??= _testsBuilder.ToImmutable();
 
-    public DiscoveryEventsHandler()
-    {
-        Tests = new List<string>();
-    }
+    /// <summary>
+    /// Gets the list of messages received from the discovery process.
+    /// </summary>
+    public ImmutableDictionary<TestMessageLevel, ImmutableArray<string?>> Messages => _messages ??= _messagesBuilder.ToImmutableDictionary(x => x.Key, x => x.Value.ToImmutable());
 
-    public void HandleDiscoveredTests(IEnumerable<TestCase> discoveredTestCases)
+    public void HandleDiscoveredTests(IEnumerable<TestCase>? discoveredTestCases)
     {
         if (discoveredTestCases != null)
         {
             foreach (TestCase testCase in discoveredTestCases)
             {
-                Tests.Add(testCase.FullyQualifiedName);
+                _testsBuilder.Add(testCase.FullyQualifiedName);
             }
         }
     }
 
-    public void HandleDiscoveryComplete(long totalTests, IEnumerable<TestCase> lastChunk, bool isAborted)
+    public void HandleDiscoveryComplete(long totalTests, IEnumerable<TestCase>? lastChunk, bool isAborted)
     {
         if (lastChunk != null)
         {
             foreach (TestCase testCase in lastChunk)
             {
-                Tests.Add(testCase.FullyQualifiedName);
+                _testsBuilder.Add(testCase.FullyQualifiedName);
             }
         }
     }
 
-    public void HandleLogMessage(TestMessageLevel level, string message)
+    public void HandleLogMessage(TestMessageLevel level, string? message)
     {
-        switch ((TestMessageLevel)level)
+        if (!_messagesBuilder.ContainsKey(level))
+        {
+            _messagesBuilder.Add(level, ImmutableArray.CreateBuilder<string?>());
+        }
+
+        _messagesBuilder[level].Add(message);
+
+        switch (level)
         {
             case TestMessageLevel.Informational:
                 EqtTrace.Info(message);

@@ -145,6 +145,7 @@ internal class UnitTestRunner : MarshalByRefObject
 
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces, _reflectHelper);
             var result = testMethodRunner.Execute();
+
             RunClassCleanupIfEndOfClass(testMethodInfo, testMethod, result);
             return result;
         }

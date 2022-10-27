@@ -3,6 +3,8 @@
 
 using System.Collections.Generic;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 
 /// <summary>
@@ -52,6 +54,11 @@ public interface ITestMethod
     ///     <c>MethodName`2(ParamTypeA,ParamTypeB,...)</c>.
     /// </example>
     string ManagedMethodName { get; }
+
+    /// <summary>
+    /// Gets the <see cref="TestIdGenerationStrategy"/> used to generate <c>TestCase.Id</c>.
+    /// </summary>
+    TestIdGenerationStrategy TestIdGenerationStrategy { get; }
 
     /// <summary>
     /// Gets a value indicating whether both <see cref="ManagedTypeName"/> and <see cref="ManagedMethodName"/> are not null or whitespace.
