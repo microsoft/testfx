@@ -42,7 +42,8 @@ public class DynamicDataTests : CLITestBase
             "UserDynamicDataTestMethod DynamicDataTest_SourcePropertyOtherType_CustomDisplayNameOtherType with 2 parameters",
             "UserDynamicDataTestMethod DynamicDataTest_SourcePropertyOtherType_CustomDisplayNameOtherType with 2 parameters",
             "DynamicDataTestWithTestCategory (John;Doe,LibProjectReferencedByDataSourceTest.User)",
-            "DynamicDataTestWithTestCategory (Jane;Doe,LibProjectReferencedByDataSourceTest.User)");
+            "DynamicDataTestWithTestCategory (Jane;Doe,LibProjectReferencedByDataSourceTest.User)",
+            "StackOverflowException_Example (DataSourceTestProject.DynamicDataTests+ExampleTestCase)");
 
         ValidateFailedTestsCount(0);
     }
