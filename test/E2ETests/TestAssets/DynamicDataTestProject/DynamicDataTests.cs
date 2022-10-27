@@ -4,11 +4,15 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using System.Collections.Generic;
+using System.Reflection;
 
 using LibProjectReferencedByDataSourceTest;
 
 using DynamicDataTestProject;
-using System.Reflection;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System.Linq;
 
 namespace DataSourceTestProject;
 
@@ -115,6 +119,13 @@ public class DynamicDataTests
         ParseAndAssert(userData, expectedUser);
     }
 
+    [DataTestMethod] // See https://github.com/microsoft/testfx/issues/1050
+    [DynamicData(nameof(GetExampleTestCases), DynamicDataSourceType.Method)]
+    public void StackOverflowException_Example(ExampleTestCase exampleTestCase)
+    {
+        Assert.IsNotNull(exampleTestCase.Example);
+    }
+
     private static void ParseAndAssert(string userData, User expectedUser)
     {
         // Prepare
@@ -181,5 +192,43 @@ public class DynamicDataTests
     public static string GetCustomDynamicDataDisplayName(MethodInfo methodInfo, object[] data)
     {
         return string.Format("Custom DynamicDataTestMethod {0} with {1} parameters", methodInfo.Name, data.Length);
+    }
+
+    private static IEnumerable<object[]> GetExampleTestCases()
+    {
+        var json =
+            """
+            [
+              {
+                "TestCaseName": "Example test.",
+                "Example": {
+                  "jTokenDictionary" : {
+                    "names": [
+                      "Jane",
+                      "John"
+                    ]
+                  }
+                }
+              }
+            ]
+            """;
+        return JsonConvert.DeserializeObject<ExampleTestCase[]>(json)
+            .Select(testCase => new object[] { testCase });
+    }
+
+    public class ExampleClass
+    {
+        /// <summary>
+        /// Dictionary with JToken TValue.
+        /// </summary>
+        [JsonProperty("jTokenDictionary")]
+        public IDictionary<string, JToken> JTokenDictionary { get; set; }
+    }
+
+    public class ExampleTestCase
+    {
+        public string TestCaseName { get; set; }
+
+        public ExampleClass Example { get; set; }
     }
 }
