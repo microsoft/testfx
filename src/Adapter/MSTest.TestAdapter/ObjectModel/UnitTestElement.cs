@@ -126,12 +126,12 @@ internal class UnitTestElement
     internal TestCase ToTestCase()
     {
         // This causes compatibility problems with older runners.
-        // string fullName = this.TestMethod.HasManagedMethodAndTypeProperties
+        // string testFullName = this.TestMethod.HasManagedMethodAndTypeProperties
         //                 ? string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.ManagedTypeName, this.TestMethod.ManagedMethodName)
         //                 : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
-        var fullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", TestMethod.FullClassName, TestMethod.Name);
+        var testFullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", TestMethod.FullClassName, TestMethod.Name);
 
-        TestCase testCase = new(fullName, Constants.ExecutorUri, TestMethod.AssemblyName)
+        TestCase testCase = new(testFullName, Constants.ExecutorUri, TestMethod.AssemblyName)
         {
             DisplayName = GetDisplayName(),
         };
@@ -223,12 +223,12 @@ internal class UnitTestElement
             testCase.SetPropertyValue(Constants.TestDynamicDataProperty, data);
         }
 
-        SetTestCaseId(testCase);
+        SetTestCaseId(testCase, testFullName);
 
         return testCase;
     }
 
-    private void SetTestCaseId(TestCase testCase)
+    private void SetTestCaseId(TestCase testCase, string testFullName)
     {
         switch (TestMethod.TestIdGenerationStrategy)
         {
@@ -238,22 +238,12 @@ internal class UnitTestElement
                 break;
 
             case TestIdGenerationStrategy.DisplayName:
-                string filePath = testCase.Source;
-                try
-                {
-                    filePath = Path.GetFileName(filePath);
-                }
-                catch (ArgumentException)
-                {
-                    // In case path contains invalid characters.
-                }
-
-                testCase.Id = GenerateDisplayNameStrategyTestId(testCase, filePath);
+                testCase.Id = GenerateDisplayNameStrategyTestId(testCase);
                 break;
 #pragma warning restore CS0618 // Type or member is obsolete
 
             case TestIdGenerationStrategy.FullyQualified:
-                testCase.Id = GenerateSerializedDataStrategyTestId();
+                testCase.Id = GenerateSerializedDataStrategyTestId(testFullName);
                 break;
 
             default:
@@ -261,11 +251,32 @@ internal class UnitTestElement
         }
     }
 
-    private Guid GenerateDisplayNameStrategyTestId(TestCase testCase, string fileName)
+    private Guid GenerateDisplayNameStrategyTestId(TestCase testCase)
     {
         var idProvider = new TestIdProvider();
         idProvider.AppendString(testCase.ExecutorUri.ToString());
-        idProvider.AppendString(fileName);
+
+        // Below comment is copied over from Test Platform.
+        // If source is a file name then just use the filename for the identifier since the file might have moved between
+        // discovery and execution (in appx mode for example). This is not elegant because the Source contents should be
+        // a black box to the framework.
+        // For example in the database adapter case this is not a file path.
+        // As discussed with team, we found no scenario for netcore, & fullclr where the Source is not present where ID
+        // is generated, which means we would always use FileName to generate ID. In cases where somehow Source Path
+        // contained garbage character the API Path.GetFileName() we are simply returning original input.
+        // For UWP where source during discovery, & during execution can be on different machine, in such case we should
+        // always use Path.GetFileName().
+        string filePath = testCase.Source;
+        try
+        {
+            filePath = Path.GetFileName(filePath);
+        }
+        catch (ArgumentException)
+        {
+            // In case path contains invalid characters.
+        }
+
+        idProvider.AppendString(filePath);
 
         if (TestMethod.HasManagedMethodAndTypeProperties)
         {
@@ -285,13 +296,34 @@ internal class UnitTestElement
         return idProvider.GetId();
     }
 
-    private Guid GenerateSerializedDataStrategyTestId()
+    private Guid GenerateSerializedDataStrategyTestId(string testFullName)
     {
         var idProvider = new TestIdProvider();
+
         idProvider.AppendString(Constants.ExecutorUriString);
-        idProvider.AppendString(TestMethod.AssemblyName);
-        idProvider.AppendString(TestMethod.FullClassName);
-        idProvider.AppendString(TestMethod.Name);
+
+        // Below comment is copied over from Test Platform.
+        // If source is a file name then just use the filename for the identifier since the file might have moved between
+        // discovery and execution (in appx mode for example). This is not elegant because the Source contents should be
+        // a black box to the framework.
+        // For example in the database adapter case this is not a file path.
+        // As discussed with team, we found no scenario for netcore, & fullclr where the Source is not present where ID
+        // is generated, which means we would always use FileName to generate ID. In cases where somehow Source Path
+        // contained garbage character the API Path.GetFileName() we are simply returning original input.
+        // For UWP where source during discovery, & during execution can be on different machine, in such case we should
+        // always use Path.GetFileName().
+        string fileNameOrFilePath = TestMethod.AssemblyName;
+        try
+        {
+            fileNameOrFilePath = Path.GetFileName(fileNameOrFilePath);
+        }
+        catch (ArgumentException)
+        {
+            // In case path contains invalid characters.
+        }
+
+        idProvider.AppendString(fileNameOrFilePath);
+        idProvider.AppendString(testFullName);
 
         if (TestMethod.SerializedData != null)
         {
