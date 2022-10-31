@@ -92,4 +92,30 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <!-- Remove this block when 6.0.11 is released -->
+  <PropertyGroup>
+    <_Net60ServicingVersionOverride>6.0.10</_Net60ServicingVersionOverride>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <KnownFrameworkReference Update="@(KnownFrameworkReference)">
+      <TargetingPackVersion Condition="'%(TargetFramework)' == 'net6.0'">$(_Net60ServicingVersionOverride)</TargetingPackVersion>
+
+      <LatestRuntimeFrameworkVersion Condition="'%(TargetFramework)' == 'net6.0'">$(_Net60ServicingVersionOverride)</LatestRuntimeFrameworkVersion>
+    </KnownFrameworkReference>
+
+    <KnownRuntimePack Update="@(KnownRuntimePack)">
+      <LatestRuntimeFrameworkVersion Condition="'%(TargetFramework)' == 'net6.0'">$(_Net60ServicingVersionOverride)</LatestRuntimeFrameworkVersion>
+
+    </KnownRuntimePack>
+    <KnownAppHostPack Update="@(KnownAppHostPack)">
+      <AppHostPackVersion Condition="'%(TargetFramework)' == 'net6.0'">$(_Net60ServicingVersionOverride)</AppHostPackVersion>
+
+    </KnownAppHostPack>
+    <KnownCrossgen2Pack Update="@(KnownCrossgen2Pack)">
+      <Crossgen2PackVersion Condition="'%(TargetFramework)' == 'net6.0'">$(_Net60ServicingVersionOverride)</Crossgen2PackVersion>
+    </KnownCrossgen2Pack>
+  </ItemGroup>
+  <!-- /Remove this block when 6.0.11 is released -->
+
 </Project>
