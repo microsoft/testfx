@@ -1,8 +1,8 @@
-abstract System.MarshalByRefObject.InitializeLifetimeService() -> object
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListenerManager.Close(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITraceListener traceListener) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListenerWrapper.Close() -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListenerWrapper.Dispose() -> void
-System.MarshalByRefObject
-System.MarshalByRefObject.MarshalByRefObject() -> void
-System.SerializableAttribute
 System.SerializableAttribute.SerializableAttribute() -> void
+System.SerializableAttribute
+System.MarshalByRefObject.MarshalByRefObject() -> void
+System.MarshalByRefObject
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListenerWrapper.Dispose() -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListenerWrapper.Close() -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListenerManager.Close(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITraceListener traceListener) -> void
+abstract System.MarshalByRefObject.InitializeLifetimeService() -> object
