@@ -23,7 +23,7 @@ public class TestResult
     /// Gets or sets the display name of the result. Useful when returning multiple results.
     /// If null then Method name is used as DisplayName.
     /// </summary>
-    public string DisplayName { get; set; }
+    public string? DisplayName { get; set; }
 
     /// <summary>
     /// Gets or sets the outcome of the test execution.
@@ -33,27 +33,27 @@ public class TestResult
     /// <summary>
     /// Gets or sets the exception thrown when test is failed.
     /// </summary>
-    public Exception TestFailureException { get; set; }
+    public Exception? TestFailureException { get; set; }
 
     /// <summary>
     /// Gets or sets the output of the message logged by test code.
     /// </summary>
-    public string LogOutput { get; set; }
+    public string? LogOutput { get; set; }
 
     /// <summary>
     /// Gets or sets the output of the message logged by test code.
     /// </summary>
-    public string LogError { get; set; }
+    public string? LogError { get; set; }
 
     /// <summary>
     /// Gets or sets the debug traces by test code.
     /// </summary>
-    public string DebugTrace { get; set; }
+    public string? DebugTrace { get; set; }
 
     /// <summary>
     /// Gets or sets the debug traces by test code.
     /// </summary>
-    public string TestContextMessages { get; set; }
+    public string? TestContextMessages { get; set; }
 
     /// <summary>
     /// Gets or sets the execution id of the result.
@@ -84,10 +84,10 @@ public class TestResult
     /// <summary>
     /// Gets or sets the return value of the test method. (Currently null always).
     /// </summary>
-    public object ReturnValue { get; set; }
+    public object? ReturnValue { get; set; }
 
     /// <summary>
     /// Gets or sets the result files attached by the test.
     /// </summary>
-    public IList<string> ResultFiles { get; set; }
+    public IList<string>? ResultFiles { get; set; }
 }

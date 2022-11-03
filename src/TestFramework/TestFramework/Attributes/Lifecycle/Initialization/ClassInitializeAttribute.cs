@@ -35,5 +35,5 @@ public sealed class ClassInitializeAttribute : Attribute
     /// <summary>
     /// Gets the Inheritance Behavior.
     /// </summary>
-    public InheritanceBehavior InheritanceBehavior { get; private set; }
+    public InheritanceBehavior InheritanceBehavior { get; }
 }

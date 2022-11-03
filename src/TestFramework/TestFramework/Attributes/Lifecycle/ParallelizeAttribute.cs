@@ -32,11 +32,7 @@ public class ParallelizeAttribute : Attribute
     /// <summary>
     /// Gets or sets the number of workers to be used for the parallel run.
     /// </summary>
-    public int Workers
-    {
-        get;
-        set;
-    }
+    public int Workers { get; set; }
 
     /// <summary>
     /// Gets or sets the scope of the parallel run.
@@ -45,9 +41,5 @@ public class ParallelizeAttribute : Attribute
     /// To enable all classes to run in parallel set this to <see cref="ExecutionScope.ClassLevel"/>.
     /// To get the maximum parallelization level set this to <see cref="ExecutionScope.MethodLevel"/>.
     /// </remarks>
-    public ExecutionScope Scope
-    {
-        get;
-        set;
-    }
+    public ExecutionScope Scope { get; set; }
 }

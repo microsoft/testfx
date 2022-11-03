@@ -13,8 +13,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed partial class Assert
 {
-    private static Assert s_that;
-
     private Assert()
     {
     }
@@ -28,15 +26,7 @@ public sealed partial class Assert
     /// Users could then use a syntax similar to the default assertions which in this case is "Assert.That.IsOfType&lt;Dog&gt;(animal);"
     /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
     /// </remarks>
-    public static Assert That
-    {
-        get
-        {
-            s_that ??= new Assert();
-
-            return s_that;
-        }
-    }
+    public static Assert That { get; } = new Assert();
 
     /// <summary>
     /// Replaces null characters ('\0') with "\\0".
@@ -50,14 +40,12 @@ public sealed partial class Assert
     /// <remarks>
     /// This is only public and still present to preserve compatibility with the V1 framework.
     /// </remarks>
-    public static string ReplaceNullChars(string input)
+    [return: NotNullIfNotNull(nameof(input))]
+    public static string? ReplaceNullChars(string? input)
     {
-        if (string.IsNullOrEmpty(input))
-        {
-            return input;
-        }
-
-        return input.Replace("\0", "\\0");
+        return StringEx.IsNullOrEmpty(input)
+            ? input
+            : input.Replace("\0", "\\0");
     }
 
     /// <summary>
@@ -70,7 +58,7 @@ public sealed partial class Assert
     /// The assertion failure message.
     /// </param>
     [DoesNotReturn]
-    internal static void ThrowAssertFailed(string assertionName, string message)
+    internal static void ThrowAssertFailed(string assertionName, string? message)
     {
         throw new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
     }
@@ -85,9 +73,9 @@ public sealed partial class Assert
     /// An object array that contains zero or more objects to format.
     /// </param>
     /// <returns>
-    /// The formatted string based on format and paramters.
+    /// The formatted string based on format and parameters.
     /// </returns>
-    internal static string BuildUserMessage(string format, params object[] parameters)
+    internal static string BuildUserMessage(string? format, params object?[]? parameters)
     {
         if (format is null)
         {
@@ -122,7 +110,7 @@ public sealed partial class Assert
     /// <param name="parameters">
     /// The parameters.
     /// </param>
-    internal static void CheckParameterNotNull([NotNull] object param, string assertionName, string parameterName, string message, params object[] parameters)
+    internal static void CheckParameterNotNull(object? param, string assertionName, string parameterName, string? message, params object?[]? parameters)
     {
         if (param == null)
         {
@@ -143,29 +131,27 @@ public sealed partial class Assert
     /// The converted string.
     /// </returns>
     [SuppressMessage("ReSharper", "RedundantToStringCall", Justification = "We are ensuring ToString() isn't overloaded in a way to misbehave")]
-    internal static string ReplaceNulls(object input)
+    internal static string ReplaceNulls(object? input)
     {
         // Use the localized "(null)" string for null values.
         if (input == null)
         {
             return FrameworkMessages.Common_NullInMessages.ToString();
         }
-        else
+
+        // Convert it to a string.
+        string? inputString = input.ToString();
+
+        // Make sure the class didn't override ToString and return null.
+        if (inputString == null)
         {
-            // Convert it to a string.
-            string inputString = input.ToString();
-
-            // Make sure the class didn't override ToString and return null.
-            if (inputString == null)
-            {
-                return FrameworkMessages.Common_ObjectString.ToString();
-            }
-
-            return ReplaceNullChars(inputString);
+            return FrameworkMessages.Common_ObjectString.ToString();
         }
+
+        return ReplaceNullChars(inputString);
     }
 
-    private static int CompareInternal(string expected, string actual, bool ignoreCase, CultureInfo culture)
+    private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo? culture)
     {
         return string.Compare(expected, actual, ignoreCase, culture);
     }
@@ -182,7 +168,7 @@ public sealed partial class Assert
     /// <param name="objB"> Object B. </param>
     /// <returns> False, always. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
-    public static new bool Equals(object objA, object objB)
+    public static new bool Equals(object? objA, object? objB)
     {
         Fail(FrameworkMessages.DoNotUseAssertEquals);
         return false;

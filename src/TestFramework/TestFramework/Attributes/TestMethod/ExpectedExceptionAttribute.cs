@@ -99,7 +99,7 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
     /// <param name="exception">The exception thrown by the unit test.</param>
     protected internal override void Verify(Exception exception)
     {
-        Debug.Assert(exception != null, "'exception' is null");
+        DebugEx.Assert(exception != null, "'exception' is null");
 
         Type thrownExceptionType = exception.GetType();
         if (AllowDerivedTypes)

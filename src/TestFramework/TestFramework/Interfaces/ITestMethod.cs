@@ -57,7 +57,7 @@ public interface ITestMethod
     /// <remarks>
     /// This call handles asynchronous test methods as well.
     /// </remarks>
-    TestResult Invoke(object[] arguments);
+    TestResult Invoke(object[]? arguments);
 
     /// <summary>
     /// Get all attributes of the test method.

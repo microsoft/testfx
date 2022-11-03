@@ -15,7 +15,7 @@ public sealed class CssIterationAttribute : Attribute
     /// Initializes a new instance of the <see cref="CssIterationAttribute"/> class for CSS Iteration URI.
     /// </summary>
     /// <param name="cssIteration">The CSS Iteration URI.</param>
-    public CssIterationAttribute(string cssIteration)
+    public CssIterationAttribute(string? cssIteration)
     {
         CssIteration = cssIteration;
     }
@@ -23,5 +23,5 @@ public sealed class CssIterationAttribute : Attribute
     /// <summary>
     /// Gets the CSS Iteration URI.
     /// </summary>
-    public string CssIteration { get; }
+    public string? CssIteration { get; }
 }

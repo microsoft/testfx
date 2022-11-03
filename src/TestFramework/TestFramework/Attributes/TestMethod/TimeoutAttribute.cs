@@ -11,8 +11,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
 public sealed class TimeoutAttribute : Attribute
 {
-    #region Constructor
-
     /// <summary>
     /// Initializes a new instance of the <see cref="TimeoutAttribute"/> class.
     /// </summary>
@@ -35,14 +33,8 @@ public sealed class TimeoutAttribute : Attribute
         Timeout = (int)timeout;
     }
 
-    #endregion
-
-    #region Properties
-
     /// <summary>
     /// Gets the timeout in milliseconds.
     /// </summary>
     public int Timeout { get; }
-
-    #endregion
 }

@@ -15,7 +15,7 @@ public sealed class CssProjectStructureAttribute : Attribute
     /// Initializes a new instance of the <see cref="CssProjectStructureAttribute"/> class for CSS Project Structure URI.
     /// </summary>
     /// <param name="cssProjectStructure">The CSS Project Structure URI.</param>
-    public CssProjectStructureAttribute(string cssProjectStructure)
+    public CssProjectStructureAttribute(string? cssProjectStructure)
     {
         CssProjectStructure = cssProjectStructure;
     }
@@ -23,5 +23,5 @@ public sealed class CssProjectStructureAttribute : Attribute
     /// <summary>
     /// Gets the CSS Project Structure URI.
     /// </summary>
-    public string CssProjectStructure { get; }
+    public string? CssProjectStructure { get; }
 }

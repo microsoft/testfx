@@ -33,7 +33,7 @@ public sealed partial class Assert
     /// <exception cref="AssertInconclusiveException">
     /// Always thrown.
     /// </exception>
-    public static void Inconclusive(string message)
+    public static void Inconclusive(string? message)
     {
         Inconclusive(message, null);
     }
@@ -51,7 +51,7 @@ public sealed partial class Assert
     /// <exception cref="AssertInconclusiveException">
     /// Always thrown.
     /// </exception>
-    public static void Inconclusive(string message, params object[] parameters)
+    public static void Inconclusive(string? message, params object?[]? parameters)
     {
         string userMessage = BuildUserMessage(message, parameters);
         throw new AssertInconclusiveException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, "Assert.Inconclusive", userMessage));

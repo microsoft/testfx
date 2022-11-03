@@ -27,7 +27,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame(object expected, object actual)
+    public static void AreSame(object? expected, object? actual)
     {
         AreSame(expected, actual, string.Empty, null);
     }
@@ -51,7 +51,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame(object expected, object actual, string message)
+    public static void AreSame(object? expected, object? actual, string? message)
     {
         AreSame(expected, actual, message, null);
     }
@@ -78,26 +78,28 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame(object expected, object actual, string message, params object[] parameters)
+    public static void AreSame(object? expected, object? actual, string? message, params object?[]? parameters)
     {
-        if (!ReferenceEquals(expected, actual))
+        if (ReferenceEquals(expected, actual))
         {
-            string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = userMessage;
-
-            if (expected is ValueType valExpected)
-            {
-                if (actual is ValueType valActual)
-                {
-                    finalMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        FrameworkMessages.AreSameGivenValues,
-                        userMessage);
-                }
-            }
-
-            ThrowAssertFailed("Assert.AreSame", finalMessage);
+            return;
         }
+
+        string userMessage = BuildUserMessage(message, parameters);
+        string finalMessage = userMessage;
+
+        if (expected is ValueType)
+        {
+            if (actual is ValueType)
+            {
+                finalMessage = string.Format(
+                    CultureInfo.CurrentCulture,
+                    FrameworkMessages.AreSameGivenValues,
+                    userMessage);
+            }
+        }
+
+        ThrowAssertFailed("Assert.AreSame", finalMessage);
     }
 
     /// <summary>
@@ -115,7 +117,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame(object notExpected, object actual)
+    public static void AreNotSame(object? notExpected, object? actual)
     {
         AreNotSame(notExpected, actual, string.Empty, null);
     }
@@ -140,7 +142,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame(object notExpected, object actual, string message)
+    public static void AreNotSame(object? notExpected, object? actual, string? message)
     {
         AreNotSame(notExpected, actual, message, null);
     }
@@ -168,7 +170,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame(object notExpected, object actual, string message, params object[] parameters)
+    public static void AreNotSame(object? notExpected, object? actual, string? message, params object?[]? parameters)
     {
         if (ReferenceEquals(notExpected, actual))
         {

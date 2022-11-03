@@ -56,7 +56,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition, string message)
+    public static void IsTrue([DoesNotReturnIf(false)] bool condition, string? message)
     {
         IsTrue(condition, message, null);
     }
@@ -75,7 +75,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string message)
+    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message)
     {
         IsTrue(condition, message, null);
     }
@@ -97,7 +97,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool condition, string message, params object[] parameters)
+    public static void IsTrue([DoesNotReturnIf(false)] bool condition, string? message, params object?[]? parameters)
     {
         if (!condition)
         {
@@ -122,7 +122,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
-    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string message, params object[] parameters)
+    public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message, params object?[]? parameters)
     {
         if (condition is false or null)
         {
@@ -174,7 +174,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition, string message)
+    public static void IsFalse([DoesNotReturnIf(true)] bool condition, string? message)
     {
         IsFalse(condition, message, null);
     }
@@ -193,7 +193,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string message)
+    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message)
     {
         IsFalse(condition, message, null);
     }
@@ -215,7 +215,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool condition, string message, params object[] parameters)
+    public static void IsFalse([DoesNotReturnIf(true)] bool condition, string? message, params object?[]? parameters)
     {
         if (condition)
         {
@@ -240,7 +240,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
-    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string message, params object[] parameters)
+    public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message, params object?[]? parameters)
     {
         if (condition is true or null)
         {
