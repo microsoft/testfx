@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,7 +12,8 @@ using System.Globalization;
 using System.IO;
 using System.Security;
 
-#if NETFRAMEWORK
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
@@ -37,10 +39,7 @@ internal abstract class TestDataConnection : IDisposable
     /// Gets the connection.
     /// </summary>
     /// <remarks>This will only return non-null for true DB based connections (TestDataConnectionSql).</remarks>
-    public virtual DbConnection Connection
-    {
-        get { return null; }
-    }
+    public virtual DbConnection? Connection => null;
 
     private static bool ExtendedDiagnosticsEnabled
     {
@@ -52,8 +51,8 @@ internal abstract class TestDataConnection : IDisposable
                 // diagnostic trace
                 try
                 {
-                    string value = Environment.GetEnvironmentVariable("VSTS_DIAGNOSTICS");
-                    s_extendedDiagnosticsEnabled = (value != null) && value.Contains("TestDataConnection");
+                    string? value = Environment.GetEnvironmentVariable("VSTS_DIAGNOSTICS");
+                    s_extendedDiagnosticsEnabled = value != null && value.Contains("TestDataConnection");
                 }
                 catch (SecurityException)
                 {
@@ -69,14 +68,14 @@ internal abstract class TestDataConnection : IDisposable
     /// Get a list of tables and views for this connection. Filters out "system" tables.
     /// </summary>
     /// <returns>List of names or null if error.</returns>
-    public abstract List<string> GetDataTablesAndViews();
+    public abstract List<string>? GetDataTablesAndViews();
 
     /// <summary>
     /// Given a table name, return a list of column names.
     /// </summary>
     /// <param name="tableName">The name of the table.</param>
     /// <returns>List of names or null if error.</returns>
-    public abstract List<string> GetColumns(string tableName);
+    public abstract List<string>? GetColumns(string tableName);
 
     /// <summary>
     /// Read the content of a table or view into memory
@@ -85,7 +84,7 @@ internal abstract class TestDataConnection : IDisposable
     /// <param name="tableName">Minimally quoted table name.</param>
     /// <param name="columns">Array of columns.</param>
     /// <returns>Data table or null if error.</returns>
-    public abstract DataTable ReadTable(string tableName, IEnumerable columns);
+    public abstract DataTable? ReadTable(string tableName, IEnumerable? columns);
 
     // It is critical that is class be disposed of properly, otherwise
     // data connections may be left open. In general it is best to use create instances
@@ -97,7 +96,7 @@ internal abstract class TestDataConnection : IDisposable
 
     internal static bool PathNeedsFixup(string path)
     {
-        if (!string.IsNullOrEmpty(path))
+        if (!StringEx.IsNullOrEmpty(path))
         {
             if (path.StartsWith(ConnectionDirectoryKey, StringComparison.Ordinal))
             {
@@ -111,7 +110,7 @@ internal abstract class TestDataConnection : IDisposable
     // Only use this if "PathNeedsFixup" returns true
     internal static string GetRelativePart(string path)
     {
-        Debug.Assert(PathNeedsFixup(path), "Incorrect path.");
+        DebugEx.Assert(PathNeedsFixup(path), "Incorrect path.");
         return path.Substring(ConnectionDirectoryKey.Length);
     }
 
@@ -119,41 +118,41 @@ internal abstract class TestDataConnection : IDisposable
     // and if it does, assume what follows is a relative
     // path, which we then convert by making it a full path
     // otherwise return null
-    internal static string FixPath(string path, List<string> foldersToCheck)
+    internal static string? FixPath(string path, List<string> foldersToCheck)
     {
-        if (PathNeedsFixup(path))
+        if (!PathNeedsFixup(path))
         {
-            string relPath = GetRelativePart(path);
-
-            // First bet, relative to the current directory
-            string fullPath = Path.GetFullPath(relPath);
-            if (File.Exists(fullPath))
-            {
-                return fullPath;
-            }
-
-            // Second bet, any on our folders foldersToCheck list
-            if (foldersToCheck != null)
-            {
-                foreach (string folder in foldersToCheck)
-                {
-                    fullPath = Path.GetFullPath(Path.Combine(folder, relPath));
-                    if (File.Exists(fullPath))
-                    {
-                        return fullPath;
-                    }
-                }
-            }
-
-            // Finally assume the file ended up directly in the current directory.
-            return Path.GetFullPath(Path.GetFileName(relPath));
+            return null;
         }
 
-        return null;
+        string relPath = GetRelativePart(path);
+
+        // First bet, relative to the current directory
+        string fullPath = Path.GetFullPath(relPath);
+        if (File.Exists(fullPath))
+        {
+            return fullPath;
+        }
+
+        // Second bet, any on our folders foldersToCheck list
+        if (foldersToCheck != null)
+        {
+            foreach (string folder in foldersToCheck)
+            {
+                fullPath = Path.GetFullPath(Path.Combine(folder, relPath));
+                if (File.Exists(fullPath))
+                {
+                    return fullPath;
+                }
+            }
+        }
+
+        // Finally assume the file ended up directly in the current directory.
+        return Path.GetFullPath(Path.GetFileName(relPath));
     }
 
     [Conditional("DEBUG")]
-    protected internal static void WriteDiagnostics(string formatString, params object[] parameters)
+    protected internal static void WriteDiagnostics(string formatString, params object?[] parameters)
     {
         if (ExtendedDiagnosticsEnabled)
         {
@@ -161,7 +160,7 @@ internal abstract class TestDataConnection : IDisposable
         }
     }
 
-    protected string FixPath(string path)
+    protected string? FixPath(string path)
     {
         return FixPath(path, _dataFolders);
     }

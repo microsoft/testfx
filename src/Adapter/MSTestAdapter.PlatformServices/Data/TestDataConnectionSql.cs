@@ -10,13 +10,13 @@ using System.Data.Common;
 using System.Data.Odbc;
 using System.Data.OleDb;
 using System.Data.SqlClient;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Text;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
@@ -29,27 +29,27 @@ internal class TestDataConnectionSql : TestDataConnection
     private readonly DbConnection _connection;
     private readonly DbProviderFactory _factory;
 
-    private string _quoteSuffix;
-    private string _quotePrefix;
+    private string? _quoteSuffix;
+    private string? _quotePrefix;
 
-#region Constructor
+    #region Constructor
 
     internal protected TestDataConnectionSql(string invariantProviderName, string connectionString, List<string> dataFolders)
         : base(dataFolders)
     {
         _factory = DbProviderFactories.GetFactory(invariantProviderName);
+        DebugEx.Assert(_factory != null, "factory should not be null.");
         WriteDiagnostics("DbProviderFactory {0}", _factory);
-        Debug.Assert(_factory != null, "factory should not be null.");
 
         _connection = _factory.CreateConnection();
+        DebugEx.Assert(_connection != null, "connection");
         WriteDiagnostics("DbConnection {0}", _connection);
-        Debug.Assert(_connection != null, "connection");
 
         _commandBuilder = _factory.CreateCommandBuilder();
+        DebugEx.Assert(_commandBuilder != null, "builder");
         WriteDiagnostics("DbCommandBuilder {0}", _commandBuilder);
-        Debug.Assert(_commandBuilder != null, "builder");
 
-        if (!string.IsNullOrEmpty(connectionString))
+        if (!StringEx.IsNullOrEmpty(connectionString))
         {
             _connection.ConnectionString = connectionString;
             WriteDiagnostics("Current directory: {0}", Directory.GetCurrentDirectory());
@@ -60,30 +60,21 @@ internal class TestDataConnectionSql : TestDataConnection
         WriteDiagnostics("Connection state is {0}", _connection.State);
     }
 
-#endregion
+    #endregion
 
-#region Data Properties
+    #region Data Properties
 
-    public override DbConnection Connection
-    {
-        get { return _connection; }
-    }
+    public override DbConnection Connection => _connection;
 
-    protected DbCommandBuilder CommandBuilder
-    {
-        get { return _commandBuilder; }
-    }
+    protected DbCommandBuilder CommandBuilder => _commandBuilder;
 
-    protected DbProviderFactory Factory
-    {
-        get { return _factory; }
-    }
+    protected DbProviderFactory Factory => _factory;
 
-#endregion
+    #endregion
 
     public static TestDataConnectionSql Create(string invariantProviderName, string connectionString, List<string> dataFolders)
     {
-        Debug.Assert(!string.IsNullOrEmpty(invariantProviderName), "invariantProviderName");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(invariantProviderName), "invariantProviderName");
 
         // unit tests pass a null for connection string, so let it pass. However, not all
         // providers can handle that, an example being ODBC
@@ -125,15 +116,16 @@ internal class TestDataConnectionSql : TestDataConnection
         return new SchemaMetaData[] { data };
     }
 
-#region Quotes
+    #region Quotes
 
 #pragma warning disable SA1201 // Elements must appear in the correct order
+    [MemberNotNull(nameof(_quotePrefix))]
     public virtual string QuotePrefix
 #pragma warning restore SA1201 // Elements must appear in the correct order
     {
         get
         {
-            if (string.IsNullOrEmpty(_quotePrefix))
+            if (StringEx.IsNullOrEmpty(_quotePrefix))
             {
                 GetQuoteLiterals();
             }
@@ -147,11 +139,12 @@ internal class TestDataConnectionSql : TestDataConnection
         }
     }
 
+    [MemberNotNull(nameof(_quoteSuffix))]
     public virtual string QuoteSuffix
     {
         get
         {
-            if (string.IsNullOrEmpty(_quoteSuffix))
+            if (StringEx.IsNullOrEmpty(_quoteSuffix))
             {
                 GetQuoteLiterals();
             }
@@ -165,17 +158,17 @@ internal class TestDataConnectionSql : TestDataConnection
         }
     }
 
-    private char CatalogSeperatorChar
+    private char CatalogSeparatorChar
     {
         get
         {
             if (CommandBuilder != null)
             {
-                string catalogSeperator = CommandBuilder.CatalogSeparator;
-                if (!string.IsNullOrEmpty(catalogSeperator))
+                string catalogSeparator = CommandBuilder.CatalogSeparator;
+                if (!StringEx.IsNullOrEmpty(catalogSeparator))
                 {
-                    Debug.Assert(catalogSeperator.Length == 1, "catalogSeperator should have 1 element.");
-                    return catalogSeperator[0];
+                    DebugEx.Assert(catalogSeparator.Length == 1, "catalogSeparator should have 1 element.");
+                    return catalogSeparator[0];
                 }
             }
 
@@ -183,17 +176,17 @@ internal class TestDataConnectionSql : TestDataConnection
         }
     }
 
-    private char SchemaSeperatorChar
+    private char SchemaSeparatorChar
     {
         get
         {
             if (CommandBuilder != null)
             {
-                string schemaSeperator = CommandBuilder.SchemaSeparator;
-                if (!string.IsNullOrEmpty(schemaSeperator))
+                string schemaSeparator = CommandBuilder.SchemaSeparator;
+                if (!StringEx.IsNullOrEmpty(schemaSeparator))
                 {
-                    Debug.Assert(schemaSeperator.Length == 1, "schemaSeperator should have 1 element.");
-                    return schemaSeperator[0];
+                    DebugEx.Assert(schemaSeparator.Length == 1, "schemaSeparator should have 1 element.");
+                    return schemaSeparator[0];
                 }
             }
 
@@ -210,7 +203,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <returns>A fully quoted string.</returns>
     public string PrepareNameForSql(string tableName)
     {
-        string[] parts = SplitName(tableName);
+        string[]? parts = SplitName(tableName);
 
         if (parts != null && parts.Length > 0)
         {
@@ -230,7 +223,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// </summary>
     /// <param name="name">A string.</param>
     /// <returns>An array of unquoted parts, or null if the name fails to conform.</returns>
-    public string[] SplitName(string name)
+    public string[]? SplitName(string name)
     {
         List<string> parts = new();
 
@@ -238,15 +231,15 @@ internal class TestDataConnectionSql : TestDataConnection
         int end = name.Length;
         char firstDelimiter = ' '; // initialize since code analysis is not smart enough
         char currentDelimiter;
-        char catalogSeperatorChar = CatalogSeperatorChar;
-        char schemaSeperatorChar = SchemaSeperatorChar;
+        char catalogSeparatorChar = CatalogSeparatorChar;
+        char schemaSeparatorChar = SchemaSeparatorChar;
 
         while (here < end)
         {
             int next = FindIdentifierEnd(name, here);
             string identifier = name.Substring(here, next - here);
 
-            if (string.IsNullOrEmpty(identifier))
+            if (StringEx.IsNullOrEmpty(identifier))
             {
                 // Not well formed, split failed
                 return null;
@@ -267,8 +260,8 @@ internal class TestDataConnectionSql : TestDataConnection
                     case 1:
                         // We infer there will be at least 2 parts
                         firstDelimiter = currentDelimiter;
-                        if (firstDelimiter != catalogSeperatorChar
-                            && firstDelimiter != schemaSeperatorChar)
+                        if (firstDelimiter != catalogSeparatorChar
+                            && firstDelimiter != schemaSeparatorChar)
                         {
                             // Not well formed, split failed
                             return null;
@@ -278,8 +271,8 @@ internal class TestDataConnectionSql : TestDataConnection
 
                     case 2:
                         // We infer there will be at least 3 parts
-                        if (firstDelimiter != catalogSeperatorChar
-                            || currentDelimiter != schemaSeperatorChar)
+                        if (firstDelimiter != catalogSeparatorChar
+                            || currentDelimiter != schemaSeparatorChar)
                         {
                             // Not well formed, split failed
                             return null;
@@ -299,7 +292,7 @@ internal class TestDataConnectionSql : TestDataConnection
             else
             {
                 // We have found the end
-                if (parts.Count == 2 && firstDelimiter != schemaSeperatorChar)
+                if (parts.Count == 2 && firstDelimiter != schemaSeparatorChar)
                 {
                     // Not well formed, split failed
                     return null;
@@ -327,7 +320,7 @@ internal class TestDataConnectionSql : TestDataConnection
         int partCount = parts.Length;
         StringBuilder result = new();
 
-        Debug.Assert(partCount is > 0 and < 4, "partCount should be 1,2 or 3.");
+        DebugEx.Assert(partCount is > 0 and < 4, "partCount should be 1,2 or 3.");
 
         int currentPart = 0;
         if (partCount > 2)
@@ -350,6 +343,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// Note that for Oledb and Odbc CommandBuilder.QuotePrefix/Suffix is empty.
     /// So we use GetQuoteLiterals for those. For all others we use CommandBuilder.QuotePrefix/Suffix.
     /// </summary>
+    [MemberNotNull(nameof(_quotePrefix), nameof(_quoteSuffix))]
     public virtual void GetQuoteLiterals()
     {
         _quotePrefix = CommandBuilder.QuotePrefix;
@@ -358,16 +352,17 @@ internal class TestDataConnectionSql : TestDataConnection
 
     protected virtual string QuoteIdentifier(string identifier)
     {
-        Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier should not be null.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier should not be null.");
         return CommandBuilder.QuoteIdentifier(identifier);
     }
 
     protected virtual string UnquoteIdentifier(string identifier)
     {
-        Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier should not be null.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier should not be null.");
         return CommandBuilder.UnquoteIdentifier(identifier);
     }
 
+    [MemberNotNull(nameof(_quotePrefix), nameof(_quoteSuffix), nameof(QuotePrefix), nameof(QuoteSuffix))]
     protected void GetQuoteLiteralsHelper()
     {
         // Try to get quote chars by hand for those providers that for some reason return empty QuotePrefix/Suffix.
@@ -375,9 +370,9 @@ internal class TestDataConnectionSql : TestDataConnection
         string quoted = QuoteIdentifier(s);
         string[] parts = quoted.Split(new string[] { s }, StringSplitOptions.None);
 
-        Debug.Assert(parts != null && parts.Length == 2, "TestDataConnectionSql.GetQuotesLiteralHelper: Failure when trying to quote an identifier!");
-        Debug.Assert(!string.IsNullOrEmpty(parts[0]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuotePrefix!");
-        Debug.Assert(!string.IsNullOrEmpty(parts[1]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuoteSuffix!");
+        DebugEx.Assert(parts != null && parts.Length == 2, "TestDataConnectionSql.GetQuotesLiteralHelper: Failure when trying to quote an identifier!");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(parts[0]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuotePrefix!");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(parts[1]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuoteSuffix!");
 
         QuotePrefix = parts[0];
         QuoteSuffix = parts[1];
@@ -385,7 +380,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
     private string MaybeQuote(string identifier, bool force)
     {
-        if (force || FindSeperators(identifier, 0) != -1)
+        if (force || FindSeparators(identifier, 0) != -1)
         {
             return QuoteIdentifier(identifier);
         }
@@ -399,9 +394,9 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <param name="text">The string.</param>
     /// <param name="from">Index.</param>
     /// <returns>Location of the separator.</returns>
-    private int FindSeperators(string text, int from)
+    private int FindSeparators(string text, int from)
     {
-        return text.IndexOfAny(new char[] { SchemaSeperatorChar, CatalogSeperatorChar }, from);
+        return text.IndexOfAny(new char[] { SchemaSeparatorChar, CatalogSeparatorChar }, from);
     }
 
     /// <summary>
@@ -417,7 +412,7 @@ internal class TestDataConnectionSql : TestDataConnection
         // These routine assumes prefixes and suffixes
         // are single characters
         string prefix = QuotePrefix;
-        Debug.Assert(prefix.Length == 1, "prefix length should be 1.");
+        DebugEx.Assert(prefix.Length == 1, "prefix length should be 1.");
         char prefixChar = prefix[0];
 
         int end = text.Length;
@@ -432,7 +427,7 @@ internal class TestDataConnectionSql : TestDataConnection
             int here = start + 1;
 
             string suffix = QuoteSuffix;
-            Debug.Assert(suffix.Length == 1, "suffix length should be 1.");
+            DebugEx.Assert(suffix.Length == 1, "suffix length should be 1.");
             char suffixChar = suffix[0];
 
             while (here < end)
@@ -469,14 +464,14 @@ internal class TestDataConnectionSql : TestDataConnection
             // In the case of an unquoted strings, the processing is much
             // simpler... the end is end of string, or the first
             // of several possible separators.
-            int seperatorPosition = FindSeperators(text, start);
-            return seperatorPosition == -1 ? end : seperatorPosition;
+            int separatorPosition = FindSeparators(text, start);
+            return separatorPosition == -1 ? end : separatorPosition;
         }
     }
 
-#endregion
+    #endregion
 
-#region Schema
+    #region Schema
 
 #pragma warning disable SA1202 // Elements must be ordered by access
 
@@ -485,7 +480,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// Can throw.
     /// </summary>
     /// <returns>The default database schema.</returns>
-    public virtual string GetDefaultSchema()
+    public virtual string? GetDefaultSchema()
     {
         return null;
     }
@@ -504,7 +499,7 @@ internal class TestDataConnectionSql : TestDataConnection
         List<string> tableNames = new();
         try
         {
-            string defaultSchema = GetDefaultSchema();
+            string? defaultSchema = GetDefaultSchema();
             WriteDiagnostics("Default schema is {0}", defaultSchema);
 
             SchemaMetaData[] metadatas = GetSchemaMetaData();
@@ -512,7 +507,7 @@ internal class TestDataConnectionSql : TestDataConnection
             // TODO: may be find better way to enumerate tables/views.
             foreach (SchemaMetaData metadata in metadatas)
             {
-                DataTable dataTable = null;
+                DataTable? dataTable = null;
                 try
                 {
                     WriteDiagnostics("Getting schema table {0}", metadata.SchemaTable);
@@ -527,12 +522,12 @@ internal class TestDataConnectionSql : TestDataConnection
                     continue;
                 }
 
-                Debug.Assert(dataTable != null, "Failed to get data table that contains metadata about tables!");
+                DebugEx.Assert(dataTable != null, "Failed to get data table that contains metadata about tables!");
 
                 foreach (DataRow row in dataTable.Rows)
                 {
                     WriteDiagnostics("Row: {0}", row);
-                    string tableSchema = null;
+                    string? tableSchema = null;
                     bool isDefaultSchema = false;
 
                     // Check the table type for validity
@@ -540,7 +535,7 @@ internal class TestDataConnectionSql : TestDataConnection
                     {
                         if (row[metadata.TableTypeColumn] != DBNull.Value)
                         {
-                            string tableType = row[metadata.TableTypeColumn] as string;
+                            string? tableType = row[metadata.TableTypeColumn] as string;
                             if (!IsInArray(tableType, metadata.ValidTableTypes))
                             {
                                 WriteDiagnostics("Table type {0} is not acceptable", tableType);
@@ -567,11 +562,11 @@ internal class TestDataConnectionSql : TestDataConnection
                         isDefaultSchema = string.Equals(tableSchema, defaultSchema, StringComparison.OrdinalIgnoreCase);
                     }
 
-                    string tableName = row[metadata.NameColumn] as string;
+                    string? tableName = row[metadata.NameColumn] as string;
                     WriteDiagnostics("Table {0}{1} found", tableSchema != null ? tableSchema + "." : string.Empty, tableName);
 
                     // If schema is defined and is not equal to default, prepend table schema in front of the table.
-                    string qualifiedTableName = tableName;
+                    string? qualifiedTableName = tableName;
                     if (isDefaultSchema)
                     {
                         qualifiedTableName = FormatTableNameForDisplay(null, tableName);
@@ -599,7 +594,7 @@ internal class TestDataConnectionSql : TestDataConnection
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public override List<string> GetColumns(string tableName)
+    public override List<string>? GetColumns(string tableName)
     {
         WriteDiagnostics("GetColumns for {0}", tableName);
         try
@@ -609,7 +604,7 @@ internal class TestDataConnectionSql : TestDataConnection
             // This lets us specifically query for columns from the appropriate table name
             // but assumes all databases have the same restrictions on all the column
             // schema tables
-            string[] restrictions = new string[4]
+            string?[] restrictions = new string?[4]
             {
                 null,               // Catalog (don't care)
                 targetSchema,       // Table schema
@@ -617,7 +612,7 @@ internal class TestDataConnectionSql : TestDataConnection
                 null,
             };             // Column name (don't care)
 
-            DataTable columns = null;
+            DataTable? columns = null;
             try
             {
                 columns = Connection.GetSchema("Columns", restrictions);
@@ -662,13 +657,13 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <param name="name">The name.</param>
     /// <param name="schemaName">The schema name output.</param>
     /// <param name="tableName">The table name output.</param>
-    protected void SplitTableName(string name, out string schemaName, out string tableName)
+    protected void SplitTableName(string name, out string? schemaName, out string tableName)
     {
         // Split the name because we need to separately look for
         // tableSchema and tableName
-        string[] parts = SplitName(name);
+        string[]? parts = SplitName(name);
 
-        Debug.Assert(parts.Length > 0, "parts should have more than one element.");
+        DebugEx.Assert(parts?.Length > 0, "parts should have more than one element.");
 
         // Right now this processing ignores any three part names (where the catalog is specified)
         // We use the default schema if the name does not specify one explicitly
@@ -683,19 +678,14 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <param name="tableSchema">Schema part of qualified table name. Quoted or not quoted.</param>
     /// <param name="tableName">Table name. Quoted or not quoted.</param>
     /// <returns>Qualified data table name.</returns>
-    protected string FormatTableNameForDisplay(string tableSchema, string tableName)
+    protected string FormatTableNameForDisplay(string? tableSchema, string? tableName)
     {
         // Note: schema can be null/empty, that is OK
-        Debug.Assert(!string.IsNullOrEmpty(tableName), "FormatDataTableNameForDisplay should be called only when table name is not empty.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(tableName), "FormatDataTableNameForDisplay should be called only when table name is not empty.");
 
-        if (string.IsNullOrEmpty(tableSchema))
-        {
-            return JoinAndQuoteName(new string[] { tableName }, false);
-        }
-        else
-        {
-            return JoinAndQuoteName(new string[] { tableSchema, tableName }, false);
-        }
+        return StringEx.IsNullOrEmpty(tableSchema)
+            ? JoinAndQuoteName(new string[] { tableName }, false)
+            : JoinAndQuoteName(new string[] { tableSchema, tableName }, false);
     }
 
     /// <summary>
@@ -705,25 +695,27 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <param name="candidate">The string.</param>
     /// <param name="values">An array of values.</param>
     /// <returns>True if string exists in array.</returns>
-    private static bool IsInArray(string candidate, string[] values)
+    private static bool IsInArray(string? candidate, string[]? values)
     {
-        if (values != null)
+        if (values == null)
         {
-            foreach (string value in values)
+            return false;
+        }
+
+        foreach (string value in values)
+        {
+            if (string.Equals(value, candidate, StringComparison.OrdinalIgnoreCase))
             {
-                if (string.Equals(value, candidate, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
+                return true;
             }
         }
 
         return false;
     }
 
-#endregion
+    #endregion
 
-#region Helpers
+    #region Helpers
 
 #pragma warning disable SA1202 // Elements must be ordered by access
     public bool IsOpen()
@@ -739,7 +731,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <returns>True if provider is for MSSql.</returns>
     protected static bool IsMSSql(string providerName)
     {
-        return (!string.IsNullOrEmpty(providerName) &&
+        return (!StringEx.IsNullOrEmpty(providerName) &&
             (providerName.StartsWith(KnownOleDbProviderNames.SqlOleDb, StringComparison.OrdinalIgnoreCase) ||
              providerName.StartsWith(KnownOleDbProviderNames.MSSqlNative, StringComparison.OrdinalIgnoreCase))) ||
              string.Equals(providerName, KnownOdbcDrivers.MSSql, StringComparison.OrdinalIgnoreCase);
@@ -763,28 +755,28 @@ internal class TestDataConnectionSql : TestDataConnection
     /// </summary>
     /// <returns>The default db schema.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    protected string GetDefaultSchemaMSSql()
+    protected string? GetDefaultSchemaMSSql()
     {
-        Debug.Assert(Connection != null, "Connection should not be null.");
+        DebugEx.Assert(Connection != null, "Connection should not be null.");
 
         try
         {
-            OleDbConnection oleDbConnection = Connection as OleDbConnection;
-            OdbcConnection odbcConnection = Connection as OdbcConnection;
-            Debug.Assert(
+            OleDbConnection? oleDbConnection = Connection as OleDbConnection;
+            OdbcConnection? odbcConnection = Connection as OdbcConnection;
+            DebugEx.Assert(
                 Connection is SqlConnection ||
                 (oleDbConnection != null && IsMSSql(oleDbConnection.Provider)) ||
                 (odbcConnection != null && IsMSSql(odbcConnection.Driver)),
                 "GetDefaultSchemaMSSql should be called only for MS SQL (either native or Ole Db or Odbc).");
 
-            Debug.Assert(IsOpen(), "The connection must already be open!");
-            Debug.Assert(!string.IsNullOrEmpty(Connection.ServerVersion), "GetDefaultSchema: the ServerVersion is null or empty!");
+            DebugEx.Assert(IsOpen(), "The connection must already be open!");
+            DebugEx.Assert(!StringEx.IsNullOrEmpty(Connection.ServerVersion), "GetDefaultSchema: the ServerVersion is null or empty!");
 
             int index = Connection.ServerVersion.IndexOf(".", StringComparison.Ordinal);
-            Debug.Assert(index > 0, "GetDefaultSchema: index should be 0");
+            DebugEx.Assert(index > 0, "GetDefaultSchema: index should be 0");
 
             string versionString = Connection.ServerVersion.Substring(0, index);
-            Debug.Assert(!string.IsNullOrEmpty(versionString), "GetDefaultSchema: version string is not present!");
+            DebugEx.Assert(!StringEx.IsNullOrEmpty(versionString), "GetDefaultSchema: version string is not present!");
 
             int version = int.Parse(versionString, CultureInfo.InvariantCulture);
 
@@ -795,7 +787,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
             using DbCommand cmd = Connection.CreateCommand();
             cmd.CommandText = sql;
-            string defaultSchema = cmd.ExecuteScalar() as string;
+            string? defaultSchema = cmd.ExecuteScalar() as string;
             return defaultSchema;
         }
         catch (Exception e)
@@ -807,9 +799,9 @@ internal class TestDataConnectionSql : TestDataConnection
         return null;
     }
 
-#endregion
+    #endregion
 
-#region Data
+    #region Data
 
     /// <summary>
     /// Read a table from the connection, into a DataTable
@@ -821,7 +813,7 @@ internal class TestDataConnectionSql : TestDataConnection
     [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Un-tested. Leaving behavior as is.")]
     [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security", Justification = "Not passed in from the user.")]
 #pragma warning disable SA1202 // Elements must be ordered by access
-    public override DataTable ReadTable(string tableName, IEnumerable columns)
+    public override DataTable ReadTable(string tableName, IEnumerable? columns)
 #pragma warning restore SA1202 // Elements must be ordered by access
     {
         using DbDataAdapter dataAdapter = Factory.CreateDataAdapter();
@@ -852,9 +844,9 @@ internal class TestDataConnectionSql : TestDataConnection
         return table;
     }
 
-    private string GetColumnsSQL(IEnumerable columns)
+    private string GetColumnsSQL(IEnumerable? columns)
     {
-        string result = null;
+        string? result = null;
         if (columns != null)
         {
             StringBuilder builder = new();
@@ -872,10 +864,10 @@ internal class TestDataConnectionSql : TestDataConnection
         }
 
         // Return a valid list of columns, or default to * for all columns
-        return !string.IsNullOrEmpty(result) ? result : "*";
+        return !StringEx.IsNullOrEmpty(result) ? result : "*";
     }
 
-#endregion
+    #endregion
 
     [SuppressMessage("Microsoft.Usage", "CA2215:Dispose methods should call base class dispose", Justification = "Un-tested. Just preserving behavior.")]
 #pragma warning disable SA1202 // Elements must be ordered by access
@@ -889,7 +881,7 @@ internal class TestDataConnectionSql : TestDataConnection
         GC.SuppressFinalize(this);
     }
 
-#region Types
+    #region Types
 
     /// <summary>
     /// When querying for tables, metadata varies quite a bit from DB to DB
@@ -898,22 +890,22 @@ internal class TestDataConnectionSql : TestDataConnection
     protected struct SchemaMetaData
     {
         // Name of a table containing tables or views
-        public string SchemaTable;
+        public string? SchemaTable;
 
         // Column that contains schema names, if null, unused
-        public string SchemaColumn;
+        public string? SchemaColumn;
 
         // Column that contains the table names
-        public string NameColumn;
+        public string? NameColumn;
 
         // Column that contains a table "type", if null, type is unchecked
-        public string TableTypeColumn;
+        public string? TableTypeColumn;
 
         // If table type is available, it is checked to be one of the values on this list
-        public string[] ValidTableTypes;
+        public string[]? ValidTableTypes;
 
         // If schema is available, it is checked to not be one of the values on this list
-        public string[] InvalidSchemas;
+        public string[]? InvalidSchemas;
     }
 
     /// <summary>
@@ -947,7 +939,7 @@ internal class TestDataConnectionSql : TestDataConnection
         internal const string MSSql = "sqlsrv32.dll";
     }
 
-#endregion
+    #endregion
 }
 
 #endif

@@ -3,7 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -18,6 +18,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -32,7 +33,7 @@ public class TestDeployment : ITestDeployment
     private readonly DeploymentItemUtility _deploymentItemUtility;
     private readonly DeploymentUtility _deploymentUtility;
     private readonly FileUtility _fileUtility;
-    private MSTestAdapterSettings _adapterSettings;
+    private MSTestAdapterSettings? _adapterSettings;
 
     #endregion
 
@@ -66,11 +67,7 @@ public class TestDeployment : ITestDeployment
     /// This is initialized at the beginning of a run session when Deploy is called.
     /// Leaving this as a static variable since the testContext needs to be filled in with this information.
     /// </remarks>
-    internal static TestRunDirectories RunDirectories
-    {
-        get;
-        private set;
-    }
+    internal static TestRunDirectories? RunDirectories { get; private set; }
 #endif
 
     /// <summary>
@@ -80,7 +77,7 @@ public class TestDeployment : ITestDeployment
     /// <param name="type"> The type. </param>
     /// <param name="warnings"> The warnings. </param>
     /// <returns> A string of deployment items. </returns>
-    public KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings)
+    public KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings)
     {
 #if WINDOWS_UWP || PORTABLE
         return null;
@@ -95,6 +92,8 @@ public class TestDeployment : ITestDeployment
     public void Cleanup()
     {
 #if !WINDOWS_UWP && !PORTABLE
+        DebugEx.Assert(_adapterSettings is not null, "Adapter settings should not be null.");
+
         // Delete the deployment directory
         if (RunDirectories != null && _adapterSettings.DeleteDeploymentDirectoryAfterTestRunIsComplete)
         {
@@ -111,7 +110,7 @@ public class TestDeployment : ITestDeployment
     /// Gets the deployment output directory where the source file along with all its dependencies is dropped.
     /// </summary>
     /// <returns> The deployment output directory. </returns>
-    public string GetDeploymentDirectory()
+    public string? GetDeploymentDirectory()
     {
 #if WINDOWS_UWP || PORTABLE
         return null;
@@ -132,7 +131,7 @@ public class TestDeployment : ITestDeployment
 #if WINDOWS_UWP || PORTABLE
         return false;
 #else
-        Debug.Assert(tests != null, "tests");
+        DebugEx.Assert(tests != null, "tests");
 
         // Reset runDirectories before doing deployment, so that older values of runDirectories is not picked
         // even if test host is kept alive.
@@ -190,10 +189,10 @@ public class TestDeployment : ITestDeployment
         var applicationBaseDirectory = string.Empty;
 
         // Run directories can be null in win8.
-        if (RunDirectories == null && !string.IsNullOrEmpty(source))
+        if (RunDirectories == null && !StringEx.IsNullOrEmpty(source))
         {
             // applicationBaseDirectory is set at source level
-            applicationBaseDirectory = Path.GetDirectoryName(source);
+            applicationBaseDirectory = Path.GetDirectoryName(source)!;
         }
 
         properties[TestContextPropertyStrings.TestRunDirectory] =
@@ -246,6 +245,7 @@ public class TestDeployment : ITestDeployment
     /// <returns>True if deployment can be done.</returns>
     private bool CanDeploy()
     {
+        DebugEx.Assert(_adapterSettings is not null, "Adapter settings should not be null.");
         if (!_adapterSettings.DeploymentEnabled)
         {
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "MSTestExecutor: CanDeploy is false.");

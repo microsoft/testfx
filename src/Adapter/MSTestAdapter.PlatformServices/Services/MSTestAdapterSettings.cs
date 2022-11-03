@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WINDOWS_UWP
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,8 +10,8 @@ using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#if !WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 public class MSTestAdapterSettings
 {
@@ -61,7 +62,7 @@ public class MSTestAdapterSettings
         //     <DeployTestSourceDependencies>true</DeployTestSourceDependencies>
         //     <DeleteDeploymentDirectoryAfterTestRunIsComplete>true</DeleteDeploymentDirectoryAfterTestRunIsComplete>
         //     <AssemblyResolution>
-        //          <Directory path= "% HOMEDRIVE %\direvtory "includeSubDirectories = "true" />
+        //          <Directory path= "% HOMEDRIVE %\directory "includeSubDirectories = "true" />
         //          <Directory path= "C:\windows" includeSubDirectories = "false" />
         //          <Directory path= ".\DirectoryName" />  ...// by default includeSubDirectories is false
         //     </AssemblyResolution>
@@ -126,9 +127,9 @@ public class MSTestAdapterSettings
         return settings;
     }
 
-    public static bool IsAppDomainCreationDisabled(string settingsXml)
+    public static bool IsAppDomainCreationDisabled(string? settingsXml)
     {
-        if (string.IsNullOrEmpty(settingsXml))
+        if (StringEx.IsNullOrEmpty(settingsXml))
         {
             return false;
         }
@@ -155,11 +156,11 @@ public class MSTestAdapterSettings
         foreach (RecursiveDirectoryPath recPath in SearchDirectories)
         {
             // If path has environment variable, then resolve it
-            string directorypath = ResolveEnvironmentVariableAndReturnFullPathIfExist(recPath.DirectoryPath, baseDirectory);
+            string? directoryPath = ResolveEnvironmentVariableAndReturnFullPathIfExist(recPath.DirectoryPath, baseDirectory);
 
-            if (!string.IsNullOrEmpty(directorypath))
+            if (!StringEx.IsNullOrEmpty(directoryPath))
             {
-                directoriesList.Add(new RecursiveDirectoryPath(directorypath, recPath.IncludeSubDirectories));
+                directoriesList.Add(new RecursiveDirectoryPath(directoryPath, recPath.IncludeSubDirectories));
             }
         }
 
@@ -172,53 +173,31 @@ public class MSTestAdapterSettings
     /// <param name="path">The path to be expanded.</param>
     /// <param name="baseDirectory">The base directory for the path which is not rooted path.</param>
     /// <returns>The expanded path.</returns>
-    internal string ResolveEnvironmentVariableAndReturnFullPathIfExist(string path, string baseDirectory)
+    internal string? ResolveEnvironmentVariableAndReturnFullPathIfExist(string path, string baseDirectory)
     {
         // Trim beginning and trailing white space from the path.
         path = path.Trim(' ', '\t');
 
-        if (!string.IsNullOrEmpty(path))
+        if (StringEx.IsNullOrEmpty(path))
         {
-            string warningMessage = null;
+            return null;
+        }
 
-            // Expand any environment variables in the path.
-            path = ExpandEnvironmentVariables(path);
+        string? warningMessage = null;
 
-            // If the path is a relative path, expand it relative to the base directory
-            if (!Path.IsPathRooted(path))
+        // Expand any environment variables in the path.
+        path = ExpandEnvironmentVariables(path);
+
+        // If the path is a relative path, expand it relative to the base directory
+        if (!Path.IsPathRooted(path))
+        {
+            if (!StringEx.IsNullOrEmpty(baseDirectory))
             {
-                if (!string.IsNullOrEmpty(baseDirectory))
-                {
-                    path = Path.Combine(baseDirectory, path);
-                }
-                else
-                {
-                    warningMessage = string.Format("The Directory: {0}, has following problem: {1}", path, "This is not an absolute path. A base directory should be provided for this to be used as a relative path.");
-
-                    if (EqtTrace.IsWarningEnabled)
-                    {
-                        EqtTrace.Warning(warningMessage);
-                    }
-
-                    return null;
-                }
+                path = Path.Combine(baseDirectory, path);
             }
-
-            try
+            else
             {
-                // Get the full path.
-                // This will cleanup the path converting any "..\" to the appropriate value
-                // and convert any alternative directory separators to "\"
-                path = Path.GetFullPath(path);
-            }
-            catch (Exception e)
-            {
-                warningMessage = e.Message;
-            }
-
-            if (!string.IsNullOrEmpty(warningMessage))
-            {
-                warningMessage = string.Format("The Directory: {0}, has following problem: {1}", path, warningMessage);
+                warningMessage = string.Format("The Directory: {0}, has following problem: {1}", path, "This is not an absolute path. A base directory should be provided for this to be used as a relative path.");
 
                 if (EqtTrace.IsWarningEnabled)
                 {
@@ -227,15 +206,39 @@ public class MSTestAdapterSettings
 
                 return null;
             }
+        }
 
-            if (DoesDirectoryExist(path))
+        try
+        {
+            // Get the full path.
+            // This will cleanup the path converting any "..\" to the appropriate value
+            // and convert any alternative directory separators to "\"
+            path = Path.GetFullPath(path);
+        }
+        catch (Exception e)
+        {
+            warningMessage = e.Message;
+        }
+
+        if (!StringEx.IsNullOrEmpty(warningMessage))
+        {
+            warningMessage = string.Format("The Directory: {0}, has following problem: {1}", path, warningMessage);
+
+            if (EqtTrace.IsWarningEnabled)
             {
-                return path;
+                EqtTrace.Warning(warningMessage);
             }
 
-            // generate warning that path does not exist.
-            EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, string.Format("The Directory: {0}, does not exist.", path));
+            return null;
         }
+
+        if (DoesDirectoryExist(path))
+        {
+            return path;
+        }
+
+        // generate warning that path does not exist.
+        EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, string.Format("The Directory: {0}, does not exist.", path));
 
         return null;
     }
@@ -269,7 +272,7 @@ public class MSTestAdapterSettings
         // Expected format of the xml is: -
         //
         // <AssemblyResolution>
-        //     <Directory path= "% HOMEDRIVE %\direvtory "includeSubDirectories = "true" />
+        //     <Directory path= "% HOMEDRIVE %\directory "includeSubDirectories = "true" />
         //     <Directory path= "C:\windows" includeSubDirectories = "false" />
         //     <Directory path= ".\DirectoryName" />  ...// by default includeSubDirectories is false
         // </AssemblyResolution>
@@ -282,12 +285,12 @@ public class MSTestAdapterSettings
             {
                 if (string.Equals("Directory", reader.Name, StringComparison.OrdinalIgnoreCase))
                 {
-                    string recursiveAttribute = reader.GetAttribute("includeSubDirectories");
+                    string? recursiveAttribute = reader.GetAttribute("includeSubDirectories");
 
                     // read the path specified
-                    string path = reader.GetAttribute("path");
+                    string? path = reader.GetAttribute("path");
 
-                    if (!string.IsNullOrEmpty(path))
+                    if (!StringEx.IsNullOrEmpty(path))
                     {
                         // Do we have to look in sub directory for dependent dll.
                         var includeSubDirectories = string.Equals(recursiveAttribute, "true", StringComparison.OrdinalIgnoreCase);

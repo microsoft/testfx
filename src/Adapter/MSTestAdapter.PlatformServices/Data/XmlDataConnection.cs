@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
@@ -13,8 +13,8 @@ using System.Security;
 using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#if NETFRAMEWORK
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
@@ -27,73 +27,72 @@ internal sealed class XmlDataConnection : TestDataConnection
     public XmlDataConnection(string fileName, List<string> dataFolders)
         : base(dataFolders)
     {
-        Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(fileName), "fileName");
         _fileName = fileName;
     }
 
-    public override List<string> GetDataTablesAndViews()
+    public override List<string>? GetDataTablesAndViews()
     {
-        DataSet dataSet = LoadDataSet(true);
-
-        if (dataSet != null)
-        {
-            List<string> tableNames = new();
-
-            int tableCount = dataSet.Tables.Count;
-            for (int i = 0; i < tableCount; i++)
-            {
-                DataTable table = dataSet.Tables[i];
-                tableNames.Add(table.TableName);
-            }
-
-            return tableNames;
-        }
-        else
+        DataSet? dataSet = LoadDataSet(true);
+        if (dataSet == null)
         {
             return null;
         }
+
+        List<string> tableNames = new();
+
+        int tableCount = dataSet.Tables.Count;
+        for (int i = 0; i < tableCount; i++)
+        {
+            DataTable table = dataSet.Tables[i];
+            tableNames.Add(table.TableName);
+        }
+
+        return tableNames;
     }
 
-    public override List<string> GetColumns(string tableName)
+    public override List<string>? GetColumns(string tableName)
     {
-        DataSet dataSet = LoadDataSet(true);
-        if (dataSet != null)
+        DataSet? dataSet = LoadDataSet(true);
+        if (dataSet == null)
         {
-            DataTable table = dataSet.Tables[tableName];
-            if (table != null)
-            {
-                List<string> columnNames = new();
-                foreach (DataColumn column in table.Columns)
-                {
-                    // Only show "normal" columns, we try to hide derived columns used as part
-                    // of the support for relations
-                    if (column.ColumnMapping != MappingType.Hidden)
-                    {
-                        columnNames.Add(column.ColumnName);
-                    }
-                }
+            return null;
+        }
 
-                return columnNames;
+        DataTable table = dataSet.Tables[tableName];
+        if (table == null)
+        {
+            return null;
+        }
+
+        List<string> columnNames = new();
+        foreach (DataColumn column in table.Columns)
+        {
+            // Only show "normal" columns, we try to hide derived columns used as part
+            // of the support for relations
+            if (column.ColumnMapping != MappingType.Hidden)
+            {
+                columnNames.Add(column.ColumnName);
             }
         }
 
-        return null;
+        return columnNames;
     }
 
-    public override DataTable ReadTable(string tableName, IEnumerable columns)
+    public override DataTable? ReadTable(string tableName, IEnumerable? columns)
     {
         // Reading XML is very simple...
         // We do not ask it to just load a specific table, or specific columns
         // so there is inefficiency since we will reload the entire file
         // once for every table in it. Oh well. Reading XML is pretty quick
         // compared to other forms of data source
-        DataSet ds = LoadDataSet(false);
+        DataSet? ds = LoadDataSet(false);
         return ds?.Tables[tableName];
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Un-tested. Preserving behavior.")]
-    private DataSet LoadDataSet(bool schemaOnly)
+    private DataSet? LoadDataSet(bool schemaOnly)
     {
         try
         {

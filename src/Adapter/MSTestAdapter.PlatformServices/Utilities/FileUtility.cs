@@ -12,6 +12,7 @@ using System.Linq;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 internal class FileUtility
@@ -25,7 +26,7 @@ internal class FileUtility
 
     public virtual void CreateDirectoryIfNotExists(string directory)
     {
-        Debug.Assert(!string.IsNullOrEmpty(directory), "directory");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(directory), "directory");
 
         if (!Directory.Exists(directory))
         {
@@ -40,7 +41,7 @@ internal class FileUtility
     /// <returns> The fileName devoid of any invalid characters. </returns>
     public static string ReplaceInvalidFileNameCharacters(string fileName)
     {
-        Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(fileName), "fileName");
 
         return Path.GetInvalidFileNameChars().Aggregate(fileName, (current, ch) => current.Replace(ch, '_'));
     }
@@ -55,8 +56,8 @@ internal class FileUtility
     /// <returns>A unique directory name.</returns>
     public virtual string GetNextIterationDirectoryName(string parentDirectoryName, string originalDirectoryName)
     {
-        Debug.Assert(!string.IsNullOrEmpty(parentDirectoryName), "parentDirectoryName");
-        Debug.Assert(!string.IsNullOrEmpty(originalDirectoryName), "originalDirectoryName");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(parentDirectoryName), "parentDirectoryName");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(originalDirectoryName), "originalDirectoryName");
 
         uint iteration = 0;
         do
@@ -98,21 +99,21 @@ internal class FileUtility
     /// throw on error when specified to abort the run on error.
     /// </returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public virtual string CopyFileOverwrite(string source, string destination, out string warning)
+    public virtual string CopyFileOverwrite(string source, string destination, out string? warning)
     {
-        Debug.Assert(!string.IsNullOrEmpty(source), "source should not be null.");
-        Debug.Assert(!string.IsNullOrEmpty(destination), "destination should not be null.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(source), "source should not be null.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(destination), "destination should not be null.");
 
         try
         {
-            string destinationDirectory = Path.GetDirectoryName(destination);
-            if (!string.IsNullOrEmpty(destinationDirectory) && File.Exists(source) && !Directory.Exists(destinationDirectory))
+            string? destinationDirectory = Path.GetDirectoryName(destination);
+            if (!StringEx.IsNullOrEmpty(destinationDirectory) && File.Exists(source) && !Directory.Exists(destinationDirectory))
             {
                 Directory.CreateDirectory(destinationDirectory);
             }
 
             // Overwrite
-            Debug.Assert(Path.IsPathRooted(source), "DeploymentManager: source path " + source + " must be rooted!");
+            DebugEx.Assert(Path.IsPathRooted(source), "DeploymentManager: source path " + source + " must be rooted!");
             File.Copy(source, destination, true);
 
             warning = null;
@@ -135,31 +136,30 @@ internal class FileUtility
     /// <param name="relativeDestination">Destination relative to the root of deployment dir.</param>
     /// <param name="sourceFile">Original file of destinationFile, i.e. the file copied to deployment dir.</param>
     /// <param name="destToSource">destToSource map.</param>
-    public string FindAndDeployPdb(string destinationFile, string relativeDestination, string sourceFile, Dictionary<string, string> destToSource)
+    public string? FindAndDeployPdb(string destinationFile, string relativeDestination, string sourceFile, Dictionary<string, string> destToSource)
     {
-        Debug.Assert(!string.IsNullOrEmpty(destinationFile), "destination should not be null or empty.");
-        Debug.Assert(!string.IsNullOrEmpty(relativeDestination), "relative destination path should not be null or empty.");
-        Debug.Assert(!string.IsNullOrEmpty(sourceFile), "sourceFile should not be null or empty.");
-        Debug.Assert(destToSource != null, "destToSource should not be null.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(destinationFile), "destination should not be null or empty.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(relativeDestination), "relative destination path should not be null or empty.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(sourceFile), "sourceFile should not be null or empty.");
+        DebugEx.Assert(destToSource != null, "destToSource should not be null.");
 
         if (!_assemblyUtility.IsAssemblyExtension(Path.GetExtension(destinationFile)))
         {
             return null;
         }
 
-        string pdbSource = GetSymbolsFileName(sourceFile);
-        if (string.IsNullOrEmpty(pdbSource))
+        string? pdbSource = GetSymbolsFileName(sourceFile);
+        if (StringEx.IsNullOrEmpty(pdbSource))
         {
             return null;
         }
 
-        string pdbDestination = null;
-        string relativePdbDestination = null;
-
+        string? pdbDestination;
+        string? relativePdbDestination;
         try
         {
-            pdbDestination = Path.Combine(Path.GetDirectoryName(destinationFile), Path.GetFileName(pdbSource));
-            relativePdbDestination = Path.Combine(Path.GetDirectoryName(relativeDestination), Path.GetFileName(pdbDestination));
+            pdbDestination = Path.Combine(Path.GetDirectoryName(destinationFile)!, Path.GetFileName(pdbSource));
+            relativePdbDestination = Path.Combine(Path.GetDirectoryName(relativeDestination)!, Path.GetFileName(pdbDestination));
         }
         catch (ArgumentException ex)
         {
@@ -173,7 +173,7 @@ internal class FileUtility
             if (DoesFileExist(pdbSource))
             {
                 pdbDestination = CopyFileOverwrite(pdbSource, pdbDestination, out var warning);
-                if (!string.IsNullOrEmpty(pdbDestination))
+                if (!StringEx.IsNullOrEmpty(pdbDestination))
                 {
                     destToSource.Add(relativePdbDestination, pdbSource);
                     return pdbDestination;
@@ -197,7 +197,7 @@ internal class FileUtility
         return AddFilesFromDirectory(directoryPath, null, ignoreIOExceptions);
     }
 
-    public virtual List<string> AddFilesFromDirectory(string directoryPath, Func<string, bool> ignoreDirectory, bool ignoreIOExceptions)
+    public virtual List<string> AddFilesFromDirectory(string directoryPath, Func<string, bool>? ignoreDirectory, bool ignoreIOExceptions)
     {
         var fileContents = new List<string>();
 
@@ -233,8 +233,8 @@ internal class FileUtility
 
     public static string TryConvertPathToRelative(string path, string rootDir)
     {
-        Debug.Assert(!string.IsNullOrEmpty(path), "path should not be null or empty.");
-        Debug.Assert(!string.IsNullOrEmpty(rootDir), "rootDir should not be null or empty.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(path), "path should not be null or empty.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(rootDir), "rootDir should not be null or empty.");
 
         if (Path.IsPathRooted(path) && path.StartsWith(rootDir, StringComparison.OrdinalIgnoreCase))
         {
@@ -252,7 +252,7 @@ internal class FileUtility
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public virtual void DeleteDirectories(string filePath)
     {
-        Validate.IsFalse(string.IsNullOrWhiteSpace(filePath), "Invalid filePath provided");
+        Validate.IsFalse(StringEx.IsNullOrWhiteSpace(filePath), "Invalid filePath provided");
         try
         {
             var root = new DirectoryInfo(filePath);
@@ -296,9 +296,9 @@ internal class FileUtility
     /// <param name="path">path to symbols file.</param>
     /// <returns>Pdb file name or null if non-existent.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private static string GetSymbolsFileName(string path)
+    private static string? GetSymbolsFileName(string? path)
     {
-        if (string.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+        if (StringEx.IsNullOrEmpty(path) || path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
         {
             if (EqtTrace.IsWarningEnabled)
             {

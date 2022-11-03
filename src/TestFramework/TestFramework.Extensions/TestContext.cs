@@ -20,7 +20,7 @@ public abstract class TestContext
     /// <summary>
     /// Gets test properties for a test.
     /// </summary>
-    public abstract IDictionary Properties { get; }
+    public abstract IDictionary? Properties { get; }
 
     /// <summary>
     /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted.
@@ -31,12 +31,12 @@ public abstract class TestContext
     /// <summary>
     /// Gets the current data row when test is used for data driven testing.
     /// </summary>
-    public abstract DataRow DataRow { get; }
+    public abstract DataRow? DataRow { get; }
 
     /// <summary>
     /// Gets current data connection row when test is used for data driven testing.
     /// </summary>
-    public abstract DbConnection DataConnection { get; }
+    public abstract DbConnection? DataConnection { get; }
 #endif
 
 #if !WINDOWS_UWP && !WIN_UI
@@ -130,7 +130,7 @@ public abstract class TestContext
     /// <param name="fileName">
     /// The file Name.
     /// </param>
-    public abstract void AddResultFile(string fileName);
+    public abstract void AddResultFile(string? fileName);
 
 #if NETFRAMEWORK
     /// <summary>
@@ -175,6 +175,7 @@ public abstract class TestContext
     private T? GetProperty<T>(string name)
         where T : class
     {
+        DebugEx.Assert(Properties is not null, "Properties is null");
 #if WINDOWS_UWP || WIN_UI
         if (!((IDictionary<string, object>)Properties).TryGetValue(name, out object? propertyValue))
         {

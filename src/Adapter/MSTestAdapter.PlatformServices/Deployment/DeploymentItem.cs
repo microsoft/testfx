@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
 using System.Globalization;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #if !WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
@@ -70,8 +71,8 @@ internal class DeploymentItem
     /// <param name="originType">Origin of this deployment directory.</param>
     internal DeploymentItem(string sourcePath, string relativeOutputDirectory, DeploymentItemOriginType originType)
     {
-        Debug.Assert(!string.IsNullOrEmpty(sourcePath), "sourcePath");
-        Debug.Assert(relativeOutputDirectory != null, "relativeOutputDirectory");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(sourcePath), "sourcePath");
+        DebugEx.Assert(relativeOutputDirectory != null, "relativeOutputDirectory");
 
         SourcePath = sourcePath;
         RelativeOutputDirectory = relativeOutputDirectory;
@@ -106,15 +107,15 @@ internal class DeploymentItem
     /// </summary>
     /// <param name="obj"> The object. </param>
     /// <returns> True if the two objects are equal. </returns>
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (obj is not DeploymentItem otherItem)
         {
             return false;
         }
 
-        Debug.Assert(SourcePath != null, "SourcePath");
-        Debug.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
+        DebugEx.Assert(SourcePath != null, "SourcePath");
+        DebugEx.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
         return SourcePath.Equals(otherItem.SourcePath, StringComparison.OrdinalIgnoreCase) &&
                RelativeOutputDirectory.Equals(otherItem.RelativeOutputDirectory, StringComparison.OrdinalIgnoreCase);
     }
@@ -125,8 +126,8 @@ internal class DeploymentItem
     /// <returns> The hash code value. </returns>
     public override int GetHashCode()
     {
-        Debug.Assert(SourcePath != null, "SourcePath");
-        Debug.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
+        DebugEx.Assert(SourcePath != null, "SourcePath");
+        DebugEx.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
         return SourcePath.GetHashCode() + RelativeOutputDirectory.GetHashCode();
     }
 
@@ -136,11 +137,11 @@ internal class DeploymentItem
     /// <returns> The <see cref="string"/> value. </returns>
     public override string ToString()
     {
-        Debug.Assert(SourcePath != null, "SourcePath");
-        Debug.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
+        DebugEx.Assert(SourcePath != null, "SourcePath");
+        DebugEx.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
 
         return
-            string.IsNullOrEmpty(RelativeOutputDirectory) ?
+            StringEx.IsNullOrEmpty(RelativeOutputDirectory) ?
                 string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItem, SourcePath) :
                 string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItemWithOutputDirectory, SourcePath, RelativeOutputDirectory);
     }

@@ -5,7 +5,8 @@
 
 using System.Collections.Generic;
 using System.Data.OleDb;
-using System.Diagnostics;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
@@ -20,7 +21,7 @@ internal sealed class OleDataConnection : TestDataConnectionSql
         : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
     {
         // Need open connection to get Connection.Provider.
-        Debug.Assert(IsOpen(), "The connection must be open!");
+        DebugEx.Assert(IsOpen(), "The connection must be open!");
 
         // Fill m_isMSSql.
         _isMSSql = Connection != null && IsMSSql(Connection.Provider);
@@ -44,7 +45,7 @@ internal sealed class OleDataConnection : TestDataConnectionSql
         GetQuoteLiteralsHelper();
     }
 
-    public override string GetDefaultSchema()
+    public override string? GetDefaultSchema()
     {
         if (_isMSSql)
         {
@@ -73,13 +74,13 @@ internal sealed class OleDataConnection : TestDataConnectionSql
 
     protected override string QuoteIdentifier(string identifier)
     {
-        Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
         return CommandBuilder.QuoteIdentifier(identifier, Connection);
     }
 
     protected override string UnquoteIdentifier(string identifier)
     {
-        Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
         return CommandBuilder.UnquoteIdentifier(identifier, Connection);
     }
 
@@ -89,14 +90,14 @@ internal sealed class OleDataConnection : TestDataConnectionSql
 
         string fileName = oleDbBuilder.DataSource;
 
-        if (string.IsNullOrEmpty(fileName))
+        if (StringEx.IsNullOrEmpty(fileName))
         {
             return connectionString;
         }
         else
         {
             // Fix-up magic file paths
-            string fixedFilePath = FixPath(fileName, dataFolders);
+            string? fixedFilePath = FixPath(fileName, dataFolders);
             if (fixedFilePath != null)
             {
                 oleDbBuilder.DataSource = fixedFilePath;

@@ -13,6 +13,7 @@ using System.Security;
 using System.Security.Permissions;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -54,12 +55,12 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <summary>
     /// Dictionary of Assemblies discovered to date.
     /// </summary>
-    private readonly Dictionary<string, Assembly> _resolvedAssemblies = new();
+    private readonly Dictionary<string, Assembly?> _resolvedAssemblies = new();
 
     /// <summary>
     /// Dictionary of Reflection-Only Assemblies discovered to date.
     /// </summary>
-    private readonly Dictionary<string, Assembly> _reflectionOnlyResolvedAssemblies = new();
+    private readonly Dictionary<string, Assembly?> _reflectionOnlyResolvedAssemblies = new();
 
     /// <summary>
     /// lock for the loaded assemblies cache.
@@ -123,7 +124,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// </returns>
     [SecurityCritical]
     [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.Infrastructure)]
-    public override object InitializeLifetimeService()
+    public override object? InitializeLifetimeService()
     {
         return null;
     }
@@ -154,7 +155,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="sender"> The sender App Domain. </param>
     /// <param name="args"> The args. </param>
     /// <returns> The <see cref="Assembly"/>. </returns>
-    internal Assembly ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
+    internal Assembly? ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
     {
         return OnResolveInternal(sender, args, true);
     }
@@ -165,7 +166,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="sender"> The sender App Domain. </param>
     /// <param name="args"> The args. </param>
     /// <returns> The <see cref="Assembly"/>.  </returns>
-    internal Assembly OnResolve(object sender, ResolveEventArgs args)
+    internal Assembly? OnResolve(object sender, ResolveEventArgs args)
     {
         return OnResolveInternal(sender, args, false);
     }
@@ -177,8 +178,8 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="searchDirectories"> The search Directories. </param>
     internal void AddSubdirectories(string path, List<string> searchDirectories)
     {
-        Debug.Assert(!string.IsNullOrEmpty(path), "'path' cannot be null or empty.");
-        Debug.Assert(searchDirectories != null, "'searchDirectories' cannot be null.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(path), "'path' cannot be null or empty.");
+        DebugEx.Assert(searchDirectories != null, "'searchDirectories' cannot be null.");
 
         // If the directory exists, get it's subdirectories
         if (DoesDirectoryExist(path))
@@ -264,7 +265,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="name"> The name. </param>
     /// <param name="isReflectionOnly"> Indicates whether this is called under a Reflection Only Load context. </param>
     /// <returns> The <see cref="Assembly"/>. </returns>
-    protected virtual Assembly SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
+    protected virtual Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
     {
         if (searchDirectorypaths == null || searchDirectorypaths.Count == 0)
         {
@@ -272,7 +273,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         }
 
         // args.Name is like: "Microsoft.VisualStudio.TestTools.Common, Version=[VersionMajor].0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a".
-        AssemblyName requestedName = null;
+        AssemblyName? requestedName = null;
 
         try
         {
@@ -284,24 +285,24 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             SafeLog(
                 name,
                 () =>
+                {
+                    if (EqtTrace.IsInfoEnabled)
                     {
-                        if (EqtTrace.IsInfoEnabled)
-                        {
-                            EqtTrace.Info(
-                                "AssemblyResolver: {0}: Failed to create assemblyName. Reason:{1} ",
-                                name,
-                                ex);
-                        }
-                    });
+                        EqtTrace.Info(
+                            "AssemblyResolver: {0}: Failed to create assemblyName. Reason:{1} ",
+                            name,
+                            ex);
+                    }
+                });
 
             return null;
         }
 
-        Debug.Assert(requestedName != null && !string.IsNullOrEmpty(requestedName.Name), "AssemblyResolver.OnResolve: requested is null or name is empty!");
+        DebugEx.Assert(requestedName != null && !StringEx.IsNullOrEmpty(requestedName.Name), "AssemblyResolver.OnResolve: requested is null or name is empty!");
 
         foreach (var dir in searchDirectorypaths)
         {
-            if (string.IsNullOrEmpty(dir))
+            if (StringEx.IsNullOrEmpty(dir))
             {
                 continue;
             }
@@ -309,12 +310,12 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             SafeLog(
                 name,
                 () =>
+                {
+                    if (EqtTrace.IsVerboseEnabled)
                     {
-                        if (EqtTrace.IsVerboseEnabled)
-                        {
-                            EqtTrace.Verbose("AssemblyResolver: Searching assembly: {0} in the directory: {1}", requestedName.Name, dir);
-                        }
-                    });
+                        EqtTrace.Verbose("AssemblyResolver: Searching assembly: {0} in the directory: {1}", requestedName.Name, dir);
+                    }
+                });
 
             foreach (var extension in new string[] { ".dll", ".exe" })
             {
@@ -340,8 +341,8 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <returns> The <see cref="bool"/>. </returns>
     private static bool RequestedAssemblyNameMatchesFound(AssemblyName requestedName, AssemblyName foundName)
     {
-        Debug.Assert(requestedName != null, "requested assembly name should not be null.");
-        Debug.Assert(foundName != null, "found assembly name should not be null.");
+        DebugEx.Assert(requestedName != null, "requested assembly name should not be null.");
+        DebugEx.Assert(foundName != null, "found assembly name should not be null.");
 
         var requestedPublicKey = requestedName.GetPublicKeyToken();
         if (requestedPublicKey != null)
@@ -392,9 +393,9 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <returns> The <see cref="Assembly"/>.  </returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "senderAppDomain", Justification = "This is an event handler.")]
-    private Assembly OnResolveInternal(object senderAppDomain, ResolveEventArgs args, bool isReflectionOnly)
+    private Assembly? OnResolveInternal(object senderAppDomain, ResolveEventArgs args, bool isReflectionOnly)
     {
-        if (string.IsNullOrEmpty(args?.Name))
+        if (StringEx.IsNullOrEmpty(args?.Name))
         {
             Debug.Fail("AssemblyResolver.OnResolve: args.Name is null or empty.");
             return null;
@@ -446,23 +447,23 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
                     // instead of loading whole search directory in one time, we are adding directory on the basis of need
                     var currentNode = _directoryList.Dequeue();
 
-                    List<string> increamentalSearchDirectory = new();
+                    List<string> incrementalSearchDirectory = new();
 
                     if (DoesDirectoryExist(currentNode.DirectoryPath))
                     {
-                        increamentalSearchDirectory.Add(currentNode.DirectoryPath);
+                        incrementalSearchDirectory.Add(currentNode.DirectoryPath);
 
                         if (currentNode.IncludeSubDirectories)
                         {
                             // Add all its sub-directory in depth first search order.
-                            AddSubdirectories(currentNode.DirectoryPath, increamentalSearchDirectory);
+                            AddSubdirectories(currentNode.DirectoryPath, incrementalSearchDirectory);
                         }
 
                         // Add this directory list in this.searchDirectories so that when we will try to resolve some other
                         // assembly, then it will look in this whole directory first.
-                        _searchDirectories.AddRange(increamentalSearchDirectory);
+                        _searchDirectories.AddRange(incrementalSearchDirectory);
 
-                        assembly = SearchAssembly(increamentalSearchDirectory, assemblyNameToLoad, isReflectionOnly);
+                        assembly = SearchAssembly(incrementalSearchDirectory, assemblyNameToLoad, isReflectionOnly);
                     }
                     else
                     {
@@ -522,14 +523,14 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             catch (Exception ex)
             {
                 SafeLog(
-                            args?.Name,
-                            () =>
-                            {
-                                if (EqtTrace.IsInfoEnabled)
-                                {
-                                    EqtTrace.Info("AssemblyResolver: {0}: Failed to load assembly. Reason: {1}", assemblyNameToLoad, ex);
-                                }
-                            });
+                    args?.Name,
+                    () =>
+                    {
+                        if (EqtTrace.IsInfoEnabled)
+                        {
+                            EqtTrace.Info("AssemblyResolver: {0}: Failed to load assembly. Reason: {1}", assemblyNameToLoad, ex);
+                        }
+                    });
             }
 
             return assembly;
@@ -543,7 +544,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="isReflectionOnly">Indicates if this is a reflection-only context.</param>
     /// <param name="assembly"> The assembly. </param>
     /// <returns> The <see cref="bool"/>. </returns>
-    private bool TryLoadFromCache(string assemblyName, bool isReflectionOnly, out Assembly assembly)
+    private bool TryLoadFromCache(string assemblyName, bool isReflectionOnly, out Assembly? assembly)
     {
         bool isFoundInCache = false;
 
@@ -581,10 +582,12 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// </summary>
     /// <param name="assemblyName">The assembly being resolved.</param>
     /// <param name="loggerAction">The logger function.</param>
-    private static void SafeLog(string assemblyName, Action loggerAction)
+    private static void SafeLog(string? assemblyName, Action loggerAction)
     {
         // Logger assembly was in `Microsoft.VisualStudio.TestPlatform.ObjectModel` assembly in legacy versions and we need to omit it as well.
-        if (!string.IsNullOrEmpty(assemblyName) && !assemblyName.StartsWith(LoggerAssemblyName) && !assemblyName.StartsWith(LoggerAssemblyNameLegacy))
+        if (!StringEx.IsNullOrEmpty(assemblyName)
+            && !assemblyName.StartsWith(LoggerAssemblyName)
+            && !assemblyName.StartsWith(LoggerAssemblyNameLegacy))
         {
             loggerAction.Invoke();
         }
@@ -600,7 +603,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <returns> The <see cref="Assembly"/>. </returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Reliability", "CA2001:AvoidCallingProblematicMethods", MessageId = "System.Reflection.Assembly.LoadFrom", Justification = "The assembly location is figured out from the configuration that the user passes in.")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private Assembly SearchAndLoadAssembly(string assemblyPath, string assemblyName, AssemblyName requestedName, bool isReflectionOnly)
+    private Assembly? SearchAndLoadAssembly(string assemblyPath, string assemblyName, AssemblyName requestedName, bool isReflectionOnly)
     {
         try
         {
