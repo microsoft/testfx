@@ -12,8 +12,8 @@ virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestResultsDire
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunDirectory.get -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.TestRunResultsDirectory.get -> string?
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.BeginTimer(string! timerName) -> void
-abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataConnection.get -> System.Data.Common.DbConnection!
-abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataRow.get -> System.Data.DataRow!
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataConnection.get -> System.Data.Common.DbConnection?
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataRow.get -> System.Data.DataRow?
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.EndTimer(string! timerName) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory.get -> string?

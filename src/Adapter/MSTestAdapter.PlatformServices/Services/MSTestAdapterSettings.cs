@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WINDOWS_UWP
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,7 +12,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#if !WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 public class MSTestAdapterSettings
 {
@@ -62,7 +62,7 @@ public class MSTestAdapterSettings
         //     <DeployTestSourceDependencies>true</DeployTestSourceDependencies>
         //     <DeleteDeploymentDirectoryAfterTestRunIsComplete>true</DeleteDeploymentDirectoryAfterTestRunIsComplete>
         //     <AssemblyResolution>
-        //          <Directory path= "% HOMEDRIVE %\direvtory "includeSubDirectories = "true" />
+        //          <Directory path= "% HOMEDRIVE %\directory "includeSubDirectories = "true" />
         //          <Directory path= "C:\windows" includeSubDirectories = "false" />
         //          <Directory path= ".\DirectoryName" />  ...// by default includeSubDirectories is false
         //     </AssemblyResolution>

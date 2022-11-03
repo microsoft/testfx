@@ -380,7 +380,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
     private string MaybeQuote(string identifier, bool force)
     {
-        if (force || FindSeperators(identifier, 0) != -1)
+        if (force || FindSeparators(identifier, 0) != -1)
         {
             return QuoteIdentifier(identifier);
         }
@@ -394,7 +394,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <param name="text">The string.</param>
     /// <param name="from">Index.</param>
     /// <returns>Location of the separator.</returns>
-    private int FindSeperators(string text, int from)
+    private int FindSeparators(string text, int from)
     {
         return text.IndexOfAny(new char[] { SchemaSeparatorChar, CatalogSeparatorChar }, from);
     }
@@ -464,8 +464,8 @@ internal class TestDataConnectionSql : TestDataConnection
             // In the case of an unquoted strings, the processing is much
             // simpler... the end is end of string, or the first
             // of several possible separators.
-            int seperatorPosition = FindSeperators(text, start);
-            return seperatorPosition == -1 ? end : seperatorPosition;
+            int separatorPosition = FindSeparators(text, start);
+            return separatorPosition == -1 ? end : separatorPosition;
         }
     }
 
