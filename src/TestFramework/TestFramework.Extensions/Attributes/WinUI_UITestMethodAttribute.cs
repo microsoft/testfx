@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 public class UITestMethodAttribute : TestMethodAttribute
 {
     private static bool s_isApplicationInitialized = false;
-    private static DispatcherQueue s_applicationDispatcherQueue;
+    private static DispatcherQueue? s_applicationDispatcherQueue;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UITestMethodAttribute"/> class.
@@ -45,7 +45,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// If none is provided <see cref="UITestMethodAttribute"/> will check for <see cref="WinUITestTargetAttribute" />, if the attribute is defined it will start the App and use its <see cref="UI.Dispatching.DispatcherQueue"/>.
     /// <see cref="UITestMethodAttribute"/> will try to use <c>Microsoft.UI.Xaml.Window.Current.DispatcherQueue</c> for the last resort, but that will only work on UWP.
     /// </summary>
-    public static DispatcherQueue DispatcherQueue { get; set; }
+    public static DispatcherQueue? DispatcherQueue { get; set; }
 
     /// <summary>
     /// Executes the test method on the UI Thread.
@@ -58,17 +58,19 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// </returns>
     /// Throws <exception cref="NotSupportedException"> when run on an async test method.
     /// </exception>
-    public override TestResult[] Execute(ITestMethod testMethod)
+    public override TestResult?[] Execute(ITestMethod testMethod)
     {
-        var attrib = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
-        if (attrib.Length > 0)
+        var attribute = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
+        if (attribute.Length > 0)
         {
             throw new NotSupportedException(FrameworkMessages.AsyncUITestMethodNotSupported);
         }
 
-        TestResult result = null;
+        TestResult? result = null;
 
-        var dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType.Assembly);
+        // TODO: Code seems to be assuming DeclaringType is never null, but it can be null.
+        // Using 'bang' notation for now to ensure same behavior.
+        var dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType!.Assembly);
         if (dispatcher == null)
         {
             throw new InvalidOperationException(FrameworkMessages.AsyncUITestMethodWithNoDispatcherQueue);
@@ -87,7 +89,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         }
         else
         {
-            var taskCompletionSource = new TaskCompletionSource<object>();
+            var taskCompletionSource = new TaskCompletionSource<object?>();
 
             if (!dispatcher.TryEnqueue(DispatcherQueuePriority.Normal, () =>
                 {
@@ -109,10 +111,10 @@ public class UITestMethodAttribute : TestMethodAttribute
             taskCompletionSource.Task.GetAwaiter().GetResult();
         }
 
-        return new TestResult[] { result };
+        return new TestResult?[] { result };
     }
 
-    private static Type GetApplicationType(Assembly assembly)
+    private static Type? GetApplicationType(Assembly assembly)
     {
         var attribute = assembly.GetCustomAttribute<WinUITestTargetAttribute>();
         if (attribute == null || attribute.ApplicationType == null)
@@ -123,7 +125,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         return attribute.ApplicationType;
     }
 
-    private static DispatcherQueue GetApplicationDispatcherQueue(Assembly assembly)
+    private static DispatcherQueue? GetApplicationDispatcherQueue(Assembly assembly)
     {
         if (s_applicationDispatcherQueue != null)
         {
@@ -145,7 +147,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         try
         {
             // We need to execute all module initializers before doing any WinRT calls.
-            // This will cause the [ModuleInitialzer]s to execute, if they haven't yet.
+            // This will cause the [ModuleInitializer]s to execute, if they haven't yet.
             var id = applicationType.Assembly.GetType("Microsoft.WindowsAppSDK.Runtime.Identity");
             if (id != null)
             {
@@ -159,7 +161,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         return InitializeApplication(applicationType);
     }
 
-    private static DispatcherQueue GetDispatcherQueue(Assembly assembly)
+    private static DispatcherQueue? GetDispatcherQueue(Assembly assembly)
     {
         if (DispatcherQueue != null)
         {
