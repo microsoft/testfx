@@ -23,15 +23,15 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// </returns>
     /// Throws <exception cref="NotSupportedException"> when run on an async test method.
     /// </exception>
-    public override TestResult[] Execute(ITestMethod testMethod)
+    public override TestResult?[] Execute(ITestMethod testMethod)
     {
-        var attrib = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
-        if (attrib.Length > 0)
+        var attribute = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
+        if (attribute.Length > 0)
         {
             throw new NotSupportedException(FrameworkMessages.AsyncUITestMethodNotSupported);
         }
 
-        TestResult result = null;
+        TestResult? result = null;
         Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
             Windows.UI.Core.CoreDispatcherPriority.Normal,
             () =>
@@ -39,7 +39,7 @@ public class UITestMethodAttribute : TestMethodAttribute
                 result = testMethod.Invoke(null);
             }).AsTask().GetAwaiter().GetResult();
 
-        return new TestResult[] { result };
+        return new TestResult?[] { result };
     }
 }
 #endif

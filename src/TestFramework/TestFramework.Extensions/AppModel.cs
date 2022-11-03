@@ -6,9 +6,6 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-#nullable enable
-#pragma warning disable SA1310 // Field names must not contain underscore
-
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 
 /// <summary>
@@ -98,6 +95,7 @@ internal static class AppModel
 
     private static class Interop
     {
+#pragma warning disable SA1310 // Field names must not contain underscore
         public const int APPMODEL_ERROR_NO_PACKAGE = 0x00003D54;
         public const int ERROR_INSUFFICIENT_BUFFER = 0x0000007A;
         public const int ERROR_INVALID_PARAMETER = 0x00000057;
