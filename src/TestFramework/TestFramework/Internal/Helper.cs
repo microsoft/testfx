@@ -43,7 +43,7 @@ internal static class Helper
     /// <exception cref="ArgumentException"> Throws ArgumentException when parameter is null. </exception>
     internal static void CheckParameterNotNullOrEmpty(string param, string parameterName, string message)
     {
-        if (string.IsNullOrEmpty(param))
+        if (StringEx.IsNullOrEmpty(param))
         {
             throw new ArgumentException(message, parameterName);
         }

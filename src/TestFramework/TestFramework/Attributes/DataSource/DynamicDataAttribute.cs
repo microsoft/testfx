@@ -34,7 +34,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     private readonly string _dynamicDataSourceName;
     private readonly DynamicDataSourceType _dynamicDataSourceType;
 
-    private Type _dynamicDataDeclaringType;
+    private Type? _dynamicDataDeclaringType;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DynamicDataAttribute"/> class.
@@ -74,20 +74,21 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     /// <summary>
     /// Gets or sets the name of method used to customize the display name in test results.
     /// </summary>
-    public string DynamicDataDisplayName { get; set; }
+    public string? DynamicDataDisplayName { get; set; }
 
     /// <summary>
     /// Gets or sets the declaring type used to customize the display name in test results.
     /// </summary>
-    public Type DynamicDataDisplayNameDeclaringType { get; set; }
+    public Type? DynamicDataDisplayNameDeclaringType { get; set; }
 
     /// <inheritdoc />
     public IEnumerable<object[]> GetData(MethodInfo methodInfo)
     {
         // Check if the declaring type of test data is passed in constructor. If not, default to test method's class type.
         _dynamicDataDeclaringType ??= methodInfo.DeclaringType;
+        DebugEx.Assert(_dynamicDataDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-        object obj = null;
+        object? obj = null;
 
         switch (_dynamicDataSourceType)
         {
@@ -144,11 +145,12 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     }
 
     /// <inheritdoc />
-    public string GetDisplayName(MethodInfo methodInfo, object[] data)
+    public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
     {
         if (DynamicDataDisplayName != null)
         {
             var dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
+            DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
 
             var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName);
             if (method == null)
@@ -172,7 +174,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                         string.Join(", ", typeof(MethodInfo).Name, typeof(object[]).Name)));
             }
 
-            return method.Invoke(null, new object[] { methodInfo, data }) as string;
+            return method.Invoke(null, new object?[] { methodInfo, data }) as string;
         }
 
         if (data != null)

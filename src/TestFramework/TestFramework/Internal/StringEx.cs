@@ -9,10 +9,10 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 internal static class StringEx
 {
-    /// <inheritdoc cref="string.IsNullOrEmpty(string)"/>
+    /// <inheritdoc cref="StringEx.IsNullOrEmpty(string)"/>
     [SuppressMessage("ApiDesign", "RS0030:Do not used banned APIs", Justification = "Replacement API to allow nullable hints for compiler")]
     public static bool IsNullOrEmpty([NotNullWhen(returnValue: false)] string? value)
-        => string.IsNullOrEmpty(value);
+        => StringEx.IsNullOrEmpty(value);
 
     /// <inheritdoc cref="string.IsNullOrWhiteSpace(string)"/>
     [SuppressMessage("ApiDesign", "RS0030:Do not used banned APIs", Justification = "Replacement API to allow nullable hints for compiler")]

@@ -23,11 +23,11 @@ internal static class UtfHelper
     /// <returns>string with error message information.</returns>
     internal static string GetExceptionMsg(Exception ex)
     {
-        Debug.Assert(ex != null, "exception is null");
+        DebugEx.Assert(ex != null, "exception is null");
 
         StringBuilder result = new();
         bool first = true;
-        for (Exception curException = ex;
+        for (Exception? curException = ex;
              curException != null;
              curException = curException.InnerException)
         {
