@@ -4,11 +4,12 @@
 #if NETFRAMEWORK
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Xml;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 internal class XmlUtilities
@@ -43,7 +44,7 @@ internal class XmlUtilities
     internal virtual XmlDocument GetXmlDocument(string configFile)
     {
         var doc = new XmlDocument();
-        if (!string.IsNullOrEmpty(configFile?.Trim()))
+        if (!StringEx.IsNullOrEmpty(configFile?.Trim()))
         {
             using var xmlReader = new XmlTextReader(configFile);
             xmlReader.DtdProcessing = DtdProcessing.Prohibit;
@@ -103,14 +104,14 @@ internal class XmlUtilities
         string fromVersion,
         string toVersion)
     {
-        Debug.Assert(assemblyName != null, "assemblyName should not be null.");
+        DebugEx.Assert(assemblyName != null, "assemblyName should not be null.");
         if (assemblyName == null)
         {
             throw new ArgumentNullException(nameof(assemblyName));
         }
 
         // Convert the public key token into a string.
-        StringBuilder publicKeyTokenString = null;
+        StringBuilder? publicKeyTokenString = null;
         var publicKeyToken = assemblyName.GetPublicKeyToken();
         if (publicKeyToken != null)
         {
@@ -126,7 +127,7 @@ internal class XmlUtilities
 
         // Get the culture as a string.
         var cultureString = assemblyName.CultureInfo.ToString();
-        if (string.IsNullOrEmpty(cultureString))
+        if (StringEx.IsNullOrEmpty(cultureString))
         {
             cultureString = "neutral";
         }

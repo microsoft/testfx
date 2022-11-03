@@ -59,7 +59,7 @@ public class RecursiveDirectoryPath : MarshalByRefObject
 #endif
     public override object InitializeLifetimeService()
     {
-        return null;
+        return null!;
     }
 }
 #endif

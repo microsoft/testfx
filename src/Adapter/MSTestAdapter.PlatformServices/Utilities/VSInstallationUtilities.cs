@@ -28,7 +28,7 @@ public static class VSInstallationUtilities
     /// </summary>
     private const string PortableVsTestManifestFilename = "Portable.VsTest.Manifest";
 
-    private static string s_vsInstallPath = null;
+    private static string? s_vsInstallPath = null;
 
     private static bool s_vsInstallPathEvaluated = false;
 
@@ -37,7 +37,7 @@ public static class VSInstallationUtilities
     /// </summary>
     /// <returns>VS install path.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Need to ignore failures to read the registry settings")]
-    public static string VSInstallPath
+    public static string? VSInstallPath
     {
         get
         {
@@ -75,14 +75,14 @@ public static class VSInstallationUtilities
     ///
     /// Returns null if VS is not installed on this machine.
     /// </summary>
-    public static string PathToPublicAssemblies => GetFullPath(PublicAssembliesDirectoryName);
+    public static string? PathToPublicAssemblies => GetFullPath(PublicAssembliesDirectoryName);
 
     /// <summary>
     /// Gets path to private assemblies.
     ///
     /// Returns null if VS is not installed on this machine.
     /// </summary>
-    public static string PathToPrivateAssemblies => GetFullPath(PrivateAssembliesFolderName);
+    public static string? PathToPrivateAssemblies => GetFullPath(PrivateAssembliesFolderName);
 
     /// <summary>
     /// Is Current process running in Portable Mode.
@@ -110,7 +110,7 @@ public static class VSInstallationUtilities
         return false;
     }
 
-    private static string GetFullPath(string folderName)
+    private static string? GetFullPath(string folderName)
     {
         var vsInstallDir = VSInstallPath;
         return IsNullOrWhiteSpace(vsInstallDir?.Trim()) ? null : Path.Combine(vsInstallDir, folderName);

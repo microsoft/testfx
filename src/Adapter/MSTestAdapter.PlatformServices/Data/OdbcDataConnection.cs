@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Data.Odbc;
 using System.Diagnostics;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
@@ -20,7 +22,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
         : base(invariantProviderName, FixConnectionString(connectionString, dataFolders), dataFolders)
     {
         // Need open connection to get Connection.Driver.
-        Debug.Assert(IsOpen(), "The connection must be open!");
+        DebugEx.Assert(IsOpen(), "The connection must be open!");
 
         _isMSSql = Connection != null && IsMSSql(Connection.Driver);
     }
@@ -43,7 +45,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
         GetQuoteLiteralsHelper();
     }
 
-    public override string GetDefaultSchema()
+    public override string? GetDefaultSchema()
     {
         if (_isMSSql)
         {
@@ -79,13 +81,13 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
 
     protected override string QuoteIdentifier(string identifier)
     {
-        Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
         return CommandBuilder.QuoteIdentifier(identifier, Connection);  // Must pass connection.
     }
 
     protected override string UnquoteIdentifier(string identifier)
     {
-        Debug.Assert(!string.IsNullOrEmpty(identifier), "identifier");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(identifier), "identifier");
         return CommandBuilder.UnquoteIdentifier(identifier, Connection);  // Must pass connection.
     }
 
@@ -100,16 +102,16 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
             return connectionString;
         }
 
-        string fileName = builder["dbq"] as string;
+        string? fileName = builder["dbq"] as string;
 
-        if (string.IsNullOrEmpty(fileName))
+        if (StringEx.IsNullOrEmpty(fileName))
         {
             return connectionString;
         }
         else
         {
             // Fix-up magic file paths
-            string fixedFilePath = FixPath(fileName, dataFolders);
+            string? fixedFilePath = FixPath(fileName, dataFolders);
             if (fixedFilePath != null)
             {
                 builder["dbq"] = fixedFilePath;

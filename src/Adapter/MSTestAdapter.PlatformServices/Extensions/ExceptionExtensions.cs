@@ -4,6 +4,8 @@
 using System;
 using System.Diagnostics;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 #if !WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 
@@ -17,10 +19,8 @@ internal static class ExceptionExtensions
     /// </summary>
     /// <param name="exception"> The exception. </param>
     /// <returns> Custom exception message that includes inner exceptions. </returns>
-    internal static string GetExceptionMessage(this Exception exception)
+    internal static string GetExceptionMessage(this Exception? exception)
     {
-        Debug.Assert(exception != null, "Exception is null");
-
         if (exception == null)
         {
             return string.Empty;

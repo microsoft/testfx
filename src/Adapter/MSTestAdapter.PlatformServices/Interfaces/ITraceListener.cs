@@ -14,7 +14,7 @@ public interface ITraceListener
     /// Gets the text writer that receives the tracing or debugging output.
     /// </summary>
     /// <returns>The writer instance.</returns>
-    TextWriter GetWriter();
+    TextWriter? GetWriter();
 
     /// <summary>
     ///  Disposes this TraceListener object.

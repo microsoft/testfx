@@ -15,6 +15,7 @@ using System.IO;
 using System.Text;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
@@ -32,7 +33,7 @@ internal sealed class CsvDataConnection : TestDataConnection
     public CsvDataConnection(string fileName, List<string> dataFolders)
         : base(dataFolders)
     {
-        Debug.Assert(!string.IsNullOrEmpty(fileName), "fileName");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(fileName), "fileName");
         _fileName = fileName;
     }
 
@@ -55,7 +56,7 @@ internal sealed class CsvDataConnection : TestDataConnection
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public override List<string> GetColumns(string tableName)
+    public override List<string>? GetColumns(string tableName)
     {
         // Somewhat heavy, this could be improved, right now I simply
         // read the table in then check the columns...
@@ -83,7 +84,7 @@ internal sealed class CsvDataConnection : TestDataConnection
 
     [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Untested. Leaving as-is.")]
     [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security", Justification = "Not passed in from user.")]
-    public DataTable ReadTable(string tableName, IEnumerable columns, int maxRows)
+    public DataTable ReadTable(string tableName, IEnumerable? columns, int maxRows)
     {
         // We specifically use OleDb to read a CSV file...
         WriteDiagnostics("ReadTable: {0}", tableName);
@@ -168,7 +169,7 @@ internal sealed class CsvDataConnection : TestDataConnection
         return table;
     }
 
-    public override DataTable ReadTable(string tableName, IEnumerable columns)
+    public override DataTable ReadTable(string tableName, IEnumerable? columns)
     {
         return ReadTable(tableName, columns, -1);
     }

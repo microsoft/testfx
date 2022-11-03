@@ -2,9 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #if !WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
@@ -34,7 +35,7 @@ public class TestRunDirectories
 
     public TestRunDirectories(string rootDirectory)
     {
-        Debug.Assert(!string.IsNullOrEmpty(rootDirectory), "rootDirectory");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(rootDirectory), "rootDirectory");
 
         RootDeploymentDirectory = rootDirectory;
     }

@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.IO;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -63,7 +62,7 @@ public class TraceListenerWrapper :
     /// Gets the text writer of System.Diagnostics.TextWriterTraceListener.Writer
     /// that receives the tracing or debugging output.
     /// </summary>
-    public TextWriter GetWriter()
+    public TextWriter? GetWriter()
     {
 #if !WINDOWS_UWP && !WIN_UI
         return Writer;

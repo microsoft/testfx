@@ -12,6 +12,7 @@ using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
@@ -24,7 +25,7 @@ internal class AssemblyUtility
 #endif
 {
 #if NETFRAMEWORK
-    private static Dictionary<string, object> s_cultures;
+    private static Dictionary<string, object?>? s_cultures;
 #endif
     private readonly string[] _assemblyExtensions = new string[] { ".dll", ".exe" };
 
@@ -32,13 +33,13 @@ internal class AssemblyUtility
     /// <summary>
     /// Gets all supported culture names in Keys. The Values are always null.
     /// </summary>
-    private static Dictionary<string, object> Cultures
+    private static Dictionary<string, object?> Cultures
     {
         get
         {
             if (s_cultures == null)
             {
-                s_cultures = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+                s_cultures = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
                 foreach (var info in CultureInfo.GetCultures(CultureTypes.AllCultures))
                 {
                     s_cultures.Add(info.Name, null);
@@ -99,7 +100,7 @@ internal class AssemblyUtility
     /// <returns> True if managed assembly. </returns>
     internal static bool IsAssembly(string path)
     {
-        Debug.Assert(!string.IsNullOrEmpty(path), "path");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(path), "path");
         try
         {
             // AssemblyName.GetAssemblyName: causes the file to be opened and closed, but the assembly is not added to this domain.
@@ -193,9 +194,9 @@ internal class AssemblyUtility
     /// <param name="configFile"> Config file to use while trying to resolve dependencies. </param>
     /// <param name="warnings"> The warnings. </param>
     /// <returns> The <see cref="T:string[]"/>. </returns>
-    internal virtual string[] GetFullPathToDependentAssemblies(string assemblyPath, string configFile, out IList<string> warnings)
+    internal virtual string[] GetFullPathToDependentAssemblies(string assemblyPath, string? configFile, out IList<string> warnings)
     {
-        Debug.Assert(!string.IsNullOrEmpty(assemblyPath), "assemblyPath");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyPath), "assemblyPath");
 
         EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "AssemblyDependencyFinder.GetDependentAssemblies: start.");
 
@@ -203,7 +204,7 @@ internal class AssemblyUtility
         var dllDirectory = Path.GetDirectoryName(Path.GetFullPath(assemblyPath));
         setupInfo.ApplicationBase = dllDirectory;
 
-        Debug.Assert(string.IsNullOrEmpty(configFile) || File.Exists(configFile), "Config file is specified but does not exist: {0}", configFile);
+        DebugEx.Assert(StringEx.IsNullOrEmpty(configFile) || File.Exists(configFile), $"Config file is specified but does not exist: {configFile}");
 
         AppDomainUtilities.SetConfigurationFile(setupInfo, configFile);
 
@@ -211,7 +212,7 @@ internal class AssemblyUtility
 
         setupInfo.LoaderOptimization = LoaderOptimization.MultiDomainHost;
 
-        AppDomain appDomain = null;
+        AppDomain? appDomain = null;
         try
         {
             appDomain = AppDomain.CreateDomain("Dependency finder domain", null, setupInfo);
@@ -269,7 +270,7 @@ internal class AssemblyUtility
     {
         // Use dictionary to ensure we get a list of unique paths, but keep a list as the
         // dictionary does not guarantee order.
-        Dictionary<string, object> resolutionPathsDictionary = new(StringComparer.OrdinalIgnoreCase);
+        Dictionary<string, object?> resolutionPathsDictionary = new(StringComparer.OrdinalIgnoreCase);
         List<string> resolutionPaths = new();
 
         // Add the path of the currently executing assembly (use Uri(CodeBase).LocalPath as Location can be on shadow dir).

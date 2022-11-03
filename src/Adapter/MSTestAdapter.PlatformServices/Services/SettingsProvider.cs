@@ -18,7 +18,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// <summary>
     /// Member variable for Adapter settings.
     /// </summary>
-    private static MSTestAdapterSettings s_settings;
+    private static MSTestAdapterSettings? s_settings;
 
     /// <summary>
     /// Gets settings provided to the adapter.

@@ -31,7 +31,7 @@ public interface ITestDeployment
     /// <param name="type"> The type. </param>
     /// <param name="warnings"> The warnings. </param>
     /// <returns> A KeyValuePair of deployment items. </returns>
-    KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings);
+    KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings);
 
     /// <summary>
     /// Cleanup deployment item directories.
@@ -42,5 +42,5 @@ public interface ITestDeployment
     /// Gets the deployment output directory where the source file along with all its dependencies is dropped.
     /// </summary>
     /// <returns> The deployment output directory. </returns>
-    string GetDeploymentDirectory();
+    string? GetDeploymentDirectory();
 }

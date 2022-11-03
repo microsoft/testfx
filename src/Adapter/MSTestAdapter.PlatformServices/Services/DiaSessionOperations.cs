@@ -7,11 +7,11 @@ using System.Reflection;
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 internal static class DiaSessionOperations
 {
-    private static MethodInfo s_methodGetNavigationData;
-    private static PropertyInfo s_propertyFileName;
-    private static PropertyInfo s_propertyMinLineNumber;
-    private static Type s_typeDiaSession;
-    private static Type s_typeDiaNavigationData;
+    private static MethodInfo? s_methodGetNavigationData;
+    private static PropertyInfo? s_propertyFileName;
+    private static PropertyInfo? s_propertyMinLineNumber;
+    private static Type? s_typeDiaSession;
+    private static Type? s_typeDiaNavigationData;
 
     /// <summary>
     /// Initializes static members of the <see cref="DiaSessionOperations"/> class.
@@ -31,13 +31,13 @@ internal static class DiaSessionOperations
     /// </summary>
     /// <param name="source"> The source file. </param>
     /// <returns> A Navigation session instance for the current platform. </returns>
-    internal static object CreateNavigationSession(string source)
+    internal static object? CreateNavigationSession(string source)
     {
         // Create instance only when DiaSession is found in Object Model.
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
             var messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
-            return SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source), messageFormatOnException);
+            return SafeInvoke(() => Activator.CreateInstance(s_typeDiaSession, source));
         }
 
         return null;
@@ -51,7 +51,7 @@ internal static class DiaSessionOperations
     /// <param name="methodName"> The method name. </param>
     /// <param name="minLineNumber"> The min line number. </param>
     /// <param name="fileName"> The file name. </param>
-    internal static void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string fileName)
+    internal static void GetNavigationData(object? navigationSession, string className, string methodName, out int minLineNumber, out string? fileName)
     {
         // Set default values.
         fileName = null;
@@ -61,11 +61,11 @@ internal static class DiaSessionOperations
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
             var messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not get navigation data for class:", className, ". Reason:{0}");
-            var data = SafeInvoke(() => s_methodGetNavigationData.Invoke(navigationSession, new object[] { className, methodName }), messageFormatOnException);
+            var data = SafeInvoke(() => s_methodGetNavigationData!.Invoke(navigationSession, new object[] { className, methodName }));
 
             if (data != null)
             {
-                fileName = (string)s_propertyFileName?.GetValue(data);
+                fileName = (string?)s_propertyFileName?.GetValue(data);
                 minLineNumber = (int)(s_propertyMinLineNumber?.GetValue(data) ?? -1);
             }
         }
@@ -100,7 +100,7 @@ internal static class DiaSessionOperations
         }
     }
 
-    private static object SafeInvoke<T>(Func<T> action, string messageFormatOnException = null)
+    private static object? SafeInvoke<T>(Func<T> action)
     {
         try
         {
