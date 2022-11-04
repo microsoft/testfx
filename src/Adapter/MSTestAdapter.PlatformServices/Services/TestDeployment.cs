@@ -92,10 +92,8 @@ public class TestDeployment : ITestDeployment
     public void Cleanup()
     {
 #if !WINDOWS_UWP && !PORTABLE
-        DebugEx.Assert(_adapterSettings is not null, "Adapter settings should not be null.");
-
         // Delete the deployment directory
-        if (RunDirectories != null && _adapterSettings.DeleteDeploymentDirectoryAfterTestRunIsComplete)
+        if (RunDirectories != null && _adapterSettings?.DeleteDeploymentDirectoryAfterTestRunIsComplete == true)
         {
             EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, "Deleting deployment directory {0}", RunDirectories.RootDeploymentDirectory);
 
