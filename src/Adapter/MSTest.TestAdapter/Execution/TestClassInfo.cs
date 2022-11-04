@@ -260,8 +260,7 @@ public class TestClassInfo
                     {
                         // ClassInitialize methods for base classes are called in reverse order of discovery
                         // Base -> Child TestClass
-                        var baseClassInitializeStack = new Stack<Tuple<MethodInfo, MethodInfo>>(
-                                BaseClassInitAndCleanupMethods.Where(p => p.Item1 != null));
+                        var baseClassInitializeStack = new Stack<Tuple<MethodInfo?, MethodInfo?>>(BaseClassInitAndCleanupMethods.Where(p => p.Item1 != null));
 
                         while (baseClassInitializeStack.Count > 0)
                         {

@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -131,6 +132,7 @@ internal class UnitTestRunner : MarshalByRefObject
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFoundClassCleanup);
             }
 
+            DebugEx.Assert(testMethodInfo is not null, "testMethodInfo is null");
             if (!IsTestMethodRunnable(testMethod, testMethodInfo, out var notRunnableResult))
             {
                 bool shouldRunClassCleanup = false;
@@ -143,7 +145,7 @@ internal class UnitTestRunner : MarshalByRefObject
                 return notRunnableResult;
             }
 
-            var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces, _reflectHelper);
+            var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
             var result = testMethodRunner.Execute();
 
             RunClassCleanupIfEndOfClass(testMethodInfo, testMethod, result);
@@ -161,7 +163,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// It returns any error information during the execution of the cleanup method.
     /// </summary>
     /// <returns> The <see cref="RunCleanupResult"/>. </returns>
-    internal RunCleanupResult RunCleanup()
+    internal RunCleanupResult? RunCleanup()
     {
         // No cleanup methods to execute, then return.
         var assemblyInfoCache = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
@@ -214,7 +216,7 @@ internal class UnitTestRunner : MarshalByRefObject
             finally
             {
                 string cleanupLogs = logListener.StandardOutput;
-                string cleanupTrace = logListener.DebugTrace;
+                string? cleanupTrace = logListener.DebugTrace;
                 string cleanupErrorLogs = logListener.StandardError;
                 var lastResult = results[results.Length - 1];
                 lastResult.StandardOut += cleanupLogs;
@@ -240,7 +242,7 @@ internal class UnitTestRunner : MarshalByRefObject
     private bool IsTestMethodRunnable(
         TestMethod testMethod,
         TestMethodInfo? testMethodInfo,
-        out UnitTestResult[] notRunnableResult)
+        [NotNullWhen(false)] out UnitTestResult[]? notRunnableResult)
     {
         // If the specified TestMethod could not be found, return a NotFound result.
         if (testMethodInfo == null)
@@ -350,7 +352,7 @@ internal class UnitTestRunner : MarshalByRefObject
             _remainingTestsByClass = testsToRun.GroupBy(t => t.TestMethod.FullClassName)
                 .ToDictionary(
                     g => g.Key,
-                    g => new HashSet<string>(g.Select(t => t.DisplayName)));
+                    g => new HashSet<string>(g.Select(t => t.DisplayName!)));
             _lifecycleFromMsTest = lifecycleFromMsTest;
             _lifecycleFromAssembly = lifecycleFromAssembly;
             _reflectHelper = reflectHelper ?? new ReflectHelper();
@@ -362,7 +364,7 @@ internal class UnitTestRunner : MarshalByRefObject
             var testsByClass = _remainingTestsByClass[testMethodInfo.TestClassName];
             lock (testsByClass)
             {
-                testsByClass.Remove(testMethod.DisplayName);
+                testsByClass.Remove(testMethod.DisplayName!);
                 if (testsByClass.Count == 0 && testMethodInfo.Parent.HasExecutableCleanupMethod)
                 {
                     var cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)

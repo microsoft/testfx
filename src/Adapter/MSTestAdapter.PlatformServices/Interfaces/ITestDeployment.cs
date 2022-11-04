@@ -22,7 +22,7 @@ public interface ITestDeployment
     /// <param name="runContext"> The run context. </param>
     /// <param name="frameworkHandle"> The framework handle. </param>
     /// <returns> True if deployment is done. </returns>
-    bool Deploy(IEnumerable<TestCase> testCases, IRunContext runContext, IFrameworkHandle frameworkHandle);
+    bool Deploy(IEnumerable<TestCase> testCases, IRunContext? runContext, IFrameworkHandle frameworkHandle);
 
     /// <summary>
     /// Gets the set of deployment items on a method and its corresponding class.

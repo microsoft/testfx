@@ -80,7 +80,7 @@ internal static class TestCaseExtensions
             (int)TestIdGenerationStrategy.FullyQualified);
 
         TestMethod testMethod = testCase.ContainsManagedMethodAndType()
-            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName, source, isAsync, testIdGenerationStrategy)
+            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, isAsync, testIdGenerationStrategy)
             : new(name, testClassName!, source, isAsync, testIdGenerationStrategy);
         var dataType = (DynamicDataType)testCase.GetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
@@ -156,7 +156,7 @@ internal static class TestCaseExtensions
 
     internal static bool ContainsManagedMethodAndType(this TestCase testCase) => !StringEx.IsNullOrWhiteSpace(testCase.GetManagedMethod()) && !StringEx.IsNullOrWhiteSpace(testCase.GetManagedType());
 
-    internal static string[] GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
+    internal static string[]? GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
 
     internal static void SetHierarchy(this TestCase testCase, params string?[] value) => testCase.SetPropertyValue(HierarchyProperty, value);
 }

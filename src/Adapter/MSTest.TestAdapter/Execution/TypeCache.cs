@@ -529,7 +529,7 @@ internal class TypeCache : MarshalByRefObject
 
         if (!methodInfo.HasCorrectTestInitializeOrCleanupSignature())
         {
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestInitializeAndCleanupMethodHasWrongSignature, methodInfo.DeclaringType.FullName, methodInfo.Name);
+            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestInitializeAndCleanupMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
         }
 
@@ -594,7 +594,14 @@ internal class TypeCache : MarshalByRefObject
         var expectedExceptionAttribute = _reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
         var timeout = GetTestTimeout(methodInfo, testMethod);
 
-        var testMethodOptions = new TestMethodOptions() { Timeout = timeout, Executor = GetTestMethodAttribute(methodInfo, testClassInfo), ExpectedException = expectedExceptionAttribute, TestContext = testContext, CaptureDebugTraces = captureDebugTraces };
+        var testMethodOptions = new TestMethodOptions
+        {
+            Timeout = timeout,
+            Executor = GetTestMethodAttribute(methodInfo, testClassInfo),
+            ExpectedException = expectedExceptionAttribute,
+            TestContext = testContext,
+            CaptureDebugTraces = captureDebugTraces,
+        };
         var testMethodInfo = new TestMethodInfo(methodInfo, testClassInfo, testMethodOptions);
 
         SetCustomProperties(testMethodInfo, testContext);
@@ -608,14 +615,14 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="methodInfo"> The method info. </param>
     /// <param name="testClassInfo"> The test class info. </param>
     /// <returns>Test Method Attribute.</returns>
-    private TestMethodAttribute GetTestMethodAttribute(MethodInfo methodInfo, TestClassInfo testClassInfo)
+    private TestMethodAttribute? GetTestMethodAttribute(MethodInfo methodInfo, TestClassInfo testClassInfo)
     {
         // Get the derived TestMethod attribute from reflection
         var testMethodAttribute = _reflectionHelper.GetDerivedAttribute<TestMethodAttribute>(methodInfo, false);
 
         // Get the derived TestMethod attribute from Extended TestClass Attribute
         // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
-        testMethodAttribute = testClassInfo.ClassAttribute.GetTestMethodAttribute(testMethodAttribute) ?? testMethodAttribute;
+        testMethodAttribute = testClassInfo.ClassAttribute.GetTestMethodAttribute(testMethodAttribute!) ?? testMethodAttribute;
 
         return testMethodAttribute;
     }
@@ -650,7 +657,7 @@ internal class TypeCache : MarshalByRefObject
     private static MethodInfo? GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
         MethodInfo? testMethodInfo = null;
-        var methodBase = ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName, testMethod.ManagedMethodName);
+        var methodBase = ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
 
         if (methodBase is MethodInfo mi)
         {
@@ -659,7 +666,7 @@ internal class TypeCache : MarshalByRefObject
         else if (methodBase != null)
         {
             var parameters = methodBase.GetParameters().Select(i => i.ParameterType).ToArray();
-            testMethodInfo = methodBase.DeclaringType.GetRuntimeMethod(methodBase.Name, parameters);
+            testMethodInfo = methodBase.DeclaringType!.GetRuntimeMethod(methodBase.Name, parameters);
         }
 
         testMethodInfo = testMethodInfo?.HasCorrectTestMethodSignature(true, discoverInternals) ?? false
@@ -669,9 +676,9 @@ internal class TypeCache : MarshalByRefObject
         return testMethodInfo;
     }
 
-    private static MethodInfo GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
+    private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
-        MethodInfo testMethodInfo;
+        MethodInfo? testMethodInfo;
 
         var methodsInClass = testClassInfo.ClassType.GetRuntimeMethods().ToArray();
 
@@ -679,9 +686,11 @@ internal class TypeCache : MarshalByRefObject
         {
             // Only find methods that match the given declaring name.
             testMethodInfo =
-                Array.Find(methodsInClass, method => method.Name.Equals(testMethod.Name)
-                                            && method.DeclaringType.FullName.Equals(testMethod.DeclaringClassFullName)
-                                            && method.HasCorrectTestMethodSignature(true, discoverInternals));
+                Array.Find(
+                    methodsInClass,
+                    method => method.Name.Equals(testMethod.Name)
+                        && method.DeclaringType!.FullName!.Equals(testMethod.DeclaringClassFullName)
+                        && method.HasCorrectTestMethodSignature(true, discoverInternals));
         }
         else
         {
@@ -691,7 +700,7 @@ internal class TypeCache : MarshalByRefObject
             var className = testClassInfo.ClassType.FullName;
             testMethodInfo =
                 methodsInClass.Where(method => method.Name.Equals(testMethod.Name) && method.HasCorrectTestMethodSignature(true, discoverInternals))
-                    .OrderByDescending(method => method.DeclaringType.FullName.Equals(className)).FirstOrDefault();
+                    .OrderByDescending(method => method.DeclaringType!.FullName!.Equals(className)).FirstOrDefault();
         }
 
         return testMethodInfo;
@@ -768,7 +777,7 @@ internal class TypeCache : MarshalByRefObject
             testMethodInfo.NotRunnableReason = string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_ErrorPredefinedTestProperty,
-                testMethodInfo.TestMethod.DeclaringType.FullName,
+                testMethodInfo.TestMethod.DeclaringType!.FullName,
                 testMethodInfo.TestMethod.Name,
                 propertyName);
 
@@ -780,7 +789,7 @@ internal class TypeCache : MarshalByRefObject
             testMethodInfo.NotRunnableReason = string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_ErrorTestPropertyNullOrEmpty,
-                testMethodInfo.TestMethod.DeclaringType.FullName,
+                testMethodInfo.TestMethod.DeclaringType!.FullName,
                 testMethodInfo.TestMethod.Name);
 
             return false;

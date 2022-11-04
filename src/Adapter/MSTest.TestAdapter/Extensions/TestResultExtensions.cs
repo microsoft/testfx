@@ -25,8 +25,8 @@ public static class TestResultExtensions
                 ? new UnitTestResult(
                     new TestFailedException(
                         outcome,
-                        testResults[i].TestFailureException.TryGetMessage(),
-                        testResults[i].TestFailureException is TestFailedException testException ? testException.StackTraceInformation : testResults[i].TestFailureException.TryGetStackTraceInformation()))
+                        testResults[i].TestFailureException!.TryGetMessage(),
+                        testResults[i].TestFailureException is TestFailedException testException ? testException.StackTraceInformation : testResults[i].TestFailureException!.TryGetStackTraceInformation()))
                 : new UnitTestResult { Outcome = outcome };
             unitTestResult.StandardOut = testResults[i].LogOutput;
             unitTestResult.StandardError = testResults[i].LogError;

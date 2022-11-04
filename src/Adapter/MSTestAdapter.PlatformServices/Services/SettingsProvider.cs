@@ -54,12 +54,12 @@ public class MSTestSettingsProvider : ISettingsProvider
 #endif
     }
 
-    public IDictionary<string, object> GetProperties(string source)
+    public IDictionary<string, object?> GetProperties(string source)
     {
 #if !WINDOWS_UWP && !PORTABLE
         return TestDeployment.GetDeploymentInformation(source);
 #else
-        return new Dictionary<string, object>();
+        return new Dictionary<string, object?>();
 #endif
     }
 }

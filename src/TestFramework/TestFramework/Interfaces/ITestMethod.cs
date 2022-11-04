@@ -29,7 +29,7 @@ public interface ITestMethod
     /// <summary>
     /// Gets the arguments with which test method is invoked.
     /// </summary>
-    object[] Arguments { get; }
+    object?[]? Arguments { get; }
 
     /// <summary>
     /// Gets the parameters of test method.

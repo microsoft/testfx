@@ -336,7 +336,7 @@ public class TestMethodRunnerTests : TestContainer
         };
 
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false, _mockReflectHelper.Object);
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         int dummyIntData = 2;
         string dummyStringData = "DummyString";
@@ -404,7 +404,7 @@ public class TestMethodRunnerTests : TestContainer
     {
         UTF.TestResult testResult = new();
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false, _mockReflectHelper.Object);
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         int dummyIntData = 2;
         string dummyStringData = "DummyString";
@@ -428,7 +428,7 @@ public class TestMethodRunnerTests : TestContainer
     {
         UTF.TestResult testResult = new();
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false, _mockReflectHelper.Object);
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         int dummyIntData = 2;
         string dummyStringData = "DummyString";
@@ -455,7 +455,7 @@ public class TestMethodRunnerTests : TestContainer
         };
 
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
-        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false, _mockReflectHelper.Object);
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
         int dummyIntData1 = 1;
         int dummyIntData2 = 2;

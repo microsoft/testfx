@@ -30,7 +30,7 @@ public class TestExecutionManager
     /// <summary>
     /// Dictionary for test run parameters.
     /// </summary>
-    private readonly IDictionary<string, object> _sessionParameters;
+    private readonly IDictionary<string, object?> _sessionParameters;
 
     /// <summary>
     /// Specifies whether the test run is canceled or not.
@@ -40,7 +40,7 @@ public class TestExecutionManager
     public TestExecutionManager()
     {
         TestMethodFilter = new TestMethodFilter();
-        _sessionParameters = new Dictionary<string, object>();
+        _sessionParameters = new Dictionary<string, object?>();
     }
 
     /// <summary>
@@ -373,7 +373,7 @@ public class TestExecutionManager
         IEnumerable<TestCase> tests,
         ITestExecutionRecorder testExecutionRecorder,
         string source,
-        IDictionary<string, object> sourceLevelParameters,
+        IDictionary<string, object?> sourceLevelParameters,
         UnitTestRunner testRunner)
     {
         foreach (var currentTest in tests)
@@ -410,7 +410,7 @@ public class TestExecutionManager
     /// <param name="tcmProperties">Tcm properties.</param>
     /// <param name="sourceLevelParameters">Source level parameters.</param>
     /// <returns>Test context properties.</returns>
-    private static IDictionary<string, object?> GetTestContextProperties(IDictionary<TestProperty, object?> tcmProperties, IDictionary<string, object> sourceLevelParameters)
+    private static IDictionary<string, object?> GetTestContextProperties(IDictionary<TestProperty, object?> tcmProperties, IDictionary<string, object?> sourceLevelParameters)
     {
         var testContextProperties = new Dictionary<string, object?>();
 

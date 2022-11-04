@@ -86,8 +86,7 @@ internal class RunSettingsUtilities
 
             // Read till we reach nodeName element or reach EOF
             while (!string.Equals(reader.Name, nodeName, StringComparison.OrdinalIgnoreCase)
-                    &&
-                    !reader.EOF)
+                    && !reader.EOF)
             {
                 reader.SkipToNextElement();
             }

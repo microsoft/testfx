@@ -60,29 +60,6 @@ internal class TestMethodRunner
     /// The capture debug traces.
     /// </param>
     public TestMethodRunner(TestMethodInfo testMethodInfo, TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
-        : this(testMethodInfo, testMethod, testContext, captureDebugTraces, ReflectHelper.Instance)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="TestMethodRunner"/> class.
-    /// </summary>
-    /// <param name="testMethodInfo">
-    /// The test method info.
-    /// </param>
-    /// <param name="testMethod">
-    /// The test method.
-    /// </param>
-    /// <param name="testContext">
-    /// The test context.
-    /// </param>
-    /// <param name="captureDebugTraces">
-    /// The capture debug traces.
-    /// </param>
-    /// <param name="reflectHelper">
-    /// The reflect Helper object.
-    /// </param>
-    public TestMethodRunner(TestMethodInfo testMethodInfo, TestMethod testMethod, ITestContext testContext, bool captureDebugTraces, ReflectHelper reflectHelper)
     {
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo should not be null");
         DebugEx.Assert(testMethod != null, "testMethod should not be null");
@@ -103,7 +80,7 @@ internal class TestMethodRunner
         string? initializationLogs = string.Empty;
         string? initializationTrace = string.Empty;
         string? initializationErrorLogs = string.Empty;
-        string initializationTestContextMessages = string.Empty;
+        string? initializationTestContextMessages = string.Empty;
 
         UnitTestResult[]? result = null;
 

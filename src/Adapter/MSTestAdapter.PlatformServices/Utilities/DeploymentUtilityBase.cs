@@ -47,7 +47,7 @@ internal abstract class DeploymentUtilityBase
 
     protected AssemblyUtility AssemblyUtility { get; set; }
 
-    public bool Deploy(IEnumerable<TestCase> tests, string source, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, TestRunDirectories runDirectories)
+    public bool Deploy(IEnumerable<TestCase> tests, string source, IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder, TestRunDirectories runDirectories)
     {
         IList<DeploymentItem> deploymentItems = DeploymentItemUtility.GetDeploymentItems(tests);
 
@@ -60,7 +60,7 @@ internal abstract class DeploymentUtilityBase
     /// </summary>
     /// <param name="runContext">The run context.</param>
     /// <returns>TestRunDirectories instance.</returns>
-    public TestRunDirectories CreateDeploymentDirectories(IRunContext runContext)
+    public TestRunDirectories CreateDeploymentDirectories(IRunContext? runContext)
     {
         var resultsDirectory = GetTestResultsDirectory(runContext);
         var rootDeploymentDirectory = GetRootDeploymentDirectory(resultsDirectory);
@@ -91,7 +91,7 @@ internal abstract class DeploymentUtilityBase
     /// </summary>
     /// <param name="runContext">The run context.</param>
     /// <returns>The test results directory.</returns>
-    public static string GetTestResultsDirectory(IRunContext runContext)
+    public static string GetTestResultsDirectory(IRunContext? runContext)
     {
         var resultsDirectory = !StringEx.IsNullOrEmpty(runContext?.TestRunDirectory) ? runContext.TestRunDirectory : null;
 
@@ -422,7 +422,7 @@ internal abstract class DeploymentUtilityBase
         }
     }
 
-    private bool Deploy(string source, IRunContext runContext, ITestExecutionRecorder testExecutionRecorder, IList<DeploymentItem> deploymentItems, TestRunDirectories runDirectories)
+    private bool Deploy(string source, IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder, IList<DeploymentItem> deploymentItems, TestRunDirectories runDirectories)
     {
         ValidateArg.NotNull(runDirectories, "runDirectories");
         if (EqtTrace.IsInfoEnabled)

@@ -11,9 +11,9 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 internal static class TestRunParameters
 {
-    internal static Dictionary<string, object> FromXml(XmlReader reader)
+    internal static Dictionary<string, object?> FromXml(XmlReader reader)
     {
-        var testParameters = new Dictionary<string, object>();
+        var testParameters = new Dictionary<string, object?>();
 
         if (reader.IsEmptyElement)
         {

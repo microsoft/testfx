@@ -1,9 +1,9 @@
 ﻿#nullable enable
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AdapterTraceLogger
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AdapterTraceLogger.AdapterTraceLogger() -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AdapterTraceLogger.LogError(string! format, params object![]! args) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AdapterTraceLogger.LogInfo(string! format, params object![]! args) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AdapterTraceLogger.LogWarning(string! format, params object![]! args) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AdapterTraceLogger.LogError(string! format, params object?[]! args) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AdapterTraceLogger.LogInfo(string! format, params object?[]! args) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AdapterTraceLogger.LogWarning(string! format, params object?[]! args) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.CreateNavigationSession(string! source) -> object?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.DisposeNavigationSession(object! navigationSession) -> void
@@ -14,9 +14,9 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperation
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.GetNavigationData(object! navigationSession, string! className, string! methodName, out int minLineNumber, out string? fileName) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.FileOperations.LoadAssembly(string! assemblyName, bool isReflectionOnly) -> System.Reflection.Assembly!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterTraceLogger
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterTraceLogger.LogError(string! format, params object![]! args) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterTraceLogger.LogInfo(string! format, params object![]! args) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterTraceLogger.LogWarning(string! format, params object![]! args) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterTraceLogger.LogError(string! format, params object?[]! args) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterTraceLogger.LogInfo(string! format, params object?[]! args) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IAdapterTraceLogger.LogWarning(string! format, params object?[]! args) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IFileOperations
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IFileOperations.CreateNavigationSession(string! source) -> object?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IFileOperations.DisposeNavigationSession(object! navigationSession) -> void
