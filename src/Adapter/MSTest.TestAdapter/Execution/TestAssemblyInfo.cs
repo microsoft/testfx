@@ -21,8 +21,8 @@ public class TestAssemblyInfo
 {
     private readonly object _assemblyInfoExecuteSyncObject;
 
-    private MethodInfo _assemblyInitializeMethod;
-    private MethodInfo _assemblyCleanupMethod;
+    private MethodInfo? _assemblyInitializeMethod;
+    private MethodInfo? _assemblyCleanupMethod;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestAssemblyInfo"/> class.
@@ -37,17 +37,15 @@ public class TestAssemblyInfo
     /// <summary>
     /// Gets <c>AssemblyInitialize</c> method for the assembly.
     /// </summary>
-    public MethodInfo AssemblyInitializeMethod
+    public MethodInfo? AssemblyInitializeMethod
     {
-        get
-        {
-            return _assemblyInitializeMethod;
-        }
+        get => _assemblyInitializeMethod;
 
         internal set
         {
             if (_assemblyInitializeMethod != null)
             {
+                DebugEx.Assert(_assemblyInitializeMethod.DeclaringType?.FullName is not null, "AssemblyInitializeMethod.DeclaringType.FullName is null");
                 var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyInit, _assemblyInitializeMethod.DeclaringType.FullName);
                 throw new TypeInspectionException(message);
             }
@@ -59,17 +57,15 @@ public class TestAssemblyInfo
     /// <summary>
     /// Gets <c>AssemblyCleanup</c> method for the assembly.
     /// </summary>
-    public MethodInfo AssemblyCleanupMethod
+    public MethodInfo? AssemblyCleanupMethod
     {
-        get
-        {
-            return _assemblyCleanupMethod;
-        }
+        get => _assemblyCleanupMethod;
 
         internal set
         {
             if (_assemblyCleanupMethod != null)
             {
+                DebugEx.Assert(_assemblyCleanupMethod.DeclaringType?.FullName is not null, "AssemblyCleanupMethod.DeclaringType.FullName is null");
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiAssemblyClean, _assemblyCleanupMethod.DeclaringType.FullName);
                 throw new TypeInspectionException(message);
             }
@@ -86,7 +82,7 @@ public class TestAssemblyInfo
     /// <summary>
     /// Gets the assembly initialization exception.
     /// </summary>
-    public Exception AssemblyInitializationException { get; internal set; }
+    public Exception? AssemblyInitializationException { get; internal set; }
 
     /// <summary>
     /// Gets a value indicating whether this assembly has an executable <c>AssemblyCleanup</c> method.
@@ -173,6 +169,7 @@ public class TestAssemblyInfo
 
         // Do not use StackTraceHelper.GetExceptionMessage(realException) as it prefixes the message with the exception type name.
         var exceptionMessage = realException.TryGetMessage();
+        DebugEx.Assert(AssemblyInitializeMethod.DeclaringType?.FullName is not null, "AssemblyInitializeMethod.DeclaringType.FullName is null");
         var errorMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.UTA_AssemblyInitMethodThrows,
@@ -195,7 +192,7 @@ public class TestAssemblyInfo
     /// Any exception that can be thrown as part of a assembly cleanup as warning messages.
     /// </returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public string RunAssemblyCleanup()
+    public string? RunAssemblyCleanup()
     {
         if (AssemblyCleanupMethod == null)
         {
@@ -226,6 +223,7 @@ public class TestAssemblyInfo
                     errorMessage = StackTraceHelper.GetExceptionMessage(realException);
                 }
 
+                DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
                 return string.Format(
                     CultureInfo.CurrentCulture,
                     Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,

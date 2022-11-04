@@ -157,7 +157,7 @@ public class FileOperations : IFileOperations
     /// Disposes the navigation session instance.
     /// </summary>
     /// <param name="navigationSession"> The navigation session. </param>
-    public void DisposeNavigationSession(object navigationSession)
+    public void DisposeNavigationSession(object? navigationSession)
     {
 #if NETSTANDARD || (NETCOREAPP && !WIN_UI) || WINDOWS_UWP || WIN_UI
         DiaSessionOperations.DisposeNavigationSession(navigationSession);

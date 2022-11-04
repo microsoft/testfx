@@ -15,15 +15,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </summary>
 internal class PlatformServiceProvider : IPlatformServiceProvider
 {
-    private static IPlatformServiceProvider s_instance;
-    private ITestSource _testSource;
-    private IFileOperations _fileOperations;
-    private IAdapterTraceLogger _traceLogger;
-    private ITestDeployment _testDeployment;
-    private ISettingsProvider _settingsProvider;
-    private ITestDataSource _testDataSource;
-    private IThreadOperations _threadOperations;
-    private IReflectionOperations _reflectionOperations;
+    private static IPlatformServiceProvider? s_instance;
+
+    private ITestSource? _testSource;
+    private IFileOperations? _fileOperations;
+    private IAdapterTraceLogger? _traceLogger;
+    private ITestDeployment? _testDeployment;
+    private ISettingsProvider? _settingsProvider;
+    private ITestDataSource? _testDataSource;
+    private IThreadOperations? _threadOperations;
+    private IReflectionOperations? _reflectionOperations;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PlatformServiceProvider"/> class - a singleton.
@@ -35,105 +36,50 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <summary>
     /// Gets an instance to the platform service validator for test sources.
     /// </summary>
-    public ITestSource TestSource
-    {
-        get
-        {
-            return _testSource ??= new TestSource();
-        }
-    }
+    public ITestSource TestSource => _testSource ??= new TestSource();
 
     /// <summary>
     /// Gets an instance to the platform service validator for data sources for tests.
     /// </summary>
-    public ITestDataSource TestDataSource
-    {
-        get
-        {
-            return _testDataSource ??= new TestDataSource();
-        }
-    }
+    public ITestDataSource TestDataSource => _testDataSource ??= new TestDataSource();
 
     /// <summary>
     /// Gets an instance to the platform service for file operations.
     /// </summary>
-    public IFileOperations FileOperations
-    {
-        get
-        {
-            return _fileOperations ??= new FileOperations();
-        }
-    }
+    public IFileOperations FileOperations => _fileOperations ??= new FileOperations();
 
     /// <summary>
     /// Gets an instance to the platform service for trace logging.
     /// </summary>
-    public IAdapterTraceLogger AdapterTraceLogger
-    {
-        get
-        {
-            return _traceLogger ??= new AdapterTraceLogger();
-        }
-    }
+    public IAdapterTraceLogger AdapterTraceLogger => _traceLogger ??= new AdapterTraceLogger();
 
     /// <summary>
     /// Gets an instance of the test deployment service.
     /// </summary>
-    public ITestDeployment TestDeployment
-    {
-        get
-        {
-            return _testDeployment ??= new TestDeployment();
-        }
-    }
+    public ITestDeployment TestDeployment => _testDeployment ??= new TestDeployment();
 
     /// <summary>
     /// Gets an instance to the platform service for a Settings Provider.
     /// </summary>
-    public ISettingsProvider SettingsProvider
-    {
-        get
-        {
-            return _settingsProvider ??= new MSTestSettingsProvider();
-        }
-    }
+    public ISettingsProvider SettingsProvider => _settingsProvider ??= new MSTestSettingsProvider();
 
     /// <summary>
     /// Gets an instance to the platform service for thread operations.
     /// </summary>
-    public IThreadOperations ThreadOperations
-    {
-        get
-        {
-            return _threadOperations ??= new ThreadOperations();
-        }
-    }
+    public IThreadOperations ThreadOperations => _threadOperations ??= new ThreadOperations();
 
     /// <summary>
     /// Gets an instance to the platform service for reflection operations specific to a platform.
     /// </summary>
-    public IReflectionOperations ReflectionOperations
-    {
-        get
-        {
-            return _reflectionOperations ??= new ReflectionOperations();
-        }
-    }
+    public IReflectionOperations ReflectionOperations => _reflectionOperations ??= new ReflectionOperations();
 
     /// <summary>
     /// Gets or sets the instance for the platform service.
     /// </summary>
     internal static IPlatformServiceProvider Instance
     {
-        get
-        {
-            return s_instance ??= new PlatformServiceProvider();
-        }
-
-        set
-        {
-            s_instance = value;
-        }
+        get => s_instance ??= new PlatformServiceProvider();
+        set => s_instance = value;
     }
 
     /// <summary>
@@ -153,8 +99,8 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// </returns>
     public ITestSourceHost CreateTestSourceHost(
         string source,
-        TestPlatform.ObjectModel.Adapter.IRunSettings runSettings,
-        TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle)
+        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings,
+        TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle)
     {
         var testSourceHost = new TestSourceHost(source, runSettings, frameworkHandle);
         testSourceHost.SetupHost();
@@ -213,7 +159,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties)
+    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties)
     {
         return new TestContextImplementation(testMethod, writer, properties);
     }

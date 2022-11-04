@@ -59,7 +59,7 @@ internal class TestMethodValidator
         // Generic method Definitions are not valid.
         if (testMethodInfo.IsGenericMethodDefinition)
         {
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, testMethodInfo.DeclaringType.FullName, testMethodInfo.Name);
+            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, testMethodInfo.DeclaringType!.FullName, testMethodInfo.Name);
             warnings.Add(message);
             return false;
         }

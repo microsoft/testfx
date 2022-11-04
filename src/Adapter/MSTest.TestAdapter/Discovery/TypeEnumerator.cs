@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -52,7 +51,7 @@ internal class TypeEnumerator
     /// </summary>
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> list of test cases.</returns>
-    internal virtual ICollection<UnitTestElement> Enumerate(out ICollection<string> warnings)
+    internal virtual ICollection<UnitTestElement>? Enumerate(out ICollection<string> warnings)
     {
         warnings = new Collection<string>();
 
@@ -109,7 +108,7 @@ internal class TypeEnumerator
 
         while (currentType != null)
         {
-            inheritanceDepths[currentType.FullName] = currentDepth;
+            inheritanceDepths[currentType.FullName!] = currentDepth;
             ++currentDepth;
             currentType = currentType.GetTypeInfo().BaseType;
         }
@@ -132,14 +131,14 @@ internal class TypeEnumerator
     internal UnitTestElement GetTestFromMethod(MethodInfo method, bool isDeclaredInTestTypeAssembly, ICollection<string> warnings)
     {
         // null if the current instance represents a generic type parameter.
-        Debug.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
+        DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
         // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.
         var isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
 
-        var testMethod = new TestMethod(method, method.Name, _type.FullName, _assemblyFilePath, isAsync, _testIdGenerationStrategy);
+        var testMethod = new TestMethod(method, method.Name, _type.FullName!, _assemblyFilePath, isAsync, _testIdGenerationStrategy);
 
-        if (!method.DeclaringType.FullName.Equals(_type.FullName))
+        if (!string.Equals(method.DeclaringType!.FullName, _type.FullName))
         {
             testMethod.DeclaringClassFullName = method.DeclaringType.FullName;
         }

@@ -27,5 +27,5 @@ public interface ISettingsProvider
     /// source is used to find application base directory used for setting test context properties.
     /// </param>
     /// <returns>Properties specific to the platform.</returns>
-    IDictionary<string, object> GetProperties(string source);
+    IDictionary<string, object?> GetProperties(string source);
 }

@@ -124,7 +124,7 @@ public class TestDeployment : ITestDeployment
     /// <param name="runContext"> The run context. </param>
     /// <param name="frameworkHandle"> The framework handle. </param>
     /// <returns> Return true if deployment is done. </returns>
-    public bool Deploy(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
+    public bool Deploy(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle)
     {
 #if WINDOWS_UWP || PORTABLE
         return false;
@@ -180,9 +180,9 @@ public class TestDeployment : ITestDeployment
     }
 
 #if !WINDOWS_UWP && !PORTABLE
-    internal static IDictionary<string, object> GetDeploymentInformation(string source)
+    internal static IDictionary<string, object?> GetDeploymentInformation(string source)
     {
-        var properties = new Dictionary<string, object>();
+        var properties = new Dictionary<string, object?>();
 
         var applicationBaseDirectory = string.Empty;
 

@@ -107,7 +107,7 @@ internal class TypeValidator
     /// <returns>Returns true if type has a valid TestContext property definition.</returns>
     internal static bool HasCorrectTestContextSignature(Type type)
     {
-        Debug.Assert(type != null, "HasCorrectTestContextSignature type is null");
+        DebugEx.Assert(type != null, "HasCorrectTestContextSignature type is null");
 
         var propertyInfoEnumerable = type.GetTypeInfo().DeclaredProperties;
         var propertyInfo = new List<PropertyInfo>();

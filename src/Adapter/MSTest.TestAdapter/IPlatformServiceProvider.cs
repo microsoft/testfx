@@ -71,8 +71,8 @@ internal interface IPlatformServiceProvider
     /// </returns>
     ITestSourceHost CreateTestSourceHost(
         string source,
-        TestPlatform.ObjectModel.Adapter.IRunSettings runSettings,
-        TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle);
+        TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings,
+        TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle);
 
     /// <summary>
     /// Gets an instance to the platform service listener who monitors trace and debug output
@@ -119,5 +119,5 @@ internal interface IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties);
+    ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties);
 }

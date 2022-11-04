@@ -2,9 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
@@ -21,17 +21,14 @@ public class TestRunCancellationToken
     /// <summary>
     /// Callback to be invoked when canceled.
     /// </summary>
-    private Action _registeredCallback;
+    private Action? _registeredCallback;
 
     /// <summary>
     /// Gets a value indicating whether the test run is canceled.
     /// </summary>
     public bool Canceled
     {
-        get
-        {
-            return _canceled;
-        }
+        get => _canceled;
 
         private set
         {
@@ -57,9 +54,9 @@ public class TestRunCancellationToken
     /// <param name="callback">Callback delegate for handling cancellation.</param>
     public void Register(Action callback)
     {
-        ValidateArg.NotNull(callback, "callback");
+        _ = callback ?? throw new ArgumentNullException(nameof(callback));
 
-        Debug.Assert(_registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
+        DebugEx.Assert(_registeredCallback == null, "Callback delegate is already registered, use a new cancellationToken");
 
         _registeredCallback = callback;
     }

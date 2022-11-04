@@ -22,7 +22,7 @@ internal static class TestCaseExtensions
         category: string.Empty,
         description: string.Empty,
         valueType: typeof(string),
-        validateValueCallback: o => !string.IsNullOrWhiteSpace(o as string),
+        validateValueCallback: o => !StringEx.IsNullOrWhiteSpace(o as string),
         attributes: TestPropertyAttributes.Hidden,
         owner: typeof(TestCase));
 
@@ -32,7 +32,7 @@ internal static class TestCaseExtensions
         category: string.Empty,
         description: string.Empty,
         valueType: typeof(string),
-        validateValueCallback: o => !string.IsNullOrWhiteSpace(o as string),
+        validateValueCallback: o => !StringEx.IsNullOrWhiteSpace(o as string),
         attributes: TestPropertyAttributes.Hidden,
         owner: typeof(TestCase));
 
@@ -52,7 +52,7 @@ internal static class TestCaseExtensions
     /// <param name="testCase"> The test case. </param>
     /// <param name="testClassName"> The test case's class name. </param>
     /// <returns> The test name, without the class name, if provided. </returns>
-    internal static string GetTestName(this TestCase testCase, string testClassName)
+    internal static string GetTestName(this TestCase testCase, string? testClassName)
     {
         var fullyQualifiedName = testCase.FullyQualifiedName;
 
@@ -80,8 +80,8 @@ internal static class TestCaseExtensions
             (int)TestIdGenerationStrategy.FullyQualified);
 
         TestMethod testMethod = testCase.ContainsManagedMethodAndType()
-            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy(), name, testClassName, source, isAsync, testIdGenerationStrategy)
-            : new(name, testClassName, source, isAsync, testIdGenerationStrategy);
+            ? new(testCase.GetManagedType(), testCase.GetManagedMethod(), testCase.GetHierarchy()!, name, testClassName!, source, isAsync, testIdGenerationStrategy)
+            : new(name, testClassName!, source, isAsync, testIdGenerationStrategy);
         var dataType = (DynamicDataType)testCase.GetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
         {
@@ -112,19 +112,19 @@ internal static class TestCaseExtensions
         }
 
         var cssIteration = testCase.GetPropertyValue<string>(Constants.CssIterationProperty, null);
-        if (!string.IsNullOrWhiteSpace(cssIteration))
+        if (!StringEx.IsNullOrWhiteSpace(cssIteration))
         {
             testElement.CssIteration = cssIteration;
         }
 
         var cssProjectStructure = testCase.GetPropertyValue<string>(Constants.CssProjectStructureProperty, null);
-        if (!string.IsNullOrWhiteSpace(cssIteration))
+        if (!StringEx.IsNullOrWhiteSpace(cssProjectStructure))
         {
             testElement.CssProjectStructure = cssProjectStructure;
         }
 
         var description = testCase.GetPropertyValue<string>(Constants.DescriptionProperty, null);
-        if (!string.IsNullOrWhiteSpace(description))
+        if (!StringEx.IsNullOrWhiteSpace(description))
         {
             testElement.Description = description;
         }
@@ -146,17 +146,17 @@ internal static class TestCaseExtensions
         return testElement;
     }
 
-    internal static string GetManagedType(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedTypeProperty, null);
+    internal static string? GetManagedType(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedTypeProperty, null);
 
     internal static void SetManagedType(this TestCase testCase, string value) => testCase.SetPropertyValue(ManagedTypeProperty, value);
 
-    internal static string GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
+    internal static string? GetManagedMethod(this TestCase testCase) => testCase.GetPropertyValue<string>(ManagedMethodProperty, null);
 
     internal static void SetManagedMethod(this TestCase testCase, string value) => testCase.SetPropertyValue(ManagedMethodProperty, value);
 
-    internal static bool ContainsManagedMethodAndType(this TestCase testCase) => !string.IsNullOrWhiteSpace(testCase.GetManagedMethod()) && !string.IsNullOrWhiteSpace(testCase.GetManagedType());
+    internal static bool ContainsManagedMethodAndType(this TestCase testCase) => !StringEx.IsNullOrWhiteSpace(testCase.GetManagedMethod()) && !StringEx.IsNullOrWhiteSpace(testCase.GetManagedType());
 
-    internal static string[] GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
+    internal static string[]? GetHierarchy(this TestCase testCase) => testCase.GetPropertyValue<string[]>(HierarchyProperty, null);
 
-    internal static void SetHierarchy(this TestCase testCase, params string[] value) => testCase.SetPropertyValue(HierarchyProperty, value);
+    internal static void SetHierarchy(this TestCase testCase, params string?[] value) => testCase.SetPropertyValue(HierarchyProperty, value);
 }

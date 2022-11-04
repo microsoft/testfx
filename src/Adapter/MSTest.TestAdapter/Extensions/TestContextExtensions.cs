@@ -11,7 +11,7 @@ internal static class TestContextExtensions
     /// </summary>
     /// <param name="testContext">The test context instance.</param>
     /// <returns>The diagnostic messages.</returns>
-    internal static string GetAndClearDiagnosticMessages(this ITestContext testContext)
+    internal static string? GetAndClearDiagnosticMessages(this ITestContext testContext)
     {
         var messages = testContext.GetDiagnosticMessages();
 

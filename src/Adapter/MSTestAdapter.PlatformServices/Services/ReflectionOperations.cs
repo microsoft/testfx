@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 #if !NETFRAMEWORK
 using System.Linq;
 #endif
@@ -25,6 +26,7 @@ public class ReflectionOperations : IReflectionOperations
     /// <param name="memberInfo"> The member. </param>
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
+    [return: NotNullIfNotNull(nameof(memberInfo))]
     public object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
     {
 #if NETFRAMEWORK
@@ -41,6 +43,7 @@ public class ReflectionOperations : IReflectionOperations
     /// <param name="type"> The attribute type. </param>
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
+    [return: NotNullIfNotNull(nameof(memberInfo))]
     public object[]? GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
     {
 #if NETFRAMEWORK
