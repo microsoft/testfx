@@ -270,9 +270,9 @@ internal class UnitTestRunner : MarshalByRefObject
 
         string ignoreMessage = null;
         var isIgnoreAttributeOnClass =
-            _reflectHelper.IsAttributeDefined(testMethodInfo.Parent.ClassType, typeof(IgnoreAttribute), false);
+            _reflectHelper.IsAttributeDefined<IgnoreAttribute>(testMethodInfo.Parent.ClassType, false);
         var isIgnoreAttributeOnMethod =
-            _reflectHelper.IsAttributeDefined(testMethodInfo.TestMethod, typeof(IgnoreAttribute), false);
+            _reflectHelper.IsAttributeDefined<IgnoreAttribute>(testMethodInfo.TestMethod, false);
 
         if (isIgnoreAttributeOnClass)
         {

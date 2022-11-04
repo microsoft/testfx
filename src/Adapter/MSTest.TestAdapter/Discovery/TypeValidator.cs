@@ -53,8 +53,8 @@ internal class TypeValidator
     internal virtual bool IsValidTestClass(Type type, ICollection<string> warnings)
     {
         if (!type.GetTypeInfo().IsClass
-            || (!_reflectHelper.IsAttributeDefined(type, typeof(TestClassAttribute), false)
-            && !_reflectHelper.HasAttributeDerivedFrom(type, typeof(TestClassAttribute), false)))
+            || (!_reflectHelper.IsAttributeDefined<TestClassAttribute>(type, false)
+            && !_reflectHelper.HasAttributeDerivedFrom<TestClassAttribute>(type, false)))
         {
             return false;
         }

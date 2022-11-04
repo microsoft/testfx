@@ -96,7 +96,7 @@ internal static class MethodInfoExtensions
         Debug.Assert(method != null, "method should not be null.");
 
         // There should be one and only one TimeoutAttribute.
-        var attributes = ReflectHelper.GetCustomAttributes(method, typeof(TimeoutAttribute), false);
+        var attributes = ReflectHelper.GetCustomAttributes<TimeoutAttribute>(method, false);
         if (attributes?.Length != 1)
         {
             return false;
@@ -127,7 +127,7 @@ internal static class MethodInfoExtensions
     /// <returns>Compiler generated type name for given async test method..</returns>
     internal static string GetAsyncTypeName(this MethodInfo method)
     {
-        var asyncStateMachineAttribute = ReflectHelper.GetCustomAttributes(method, typeof(AsyncStateMachineAttribute), false).FirstOrDefault() as AsyncStateMachineAttribute;
+        var asyncStateMachineAttribute = ReflectHelper.GetCustomAttributes<AsyncStateMachineAttribute>(method, false).FirstOrDefault();
 
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
