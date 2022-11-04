@@ -151,7 +151,7 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
             Returns(attribs);
 
-        Verify(rh.IsAttributeDefined(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true));
+        Verify(rh.IsAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
     }
 
     public void IsAttributeDefinedShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
@@ -164,7 +164,7 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
             Returns(attribs);
 
-        Verify(!rh.IsAttributeDefined(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true));
+        Verify(!rh.IsAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
     }
 
     public void IsAttributeDefinedShouldReturnFromCache()
@@ -181,10 +181,10 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(memberInfo, true)).
             Returns(attribs);
 
-        Verify(rh.IsAttributeDefined(memberInfo, typeof(UTF.TestMethodAttribute), true));
+        Verify(rh.IsAttributeDefined<UTF.TestMethodAttribute>(memberInfo, true));
 
         // Validate that reflection APIs are not called again.
-        Verify(rh.IsAttributeDefined(memberInfo, typeof(UTF.TestMethodAttribute), true));
+        Verify(rh.IsAttributeDefined<UTF.TestMethodAttribute>(memberInfo, true));
         _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo, true), Times.Once);
 
         // Also validate that reflection APIs for an individual type is not called since the cache gives us what we need already.
@@ -205,7 +205,7 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true)).
             Returns(attribs);
 
-        Verify(rh.IsAttributeDefined(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true));
+        Verify(rh.IsAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
     }
 
     public void HasAttributeDerivedFromShouldReturnTrueIfSpecifiedAttributeIsDefinedOnAMember()
@@ -218,7 +218,7 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
             Returns(attribs);
 
-        Verify(rh.HasAttributeDerivedFrom(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true));
+        Verify(rh.HasAttributeDerivedFrom<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
     }
 
     public void HasAttributeDerivedFromShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
@@ -231,7 +231,7 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
             Returns(attribs);
 
-        Verify(!rh.IsAttributeDefined(mockMemberInfo.Object, typeof(UTF.TestClassAttribute), true));
+        Verify(!rh.IsAttributeDefined<UTF.TestClassAttribute>(mockMemberInfo.Object, true));
     }
 
     public void HasAttributeDerivedFromShouldReturnFromCache()
@@ -248,10 +248,10 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(memberInfo, true)).
             Returns(attribs);
 
-        Verify(rh.HasAttributeDerivedFrom(memberInfo, typeof(UTF.TestMethodAttribute), true));
+        Verify(rh.HasAttributeDerivedFrom<UTF.TestMethodAttribute>(memberInfo, true));
 
         // Validate that reflection APIs are not called again.
-        Verify(rh.HasAttributeDerivedFrom(memberInfo, typeof(UTF.TestMethodAttribute), true));
+        Verify(rh.HasAttributeDerivedFrom<UTF.TestMethodAttribute>(memberInfo, true));
         _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(memberInfo, true), Times.Once);
 
         // Also validate that reflection APIs for an individual type is not called since the cache gives us what we need already.
@@ -272,7 +272,7 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true)).
             Returns(attribs);
 
-        Verify(!rh.IsAttributeDefined(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true));
+        Verify(!rh.IsAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
     }
 
     public void HasAttributeDerivedFromShouldReturnTrueQueryingProvidedAttributesExistenceIfGettingAllAttributesFail()
@@ -289,7 +289,7 @@ public class ReflectHelperTests : TestContainer
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(TestableExtendedTestMethod), true)).
             Returns(attribs);
 
-        Verify(rh.IsAttributeDefined(mockMemberInfo.Object, typeof(TestableExtendedTestMethod), true));
+        Verify(rh.IsAttributeDefined<TestableExtendedTestMethod>(mockMemberInfo.Object, true));
     }
 }
 

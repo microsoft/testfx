@@ -35,7 +35,7 @@ public class TestCaseDiscoverySinkTests : TestContainer
 
     public void SendTestCaseShouldAddTheTestCaseToTests()
     {
-        TestCase tc = new("T", new Uri("executor://TestExecutorUri"), "A");
+        TestCase tc = new("TAttribute", new Uri("executor://TestExecutorUri"), "A");
         _testCaseDiscoverySink.SendTestCase(tc);
 
         Verify(_testCaseDiscoverySink.Tests is not null);

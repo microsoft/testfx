@@ -239,11 +239,6 @@ internal class TypeCache : MarshalByRefObject
 
         var classInfo = new TestClassInfo(classType, constructor, testContextProperty, ReflectHelper.GetDerivedAttribute<TestClassAttribute>(classType, false), assemblyInfo);
 
-        var testInitializeAttributeType = typeof(TestInitializeAttribute);
-        var testCleanupAttributeType = typeof(TestCleanupAttribute);
-        var classInitializeAttributeType = typeof(ClassInitializeAttribute);
-        var classCleanupAttributeType = typeof(ClassCleanupAttribute);
-
         // List holding the instance of the initialize/cleanup methods
         // to be passed into the tuples' queue  when updating the class info.
         var initAndCleanupMethods = new MethodInfo[2];
@@ -257,10 +252,10 @@ internal class TypeCache : MarshalByRefObject
         foreach (var methodInfo in classType.GetTypeInfo().DeclaredMethods)
         {
             // Update test initialize/cleanup method
-            UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, isBase: false, instanceMethods: instanceMethods, testInitializeAttributeType: testInitializeAttributeType, testCleanupAttributeType: testCleanupAttributeType);
+            UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, false, instanceMethods);
 
             // Update class initialize/cleanup method
-            UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods, classInitializeAttributeType, classCleanupAttributeType);
+            UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods);
         }
 
         var baseType = classType.GetTypeInfo().BaseType;
@@ -271,12 +266,12 @@ internal class TypeCache : MarshalByRefObject
                 if (methodInfo.IsPublic && !methodInfo.IsStatic)
                 {
                     // Update test initialize/cleanup method from base type.
-                    UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, instanceMethods, testInitializeAttributeType, testCleanupAttributeType);
+                    UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, instanceMethods);
                 }
 
                 if (methodInfo.IsPublic && methodInfo.IsStatic)
                 {
-                    UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, true, ref initAndCleanupMethods, classInitializeAttributeType, classCleanupAttributeType);
+                    UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, true, ref initAndCleanupMethods);
                 }
             }
 
@@ -351,8 +346,8 @@ internal class TypeCache : MarshalByRefObject
                 try
                 {
                     // Only examine classes which are TestClass or derives from TestClass attribute
-                    if (!_reflectionHelper.IsAttributeDefined(t, typeof(TestClassAttribute), inherit: true) &&
-                        !_reflectionHelper.HasAttributeDerivedFrom(t, typeof(TestClassAttribute), true))
+                    if (!_reflectionHelper.IsAttributeDefined<TestClassAttribute>(t, inherit: true) &&
+                        !_reflectionHelper.HasAttributeDerivedFrom<TestClassAttribute>(t, true))
                     {
                         continue;
                     }
@@ -371,11 +366,11 @@ internal class TypeCache : MarshalByRefObject
                 // Enumerate through all methods and identify the Assembly Init and cleanup methods.
                 foreach (var methodInfo in t.GetTypeInfo().DeclaredMethods)
                 {
-                    if (IsAssemblyOrClassInitializeMethod(methodInfo, assemblyInitializeType))
+                    if (IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
                     {
                         assemblyInfo.AssemblyInitializeMethod = methodInfo;
                     }
-                    else if (IsAssemblyOrClassCleanupMethod(methodInfo, assemblyCleanupType))
+                    else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
                     {
                         assemblyInfo.AssemblyCleanupMethod = methodInfo;
                     }
@@ -391,12 +386,13 @@ internal class TypeCache : MarshalByRefObject
     /// <summary>
     /// Verify if a given method is an Assembly or Class Initialize method.
     /// </summary>
+    /// <typeparam name="TInitializeAttribute">The initialization attribute type. </typeparam>
     /// <param name="methodInfo"> The method info. </param>
-    /// <param name="initializeAttributeType"> The initialization attribute type. </param>
     /// <returns> True if its an initialization method. </returns>
-    private bool IsAssemblyOrClassInitializeMethod(MethodInfo methodInfo, Type initializeAttributeType)
+    private bool IsAssemblyOrClassInitializeMethod<TInitializeAttribute>(MethodInfo methodInfo)
+        where TInitializeAttribute : Attribute
     {
-        if (!_reflectionHelper.IsAttributeDefined(methodInfo, initializeAttributeType, false))
+        if (!_reflectionHelper.IsAttributeDefined<TInitializeAttribute>(methodInfo, false))
         {
             return false;
         }
@@ -413,12 +409,13 @@ internal class TypeCache : MarshalByRefObject
     /// <summary>
     /// Verify if a given method is an Assembly or Class cleanup method.
     /// </summary>
+    /// <typeparam name="TCleanupAttribute">The cleanup attribute type.</typeparam>
     /// <param name="methodInfo"> The method info. </param>
-    /// <param name="cleanupAttributeType"> The cleanup attribute type. </param>
     /// <returns> True if its a cleanup method. </returns>
-    private bool IsAssemblyOrClassCleanupMethod(MethodInfo methodInfo, Type cleanupAttributeType)
+    private bool IsAssemblyOrClassCleanupMethod<TCleanupAttribute>(MethodInfo methodInfo)
+        where TCleanupAttribute : Attribute
     {
-        if (!_reflectionHelper.IsAttributeDefined(methodInfo, cleanupAttributeType, false))
+        if (!_reflectionHelper.IsAttributeDefined<TCleanupAttribute>(methodInfo, false))
         {
             return false;
         }
@@ -461,24 +458,20 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="methodInfo"> The Method Info. </param>
     /// <param name="isBase"> Flag to check whether base class needs to be validated. </param>
     /// <param name="initAndCleanupMethods"> An array with Initialize/Cleanup methods. </param>
-    /// <param name="classInitializeAttributeType"> The Class Initialize Attribute Type. </param>
-    /// <param name="classCleanupAttributeType"> The Class Cleanup Attribute Type. </param>
     private void UpdateInfoIfClassInitializeOrCleanupMethod(
         TestClassInfo classInfo,
         MethodInfo methodInfo,
         bool isBase,
-        ref MethodInfo[] initAndCleanupMethods,
-        Type classInitializeAttributeType,
-        Type classCleanupAttributeType)
+        ref MethodInfo[] initAndCleanupMethods)
     {
-        var isInitializeMethod = IsAssemblyOrClassInitializeMethod(methodInfo, classInitializeAttributeType);
-        var isCleanupMethod = IsAssemblyOrClassCleanupMethod(methodInfo, classCleanupAttributeType);
+        var isInitializeMethod = IsAssemblyOrClassInitializeMethod<ClassInitializeAttribute>(methodInfo);
+        var isCleanupMethod = IsAssemblyOrClassCleanupMethod<ClassCleanupAttribute>(methodInfo);
 
         if (isInitializeMethod)
         {
             if (isBase)
             {
-                if (((ClassInitializeAttribute)_reflectionHelper.GetCustomAttribute(methodInfo, classInitializeAttributeType))
+                if (_reflectionHelper.GetCustomAttribute<ClassInitializeAttribute>(methodInfo)
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[0] = methodInfo;
@@ -495,7 +488,7 @@ internal class TypeCache : MarshalByRefObject
         {
             if (isBase)
             {
-                if (((ClassCleanupAttribute)_reflectionHelper.GetCustomAttribute(methodInfo, classCleanupAttributeType))
+                if (_reflectionHelper.GetCustomAttribute<ClassCleanupAttribute>(methodInfo)
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[1] = methodInfo;
@@ -516,18 +509,14 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="methodInfo"> The method Info. </param>
     /// <param name="isBase"> If this needs to validate in base class or not. </param>
     /// <param name="instanceMethods"> The instance Methods. </param>
-    /// <param name="testInitializeAttributeType"> The test Initialize Attribute Type. </param>
-    /// <param name="testCleanupAttributeType"> The test Cleanup Attribute Type. </param>
     private void UpdateInfoIfTestInitializeOrCleanupMethod(
         TestClassInfo classInfo,
         MethodInfo methodInfo,
         bool isBase,
-        Dictionary<string, string> instanceMethods,
-        Type testInitializeAttributeType,
-        Type testCleanupAttributeType)
+        Dictionary<string, string> instanceMethods)
     {
-        var hasTestInitialize = _reflectionHelper.IsAttributeDefined(methodInfo, testInitializeAttributeType, inherit: false);
-        var hasTestCleanup = _reflectionHelper.IsAttributeDefined(methodInfo, testCleanupAttributeType, inherit: false);
+        var hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
+        var hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
 
         if (!hasTestCleanup && !hasTestInitialize)
         {

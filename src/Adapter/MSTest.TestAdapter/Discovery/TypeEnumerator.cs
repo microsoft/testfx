@@ -158,7 +158,7 @@ internal class TypeEnumerator
             TestCategory = _reflectHelper.GetCategories(method, _type),
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
-            Ignored = _reflectHelper.IsAttributeDefined(method, typeof(IgnoreAttribute), false),
+            Ignored = _reflectHelper.IsAttributeDefined<IgnoreAttribute>(method, false),
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
         };
 
@@ -178,29 +178,29 @@ internal class TypeEnumerator
 
         testElement.Traits = traits.ToArray();
 
-        if (_reflectHelper.GetCustomAttribute(method, typeof(CssIterationAttribute)) is CssIterationAttribute cssIteration)
+        if (_reflectHelper.GetCustomAttribute<CssIterationAttribute>(method) is CssIterationAttribute cssIteration)
         {
             testElement.CssIteration = cssIteration.CssIteration;
         }
 
-        if (_reflectHelper.GetCustomAttribute(method, typeof(CssProjectStructureAttribute)) is CssProjectStructureAttribute cssProjectStructure)
+        if (_reflectHelper.GetCustomAttribute<CssProjectStructureAttribute>(method) is CssProjectStructureAttribute cssProjectStructure)
         {
             testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
         }
 
-        if (_reflectHelper.GetCustomAttribute(method, typeof(DescriptionAttribute)) is DescriptionAttribute descriptionAttribute)
+        if (_reflectHelper.GetCustomAttribute<DescriptionAttribute>(method) is DescriptionAttribute descriptionAttribute)
         {
             testElement.Description = descriptionAttribute.Description;
         }
 
-        var workItemAttributes = _reflectHelper.GetCustomAttributes(method, typeof(WorkItemAttribute)).Cast<WorkItemAttribute>().ToArray();
+        var workItemAttributes = _reflectHelper.GetCustomAttributes<WorkItemAttribute>(method);
         if (workItemAttributes.Any())
         {
             testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString()).ToArray();
         }
 
         // get DisplayName from TestMethodAttribute
-        var testMethodAttribute = _reflectHelper.GetCustomAttribute(method, typeof(TestMethodAttribute)) as TestMethodAttribute;
+        var testMethodAttribute = _reflectHelper.GetCustomAttribute<TestMethodAttribute>(method);
         testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
 
         return testElement;

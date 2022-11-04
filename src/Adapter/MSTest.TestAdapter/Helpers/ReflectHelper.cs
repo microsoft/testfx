@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -33,105 +36,90 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Checks to see if the parameter memberInfo contains the parameter attribute or not.
     /// </summary>
+    /// <typeparam name="TAttribute">Attribute to search for.</typeparam>
     /// <param name="memberInfo">Member/Type to test.</param>
-    /// <param name="attributeType">Attribute to search for.</param>
     /// <param name="inherit">Look through inheritance or not.</param>
     /// <returns>True if the attribute of the specified type is defined.</returns>
-    public virtual bool IsAttributeDefined(MemberInfo memberInfo, Type attributeType, bool inherit)
+    public virtual bool IsAttributeDefined<TAttribute>(MemberInfo memberInfo, bool inherit)
+        where TAttribute : Attribute
     {
         if (memberInfo == null)
         {
             throw new ArgumentNullException(nameof(memberInfo));
         }
 
-        if (attributeType == null)
-        {
-            throw new ArgumentNullException(nameof(attributeType));
-        }
-
-        Debug.Assert(attributeType != null, "attributeType should not be null.");
-
         // Get attributes defined on the member from the cache.
-        Dictionary<string, object> attributes = GetAttributes(memberInfo, inherit);
+        Dictionary<string, object>? attributes = GetAttributes(memberInfo, inherit);
+        var requiredAttributeQualifiedName = typeof(TAttribute).AssemblyQualifiedName!;
         if (attributes == null)
         {
             // If we could not obtain all attributes from cache, just get the one we need.
-            var specificAttributes = GetCustomAttributes(memberInfo, attributeType, inherit);
-            var requiredAttributeQualifiedName = attributeType.AssemblyQualifiedName;
-
+            var specificAttributes = GetCustomAttributes<TAttribute>(memberInfo, inherit);
             return specificAttributes.Any(a => string.Equals(a.GetType().AssemblyQualifiedName, requiredAttributeQualifiedName));
         }
 
-        string nameToFind = attributeType.AssemblyQualifiedName;
-        if (attributes.ContainsKey(nameToFind))
-        {
-            return true;
-        }
-
-        return false;
+        return attributes.ContainsKey(requiredAttributeQualifiedName);
     }
 
     /// <summary>
     /// Checks to see if the parameter memberInfo contains the parameter attribute or not.
     /// </summary>
+    /// <typeparam name="TAttribute">Attribute to search for.</typeparam>
     /// <param name="type">Member/Type to test.</param>
-    /// <param name="attributeType">Attribute to search for.</param>
     /// <param name="inherit">Look through inheritance or not.</param>
     /// <returns>True if the specified attribute is defined on the type.</returns>
-    public virtual bool IsAttributeDefined(Type type, Type attributeType, bool inherit)
+    public virtual bool IsAttributeDefined<TAttribute>(Type type, bool inherit)
+        where TAttribute : Attribute
     {
         var memberInfo = (MemberInfo)type.GetTypeInfo();
-        return IsAttributeDefined(memberInfo, attributeType, inherit);
+        return IsAttributeDefined<TAttribute>(memberInfo, inherit);
     }
 
     /// <summary>
     /// Returns true when specified class/member has attribute derived from specific attribute.
     /// </summary>
+    /// <typeparam name="TAttribute">The base attribute type.</typeparam>
     /// <param name="type">The type.</param>
-    /// <param name="baseAttributeType">The base attribute type.</param>
     /// <param name="inherit">Should look at inheritance tree.</param>
     /// <returns>An object derived from Attribute that corresponds to the instance of found attribute.</returns>
-    public virtual bool HasAttributeDerivedFrom(Type type, Type baseAttributeType, bool inherit)
+    public virtual bool HasAttributeDerivedFrom<TAttribute>(Type type, bool inherit)
+        where TAttribute : Attribute
     {
         var memberInfo = (MemberInfo)type.GetTypeInfo();
-        return HasAttributeDerivedFrom(memberInfo, baseAttributeType, inherit);
+        return HasAttributeDerivedFrom<TAttribute>(memberInfo, inherit);
     }
 
     /// <summary>
     /// Returns true when specified class/member has attribute derived from specific attribute.
     /// </summary>
+    /// <typeparam name="TAttribute">The base attribute type.</typeparam>
     /// <param name="memberInfo">The member info.</param>
-    /// <param name="baseAttributeType">The base attribute type.</param>
     /// <param name="inherit">Should look at inheritance tree.</param>
     /// <returns>An object derived from Attribute that corresponds to the instance of found attribute.</returns>
-    public bool HasAttributeDerivedFrom(MemberInfo memberInfo, Type baseAttributeType, bool inherit)
+    public bool HasAttributeDerivedFrom<TAttribute>(MemberInfo memberInfo, bool inherit)
+        where TAttribute : Attribute
     {
         if (memberInfo == null)
         {
             throw new ArgumentNullException(nameof(memberInfo));
         }
 
-        if (baseAttributeType == null)
-        {
-            throw new ArgumentNullException(nameof(baseAttributeType));
-        }
-
         // Get all attributes on the member.
-        Dictionary<string, object> attributes = GetAttributes(memberInfo, inherit);
+        Dictionary<string, object>? attributes = GetAttributes(memberInfo, inherit);
         if (attributes == null)
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(ReflectHelper)}.{nameof(GetAttributes)}: {Resource.FailedFetchAttributeCache}");
 
-            return IsAttributeDefined(memberInfo, baseAttributeType, inherit);
+            return IsAttributeDefined<TAttribute>(memberInfo, inherit);
         }
 
         // Try to find the attribute that is derived from baseAttrType.
         foreach (object attribute in attributes.Values)
         {
-            Debug.Assert(attribute != null, $"{nameof(ReflectHelper)}.{nameof(GetAttributes)}: internal error: wrong value in the attributes dictionary.");
+            DebugEx.Assert(attribute != null, $"{nameof(ReflectHelper)}.{nameof(GetAttributes)}: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
-            if (attributeType.GetTypeInfo().IsSubclassOf(baseAttributeType))
+            if (attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttribute)))
             {
                 return true;
             }
@@ -149,15 +137,15 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>
     /// The expected exception attribute found for this test. Null if not found.
     /// </returns>
-    public virtual ExpectedExceptionBaseAttribute ResolveExpectedExceptionHelper(MethodInfo methodInfo, TestMethod testMethod)
+    public virtual ExpectedExceptionBaseAttribute? ResolveExpectedExceptionHelper(MethodInfo methodInfo, TestMethod testMethod)
     {
-        Debug.Assert(methodInfo != null, "MethodInfo should be non-null");
+        DebugEx.Assert(methodInfo != null, "MethodInfo should be non-null");
 
         // Get the expected exception attribute
-        ExpectedExceptionBaseAttribute[] expectedExceptions;
+        ExpectedExceptionBaseAttribute[]? expectedExceptions;
         try
         {
-            expectedExceptions = GetCustomAttributes(methodInfo, typeof(ExpectedExceptionBaseAttribute), true).OfType<ExpectedExceptionBaseAttribute>().ToArray();
+            expectedExceptions = GetCustomAttributes<ExpectedExceptionBaseAttribute>(methodInfo, true);
         }
         catch (Exception ex)
         {
@@ -182,10 +170,10 @@ internal class ReflectHelper : MarshalByRefObject
         if (expectedExceptions.Length > 1)
         {
             string errorMessage = string.Format(
-                                                CultureInfo.CurrentCulture,
-                                                Resource.UTA_MultipleExpectedExceptionsOnTestMethod,
-                                                testMethod.FullClassName,
-                                                testMethod.Name);
+                CultureInfo.CurrentCulture,
+                Resource.UTA_MultipleExpectedExceptionsOnTestMethod,
+                testMethod.FullClassName,
+                testMethod.Name);
             throw new TypeInspectionException(errorMessage);
         }
 
@@ -205,26 +193,15 @@ internal class ReflectHelper : MarshalByRefObject
 #if NET5_0_OR_GREATER
     [Obsolete]
 #endif
-    public override object InitializeLifetimeService()
+    public override object InitializeLifetimeService() => null!;
+
+    internal static TAttribute[]? GetAttributes<TAttribute>(MethodBase methodBase, bool inherit)
+        where TAttribute : Attribute
     {
-        return null;
-    }
-
-    internal static T[] GetAttributes<T>(MethodBase methodBase, bool inherit)
-        where T : Attribute
-    {
-        Attribute[] attributeArray = GetCustomAttributes(methodBase, typeof(T), inherit);
-        if (attributeArray == null || attributeArray.Length == 0)
-        {
-            return null;
-        }
-
-        if (attributeArray is T[] attributes)
-        {
-            return attributes;
-        }
-
-        return attributeArray.Where(a => a is T).Cast<T>().ToArray();
+        TAttribute[]? attributeArray = GetCustomAttributes<TAttribute>(methodBase, inherit);
+        return attributeArray == null || attributeArray.Length == 0
+            ? null
+            : attributeArray;
     }
 
     /// <summary>
@@ -251,11 +228,13 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Get custom attributes on a member for both normal and reflection only load.
     /// </summary>
+    /// <typeparam name="TAttribute">Type of attribute to retrieve.</typeparam>
     /// <param name="memberInfo">Member for which attributes needs to be retrieved.</param>
-    /// <param name="type">Type of attribute to retrieve.</param>
     /// <param name="inherit">If inherited type of attribute.</param>
     /// <returns>All attributes of give type on member.</returns>
-    internal static Attribute[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
+    [return: NotNullIfNotNull(nameof(memberInfo))]
+    internal static TAttribute[]? GetCustomAttributes<TAttribute>(MemberInfo? memberInfo, bool inherit)
+        where TAttribute : Attribute
     {
         if (memberInfo == null)
         {
@@ -264,10 +243,10 @@ internal class ReflectHelper : MarshalByRefObject
 
         var attributesArray = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
             memberInfo,
-            type,
+            typeof(TAttribute),
             inherit);
 
-        return attributesArray.OfType<Attribute>().ToArray();
+        return attributesArray!.OfType<TAttribute>().ToArray(); // TODO: Investigate if we rely on NRE
     }
 
     /// <summary>
@@ -276,7 +255,8 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="memberInfo">Member for which attributes needs to be retrieved.</param>
     /// <param name="inherit">If inherited type of attribute.</param>
     /// <returns>All attributes of give type on member.</returns>
-    internal static object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
+    [return: NotNullIfNotNull(nameof(memberInfo))]
+    internal static object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
     {
         if (memberInfo == null)
         {
@@ -287,42 +267,24 @@ internal class ReflectHelper : MarshalByRefObject
             memberInfo,
             inherit);
 
-        return attributesArray.ToArray();
+        return attributesArray!.ToArray(); // TODO: Investigate if we rely on NRE
     }
 
     /// <summary>
     /// Returns the first attribute of the specified type or null if no attribute
     /// of the specified type is set on the method.
     /// </summary>
-    /// <typeparam name="TAttributeType">The type of attribute to return.</typeparam>
+    /// <typeparam name="TAttribute">The type of attribute to return.</typeparam>
     /// <param name="method">The method on which the attribute is defined.</param>
     /// <returns>The attribute or null if none exists.</returns>
-    internal TAttributeType GetAttribute<TAttributeType>(MethodInfo method)
-        where TAttributeType : class
+    internal TAttribute? GetAttribute<TAttribute>(MethodInfo method)
+        where TAttribute : Attribute
     {
-        if (IsAttributeDefined(method, typeof(TAttributeType), false))
+        if (IsAttributeDefined<TAttribute>(method, false))
         {
-            object[] attributes = GetCustomAttributes(method, typeof(TAttributeType), false);
-            Debug.Assert(attributes.Length == 1, "Should only be one attribute.");
-            return attributes[0] as TAttributeType;
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Returns the attribute of the specified type. Null if no attribute of the specified type is defined.
-    /// </summary>
-    /// <param name="attributeType">The attribute type.</param>
-    /// <param name="method">The method to inspect.</param>
-    /// <returns>Attribute of the specified type. Null if not found.</returns>
-    internal Attribute GetAttribute(Type attributeType, MethodInfo method)
-    {
-        if (IsAttributeDefined(method, attributeType, false))
-        {
-            object[] attributes = GetCustomAttributes(method, attributeType, false);
-            Debug.Assert(attributes.Length == 1, "Should only be one attribute.");
-            return attributes[0] as Attribute;
+            TAttribute[] attributes = GetCustomAttributes<TAttribute>(method, false);
+            DebugEx.Assert(attributes.Length == 1, "Should only be one attribute.");
+            return attributes[0];
         }
 
         return null;
@@ -335,9 +297,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="type">The type declared in the assembly to check.</param>
     /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
     internal virtual bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
-    {
-        return method.DeclaringType.GetTypeInfo().Assembly.Equals(type.GetTypeInfo().Assembly);
-    }
+        => method.DeclaringType!.GetTypeInfo().Assembly.Equals(type.GetTypeInfo().Assembly); // TODO: Investigate if we rely on NRE
 
     /// <summary>
     /// Get categories applied to the test method.
@@ -347,7 +307,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Categories defined.</returns>
     internal virtual string[] GetCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
-        var categories = GetCustomAttributesRecursively(categoryAttributeProvider, owningType, typeof(TestCategoryBaseAttribute));
+        var categories = GetCustomAttributesRecursively(categoryAttributeProvider, owningType);
         List<string> testCategories = new();
 
         if (categories != null)
@@ -366,10 +326,10 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
     /// <returns> The parallelization level if set. -1 otherwise. </returns>
-    internal static ParallelizeAttribute GetParallelizeAttribute(Assembly assembly)
-    {
-        return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ParallelizeAttribute)).OfType<ParallelizeAttribute>().FirstOrDefault();
-    }
+    internal static ParallelizeAttribute? GetParallelizeAttribute(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ParallelizeAttribute))
+            !.OfType<ParallelizeAttribute>() // TODO: Investigate if we rely on NRE
+            .FirstOrDefault();
 
     /// <summary>
     /// Get the parallelization behavior for a test method.
@@ -378,10 +338,8 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="owningType">The type that owns <paramref name="testMethod"/>.</param>
     /// <returns>True if test method should not run in parallel.</returns>
     internal bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType)
-    {
-        return GetCustomAttributes(testMethod, typeof(DoNotParallelizeAttribute)).Any()
-               || GetCustomAttributes(owningType.GetTypeInfo(), typeof(DoNotParallelizeAttribute)).Any();
-    }
+        => GetCustomAttributes<DoNotParallelizeAttribute>(testMethod).Any()
+        || GetCustomAttributes<DoNotParallelizeAttribute>(owningType.GetTypeInfo()).Any();
 
     /// <summary>
     /// Get the parallelization behavior for a test assembly.
@@ -389,38 +347,36 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="assembly">The test assembly.</param>
     /// <returns>True if test assembly should not run in parallel.</returns>
     internal static bool IsDoNotParallelizeSet(Assembly assembly)
-    {
-        return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute)).Any();
-    }
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute))
+            !.Any(); // TODO: Investigate if we rely on NRE
 
     /// <summary>
     /// Gets the class cleanup lifecycle set on an assembly.
     /// </summary>
     /// <param name="assembly"> The test assembly. </param>
     /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
-    internal static ClassCleanupExecutionAttribute GetClassCleanupAttribute(Assembly assembly)
-    {
-        return PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute)).OfType<ClassCleanupExecutionAttribute>().FirstOrDefault();
-    }
+    internal static ClassCleanupExecutionAttribute? GetClassCleanupAttribute(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute))
+            !.OfType<ClassCleanupExecutionAttribute>() // TODO: Investigate if we rely on NRE
+            .FirstOrDefault();
 
     /// <summary>
     /// Gets custom attributes at the class and assembly for a method.
     /// </summary>
     /// <param name="attributeProvider">Method Info or Member Info or a Type.</param>
     /// <param name="owningType">The type that owns <paramref name="attributeProvider"/>.</param>
-    /// <param name="type"> What type of CustomAttribute you need. For instance: TestCategory, Owner etc..</param>
     /// <returns>The categories of the specified type on the method. </returns>
-    internal IEnumerable<object> GetCustomAttributesRecursively(MemberInfo attributeProvider, Type owningType, Type type)
+    internal IEnumerable<object> GetCustomAttributesRecursively(MemberInfo attributeProvider, Type owningType)
     {
-        var categories = GetCustomAttributes(attributeProvider, typeof(TestCategoryBaseAttribute));
+        var categories = GetCustomAttributes<TestCategoryBaseAttribute>(attributeProvider);
         if (categories != null)
         {
-            categories = categories.Concat(GetCustomAttributes(owningType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
+            categories = categories.Concat(GetCustomAttributes<TestCategoryBaseAttribute>(owningType.GetTypeInfo())).ToArray();
         }
 
         if (categories != null)
         {
-            categories = categories.Concat(GetCustomAttributeForAssembly(owningType.GetTypeInfo(), typeof(TestCategoryBaseAttribute))).ToArray();
+            categories = categories.Concat(GetCustomAttributeForAssembly<TestCategoryBaseAttribute>(owningType.GetTypeInfo())).ToArray();
         }
 
         if (categories != null)
@@ -435,43 +391,40 @@ internal class ReflectHelper : MarshalByRefObject
     /// Gets the custom attributes on the assembly of a member info
     /// NOTE: having it as separate virtual method, so that we can extend it for testing.
     /// </summary>
+    /// <typeparam name="TAttribute">The attribute type to find.</typeparam>
     /// <param name="memberInfo">The member to inspect.</param>
-    /// <param name="type">The attribute type to find.</param>
     /// <returns>Custom attributes defined.</returns>
-    internal virtual Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo, Type type)
-    {
-        return
-            PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
-                memberInfo.Module.Assembly, type).OfType<Attribute>().ToArray();
-    }
+    internal virtual TAttribute[] GetCustomAttributeForAssembly<TAttribute>(MemberInfo memberInfo)
+        where TAttribute : Attribute
+        => PlatformServiceProvider.Instance.ReflectionOperations
+            .GetCustomAttributes(memberInfo.Module.Assembly, typeof(TAttribute))
+            !.OfType<TAttribute>()
+            .ToArray();
 
     /// <summary>
     /// Gets the custom attributes of the provided type on a memberInfo.
     /// </summary>
+    /// <typeparam name="TAttribute">The attribute type.</typeparam>
     /// <param name="attributeProvider"> The member to reflect on. </param>
-    /// <param name="type"> The attribute type. </param>
     /// <returns>Attributes defined.</returns>
-    internal virtual Attribute[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
-    {
-        return GetCustomAttributes(attributeProvider, type, true);
-    }
+    internal virtual TAttribute[] GetCustomAttributes<TAttribute>(MemberInfo attributeProvider)
+        where TAttribute : Attribute
+        => GetCustomAttributes<TAttribute>(attributeProvider, true);
 
     /// <summary>
     /// Gets the first custom attribute of the provided type on a memberInfo.
     /// </summary>
+    /// <typeparam name="TAttribute">The attribute type.</typeparam>
     /// <param name="attributeProvider"> The member to reflect on. </param>
-    /// <param name="type"> The attribute type. </param>
     /// <returns>Attribute defined.</returns>
-    internal virtual Attribute GetCustomAttribute(MemberInfo attributeProvider, Type type)
+    internal virtual TAttribute? GetCustomAttribute<TAttribute>(MemberInfo attributeProvider)
+        where TAttribute : Attribute
     {
-        var attribute = GetCustomAttributes(attributeProvider, type, true);
+        var attribute = GetCustomAttributes<TAttribute>(attributeProvider, true);
 
-        if (attribute == null || attribute.Length != 1)
-        {
-            return null;
-        }
-
-        return attribute[0];
+        return attribute == null || attribute.Length != 1
+            ? null
+            : attribute[0];
     }
 
     /// <summary>
@@ -479,18 +432,13 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="ownerAttributeProvider">The member to inspect.</param>
     /// <returns>The owner trait.</returns>
-    internal virtual Trait GetTestOwnerAsTraits(MemberInfo ownerAttributeProvider)
+    internal virtual Trait? GetTestOwnerAsTraits(MemberInfo ownerAttributeProvider)
     {
-        string owner = GetOwner(ownerAttributeProvider);
+        string? owner = GetOwner(ownerAttributeProvider);
 
-        if (string.IsNullOrEmpty(owner))
-        {
-            return null;
-        }
-        else
-        {
-            return new Trait("Owner", owner);
-        }
+        return StringEx.IsNullOrEmpty(owner)
+            ? null
+            : new Trait("Owner", owner);
     }
 
     /// <summary>
@@ -498,17 +446,9 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="testPriority">The priority.</param>
     /// <returns>The corresponding trait.</returns>
-    internal virtual Trait GetTestPriorityAsTraits(int? testPriority)
-    {
-        if (testPriority == null)
-        {
-            return null;
-        }
-        else
-        {
-            return new Trait("Priority", ((int)testPriority).ToString(CultureInfo.InvariantCulture));
-        }
-    }
+    internal virtual Trait? GetTestPriorityAsTraits(int? testPriority) => testPriority == null
+            ? null
+            : new Trait("Priority", ((int)testPriority).ToString(CultureInfo.InvariantCulture));
 
     /// <summary>
     /// Priority if any set for test method. Will return priority if attribute is applied to TestMethod
@@ -518,14 +458,11 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Priority value if defined. Null otherwise.</returns>
     internal virtual int? GetPriority(MemberInfo priorityAttributeProvider)
     {
-        var priorityAttribute = GetCustomAttributes(priorityAttributeProvider, typeof(PriorityAttribute), true);
+        var priorityAttribute = GetCustomAttributes<PriorityAttribute>(priorityAttributeProvider, true);
 
-        if (priorityAttribute == null || priorityAttribute.Length != 1)
-        {
-            return null;
-        }
-
-        return (priorityAttribute[0] as PriorityAttribute).Priority;
+        return priorityAttribute == null || priorityAttribute.Length != 1
+            ? null
+            : priorityAttribute[0].Priority;
     }
 
     /// <summary>
@@ -534,16 +471,13 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="ignoreAttributeProvider">The member to inspect.</param>
     /// <returns>Priority value if defined. Null otherwise.</returns>
-    internal virtual string GetIgnoreMessage(MemberInfo ignoreAttributeProvider)
+    internal virtual string? GetIgnoreMessage(MemberInfo ignoreAttributeProvider)
     {
-        var ignoreAttribute = GetCustomAttributes(ignoreAttributeProvider, typeof(IgnoreAttribute), true);
+        var ignoreAttribute = GetCustomAttributes<IgnoreAttribute>(ignoreAttributeProvider, true);
 
-        if (!ignoreAttribute.Any())
-        {
-            return null;
-        }
-
-        return (ignoreAttribute?.FirstOrDefault() as IgnoreAttribute).IgnoreMessage;
+        return ignoreAttribute is null || ignoreAttribute.Length == 0
+            ? null
+            : ignoreAttribute[0].IgnoreMessage;
     }
 
     /// <summary>
@@ -558,7 +492,7 @@ internal class ReflectHelper : MarshalByRefObject
             return null;
         }
 
-        var sequencingAttribute = GetCustomAttributes(classInfo.ClassCleanupMethod, typeof(ClassCleanupAttribute), true)?.FirstOrDefault() as ClassCleanupAttribute;
+        var sequencingAttribute = GetCustomAttributes<ClassCleanupAttribute>(classInfo.ClassCleanupMethod, true)?.FirstOrDefault();
 
         return sequencingAttribute?.CleanupBehavior;
     }
@@ -570,20 +504,13 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>List of traits.</returns>
     internal virtual IEnumerable<Trait> GetTestPropertiesAsTraits(MemberInfo testPropertyProvider)
     {
-        var testPropertyAttributes = GetTestPropertyAttributes(testPropertyProvider);
+        var testPropertyAttributes = GetCustomAttributes<TestPropertyAttribute>(testPropertyProvider, true);
 
         foreach (TestPropertyAttribute testProperty in testPropertyAttributes)
         {
-            Trait testPropertyPair;
-            if (testProperty.Name == null)
-            {
-                testPropertyPair = new Trait(string.Empty, testProperty.Value);
-            }
-            else
-            {
-                testPropertyPair = new Trait(testProperty.Name, testProperty.Value);
-            }
-
+            Trait testPropertyPair = testProperty.Name == null
+                ? new Trait(string.Empty, testProperty.Value)
+                : new Trait(testProperty.Name, testProperty.Value);
             yield return testPropertyPair;
         }
     }
@@ -595,10 +522,10 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="memberInfo">The member to inspect.</param>
     /// <param name="inherit">Look at inheritance chain.</param>
     /// <returns>An instance of the attribute.</returns>
-    internal TAttributeType GetDerivedAttribute<TAttributeType>(MemberInfo memberInfo, bool inherit)
+    internal TAttributeType? GetDerivedAttribute<TAttributeType>(MemberInfo memberInfo, bool inherit)
         where TAttributeType : Attribute
     {
-        Dictionary<string, object> attributes = GetAttributes(memberInfo, inherit);
+        Dictionary<string, object>? attributes = GetAttributes(memberInfo, inherit);
         if (attributes == null)
         {
             return null;
@@ -607,7 +534,7 @@ internal class ReflectHelper : MarshalByRefObject
         // Try to find the attribute that is derived from baseAttrType.
         foreach (object attribute in attributes.Values)
         {
-            Debug.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
+            DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
             if (attributeType.Equals(typeof(TAttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttributeType)))
@@ -626,7 +553,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="type">The type to inspect.</param>
     /// <param name="inherit">Look at inheritance chain.</param>
     /// <returns>An instance of the attribute.</returns>
-    internal static TAttributeType GetDerivedAttribute<TAttributeType>(Type type, bool inherit)
+    internal static TAttributeType? GetDerivedAttribute<TAttributeType>(Type type, bool inherit)
         where TAttributeType : Attribute
     {
         var attributes = GetCustomAttributes(type.GetTypeInfo(), inherit);
@@ -638,7 +565,7 @@ internal class ReflectHelper : MarshalByRefObject
         // Try to find the attribute that is derived from baseAttrType.
         foreach (object attribute in attributes)
         {
-            Debug.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
+            DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
             if (attributeType.Equals(typeof(TAttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttributeType)))
@@ -655,26 +582,13 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     /// <param name="ownerAttributeProvider">The member to inspect.</param>
     /// <returns>owner if attribute is applied to TestMethod, else null.</returns>
-    private static string GetOwner(MemberInfo ownerAttributeProvider)
+    private static string? GetOwner(MemberInfo ownerAttributeProvider)
     {
-        var ownerAttribute = GetCustomAttributes(ownerAttributeProvider, typeof(OwnerAttribute), true).ToArray();
+        var ownerAttribute = GetCustomAttributes<OwnerAttribute>(ownerAttributeProvider, true);
 
-        if (ownerAttribute == null || ownerAttribute.Length != 1)
-        {
-            return null;
-        }
-
-        return (ownerAttribute[0] as OwnerAttribute).Owner;
-    }
-
-    /// <summary>
-    /// Return TestProperties attributes applied to TestMethod.
-    /// </summary>
-    /// <param name="propertyAttributeProvider">The member to inspect.</param>
-    /// <returns>TestProperty attributes if defined. Empty otherwise.</returns>
-    private static IEnumerable<Attribute> GetTestPropertyAttributes(MemberInfo propertyAttributeProvider)
-    {
-        return GetCustomAttributes(propertyAttributeProvider, typeof(TestPropertyAttribute), true);
+        return ownerAttribute == null || ownerAttribute.Length != 1
+            ? null
+            : ownerAttribute[0].Owner;
     }
 
     /// <summary>
@@ -683,57 +597,59 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="memberInfo">The member to inspect.</param>
     /// <param name="inherit">Look at inheritance chain.</param>
     /// <returns>attributes defined.</returns>
-    private Dictionary<string, object> GetAttributes(MemberInfo memberInfo, bool inherit)
+    private Dictionary<string, object>? GetAttributes(MemberInfo memberInfo, bool inherit)
     {
         // If the information is cached, then use it otherwise populate the cache using
         // the reflection APIs.
-        Dictionary<string, object> attributes;
+        Dictionary<string, object>? attributes;
         lock (_attributeCache)
         {
-            if (!_attributeCache.TryGetValue(memberInfo, out attributes))
+            if (_attributeCache.TryGetValue(memberInfo, out attributes))
             {
-                // Populate the cache
-                attributes = new Dictionary<string, object>();
+                return attributes;
+            }
 
-                object[] customAttributesArray = null;
+            // Populate the cache
+            attributes = new Dictionary<string, object>();
+
+            object[]? customAttributesArray = null;
+            try
+            {
+                customAttributesArray = GetCustomAttributes(memberInfo, inherit);
+            }
+            catch (Exception ex)
+            {
+                // Get the exception description
+                string description;
                 try
                 {
-                    customAttributesArray = GetCustomAttributes(memberInfo, inherit);
+                    // Can throw if the Message or StackTrace properties throw exceptions
+                    description = ex.ToString();
                 }
-                catch (Exception ex)
+                catch (Exception ex2)
                 {
-                    // Get the exception description
-                    string description;
-                    try
-                    {
-                        // Can throw if the Message or StackTrace properties throw exceptions
-                        description = ex.ToString();
-                    }
-                    catch (Exception ex2)
-                    {
-                        description = string.Format(CultureInfo.CurrentCulture, Resource.ExceptionOccuredWhileGettingTheExceptionDescription, ex.GetType().FullName, ex2.GetType().FullName);                               // ex.GetType().FullName +
-                    }
-
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.FailedToGetCustomAttribute, memberInfo.GetType().FullName, description);
-
-                    // Since we cannot check by attribute names, do it in reflection way.
-                    // Note 1: this will not work for different version of assembly but it is better than nothing.
-                    // Note 2: we cannot cache this because we don't know if there are other attributes defined.
-                    return null;
+                    description = string.Format(CultureInfo.CurrentCulture, Resource.ExceptionOccuredWhileGettingTheExceptionDescription, ex.GetType().FullName, ex2.GetType().FullName);                               // ex.GetType().FullName +
                 }
 
-                Debug.Assert(customAttributesArray != null, "attributes should not be null.");
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.FailedToGetCustomAttribute, memberInfo.GetType().FullName!, description);
 
-                foreach (object customAttribute in customAttributesArray)
-                {
-                    Type attributeType = customAttribute.GetType();
-                    attributes[attributeType.AssemblyQualifiedName] = customAttribute;
-                }
-
-                _attributeCache.Add(memberInfo, attributes);
+                // Since we cannot check by attribute names, do it in reflection way.
+                // Note 1: this will not work for different version of assembly but it is better than nothing.
+                // Note 2: we cannot cache this because we don't know if there are other attributes defined.
+                return null;
             }
-        }
 
-        return attributes;
+            DebugEx.Assert(customAttributesArray != null, "attributes should not be null.");
+
+            foreach (object customAttribute in customAttributesArray)
+            {
+                Type attributeType = customAttribute.GetType();
+                attributes[attributeType.AssemblyQualifiedName!] = customAttribute;
+            }
+
+            _attributeCache.Add(memberInfo, attributes);
+
+            return attributes;
+        }
     }
 }
