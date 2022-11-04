@@ -24,14 +24,14 @@ internal static class DataSerializationHelper
     /// </summary>
     /// <param name="data">Data array to serialize.</param>
     /// <returns>Serialized array.</returns>
-    public static string[] Serialize(object[] data)
+    public static string?[]? Serialize(object[]? data)
     {
         if (data == null)
         {
             return null;
         }
 
-        var serializedData = new string[data.Length * 2];
+        var serializedData = new string?[data.Length * 2];
         for (int i = 0; i < data.Length; i++)
         {
             var typeIndex = i * 2;
@@ -66,7 +66,7 @@ internal static class DataSerializationHelper
     /// </summary>
     /// <param name="serializedData">Serialized data array to deserialize.</param>
     /// <returns>Deserialized array.</returns>
-    public static object[] Deserialize(string[] serializedData)
+    public static object?[]? Deserialize(string[]? serializedData)
     {
         if (serializedData == null || serializedData.Length % 2 != 0)
         {
@@ -74,7 +74,7 @@ internal static class DataSerializationHelper
         }
 
         var length = serializedData.Length / 2;
-        var data = new object[length];
+        var data = new object?[length];
 
         for (int i = 0; i < length; i++)
         {
@@ -108,7 +108,7 @@ internal static class DataSerializationHelper
     private static DataContractJsonSerializer GetSerializer(Type type)
     {
         return SerializerCache.GetOrAdd(
-            type.AssemblyQualifiedName,
+            type.AssemblyQualifiedName!,
             _ => new DataContractJsonSerializer(type, SerializerSettings));
     }
 }

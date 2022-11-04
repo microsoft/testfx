@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Xml;
@@ -37,12 +38,12 @@ public class MSTestSettings
     /// <summary>
     /// Member variable for Adapter settings.
     /// </summary>
-    private static MSTestSettings s_currentSettings;
+    private static MSTestSettings? s_currentSettings;
 
     /// <summary>
     /// Member variable for RunConfiguration settings.
     /// </summary>
-    private static RunConfigurationSettings s_runConfigurationSettings;
+    private static RunConfigurationSettings? s_runConfigurationSettings;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestSettings"/> class.
@@ -63,37 +64,21 @@ public class MSTestSettings
     /// <summary>
     /// Gets the current settings.
     /// </summary>
+    [AllowNull]
     public static MSTestSettings CurrentSettings
     {
-        get
-        {
-            s_currentSettings ??= new MSTestSettings();
-
-            return s_currentSettings;
-        }
-
-        private set
-        {
-            s_currentSettings = value;
-        }
+        get => s_currentSettings ??= new MSTestSettings();
+        private set => s_currentSettings = value;
     }
 
     /// <summary>
     /// Gets the current configuration settings.
     /// </summary>
+    [AllowNull]
     public static RunConfigurationSettings RunConfigurationSettings
     {
-        get
-        {
-            s_runConfigurationSettings ??= new RunConfigurationSettings();
-
-            return s_runConfigurationSettings;
-        }
-
-        private set
-        {
-            s_runConfigurationSettings = value;
-        }
+        get => s_runConfigurationSettings ??= new RunConfigurationSettings();
+        private set => s_runConfigurationSettings = value;
     }
 
     /// <summary>
@@ -110,7 +95,7 @@ public class MSTestSettings
     /// <summary>
     /// Gets the path to settings file.
     /// </summary>
-    public string TestSettingsFile { get; private set; }
+    public string? TestSettingsFile { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether an inconclusive result be mapped to failed test.
@@ -191,11 +176,11 @@ public class MSTestSettings
     /// <param name="context">
     /// The discovery context that contains the runsettings.
     /// </param>
-    public static void PopulateSettings(IDiscoveryContext context)
+    public static void PopulateSettings(IDiscoveryContext? context)
     {
         RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
-        if (context == null || context.RunSettings == null || string.IsNullOrEmpty(context.RunSettings.SettingsXml))
+        if (context == null || context.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
         {
             // This will contain default adapter settings
             CurrentSettings = new MSTestSettings();
@@ -233,7 +218,7 @@ public class MSTestSettings
     /// <returns> Returns true if test settings is provided.. </returns>
     public static bool IsLegacyScenario(IMessageLogger logger)
     {
-        if (!string.IsNullOrEmpty(CurrentSettings.TestSettingsFile))
+        if (!StringEx.IsNullOrEmpty(CurrentSettings.TestSettingsFile))
         {
             logger.SendMessage(TestMessageLevel.Warning, Resource.LegacyScenariosNotSupportedWarning);
             return true;
@@ -248,9 +233,9 @@ public class MSTestSettings
     /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
     /// <param name="settingName"> The name of the adapter settings to fetch - Its either MSTest or MSTestV2. </param>
     /// <returns> The settings if found. Null otherwise. </returns>
-    internal static MSTestSettings GetSettings(string runSettingsXml, string settingName)
+    internal static MSTestSettings? GetSettings(string? runSettingsXml, string settingName)
     {
-        if (string.IsNullOrWhiteSpace(runSettingsXml))
+        if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
         {
             return null;
         }
@@ -265,8 +250,7 @@ public class MSTestSettings
 
             // Read till we reach nodeName element or reach EOF
             while (!string.Equals(reader.Name, settingName, StringComparison.OrdinalIgnoreCase)
-                    &&
-                    !reader.EOF)
+                    && !reader.EOF)
             {
                 reader.SkipToNextElement();
             }
@@ -410,7 +394,7 @@ public class MSTestSettings
                         {
                             string fileName = reader.ReadInnerXml();
 
-                            if (!string.IsNullOrEmpty(fileName))
+                            if (!StringEx.IsNullOrEmpty(fileName))
                             {
                                 settings.TestSettingsFile = fileName;
                             }

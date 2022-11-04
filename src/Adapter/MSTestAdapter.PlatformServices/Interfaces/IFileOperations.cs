@@ -75,7 +75,7 @@ public interface IFileOperations
     /// Unfortunately we cannot use INavigationSession introduced in Object Model in Dev14 update-2 because
     /// the adapter needs to work with older VS versions as well where this new type would not be defined resulting in a type not found exception.
     /// </remarks>
-    void DisposeNavigationSession(object navigationSession);
+    void DisposeNavigationSession(object? navigationSession);
 
     /// <summary>
     /// Gets the full file path of an assembly file.

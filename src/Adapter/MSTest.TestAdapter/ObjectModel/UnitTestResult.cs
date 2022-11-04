@@ -8,6 +8,7 @@ using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 [Serializable]
@@ -56,7 +57,7 @@ public class UnitTestResult
     /// <summary>
     /// Gets the display name for the result.
     /// </summary>
-    public string DisplayName { get; internal set; }
+    public string? DisplayName { get; internal set; }
 
     /// <summary>
     /// Gets the outcome of the result.
@@ -66,7 +67,7 @@ public class UnitTestResult
     /// <summary>
     /// Gets the errorMessage of the result.
     /// </summary>
-    public string ErrorMessage { get; internal set; }
+    public string? ErrorMessage { get; internal set; }
 
     /// <summary>
     /// Gets the stackTrace of the result.
@@ -149,7 +150,7 @@ public class UnitTestResult
     /// <returns> The <see cref="TestResult"/>. </returns>
     internal TestResult ToTestResult(TestCase testCase, DateTimeOffset startTime, DateTimeOffset endTime, MSTestSettings currentSettings)
     {
-        Debug.Assert(testCase != null, "testCase");
+        DebugEx.Assert(testCase != null, "testCase");
 
         var testResult = new TestResult(testCase)
         {
@@ -166,26 +167,26 @@ public class UnitTestResult
         testResult.SetPropertyValue(Constants.ParentExecIdProperty, ParentExecId);
         testResult.SetPropertyValue(Constants.InnerResultsCountProperty, InnerResultsCount);
 
-        if (!string.IsNullOrEmpty(StandardOut))
+        if (!StringEx.IsNullOrEmpty(StandardOut))
         {
             TestResultMessage message = new(TestResultMessage.StandardOutCategory, StandardOut);
             testResult.Messages.Add(message);
         }
 
-        if (!string.IsNullOrEmpty(StandardError))
+        if (!StringEx.IsNullOrEmpty(StandardError))
         {
             TestResultMessage message = new(TestResultMessage.StandardErrorCategory, StandardError);
             testResult.Messages.Add(message);
         }
 
-        if (!string.IsNullOrEmpty(DebugTrace))
+        if (!StringEx.IsNullOrEmpty(DebugTrace))
         {
             string debugTraceMessagesInStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.DebugTraceBanner, DebugTrace);
             TestResultMessage debugTraceMessage = new(TestResultMessage.StandardOutCategory, debugTraceMessagesInStdOut);
             testResult.Messages.Add(debugTraceMessage);
         }
 
-        if (!string.IsNullOrEmpty(TestContextMessages))
+        if (!StringEx.IsNullOrEmpty(TestContextMessages))
         {
             string testContextMessagesInStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.TestContextMessageBanner, TestContextMessages);
             TestResultMessage testContextMessage = new(TestResultMessage.StandardOutCategory, testContextMessagesInStdOut);

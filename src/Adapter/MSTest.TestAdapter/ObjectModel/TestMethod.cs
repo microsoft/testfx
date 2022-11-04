@@ -5,13 +5,16 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
 using TestIdGenerationStrategy = Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -27,34 +30,32 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     public const int TotalHierarchyLevels = HierarchyConstants.Levels.TotalLevelCount;
 
-    #region Fields
-    private readonly IReadOnlyCollection<string> _hierarchy;
-    private string _declaringClassFullName = null;
-    private string _declaringAssemblyName = null;
-    #endregion
+    private readonly ReadOnlyCollection<string?> _hierarchy;
+    private string? _declaringClassFullName = null;
+    private string? _declaringAssemblyName = null;
 
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
     {
-        if (string.IsNullOrEmpty(assemblyName))
+        if (StringEx.IsNullOrEmpty(assemblyName))
         {
             throw new ArgumentNullException(nameof(assemblyName));
         }
 
-        Debug.Assert(!string.IsNullOrEmpty(name), "TestName cannot be empty");
-        Debug.Assert(!string.IsNullOrEmpty(fullClassName), "Full className cannot be empty");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(name), "TestName cannot be empty");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(fullClassName), "Full className cannot be empty");
 
         Name = name;
         FullClassName = fullClassName;
         AssemblyName = assemblyName;
         IsAsync = isAsync;
 
-        var hierarchy = new string[HierarchyConstants.Levels.TotalLevelCount];
+        var hierarchy = new string?[HierarchyConstants.Levels.TotalLevelCount];
         hierarchy[HierarchyConstants.Levels.ContainerIndex] = null;
         hierarchy[HierarchyConstants.Levels.NamespaceIndex] = fullClassName;
         hierarchy[HierarchyConstants.Levels.ClassIndex] = name;
         hierarchy[HierarchyConstants.Levels.TestGroupIndex] = name;
 
-        _hierarchy = new ReadOnlyCollection<string>(hierarchy);
+        _hierarchy = new ReadOnlyCollection<string?>(hierarchy);
         TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
     }
 
@@ -80,17 +81,17 @@ public sealed class TestMethod : ITestMethod
         ManagedTypeName = managedType;
         ManagedMethodName = managedMethod;
         TestIdGenerationStrategy = testIdGenerationStrategy;
-        _hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
+        _hierarchy = new ReadOnlyCollection<string?>(hierarchyValues);
     }
 
-    internal TestMethod(string managedTypeName, string managedMethodName, string[] hierarchyValues, string name,
+    internal TestMethod(string? managedTypeName, string? managedMethodName, string[] hierarchyValues, string name,
         string fullClassName, string assemblyName, bool isAsync, TestIdGenerationStrategy testIdGenerationStrategy)
         : this(name, fullClassName, assemblyName, isAsync)
     {
         ManagedTypeName = managedTypeName;
         ManagedMethodName = managedMethodName;
         TestIdGenerationStrategy = testIdGenerationStrategy;
-        _hierarchy = new ReadOnlyCollection<string>(hierarchyValues);
+        _hierarchy = new ReadOnlyCollection<string?>(hierarchyValues);
     }
 
     /// <inheritdoc />
@@ -104,16 +105,13 @@ public sealed class TestMethod : ITestMethod
     /// This will be null if AssemblyName is same as DeclaringAssemblyName.
     /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
     /// </summary>
-    public string DeclaringAssemblyName
+    public string? DeclaringAssemblyName
     {
-        get
-        {
-            return _declaringAssemblyName;
-        }
+        get => _declaringAssemblyName;
 
         set
         {
-            Debug.Assert(value != AssemblyName, "DeclaringAssemblyName should not be the same as AssemblyName.");
+            DebugEx.Assert(value != AssemblyName, "DeclaringAssemblyName should not be the same as AssemblyName.");
             _declaringAssemblyName = value;
         }
     }
@@ -124,16 +122,13 @@ public sealed class TestMethod : ITestMethod
     /// This will be null if FullClassName is same as DeclaringClassFullName.
     /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a perf hit.
     /// </summary>
-    public string DeclaringClassFullName
+    public string? DeclaringClassFullName
     {
-        get
-        {
-            return _declaringClassFullName;
-        }
+        get => _declaringClassFullName;
 
         set
         {
-            Debug.Assert(value != FullClassName, "DeclaringClassFullName should not be the same as FullClassName.");
+            DebugEx.Assert(value != FullClassName, "DeclaringClassFullName should not be the same as FullClassName.");
             _declaringClassFullName = value;
         }
     }
@@ -145,16 +140,17 @@ public sealed class TestMethod : ITestMethod
     public bool IsAsync { get; private set; }
 
     /// <inheritdoc />
-    public string ManagedTypeName { get; }
+    public string? ManagedTypeName { get; }
 
     /// <inheritdoc />
-    public string ManagedMethodName { get; }
+    public string? ManagedMethodName { get; }
 
     /// <inheritdoc />
-    public bool HasManagedMethodAndTypeProperties => !string.IsNullOrWhiteSpace(ManagedTypeName) && !string.IsNullOrWhiteSpace(ManagedMethodName);
+    [MemberNotNullWhen(true, nameof(ManagedTypeName), nameof(ManagedMethodName))]
+    public bool HasManagedMethodAndTypeProperties => !StringEx.IsNullOrWhiteSpace(ManagedTypeName) && !StringEx.IsNullOrWhiteSpace(ManagedMethodName);
 
     /// <inheritdoc />
-    public IReadOnlyCollection<string> Hierarchy => _hierarchy;
+    public IReadOnlyCollection<string?> Hierarchy => _hierarchy;
 
     /// <inheritdoc />
     public TestIdGenerationStrategy TestIdGenerationStrategy { get; }
@@ -167,17 +163,17 @@ public sealed class TestMethod : ITestMethod
     /// <summary>
     /// Gets or sets the serialized data.
     /// </summary>
-    internal string[] SerializedData { get; set; }
+    internal string?[]? SerializedData { get; set; }
 
     /// <summary>
     /// Gets or sets the test group set during discovery.
     /// </summary>
-    internal string TestGroup { get; set; }
+    internal string? TestGroup { get; set; }
 
     /// <summary>
     /// Gets or sets the display name set during discovery.
     /// </summary>
-    internal string DisplayName { get; set; }
+    internal string? DisplayName { get; set; }
 
-    internal TestMethod Clone() => MemberwiseClone() as TestMethod;
+    internal TestMethod Clone() => (TestMethod)MemberwiseClone();
 }

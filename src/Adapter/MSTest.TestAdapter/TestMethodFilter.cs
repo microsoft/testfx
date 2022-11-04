@@ -10,6 +10,7 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal class TestMethodFilter
@@ -38,21 +39,25 @@ internal class TestMethodFilter
     /// <param name="logger">Handler to report test messages/start/end and results.</param>
     /// <param name="filterHasError">Indicates that the filter is unsupported/has an error.</param>
     /// <returns>A filter expression.</returns>
-    internal ITestCaseFilterExpression GetFilterExpression(IDiscoveryContext context, IMessageLogger logger, out bool filterHasError)
+    internal ITestCaseFilterExpression? GetFilterExpression(IDiscoveryContext? context, IMessageLogger logger, out bool filterHasError)
     {
         filterHasError = false;
-        ITestCaseFilterExpression filter = null;
-        if (context != null)
+        if (context == null)
         {
-            try
-            {
-                filter = (context is IRunContext) ? GetTestCaseFilterFromRunContext(context as IRunContext) : GetTestCaseFilterFromDiscoveryContext(context, logger);
-            }
-            catch (TestPlatformFormatException ex)
-            {
-                filterHasError = true;
-                logger.SendMessage(TestMessageLevel.Error, ex.Message);
-            }
+            return null;
+        }
+
+        ITestCaseFilterExpression? filter = null;
+        try
+        {
+            filter = context is IRunContext runContext
+                ? GetTestCaseFilterFromRunContext(runContext)
+                : GetTestCaseFilterFromDiscoveryContext(context, logger);
+        }
+        catch (TestPlatformFormatException ex)
+        {
+            filterHasError = true;
+            logger.SendMessage(TestMessageLevel.Error, ex.Message);
         }
 
         return filter;
@@ -66,7 +71,7 @@ internal class TestMethodFilter
     internal TestProperty PropertyProvider(string propertyName)
     {
         _supportedProperties.TryGetValue(propertyName, out var testProperty);
-        Debug.Assert(testProperty != null, "Invalid property queried");
+        DebugEx.Assert(testProperty != null, "Invalid property queried");
         return testProperty;
     }
 
@@ -76,7 +81,7 @@ internal class TestMethodFilter
     /// <param name="currentTest">The current test case.</param>
     /// <param name="propertyName">Property name.</param>
     /// <returns>The property value.</returns>
-    internal object PropertyValueProvider(TestCase currentTest, string propertyName)
+    internal object? PropertyValueProvider(TestCase? currentTest, string? propertyName)
     {
         if (currentTest != null && propertyName != null)
         {
@@ -99,7 +104,7 @@ internal class TestMethodFilter
     /// </summary>
     /// <param name="context">Run context.</param>
     /// <returns>Filter expression.</returns>
-    private ITestCaseFilterExpression GetTestCaseFilterFromRunContext(IRunContext context)
+    private ITestCaseFilterExpression? GetTestCaseFilterFromRunContext(IRunContext context)
     {
         return context.GetTestCaseFilter(_supportedProperties.Keys, PropertyProvider);
     }
@@ -110,13 +115,13 @@ internal class TestMethodFilter
     /// <param name="context">Discovery context.</param>
     /// <param name="logger">The logger to log exception messages too.</param>
     /// <returns>Filter expression.</returns>
-    private ITestCaseFilterExpression GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context, IMessageLogger logger)
+    private ITestCaseFilterExpression? GetTestCaseFilterFromDiscoveryContext(IDiscoveryContext context, IMessageLogger logger)
     {
         try
         {
             // GetTestCaseFilter is present in DiscoveryContext but not in IDiscoveryContext interface.
-            MethodInfo methodGetTestCaseFilter = context.GetType().GetRuntimeMethod("GetTestCaseFilter", new[] { typeof(IEnumerable<string>), typeof(Func<string, TestProperty>) });
-            return (ITestCaseFilterExpression)methodGetTestCaseFilter?.Invoke(context, new object[] { _supportedProperties.Keys, (Func<string, TestProperty>)PropertyProvider });
+            MethodInfo? methodGetTestCaseFilter = context.GetType().GetRuntimeMethod("GetTestCaseFilter", new[] { typeof(IEnumerable<string>), typeof(Func<string, TestProperty>) });
+            return (ITestCaseFilterExpression?)methodGetTestCaseFilter?.Invoke(context, new object[] { _supportedProperties.Keys, (Func<string, TestProperty>)PropertyProvider });
         }
         catch (Exception ex)
         {
@@ -124,7 +129,7 @@ internal class TestMethodFilter
             // Hence throwing exception only if it is of type TargetInvocationException(i.e. Method got invoked but something went wrong in GetTestCaseFilter Method)
             if (ex is TargetInvocationException)
             {
-                throw ex.InnerException;
+                throw ex.InnerException!;
             }
 
             logger.SendMessage(TestMessageLevel.Warning, ex.Message);

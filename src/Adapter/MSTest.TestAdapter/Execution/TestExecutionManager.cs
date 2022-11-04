@@ -35,7 +35,7 @@ public class TestExecutionManager
     /// <summary>
     /// Specifies whether the test run is canceled or not.
     /// </summary>
-    private TestRunCancellationToken _cancellationToken;
+    private TestRunCancellationToken? _cancellationToken;
 
     public TestExecutionManager()
     {
@@ -60,12 +60,12 @@ public class TestExecutionManager
     /// <param name="runContext">Context to use when executing the tests.</param>
     /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
     /// <param name="runCancellationToken">Test run cancellation token.</param>
-    public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
+    public void RunTests(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
     {
-        Debug.Assert(tests != null, "tests");
-        Debug.Assert(runContext != null, "runContext");
-        Debug.Assert(frameworkHandle != null, "frameworkHandle");
-        Debug.Assert(runCancellationToken != null, "runCancellationToken");
+        DebugEx.Assert(tests != null, "tests");
+        DebugEx.Assert(runContext != null, "runContext");
+        DebugEx.Assert(frameworkHandle != null, "frameworkHandle");
+        DebugEx.Assert(runCancellationToken != null, "runCancellationToken");
 
         _cancellationToken = runCancellationToken;
 
@@ -83,7 +83,7 @@ public class TestExecutionManager
         }
     }
 
-    public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
+    public void RunTests(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
     {
         _cancellationToken = cancellationToken;
 
@@ -130,7 +130,7 @@ public class TestExecutionManager
     /// <param name="runContext">The run context.</param>
     /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    internal virtual void ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
+    internal virtual void ExecuteTests(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
     {
         var testsBySource = from test in tests
                             group test by test.Source into testGroup
@@ -187,7 +187,7 @@ public class TestExecutionManager
         }
     }
 
-    private static bool MatchTestFilter(ITestCaseFilterExpression filterExpression, TestCase test, TestMethodFilter testMethodFilter)
+    private static bool MatchTestFilter(ITestCaseFilterExpression? filterExpression, TestCase test, TestMethodFilter testMethodFilter)
     {
         if (filterExpression != null && filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)) == false)
         {
@@ -206,21 +206,21 @@ public class TestExecutionManager
     /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
     /// <param name="source">The test container for the tests.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    private void ExecuteTestsInSource(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
+    private void ExecuteTestsInSource(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
     {
-        Debug.Assert(!string.IsNullOrEmpty(source), "Source cannot be empty");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(source), "Source cannot be empty");
 
         if (isDeploymentDone)
         {
-            source = Path.Combine(PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory(), Path.GetFileName(source));
+            source = Path.Combine(PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory()!, Path.GetFileName(source));
         }
 
         using var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
 
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
-        var testRunner = isolationHost.CreateInstanceForType(
+        var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
-            new object[] { MSTestSettings.CurrentSettings }) as UnitTestRunner;
+            new object[] { MSTestSettings.CurrentSettings })!;
 
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
@@ -244,7 +244,7 @@ public class TestExecutionManager
             sourceLevelParameters = _sessionParameters.ConcatWithOverwrites(sourceLevelParameters);
         }
 
-        TestAssemblySettingsProvider sourceSettingsProvider = null;
+        TestAssemblySettingsProvider? sourceSettingsProvider = null;
 
         try
         {
@@ -293,7 +293,7 @@ public class TestExecutionManager
 
             if (parallelizableTestSet != null)
             {
-                ConcurrentQueue<IEnumerable<TestCase>> queue = null;
+                ConcurrentQueue<IEnumerable<TestCase>>? queue = null;
 
                 // Chunk the sets into further groups based on parallel level
                 switch (parallelScope)
@@ -314,7 +314,7 @@ public class TestExecutionManager
                     tasks.Add(Task.Factory.StartNew(
                         () =>
                         {
-                            while (!queue.IsEmpty)
+                            while (!queue!.IsEmpty)
                             {
                                 if (_cancellationToken != null && _cancellationToken.Canceled)
                                 {
@@ -322,7 +322,7 @@ public class TestExecutionManager
                                     break;
                                 }
 
-                                if (queue.TryDequeue(out IEnumerable<TestCase> testSet))
+                                if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
                                 {
                                     ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
                                 }
@@ -410,9 +410,9 @@ public class TestExecutionManager
     /// <param name="tcmProperties">Tcm properties.</param>
     /// <param name="sourceLevelParameters">Source level parameters.</param>
     /// <returns>Test context properties.</returns>
-    private static IDictionary<string, object> GetTestContextProperties(IDictionary<TestProperty, object> tcmProperties, IDictionary<string, object> sourceLevelParameters)
+    private static IDictionary<string, object?> GetTestContextProperties(IDictionary<TestProperty, object?> tcmProperties, IDictionary<string, object> sourceLevelParameters)
     {
-        var testContextProperties = new Dictionary<string, object>();
+        var testContextProperties = new Dictionary<string, object?>();
 
         // Add tcm properties.
         foreach (var propertyPair in tcmProperties)
@@ -448,9 +448,9 @@ public class TestExecutionManager
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]
-    private void CacheSessionParameters(IRunContext runContext, ITestExecutionRecorder testExecutionRecorder)
+    private void CacheSessionParameters(IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder)
     {
-        if (string.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))
+        if (StringEx.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))
         {
             return;
         }
@@ -482,19 +482,19 @@ public class TestExecutionManager
     /// <param name="result">Result of the run operation.</param>
     private static void LogCleanupResult(ITestExecutionRecorder testExecutionRecorder, RunCleanupResult result)
     {
-        Debug.Assert(testExecutionRecorder != null, "Logger should not be null");
+        DebugEx.Assert(testExecutionRecorder != null, "Logger should not be null");
 
-        if (!string.IsNullOrWhiteSpace(result.StandardOut))
+        if (!StringEx.IsNullOrWhiteSpace(result.StandardOut))
         {
             testExecutionRecorder.SendMessage(TestMessageLevel.Informational, result.StandardOut);
         }
 
-        if (!string.IsNullOrWhiteSpace(result.DebugTrace))
+        if (!StringEx.IsNullOrWhiteSpace(result.DebugTrace))
         {
             testExecutionRecorder.SendMessage(TestMessageLevel.Informational, result.DebugTrace);
         }
 
-        if (!string.IsNullOrWhiteSpace(result.StandardError))
+        if (!StringEx.IsNullOrWhiteSpace(result.StandardError))
         {
             testExecutionRecorder.SendMessage(
                 MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,
@@ -505,7 +505,7 @@ public class TestExecutionManager
         {
             foreach (string warning in result.Warnings)
             {
-                if (!string.IsNullOrWhiteSpace(warning))
+                if (!StringEx.IsNullOrWhiteSpace(warning))
                 {
                     testExecutionRecorder.SendMessage(
                         MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,

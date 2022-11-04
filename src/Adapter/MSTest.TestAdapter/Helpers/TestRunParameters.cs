@@ -29,8 +29,8 @@ internal static class TestRunParameters
             switch (elementName)
             {
                 case "Parameter":
-                    string paramName = null;
-                    string paramValue = null;
+                    string? paramName = null;
+                    string? paramValue = null;
                     for (var attIndex = 0; attIndex < reader.AttributeCount; attIndex++)
                     {
                         reader.MoveToAttribute(attIndex);

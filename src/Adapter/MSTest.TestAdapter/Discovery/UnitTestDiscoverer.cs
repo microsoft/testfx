@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal class UnitTestDiscoverer
@@ -55,7 +56,7 @@ internal class UnitTestDiscoverer
         string source,
         IMessageLogger logger,
         ITestCaseDiscoverySink discoverySink,
-        IDiscoveryContext discoveryContext)
+        IDiscoveryContext? discoveryContext)
     {
         var testElements = _assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out var warnings);
 
@@ -84,11 +85,11 @@ internal class UnitTestDiscoverer
         SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
     }
 
-    internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext discoveryContext, IMessageLogger logger)
+    internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
     {
         var shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
 
-        var navigationSessions = new Dictionary<string, object>();
+        var navigationSessions = new Dictionary<string, object?>();
         try
         {
             if (shouldCollectSourceInformation)
@@ -97,7 +98,7 @@ internal class UnitTestDiscoverer
             }
 
             // Get filter expression and skip discovery in case filter expression has parsing error.
-            ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, logger, out var filterHasError);
+            ITestCaseFilterExpression? filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, logger, out var filterHasError);
             if (filterHasError)
             {
                 return;
@@ -139,7 +140,7 @@ internal class UnitTestDiscoverer
                 var methodName = testElement.TestMethod.Name;
 
                 // If it is async test method use compiler generated type and method name for navigation data.
-                if (!string.IsNullOrEmpty(testElement.AsyncTypeName))
+                if (!StringEx.IsNullOrEmpty(testElement.AsyncTypeName))
                 {
                     className = testElement.AsyncTypeName;
 
@@ -154,7 +155,7 @@ internal class UnitTestDiscoverer
                     out var minLineNumber,
                     out var fileName);
 
-                if (!string.IsNullOrEmpty(fileName))
+                if (!StringEx.IsNullOrEmpty(fileName))
                 {
                     testCase.LineNumber = minLineNumber;
                     testCase.CodeFilePath = fileName;
@@ -165,7 +166,7 @@ internal class UnitTestDiscoverer
         }
         finally
         {
-            foreach (object navigationSession in navigationSessions.Values)
+            foreach (object? navigationSession in navigationSessions.Values)
             {
                 PlatformServiceProvider.Instance.FileOperations.DisposeNavigationSession(navigationSession);
             }

@@ -19,12 +19,12 @@ public class LogMessageListener : IDisposable
 {
     private static readonly object TraceLock = new();
     private static int s_listenerCount;
-    private static ThreadSafeStringWriter s_redirectedDebugTrace;
+    private static ThreadSafeStringWriter? s_redirectedDebugTrace;
 
     /// <summary>
     /// Trace listener to capture Trace.WriteLines in the test cases.
     /// </summary>
-    private static ITraceListener s_traceListener;
+    private static ITraceListener? s_traceListener;
     private readonly ThreadSafeStringWriter _redirectedStandardOutput;
     private readonly ThreadSafeStringWriter _redirectedStandardError;
     private readonly bool _captureDebugTraces;
@@ -32,7 +32,7 @@ public class LogMessageListener : IDisposable
     /// <summary>
     /// Trace listener Manager to perform operation on trace listener objects.
     /// </summary>
-    private ITraceListenerManager _traceListenerManager;
+    private ITraceListenerManager? _traceListenerManager;
     private bool _isDisposed;
 
     /// <summary>
@@ -41,14 +41,13 @@ public class LogMessageListener : IDisposable
     /// <param name="captureDebugTraces">Captures debug traces if true.</param>
     public LogMessageListener(bool captureDebugTraces)
     {
-        _captureDebugTraces = captureDebugTraces;
-
         // Cache the original output/error streams and replace it with the own stream.
         _redirectedStandardOutput = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out");
         _redirectedStandardError = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "err");
 
         Logger.OnLogMessage += _redirectedStandardOutput.WriteLine;
 
+        _captureDebugTraces = captureDebugTraces;
         if (!_captureDebugTraces)
         {
             return;
@@ -104,28 +103,22 @@ public class LogMessageListener : IDisposable
     /// Gets 'Trace' Output from the redirected stream.
     /// </summary>
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
-    public string DebugTrace
-    {
-        get
-        {
-            return s_redirectedDebugTrace?.ToString();
-        }
-    }
+    public string? DebugTrace => s_redirectedDebugTrace?.ToString();
 
-    public string GetAndClearStandardOutput()
+    public string? GetAndClearStandardOutput()
     {
         var output = _redirectedStandardOutput.ToStringAndClear();
         return output;
     }
 
-    public string GetAndClearStandardError()
+    public string? GetAndClearStandardError()
     {
         var output = _redirectedStandardError.ToStringAndClear();
         return output;
     }
 
     [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
-    public string GetAndClearDebugTrace()
+    public string? GetAndClearDebugTrace()
     {
         if (s_redirectedDebugTrace == null)
         {
@@ -169,7 +162,7 @@ public class LogMessageListener : IDisposable
                 {
                     if (s_traceListener != null)
                     {
-                        _traceListenerManager.Remove(s_traceListener);
+                        _traceListenerManager?.Remove(s_traceListener);
                     }
                 }
                 catch (Exception e)
@@ -181,7 +174,7 @@ public class LogMessageListener : IDisposable
                 if (s_traceListener != null)
                 {
                     // Dispose trace manager and listeners
-                    _traceListenerManager.Dispose(s_traceListener);
+                    _traceListenerManager?.Dispose(s_traceListener);
                     _traceListenerManager = null;
                     s_traceListener = null;
                 }

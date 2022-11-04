@@ -37,7 +37,7 @@ public class TestSourceHost : ITestSourceHost
 #pragma warning restore SA1214 // Readonly fields should appear before non-readonly fields
 
     private readonly IRunSettings? _runSettings;
-    private readonly IFrameworkHandle _frameworkHandle;
+    private readonly IFrameworkHandle? _frameworkHandle;
     private readonly IAppDomain _appDomain;
 
     /// <summary>
@@ -59,7 +59,7 @@ public class TestSourceHost : ITestSourceHost
     /// <param name="sourceFileName"> The source file name. </param>
     /// <param name="runSettings"> The run-settings provided for this session. </param>
     /// <param name="frameworkHandle"> The handle to the test platform. </param>
-    public TestSourceHost(string sourceFileName, IRunSettings runSettings, IFrameworkHandle frameworkHandle)
+    public TestSourceHost(string sourceFileName, IRunSettings? runSettings, IFrameworkHandle? frameworkHandle)
 #if NETFRAMEWORK
         : this(sourceFileName, runSettings, frameworkHandle, new AppDomainWrapper())
 #endif
@@ -73,7 +73,7 @@ public class TestSourceHost : ITestSourceHost
     }
 
 #if NETFRAMEWORK
-    internal TestSourceHost(string sourceFileName, IRunSettings? runSettings, IFrameworkHandle frameworkHandle, IAppDomain appDomain)
+    internal TestSourceHost(string sourceFileName, IRunSettings? runSettings, IFrameworkHandle? frameworkHandle, IAppDomain appDomain)
     {
         _sourceFileName = sourceFileName;
         _runSettings = runSettings;

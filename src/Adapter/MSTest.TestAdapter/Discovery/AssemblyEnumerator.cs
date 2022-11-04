@@ -59,7 +59,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <summary>
     /// Gets or sets the run settings to use for current discovery session.
     /// </summary>
-    public string RunSettingsXml { get; set; }
+    public string? RunSettingsXml { get; set; }
 
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
@@ -73,7 +73,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 #endif
     public override object InitializeLifetimeService()
     {
-        return null;
+        return null!;
     }
 
     /// <summary>
@@ -84,9 +84,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>A collection of Test Elements.</returns>
     internal ICollection<UnitTestElement> EnumerateAssembly(string assemblyFileName, out ICollection<string> warnings)
     {
-        Debug.Assert(!string.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
+        DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
 
-        var runSettingsXml = RunSettingsXml;
         var warningMessages = new List<string>();
         var tests = new List<UnitTestElement>();
 
@@ -113,7 +112,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            var testsInType = DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages,
+            var testsInType = DiscoverTestsInType(assemblyFileName, RunSettingsXml, assembly, type, warningMessages,
                 discoverInternals, testDataSourceDiscovery, testIdGenerationStrategy);
             tests.AddRange(testsInType);
         }
@@ -129,7 +128,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The file name of the assembly.</param>
     /// <param name="warningMessages">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Gets the types defined in the provided assembly.</returns>
-    internal static Type[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string> warningMessages)
+    internal static Type?[]? GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
     {
         var types = new List<Type>();
         try
@@ -167,9 +166,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>Returns loader exceptions as a multi-line string.</returns>
     internal static string GetLoadExceptionDetails(ReflectionTypeLoadException ex)
     {
-        Debug.Assert(ex != null, "exception should not be null.");
+        DebugEx.Assert(ex != null, "exception should not be null.");
 
-        var map = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase); // Exception -> null.
+        var map = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase); // Exception -> null.
         var errorDetails = new StringBuilder();
 
         if (ex.LoaderExceptions?.Length > 0)
@@ -177,7 +176,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Loader exceptions can contain duplicates, leave only unique exceptions.
             foreach (var loaderException in ex.LoaderExceptions)
             {
-                Debug.Assert(loaderException != null, "loader exception should not be null.");
+                DebugEx.Assert(loaderException != null, "loader exception should not be null.");
                 var line = string.Format(CultureInfo.CurrentCulture, Resource.EnumeratorLoadTypeErrorFormat, loaderException.GetType(), loaderException.Message);
                 if (!map.ContainsKey(line))
                 {
@@ -211,7 +210,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
     }
 
-    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly,
+    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string? runSettingsXml, Assembly assembly,
         Type type, List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
         TestIdGenerationStrategy testIdGenerationStrategy)
     {
@@ -220,7 +219,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             ?? sourceLevelParameters
             ?? new Dictionary<string, object>();
 
-        string typeFullName = null;
+        string? typeFullName = null;
         var tests = new List<UnitTestElement>();
 
         try

@@ -24,10 +24,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 public class TestClassInfo
 {
     private readonly object _testClassExecuteSyncObject;
-    private MethodInfo _classCleanupMethod;
-    private MethodInfo _classInitializeMethod;
-    private MethodInfo _testCleanupMethod;
-    private MethodInfo _testInitializeMethod;
+    private MethodInfo? _classCleanupMethod;
+    private MethodInfo? _classInitializeMethod;
+    private MethodInfo? _testCleanupMethod;
+    private MethodInfo? _testInitializeMethod;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestClassInfo"/> class.
@@ -40,14 +40,14 @@ public class TestClassInfo
     internal TestClassInfo(
         Type type,
         ConstructorInfo constructor,
-        PropertyInfo testContextProperty,
+        PropertyInfo? testContextProperty,
         TestClassAttribute classAttribute,
         TestAssemblyInfo parent)
     {
-        Debug.Assert(type != null, "Type should not be null");
-        Debug.Assert(constructor != null, "Constructor should not be null");
-        Debug.Assert(parent != null, "Parent should not be null");
-        Debug.Assert(classAttribute != null, "ClassAttribute should not be null");
+        DebugEx.Assert(type != null, "Type should not be null");
+        DebugEx.Assert(constructor != null, "Constructor should not be null");
+        DebugEx.Assert(parent != null, "Parent should not be null");
+        DebugEx.Assert(classAttribute != null, "ClassAttribute should not be null");
 
         ClassType = type;
         Constructor = constructor;
@@ -79,7 +79,7 @@ public class TestClassInfo
     /// <summary>
     /// Gets the test context property.
     /// </summary>
-    public PropertyInfo TestContextProperty { get; }
+    public PropertyInfo? TestContextProperty { get; }
 
     /// <summary>
     /// Gets the parent <see cref="TestAssemblyInfo"/>.
@@ -89,12 +89,9 @@ public class TestClassInfo
     /// <summary>
     /// Gets the class initialize method.
     /// </summary>
-    public MethodInfo ClassInitializeMethod
+    public MethodInfo? ClassInitializeMethod
     {
-        get
-        {
-            return _classInitializeMethod;
-        }
+        get => _classInitializeMethod;
 
         internal set
         {
@@ -126,22 +123,19 @@ public class TestClassInfo
     /// <summary>
     /// Gets the exception thrown during <see cref="ClassInitializeAttribute"/> method invocation.
     /// </summary>
-    public Exception ClassInitializationException { get; internal set; }
+    public Exception? ClassInitializationException { get; internal set; }
 
     /// <summary>
     /// Gets the exception thrown during <see cref="ClassCleanupAttribute"/> method invocation.
     /// </summary>
-    public Exception ClassCleanupException { get; internal set; }
+    public Exception? ClassCleanupException { get; internal set; }
 
     /// <summary>
     /// Gets the class cleanup method.
     /// </summary>
-    public MethodInfo ClassCleanupMethod
+    public MethodInfo? ClassCleanupMethod
     {
-        get
-        {
-            return _classCleanupMethod;
-        }
+        get => _classCleanupMethod;
 
         internal set
         {
@@ -186,12 +180,9 @@ public class TestClassInfo
     /// <summary>
     /// Gets the test initialize method.
     /// </summary>
-    public MethodInfo TestInitializeMethod
+    public MethodInfo? TestInitializeMethod
     {
-        get
-        {
-            return _testInitializeMethod;
-        }
+        get => _testInitializeMethod;
 
         internal set
         {
@@ -208,12 +199,9 @@ public class TestClassInfo
     /// <summary>
     /// Gets the test cleanup method.
     /// </summary>
-    public MethodInfo TestCleanupMethod
+    public MethodInfo? TestCleanupMethod
     {
-        get
-        {
-            return _testCleanupMethod;
-        }
+        get => _testCleanupMethod;
 
         internal set
         {
@@ -256,8 +244,8 @@ public class TestClassInfo
             throw new NullReferenceException(Resource.TestContextIsNull);
         }
 
-        MethodInfo initializeMethod = null;
-        string failedClassInitializeMethodName = string.Empty;
+        MethodInfo? initializeMethod = null;
+        string? failedClassInitializeMethodName = string.Empty;
 
         // If class initialization is not done, then do it.
         if (!IsClassInitializeExecuted)
@@ -290,15 +278,12 @@ public class TestClassInfo
 
                         initializeMethod = null;
 
-                        if (_classInitializeMethod != null)
-                        {
-                            ClassInitializeMethod.InvokeAsSynchronousTask(null, testContext);
-                        }
+                        ClassInitializeMethod?.InvokeAsSynchronousTask(null, testContext);
                     }
                     catch (Exception ex)
                     {
                         ClassInitializationException = ex;
-                        failedClassInitializeMethodName = initializeMethod?.Name ?? ClassInitializeMethod.Name;
+                        failedClassInitializeMethodName = initializeMethod?.Name ?? ClassInitializeMethod?.Name;
                     }
                     finally
                     {
@@ -349,7 +334,7 @@ public class TestClassInfo
     /// <returns>
     /// Any exception that can be thrown as part of a class cleanup as warning messages.
     /// </returns>
-    public string RunClassCleanup(ClassCleanupBehavior classCleanupLifecycle = ClassCleanupBehavior.EndOfAssembly)
+    public string? RunClassCleanup(ClassCleanupBehavior classCleanupLifecycle = ClassCleanupBehavior.EndOfAssembly)
     {
         if (ClassCleanupMethod is null && BaseClassInitAndCleanupMethods.All(p => p.Item2 == null))
         {
@@ -370,7 +355,7 @@ public class TestClassInfo
 
             if (IsClassInitializeExecuted || ClassInitializeMethod is null)
             {
-                MethodInfo classCleanupMethod = null;
+                MethodInfo? classCleanupMethod = null;
 
                 try
                 {
@@ -409,7 +394,7 @@ public class TestClassInfo
                     errorMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-                        classCleanupMethod.DeclaringType.Name,
+                        classCleanupMethod!.DeclaringType!.Name,
                         classCleanupMethod.Name,
                         errorMessage,
                         exceptionStackTraceInfo?.ErrorStackTrace);

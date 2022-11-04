@@ -34,7 +34,7 @@ internal class UnitTestElement
             throw new ArgumentNullException(nameof(testMethod));
         }
 
-        Debug.Assert(testMethod.FullClassName != null, "Full className cannot be empty");
+        DebugEx.Assert(testMethod.FullClassName != null, "Full className cannot be empty");
         TestMethod = testMethod;
     }
 
@@ -56,12 +56,12 @@ internal class UnitTestElement
     /// <summary>
     /// Gets or sets the test categories for test method.
     /// </summary>
-    public string[] TestCategory { get; set; }
+    public string[]? TestCategory { get; set; }
 
     /// <summary>
     /// Gets or sets the traits for test method.
     /// </summary>
-    public Trait[] Traits { get; set; }
+    public Trait[]? Traits { get; set; }
 
     /// <summary>
     /// Gets or sets the priority of the test method, if any.
@@ -76,41 +76,41 @@ internal class UnitTestElement
     /// <summary>
     /// Gets or sets the deployment items for the test method.
     /// </summary>
-    public KeyValuePair<string, string>[] DeploymentItems { get; set; }
+    public KeyValuePair<string, string>[]? DeploymentItems { get; set; }
 
     /// <summary>
     /// Gets or sets the DisplayName.
     /// </summary>
-    public string DisplayName { get; set; }
+    public string? DisplayName { get; set; }
 
     /// <summary>
     /// Gets or sets the compiler generated type name for async test method.
     /// </summary>
-    internal string AsyncTypeName { get; set; }
+    internal string? AsyncTypeName { get; set; }
 
     /// <summary>
     /// Gets or sets the Css Iteration for the test method.
     /// </summary>
-    internal string CssIteration { get; set; }
+    internal string? CssIteration { get; set; }
 
     /// <summary>
     /// Gets or sets the Css Project Structure for the test method.
     /// </summary>
-    internal string CssProjectStructure { get; set; }
+    internal string? CssProjectStructure { get; set; }
 
     /// <summary>
     /// Gets or sets the Description for the test method.
     /// </summary>
-    internal string Description { get; set; }
+    internal string? Description { get; set; }
 
     /// <summary>
     /// Gets or sets the Work Item Ids for the test method.
     /// </summary>
-    internal string[] WorkItemIds { get; set; }
+    internal string[]? WorkItemIds { get; set; }
 
     internal UnitTestElement Clone()
     {
-        var clone = MemberwiseClone() as UnitTestElement;
+        var clone = (UnitTestElement)MemberwiseClone();
         if (TestMethod != null)
         {
             clone.TestMethod = TestMethod.Clone();
@@ -182,17 +182,17 @@ internal class UnitTestElement
             testCase.Traits.AddRange(Traits);
         }
 
-        if (!string.IsNullOrEmpty(CssIteration))
+        if (!StringEx.IsNullOrEmpty(CssIteration))
         {
             testCase.SetPropertyValue(Constants.CssIterationProperty, CssIteration);
         }
 
-        if (!string.IsNullOrEmpty(CssProjectStructure))
+        if (!StringEx.IsNullOrEmpty(CssProjectStructure))
         {
             testCase.SetPropertyValue(Constants.CssProjectStructureProperty, CssProjectStructure);
         }
 
-        if (!string.IsNullOrEmpty(Description))
+        if (!StringEx.IsNullOrEmpty(Description))
         {
             testCase.SetPropertyValue(Constants.DescriptionProperty, Description);
         }
@@ -338,12 +338,12 @@ internal class UnitTestElement
 
     private string GetDisplayName()
     {
-        if (string.IsNullOrWhiteSpace(DisplayName))
+        if (StringEx.IsNullOrWhiteSpace(DisplayName))
         {
             return TestMethod.Name;
 
             // This causes compatibility problems with older runners.
-            // return string.IsNullOrWhiteSpace(this.TestMethod.ManagedMethodName)
+            // return StringEx.IsNullOrWhiteSpace(this.TestMethod.ManagedMethodName)
             //      ? this.TestMethod.Name
             //      : this.TestMethod.ManagedMethodName;
         }

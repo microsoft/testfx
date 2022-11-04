@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -98,7 +97,7 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="testContext"> The test Context. </param>
     /// <param name="captureDebugTraces"> Indicates whether the test method should capture debug traces.</param>
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
-    public TestMethodInfo GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
+    public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
     {
         if (testMethod == null)
         {
@@ -136,7 +135,7 @@ internal class TypeCache : MarshalByRefObject
 #endif
     public override object InitializeLifetimeService()
     {
-        return null;
+        return null!;
     }
 
     #region ClassInfo creation and cache logic.
@@ -146,17 +145,16 @@ internal class TypeCache : MarshalByRefObject
     /// </summary>
     /// <param name="testMethod"> The test Method.  </param>
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
-    private TestClassInfo GetClassInfo(TestMethod testMethod)
+    private TestClassInfo? GetClassInfo(TestMethod testMethod)
     {
-        Debug.Assert(testMethod != null, "test method is null");
+        DebugEx.Assert(testMethod != null, "test method is null");
 
         var typeName = testMethod.FullClassName;
 
-        if (!_classInfoCache.TryGetValue(typeName, out TestClassInfo classInfo))
+        if (!_classInfoCache.TryGetValue(typeName, out TestClassInfo? classInfo))
         {
             // Load the class type
-            Type type = LoadType(typeName, testMethod.AssemblyName);
-
+            Type? type = LoadType(typeName, testMethod.AssemblyName);
             if (type == null)
             {
                 // This means the class containing the test method could not be found.
@@ -181,7 +179,7 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="assemblyName"> The assembly Name. </param>
     /// <returns> The <see cref="Type"/>. </returns>
     /// <exception cref="TypeInspectionException"> Thrown when there is a type load exception from the assembly. </exception>
-    private static Type LoadType(string typeName, string assemblyName)
+    private static Type? LoadType(string typeName, string assemblyName)
     {
         try
         {
@@ -287,7 +285,7 @@ internal class TypeCache : MarshalByRefObject
     /// </summary>
     /// <param name="classType"> The class Type. </param>
     /// <returns> The <see cref="PropertyInfo"/> for TestContext property. Null if not defined. </returns>
-    private static PropertyInfo ResolveTestContext(Type classType)
+    private static PropertyInfo? ResolveTestContext(Type classType)
     {
         try
         {
@@ -327,7 +325,7 @@ internal class TypeCache : MarshalByRefObject
     {
         var assembly = type.GetTypeInfo().Assembly;
 
-        if (!_testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo assemblyInfo))
+        if (!_testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo? assemblyInfo))
         {
             var assemblyInitializeType = typeof(AssemblyInitializeAttribute);
             var assemblyCleanupType = typeof(AssemblyCleanupAttribute);
@@ -580,10 +578,10 @@ internal class TypeCache : MarshalByRefObject
     /// <returns>
     /// The TestMethodInfo for the given test method. Null if the test method could not be found.
     /// </returns>
-    private TestMethodInfo ResolveTestMethod(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext, bool captureDebugTraces)
+    private TestMethodInfo? ResolveTestMethod(TestMethod testMethod, TestClassInfo testClassInfo, ITestContext testContext, bool captureDebugTraces)
     {
-        Debug.Assert(testMethod != null, "testMethod is Null");
-        Debug.Assert(testClassInfo != null, "testClassInfo is Null");
+        DebugEx.Assert(testMethod != null, "testMethod is Null");
+        DebugEx.Assert(testClassInfo != null, "testClassInfo is Null");
 
         var methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
         if (methodInfo == null)
@@ -648,9 +646,9 @@ internal class TypeCache : MarshalByRefObject
         return testMethodInfo;
     }
 
-    private static MethodInfo GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
+    private static MethodInfo? GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
-        MethodInfo testMethodInfo = null;
+        MethodInfo? testMethodInfo = null;
         var methodBase = ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName, testMethod.ManagedMethodName);
 
         if (methodBase is MethodInfo mi)
@@ -706,7 +704,7 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The timeout value if defined in milliseconds. 0 if not defined. </returns>
     private int GetTestTimeout(MethodInfo methodInfo, TestMethod testMethod)
     {
-        Debug.Assert(methodInfo != null, "TestMethod should be non-null");
+        DebugEx.Assert(methodInfo != null, "TestMethod should be non-null");
         var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
         var globalTimeout = MSTestSettings.CurrentSettings.TestTimeout;
 
@@ -735,11 +733,11 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="testContext"> The test Context. </param>
     private static void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
-        Debug.Assert(testMethodInfo != null, "testMethodInfo is Null");
-        Debug.Assert(testMethodInfo.TestMethod != null, "testMethodInfo.TestMethod is Null");
+        DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
+        DebugEx.Assert(testMethodInfo.TestMethod != null, "testMethodInfo.TestMethod is Null");
 
         var attributes = testMethodInfo.TestMethod.GetCustomAttributes(typeof(TestPropertyAttribute), false);
-        Debug.Assert(attributes != null, "attributes is null");
+        DebugEx.Assert(attributes != null, "attributes is null");
 
         foreach (TestPropertyAttribute attribute in attributes)
         {
@@ -776,7 +774,7 @@ internal class TypeCache : MarshalByRefObject
             return false;
         }
 
-        if (string.IsNullOrEmpty(propertyName))
+        if (StringEx.IsNullOrEmpty(propertyName))
         {
             testMethodInfo.NotRunnableReason = string.Format(
                 CultureInfo.CurrentCulture,
@@ -787,7 +785,7 @@ internal class TypeCache : MarshalByRefObject
             return false;
         }
 
-        if (testContext.TryGetPropertyValue(propertyName, out object existingValue))
+        if (testContext.TryGetPropertyValue(propertyName, out object? existingValue))
         {
             // Do not add to the test context because it would conflict with an already existing value.
             // We were at one point reporting a warning here. However with extensibility centered around TestProperty where

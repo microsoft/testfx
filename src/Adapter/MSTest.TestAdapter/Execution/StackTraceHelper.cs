@@ -3,12 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
@@ -21,7 +21,7 @@ internal static class StackTraceHelper
     /// Gets the types whose methods should be ignored in the reported call stacks.
     /// This is used to remove our stack that the user will not care about.
     /// </summary>
-    private static readonly List<string> TypesToBeExcluded = new() { typeof(TestTools.UnitTesting.Assert).Namespace, typeof(MSTestExecutor).Namespace };
+    private static readonly List<string> TypesToBeExcluded = new() { typeof(Assert).Namespace!, typeof(MSTestExecutor).Namespace! };
 
     /// <summary>
     /// Gets the stack trace for an exception, including all stack traces for inner
@@ -33,13 +33,13 @@ internal static class StackTraceHelper
     /// <returns>
     /// The <see cref="StackTraceInformation"/> for the provided exception.
     /// </returns>
-    internal static StackTraceInformation GetStackTraceInformation(Exception ex)
+    internal static StackTraceInformation? GetStackTraceInformation(Exception ex)
     {
-        Debug.Assert(ex != null, "exception should not be null.");
+        DebugEx.Assert(ex != null, "exception should not be null.");
 
         Stack<string> stackTraces = new();
 
-        for (Exception curException = ex;
+        for (Exception? curException = ex;
             curException != null;
             curException = curException.InnerException)
         {
@@ -102,14 +102,14 @@ internal static class StackTraceHelper
     /// </returns>
     internal static string TrimStackTrace(string stackTrace)
     {
-        Debug.Assert(!string.IsNullOrEmpty(stackTrace), "stack trace should be non-empty.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(stackTrace), "stack trace should be non-empty.");
 
         StringBuilder result = new(stackTrace.Length);
         string[] stackFrames = Regex.Split(stackTrace, Environment.NewLine);
 
         foreach (string stackFrame in stackFrames)
         {
-            if (string.IsNullOrEmpty(stackFrame))
+            if (StringEx.IsNullOrEmpty(stackFrame))
             {
                 continue;
             }
@@ -140,11 +140,11 @@ internal static class StackTraceHelper
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     internal static string GetExceptionMessage(Exception ex)
     {
-        Debug.Assert(ex != null, "exception should not be null.");
+        DebugEx.Assert(ex != null, "exception should not be null.");
 
         StringBuilder result = new();
         bool first = true;
-        for (Exception curException = ex;
+        for (Exception? curException = ex;
              curException != null;
              curException = curException.InnerException)
         {
@@ -187,7 +187,7 @@ internal static class StackTraceHelper
     /// <returns>
     /// The <see cref="StackTraceInformation"/>.
     /// </returns>
-    internal static StackTraceInformation CreateStackTraceInformation(
+    internal static StackTraceInformation? CreateStackTraceInformation(
         Exception ex,
         bool checkInnerExceptions,
         string stackTraceString)
@@ -199,7 +199,7 @@ internal static class StackTraceHelper
 
         var stackTrace = TrimStackTrace(stackTraceString);
 
-        if (!string.IsNullOrEmpty(stackTrace))
+        if (!StringEx.IsNullOrEmpty(stackTrace))
         {
             return new StackTraceInformation(stackTrace, null, 0, 0);
         }

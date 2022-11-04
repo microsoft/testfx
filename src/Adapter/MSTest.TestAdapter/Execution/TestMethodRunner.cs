@@ -12,6 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -82,9 +83,9 @@ internal class TestMethodRunner
     /// </param>
     public TestMethodRunner(TestMethodInfo testMethodInfo, TestMethod testMethod, ITestContext testContext, bool captureDebugTraces, ReflectHelper reflectHelper)
     {
-        Debug.Assert(testMethodInfo != null, "testMethodInfo should not be null");
-        Debug.Assert(testMethod != null, "testMethod should not be null");
-        Debug.Assert(testContext != null, "testContext should not be null");
+        DebugEx.Assert(testMethodInfo != null, "testMethodInfo should not be null");
+        DebugEx.Assert(testMethod != null, "testMethod should not be null");
+        DebugEx.Assert(testContext != null, "testContext should not be null");
 
         _testMethodInfo = testMethodInfo;
         _test = testMethod;
@@ -98,12 +99,12 @@ internal class TestMethodRunner
     /// <returns>The test results.</returns>
     internal UnitTestResult[] Execute()
     {
-        string initializationLogs = string.Empty;
-        string initializationTrace = string.Empty;
-        string initializationErrorLogs = string.Empty;
+        string? initializationLogs = string.Empty;
+        string? initializationTrace = string.Empty;
+        string? initializationErrorLogs = string.Empty;
         string initializationTestContextMessages = string.Empty;
 
-        UnitTestResult[] result = null;
+        UnitTestResult[]? result = null;
 
         try
         {
@@ -168,10 +169,10 @@ internal class TestMethodRunner
     /// <returns>The test results.</returns>
     internal UnitTestResult[] RunTestMethod()
     {
-        Debug.Assert(_test != null, "Test should not be null.");
-        Debug.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
+        DebugEx.Assert(_test != null, "Test should not be null.");
+        DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
 
-        List<UTF.TestResult> results = new();
+        List<TestResult> results = new();
         var isDataDriven = false;
         var parentStopwatch = Stopwatch.StartNew();
 
@@ -193,7 +194,7 @@ internal class TestMethodRunner
 
                 foreach (var testResult in testResults)
                 {
-                    if (string.IsNullOrWhiteSpace(testResult.DisplayName))
+                    if (StringEx.IsNullOrWhiteSpace(testResult.DisplayName))
                     {
                         testResult.DisplayName = _test.DisplayName;
                     }
@@ -222,7 +223,7 @@ internal class TestMethodRunner
             if (_test.TestIdGenerationStrategy == UTF.TestIdGenerationStrategy.Legacy)
             {
                 parentStopwatch.Stop();
-                var parentResult = new UTF.TestResult
+                var parentResult = new TestResult
                 {
                     Outcome = aggregateOutcome,
                     Duration = parentStopwatch.Elapsed,
@@ -241,7 +242,7 @@ internal class TestMethodRunner
         // Set a result in case no result is present.
         if (results.Count == 0)
         {
-            UTF.TestResult emptyResult = new()
+            TestResult emptyResult = new()
             {
                 Outcome = aggregateOutcome,
                 TestFailureException = new TestFailedException(UnitTestOutcome.Error, Resource.UTA_NoTestResult),
@@ -257,11 +258,11 @@ internal class TestMethodRunner
         return unitTestResults;
     }
 
-    private bool ExecuteDataSourceBasedTests(List<UTF.TestResult> results)
+    private bool ExecuteDataSourceBasedTests(List<TestResult> results)
     {
         var isDataDriven = false;
 
-        UTF.DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<UTF.DataSourceAttribute>(false);
+        DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>(false);
         if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
         {
             isDataDriven = true;
@@ -275,7 +276,7 @@ internal class TestMethodRunner
                 if (dataRows == null)
                 {
                     watch.Stop();
-                    var inconclusiveResult = new UTF.TestResult
+                    var inconclusiveResult = new TestResult
                     {
                         Outcome = UTF.UnitTestOutcome.Inconclusive,
                         Duration = watch.Elapsed,
@@ -290,7 +291,7 @@ internal class TestMethodRunner
 
                         foreach (object dataRow in dataRows)
                         {
-                            UTF.TestResult[] testResults = ExecuteTestWithDataRow(dataRow, rowIndex++);
+                            TestResult[] testResults = ExecuteTestWithDataRow(dataRow, rowIndex++);
                             results.AddRange(testResults);
                         }
                     }
@@ -304,7 +305,7 @@ internal class TestMethodRunner
             catch (Exception ex)
             {
                 watch.Stop();
-                var failedResult = new UTF.TestResult
+                var failedResult = new TestResult
                 {
                     Outcome = UTF.UnitTestOutcome.Error,
                     TestFailureException = ex,
@@ -342,7 +343,7 @@ internal class TestMethodRunner
         return isDataDriven;
     }
 
-    private UTF.TestResult[] ExecuteTestWithDataSource(UTF.ITestDataSource testDataSource, object[] data)
+    private TestResult[] ExecuteTestWithDataSource(UTF.ITestDataSource? testDataSource, object[] data)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -350,7 +351,7 @@ internal class TestMethodRunner
         var testResults = ExecuteTest(_testMethodInfo);
         stopwatch.Stop();
 
-        var hasDisplayName = !string.IsNullOrWhiteSpace(_test.DisplayName);
+        var hasDisplayName = !StringEx.IsNullOrWhiteSpace(_test.DisplayName);
         foreach (var testResult in testResults)
         {
             if (testResult.Duration == TimeSpan.Zero)
@@ -374,12 +375,12 @@ internal class TestMethodRunner
         return testResults;
     }
 
-    private UTF.TestResult[] ExecuteTestWithDataRow(object dataRow, int rowIndex)
+    private TestResult[] ExecuteTestWithDataRow(object dataRow, int rowIndex)
     {
         var displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, _test.DisplayName, rowIndex);
-        Stopwatch stopwatch = null;
+        Stopwatch? stopwatch = null;
 
-        UTF.TestResult[] testResults = null;
+        TestResult[]? testResults = null;
         try
         {
             stopwatch = Stopwatch.StartNew();
@@ -402,7 +403,7 @@ internal class TestMethodRunner
         return testResults;
     }
 
-    private UTF.TestResult[] ExecuteTest(TestMethodInfo testMethodInfo)
+    private TestResult[] ExecuteTest(TestMethodInfo testMethodInfo)
     {
         try
         {
@@ -412,7 +413,7 @@ internal class TestMethodRunner
         {
             return new[]
             {
-                new UTF.TestResult()
+                new TestResult()
                 {
                     TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex?.Message, ex?.StackTrace), ex),
                 },
@@ -425,7 +426,7 @@ internal class TestMethodRunner
     /// </summary>
     /// <param name="results">Results.</param>
     /// <returns>Aggregate outcome.</returns>
-    private static UTF.UnitTestOutcome GetAggregateOutcome(List<UTF.TestResult> results)
+    private static UTF.UnitTestOutcome GetAggregateOutcome(List<TestResult> results)
     {
         // In case results are not present, set outcome as unknown.
         if (results.Count == 0)
@@ -449,7 +450,7 @@ internal class TestMethodRunner
     /// </summary>
     /// <param name="results">Results.</param>
     /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
-    private static List<UTF.TestResult> UpdateResultsWithParentInfo(List<UTF.TestResult> results)
+    private static List<TestResult> UpdateResultsWithParentInfo(List<TestResult> results)
     {
         // Return results in case there are no results.
         if (results.Count == 0)
@@ -458,7 +459,7 @@ internal class TestMethodRunner
         }
 
         // UpdatedResults contain parent result at first position and remaining results has parent info updated.
-        var updatedResults = new List<UTF.TestResult>();
+        var updatedResults = new List<TestResult>();
 
         foreach (var result in results)
         {
@@ -478,9 +479,9 @@ internal class TestMethodRunner
     /// <param name="results">Results.</param>
     /// <param name="parentResult">Parent results.</param>
     /// <returns>Updated results which contains parent result as first result. All other results contains parent result info.</returns>
-    private static List<UTF.TestResult> UpdateResultsWithParentInfo(
-        List<UTF.TestResult> results,
-        UTF.TestResult parentResult)
+    private static List<TestResult> UpdateResultsWithParentInfo(
+        List<TestResult> results,
+        TestResult parentResult)
     {
         // Return results in case there are no results.
         if (results.Count == 0)
@@ -489,7 +490,7 @@ internal class TestMethodRunner
         }
 
         // UpdatedResults contain parent result at first position and remaining results has parent info updated.
-        List<UTF.TestResult> updatedResults = new() { parentResult };
+        List<TestResult> updatedResults = new() { parentResult };
 
         foreach (var result in results)
         {

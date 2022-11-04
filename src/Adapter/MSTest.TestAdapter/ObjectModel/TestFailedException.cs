@@ -2,7 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
@@ -17,20 +18,20 @@ internal class TestFailedException : Exception
     {
     }
 
-    public TestFailedException(UnitTestOutcome outcome, string errorMessage, StackTraceInformation stackTraceInformation)
+    public TestFailedException(UnitTestOutcome outcome, string errorMessage, StackTraceInformation? stackTraceInformation)
         : this(outcome, errorMessage, stackTraceInformation, null)
     {
     }
 
-    public TestFailedException(UnitTestOutcome outcome, string errorMessage, Exception realException)
+    public TestFailedException(UnitTestOutcome outcome, string errorMessage, Exception? realException)
         : this(outcome, errorMessage, null, realException)
     {
     }
 
-    public TestFailedException(UnitTestOutcome outcome, string errorMessage, StackTraceInformation stackTraceInformation, Exception realException)
+    public TestFailedException(UnitTestOutcome outcome, string errorMessage, StackTraceInformation? stackTraceInformation, Exception? realException)
         : base(errorMessage, realException)
     {
-        Debug.Assert(!string.IsNullOrEmpty(errorMessage), "ErrorMessage should not be empty");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(errorMessage), "ErrorMessage should not be empty");
 
         Outcome = outcome;
         StackTraceInformation = stackTraceInformation;
@@ -39,7 +40,7 @@ internal class TestFailedException : Exception
     /// <summary>
     /// Gets stack trace information associated with the test failure.
     /// </summary>
-    public StackTraceInformation StackTraceInformation { get; private set; }
+    public StackTraceInformation? StackTraceInformation { get; private set; }
 
     /// <summary>
     /// Gets outcome of the test case.

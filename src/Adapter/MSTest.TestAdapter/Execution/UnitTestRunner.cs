@@ -36,7 +36,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <summary>
     /// Class cleanup manager.
     /// </summary>
-    private ClassCleanupManager _classCleanupManager;
+    private ClassCleanupManager? _classCleanupManager;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
@@ -74,7 +74,7 @@ internal class UnitTestRunner : MarshalByRefObject
 #endif
     public override object InitializeLifetimeService()
     {
-        return null;
+        return null!;
     }
 
     /// <summary>
@@ -106,7 +106,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <param name="testMethod"> The test Method. </param>
     /// <param name="testContextProperties"> The test context properties. </param>
     /// <returns> The <see cref="UnitTestResult"/>. </returns>
-    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object> testContextProperties)
+    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties)
     {
         if (testMethod == null)
         {
@@ -116,7 +116,7 @@ internal class UnitTestRunner : MarshalByRefObject
         try
         {
             using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
-            var properties = new Dictionary<string, object>(testContextProperties);
+            var properties = new Dictionary<string, object?>(testContextProperties);
             var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
             testContext.SetOutcome(UTF.UnitTestOutcome.InProgress);
 
@@ -239,7 +239,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <returns>whether the given testMethod is runnable.</returns>
     private bool IsTestMethodRunnable(
         TestMethod testMethod,
-        TestMethodInfo testMethodInfo,
+        TestMethodInfo? testMethodInfo,
         out UnitTestResult[] notRunnableResult)
     {
         // If the specified TestMethod could not be found, return a NotFound result.
@@ -268,7 +268,7 @@ internal class UnitTestRunner : MarshalByRefObject
             }
         }
 
-        string ignoreMessage = null;
+        string? ignoreMessage = null;
         var isIgnoreAttributeOnClass =
             _reflectHelper.IsAttributeDefined<IgnoreAttribute>(testMethodInfo.Parent.ClassType, false);
         var isIgnoreAttributeOnMethod =
@@ -279,7 +279,7 @@ internal class UnitTestRunner : MarshalByRefObject
             ignoreMessage = _reflectHelper.GetIgnoreMessage(testMethodInfo.Parent.ClassType.GetTypeInfo());
         }
 
-        if (string.IsNullOrEmpty(ignoreMessage) && isIgnoreAttributeOnMethod)
+        if (StringEx.IsNullOrEmpty(ignoreMessage) && isIgnoreAttributeOnMethod)
         {
             ignoreMessage = _reflectHelper.GetIgnoreMessage(testMethodInfo.TestMethod);
         }
@@ -305,7 +305,7 @@ internal class UnitTestRunner : MarshalByRefObject
     {
         foreach (var assemblyInfo in assemblyInfoCache)
         {
-            Debug.Assert(assemblyInfo.HasExecutableCleanupMethod, "HasExecutableCleanupMethod should be true.");
+            DebugEx.Assert(assemblyInfo.HasExecutableCleanupMethod, "HasExecutableCleanupMethod should be true.");
 
             var warning = assemblyInfo.RunAssemblyCleanup();
             if (warning != null)
@@ -324,7 +324,7 @@ internal class UnitTestRunner : MarshalByRefObject
     {
         foreach (var classInfo in classInfoCache)
         {
-            Debug.Assert(classInfo.HasExecutableCleanupMethod, "HasExecutableCleanupMethod should be true.");
+            DebugEx.Assert(classInfo.HasExecutableCleanupMethod, "HasExecutableCleanupMethod should be true.");
 
             var warning = classInfo.RunClassCleanup();
             if (warning != null)
@@ -345,7 +345,7 @@ internal class UnitTestRunner : MarshalByRefObject
             IEnumerable<UnitTestElement> testsToRun,
             ClassCleanupBehavior? lifecycleFromMsTest,
             ClassCleanupBehavior lifecycleFromAssembly,
-            ReflectHelper reflectHelper = null)
+            ReflectHelper? reflectHelper = null)
         {
             _remainingTestsByClass = testsToRun.GroupBy(t => t.TestMethod.FullClassName)
                 .ToDictionary(

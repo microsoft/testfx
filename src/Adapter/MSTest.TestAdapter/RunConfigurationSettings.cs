@@ -8,6 +8,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 public class RunConfigurationSettings
@@ -37,9 +38,9 @@ public class RunConfigurationSettings
     /// The discovery context that contains the runsettings.
     /// </param>
     /// <returns>Populated RunConfigurationSettings from the discovery context.</returns>
-    public static RunConfigurationSettings PopulateSettings(IDiscoveryContext context)
+    public static RunConfigurationSettings PopulateSettings(IDiscoveryContext? context)
     {
-        if (context == null || context.RunSettings == null || string.IsNullOrEmpty(context.RunSettings.SettingsXml))
+        if (context == null || context.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
         {
             // This will contain default configuration settings
             return new RunConfigurationSettings();
@@ -61,7 +62,7 @@ public class RunConfigurationSettings
     /// <param name="runsettingsXml"> The xml with the settings passed from the test platform. </param>
     /// <param name="settingName"> The name of the settings to fetch.</param>
     /// <returns> The settings if found. Null otherwise. </returns>
-    internal static RunConfigurationSettings GetSettings(string runsettingsXml, string settingName)
+    internal static RunConfigurationSettings? GetSettings(string runsettingsXml, string settingName)
     {
         using (var stringReader = new StringReader(runsettingsXml))
         {
@@ -73,8 +74,7 @@ public class RunConfigurationSettings
 
             // Read till we reach nodeName element or reach EOF
             while (!string.Equals(reader.Name, settingName, StringComparison.OrdinalIgnoreCase)
-                    &&
-                    !reader.EOF)
+                    && !reader.EOF)
             {
                 reader.SkipToNextElement();
             }
@@ -96,7 +96,7 @@ public class RunConfigurationSettings
     /// <returns>An instance of the <see cref="MSTestSettings"/> class.</returns>
     private static RunConfigurationSettings ToSettings(XmlReader reader)
     {
-        ValidateArg.NotNull(reader, "reader");
+        _ = reader ?? throw new ArgumentNullException(nameof(reader));
 
         // Expected format of the xml is: -
         //

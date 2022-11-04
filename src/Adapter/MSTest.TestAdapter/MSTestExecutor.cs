@@ -22,7 +22,7 @@ public class MSTestExecutor : ITestExecutor
     /// <summary>
     /// Token for canceling the test run.
     /// </summary>
-    private TestRunCancellationToken _cancellationToken = null;
+    private TestRunCancellationToken? _cancellationToken = null;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestExecutor"/> class.
@@ -30,7 +30,6 @@ public class MSTestExecutor : ITestExecutor
     public MSTestExecutor()
     {
         TestExecutionManager = new TestExecutionManager();
-        MSTestDiscoverer = new MSTestDiscoverer();
     }
 
     /// <summary>
@@ -38,12 +37,7 @@ public class MSTestExecutor : ITestExecutor
     /// </summary>
     public TestExecutionManager TestExecutionManager { get; protected set; }
 
-    /// <summary>
-    /// Gets discoverer used for validating the sources.
-    /// </summary>
-    private MSTestDiscoverer MSTestDiscoverer { get; }
-
-    public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
+    public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from testcases.");
 
@@ -77,7 +71,7 @@ public class MSTestExecutor : ITestExecutor
         _cancellationToken = null;
     }
 
-    public void RunTests(IEnumerable<string> sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
+    public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");

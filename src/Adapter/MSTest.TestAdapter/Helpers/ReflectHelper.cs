@@ -152,11 +152,11 @@ internal class ReflectHelper : MarshalByRefObject
             // If construction of the attribute throws an exception, indicate that there was an
             // error when trying to run the test
             string errorMessage = string.Format(
-                                                CultureInfo.CurrentCulture,
-                                                Resource.UTA_ExpectedExceptionAttributeConstructionException,
-                                                testMethod.FullClassName,
-                                                testMethod.Name,
-                                                StackTraceHelper.GetExceptionMessage(ex));
+                CultureInfo.CurrentCulture,
+                Resource.UTA_ExpectedExceptionAttributeConstructionException,
+                testMethod.FullClassName,
+                testMethod.Name,
+                StackTraceHelper.GetExceptionMessage(ex));
             throw new TypeInspectionException(errorMessage);
         }
 

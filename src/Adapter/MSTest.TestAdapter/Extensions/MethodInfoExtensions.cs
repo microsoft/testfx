@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -21,7 +20,7 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has the right Assembly/Class initialize signature.</returns>
     internal static bool HasCorrectClassOrAssemblyInitializeSignature(this MethodInfo method)
     {
-        Debug.Assert(method != null, "method should not be null.");
+        DebugEx.Assert(method != null, "method should not be null.");
 
         ParameterInfo[] parameters = method.GetParameters();
 
@@ -40,7 +39,7 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has the right Assembly/Class cleanup signature.</returns>
     internal static bool HasCorrectClassOrAssemblyCleanupSignature(this MethodInfo method)
     {
-        Debug.Assert(method != null, "method should not be null.");
+        DebugEx.Assert(method != null, "method should not be null.");
 
         return
             method.IsStatic &&
@@ -56,7 +55,7 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has the right test init/cleanup signature.</returns>
     internal static bool HasCorrectTestInitializeOrCleanupSignature(this MethodInfo method)
     {
-        Debug.Assert(method != null, "method should not be null.");
+        DebugEx.Assert(method != null, "method should not be null.");
 
         return
             !method.IsStatic &&
@@ -75,7 +74,7 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has the right test method signature.</returns>
     internal static bool HasCorrectTestMethodSignature(this MethodInfo method, bool ignoreParameterLength, bool discoverInternals = false)
     {
-        Debug.Assert(method != null, "method should not be null.");
+        DebugEx.Assert(method != null, "method should not be null.");
 
         return
             !method.IsAbstract &&
@@ -93,7 +92,7 @@ internal static class MethodInfoExtensions
     /// <returns>True if the method has the right test timeout signature.</returns>
     internal static bool HasCorrectTimeout(this MethodInfo method)
     {
-        Debug.Assert(method != null, "method should not be null.");
+        DebugEx.Assert(method != null, "method should not be null.");
 
         // There should be one and only one TimeoutAttribute.
         var attributes = ReflectHelper.GetCustomAttributes<TimeoutAttribute>(method, false);
@@ -103,9 +102,7 @@ internal static class MethodInfoExtensions
         }
 
         // Timeout cannot be less than 0.
-        var attribute = attributes[0] as TimeoutAttribute;
-
-        return !(attribute?.Timeout < 0);
+        return !(attributes[0]?.Timeout < 0);
     }
 
     /// <summary>
@@ -125,7 +122,7 @@ internal static class MethodInfoExtensions
     /// </summary>
     /// <param name="method">The method to verify.</param>
     /// <returns>Compiler generated type name for given async test method..</returns>
-    internal static string GetAsyncTypeName(this MethodInfo method)
+    internal static string? GetAsyncTypeName(this MethodInfo method)
     {
         var asyncStateMachineAttribute = ReflectHelper.GetCustomAttributes<AsyncStateMachineAttribute>(method, false).FirstOrDefault();
 
@@ -144,7 +141,7 @@ internal static class MethodInfoExtensions
     /// <param name="parameters">
     /// Arguments for the methodInfo invoke.
     /// </param>
-    internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object classInstance, params object[] parameters)
+    internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? parameters)
     {
         var methodParameters = methodInfo.GetParameters();
 

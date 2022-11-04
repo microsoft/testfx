@@ -68,7 +68,7 @@ public interface ITestMethod
     /// <returns>
     /// All attributes.
     /// </returns>
-    Attribute[] GetAllAttributes(bool inherit);
+    Attribute[]? GetAllAttributes(bool inherit);
 
     /// <summary>
     /// Get attribute of specific type.

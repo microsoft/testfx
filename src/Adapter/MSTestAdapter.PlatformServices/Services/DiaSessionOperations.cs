@@ -75,7 +75,7 @@ internal static class DiaSessionOperations
     /// Disposes the navigation session instance.
     /// </summary>
     /// <param name="navigationSession"> The navigation session. </param>
-    internal static void DisposeNavigationSession(object navigationSession)
+    internal static void DisposeNavigationSession(object? navigationSession)
     {
         var diaSession = navigationSession as IDisposable;
         diaSession?.Dispose();

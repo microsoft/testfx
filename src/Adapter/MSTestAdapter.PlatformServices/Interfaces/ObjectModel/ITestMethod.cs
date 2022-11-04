@@ -27,7 +27,7 @@ public interface ITestMethod
     /// This will be null if AssemblyName is same as DeclaringAssemblyName.
     /// Reason to set to null in the above case is to minimize the transfer of data across appdomains and not have a performance hit.
     /// </summary>
-    string DeclaringClassFullName { get; }
+    string? DeclaringClassFullName { get; }
 
     /// <summary>
     /// Gets the name of the test assembly.
@@ -45,7 +45,7 @@ public interface ITestMethod
     /// <example>
     ///     <c>NamespaceA.NamespaceB.ClassName`1+InnerClass`2</c>.
     /// </example>
-    string ManagedTypeName { get; }
+    string? ManagedTypeName { get; }
 
     /// <summary>
     /// Gets the fully specified method name metadata format.
@@ -53,7 +53,7 @@ public interface ITestMethod
     /// <example>
     ///     <c>MethodName`2(ParamTypeA,ParamTypeB,...)</c>.
     /// </example>
-    string ManagedMethodName { get; }
+    string? ManagedMethodName { get; }
 
     /// <summary>
     /// Gets the <see cref="TestIdGenerationStrategy"/> used to generate <c>TestCase.Id</c>.
@@ -71,5 +71,5 @@ public interface ITestMethod
     /// <remarks>
     /// Contains four items in order: Namespace, class name, test group, display name.
     /// </remarks>
-    IReadOnlyCollection<string> Hierarchy { get; }
+    IReadOnlyCollection<string?> Hierarchy { get; }
 }
