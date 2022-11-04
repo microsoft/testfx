@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -53,7 +52,7 @@ public class TestClassInfo
         Constructor = constructor;
         TestContextProperty = testContextProperty;
         BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
-        BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo, MethodInfo>>();
+        BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo?, MethodInfo?>>();
         BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
         BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
         Parent = parent;
@@ -175,7 +174,7 @@ public class TestClassInfo
     /// <summary>
     /// Gets a tuples' queue of class initialize/cleanup methods to call for this type.
     /// </summary>
-    public Queue<Tuple<MethodInfo, MethodInfo>> BaseClassInitAndCleanupMethods { get; }
+    public Queue<Tuple<MethodInfo?, MethodInfo?>> BaseClassInitAndCleanupMethods { get; }
 
     /// <summary>
     /// Gets the test initialize method.

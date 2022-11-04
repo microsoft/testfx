@@ -128,7 +128,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The file name of the assembly.</param>
     /// <param name="warningMessages">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Gets the types defined in the provided assembly.</returns>
-    internal static Type?[]? GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
+    internal static Type?[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
     {
         var types = new List<Type>();
         try
@@ -217,7 +217,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
         sourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(sourceLevelParameters)
             ?? sourceLevelParameters
-            ?? new Dictionary<string, object>();
+            ?? new Dictionary<string, object?>();
 
         string? typeFullName = null;
         var tests = new List<UnitTestElement>();
@@ -240,7 +240,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
                     {
-                        if (DynamicDataAttached(sourceLevelParameters, assembly, test, tests))
+                        if (DynamicDataAttached(sourceLevelParameters, test, tests))
                         {
                             continue;
                         }
@@ -262,7 +262,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return tests;
     }
 
-    private bool DynamicDataAttached(IDictionary<string, object> sourceLevelParameters, Assembly assembly, UnitTestElement test, List<UnitTestElement> tests)
+    private bool DynamicDataAttached(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test, List<UnitTestElement> tests)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -386,7 +386,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
 #pragma warning disable CS0618 // Type or member is obsolete
                 if (test.TestMethod.TestIdGenerationStrategy == TestIdGenerationStrategy.DisplayName
-                    && testDisplayNameFirstSeen.TryGetValue(discoveredTest.DisplayName, out var firstIndexSeen))
+                    && testDisplayNameFirstSeen.TryGetValue(discoveredTest.DisplayName!, out var firstIndexSeen))
                 {
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstIndexSeen, index, discoveredTest.DisplayName);
                     warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
@@ -415,7 +415,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
 
                 discoveredTests.Add(discoveredTest);
-                testDisplayNameFirstSeen[discoveredTest.DisplayName] = index++;
+                testDisplayNameFirstSeen[discoveredTest.DisplayName!] = index++;
             }
 
             tests.AddRange(discoveredTests);

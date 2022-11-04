@@ -30,8 +30,6 @@ public class TestMethodInfo : ITestMethod
     /// </summary>
     public const int TimeoutWhenNotSet = 0;
 
-    private object?[]? _arguments;
-
     internal TestMethodInfo(
         MethodInfo testMethod,
         TestClassInfo parent,
@@ -70,7 +68,7 @@ public class TestMethodInfo : ITestMethod
 
     public MethodInfo MethodInfo => TestMethod;
 
-    public object?[]? Arguments => _arguments;
+    public object?[]? Arguments { get; private set; }
 
     /// <summary>
     /// Gets testMethod referred by this object.
@@ -148,7 +146,7 @@ public class TestMethodInfo : ITestMethod
 
     internal void SetArguments(object?[]? arguments)
     {
-        _arguments = arguments == null ? null : ResolveArguments(arguments);
+        Arguments = arguments == null ? null : ResolveArguments(arguments);
     }
 
     internal object?[] ResolveArguments(object?[] arguments)

@@ -235,7 +235,9 @@ internal class TypeCache : MarshalByRefObject
 
         var assemblyInfo = GetAssemblyInfo(classType);
 
-        var classInfo = new TestClassInfo(classType, constructor, testContextProperty, ReflectHelper.GetDerivedAttribute<TestClassAttribute>(classType, false), assemblyInfo);
+        var testClassAttribute = ReflectHelper.GetDerivedAttribute<TestClassAttribute>(classType, false);
+        DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
+        var classInfo = new TestClassInfo(classType, constructor, testContextProperty, testClassAttribute, assemblyInfo);
 
         // List holding the instance of the initialize/cleanup methods
         // to be passed into the tuples' queue  when updating the class info.
@@ -245,7 +247,7 @@ internal class TypeCache : MarshalByRefObject
         // which is used to decide whether TestInitialize/TestCleanup methods
         // present in the base type should be used or not. They are not used if
         // the method is overridden in the derived type.
-        var instanceMethods = new Dictionary<string, string>();
+        var instanceMethods = new Dictionary<string, string?>();
 
         foreach (var methodInfo in classType.GetTypeInfo().DeclaredMethods)
         {
@@ -297,7 +299,7 @@ internal class TypeCache : MarshalByRefObject
             }
 
             // check if testContextProperty is of correct type
-            if (!testContextProperty.PropertyType.FullName.Equals(typeof(TestContext).FullName, StringComparison.Ordinal))
+            if (!string.Equals(testContextProperty.PropertyType.FullName, typeof(TestContext).FullName, StringComparison.Ordinal))
             {
                 var errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.UTA_TestContextTypeMismatchLoadError, classType.FullName);
                 throw new TypeInspectionException(errorMessage);
@@ -325,58 +327,57 @@ internal class TypeCache : MarshalByRefObject
     {
         var assembly = type.GetTypeInfo().Assembly;
 
-        if (!_testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo? assemblyInfo))
+        if (_testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo? assemblyInfo))
         {
-            var assemblyInitializeType = typeof(AssemblyInitializeAttribute);
-            var assemblyCleanupType = typeof(AssemblyCleanupAttribute);
+            return assemblyInfo;
+        }
 
-            assemblyInfo = new TestAssemblyInfo(assembly);
+        assemblyInfo = new TestAssemblyInfo(assembly);
 
-            var types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName, null);
+        var types = AssemblyEnumerator.GetTypes(assembly, assembly.FullName!, null);
 
-            foreach (var t in types)
+        foreach (var t in types)
+        {
+            if (t == null)
             {
-                if (t == null)
-                {
-                    continue;
-                }
-
-                try
-                {
-                    // Only examine classes which are TestClass or derives from TestClass attribute
-                    if (!_reflectionHelper.IsAttributeDefined<TestClassAttribute>(t, inherit: true) &&
-                        !_reflectionHelper.HasAttributeDerivedFrom<TestClassAttribute>(t, true))
-                    {
-                        continue;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // If we fail to discover type from an assembly, then do not abort. Pick the next type.
-                    PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
-                        "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}",
-                        t.FullName,
-                        ex);
-
-                    continue;
-                }
-
-                // Enumerate through all methods and identify the Assembly Init and cleanup methods.
-                foreach (var methodInfo in t.GetTypeInfo().DeclaredMethods)
-                {
-                    if (IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
-                    {
-                        assemblyInfo.AssemblyInitializeMethod = methodInfo;
-                    }
-                    else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
-                    {
-                        assemblyInfo.AssemblyCleanupMethod = methodInfo;
-                    }
-                }
+                continue;
             }
 
-            assemblyInfo = _testAssemblyInfoCache.GetOrAdd(assembly, assemblyInfo);
+            try
+            {
+                // Only examine classes which are TestClass or derives from TestClass attribute
+                if (!_reflectionHelper.IsAttributeDefined<TestClassAttribute>(t, inherit: true) &&
+                    !_reflectionHelper.HasAttributeDerivedFrom<TestClassAttribute>(t, true))
+                {
+                    continue;
+                }
+            }
+            catch (Exception ex)
+            {
+                // If we fail to discover type from an assembly, then do not abort. Pick the next type.
+                PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(
+                    "TypeCache: Exception occurred while checking whether type {0} is a test class or not. {1}",
+                    t.FullName,
+                    ex);
+
+                continue;
+            }
+
+            // Enumerate through all methods and identify the Assembly Init and cleanup methods.
+            foreach (var methodInfo in t.GetTypeInfo().DeclaredMethods)
+            {
+                if (IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
+                {
+                    assemblyInfo.AssemblyInitializeMethod = methodInfo;
+                }
+                else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
+                {
+                    assemblyInfo.AssemblyCleanupMethod = methodInfo;
+                }
+            }
         }
+
+        assemblyInfo = _testAssemblyInfoCache.GetOrAdd(assembly, assemblyInfo);
 
         return assemblyInfo;
     }
@@ -397,7 +398,7 @@ internal class TypeCache : MarshalByRefObject
 
         if (!methodInfo.HasCorrectClassOrAssemblyInitializeSignature())
         {
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ClassOrAssemblyInitializeMethodHasWrongSignature, methodInfo.DeclaringType.FullName, methodInfo.Name);
+            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ClassOrAssemblyInitializeMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
         }
 
@@ -420,7 +421,7 @@ internal class TypeCache : MarshalByRefObject
 
         if (!methodInfo.HasCorrectClassOrAssemblyCleanupSignature())
         {
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ClassOrAssemblyCleanupMethodHasWrongSignature, methodInfo.DeclaringType.FullName, methodInfo.Name);
+            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ClassOrAssemblyCleanupMethodHasWrongSignature, methodInfo.DeclaringType!.FullName, methodInfo.Name);
             throw new TypeInspectionException(message);
         }
 
@@ -441,7 +442,7 @@ internal class TypeCache : MarshalByRefObject
         if (initAndCleanupMethods.Any(x => x != null))
         {
             classInfo.BaseClassInitAndCleanupMethods.Enqueue(
-                    new Tuple<MethodInfo, MethodInfo>(
+                    new Tuple<MethodInfo?, MethodInfo?>(
                         initAndCleanupMethods.FirstOrDefault(),
                         initAndCleanupMethods.LastOrDefault()));
         }
@@ -469,7 +470,7 @@ internal class TypeCache : MarshalByRefObject
         {
             if (isBase)
             {
-                if (_reflectionHelper.GetCustomAttribute<ClassInitializeAttribute>(methodInfo)
+                if (_reflectionHelper.GetCustomAttribute<ClassInitializeAttribute>(methodInfo)!
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[0] = methodInfo;
@@ -486,7 +487,7 @@ internal class TypeCache : MarshalByRefObject
         {
             if (isBase)
             {
-                if (_reflectionHelper.GetCustomAttribute<ClassCleanupAttribute>(methodInfo)
+                if (_reflectionHelper.GetCustomAttribute<ClassCleanupAttribute>(methodInfo)!
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[1] = methodInfo;
@@ -511,7 +512,7 @@ internal class TypeCache : MarshalByRefObject
         TestClassInfo classInfo,
         MethodInfo methodInfo,
         bool isBase,
-        Dictionary<string, string> instanceMethods)
+        Dictionary<string, string?> instanceMethods)
     {
         var hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
         var hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);

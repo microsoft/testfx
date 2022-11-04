@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
@@ -153,7 +154,7 @@ internal class TestMethodRunner
         }
         finally
         {
-            var firstResult = result[0];
+            var firstResult = result![0];
             firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
             firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
             firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
@@ -271,7 +272,7 @@ internal class TestMethodRunner
 
             try
             {
-                IEnumerable<object> dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(_testMethodInfo, _testContext);
+                IEnumerable<object>? dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(_testMethodInfo, _testContext);
 
                 if (dataRows == null)
                 {
@@ -316,7 +317,10 @@ internal class TestMethodRunner
         }
         else
         {
-            UTF.ITestDataSource[] testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>().ToArray();
+            UTF.ITestDataSource[]? testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)
+                ?.Where(a => a is UTF.ITestDataSource)
+                .OfType<UTF.ITestDataSource>()
+                .ToArray();
 
             if (testDataSources != null && testDataSources.Length > 0)
             {
@@ -343,7 +347,7 @@ internal class TestMethodRunner
         return isDataDriven;
     }
 
-    private TestResult[] ExecuteTestWithDataSource(UTF.ITestDataSource? testDataSource, object[] data)
+    private TestResult[] ExecuteTestWithDataSource(UTF.ITestDataSource? testDataSource, object?[]? data)
     {
         var stopwatch = Stopwatch.StartNew();
 
@@ -407,7 +411,7 @@ internal class TestMethodRunner
     {
         try
         {
-            return _testMethodInfo.TestMethodOptions.Executor.Execute(testMethodInfo);
+            return _testMethodInfo.TestMethodOptions.Executor!.Execute(testMethodInfo);
         }
         catch (Exception ex)
         {

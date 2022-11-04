@@ -24,7 +24,7 @@ internal static class DataSerializationHelper
     /// </summary>
     /// <param name="data">Data array to serialize.</param>
     /// <returns>Serialized array.</returns>
-    public static string?[]? Serialize(object[]? data)
+    public static string?[]? Serialize(object?[]? data)
     {
         if (data == null)
         {
@@ -44,7 +44,7 @@ internal static class DataSerializationHelper
                 continue;
             }
 
-            var type = data[i].GetType();
+            var type = data[i]!.GetType();
             var typeName = type.AssemblyQualifiedName;
 
             serializedData[typeIndex] = typeName;
@@ -66,7 +66,7 @@ internal static class DataSerializationHelper
     /// </summary>
     /// <param name="serializedData">Serialized data array to deserialize.</param>
     /// <returns>Deserialized array.</returns>
-    public static object?[]? Deserialize(string[]? serializedData)
+    public static object?[]? Deserialize(string?[]? serializedData)
     {
         if (serializedData == null || serializedData.Length % 2 != 0)
         {
