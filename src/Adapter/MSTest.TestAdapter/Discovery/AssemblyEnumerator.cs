@@ -153,7 +153,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
             }
 
-            return ex.Types;
+            return ex.Types!;
         }
 
         return types.ToArray();
