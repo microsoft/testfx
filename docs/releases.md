@@ -1,5 +1,143 @@
 # Releases
 
+## 3.0.0-preview-20221110-04 (November 2022)
+
+* Improve release notes generator [#1374](https://github.com/microsoft/testfx/pull/1374)
+* Bump version to v3.0.0 [#1373](https://github.com/microsoft/testfx/pull/1373)
+* Enable nullable for TestAdapter project [#1370](https://github.com/microsoft/testfx/pull/1370)
+* Refactor reflection helper to return strongly typed attributes [#1369](https://github.com/microsoft/testfx/pull/1369)
+* Sort lines in public API files
+* Enable nullable for Platform Services [#1366](https://github.com/microsoft/testfx/pull/1366)
+* Enable nullables for Framework [#1365](https://github.com/microsoft/testfx/pull/1365)
+* Enable nullable for TestFramework.Extensions [#1363](https://github.com/microsoft/testfx/pull/1363)
+* Use NewtonsoftJson v13.0.1 [#1361](https://github.com/microsoft/testfx/pull/1361)
+* Add temporary hack to avoid 6.0.11 restore issue [#1357](https://github.com/microsoft/testfx/pull/1357)
+* Add test case for StackOverflow issue [#1353](https://github.com/microsoft/testfx/pull/1353)
+* Introduce strategies for test ID generation [#1306](https://github.com/microsoft/testfx/pull/1306)
+* Fix broken tests and refactor test API [#1352](https://github.com/microsoft/testfx/pull/1352)
+* Refactor integration tests to use FluentAssertions [#1349](https://github.com/microsoft/testfx/pull/1349)
+* Remove skipping check for x64 [#1350](https://github.com/microsoft/testfx/pull/1350)
+* Revert temporary hack related to .net 6.0.10 [#1346](https://github.com/microsoft/testfx/pull/1346)
+* Naming and using cleanup [#1347](https://github.com/microsoft/testfx/pull/1347)
+* Add markdownlint CI leg [#1344](https://github.com/microsoft/testfx/pull/1344)
+* Update links to official MSTest documentation
+* Revisit RFCs [#1342](https://github.com/microsoft/testfx/pull/1342)
+* Remove class/assembly initialization messages from logs. [#1339](https://github.com/microsoft/testfx/pull/1339)
+* Add tests to document test suite messages [#1313](https://github.com/microsoft/testfx/pull/1313)
+* Various styling refactoring [#1334](https://github.com/microsoft/testfx/pull/1334)
+* Refactor available ctors for DataRowAttribute [#1332](https://github.com/microsoft/testfx/pull/1332)
+* Refactor solution items to add UnitTests folder
+* Add more tests for parameterized tests [#1330](https://github.com/microsoft/testfx/pull/1330)
+* Add screenshot for test filtering in VS [#1329](https://github.com/microsoft/testfx/pull/1329)
+* Update prerequisites section
+* Bring back stylecop analyzers [#1314](https://github.com/microsoft/testfx/pull/1314)
+* Merge testfx-docs repo here and update links [#1326](https://github.com/microsoft/testfx/pull/1326)
+* Update version of Microsoft.CodeAnalysis.PublicApiAnalyzers
+* Add public api analyzers [#1318](https://github.com/microsoft/testfx/pull/1318)
+* Update GitHub issues and PR templates [#1315](https://github.com/microsoft/testfx/pull/1315)
+* Try to simplify automation.cli and support of different TFMs [#1312](https://github.com/microsoft/testfx/pull/1312)
+* Add temporary hack to avoid 6.0.10 restore issue [#1311](https://github.com/microsoft/testfx/pull/1311)
+* Add support for AsyncDisposable cleanup [#1288](https://github.com/microsoft/testfx/pull/1288)
+* Fix .gitignore
+* Update Install-DotNetCli end to use similar wording as other steps
+* Remove unexpected dll in target [#1308](https://github.com/microsoft/testfx/pull/1308)
+* Merge all implementations of TestContext [#1302](https://github.com/microsoft/testfx/pull/1302)
+* Merge timeout behaviors for .NET Core and .NET Framework [#1296](https://github.com/microsoft/testfx/pull/1296)
+* Don't exclude TestAssets from source control [#1298](https://github.com/microsoft/testfx/pull/1298)
+* Remove broken UWP unit test [#1295](https://github.com/microsoft/testfx/pull/1295)
+* Fix localization path
+* Merge interfaces into PlatformServices [#1293](https://github.com/microsoft/testfx/pull/1293)
+* Rename projects to better match assembly [#1291](https://github.com/microsoft/testfx/pull/1291)
+* Install required .NET before build instead of before test [#1290](https://github.com/microsoft/testfx/pull/1290)
+* Fix issue causing null ref when test class has no namespace [#1283](https://github.com/microsoft/testfx/pull/1283)
+* Cleanup solution and test projects [#1282](https://github.com/microsoft/testfx/pull/1282)
+* Convert smoke.e2e.tests and DiscoveryAndExecutionTests to use local test framework [#1261](https://github.com/microsoft/testfx/pull/1261)
+* Fix included package [#1280](https://github.com/microsoft/testfx/pull/1280)
+* Fix common.lib.ps1 to download latest patched SDKs [#1279](https://github.com/microsoft/testfx/pull/1279)
+* Remove PlatformServices.Shared.Unit.Tests [#1270](https://github.com/microsoft/testfx/pull/1270)
+* Ensure we run core tests for all supported TFMs [#1268](https://github.com/microsoft/testfx/pull/1268)
+* Ensure we run adapter tests for all supported TFMs [#1267](https://github.com/microsoft/testfx/pull/1267)
+* Convert PlatformServices tests to use new test framework [#1249](https://github.com/microsoft/testfx/pull/1249)
+* Convert test.core.unit.tests to use local test framework [#1259](https://github.com/microsoft/testfx/pull/1259)
+* Remove unused build step [#1266](https://github.com/microsoft/testfx/pull/1266)
+* Fix broken tests on main [#1265](https://github.com/microsoft/testfx/pull/1265)
+* Added version parameter to build script [#1264](https://github.com/microsoft/testfx/pull/1264)
+* Fix broken unit tests
+* Fix testasset of ComponentTests
+* Update PlatformServices.Desktop.Component.Tests to use new test fwk [#1252](https://github.com/microsoft/testfx/pull/1252)
+* Remove PlatformServices.Portable [#1258](https://github.com/microsoft/testfx/pull/1258)
+* Cleanup on MSTest.CoreAdapter.UnitTests [#1257](https://github.com/microsoft/testfx/pull/1257)
+* Add Assert.IsInstanceOfType<T> [#1241](https://github.com/microsoft/testfx/pull/1241)
+* Unwrap real exception from TargetInvocationException [#1254](https://github.com/microsoft/testfx/pull/1254)
+* Convert MSTest.CoreAdapter.Unit.Tests to use new test framework [#1245](https://github.com/microsoft/testfx/pull/1245)
+* Revert CallerArgumentExpression attribute changes [#1251](https://github.com/microsoft/testfx/pull/1251)
+* Allow mirroring. **BYPASS_SECRET_SCANNING**
+* Add some simple test framwork to allow testing MSTest [#1242](https://github.com/microsoft/testfx/pull/1242)
+* Split Assert class per group of feature [#1238](https://github.com/microsoft/testfx/pull/1238)
+* Fixed the case ignoring in AreEqual() with culture parameter [#1216](https://github.com/microsoft/testfx/pull/1216)
+* Add WinUI tests to PlatformServices [#1234](https://github.com/microsoft/testfx/pull/1234)
+* Add net6.0 tests for PlatformServices [#1233](https://github.com/microsoft/testfx/pull/1233)
+* Merge various PlatformServices.XXX.UnitTests projects together [#1232](https://github.com/microsoft/testfx/pull/1232)
+* Improve assembly versions and available metadata [#1231](https://github.com/microsoft/testfx/pull/1231)
+* Fix NuGet packages content + support netcoreapp3.1 [#1228](https://github.com/microsoft/testfx/pull/1228)
+* Update comment about assembly version in TestFx.targets
+* Fix behavior for netcore TFMs [#1230](https://github.com/microsoft/testfx/pull/1230)
+* Enable and fix CA1806 violations [#1227](https://github.com/microsoft/testfx/pull/1227)
+* Enable and fix CA1822 (make member static) violations [#1226](https://github.com/microsoft/testfx/pull/1226)
+* Enable and fix performance analyzers [#1223](https://github.com/microsoft/testfx/pull/1223)
+* More project/files simplification for PlatformServices [#1221](https://github.com/microsoft/testfx/pull/1221)
+* Projects cleanup [#1219](https://github.com/microsoft/testfx/pull/1219)
+* Factorize out some project properties [#1217](https://github.com/microsoft/testfx/pull/1217)
+* Fix some typos in test names
+* Fix some typos
+* Find TP package version using Versions.props [#1211](https://github.com/microsoft/testfx/pull/1211)
+* Simplify Link references in csproj
+* Merge TFM specific classes together [#1209](https://github.com/microsoft/testfx/pull/1209)
+* Merge TFM specific PlatformServices into a single PlatformServices [#1208](https://github.com/microsoft/testfx/pull/1208)
+* Update azure-pipelines.yml
+* Update azure-pipelines.yml
+* Review compiler directives [#1203](https://github.com/microsoft/testfx/pull/1203)
+* Merge extension projects into one [#1202](https://github.com/microsoft/testfx/pull/1202)
+* Ignore commit 4bb533 from revision logs
+* Use newer C# syntaxes [#1200](https://github.com/microsoft/testfx/pull/1200)
+* Ignore commit "Define and apply field naming conventions"
+* Define and apply field naming conventions [#1198](https://github.com/microsoft/testfx/pull/1198)
+* Ignore convert to file-scoped namespace revision
+* Convert to file-scoped namespaces [#1197](https://github.com/microsoft/testfx/pull/1197)
+* Target .NET 6 instead of .NET 5 [#1196](https://github.com/microsoft/testfx/pull/1196)
+* Remove un-needed files
+* Remove test adapter nuget uap dependencies [#1195](https://github.com/microsoft/testfx/pull/1195)
+* Prefer specific tfm over generic ones [#1192](https://github.com/microsoft/testfx/pull/1192)
+* Simplify projects dependencies and files [#1193](https://github.com/microsoft/testfx/pull/1193)
+* Target netstandard2.0 as minimal netstandard [#1194](https://github.com/microsoft/testfx/pull/1194)
+* Simplify UWP projects [#1191](https://github.com/microsoft/testfx/pull/1191)
+* Make private fields readonly when possible [#1188](https://github.com/microsoft/testfx/pull/1188)
+* Favor inline initialization over static ctor [#1189](https://github.com/microsoft/testfx/pull/1189)
+* Add MSTest.nuspec to VS items
+* Mark exceptions with SerializableAttribute [#1186](https://github.com/microsoft/testfx/pull/1186)
+* Remove ProjectGuid and simplify ProjectReference calls [#1185](https://github.com/microsoft/testfx/pull/1185)
+* Apply modern C# features/syntaxes [#1183](https://github.com/microsoft/testfx/pull/1183)
+* Rename MSTest.CoreAdapter into MSTest.TestAdapter [#1181](https://github.com/microsoft/testfx/pull/1181)
+* Move test projects to SDK style [#1179](https://github.com/microsoft/testfx/pull/1179)
+* Align MicrosoftDiaSymReaderPdb2PdbVersion with arcade one
+* Use Foreach-Object to display contents
+* Add Write-Verbose on content of Get-ChildItem
+* Do not fail generate release task notes when skipping
+* Display full packages folder
+* List files in case Pdb2Pdb.exe is not found
+* List files in case Pdb2Pdb.exe is not found
+* Fixed package restore.
+* Id generator logic restored. [#1174](https://github.com/microsoft/testfx/pull/1174)
+* Discard auto PRs in write-release-notes.ps1 [#1173](https://github.com/microsoft/testfx/pull/1173)
+
+See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-20220810-02...v3.0.0-preview-20221110-04)
+
+### Artifacts
+
+* MSTest: [3.0.0-preview-20221110-04](https://www.nuget.org/packages/MSTest/3.0.0-preview-20221110-04)
+* MSTest.TestFramework: [3.0.0-preview-20221110-04](https://www.nuget.org/packages/MSTest.TestFramework/3.0.0-preview-20221110-04)
+* MSTest.TestAdapter: [3.0.0-preview-20221110-04](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.0-preview-20221110-04)
+
 # 2.3.0-preview-20220810-02 (August 2022)
 
 - [x] [Fixed issues with SDK style projects.](https://github.com/microsoft/testfx/pull/1171)
