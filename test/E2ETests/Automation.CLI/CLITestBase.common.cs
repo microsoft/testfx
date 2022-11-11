@@ -15,6 +15,7 @@ public partial class CLITestBase : TestContainer
     private const string TestAssetsFolder = "TestAssets";
     private const string PackagesFolder = "packages";
     private const string EngineeringFolder = "eng";
+    private const string ArtifactsFolder = "artifacts";
 
     // This value is automatically updated by "build.ps1" script.
     private const string TestPlatformCLIPackageName = "Microsoft.TestPlatform";
@@ -22,7 +23,7 @@ public partial class CLITestBase : TestContainer
 
     protected XmlDocument ReadVersionProps()
     {
-        var versionPropsFilePath = Path.Combine(Environment.CurrentDirectory, EngineeringFolder, "Versions.props");
+        var versionPropsFilePath = Path.Combine(GetRepositoryRootFolder(), EngineeringFolder, "Versions.props");
         using var fileStream = File.OpenRead(versionPropsFilePath);
         using var xmlTextReader = new XmlTextReader(fileStream) { Namespaces = false };
         var versionPropsXml = new XmlDocument();
@@ -39,18 +40,18 @@ public partial class CLITestBase : TestContainer
         return testSdkVersion.InnerText;
     }
 
-    protected string GetArtifactsFolder()
+    protected string GetRepositoryRootFolder()
     {
         var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
-        return Path.Combine(assemblyLocation, @"..\..\..\..");
+        return Path.Combine(assemblyLocation, @"..\..\..\..\..");
     }
 
     /// <summary>
     /// Gets the path of test assets folder.
     /// </summary>
     /// <returns>Path to testassets folder.</returns>
-    protected string GetAssetFolderPath() => Path.Combine(GetArtifactsFolder(), TestAssetsFolder);
+    protected string GetAssetFolderPath() => Path.Combine(GetRepositoryRootFolder(), ArtifactsFolder, TestAssetsFolder);
 
     /// <summary>
     /// Gets the full path to a test asset.
@@ -75,7 +76,7 @@ public partial class CLITestBase : TestContainer
 
     protected string GetTestAdapterPath()
     {
-        var testAdapterPath = Path.Combine(GetArtifactsFolder(), TestAssetsFolder);
+        var testAdapterPath = Path.Combine(GetRepositoryRootFolder(), ArtifactsFolder, TestAssetsFolder);
         return testAdapterPath;
     }
 
