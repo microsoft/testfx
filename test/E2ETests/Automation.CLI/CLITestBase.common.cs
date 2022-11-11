@@ -13,7 +13,6 @@ namespace Microsoft.MSTestV2.CLIAutomation;
 public partial class CLITestBase : TestContainer
 {
     private const string TestAssetsFolder = "TestAssets";
-    private const string ArtifactsFolder = "artifacts";
     private const string PackagesFolder = "packages";
     private const string EngineeringFolder = "eng";
 
@@ -40,11 +39,18 @@ public partial class CLITestBase : TestContainer
         return testSdkVersion.InnerText;
     }
 
+    protected string GetArtifactsFolder()
+    {
+        var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
+        return Path.Combine(assemblyLocation, @"..\..\..\..");
+    }
+
     /// <summary>
     /// Gets the path of test assets folder.
     /// </summary>
     /// <returns>Path to testassets folder.</returns>
-    protected string GetAssetFolderPath() => Path.Combine(Environment.CurrentDirectory, ArtifactsFolder, TestAssetsFolder);
+    protected string GetAssetFolderPath() => Path.Combine(GetArtifactsFolder(), TestAssetsFolder);
 
     /// <summary>
     /// Gets the full path to a test asset.
@@ -69,7 +75,7 @@ public partial class CLITestBase : TestContainer
 
     protected string GetTestAdapterPath()
     {
-        var testAdapterPath = Path.Combine(Environment.CurrentDirectory, ArtifactsFolder, TestAssetsFolder);
+        var testAdapterPath = Path.Combine(GetArtifactsFolder(), TestAssetsFolder);
         return testAdapterPath;
     }
 
