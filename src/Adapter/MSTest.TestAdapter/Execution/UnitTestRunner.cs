@@ -132,11 +132,15 @@ internal class UnitTestRunner : MarshalByRefObject
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFoundClassCleanup);
             }
 
-            DebugEx.Assert(testMethodInfo is not null, "testMethodInfo is null");
             if (!IsTestMethodRunnable(testMethod, testMethodInfo, out var notRunnableResult))
             {
-                bool shouldRunClassCleanup = false;
-                _classCleanupManager?.MarkTestComplete(testMethodInfo, testMethod, out shouldRunClassCleanup);
+                if (_classCleanupManager is null)
+                {
+                    return notRunnableResult;
+                }
+
+                DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
+                _classCleanupManager.MarkTestComplete(testMethodInfo, testMethod, out bool shouldRunClassCleanup);
                 if (shouldRunClassCleanup)
                 {
                     testMethodInfo.Parent.RunClassCleanup(ClassCleanupBehavior.EndOfClass);
@@ -145,6 +149,7 @@ internal class UnitTestRunner : MarshalByRefObject
                 return notRunnableResult;
             }
 
+            DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
             var result = testMethodRunner.Execute();
 
