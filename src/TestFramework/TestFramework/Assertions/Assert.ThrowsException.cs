@@ -31,7 +31,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static T? ThrowsException<T>(Action action)
+    public static T ThrowsException<T>(Action action)
         where T : Exception
     {
         return ThrowsException<T>(action, string.Empty, null);
@@ -57,7 +57,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static T? ThrowsException<T>(Action action, string message)
+    public static T ThrowsException<T>(Action action, string message)
         where T : Exception
     {
         return ThrowsException<T>(action, message, null);
@@ -79,7 +79,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static T? ThrowsException<T>(Func<object> action)
+    public static T ThrowsException<T>(Func<object> action)
         where T : Exception
     {
         return ThrowsException<T>(action, string.Empty, null);
@@ -105,7 +105,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static T? ThrowsException<T>(Func<object> action, string message)
+    public static T ThrowsException<T>(Func<object> action, string message)
         where T : Exception
     {
         return ThrowsException<T>(action, message, null);
@@ -134,7 +134,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static T? ThrowsException<T>(Func<object> action, string message, params object?[]? parameters)
+    public static T ThrowsException<T>(Func<object> action, string message, params object?[]? parameters)
         where T : Exception
     {
         return ThrowsException<T>(() => { action(); }, message, parameters);
@@ -164,7 +164,7 @@ public sealed partial class Assert
     /// The exception that was thrown.
     /// </returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and format appropriately.")]
-    public static T? ThrowsException<T>(Action action, string message, params object?[]? parameters)
+    public static T ThrowsException<T>(Action action, string message, params object?[]? parameters)
         where T : Exception
     {
         if (action == null)
@@ -229,7 +229,7 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
-    public static async Task<T?> ThrowsExceptionAsync<T>(Func<Task> action)
+    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
         where T : Exception
     {
         return await ThrowsExceptionAsync<T>(action, string.Empty, null).ConfigureAwait(false);
@@ -251,7 +251,7 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
-    public static async Task<T?> ThrowsExceptionAsync<T>(Func<Task> action, string message)
+    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
         where T : Exception
     {
         return await ThrowsExceptionAsync<T>(action, message, null).ConfigureAwait(false);
@@ -276,7 +276,7 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
-    public static async Task<T?> ThrowsExceptionAsync<T>(Func<Task> action, string message, params object?[]? parameters)
+    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message, params object?[]? parameters)
         where T : Exception
     {
         if (action == null)
@@ -322,6 +322,6 @@ public sealed partial class Assert
         ThrowAssertFailed("Assert.ThrowsException", finalMessage);
 
         // This will not hit, but need it for compiler.
-        return null;
+        return null!;
     }
 }
