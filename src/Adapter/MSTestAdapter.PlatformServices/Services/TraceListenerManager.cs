@@ -53,7 +53,7 @@ public class TraceListenerManager : ITraceListenerManager
 #if !WINDOWS_UWP && !WIN_UI
         // NOTE: Listeners will not get Debug events in dotnet core due to platform limitation.
         // Refer https://github.com/Microsoft/testfx/pull/218 for more details.
-        Trace.Listeners.Add(traceListener as TextWriterTraceListener);
+        Trace.Listeners.Add((TextWriterTraceListener)traceListener);
 #endif
     }
 

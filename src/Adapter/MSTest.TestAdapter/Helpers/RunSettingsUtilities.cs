@@ -9,6 +9,7 @@ using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
@@ -36,13 +37,13 @@ internal class RunSettingsUtilities
     /// <param name="settingsXml">The runsettings xml.</param>
     /// <returns>The test run parameters.</returns>
     /// <remarks>If there is no test run parameters section defined in the settingsxml a blank dictionary is returned.</remarks>
-    internal static Dictionary<string, object> GetTestRunParameters(string settingsXml)
+    internal static Dictionary<string, object?> GetTestRunParameters(string? settingsXml)
     {
         var nodeValue = GetNodeValue(settingsXml, Constants.TestRunParametersName, TestRunParameters.FromXml);
-        if (nodeValue == default(Dictionary<string, object>))
+        if (nodeValue == default(Dictionary<string, object?>))
         {
             // Return default.
-            nodeValue = new Dictionary<string, object>();
+            nodeValue = new Dictionary<string, object?>();
         }
 
         return nodeValue;
@@ -67,9 +68,9 @@ internal class RunSettingsUtilities
         }
     }
 
-    private static T GetNodeValue<T>(string settingsXml, string nodeName, Func<XmlReader, T> nodeParser)
+    private static T? GetNodeValue<T>(string? settingsXml, string nodeName, Func<XmlReader, T> nodeParser)
     {
-        if (string.IsNullOrWhiteSpace(settingsXml))
+        if (StringEx.IsNullOrWhiteSpace(settingsXml))
         {
             return default;
         }
@@ -85,8 +86,7 @@ internal class RunSettingsUtilities
 
             // Read till we reach nodeName element or reach EOF
             while (!string.Equals(reader.Name, nodeName, StringComparison.OrdinalIgnoreCase)
-                    &&
-                    !reader.EOF)
+                    && !reader.EOF)
             {
                 reader.SkipToNextElement();
             }

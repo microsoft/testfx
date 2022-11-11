@@ -20,7 +20,7 @@ public interface ITestDataSource
     /// <returns>
     /// Test data for calling test method.
     /// </returns>
-    IEnumerable<object[]> GetData(MethodInfo methodInfo);
+    IEnumerable<object?[]> GetData(MethodInfo methodInfo);
 
     /// <summary>
     /// Gets the display name corresponding to test data row for displaying in TestResults.
@@ -34,5 +34,5 @@ public interface ITestDataSource
     /// <returns>
     /// The <see cref="string"/>.
     /// </returns>
-    string GetDisplayName(MethodInfo methodInfo, object[] data);
+    string? GetDisplayName(MethodInfo methodInfo, object?[]? data);
 }

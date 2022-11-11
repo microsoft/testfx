@@ -5,13 +5,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
@@ -43,10 +43,10 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public string[] GetFullPathToDependentAssemblies(string assemblyPath, out IList<string> warnings)
     {
-        Debug.Assert(!string.IsNullOrEmpty(assemblyPath), "assemblyPath");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyPath), "assemblyPath");
 
         warnings = new List<string>();
-        Assembly assembly = null;
+        Assembly? assembly;
         try
         {
             EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Reflection loading {assemblyPath}.");
@@ -63,7 +63,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
             return Array.Empty<string>(); // Otherwise just return no dependencies.
         }
 
-        Debug.Assert(assembly != null, "assembly");
+        DebugEx.Assert(assembly != null, "assembly");
 
         List<string> result = new();
         HashSet<string> visitedAssemblies = new()
@@ -80,7 +80,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     /// initialize the lifetime service.
     /// </summary>
     /// <returns> The <see cref="object"/>. </returns>
-    public override object InitializeLifetimeService()
+    public override object? InitializeLifetimeService()
     {
         // Infinite.
         return null;
@@ -93,26 +93,28 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     /// <returns> String representation of the target dotNet framework e.g. .NETFramework,Version=v4.0. </returns>
     internal string GetTargetFrameworkVersionStringFromPath(string path)
     {
-        if (File.Exists(path))
+        if (!File.Exists(path))
         {
-            try
+            return string.Empty;
+        }
+
+        try
+        {
+            Assembly a = _assemblyUtility.ReflectionOnlyLoadFrom(path);
+            return GetTargetFrameworkStringFromAssembly(a);
+        }
+        catch (BadImageFormatException)
+        {
+            if (EqtTrace.IsErrorEnabled)
             {
-                Assembly a = _assemblyUtility.ReflectionOnlyLoadFrom(path);
-                return GetTargetFrameworkStringFromAssembly(a);
+                EqtTrace.Error("AssemblyHelper:GetTargetFrameworkVersionString() caught BadImageFormatException. Falling to native binary.");
             }
-            catch (BadImageFormatException)
+        }
+        catch (Exception ex)
+        {
+            if (EqtTrace.IsErrorEnabled)
             {
-                if (EqtTrace.IsErrorEnabled)
-                {
-                    EqtTrace.Error("AssemblyHelper:GetTargetFrameworkVersionString() caught BadImageFormatException. Falling to native binary.");
-                }
-            }
-            catch (Exception ex)
-            {
-                if (EqtTrace.IsErrorEnabled)
-                {
-                    EqtTrace.Error("AssemblyHelper:GetTargetFrameworkVersionString() Returning default. Unhandled exception: {0}.", ex);
-                }
+                EqtTrace.Error("AssemblyHelper:GetTargetFrameworkVersionString() Returning default. Unhandled exception: {0}.", ex);
             }
         }
 
@@ -129,21 +131,25 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         string dotNetVersion = string.Empty;
         foreach (CustomAttributeData data in CustomAttributeData.GetCustomAttributes(assembly))
         {
-            if (data?.NamedArguments?.Count > 0)
+            if (!(data?.NamedArguments?.Count > 0))
             {
-                var declaringType = data.NamedArguments[0].MemberInfo.DeclaringType;
-                if (declaringType != null)
-                {
-                    string attributeName = declaringType.FullName;
-                    if (string.Equals(
-                        attributeName,
-                        PlatformServices.Constants.TargetFrameworkAttributeFullName,
-                        StringComparison.OrdinalIgnoreCase))
-                    {
-                        dotNetVersion = data.ConstructorArguments[0].Value.ToString();
-                        break;
-                    }
-                }
+                continue;
+            }
+
+            var declaringType = data.NamedArguments[0].MemberInfo.DeclaringType;
+            if (declaringType == null)
+            {
+                continue;
+            }
+
+            string attributeName = declaringType.FullName;
+            if (string.Equals(
+                attributeName,
+                Constants.TargetFrameworkAttributeFullName,
+                StringComparison.OrdinalIgnoreCase))
+            {
+                dotNetVersion = data.ConstructorArguments[0].Value.ToString();
+                break;
             }
         }
 
@@ -160,7 +166,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     /// <param name="warnings"> The warnings. </param>
     private void ProcessChildren(Assembly assembly, IList<string> result, ISet<string> visitedAssemblies, IList<string> warnings)
     {
-        Debug.Assert(assembly != null, "assembly");
+        DebugEx.Assert(assembly != null, "assembly");
 
         EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Processing assembly {assembly.FullName}.");
         foreach (AssemblyName reference in assembly.GetReferencedAssemblies())
@@ -183,7 +189,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         }
 
         // Assembly.GetModules() returns all modules including main one.
-        if (modules.Length > 1)
+        if (Array.Empty<Module>().Length > 1)
         {
             // The modules must be in the same directory as assembly that references them.
             foreach (Module m in modules)
@@ -232,7 +238,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private void GetDependentAssembliesInternal(string assemblyString, IList<string> result, ISet<string> visitedAssemblies, IList<string> warnings)
     {
-        Debug.Assert(!string.IsNullOrEmpty(assemblyString), "assemblyString");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyString), "assemblyString");
 
         if (!visitedAssemblies.Add(assemblyString))
         {
@@ -240,13 +246,13 @@ internal class AssemblyLoadWorker : MarshalByRefObject
             return;
         }
 
-        Assembly assembly = null;
+        Assembly? assembly;
         try
         {
             EqtTrace.Verbose($"AssemblyLoadWorker.GetDependentAssembliesInternal: Reflection loading {assemblyString}.");
 
             string postPolicyAssembly = AppDomain.CurrentDomain.ApplyPolicy(assemblyString);
-            Debug.Assert(!string.IsNullOrEmpty(postPolicyAssembly), "postPolicyAssembly");
+            DebugEx.Assert(!StringEx.IsNullOrEmpty(postPolicyAssembly), "postPolicyAssembly");
 
             assembly = _assemblyUtility.ReflectionOnlyLoad(postPolicyAssembly);
             visitedAssemblies.Add(assembly.FullName);   // Just in case.

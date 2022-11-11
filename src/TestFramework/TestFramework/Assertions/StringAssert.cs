@@ -14,8 +14,6 @@ public sealed class StringAssert
 {
     private static readonly object[] Empty = Array.Empty<object>();
 
-    private static StringAssert s_that;
-
     #region Singleton constructor
 
     private StringAssert()
@@ -31,15 +29,7 @@ public sealed class StringAssert
     /// Users could then use a syntax similar to the default assertions which in this case is "StringAssert.That.ContainsWords(value, substrings);"
     /// More documentation is at "https://github.com/Microsoft/testfx/docs/README.md".
     /// </remarks>
-    public static StringAssert That
-    {
-        get
-        {
-            s_that ??= new StringAssert();
-
-            return s_that;
-        }
-    }
+    public static StringAssert That { get; } = new StringAssert();
 
     #endregion
 
@@ -108,7 +98,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="substring"/> is not found in
     /// <paramref name="value"/>.
     /// </exception>
-    public static void Contains(string value, string substring, string message)
+    public static void Contains(string value, string substring, string? message)
     {
         Contains(value, substring, message, StringComparison.Ordinal);
     }
@@ -136,7 +126,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="substring"/> is not found in
     /// <paramref name="value"/>.
     /// </exception>
-    public static void Contains(string value, string substring, string message, StringComparison comparisonType)
+    public static void Contains(string value, string substring, string? message, StringComparison comparisonType)
     {
         Contains(value, substring, message, comparisonType, Empty);
     }
@@ -164,7 +154,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="substring"/> is not found in
     /// <paramref name="value"/>.
     /// </exception>
-    public static void Contains(string value, string substring, string message, params object[] parameters)
+    public static void Contains(string value, string substring, string? message, params object?[]? parameters)
     {
         Contains(value, substring, message, StringComparison.Ordinal, parameters);
     }
@@ -195,7 +185,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="substring"/> is not found in
     /// <paramref name="value"/>.
     /// </exception>
-    public static void Contains(string value, string substring, string message, StringComparison comparisonType, params object[] parameters)
+    public static void Contains(string value, string substring, string? message, StringComparison comparisonType, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(value, "StringAssert.Contains", "value", string.Empty);
         Assert.CheckParameterNotNull(substring, "StringAssert.Contains", "substring", string.Empty);
@@ -270,7 +260,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="value"/> does not begin with
     /// <paramref name="substring"/>.
     /// </exception>
-    public static void StartsWith(string value, string substring, string message)
+    public static void StartsWith(string value, string substring, string? message)
     {
         StartsWith(value, substring, message, StringComparison.Ordinal);
     }
@@ -298,7 +288,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="value"/> does not begin with
     /// <paramref name="substring"/>.
     /// </exception>
-    public static void StartsWith(string value, string substring, string message, params object[] parameters)
+    public static void StartsWith(string value, string substring, string? message, params object?[]? parameters)
     {
         StartsWith(value, substring, message, StringComparison.Ordinal, parameters);
     }
@@ -326,7 +316,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="value"/> does not begin with
     /// <paramref name="substring"/>.
     /// </exception>
-    public static void StartsWith(string value, string substring, string message, StringComparison comparisonType)
+    public static void StartsWith(string value, string substring, string? message, StringComparison comparisonType)
     {
         StartsWith(value, substring, message, comparisonType, Empty);
     }
@@ -357,7 +347,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="value"/> does not begin with
     /// <paramref name="substring"/>.
     /// </exception>
-    public static void StartsWith(string value, string substring, string message, StringComparison comparisonType, params object[] parameters)
+    public static void StartsWith(string value, string substring, string? message, StringComparison comparisonType, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(value, "StringAssert.StartsWith", "value", string.Empty);
         Assert.CheckParameterNotNull(substring, "StringAssert.StartsWith", "substring", string.Empty);
@@ -432,7 +422,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="value"/> does not end with
     /// <paramref name="substring"/>.
     /// </exception>
-    public static void EndsWith(string value, string substring, string message)
+    public static void EndsWith(string value, string substring, string? message)
     {
         EndsWith(value, substring, message, StringComparison.Ordinal);
     }
@@ -460,7 +450,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="value"/> does not end with
     /// <paramref name="substring"/>.
     /// </exception>
-    public static void EndsWith(string value, string substring, string message, params object[] parameters)
+    public static void EndsWith(string value, string substring, string? message, params object?[]? parameters)
     {
         EndsWith(value, substring, message, StringComparison.Ordinal, parameters);
     }
@@ -488,7 +478,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="value"/> does not end with
     /// <paramref name="substring"/>.
     /// </exception>
-    public static void EndsWith(string value, string substring, string message, StringComparison comparisonType)
+    public static void EndsWith(string value, string substring, string? message, StringComparison comparisonType)
     {
         EndsWith(value, substring, message, comparisonType, Empty);
     }
@@ -519,7 +509,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="value"/> does not end with
     /// <paramref name="substring"/>.
     /// </exception>
-    public static void EndsWith(string value, string substring, string message, StringComparison comparisonType, params object[] parameters)
+    public static void EndsWith(string value, string substring, string? message, StringComparison comparisonType, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(value, "StringAssert.EndsWith", "value", string.Empty);
         Assert.CheckParameterNotNull(substring, "StringAssert.EndsWith", "substring", string.Empty);
@@ -575,7 +565,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="value"/> does not match
     /// <paramref name="pattern"/>.
     /// </exception>
-    public static void Matches(string value, Regex pattern, string message)
+    public static void Matches(string value, Regex pattern, string? message)
     {
         Matches(value, pattern, message, null);
     }
@@ -603,7 +593,7 @@ public sealed class StringAssert
     /// Thrown if <paramref name="value"/> does not match
     /// <paramref name="pattern"/>.
     /// </exception>
-    public static void Matches(string value, Regex pattern, string message, params object[] parameters)
+    public static void Matches(string value, Regex pattern, string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(value, "StringAssert.Matches", "value", string.Empty);
         Assert.CheckParameterNotNull(pattern, "StringAssert.Matches", "pattern", string.Empty);
@@ -654,7 +644,7 @@ public sealed class StringAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> matches <paramref name="pattern"/>.
     /// </exception>
-    public static void DoesNotMatch(string value, Regex pattern, string message)
+    public static void DoesNotMatch(string value, Regex pattern, string? message)
     {
         DoesNotMatch(value, pattern, message, null);
     }
@@ -681,7 +671,7 @@ public sealed class StringAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> matches <paramref name="pattern"/>.
     /// </exception>
-    public static void DoesNotMatch(string value, Regex pattern, string message, params object[] parameters)
+    public static void DoesNotMatch(string value, Regex pattern, string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(value, "StringAssert.DoesNotMatch", "value", string.Empty);
         Assert.CheckParameterNotNull(pattern, "StringAssert.DoesNotMatch", "pattern", string.Empty);

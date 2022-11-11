@@ -14,6 +14,7 @@ using System.Security;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 internal class DeploymentUtility : DeploymentUtilityBase
@@ -62,14 +63,14 @@ internal class DeploymentUtility : DeploymentUtilityBase
     /// <returns>Root deployment directory.</returns>
     public override string GetRootDeploymentDirectory(string baseDirectory)
     {
-        string dateTimeSufix = DateTime.Now.ToString("yyyyMMddTHHmmss", DateTimeFormatInfo.InvariantInfo);
+        string dateTimeSuffix = DateTime.Now.ToString("yyyyMMddTHHmmss", DateTimeFormatInfo.InvariantInfo);
         string directoryName = string.Format(CultureInfo.InvariantCulture, Resource.TestRunName, DeploymentFolderPrefix,
 #if NETFRAMEWORK
             Environment.UserName,
 #else
             Environment.GetEnvironmentVariable("USERNAME") ?? Environment.GetEnvironmentVariable("USER"),
 #endif
-            dateTimeSufix);
+            dateTimeSuffix);
         directoryName = FileUtility.ReplaceInvalidFileNameCharacters(directoryName);
 
         return FileUtility.GetNextIterationDirectoryName(baseDirectory, directoryName);
@@ -84,7 +85,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
 
         foreach (var dependencyItem in dependencies)
         {
-            Debug.Assert(Path.IsPathRooted(dependencyItem.SourcePath), "Path of the dependency " + dependencyItem.SourcePath + " is not rooted.");
+            DebugEx.Assert(Path.IsPathRooted(dependencyItem.SourcePath), "Path of the dependency " + dependencyItem.SourcePath + " is not rooted.");
 
             // Add dependencies to filesToDeploy.
             filesToDeploy.Add(dependencyItem.SourcePath);
@@ -134,13 +135,13 @@ internal class DeploymentUtility : DeploymentUtilityBase
         foreach (DeploymentItem item in deploymentItems)
         {
             // We do not care about deployment items which are directories because in that case we deploy all files underneath anyway.
-            string path = null;
+            string? path = null;
             try
             {
                 path = GetFullPathToDeploymentItemSource(item.SourcePath, testSource);
                 path = Path.GetFullPath(path);
 
-                if (string.IsNullOrEmpty(path) || !AssemblyUtility.IsAssemblyExtension(Path.GetExtension(path))
+                if (StringEx.IsNullOrEmpty(path) || !AssemblyUtility.IsAssemblyExtension(Path.GetExtension(path))
                     || !FileUtility.DoesFileExist(path) || !AssemblyUtility.IsAssembly(path))
                 {
                     continue;
@@ -172,22 +173,22 @@ internal class DeploymentUtility : DeploymentUtilityBase
             {
                 string itemDir = Path.GetDirectoryName(path).TrimEnd(
                     new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-                List<string> itemSatellites = AssemblyUtility.GetSatelliteAssemblies(path);
+                List<string> itemSatellites = AssemblyUtility.GetSatelliteAssemblies(path!);
                 foreach (string satellite in itemSatellites)
                 {
-                    Debug.Assert(!string.IsNullOrEmpty(satellite), "DeploymentManager.DoDeployment: got empty satellite!");
-                    Debug.Assert(
+                    DebugEx.Assert(!StringEx.IsNullOrEmpty(satellite), "DeploymentManager.DoDeployment: got empty satellite!");
+                    DebugEx.Assert(
                         satellite.IndexOf(itemDir, StringComparison.OrdinalIgnoreCase) == 0,
                         "DeploymentManager.DoDeployment: Got satellite that does not start with original item path");
 
                     string satelliteDir = Path.GetDirectoryName(satellite).TrimEnd(
                         new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
 
-                    Debug.Assert(!string.IsNullOrEmpty(satelliteDir), "DeploymentManager.DoDeployment: got empty satellite dir!");
-                    Debug.Assert(satelliteDir.Length > itemDir.Length + 1, "DeploymentManager.DoDeployment: wrong satellite dir length!");
+                    DebugEx.Assert(!StringEx.IsNullOrEmpty(satelliteDir), "DeploymentManager.DoDeployment: got empty satellite dir!");
+                    DebugEx.Assert(satelliteDir.Length > itemDir.Length + 1, "DeploymentManager.DoDeployment: wrong satellite dir length!");
 
                     string localeDir = satelliteDir.Substring(itemDir.Length + 1);
-                    Debug.Assert(!string.IsNullOrEmpty(localeDir), "DeploymentManager.DoDeployment: got empty dir name for satellite dir!");
+                    DebugEx.Assert(!StringEx.IsNullOrEmpty(localeDir), "DeploymentManager.DoDeployment: got empty dir name for satellite dir!");
 
                     string relativeOutputDir = Path.Combine(item.RelativeOutputDirectory, localeDir);
 
@@ -227,13 +228,13 @@ internal class DeploymentUtility : DeploymentUtilityBase
     /// <param name="configFile">The config file.</param>
     /// <param name="deploymentItems">Deployment items.</param>
     /// <param name="warnings">Warnings.</param>
-    private void AddDependencies(string testSource, string configFile, IList<DeploymentItem> deploymentItems, IList<string> warnings)
+    private void AddDependencies(string testSource, string? configFile, IList<DeploymentItem> deploymentItems, IList<string> warnings)
     {
-        Debug.Assert(!string.IsNullOrEmpty(testSource), "testSource should not be null or empty.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(testSource), "testSource should not be null or empty.");
 
         // config file can be null.
-        Debug.Assert(deploymentItems != null, "deploymentItems should not be null.");
-        Debug.Assert(Path.IsPathRooted(testSource), "path should be rooted.");
+        DebugEx.Assert(deploymentItems != null, "deploymentItems should not be null.");
+        DebugEx.Assert(Path.IsPathRooted(testSource), "path should be rooted.");
 
         var sw = Stopwatch.StartNew();
 

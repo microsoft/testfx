@@ -6,6 +6,8 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
@@ -23,7 +25,7 @@ internal sealed class SqlDataConnection : TestDataConnectionSql
     /// this.Connection must be already opened.
     /// </summary>
     /// <returns>The default database schema.</returns>
-    public override string GetDefaultSchema()
+    public override string? GetDefaultSchema()
     {
         return GetDefaultSchemaMSSql();
     }
@@ -48,7 +50,7 @@ internal sealed class SqlDataConnection : TestDataConnectionSql
 
         string attachedFile = sqlBuilder.AttachDBFilename;
 
-        if (string.IsNullOrEmpty(attachedFile))
+        if (StringEx.IsNullOrEmpty(attachedFile))
         {
             // No file, so no need to rewrite the connection string
             return connectionString;
@@ -61,7 +63,7 @@ internal sealed class SqlDataConnection : TestDataConnectionSql
             sqlBuilder.Pooling = false;
 
             // Fix-up magic file paths
-            string fixedFilePath = FixPath(attachedFile, dataFolders);
+            string? fixedFilePath = FixPath(attachedFile, dataFolders);
             if (fixedFilePath != null)
             {
                 sqlBuilder.AttachDBFilename = fixedFilePath;

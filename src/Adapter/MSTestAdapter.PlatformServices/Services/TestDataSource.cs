@@ -15,7 +15,9 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using ITestDataSource = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestDataSource;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -31,9 +33,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 public class TestDataSource : ITestDataSource
 {
 #if NETFRAMEWORK
-    public IEnumerable<object> GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
+    public IEnumerable<object>? GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
 #else
-    IEnumerable<object> ITestDataSource.GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
+    IEnumerable<object>? ITestDataSource.GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext)
 #endif
     {
 #if NETFRAMEWORK
@@ -50,8 +52,8 @@ public class TestDataSource : ITestDataSource
         TestDataConnectionFactory factory = new();
 
         string providerNameInvariant;
-        string connectionString;
-        string tableName;
+        string? connectionString;
+        string? tableName;
         UTF.DataAccessMethod dataAccessMethod;
 
         try
@@ -66,10 +68,11 @@ public class TestDataSource : ITestDataSource
 
         try
         {
-            using TestDataConnection connection = factory.Create(providerNameInvariant, connectionString, dataFolders);
-            DataTable table = connection.ReadTable(tableName, null);
-            DataRow[] rows = table.Select();
-            Debug.Assert(rows != null, "rows should not be null.");
+            using TestDataConnection connection = factory.Create(providerNameInvariant, connectionString!, dataFolders);
+            DataTable? table = connection.ReadTable(tableName!, null);
+            DebugEx.Assert(table != null, "Table should not be null");
+            DataRow[] rows = table!.Select();
+            DebugEx.Assert(rows != null, "rows should not be null.");
 
             // check for row length is 0
             if (rows.Length == 0)
@@ -110,14 +113,14 @@ public class TestDataSource : ITestDataSource
     {
         switch (dataAccessMethod)
         {
-            case UTF.DataAccessMethod.Sequential:
+            case DataAccessMethod.Sequential:
                 return new SequentialIntPermutation(length);
 
-            case UTF.DataAccessMethod.Random:
+            case DataAccessMethod.Random:
                 return new RandomIntPermutation(length);
 
             default:
-                Debug.Fail("Unknown DataAccessMehtod: " + dataAccessMethod);
+                Debug.Fail("Unknown DataAccessMethod: " + dataAccessMethod);
                 return new SequentialIntPermutation(length);
         }
     }
@@ -130,28 +133,28 @@ public class TestDataSource : ITestDataSource
     /// <param name="connectionString">The connection string.</param>
     /// <param name="tableName">The table name.</param>
     /// <param name="dataAccessMethod">The data access method.</param>
-    private static void GetConnectionProperties(UTF.DataSourceAttribute dataSourceAttribute, out string providerNameInvariant, out string connectionString, out string tableName, out UTF.DataAccessMethod dataAccessMethod)
+    private static void GetConnectionProperties(UTF.DataSourceAttribute dataSourceAttribute, out string providerNameInvariant,
+        out string? connectionString, out string? tableName, out UTF.DataAccessMethod dataAccessMethod)
     {
-        if (string.IsNullOrEmpty(dataSourceAttribute.DataSourceSettingName) == false)
-        {
-            UTF.DataSourceElement elem = UTF.TestConfiguration.ConfigurationSection.DataSources[dataSourceAttribute.DataSourceSettingName];
-            if (elem == null)
-            {
-                throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_DataSourceConfigurationSectionMissing, dataSourceAttribute.DataSourceSettingName));
-            }
-
-            providerNameInvariant = ConfigurationManager.ConnectionStrings[elem.ConnectionString].ProviderName;
-            connectionString = ConfigurationManager.ConnectionStrings[elem.ConnectionString].ConnectionString;
-            tableName = elem.DataTableName;
-            dataAccessMethod = (UTF.DataAccessMethod)Enum.Parse(typeof(UTF.DataAccessMethod), elem.DataAccessMethod);
-        }
-        else
+        if (StringEx.IsNullOrEmpty(dataSourceAttribute.DataSourceSettingName))
         {
             providerNameInvariant = dataSourceAttribute.ProviderInvariantName;
             connectionString = dataSourceAttribute.ConnectionString;
             tableName = dataSourceAttribute.TableName;
             dataAccessMethod = dataSourceAttribute.DataAccessMethod;
+            return;
         }
+
+        UTF.DataSourceElement element = TestConfiguration.ConfigurationSection.DataSources[dataSourceAttribute.DataSourceSettingName];
+        if (element == null)
+        {
+            throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_DataSourceConfigurationSectionMissing, dataSourceAttribute.DataSourceSettingName));
+        }
+
+        providerNameInvariant = ConfigurationManager.ConnectionStrings[element.ConnectionString].ProviderName;
+        connectionString = ConfigurationManager.ConnectionStrings[element.ConnectionString].ConnectionString;
+        tableName = element.DataTableName;
+        dataAccessMethod = (UTF.DataAccessMethod)Enum.Parse(typeof(UTF.DataAccessMethod), element.DataAccessMethod);
     }
 #endif
 }

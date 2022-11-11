@@ -10,6 +10,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Nullable>enable</Nullable>
     <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
     <!-- Following path will be overridden by specific TFMs -->
     <LocDocumentationSubPath>Extensions\Core</LocDocumentationSubPath>

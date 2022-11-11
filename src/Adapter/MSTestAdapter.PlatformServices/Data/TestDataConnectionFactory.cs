@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-
 #if NETFRAMEWORK
+using System.Collections.Generic;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 
 /// <summary>
@@ -43,8 +43,8 @@ internal class TestDataConnectionFactory
     /// <returns>The TestDataConnection instance.</returns>
     public virtual TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders)
     {
-        Debug.Assert(!string.IsNullOrEmpty(invariantProviderName), "invariantProviderName");
-        Debug.Assert(!string.IsNullOrEmpty(connectionString), "connectionString");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(invariantProviderName), "invariantProviderName");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(connectionString), "connectionString");
 
         TestDataConnection.WriteDiagnostics("Create {0}, {1}", invariantProviderName, connectionString);
 
@@ -52,7 +52,7 @@ internal class TestDataConnectionFactory
         // here we look for special cases
         if (SpecializedProviders.TryGetValue(invariantProviderName, out var factory))
         {
-            Debug.Assert(factory != null, "factory");
+            DebugEx.Assert(factory != null, "factory");
             return factory.Create(invariantProviderName, connectionString, dataFolders);
         }
         else

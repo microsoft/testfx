@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppCont
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -63,7 +64,7 @@ public class FileOperations : IFileOperations
     /// </summary>
     /// <param name="assembly">The assembly.</param>
     /// <returns>Path to the .DLL of the assembly.</returns>
-    public string GetAssemblyPath(Assembly assembly)
+    public string? GetAssemblyPath(Assembly assembly)
     {
 #if NETSTANDARD || NETCOREAPP || NETFRAMEWORK
         return assembly.Location;
@@ -114,7 +115,7 @@ public class FileOperations : IFileOperations
     /// </summary>
     /// <param name="source"> The source file. </param>
     /// <returns> A Navigation session instance for the current platform. </returns>
-    public object CreateNavigationSession(string source)
+    public object? CreateNavigationSession(string source)
     {
 #if NETSTANDARD || (NETCOREAPP && !WIN_UI) || WINDOWS_UWP || WIN_UI
         return DiaSessionOperations.CreateNavigationSession(source);
@@ -133,7 +134,7 @@ public class FileOperations : IFileOperations
     /// <param name="methodName"> The method name. </param>
     /// <param name="minLineNumber"> The min line number. </param>
     /// <param name="fileName"> The file name. </param>
-    public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string fileName)
+    public void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string? fileName)
     {
 #if NETSTANDARD || (NETCOREAPP && !WIN_UI) || WINDOWS_UWP || WIN_UI
         DiaSessionOperations.GetNavigationData(navigationSession, className, methodName, out minLineNumber, out fileName);
@@ -141,8 +142,8 @@ public class FileOperations : IFileOperations
         fileName = null;
         minLineNumber = -1;
 
-        var diasession = navigationSession as DiaSession;
-        var navigationData = diasession?.GetNavigationData(className, methodName);
+        var diaSession = navigationSession as DiaSession;
+        var navigationData = diaSession?.GetNavigationData(className, methodName);
 
         if (navigationData != null)
         {
@@ -156,13 +157,13 @@ public class FileOperations : IFileOperations
     /// Disposes the navigation session instance.
     /// </summary>
     /// <param name="navigationSession"> The navigation session. </param>
-    public void DisposeNavigationSession(object navigationSession)
+    public void DisposeNavigationSession(object? navigationSession)
     {
 #if NETSTANDARD || (NETCOREAPP && !WIN_UI) || WINDOWS_UWP || WIN_UI
         DiaSessionOperations.DisposeNavigationSession(navigationSession);
 #elif NETFRAMEWORK
-        var diasession = navigationSession as DiaSession;
-        diasession?.Dispose();
+        var diaSession = navigationSession as DiaSession;
+        diaSession?.Dispose();
 #endif
 
     }
@@ -191,7 +192,7 @@ public class FileOperations : IFileOperations
     }
 
 #if NETFRAMEWORK
-    private static object SafeInvoke<T>(Func<T> action, string messageFormatOnException = null)
+    private static object? SafeInvoke<T>(Func<T> action, string? messageFormatOnException = null)
     {
         try
         {
@@ -199,7 +200,7 @@ public class FileOperations : IFileOperations
         }
         catch (Exception exception)
         {
-            if (string.IsNullOrEmpty(messageFormatOnException))
+            if (StringEx.IsNullOrEmpty(messageFormatOnException))
             {
                 messageFormatOnException = "{0}";
             }

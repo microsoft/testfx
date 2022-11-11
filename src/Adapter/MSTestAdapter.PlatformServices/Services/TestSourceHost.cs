@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -23,7 +24,7 @@ public class TestSourceHost : ITestSourceHost
 {
 #if !WINDOWS_UWP && !PORTABLE
     private readonly string _sourceFileName;
-    private string _currentDirectory = null;
+    private string? _currentDirectory = null;
 #endif
 
 #if NETFRAMEWORK
@@ -35,26 +36,21 @@ public class TestSourceHost : ITestSourceHost
     private readonly bool _isAppDomainCreationDisabled;
 #pragma warning restore SA1214 // Readonly fields should appear before non-readonly fields
 
-    private readonly IRunSettings _runSettings;
-    private readonly IFrameworkHandle _frameworkHandle;
+    private readonly IRunSettings? _runSettings;
+    private readonly IFrameworkHandle? _frameworkHandle;
     private readonly IAppDomain _appDomain;
-
-    /// <summary>
-    /// Child AppDomain used to discover/execute tests.
-    /// </summary>
-    private AppDomain _domain;
 
     /// <summary>
     /// Assembly resolver used in the current app-domain.
     /// </summary>
-    private AssemblyResolver _parentDomainAssemblyResolver;
+    private AssemblyResolver? _parentDomainAssemblyResolver;
 
     /// <summary>
     /// Assembly resolver used in the new child app-domain created for discovery/execution.
     /// </summary>
-    private AssemblyResolver _childDomainAssemblyResolver;
+    private AssemblyResolver? _childDomainAssemblyResolver;
 
-    private string _targetFrameworkVersion;
+    private string? _targetFrameworkVersion;
 #endif
 
     /// <summary>
@@ -63,7 +59,7 @@ public class TestSourceHost : ITestSourceHost
     /// <param name="sourceFileName"> The source file name. </param>
     /// <param name="runSettings"> The run-settings provided for this session. </param>
     /// <param name="frameworkHandle"> The handle to the test platform. </param>
-    public TestSourceHost(string sourceFileName, IRunSettings runSettings, IFrameworkHandle frameworkHandle)
+    public TestSourceHost(string sourceFileName, IRunSettings? runSettings, IFrameworkHandle? frameworkHandle)
 #if NETFRAMEWORK
         : this(sourceFileName, runSettings, frameworkHandle, new AppDomainWrapper())
 #endif
@@ -77,7 +73,7 @@ public class TestSourceHost : ITestSourceHost
     }
 
 #if NETFRAMEWORK
-    internal TestSourceHost(string sourceFileName, IRunSettings runSettings, IFrameworkHandle frameworkHandle, IAppDomain appDomain)
+    internal TestSourceHost(string sourceFileName, IRunSettings? runSettings, IFrameworkHandle? frameworkHandle, IAppDomain appDomain)
     {
         _sourceFileName = sourceFileName;
         _runSettings = runSettings;
@@ -88,16 +84,13 @@ public class TestSourceHost : ITestSourceHost
         SetContext(sourceFileName);
 
         // Set isAppDomainCreationDisabled flag
-        _isAppDomainCreationDisabled = (_runSettings != null) && MSTestAdapterSettings.IsAppDomainCreationDisabled(_runSettings.SettingsXml);
+        _isAppDomainCreationDisabled = _runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(_runSettings.SettingsXml);
     }
 
-    internal AppDomain AppDomain
-    {
-        get
-        {
-            return _domain;
-        }
-    }
+    /// <summary>
+    /// Gets the child AppDomain used to discover/execute tests.
+    /// </summary>
+    internal AppDomain? AppDomain { get; private set; }
 #endif
 
     /// <summary>
@@ -135,11 +128,11 @@ public class TestSourceHost : ITestSourceHost
             EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating app-domain for source {0} with application base path {1}.", _sourceFileName, appDomainSetup.ApplicationBase);
 
             string domainName = string.Format("TestSourceHost: Enumerating source ({0})", _sourceFileName);
-            _domain = _appDomain.CreateDomain(domainName, null, appDomainSetup);
+            AppDomain = _appDomain.CreateDomain(domainName, null!, appDomainSetup);
 
             // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recursive assembly resolution
             // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
-            EqtTrace.SetupRemoteEqtTraceListeners(_domain);
+            EqtTrace.SetupRemoteEqtTraceListeners(AppDomain);
 
             // Add an assembly resolver in the child app-domain...
             Type assemblyResolverType = typeof(AssemblyResolver);
@@ -147,7 +140,7 @@ public class TestSourceHost : ITestSourceHost
             EqtTrace.Info("DesktopTestSourceHost.SetupHost(): assemblyenumerator location: {0} , fullname: {1} ", assemblyResolverType.Assembly.Location, assemblyResolverType.FullName);
 
             var resolver = AppDomainUtilities.CreateInstance(
-                _domain,
+                AppDomain,
                 assemblyResolverType,
                 new object[] { resolutionPaths });
 
@@ -173,7 +166,7 @@ public class TestSourceHost : ITestSourceHost
     /// </param>
     /// <returns>  An instance of the type created in the host. </returns>
     /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
-    public object CreateInstanceForType(Type type, object[] args)
+    public object? CreateInstanceForType(Type type, object?[]? args)
     {
 #if NETFRAMEWORK
         // Honor DisableAppDomain setting if it is present in runsettings
@@ -182,7 +175,7 @@ public class TestSourceHost : ITestSourceHost
             return Activator.CreateInstance(type, args);
         }
 
-        return AppDomainUtilities.CreateInstance(_domain, type, args);
+        return AppDomainUtilities.CreateInstance(AppDomain!, type, args);
 #else
         return Activator.CreateInstance(type, args);
 #endif
@@ -206,11 +199,11 @@ public class TestSourceHost : ITestSourceHost
             _childDomainAssemblyResolver = null;
         }
 
-        if (_domain != null)
+        if (AppDomain != null)
         {
             try
             {
-                _appDomain.Unload(_domain);
+                _appDomain.Unload(AppDomain);
             }
             catch (Exception exception)
             {
@@ -227,7 +220,7 @@ public class TestSourceHost : ITestSourceHost
                 }
             }
 
-            _domain = null;
+            AppDomain = null;
         }
 
         ResetContext();
@@ -245,14 +238,14 @@ public class TestSourceHost : ITestSourceHost
     /// <param name="source">
     /// source parameter used for setting context.
     /// </param>
-    private void SetContext(string source)
+    private void SetContext(string? source)
     {
-        if (string.IsNullOrEmpty(source))
+        if (StringEx.IsNullOrEmpty(source))
         {
             return;
         }
 
-        Exception setWorkingDirectoryException = null;
+        Exception? setWorkingDirectoryException = null;
         _currentDirectory = Environment.CurrentDirectory;
         try
         {
@@ -261,14 +254,14 @@ public class TestSourceHost : ITestSourceHost
             // then directory resolution works properly.
             var dirName = Path.GetDirectoryName(Path.GetFullPath(source));
 #if WIN_UI
-            if (string.IsNullOrEmpty(dirName))
+            if (StringEx.IsNullOrEmpty(dirName))
             {
-                dirName = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
+                dirName = Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!;
             }
 
             Directory.SetCurrentDirectory(dirName);
 #else
-            Environment.CurrentDirectory = dirName;
+            Environment.CurrentDirectory = dirName!;
 #if NETFRAMEWORK
             EqtTrace.Info("MSTestExecutor: Changed the working directory to {0}", Environment.CurrentDirectory);
 #endif
@@ -294,7 +287,7 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     private void ResetContext()
     {
-        if (!string.IsNullOrEmpty(_currentDirectory))
+        if (!StringEx.IsNullOrEmpty(_currentDirectory))
         {
             Environment.CurrentDirectory = _currentDirectory;
         }
@@ -315,6 +308,7 @@ public class TestSourceHost : ITestSourceHost
         //    in IDE scenarios. If the app base is set to the test source location, discovery will not work because we drop the
         //    UWP platform service assembly at the test source location and since CLR starts looking for assemblies from the app base location,
         //    there would be a mismatch of platform service assemblies during discovery.
+        DebugEx.Assert(_targetFrameworkVersion is not null, "Target framework version is null.");
         if (_targetFrameworkVersion.Contains(Constants.DotNetFrameWorkStringPrefix))
         {
             return Path.GetDirectoryName(_sourceFileName) ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
@@ -349,14 +343,16 @@ public class TestSourceHost : ITestSourceHost
         {
             EqtTrace.Info("DesktopTestSourceHost.GetResolutionPaths(): Not running in portable mode");
 
-            string pathToPublicAssemblies = VSInstallationUtilities.PathToPublicAssemblies;
-            if (!StringUtilities.IsNullOrWhiteSpace(pathToPublicAssemblies))
+            string? pathToPublicAssemblies = VSInstallationUtilities.PathToPublicAssemblies;
+            if (!StringEx.IsNullOrWhiteSpace(pathToPublicAssemblies)
+                && !StringUtilities.IsNullOrWhiteSpace(pathToPublicAssemblies))
             {
                 resolutionPaths.Add(pathToPublicAssemblies);
             }
 
-            string pathToPrivateAssemblies = VSInstallationUtilities.PathToPrivateAssemblies;
-            if (!StringUtilities.IsNullOrWhiteSpace(pathToPrivateAssemblies))
+            string? pathToPrivateAssemblies = VSInstallationUtilities.PathToPrivateAssemblies;
+            if (!StringEx.IsNullOrWhiteSpace(pathToPrivateAssemblies)
+                && !StringUtilities.IsNullOrWhiteSpace(pathToPrivateAssemblies))
             {
                 resolutionPaths.Add(pathToPrivateAssemblies);
             }
@@ -382,7 +378,7 @@ public class TestSourceHost : ITestSourceHost
         return AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
     }
 
-    private static string GetConfigFileForTestSource(string sourceFileName)
+    private static string? GetConfigFileForTestSource(string sourceFileName)
     {
         return new DeploymentUtility().GetConfigFile(sourceFileName);
     }
@@ -391,24 +387,25 @@ public class TestSourceHost : ITestSourceHost
     {
         // Check if user specified any adapter settings
         MSTestAdapterSettings adapterSettings = MSTestSettingsProvider.Settings;
-
-        if (adapterSettings != null)
+        if (adapterSettings == null)
         {
-            try
+            return;
+        }
+
+        try
+        {
+            var additionalSearchDirectories = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
+            if (additionalSearchDirectories?.Count > 0)
             {
-                var additionalSearchDirectories = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
-                if (additionalSearchDirectories?.Count > 0)
-                {
-                    assemblyResolver.AddSearchDirectoriesFromRunSetting(additionalSearchDirectories);
-                }
+                assemblyResolver.AddSearchDirectoriesFromRunSetting(additionalSearchDirectories);
             }
-            catch (Exception exception)
-            {
-                EqtTrace.Error(
-                    "DesktopTestSourceHost.AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(): Exception hit while trying to set assembly resolver for domain. Exception : {0} \n Message : {1}",
-                    exception,
-                    exception.Message);
-            }
+        }
+        catch (Exception exception)
+        {
+            EqtTrace.Error(
+                "DesktopTestSourceHost.AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(): Exception hit while trying to set assembly resolver for domain. Exception : {0} \n Message : {1}",
+                exception,
+                exception.Message);
         }
     }
 #endif

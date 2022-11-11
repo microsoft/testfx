@@ -2,10 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -23,7 +25,8 @@ internal static class ExceptionExtensions
     /// <returns>
     /// An <see cref="Exception"/> instance.
     /// </returns>
-    internal static Exception GetInnerExceptionOrDefault(this Exception exception)
+    [return: NotNullIfNotNull(nameof(exception))]
+    internal static Exception? GetInnerExceptionOrDefault(this Exception exception)
     {
         return exception?.InnerException ?? exception;
     }
@@ -49,9 +52,9 @@ internal static class ExceptionExtensions
     /// </summary>
     /// <param name="exception">An <see cref="Exception"/> instance.</param>
     /// <returns>StackTraceInformation for the exception.</returns>
-    internal static StackTraceInformation TryGetStackTraceInformation(this Exception exception)
+    internal static StackTraceInformation? TryGetStackTraceInformation(this Exception exception)
     {
-        if (!string.IsNullOrEmpty(exception?.StackTrace))
+        if (!StringEx.IsNullOrEmpty(exception?.StackTrace))
         {
             return StackTraceHelper.CreateStackTraceInformation(exception, false, exception.StackTrace);
         }
@@ -67,7 +70,8 @@ internal static class ExceptionExtensions
     /// <param name="exceptionMessage">Exception message.</param>
     /// <param name="exceptionStackTrace">StackTraceInformation for the exception.</param>
     /// <returns>True, if Assert exception. False, otherwise.</returns>
-    internal static bool TryGetUnitTestAssertException(this Exception exception, out UTF.UnitTestOutcome outcome, out string exceptionMessage, out StackTraceInformation exceptionStackTrace)
+    internal static bool TryGetUnitTestAssertException(this Exception exception, out UTF.UnitTestOutcome outcome,
+        [NotNullWhen(true)] out string? exceptionMessage, out StackTraceInformation? exceptionStackTrace)
     {
         if (exception is UTF.UnitTestAssertException)
         {

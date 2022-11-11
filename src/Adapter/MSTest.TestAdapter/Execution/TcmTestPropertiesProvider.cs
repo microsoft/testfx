@@ -17,9 +17,9 @@ internal static class TcmTestPropertiesProvider
     /// </summary>
     /// <param name="testCase">Test case.</param>
     /// <returns>Tcm properties.</returns>
-    public static IDictionary<TestPlatformObjectModel.TestProperty, object> GetTcmProperties(TestPlatformObjectModel.TestCase testCase)
+    public static IDictionary<TestPlatformObjectModel.TestProperty, object?> GetTcmProperties(TestPlatformObjectModel.TestCase testCase)
     {
-        var tcmProperties = new Dictionary<TestPlatformObjectModel.TestProperty, object>();
+        var tcmProperties = new Dictionary<TestPlatformObjectModel.TestProperty, object?>();
 
         // Return empty properties when testCase is null or when test case id is zero.
         if (testCase == null ||

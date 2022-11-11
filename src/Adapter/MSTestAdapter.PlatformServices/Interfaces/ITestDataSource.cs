@@ -24,5 +24,5 @@ public interface ITestDataSource
     /// <returns>
     /// Test data for calling test method.
     /// </returns>
-    IEnumerable<object> GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext);
+    IEnumerable<object>? GetData(UTF.ITestMethod testMethodInfo, ITestContext testContext);
 }

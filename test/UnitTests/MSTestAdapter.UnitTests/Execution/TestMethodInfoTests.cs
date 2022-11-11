@@ -82,7 +82,7 @@ public class TestMethodInfoTests : TestContainer
         _testMethodInfo = new TestMethodInfo(
             _methodInfo,
             parent: _testClassInfo,
-            testmethodOptions: _testMethodOptions);
+            testMethodOptions: _testMethodOptions);
 
         // Reset test hooks
         DummyTestClass.TestConstructorMethodBody = () => { };

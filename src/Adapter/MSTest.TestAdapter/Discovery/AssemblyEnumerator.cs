@@ -59,7 +59,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <summary>
     /// Gets or sets the run settings to use for current discovery session.
     /// </summary>
-    public string RunSettingsXml { get; set; }
+    public string? RunSettingsXml { get; set; }
 
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
@@ -73,7 +73,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 #endif
     public override object InitializeLifetimeService()
     {
-        return null;
+        return null!;
     }
 
     /// <summary>
@@ -84,9 +84,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>A collection of Test Elements.</returns>
     internal ICollection<UnitTestElement> EnumerateAssembly(string assemblyFileName, out ICollection<string> warnings)
     {
-        Debug.Assert(!string.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
+        DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
 
-        var runSettingsXml = RunSettingsXml;
         var warningMessages = new List<string>();
         var tests = new List<UnitTestElement>();
 
@@ -113,7 +112,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            var testsInType = DiscoverTestsInType(assemblyFileName, runSettingsXml, assembly, type, warningMessages,
+            var testsInType = DiscoverTestsInType(assemblyFileName, RunSettingsXml, assembly, type, warningMessages,
                 discoverInternals, testDataSourceDiscovery, testIdGenerationStrategy);
             tests.AddRange(testsInType);
         }
@@ -129,7 +128,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The file name of the assembly.</param>
     /// <param name="warningMessages">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Gets the types defined in the provided assembly.</returns>
-    internal static Type[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string> warningMessages)
+    internal static Type?[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
     {
         var types = new List<Type>();
         try
@@ -154,7 +153,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
             }
 
-            return ex.Types;
+            return ex.Types!;
         }
 
         return types.ToArray();
@@ -167,9 +166,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>Returns loader exceptions as a multi-line string.</returns>
     internal static string GetLoadExceptionDetails(ReflectionTypeLoadException ex)
     {
-        Debug.Assert(ex != null, "exception should not be null.");
+        DebugEx.Assert(ex != null, "exception should not be null.");
 
-        var map = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase); // Exception -> null.
+        var map = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase); // Exception -> null.
         var errorDetails = new StringBuilder();
 
         if (ex.LoaderExceptions?.Length > 0)
@@ -177,7 +176,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             // Loader exceptions can contain duplicates, leave only unique exceptions.
             foreach (var loaderException in ex.LoaderExceptions)
             {
-                Debug.Assert(loaderException != null, "loader exception should not be null.");
+                DebugEx.Assert(loaderException != null, "loader exception should not be null.");
                 var line = string.Format(CultureInfo.CurrentCulture, Resource.EnumeratorLoadTypeErrorFormat, loaderException.GetType(), loaderException.Message);
                 if (!map.ContainsKey(line))
                 {
@@ -211,16 +210,16 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
     }
 
-    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string runSettingsXml, Assembly assembly,
+    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string? runSettingsXml, Assembly assembly,
         Type type, List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
         TestIdGenerationStrategy testIdGenerationStrategy)
     {
         var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
         sourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(sourceLevelParameters)
             ?? sourceLevelParameters
-            ?? new Dictionary<string, object>();
+            ?? new Dictionary<string, object?>();
 
-        string typeFullName = null;
+        string? typeFullName = null;
         var tests = new List<UnitTestElement>();
 
         try
@@ -228,7 +227,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             typeFullName = type.FullName;
             var testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
             var unitTestCases = testTypeEnumerator.Enumerate(out var warningsFromTypeEnumerator);
-            var typeIgnored = ReflectHelper.IsAttributeDefined(type, typeof(IgnoreAttribute), false);
+            var typeIgnored = ReflectHelper.IsAttributeDefined<IgnoreAttribute>(type, false);
 
             if (warningsFromTypeEnumerator != null)
             {
@@ -241,7 +240,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
                     {
-                        if (DynamicDataAttached(sourceLevelParameters, assembly, test, tests))
+                        if (DynamicDataAttached(sourceLevelParameters, test, tests))
                         {
                             continue;
                         }
@@ -263,7 +262,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return tests;
     }
 
-    private bool DynamicDataAttached(IDictionary<string, object> sourceLevelParameters, Assembly assembly, UnitTestElement test, List<UnitTestElement> tests)
+    private bool DynamicDataAttached(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test, List<UnitTestElement> tests)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -387,7 +386,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 // If strategy is DisplayName and we have a duplicate test name don't expand the test, bail out.
 #pragma warning disable CS0618 // Type or member is obsolete
                 if (test.TestMethod.TestIdGenerationStrategy == TestIdGenerationStrategy.DisplayName
-                    && testDisplayNameFirstSeen.TryGetValue(discoveredTest.DisplayName, out var firstIndexSeen))
+                    && testDisplayNameFirstSeen.TryGetValue(discoveredTest.DisplayName!, out var firstIndexSeen))
                 {
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstIndexSeen, index, discoveredTest.DisplayName);
                     warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
@@ -416,7 +415,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 }
 
                 discoveredTests.Add(discoveredTest);
-                testDisplayNameFirstSeen[discoveredTest.DisplayName] = index++;
+                testDisplayNameFirstSeen[discoveredTest.DisplayName!] = index++;
             }
 
             tests.AddRange(discoveredTests);

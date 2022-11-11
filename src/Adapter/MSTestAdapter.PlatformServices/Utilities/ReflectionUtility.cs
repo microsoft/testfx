@@ -4,6 +4,7 @@
 #if !WINDOWS_UWP
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 #if NETFRAMEWORK
 using System.Collections;
 using System.Collections.Generic;
@@ -25,7 +26,8 @@ internal class ReflectionUtility
     /// <param name="attributeProvider"> The member to reflect on. </param>
     /// <param name="type"> The attribute type. </param>
     /// <returns> The vale of the custom attribute. </returns>
-    internal virtual object[] GetCustomAttributes(MemberInfo attributeProvider, Type type)
+    [return: NotNullIfNotNull(nameof(attributeProvider))]
+    internal virtual object[]? GetCustomAttributes(MemberInfo attributeProvider, Type type)
     {
         return GetCustomAttributes(attributeProvider, type, true);
     }
@@ -36,7 +38,8 @@ internal class ReflectionUtility
     /// <param name="memberInfo"> The member. </param>
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
-    internal static object[] GetCustomAttributes(MemberInfo memberInfo, bool inherit)
+    [return: NotNullIfNotNull(nameof(memberInfo))]
+    internal static object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
     {
         return GetCustomAttributes(memberInfo, type: null, inherit: inherit);
     }
@@ -48,7 +51,8 @@ internal class ReflectionUtility
     /// <param name="type">Type of attribute to retrieve.</param>
     /// <param name="inherit">If inherited type of attribute.</param>
     /// <returns>All attributes of give type on member.</returns>
-    internal static object[] GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
+    [return: NotNullIfNotNull(nameof(memberInfo))]
+    internal static object[]? GetCustomAttributes(MemberInfo? memberInfo, Type? type, bool inherit)
     {
         if (memberInfo == null)
         {
@@ -88,10 +92,10 @@ internal class ReflectionUtility
                     AddNewAttributes(
                         attributes,
                         shouldGetAllAttributes,
-                        type,
+                        type!,
                         uniqueAttributes,
                         nonUniqueAttributes);
-                    tempTypeInfo = tempTypeInfo.BaseType?.GetTypeInfo();
+                    tempTypeInfo = tempTypeInfo!.BaseType?.GetTypeInfo();
                     inheritanceLevel++;
                 }
                 while (tempTypeInfo != null && tempTypeInfo != typeof(object).GetTypeInfo()
@@ -108,19 +112,17 @@ internal class ReflectionUtility
                     AddNewAttributes(
                         attributes,
                         shouldGetAllAttributes,
-                        type,
+                        type!,
                         uniqueAttributes,
                         nonUniqueAttributes);
-                    var baseDefinition = tempMethodInfo.GetBaseDefinition();
+                    var baseDefinition = tempMethodInfo!.GetBaseDefinition();
 
-                    if (baseDefinition != null)
-                    {
-                        if (string.Equals(
+                    if (baseDefinition != null
+                        && string.Equals(
                             string.Concat(tempMethodInfo.DeclaringType.FullName, tempMethodInfo.Name),
                             string.Concat(baseDefinition.DeclaringType.FullName, baseDefinition.Name)))
-                        {
-                            break;
-                        }
+                    {
+                        break;
                     }
 
                     tempMethodInfo = baseDefinition;
@@ -134,7 +136,7 @@ internal class ReflectionUtility
                 // Return the attributes that CustomAttributeData returns in this cases not considering inheritance.
                 var firstLevelAttributes =
                 CustomAttributeData.GetCustomAttributes(memberInfo);
-                AddNewAttributes(firstLevelAttributes, shouldGetAllAttributes, type, uniqueAttributes, nonUniqueAttributes);
+                AddNewAttributes(firstLevelAttributes, shouldGetAllAttributes, type!, uniqueAttributes, nonUniqueAttributes);
             }
 
             nonUniqueAttributes.AddRange(uniqueAttributes.Values);
@@ -155,33 +157,33 @@ internal class ReflectionUtility
 #if NETFRAMEWORK
     internal static object[] GetCustomAttributes(Assembly assembly, Type type)
     {
-        if (assembly.ReflectionOnly)
-        {
-            List<CustomAttributeData> customAttributes = new();
-            customAttributes.AddRange(CustomAttributeData.GetCustomAttributes(assembly));
-
-            List<object> attributesArray = new();
-
-            foreach (var attribute in customAttributes)
-            {
-                if (IsTypeInheriting(attribute.Constructor.DeclaringType, type)
-                        || attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
-                            type.AssemblyQualifiedName))
-                {
-                    Attribute attributeInstance = CreateAttributeInstance(attribute);
-                    if (attributeInstance != null)
-                    {
-                        attributesArray.Add(attributeInstance);
-                    }
-                }
-            }
-
-            return attributesArray.ToArray();
-        }
-        else
+        if (!assembly.ReflectionOnly)
         {
             return assembly.GetCustomAttributes(type).ToArray();
         }
+
+        List<CustomAttributeData> customAttributes = new();
+        customAttributes.AddRange(CustomAttributeData.GetCustomAttributes(assembly));
+
+        List<object> attributesArray = new();
+
+        foreach (var attribute in customAttributes)
+        {
+            if (!IsTypeInheriting(attribute.Constructor.DeclaringType, type)
+                    && !attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
+                        type.AssemblyQualifiedName))
+            {
+                continue;
+            }
+
+            Attribute? attributeInstance = CreateAttributeInstance(attribute);
+            if (attributeInstance != null)
+            {
+                attributesArray.Add(attributeInstance);
+            }
+        }
+
+        return attributesArray.ToArray();
     }
 
     /// <summary>
@@ -189,9 +191,9 @@ internal class ReflectionUtility
     /// </summary>
     /// <param name="attributeData">The attribute data.</param>
     /// <returns>An attribute.</returns>
-    private static Attribute CreateAttributeInstance(CustomAttributeData attributeData)
+    private static Attribute? CreateAttributeInstance(CustomAttributeData attributeData)
     {
-        object attribute = null;
+        object? attribute = null;
         try
         {
             // Create instance of attribute. For some case, constructor param is returned as ReadOnlyCollection
@@ -204,34 +206,27 @@ internal class ReflectionUtility
             {
                 Type parameterType = Type.GetType(parameter.ArgumentType.AssemblyQualifiedName);
                 constructorParameters.Add(parameterType);
-                if (parameterType.IsArray)
+                if (!parameterType.IsArray
+                    || parameter.Value is not IEnumerable enumerable)
                 {
-                    if (parameter.Value is IEnumerable enumerable)
-                    {
-                        ArrayList list = new();
-                        foreach (var item in enumerable)
-                        {
-                            if (item is CustomAttributeTypedArgument argument)
-                            {
-                                list.Add(argument.Value);
-                            }
-                            else
-                            {
-                                list.Add(item);
-                            }
-                        }
+                    constructorArguments.Add(parameter.Value);
+                    continue;
+                }
 
-                        constructorArguments.Add(list.ToArray(parameterType.GetElementType()));
+                ArrayList list = new();
+                foreach (var item in enumerable)
+                {
+                    if (item is CustomAttributeTypedArgument argument)
+                    {
+                        list.Add(argument.Value);
                     }
                     else
                     {
-                        constructorArguments.Add(parameter.Value);
+                        list.Add(item);
                     }
                 }
-                else
-                {
-                    constructorArguments.Add(parameter.Value);
-                }
+
+                constructorArguments.Add(list.ToArray(parameterType.GetElementType()));
             }
 
             ConstructorInfo constructor = attributeType.GetConstructor(constructorParameters.ToArray());
@@ -266,29 +261,33 @@ internal class ReflectionUtility
     {
         foreach (var attribute in customAttributes)
         {
-            if (shouldGetAllAttributes
-                || (IsTypeInheriting(attribute.Constructor.DeclaringType, type)
-                    || attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
-                        type.AssemblyQualifiedName)))
+            if (!shouldGetAllAttributes
+                && !IsTypeInheriting(attribute.Constructor.DeclaringType, type)
+                    && !attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
+                        type.AssemblyQualifiedName))
             {
-                Attribute attributeInstance = CreateAttributeInstance(attribute);
-                if (attributeInstance != null)
+                continue;
+            }
+
+            Attribute? attributeInstance = CreateAttributeInstance(attribute);
+            if (attributeInstance == null)
+            {
+                continue;
+            }
+
+            if (GetCustomAttributes(
+                    attributeInstance.GetType().GetTypeInfo(),
+                    typeof(AttributeUsageAttribute),
+                    true).FirstOrDefault() is AttributeUsageAttribute attributeUsageAttribute && !attributeUsageAttribute.AllowMultiple)
+            {
+                if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))
                 {
-                    if (GetCustomAttributes(
-                            attributeInstance.GetType().GetTypeInfo(),
-                            typeof(AttributeUsageAttribute),
-                            true).FirstOrDefault() is AttributeUsageAttribute attributeUsageAttribute && !attributeUsageAttribute.AllowMultiple)
-                    {
-                        if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))
-                        {
-                            uniqueAttributes.Add(attributeInstance.GetType().FullName, attributeInstance);
-                        }
-                    }
-                    else
-                    {
-                        nonUniqueAttributes.Add(attributeInstance);
-                    }
+                    uniqueAttributes.Add(attributeInstance.GetType().FullName, attributeInstance);
                 }
+            }
+            else
+            {
+                nonUniqueAttributes.Add(attributeInstance);
             }
         }
     }
@@ -298,7 +297,7 @@ internal class ReflectionUtility
     /// </summary>
     /// <param name="memberInfo"> The member Info. </param>
     /// <returns> True if the member is loaded in a reflection only context. </returns>
-    private static bool IsReflectionOnlyLoad(MemberInfo memberInfo)
+    private static bool IsReflectionOnlyLoad(MemberInfo? memberInfo)
     {
         if (memberInfo != null)
         {
@@ -308,7 +307,7 @@ internal class ReflectionUtility
         return false;
     }
 
-    private static bool IsTypeInheriting(Type type1, Type type2)
+    private static bool IsTypeInheriting(Type? type1, Type type2)
     {
         while (type1 != null)
         {

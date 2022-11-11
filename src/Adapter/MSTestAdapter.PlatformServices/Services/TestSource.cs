@@ -141,14 +141,14 @@ public class TestSource : ITestSource
             return newSources;
         }
 #elif WIN_UI
-        string appxSource;
+        string? appxSource;
         if ((appxSource = FindAppxSource(sources)) != null)
         {
-            var appxSourceDirectory = Path.GetDirectoryName(appxSource);
+            var appxSourceDirectory = Path.GetDirectoryName(appxSource)!;
 
             List<string> newSources = new();
 
-            var files = Directory.GetFiles(AppModel.GetCurrentPackagePath());
+            var files = Directory.GetFiles(AppModel.GetCurrentPackagePath()!);
             foreach (var filePath in files)
             {
                 var isExtSupported = ExecutableExtensions.Any(ext => filePath.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
@@ -196,7 +196,7 @@ public class TestSource : ITestSource
     /// </summary>
     /// <param name="sources">The list of sources.</param>
     /// <returns>True if there is an appx source.</returns>
-    private static string FindAppxSource(IEnumerable<string> sources)
+    private static string? FindAppxSource(IEnumerable<string> sources)
     {
         foreach (string source in sources)
         {

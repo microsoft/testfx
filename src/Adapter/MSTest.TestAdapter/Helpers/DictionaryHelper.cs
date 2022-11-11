@@ -9,8 +9,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 internal static class DictionaryHelper
 {
     public static IDictionary<TKey, TValue> ConcatWithOverwrites<TKey, TValue>(
-        this IDictionary<TKey, TValue> source,
-        IDictionary<TKey, TValue> overwrite,
+        this IDictionary<TKey, TValue>? source,
+        IDictionary<TKey, TValue>? overwrite,
         string sourceFriendlyName = "source",
         string overwriteFriendlyName = "overwrite")
         where TKey : IEquatable<TKey>
@@ -24,16 +24,16 @@ internal static class DictionaryHelper
         if (overwrite == null || overwrite?.Count == 0)
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: The {0} is null or empty, returning the {1} dictionary.", overwriteFriendlyName, sourceFriendlyName);
-            return source.ToDictionary(p => p.Key, p => p.Value);
+            return source!.ToDictionary(p => p.Key, p => p.Value);
         }
 
         if (source == null || source?.Count == 0)
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: The {0} is null or empty, returning the {1} dictionary.", sourceFriendlyName, overwriteFriendlyName);
-            return overwrite.ToDictionary(p => p.Key, p => p.Value);
+            return overwrite!.ToDictionary(p => p.Key, p => p.Value);
         }
 
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: The {0} has {1} keys. And {2} has {3} keys. Merging them.", sourceFriendlyName, source.Count, overwriteFriendlyName, overwrite.Count);
+        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: The {0} has {1} keys. And {2} has {3} keys. Merging them.", sourceFriendlyName, source!.Count, overwriteFriendlyName, overwrite!.Count);
         var destination = source.ToDictionary(p => p.Key, p => p.Value);
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: Taking all keys from {0}: {1}.", sourceFriendlyName, string.Join(", ", source.Keys));
         var overwrites = new List<TKey>();

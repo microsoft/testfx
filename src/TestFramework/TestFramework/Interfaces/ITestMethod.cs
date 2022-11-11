@@ -29,7 +29,7 @@ public interface ITestMethod
     /// <summary>
     /// Gets the arguments with which test method is invoked.
     /// </summary>
-    object[] Arguments { get; }
+    object?[]? Arguments { get; }
 
     /// <summary>
     /// Gets the parameters of test method.
@@ -57,7 +57,7 @@ public interface ITestMethod
     /// <remarks>
     /// This call handles asynchronous test methods as well.
     /// </remarks>
-    TestResult Invoke(object[] arguments);
+    TestResult Invoke(object[]? arguments);
 
     /// <summary>
     /// Get all attributes of the test method.
@@ -68,7 +68,7 @@ public interface ITestMethod
     /// <returns>
     /// All attributes.
     /// </returns>
-    Attribute[] GetAllAttributes(bool inherit);
+    Attribute[]? GetAllAttributes(bool inherit);
 
     /// <summary>
     /// Get attribute of specific type.

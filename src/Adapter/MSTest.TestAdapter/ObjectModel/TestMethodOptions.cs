@@ -19,12 +19,12 @@ internal class TestMethodOptions
     /// <summary>
     /// Gets or sets the ExpectedException attribute adorned on a test method.
     /// </summary>
-    internal ExpectedExceptionBaseAttribute ExpectedException { get; set; }
+    internal ExpectedExceptionBaseAttribute? ExpectedException { get; set; }
 
     /// <summary>
     /// Gets or sets the testcontext passed into the test method.
     /// </summary>
-    internal ITestContext TestContext { get; set; }
+    internal ITestContext? TestContext { get; set; }
 
     /// <summary>
     /// Gets or sets a value indicating whether debug traces should be captured when running the test.
@@ -34,5 +34,5 @@ internal class TestMethodOptions
     /// <summary>
     /// Gets or sets the test method executor that invokes the test.
     /// </summary>
-    internal TestMethodAttribute Executor { get; set; }
+    internal TestMethodAttribute? Executor { get; set; }
 }

@@ -16,14 +16,12 @@ public class RunConfigurationSettingsTests : TestContainer
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
     private readonly Mock<IDiscoveryContext> _mockDiscoveryContext;
     private readonly Mock<IRunSettings> _mockRunSettings;
-    private readonly Mock<IMessageLogger> _mockMessageLogger;
 
     public RunConfigurationSettingsTests()
     {
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _mockDiscoveryContext = new Mock<IDiscoveryContext>();
         _mockRunSettings = new Mock<IRunSettings>();
-        _mockMessageLogger = new Mock<IMessageLogger>();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 

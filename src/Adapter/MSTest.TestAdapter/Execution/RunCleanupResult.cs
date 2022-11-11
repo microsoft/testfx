@@ -15,20 +15,20 @@ internal class RunCleanupResult
     /// <summary>
     /// Gets or sets the standard out of the cleanup methods.
     /// </summary>
-    internal string StandardOut { get; set; }
+    internal string? StandardOut { get; set; }
 
     /// <summary>
     /// Gets or sets the standard error of the cleanup methods.
     /// </summary>
-    internal string StandardError { get; set; }
+    internal string? StandardError { get; set; }
 
     /// <summary>
     /// Gets or sets the Debug trace of the cleanup methods.
     /// </summary>
-    internal string DebugTrace { get; set; }
+    internal string? DebugTrace { get; set; }
 
     /// <summary>
     /// Gets or sets the Warnings from the RunCleanup method.
     /// </summary>
-    internal IList<string> Warnings { get; set; }
+    internal IList<string>? Warnings { get; set; }
 }

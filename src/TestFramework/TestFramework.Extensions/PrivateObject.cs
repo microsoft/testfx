@@ -4,7 +4,6 @@
 #if NETFRAMEWORK
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -23,10 +22,10 @@ public class PrivateObject
 
     private static readonly BindingFlags ConstructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.NonPublic;
 
-    private object _target;     // automatically initialized to null
-    private Type _originalType; // automatically initialized to null
+    private object _target;
+    private Type _originalType;
 
-    private Dictionary<string, LinkedList<MethodInfo>> _methodCache; // automatically initialized to null
+    private Dictionary<string, LinkedList<MethodInfo>>? _methodCache;
 
     #endregion
 
@@ -41,10 +40,10 @@ public class PrivateObject
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an object, so 'obj' seems reasonable")]
     public PrivateObject(object obj, string memberToAccess)
     {
-        Helper.CheckParameterNotNull(obj, "obj", string.Empty);
+        _ = obj ?? throw new ArgumentNullException(nameof(obj));
         ValidateAccessString(memberToAccess);
 
-        PrivateObject temp = obj as PrivateObject;
+        PrivateObject? temp = obj as PrivateObject;
         temp ??= new PrivateObject(obj);
 
         // Split The access string
@@ -52,7 +51,8 @@ public class PrivateObject
 
         for (int i = 0; i < arr.Length; i++)
         {
-            object next = temp.InvokeHelper(arr[i], BindToEveryThing | BindingFlags.Instance | BindingFlags.GetField | BindingFlags.GetProperty, null, CultureInfo.InvariantCulture);
+            object? next = temp.InvokeHelper(arr[i], BindToEveryThing | BindingFlags.Instance | BindingFlags.GetField | BindingFlags.GetProperty, null, CultureInfo.InvariantCulture);
+            DebugEx.Assert(next is not null, "next should not be null");
             temp = new PrivateObject(next);
         }
 
@@ -67,7 +67,7 @@ public class PrivateObject
     /// <param name="assemblyName">Name of the assembly.</param>
     /// <param name="typeName">fully qualified name.</param>
     /// <param name="args">Arguments to pass to the constructor.</param>
-    public PrivateObject(string assemblyName, string typeName, params object[] args)
+    public PrivateObject(string assemblyName, string typeName, params object?[]? args)
         : this(assemblyName, typeName, null, args)
     {
     }
@@ -80,11 +80,11 @@ public class PrivateObject
     /// <param name="typeName">fully qualified name.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get.</param>
     /// <param name="args">Arguments to pass to the constructor.</param>
-    public PrivateObject(string assemblyName, string typeName, Type[] parameterTypes, object[] args)
+    public PrivateObject(string assemblyName, string typeName, Type[]? parameterTypes, object?[]? args)
         : this(Type.GetType(string.Format(CultureInfo.InvariantCulture, "{0}, {1}", typeName, assemblyName), false), parameterTypes, args)
     {
-        Helper.CheckParameterNotNull(assemblyName, "assemblyName", string.Empty);
-        Helper.CheckParameterNotNull(typeName, "typeName", string.Empty);
+        _ = assemblyName ?? throw new ArgumentNullException(nameof(assemblyName));
+        _ = typeName ?? throw new ArgumentNullException(nameof(typeName));
     }
 
     /// <summary>
@@ -93,7 +93,7 @@ public class PrivateObject
     /// </summary>
     /// <param name="type">type of the object to create.</param>
     /// <param name="args">Arguments to pass to the constructor.</param>
-    public PrivateObject(Type type, params object[] args)
+    public PrivateObject(Type type, params object?[]? args)
         : this(type, null, args)
     {
         Helper.CheckParameterNotNull(type, "type", string.Empty);
@@ -106,13 +106,13 @@ public class PrivateObject
     /// <param name="type">type of the object to create.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get.</param>
     /// <param name="args">Arguments to pass to the constructor.</param>
-    public PrivateObject(Type type, Type[] parameterTypes, object[] args)
+    public PrivateObject(Type type, Type[]? parameterTypes, object?[]? args)
     {
         Helper.CheckParameterNotNull(type, "type", string.Empty);
-        object o;
+        object? o;
         if (parameterTypes != null)
         {
-            ConstructorInfo ci = type.GetConstructor(BindToEveryThing, null, parameterTypes, null);
+            ConstructorInfo? ci = type.GetConstructor(BindToEveryThing, null, parameterTypes, null);
             if (ci == null)
             {
                 throw new ArgumentException(FrameworkMessages.PrivateAccessorConstructorNotFound);
@@ -124,7 +124,7 @@ public class PrivateObject
             }
             catch (TargetInvocationException e)
             {
-                Debug.Assert(e.InnerException != null, "Inner exception should not be null.");
+                DebugEx.Assert(e.InnerException != null, "Inner exception should not be null.");
                 if (e.InnerException != null)
                 {
                     throw e.InnerException;
@@ -149,7 +149,7 @@ public class PrivateObject
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an object, so 'obj' seems reasonable")]
     public PrivateObject(object obj)
     {
-        Helper.CheckParameterNotNull(obj, "obj", string.Empty);
+        _ = obj ?? throw new ArgumentNullException(nameof(obj));
         ConstructFrom(obj);
     }
 
@@ -162,7 +162,7 @@ public class PrivateObject
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We don't know anything about the object other than that it's an object, so 'obj' seems reasonable")]
     public PrivateObject(object obj, PrivateType type)
     {
-        Helper.CheckParameterNotNull(type, "type", string.Empty);
+        _ = type ?? throw new ArgumentNullException(nameof(type));
         _target = obj;
         _originalType = type.ReferencedType;
     }
@@ -181,7 +181,7 @@ public class PrivateObject
 
         set
         {
-            Helper.CheckParameterNotNull(value, "Target", string.Empty);
+            _ = value ?? throw new ArgumentNullException(nameof(Target));
             _target = value;
             _originalType = value.GetType();
         }
@@ -207,7 +207,7 @@ public class PrivateObject
                 BuildGenericMethodCacheForType(_originalType);
             }
 
-            Debug.Assert(_methodCache != null, "Invalid method cache for type.");
+            DebugEx.Assert(_methodCache != null, "Invalid method cache for type.");
 
             return _methodCache;
         }
@@ -219,7 +219,7 @@ public class PrivateObject
     /// <returns>int representing hashcode of the target object.</returns>
     public override int GetHashCode()
     {
-        Debug.Assert(_target != null, "target should not be null.");
+        DebugEx.Assert(_target != null, "target should not be null.");
         return _target.GetHashCode();
     }
 
@@ -228,11 +228,11 @@ public class PrivateObject
     /// </summary>
     /// <param name="obj">Object with whom to compare.</param>
     /// <returns>returns true if the objects are equal.</returns>
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         if (this != obj)
         {
-            Debug.Assert(_target != null, "target should not be null.");
+            DebugEx.Assert(_target != null, "target should not be null.");
             return typeof(PrivateObject) == obj?.GetType()
                 && _target.Equals(((PrivateObject)obj)._target);
         }
@@ -246,9 +246,9 @@ public class PrivateObject
     /// <param name="name">Name of the method.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call.</returns>
-    public object Invoke(string name, params object[] args)
+    public object? Invoke(string name, params object?[]? args)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         return Invoke(name, null, args, CultureInfo.InvariantCulture);
     }
 
@@ -259,7 +259,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call.</returns>
-    public object Invoke(string name, Type[] parameterTypes, object[] args)
+    public object? Invoke(string name, Type[] parameterTypes, object?[]? args)
     {
         return Invoke(name, parameterTypes, args, CultureInfo.InvariantCulture);
     }
@@ -272,7 +272,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
     /// <returns>Result of method call.</returns>
-    public object Invoke(string name, Type[] parameterTypes, object[] args, Type[] typeArguments)
+    public object? Invoke(string name, Type[] parameterTypes, object?[]? args, Type[] typeArguments)
     {
         return Invoke(name, BindToEveryThing, parameterTypes, args, CultureInfo.InvariantCulture, typeArguments);
     }
@@ -284,7 +284,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of method call.</returns>
-    public object Invoke(string name, object[] args, CultureInfo culture)
+    public object? Invoke(string name, object?[]? args, CultureInfo culture)
     {
         return Invoke(name, null, args, culture);
     }
@@ -297,7 +297,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of method call.</returns>
-    public object Invoke(string name, Type[] parameterTypes, object[] args, CultureInfo culture)
+    public object? Invoke(string name, Type[]? parameterTypes, object?[]? args, CultureInfo culture)
     {
         return Invoke(name, BindToEveryThing, parameterTypes, args, culture);
     }
@@ -309,7 +309,7 @@ public class PrivateObject
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call.</returns>
-    public object Invoke(string name, BindingFlags bindingFlags, params object[] args)
+    public object? Invoke(string name, BindingFlags bindingFlags, params object?[]? args)
     {
         return Invoke(name, bindingFlags, null, args, CultureInfo.InvariantCulture);
     }
@@ -322,7 +322,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call.</returns>
-    public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args)
+    public object? Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object?[]? args)
     {
         return Invoke(name, bindingFlags, parameterTypes, args, CultureInfo.InvariantCulture);
     }
@@ -335,7 +335,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of method call.</returns>
-    public object Invoke(string name, BindingFlags bindingFlags, object[] args, CultureInfo culture)
+    public object? Invoke(string name, BindingFlags bindingFlags, object?[]? args, CultureInfo culture)
     {
         return Invoke(name, bindingFlags, null, args, culture);
     }
@@ -349,7 +349,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of method call.</returns>
-    public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args, CultureInfo culture)
+    public object? Invoke(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args, CultureInfo culture)
     {
         return Invoke(name, bindingFlags, parameterTypes, args, culture, null);
     }
@@ -364,9 +364,9 @@ public class PrivateObject
     /// <param name="culture">Culture info.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
     /// <returns>Result of method call.</returns>
-    public object Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args, CultureInfo culture, Type[] typeArguments)
+    public object? Invoke(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args, CultureInfo? culture, Type[]? typeArguments)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         if (parameterTypes == null)
         {
             return InvokeHelper(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
@@ -375,18 +375,18 @@ public class PrivateObject
         bindingFlags |= BindToEveryThing | BindingFlags.Instance;
 
         // Fix up the parameter types
-        MethodInfo member = _originalType.GetMethod(name, bindingFlags, null, parameterTypes, null);
+        MethodInfo? member = _originalType.GetMethod(name, bindingFlags, null, parameterTypes, null);
 
         // If the method was not found and type arguments were provided for generic parameters,
         // attempt to look up a generic method.
-        if ((member == null) && (typeArguments != null))
+        if (member == null && typeArguments != null)
         {
             // This method may contain generic parameters...if so, the previous call to
             // GetMethod() will fail because it doesn't fully support generic parameters.
 
             // Look in the method cache to see if there is a generic method
             // on the incoming type that contains the correct signature.
-            member = GetGenericMethodFromCache(name, parameterTypes, typeArguments, bindingFlags, null);
+            member = GetGenericMethodFromCache(name, parameterTypes, typeArguments, bindingFlags);
         }
 
         if (member == null)
@@ -409,7 +409,7 @@ public class PrivateObject
         }
         catch (TargetInvocationException e)
         {
-            Debug.Assert(e.InnerException != null, "Inner exception should not be null.");
+            DebugEx.Assert(e.InnerException != null, "Inner exception should not be null.");
             if (e.InnerException != null)
             {
                 throw e.InnerException;
@@ -427,7 +427,7 @@ public class PrivateObject
     /// <returns>An array of elements.</returns>
     public object GetArrayElement(string name, params int[] indices)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         return GetArrayElement(name, BindToEveryThing, indices);
     }
 
@@ -439,7 +439,7 @@ public class PrivateObject
     /// <param name="indices">the indices of array.</param>
     public void SetArrayElement(string name, object value, params int[] indices)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         SetArrayElement(name, BindToEveryThing, value, indices);
     }
 
@@ -452,8 +452,9 @@ public class PrivateObject
     /// <returns>An array of elements.</returns>
     public object GetArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
-        Array arr = (Array)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Array? arr = (Array?)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
+        DebugEx.Assert(arr is not null, "arr should not be null");
         return arr.GetValue(indices);
     }
 
@@ -466,8 +467,9 @@ public class PrivateObject
     /// <param name="indices">the indices of array.</param>
     public void SetArrayElement(string name, BindingFlags bindingFlags, object value, params int[] indices)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
-        Array arr = (Array)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
+        Array? arr = (Array?)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
+        DebugEx.Assert(arr is not null, "arr should not be null");
         arr.SetValue(value, indices);
     }
 
@@ -476,9 +478,9 @@ public class PrivateObject
     /// </summary>
     /// <param name="name">Name of the field.</param>
     /// <returns>The field.</returns>
-    public object GetField(string name)
+    public object? GetField(string name)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         return GetField(name, BindToEveryThing);
     }
 
@@ -489,7 +491,7 @@ public class PrivateObject
     /// <param name="value">value to set.</param>
     public void SetField(string name, object value)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         SetField(name, BindToEveryThing, value);
     }
 
@@ -499,9 +501,9 @@ public class PrivateObject
     /// <param name="name">Name of the field.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <returns>The field.</returns>
-    public object GetField(string name, BindingFlags bindingFlags)
+    public object? GetField(string name, BindingFlags bindingFlags)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         return InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
     }
 
@@ -511,10 +513,10 @@ public class PrivateObject
     /// <param name="name">Name of the field.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="value">value to set.</param>
-    public void SetField(string name, BindingFlags bindingFlags, object value)
+    public void SetField(string name, BindingFlags bindingFlags, object? value)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
-        InvokeHelper(name, BindingFlags.SetField | bindingFlags, new object[] { value }, CultureInfo.InvariantCulture);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
+        InvokeHelper(name, BindingFlags.SetField | bindingFlags, new object?[] { value }, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -522,9 +524,9 @@ public class PrivateObject
     /// </summary>
     /// <param name="name">Name of the field or property.</param>
     /// <returns>The field or property.</returns>
-    public object GetFieldOrProperty(string name)
+    public object? GetFieldOrProperty(string name)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         return GetFieldOrProperty(name, BindToEveryThing);
     }
 
@@ -535,7 +537,7 @@ public class PrivateObject
     /// <param name="value">value to set.</param>
     public void SetFieldOrProperty(string name, object value)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         SetFieldOrProperty(name, BindToEveryThing, value);
     }
 
@@ -545,9 +547,9 @@ public class PrivateObject
     /// <param name="name">Name of the field or property.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <returns>The field or property.</returns>
-    public object GetFieldOrProperty(string name, BindingFlags bindingFlags)
+    public object? GetFieldOrProperty(string name, BindingFlags bindingFlags)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         return InvokeHelper(name, BindingFlags.GetField | BindingFlags.GetProperty | bindingFlags, null, CultureInfo.InvariantCulture);
     }
 
@@ -557,10 +559,10 @@ public class PrivateObject
     /// <param name="name">Name of the field or property.</param>
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="value">value to set.</param>
-    public void SetFieldOrProperty(string name, BindingFlags bindingFlags, object value)
+    public void SetFieldOrProperty(string name, BindingFlags bindingFlags, object? value)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
-        InvokeHelper(name, BindingFlags.SetField | BindingFlags.SetProperty | bindingFlags, new object[] { value }, CultureInfo.InvariantCulture);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
+        InvokeHelper(name, BindingFlags.SetField | BindingFlags.SetProperty | bindingFlags, new object?[] { value }, CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -569,7 +571,7 @@ public class PrivateObject
     /// <param name="name">Name of the property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
-    public object GetProperty(string name, params object[] args)
+    public object? GetProperty(string name, params object?[]? args)
     {
         return GetProperty(name, null, args);
     }
@@ -581,7 +583,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
-    public object GetProperty(string name, Type[] parameterTypes, object[] args)
+    public object? GetProperty(string name, Type[]? parameterTypes, object?[]? args)
     {
         return GetProperty(name, BindToEveryThing, parameterTypes, args);
     }
@@ -592,7 +594,7 @@ public class PrivateObject
     /// <param name="name">Name of the property.</param>
     /// <param name="value">value to set.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetProperty(string name, object value, params object[] args)
+    public void SetProperty(string name, object? value, params object?[]? args)
     {
         SetProperty(name, null, value, args);
     }
@@ -604,7 +606,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="value">value to set.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetProperty(string name, Type[] parameterTypes, object value, object[] args)
+    public void SetProperty(string name, Type[]? parameterTypes, object? value, object?[]? args)
     {
         SetProperty(name, BindToEveryThing, value, parameterTypes, args);
     }
@@ -616,7 +618,7 @@ public class PrivateObject
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
-    public object GetProperty(string name, BindingFlags bindingFlags, params object[] args)
+    public object? GetProperty(string name, BindingFlags bindingFlags, params object?[]? args)
     {
         return GetProperty(name, bindingFlags, null, args);
     }
@@ -629,15 +631,15 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
-    public object GetProperty(string name, BindingFlags bindingFlags, Type[] parameterTypes, object[] args)
+    public object? GetProperty(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
         if (parameterTypes == null)
         {
             return InvokeHelper(name, bindingFlags | BindingFlags.GetProperty, args, null);
         }
 
-        PropertyInfo pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
+        PropertyInfo? pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
         if (pi == null)
         {
             throw new ArgumentException(
@@ -654,7 +656,7 @@ public class PrivateObject
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="value">value to set.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetProperty(string name, BindingFlags bindingFlags, object value, params object[] args)
+    public void SetProperty(string name, BindingFlags bindingFlags, object value, params object?[]? args)
     {
         SetProperty(name, bindingFlags, value, null, args);
     }
@@ -667,25 +669,21 @@ public class PrivateObject
     /// <param name="value">value to set.</param>
     /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetProperty(string name, BindingFlags bindingFlags, object value, Type[] parameterTypes, object[] args)
+    public void SetProperty(string name, BindingFlags bindingFlags, object? value, Type[]? parameterTypes, object?[]? args)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
+        _ = name ?? throw new ArgumentNullException(nameof(name));
 
         if (parameterTypes == null)
         {
-            object[] pass = new object[(args?.Length ?? 0) + 1];
+            object?[] pass = new object[(args?.Length ?? 0) + 1];
             pass[0] = value;
             args?.CopyTo(pass, 1);
             InvokeHelper(name, bindingFlags | BindingFlags.SetProperty, pass, null);
             return;
         }
 
-        PropertyInfo pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
-        if (pi == null)
-        {
-            throw new ArgumentException(
-                string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
-        }
+        PropertyInfo? pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null)
+            ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
 
         pi.SetValue(_target, value, args);
     }
@@ -698,7 +696,7 @@ public class PrivateObject
     /// <param name="access"> access string.</param>
     private static void ValidateAccessString(string access)
     {
-        Helper.CheckParameterNotNull(access, "access", string.Empty);
+        _ = access ?? throw new ArgumentNullException(nameof(access));
         if (access.Length == 0)
         {
             throw new ArgumentException(FrameworkMessages.AccessStringInvalidSyntax);
@@ -722,10 +720,10 @@ public class PrivateObject
     /// <param name="args">Arguments for the invocation.</param>
     /// <param name="culture">Culture.</param>
     /// <returns>Result of the invocation.</returns>
-    private object InvokeHelper(string name, BindingFlags bindingFlags, object[] args, CultureInfo culture)
+    private object? InvokeHelper(string name, BindingFlags bindingFlags, object?[]? args, CultureInfo? culture)
     {
-        Helper.CheckParameterNotNull(name, "name", string.Empty);
-        Debug.Assert(_target != null, "Internal Error: Null reference is returned for internal object");
+        _ = name ?? throw new ArgumentNullException(nameof(name));
+        DebugEx.Assert(_target != null, "Internal Error: Null reference is returned for internal object");
 
         // Invoke the actual Method
         try
@@ -734,7 +732,7 @@ public class PrivateObject
         }
         catch (TargetInvocationException e)
         {
-            Debug.Assert(e.InnerException != null, "Inner exception should not be null.");
+            DebugEx.Assert(e.InnerException != null, "Inner exception should not be null.");
             if (e.InnerException != null)
             {
                 throw e.InnerException;
@@ -744,16 +742,17 @@ public class PrivateObject
         }
     }
 
+    [MemberNotNull(nameof(_target), nameof(_originalType))]
     private void ConstructFrom(object obj)
     {
-        Helper.CheckParameterNotNull(obj, "obj", string.Empty);
+        _ = obj ?? throw new ArgumentNullException(nameof(obj));
         _target = obj;
         _originalType = obj.GetType();
     }
 
     private void BuildGenericMethodCacheForType(Type t)
     {
-        Debug.Assert(t != null, "type should not be null.");
+        DebugEx.Assert(t != null, "type should not be null.");
         _methodCache = new Dictionary<string, LinkedList<MethodInfo>>();
 
         MethodInfo[] members = t.GetMethods(BindToEveryThing);
@@ -772,7 +771,7 @@ public class PrivateObject
                 GenericMethodCache.Add(member.Name, listByName);
             }
 
-            Debug.Assert(listByName != null, "list should not be null.");
+            DebugEx.Assert(listByName != null, "list should not be null.");
             listByName.AddLast(member);
         }
     }
@@ -784,25 +783,25 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of types corresponding to the types of the parameters in which to search.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
     /// <param name="bindingFlags"><see cref="BindingFlags"/> to further filter the method signatures.</param>
-    /// <param name="modifiers">Modifiers for parameters.</param>
     /// <returns>A method info instance.</returns>
-    private MethodInfo GetGenericMethodFromCache(string methodName, Type[] parameterTypes, Type[] typeArguments, BindingFlags bindingFlags, ParameterModifier[] modifiers)
+    private MethodInfo? GetGenericMethodFromCache(string methodName, Type[] parameterTypes, Type[] typeArguments, BindingFlags bindingFlags)
     {
-        Debug.Assert(!string.IsNullOrEmpty(methodName), "Invalid method name.");
-        Debug.Assert(parameterTypes != null, "Invalid parameter type array.");
-        Debug.Assert(typeArguments != null, "Invalid type arguments array.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(methodName), "Invalid method name.");
+        DebugEx.Assert(parameterTypes != null, "Invalid parameter type array.");
+        DebugEx.Assert(typeArguments != null, "Invalid type arguments array.");
 
         // Build a preliminary list of method candidates that contain roughly the same signature.
-        var methodCandidates = GetMethodCandidates(methodName, parameterTypes, typeArguments, bindingFlags, modifiers);
+        var methodCandidates = GetMethodCandidates(methodName, parameterTypes, typeArguments, bindingFlags);
 
         // Search of ambiguous methods (methods with the same signature).
         MethodInfo[] finalCandidates = new MethodInfo[methodCandidates.Count];
         methodCandidates.CopyTo(finalCandidates, 0);
 
+        // TODO: Check if it's possible to have parameterTypes null here as we assert it's not null above.
         if (parameterTypes == null || parameterTypes.Length != 0)
         {
             // Now that we have a preliminary list of candidates, select the most appropriate one.
-            return RuntimeTypeHelper.SelectMethod(bindingFlags, finalCandidates, parameterTypes, modifiers) as MethodInfo;
+            return RuntimeTypeHelper.SelectMethod(finalCandidates, parameterTypes!) as MethodInfo;
         }
 
         for (int i = 0; i < finalCandidates.Length; i++)
@@ -819,11 +818,11 @@ public class PrivateObject
         return RuntimeTypeHelper.FindMostDerivedNewSlotMeth(finalCandidates, finalCandidates.Length) as MethodInfo;
     }
 
-    private LinkedList<MethodInfo> GetMethodCandidates(string methodName, Type[] parameterTypes, Type[] typeArguments, BindingFlags bindingFlags, ParameterModifier[] modifiers)
+    private LinkedList<MethodInfo> GetMethodCandidates(string methodName, Type[] parameterTypes, Type[] typeArguments, BindingFlags bindingFlags)
     {
-        Debug.Assert(!string.IsNullOrEmpty(methodName), "methodName should not be null.");
-        Debug.Assert(parameterTypes != null, "parameterTypes should not be null.");
-        Debug.Assert(typeArguments != null, "typeArguments should not be null.");
+        DebugEx.Assert(!StringEx.IsNullOrEmpty(methodName), "methodName should not be null.");
+        DebugEx.Assert(parameterTypes != null, "parameterTypes should not be null.");
+        DebugEx.Assert(typeArguments != null, "typeArguments should not be null.");
 
         LinkedList<MethodInfo> methodCandidates = new();
 
@@ -832,7 +831,7 @@ public class PrivateObject
             return methodCandidates;
         }
 
-        Debug.Assert(methods != null, "methods should not be null.");
+        DebugEx.Assert(methods != null, "methods should not be null.");
 
         foreach (MethodInfo candidate in methods)
         {

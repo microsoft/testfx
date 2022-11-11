@@ -303,11 +303,8 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
         mockReflectHelper.Setup(
-            rh =>
-            rh.IsAttributeDefined(
-                type.GetMethod("AssemblyInitialize"),
-                typeof(UTF.AssemblyInitializeAttribute),
-                It.IsAny<bool>())).Returns(true);
+            rh => rh.IsAttributeDefined<UTF.AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize"), It.IsAny<bool>()))
+            .Returns(true);
 
         var validator = 1;
         DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => { validator <<= 2; };

@@ -21,10 +21,7 @@ public class WinUITestTargetAttribute : Attribute
     /// </param>
     public WinUITestTargetAttribute(Type applicationType)
     {
-        if (applicationType == null)
-        {
-            throw new ArgumentNullException(nameof(applicationType));
-        }
+        _ = applicationType ?? throw new ArgumentNullException(nameof(applicationType));
 
         if (!typeof(UI.Xaml.Application).IsAssignableFrom(applicationType))
         {

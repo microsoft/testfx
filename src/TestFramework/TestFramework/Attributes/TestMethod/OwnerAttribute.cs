@@ -17,7 +17,7 @@ public sealed class OwnerAttribute : Attribute
     /// <param name="owner">
     /// The owner.
     /// </param>
-    public OwnerAttribute(string owner)
+    public OwnerAttribute(string? owner)
     {
         Owner = owner;
     }
@@ -25,5 +25,5 @@ public sealed class OwnerAttribute : Attribute
     /// <summary>
     /// Gets the owner.
     /// </summary>
-    public string Owner { get; }
+    public string? Owner { get; }
 }

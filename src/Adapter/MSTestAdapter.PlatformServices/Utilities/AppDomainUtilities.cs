@@ -12,6 +12,7 @@ using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
@@ -25,7 +26,7 @@ internal static class AppDomainUtilities
     private static readonly Version DefaultVersion = new();
     private static readonly Version Version45 = new("4.5");
 
-    private static XmlUtilities s_xmlUtilities = null;
+    private static XmlUtilities? s_xmlUtilities = null;
 
     /// <summary>
     /// Gets or sets the Xml Utilities instance.
@@ -56,7 +57,7 @@ internal static class AppDomainUtilities
     {
         if (GetTargetFrameworkVersionFromVersionString(frameworkVersionString).CompareTo(Version45) > 0)
         {
-            PropertyInfo pInfo = typeof(AppDomainSetup).GetProperty(PlatformServices.Constants.TargetFrameworkName);
+            PropertyInfo pInfo = typeof(AppDomainSetup).GetProperty(Constants.TargetFrameworkName);
             pInfo?.SetValue(setup, frameworkVersionString, null);
         }
     }
@@ -81,54 +82,56 @@ internal static class AppDomainUtilities
 
         SetConfigurationFile(appDomainSetup, new DeploymentUtility().GetConfigFile(testSourcePath));
 
-        if (File.Exists(testSourcePath))
+        if (!File.Exists(testSourcePath))
         {
-            AppDomain appDomain = null;
+            return string.Empty;
+        }
 
-            try
-            {
-                appDomain = AppDomain.CreateDomain("Framework Version String Domain", null, appDomainSetup);
+        AppDomain? appDomain = null;
 
-                // Wire the eqttrace logs in this domain to the current domain.
-                EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
+        try
+        {
+            appDomain = AppDomain.CreateDomain("Framework Version String Domain", null, appDomainSetup);
 
-                // Add an assembly resolver to resolve ObjectModel or any Test Platform dependencies.
-                // Not moving to IMetaDataImport APIs because the time taken for this operation is <20 ms and
-                // IMetaDataImport needs COM registration which is not a guarantee in Dev15.
-                var assemblyResolverType = typeof(AssemblyResolver);
+            // Wire the eqttrace logs in this domain to the current domain.
+            EqtTrace.SetupRemoteEqtTraceListeners(appDomain);
 
-                var resolutionPaths = new List<string>
+            // Add an assembly resolver to resolve ObjectModel or any Test Platform dependencies.
+            // Not moving to IMetaDataImport APIs because the time taken for this operation is <20 ms and
+            // IMetaDataImport needs COM registration which is not a guarantee in Dev15.
+            var assemblyResolverType = typeof(AssemblyResolver);
+
+            var resolutionPaths = new List<string>
                 {
                     Path.GetDirectoryName(typeof(TestCase).Assembly.Location),
                     Path.GetDirectoryName(testSourcePath),
                 };
 
-                CreateInstance(
-                    appDomain,
-                    assemblyResolverType,
-                    new object[] { resolutionPaths });
+            CreateInstance(
+                appDomain,
+                assemblyResolverType,
+                new object[] { resolutionPaths });
 
-                var assemblyLoadWorker =
-                    (AssemblyLoadWorker)CreateInstance(
-                    appDomain,
-                    typeof(AssemblyLoadWorker),
-                    null);
+            var assemblyLoadWorker =
+                (AssemblyLoadWorker)CreateInstance(
+                appDomain,
+                typeof(AssemblyLoadWorker),
+                null);
 
-                return assemblyLoadWorker.GetTargetFrameworkVersionStringFromPath(testSourcePath);
-            }
-            catch (Exception exception)
+            return assemblyLoadWorker.GetTargetFrameworkVersionStringFromPath(testSourcePath);
+        }
+        catch (Exception exception)
+        {
+            if (EqtTrace.IsErrorEnabled)
             {
-                if (EqtTrace.IsErrorEnabled)
-                {
-                    EqtTrace.Error(exception);
-                }
+                EqtTrace.Error(exception);
             }
-            finally
+        }
+        finally
+        {
+            if (appDomain != null)
             {
-                if (appDomain != null)
-                {
-                    AppDomain.Unload(appDomain);
-                }
+                AppDomain.Unload(appDomain);
             }
         }
 
@@ -141,52 +144,51 @@ internal static class AppDomainUtilities
     /// <param name="appDomainSetup"> The app Domain Setup. </param>
     /// <param name="testSourceConfigFile"> The test Source Config File. </param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    internal static void SetConfigurationFile(AppDomainSetup appDomainSetup, string testSourceConfigFile)
+    internal static void SetConfigurationFile(AppDomainSetup appDomainSetup, string? testSourceConfigFile)
     {
-        if (!string.IsNullOrEmpty(testSourceConfigFile))
-        {
-            if (EqtTrace.IsInfoEnabled)
-            {
-                EqtTrace.Info("UnitTestAdapter: Using configuration file {0} to setup appdomain for test source {1}.", testSourceConfigFile, Path.GetFileNameWithoutExtension(testSourceConfigFile));
-            }
-
-            appDomainSetup.ConfigurationFile = Path.GetFullPath(testSourceConfigFile);
-
-            try
-            {
-                // Add redirection of the built 11.0 Object Model assembly to the current version if that is not 11.0
-                var currentVersionOfObjectModel = typeof(TestCase).Assembly.GetName().Version.ToString();
-                if (!string.Equals(currentVersionOfObjectModel, ObjectModelVersionBuiltAgainst))
-                {
-                    var assemblyName = typeof(TestCase).Assembly.GetName();
-                    var configurationBytes =
-                        XmlUtilities.AddAssemblyRedirection(
-                            testSourceConfigFile,
-                            assemblyName,
-                            ObjectModelVersionBuiltAgainst,
-                            assemblyName.Version.ToString());
-                    appDomainSetup.SetConfigurationBytes(configurationBytes);
-                }
-            }
-            catch (Exception ex)
-            {
-                if (EqtTrace.IsErrorEnabled)
-                {
-                    EqtTrace.Error("Exception hit while adding binding redirects to test source config file. Exception : {0}", ex);
-                }
-            }
-        }
-        else
+        if (StringEx.IsNullOrEmpty(testSourceConfigFile))
         {
             // Use the current domains configuration setting.
             appDomainSetup.ConfigurationFile = AppDomain.CurrentDomain.SetupInformation.ConfigurationFile;
+            return;
+        }
+
+        if (EqtTrace.IsInfoEnabled)
+        {
+            EqtTrace.Info("UnitTestAdapter: Using configuration file {0} to setup appdomain for test source {1}.", testSourceConfigFile, Path.GetFileNameWithoutExtension(testSourceConfigFile));
+        }
+
+        appDomainSetup.ConfigurationFile = Path.GetFullPath(testSourceConfigFile);
+
+        try
+        {
+            // Add redirection of the built 11.0 Object Model assembly to the current version if that is not 11.0
+            var currentVersionOfObjectModel = typeof(TestCase).Assembly.GetName().Version.ToString();
+            if (!string.Equals(currentVersionOfObjectModel, ObjectModelVersionBuiltAgainst))
+            {
+                var assemblyName = typeof(TestCase).Assembly.GetName();
+                var configurationBytes =
+                    XmlUtilities.AddAssemblyRedirection(
+                        testSourceConfigFile,
+                        assemblyName,
+                        ObjectModelVersionBuiltAgainst,
+                        assemblyName.Version.ToString());
+                appDomainSetup.SetConfigurationBytes(configurationBytes);
+            }
+        }
+        catch (Exception ex)
+        {
+            if (EqtTrace.IsErrorEnabled)
+            {
+                EqtTrace.Error("Exception hit while adding binding redirects to test source config file. Exception : {0}", ex);
+            }
         }
     }
 
-    internal static object CreateInstance(AppDomain appDomain, Type type, object[] arguments)
+    internal static object CreateInstance(AppDomain appDomain, Type type, object?[]? arguments)
     {
-        Debug.Assert(appDomain != null, "appDomain is null");
-        Debug.Assert(type != null, "type is null");
+        DebugEx.Assert(appDomain != null, "appDomain is null");
+        DebugEx.Assert(type != null, "type is null");
 
         var typeAssemblyLocation = type.Assembly.Location;
         var fullFilePath = typeAssemblyLocation == null ? null : Path.Combine(appDomain.SetupInformation.ApplicationBase, Path.GetFileName(typeAssemblyLocation));
@@ -234,9 +236,9 @@ internal static class AppDomainUtilities
     {
         try
         {
-            if (version.Length > PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1)
+            if (version.Length > Constants.DotNetFrameWorkStringPrefix.Length + 1)
             {
-                string versionPart = version.Substring(PlatformServices.Constants.DotNetFrameWorkStringPrefix.Length + 1);
+                string versionPart = version.Substring(Constants.DotNetFrameWorkStringPrefix.Length + 1);
                 return new Version(versionPart);
             }
         }

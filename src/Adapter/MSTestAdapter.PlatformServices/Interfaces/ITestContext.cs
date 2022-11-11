@@ -23,7 +23,7 @@ public interface ITestContext
     /// <param name="propertyName"> The property Name. </param>
     /// <param name="propertyValue"> The property Value. </param>
     /// <returns> True if the property is present. </returns>
-    bool TryGetPropertyValue(string propertyName, out object propertyValue);
+    bool TryGetPropertyValue(string propertyName, out object? propertyValue);
 
     /// <summary>
     /// Adds the parameter name/value pair to property bag.
@@ -42,13 +42,13 @@ public interface ITestContext
     /// Set data row for particular run of TestMethod.
     /// </summary>
     /// <param name="dataRow">data row.</param>
-    void SetDataRow(object dataRow);
+    void SetDataRow(object? dataRow);
 
     /// <summary>
     /// Set connection for TestContext.
     /// </summary>
     /// <param name="dbConnection">db Connection.</param>
-    void SetDataConnection(object dbConnection);
+    void SetDataConnection(object? dbConnection);
 
     /// <summary>
     /// Gets the attached Result files.
@@ -56,13 +56,13 @@ public interface ITestContext
     /// <returns>
     /// The list of result files.
     /// </returns>
-    IList<string> GetResultFiles();
+    IList<string>? GetResultFiles();
 
     /// <summary>
     /// Gets the diagnostics messages written to TestContext.WriteLine().
     /// </summary>
     /// <returns>The test context messages added so far.</returns>
-    string GetDiagnosticMessages();
+    string? GetDiagnosticMessages();
 
     /// <summary>
     /// Clears the previous testContext writeline messages.

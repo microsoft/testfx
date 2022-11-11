@@ -32,7 +32,7 @@ public interface IFileOperations
     /// </summary>
     /// <param name="assembly">The assembly.</param>
     /// <returns>Path to the .DLL of the assembly.</returns>
-    string GetAssemblyPath(Assembly assembly);
+    string? GetAssemblyPath(Assembly assembly);
 
     /// <summary>
     /// Verify if a file exists in the current context.
@@ -51,7 +51,7 @@ public interface IFileOperations
     /// Unfortunately we cannot use INavigationSession introduced in Object Model in Dev14 update-2 because
     /// the adapter needs to work with older VS versions as well where this new type would not be defined resulting in a type not found exception.
     /// </remarks>
-    object CreateNavigationSession(string source);
+    object? CreateNavigationSession(string source);
 
     /// <summary>
     /// Gets the navigation data for a navigation session.
@@ -65,7 +65,7 @@ public interface IFileOperations
     /// Unfortunately we cannot use INavigationSession introduced in Object Model in Dev14 update-2 because
     /// the adapter needs to work with older VS versions as well where this new type would not be defined resulting in a type not found exception.
     /// </remarks>
-    void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string fileName);
+    void GetNavigationData(object navigationSession, string className, string methodName, out int minLineNumber, out string? fileName);
 
     /// <summary>
     /// Disposes the navigation session instance.
@@ -75,7 +75,7 @@ public interface IFileOperations
     /// Unfortunately we cannot use INavigationSession introduced in Object Model in Dev14 update-2 because
     /// the adapter needs to work with older VS versions as well where this new type would not be defined resulting in a type not found exception.
     /// </remarks>
-    void DisposeNavigationSession(object navigationSession);
+    void DisposeNavigationSession(object? navigationSession);
 
     /// <summary>
     /// Gets the full file path of an assembly file.

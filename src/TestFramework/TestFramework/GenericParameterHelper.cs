@@ -24,7 +24,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public class GenericParameterHelper : IComparable, IEnumerable
 {
     private static readonly Random Randomizer = new();
-    private IList _ienumerableStore;
+    private List<object>? _ienumerableStore;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GenericParameterHelper"/> class that
@@ -59,9 +59,9 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// <param name="obj">object to do comparison with.</param>
     /// <returns>true if obj has the same value as 'this' GenericParameterHelper object.
     /// false otherwise.</returns>
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
-        GenericParameterHelper other = obj as GenericParameterHelper;
+        GenericParameterHelper? other = obj as GenericParameterHelper;
 
         return Data == other?.Data;
     }
@@ -85,7 +85,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// <exception cref="NotSupportedException">
     /// Thrown when the object passed in is not an instance of <see cref="GenericParameterHelper"/>.
     /// </exception>
-    public int CompareTo(object obj)
+    public int CompareTo(object? obj)
     {
         if (obj is GenericParameterHelper gpf)
         {

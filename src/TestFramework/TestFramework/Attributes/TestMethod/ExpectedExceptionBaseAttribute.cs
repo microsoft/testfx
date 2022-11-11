@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
@@ -14,8 +13,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
 public abstract class ExpectedExceptionBaseAttribute : Attribute
 {
-    #region Constructors
-
     /// <summary>
     /// Initializes a new instance of the <see cref="ExpectedExceptionBaseAttribute"/> class with a default no-exception message.
     /// </summary>
@@ -32,17 +29,13 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     /// Message to include in the test result if the test fails due to not throwing an
     /// exception.
     /// </param>
-    protected ExpectedExceptionBaseAttribute(string noExceptionMessage)
+    protected ExpectedExceptionBaseAttribute(string? noExceptionMessage)
     {
         SpecifiedNoExceptionMessage =
-            noExceptionMessage == null ?
-                string.Empty :
-                noExceptionMessage.Trim();
+            noExceptionMessage == null
+                ? string.Empty
+                : noExceptionMessage.Trim();
     }
-
-    #endregion
-
-    #region Properties
 
     // TODO: Test Context needs to be put in here for source compat.
 
@@ -53,9 +46,9 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     {
         get
         {
-            Debug.Assert(SpecifiedNoExceptionMessage != null, "'noExceptionMessage' is null");
+            DebugEx.Assert(SpecifiedNoExceptionMessage != null, "'noExceptionMessage' is null");
 
-            if (string.IsNullOrEmpty(SpecifiedNoExceptionMessage))
+            if (StringEx.IsNullOrEmpty(SpecifiedNoExceptionMessage))
             {
                 // Provide a default message when none was provided by a derived class
                 return GetDefaultNoExceptionMessage(GetType().FullName);
@@ -70,16 +63,12 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     /// </summary>
     protected string SpecifiedNoExceptionMessage { get; private set; }
 
-    #endregion
-
-    #region Methods
-
     /// <summary>
     /// Gets the default no-exception message.
     /// </summary>
     /// <param name="expectedExceptionAttributeTypeName">The ExpectedException attribute type name.</param>
     /// <returns>The default no-exception message.</returns>
-    internal static string GetDefaultNoExceptionMessage(string expectedExceptionAttributeTypeName)
+    internal static string GetDefaultNoExceptionMessage(string? expectedExceptionAttributeTypeName)
     {
         return string.Format(
             CultureInfo.CurrentCulture,
@@ -114,6 +103,4 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
             throw new AssertInconclusiveException(exception.Message);
         }
     }
-
-    #endregion
 }

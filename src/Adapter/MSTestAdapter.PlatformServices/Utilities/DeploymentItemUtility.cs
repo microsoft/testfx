@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -65,7 +66,8 @@ internal class DeploymentItemUtility
     /// <param name="classLevelDeploymentItems"> The class level deployment items. </param>
     /// <param name="warnings"> The warnings. </param>
     /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>.of deployment item information. </returns>
-    internal KeyValuePair<string, string>[] GetDeploymentItems(MethodInfo method, IList<DeploymentItem> classLevelDeploymentItems, ICollection<string> warnings)
+    internal KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, IList<DeploymentItem> classLevelDeploymentItems,
+        ICollection<string> warnings)
     {
         var testLevelDeploymentItems = GetDeploymentItems(_reflectionUtility.GetCustomAttributes(method, typeof(DeploymentItemAttribute)), warnings);
 
@@ -80,9 +82,9 @@ internal class DeploymentItemUtility
     /// <param name="warning"> The warning message if it is an invalid deployment item. </param>
     /// <returns> Returns true if it is a valid deployment item. </returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", MessageId = "2#", Justification = "Internal method.")]
-    internal static bool IsValidDeploymentItem(string sourcePath, string relativeOutputDirectory, out string warning)
+    internal static bool IsValidDeploymentItem([NotNullWhen(true)] string? sourcePath, [NotNullWhen(true)] string? relativeOutputDirectory, out string warning)
     {
-        if (string.IsNullOrEmpty(sourcePath))
+        if (StringEx.IsNullOrEmpty(sourcePath))
         {
             warning = Resource.DeploymentItemPathCannotBeNullOrEmpty;
             return false;
@@ -127,14 +129,16 @@ internal class DeploymentItemUtility
         List<DeploymentItem> allDeploymentItems = new();
         foreach (var test in tests)
         {
-            KeyValuePair<string, string>[] items = GetDeploymentItems(test);
+            KeyValuePair<string, string>[]? items = GetDeploymentItems(test);
             if (items == null || items.Length == 0)
             {
                 continue;
             }
 
-            IList<DeploymentItem> deploymentItemsToBeAdded = FromKeyValuePairs(items);
-            foreach (var deploymentItemToBeAdded in deploymentItemsToBeAdded)
+            IList<DeploymentItem>? deploymentItemsToBeAdded = FromKeyValuePairs(items);
+
+            // TODO: Check if we can avoid potential NRE here.
+            foreach (var deploymentItemToBeAdded in deploymentItemsToBeAdded!)
             {
                 AddDeploymentItem(allDeploymentItems, deploymentItemToBeAdded);
             }
@@ -145,8 +149,8 @@ internal class DeploymentItemUtility
 
     internal static void AddDeploymentItem(IList<DeploymentItem> deploymentItemList, DeploymentItem deploymentItem)
     {
-        Debug.Assert(deploymentItemList != null, "DeploymentItem list cannot be null");
-        Debug.Assert(deploymentItem != null, "DeploymentItem  cannot be null");
+        DebugEx.Assert(deploymentItemList != null, "DeploymentItem list cannot be null");
+        DebugEx.Assert(deploymentItem != null, "DeploymentItem  cannot be null");
 
         if (!deploymentItemList.Contains(deploymentItem))
         {
@@ -197,7 +201,9 @@ internal class DeploymentItemUtility
         return deploymentItems;
     }
 
-    private static IList<DeploymentItem> Concat(IList<DeploymentItem> deploymentItemList1, IList<DeploymentItem> deploymentItemList2)
+    [return: NotNullIfNotNull(nameof(deploymentItemList1))]
+    [return: NotNullIfNotNull(nameof(deploymentItemList2))]
+    private static IList<DeploymentItem>? Concat(IList<DeploymentItem>? deploymentItemList1, IList<DeploymentItem>? deploymentItemList2)
     {
         if (deploymentItemList1 == null && deploymentItemList2 == null)
         {
@@ -229,14 +235,14 @@ internal class DeploymentItemUtility
     /// </summary>
     /// <param name="testCase"> The test Case. </param>
     /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>. </returns>
-    private static KeyValuePair<string, string>[] GetDeploymentItems(TestCase testCase)
+    private static KeyValuePair<string, string>[]? GetDeploymentItems(TestCase testCase)
     {
         return
-            testCase.GetPropertyValue(PlatformServices.Constants.DeploymentItemsProperty) as
+            testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as
             KeyValuePair<string, string>[];
     }
 
-    private static KeyValuePair<string, string>[] ToKeyValuePairs(IList<DeploymentItem> deploymentItemList)
+    private static KeyValuePair<string, string>[]? ToKeyValuePairs(IList<DeploymentItem> deploymentItemList)
     {
         if (deploymentItemList == null || deploymentItemList.Count == 0)
         {
@@ -256,7 +262,7 @@ internal class DeploymentItemUtility
         return result.ToArray();
     }
 
-    private static IList<DeploymentItem> FromKeyValuePairs(KeyValuePair<string, string>[] deploymentItemsData)
+    private static IList<DeploymentItem>? FromKeyValuePairs(KeyValuePair<string, string>[] deploymentItemsData)
     {
         if (deploymentItemsData == null || deploymentItemsData.Length == 0)
         {

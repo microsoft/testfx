@@ -53,8 +53,8 @@ internal class TypeValidator
     internal virtual bool IsValidTestClass(Type type, ICollection<string> warnings)
     {
         if (!type.GetTypeInfo().IsClass
-            || (!_reflectHelper.IsAttributeDefined(type, typeof(TestClassAttribute), false)
-            && !_reflectHelper.HasAttributeDerivedFrom(type, typeof(TestClassAttribute), false)))
+            || (!_reflectHelper.IsAttributeDefined<TestClassAttribute>(type, false)
+            && !_reflectHelper.HasAttributeDerivedFrom<TestClassAttribute>(type, false)))
         {
             return false;
         }
@@ -107,7 +107,7 @@ internal class TypeValidator
     /// <returns>Returns true if type has a valid TestContext property definition.</returns>
     internal static bool HasCorrectTestContextSignature(Type type)
     {
-        Debug.Assert(type != null, "HasCorrectTestContextSignature type is null");
+        DebugEx.Assert(type != null, "HasCorrectTestContextSignature type is null");
 
         var propertyInfoEnumerable = type.GetTypeInfo().DeclaredProperties;
         var propertyInfo = new List<PropertyInfo>();

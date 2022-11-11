@@ -23,7 +23,7 @@ public class Logger
     /// Event to listen. Raised when unit test writer writes some message.
     /// Mainly to consume by adapter.
     /// </summary>
-    public static event LogMessageHandler OnLogMessage;
+    public static event LogMessageHandler? OnLogMessage;
 
     /// <summary>
     /// API for test writer to call to Log messages.
@@ -31,7 +31,7 @@ public class Logger
     /// <param name="format">String format with placeholders.</param>
     /// <param name="args">Parameters for placeholders.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public static void LogMessage(string format, params object[] args)
+    public static void LogMessage(string format, params object?[] args)
     {
         if (OnLogMessage == null)
         {
@@ -50,7 +50,7 @@ public class Logger
         {
             try
             {
-                invoker.GetMethodInfo().Invoke(invoker.Target, new object[] { message });
+                invoker!.GetMethodInfo()!.Invoke(invoker.Target, new[] { message });
             }
             catch (Exception)
             {

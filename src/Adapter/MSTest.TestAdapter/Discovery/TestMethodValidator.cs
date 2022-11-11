@@ -50,8 +50,8 @@ internal class TestMethodValidator
     /// <returns> Return true if a method is a valid test method. </returns>
     internal virtual bool IsValidTestMethod(MethodInfo testMethodInfo, Type type, ICollection<string> warnings)
     {
-        if (!_reflectHelper.IsAttributeDefined(testMethodInfo, typeof(TestMethodAttribute), false)
-            && !_reflectHelper.HasAttributeDerivedFrom(testMethodInfo, typeof(TestMethodAttribute), false))
+        if (!_reflectHelper.IsAttributeDefined<TestMethodAttribute>(testMethodInfo, false)
+            && !_reflectHelper.HasAttributeDerivedFrom<TestMethodAttribute>(testMethodInfo, false))
         {
             return false;
         }
@@ -59,7 +59,7 @@ internal class TestMethodValidator
         // Generic method Definitions are not valid.
         if (testMethodInfo.IsGenericMethodDefinition)
         {
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, testMethodInfo.DeclaringType.FullName, testMethodInfo.Name);
+            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, testMethodInfo.DeclaringType!.FullName, testMethodInfo.Name);
             warnings.Add(message);
             return false;
         }
@@ -69,7 +69,7 @@ internal class TestMethodValidator
 
         // Todo: Decide whether parameter count matters.
         // The isGenericMethod check below id to verify that there are no closed generic methods slipping through.
-        // Closed generic methods being GenericMethod<int> and open being GenericMethod<T>.
+        // Closed generic methods being GenericMethod<int> and open being GenericMethod<TAttribute>.
         var isValidTestMethod = isAccessible && !testMethodInfo.IsAbstract && !testMethodInfo.IsStatic
                                 && !testMethodInfo.IsGenericMethod
                                 && testMethodInfo.IsVoidOrTaskReturnType();

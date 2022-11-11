@@ -16,12 +16,12 @@ internal class TypeInspectionException : Exception
     {
     }
 
-    public TypeInspectionException(string message)
+    public TypeInspectionException(string? message)
         : base(message)
     {
     }
 
-    public TypeInspectionException(string message, Exception innerException)
+    public TypeInspectionException(string? message, Exception? innerException)
         : base(message, innerException)
     {
     }

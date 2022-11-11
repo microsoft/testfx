@@ -22,7 +22,7 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
 #endif
     public override object InitializeLifetimeService()
     {
-        return null;
+        return null!;
     }
 
     internal static TestAssemblySettings GetSettings(string source)

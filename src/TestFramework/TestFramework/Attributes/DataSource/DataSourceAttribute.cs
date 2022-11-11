@@ -89,12 +89,12 @@ public sealed class DataSourceAttribute : Attribute
     /// <summary>
     /// Gets a value representing the connection string for the data source.
     /// </summary>
-    public string ConnectionString { get; }
+    public string? ConnectionString { get; }
 
     /// <summary>
     /// Gets a value indicating the table name providing data.
     /// </summary>
-    public string TableName { get; }
+    public string? TableName { get; }
 
     /// <summary>
     /// Gets the method used to access the data source.
@@ -108,5 +108,5 @@ public sealed class DataSourceAttribute : Attribute
     /// <summary>
     /// Gets the name of a data source found in the &lt;microsoft.visualstudio.qualitytools&gt; section in the app.config file.
     /// </summary>
-    public string DataSourceSettingName { get; }
+    public string? DataSourceSettingName { get; }
 }

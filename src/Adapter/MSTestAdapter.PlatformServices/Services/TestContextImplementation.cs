@@ -15,7 +15,9 @@ using System.Threading;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
@@ -59,7 +61,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <summary>
     /// Properties.
     /// </summary>
-    private IDictionary<string, object> _properties;
+    private IDictionary<string, object?> _properties;
 
     /// <summary>
     /// Unit test outcome.
@@ -70,12 +72,12 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <summary>
     /// DB connection for test context.
     /// </summary>
-    private DbConnection _dbConnection;
+    private DbConnection? _dbConnection;
 
     /// <summary>
     /// Data row for TestContext.
     /// </summary>
-    private DataRow _dataRow;
+    private DataRow? _dataRow;
 #endif
 
     /// <summary>
@@ -84,22 +86,22 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <param name="testMethod">The test method.</param>
     /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
-    public TestContextImplementation(ITestMethod testMethod, StringWriter stringWriter, IDictionary<string, object> properties)
+    public TestContextImplementation(ITestMethod testMethod, StringWriter stringWriter, IDictionary<string, object?> properties)
     {
-        Debug.Assert(testMethod != null, "TestMethod is not null");
-        Debug.Assert(properties != null, "properties is not null");
+        DebugEx.Assert(testMethod != null, "TestMethod is not null");
+        DebugEx.Assert(properties != null, "properties is not null");
 
 #if NETFRAMEWORK
-        Debug.Assert(stringWriter != null, "StringWriter is not null");
+        DebugEx.Assert(stringWriter != null, "StringWriter is not null");
 #endif
 
-        Debug.Assert(stringWriter is ThreadSafeStringWriter, "Was expected stringWriter to be a ThreadSafeStringWriter");
+        DebugEx.Assert(stringWriter is ThreadSafeStringWriter, "Was expected stringWriter to be a ThreadSafeStringWriter");
 
         _testMethod = testMethod;
 
         // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
         _threadSafeStringWriter = (ThreadSafeStringWriter)stringWriter;
-        _properties = new Dictionary<string, object>(properties);
+        _properties = new Dictionary<string, object?>(properties);
         CancellationTokenSource = new CancellationTokenSource();
         InitializeProperties();
 
@@ -121,73 +123,31 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 
 #if NETFRAMEWORK
     /// <inheritdoc/>
-    public override DbConnection DataConnection
-    {
-        get
-        {
-            return _dbConnection;
-        }
-    }
+    public override DbConnection? DataConnection => _dbConnection;
 
     /// <inheritdoc/>
-    public override DataRow DataRow
-    {
-        get
-        {
-            return _dataRow;
-        }
-    }
+    public override DataRow? DataRow => _dataRow;
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary Properties
-    {
-        get
-        {
-            return _properties as IDictionary;
-        }
-    }
+    public override IDictionary? Properties => _properties as IDictionary;
 
 #if !WINDOWS_UWP && !WIN_UI && !PORTABLE
     /// <inheritdoc/>
-    public override string TestRunDirectory
-    {
-        get
-        {
-            return GetStringPropertyValue(TestContextPropertyStrings.TestRunDirectory);
-        }
-    }
+    public override string? TestRunDirectory => GetStringPropertyValue(TestContextPropertyStrings.TestRunDirectory);
 
     /// <inheritdoc/>
-    public override string DeploymentDirectory
-    {
-        get
-        {
-            return GetStringPropertyValue(TestContextPropertyStrings.DeploymentDirectory);
-        }
-    }
+    public override string? DeploymentDirectory => GetStringPropertyValue(TestContextPropertyStrings.DeploymentDirectory);
 
     /// <inheritdoc/>
-    public override string ResultsDirectory
-    {
-        get
-        {
-            return GetStringPropertyValue(TestContextPropertyStrings.ResultsDirectory);
-        }
-    }
+    public override string? ResultsDirectory => GetStringPropertyValue(TestContextPropertyStrings.ResultsDirectory);
 
     /// <inheritdoc/>
-    public override string TestRunResultsDirectory
-    {
-        get
-        {
-            return GetStringPropertyValue(TestContextPropertyStrings.TestRunResultsDirectory);
-        }
-    }
+    public override string? TestRunResultsDirectory => GetStringPropertyValue(TestContextPropertyStrings.TestRunResultsDirectory);
 
     /// <inheritdoc/>
     [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", Justification = "TestResultsDirectory is what we need.")]
-    public override string TestResultsDirectory
+    public override string? TestResultsDirectory
     {
         get
         {
@@ -198,34 +158,16 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     }
 
     /// <inheritdoc/>
-    public override string TestDir
-    {
-        get
-        {
-            return GetStringPropertyValue(TestContextPropertyStrings.TestDir);
-        }
-    }
+    public override string? TestDir => GetStringPropertyValue(TestContextPropertyStrings.TestDir);
 
     /// <inheritdoc/>
-    public override string TestDeploymentDir
-    {
-        get
-        {
-            return GetStringPropertyValue(TestContextPropertyStrings.TestDeploymentDir);
-        }
-    }
+    public override string? TestDeploymentDir => GetStringPropertyValue(TestContextPropertyStrings.TestDeploymentDir);
 
     /// <inheritdoc/>
-    public override string TestLogsDir
-    {
-        get
-        {
-            return GetStringPropertyValue(TestContextPropertyStrings.TestLogsDir);
-        }
-    }
+    public override string? TestLogsDir => GetStringPropertyValue(TestContextPropertyStrings.TestLogsDir);
 
     /// <inheritdoc/>
-    public override string FullyQualifiedTestClassName
+    public override string? FullyQualifiedTestClassName
     {
         get
         {
@@ -241,26 +183,14 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 #if NETFRAMEWORK
 
     /// <inheritdoc/>
-    public override string ManagedType
-    {
-        get
-        {
-            return GetStringPropertyValue(TestContextPropertyStrings.ManagedType);
-        }
-    }
+    public override string? ManagedType => GetStringPropertyValue(TestContextPropertyStrings.ManagedType);
 
     /// <inheritdoc/>
-    public override string ManagedMethod
-    {
-        get
-        {
-            return GetStringPropertyValue(TestContextPropertyStrings.ManagedMethod);
-        }
-    }
+    public override string? ManagedMethod => GetStringPropertyValue(TestContextPropertyStrings.ManagedMethod);
 #endif
 
     /// <inheritdoc/>
-    public override string TestName
+    public override string? TestName
     {
         get
         {
@@ -274,19 +204,13 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     }
 #endif
 
-    public UTF.TestContext Context
-    {
-        get
-        {
-            return this as UTF.TestContext;
-        }
-    }
+    public UTF.TestContext Context => this;
 
     /// <inheritdoc/>
-    public override void AddResultFile(string fileName)
+    public override void AddResultFile(string? fileName)
     {
 #if !WINDOWS_UWP && !WIN_UI && !PORTABLE
-        if (string.IsNullOrEmpty(fileName))
+        if (StringEx.IsNullOrEmpty(fileName))
         {
             throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
         }
@@ -314,7 +238,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     ///     test is running.
     /// </summary>
     /// <param name="message">The formatted string that contains the trace message.</param>
-    public override void Write(string message)
+    public override void Write(string? message)
     {
         if (_stringWriterDisposed)
         {
@@ -338,7 +262,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// </summary>
     /// <param name="format">The string that contains the trace message.</param>
     /// <param name="args">Arguments to add to the trace message.</param>
-    public override void Write(string format, params object[] args)
+    public override void Write(string format, params object?[] args)
     {
         if (_stringWriterDisposed)
         {
@@ -347,7 +271,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 
         try
         {
-            string message = string.Format(CultureInfo.CurrentCulture, format?.Replace("\0", "\\0"), args);
+            string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
             _threadSafeStringWriter.Write(message);
         }
         catch (ObjectDisposedException)
@@ -361,7 +285,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     ///     test is running.
     /// </summary>
     /// <param name="message">The formatted string that contains the trace message.</param>
-    public override void WriteLine(string message)
+    public override void WriteLine(string? message)
     {
         if (_stringWriterDisposed)
         {
@@ -385,7 +309,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// </summary>
     /// <param name="format">The string that contains the trace message.</param>
     /// <param name="args">Arguments to add to the trace message.</param>
-    public override void WriteLine(string format, params object[] args)
+    public override void WriteLine(string format, params object?[] args)
     {
         if (_stringWriterDisposed)
         {
@@ -394,7 +318,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 
         try
         {
-            string message = string.Format(CultureInfo.CurrentCulture, format?.Replace("\0", "\\0"), args);
+            string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
             _threadSafeStringWriter.WriteLine(message);
         }
         catch (ObjectDisposedException)
@@ -420,7 +344,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// Set data row for particular run of TestMethod.
     /// </summary>
     /// <param name="dataRow">data row.</param>
-    public void SetDataRow(object dataRow)
+    public void SetDataRow(object? dataRow)
     {
 #if NETFRAMEWORK
         _dataRow = dataRow as DataRow;
@@ -431,7 +355,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// Set connection for TestContext.
     /// </summary>
     /// <param name="dbConnection">db Connection.</param>
-    public void SetDataConnection(object dbConnection)
+    public void SetDataConnection(object? dbConnection)
     {
 #if NETFRAMEWORK
         _dbConnection = dbConnection as DbConnection;
@@ -444,7 +368,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <param name="propertyName">The property name.</param>
     /// <param name="propertyValue">The property value.</param>
     /// <returns>True if found.</returns>
-    public bool TryGetPropertyValue(string propertyName, out object propertyValue)
+    public bool TryGetPropertyValue(string propertyName, out object? propertyValue)
     {
         if (_properties == null)
         {
@@ -462,7 +386,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <param name="propertyValue">The property value.</param>
     public void AddProperty(string propertyName, string propertyValue)
     {
-        _properties ??= new Dictionary<string, object>();
+        _properties ??= new Dictionary<string, object?>();
 
         _properties.Add(propertyName, propertyValue);
     }
@@ -471,7 +395,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// Result files attached.
     /// </summary>
     /// <returns>Results files generated in run.</returns>
-    public IList<string> GetResultFiles()
+    public IList<string>? GetResultFiles()
     {
 #if !WINDOWS_UWP && !WIN_UI
         if (!_testResultFiles.Any())
@@ -495,7 +419,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// Gets messages from the testContext writeLines.
     /// </summary>
     /// <returns>The test context messages added so far.</returns>
-    public string GetDiagnosticMessages()
+    public string? GetDiagnosticMessages()
     {
         return _threadSafeStringWriter.ToString();
     }
@@ -516,7 +440,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// </summary>
     /// <param name="propertyName">Property Name.</param>
     /// <returns>Property value.</returns>
-    private object GetPropertyValue(string propertyName)
+    private object? GetPropertyValue(string propertyName)
     {
         _properties.TryGetValue(propertyName, out var propertyValue);
 
@@ -534,17 +458,17 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     {
         switch (outcome)
         {
-            case UTF.UnitTestOutcome.Error:
-            case UTF.UnitTestOutcome.Failed:
-            case UTF.UnitTestOutcome.Inconclusive:
-            case UTF.UnitTestOutcome.Passed:
-            case UTF.UnitTestOutcome.Timeout:
-            case UTF.UnitTestOutcome.InProgress:
+            case UnitTestOutcome.Error:
+            case UnitTestOutcome.Failed:
+            case UnitTestOutcome.Inconclusive:
+            case UnitTestOutcome.Passed:
+            case UnitTestOutcome.Timeout:
+            case UnitTestOutcome.InProgress:
                 return outcome;
 
             default:
                 Debug.Fail("Unknown outcome " + outcome);
-                return UTF.UnitTestOutcome.Unknown;
+                return UnitTestOutcome.Unknown;
         }
     }
 #endif
@@ -555,7 +479,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// </summary>
     /// <param name="propertyName">Property Name.</param>
     /// <returns>Property value.</returns>
-    private string GetStringPropertyValue(string propertyName)
+    private string? GetStringPropertyValue(string propertyName)
     {
         _properties.TryGetValue(propertyName, out var propertyValue);
         return propertyValue as string;

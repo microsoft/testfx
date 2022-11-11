@@ -35,7 +35,7 @@ public sealed partial class Assert
     /// Always thrown.
     /// </exception>
     [DoesNotReturn]
-    public static void Fail(string message)
+    public static void Fail(string? message)
     {
         Fail(message, null);
     }
@@ -54,7 +54,7 @@ public sealed partial class Assert
     /// Always thrown.
     /// </exception>
     [DoesNotReturn]
-    public static void Fail(string message, params object[] parameters)
+    public static void Fail(string? message, params object?[]? parameters)
     {
         ThrowAssertFailed("Assert.Fail", BuildUserMessage(message, parameters));
     }

@@ -25,10 +25,7 @@ internal static class Helper
     /// <exception cref="ArgumentNullException"> Throws argument null exception when parameter is null. </exception>
     internal static void CheckParameterNotNull(object param, string parameterName, string message)
     {
-        if (param == null)
-        {
-            throw new ArgumentNullException(parameterName, message);
-        }
+        _ = param ?? throw new ArgumentNullException(nameof(param));
     }
 
     /// <summary>
@@ -46,7 +43,7 @@ internal static class Helper
     /// <exception cref="ArgumentException"> Throws ArgumentException when parameter is null. </exception>
     internal static void CheckParameterNotNullOrEmpty(string param, string parameterName, string message)
     {
-        if (string.IsNullOrEmpty(param))
+        if (StringEx.IsNullOrEmpty(param))
         {
             throw new ArgumentException(message, parameterName);
         }

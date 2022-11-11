@@ -57,15 +57,15 @@ public class ThreadSafeStringWriter : StringWriter
     {
         try
         {
-            return GetStringBuilderOrNull()?.ToString();
+            return GetStringBuilderOrNull()?.ToString()!;
         }
         catch (ObjectDisposedException)
         {
-            return default;
+            return default!;
         }
     }
 
-    public string ToStringAndClear()
+    public string? ToStringAndClear()
     {
         try
         {
@@ -87,7 +87,7 @@ public class ThreadSafeStringWriter : StringWriter
     }
 
     /// <inheritdoc/>
-    public override void Write(string value)
+    public override void Write(string? value)
     {
 #if DEBUG
         AllOutput.Append(value);
@@ -95,7 +95,7 @@ public class ThreadSafeStringWriter : StringWriter
         GetOrAddStringBuilder().Append(value);
     }
 
-    public override void WriteLine(string value)
+    public override void WriteLine(string? value)
     {
 #if DEBUG
         AllOutput.AppendLine(value);
@@ -129,7 +129,7 @@ public class ThreadSafeStringWriter : StringWriter
     }
 
     // Avoiding name GetStringBuilder because it is already present on the base class.
-    private ThreadSafeStringBuilder GetStringBuilderOrNull()
+    private ThreadSafeStringBuilder? GetStringBuilderOrNull()
     {
         lock (StaticLockObject)
         {
@@ -186,7 +186,7 @@ public class ThreadSafeStringWriter : StringWriter
         private readonly StringBuilder _stringBuilder = new();
         private readonly object _instanceLockObject = new();
 
-        public void Append(string value)
+        public void Append(string? value)
         {
             lock (_instanceLockObject)
             {
@@ -210,7 +210,7 @@ public class ThreadSafeStringWriter : StringWriter
             }
         }
 
-        public void AppendLine(string value)
+        public void AppendLine(string? value)
         {
             lock (_instanceLockObject)
             {

@@ -16,7 +16,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
 internal class TestableReflectHelper : ReflectHelper
 {
     /// <summary>
-    /// A dictionary to hold mock custom attributes. The int represents a hascode of
+    /// A dictionary to hold mock custom attributes. The int represents a hash code of
     /// the Type of custom attribute and the level its applied at :
     /// MemberTypes.All for assembly level
     /// MemberTypes.TypeInfo for class level
@@ -31,42 +31,27 @@ internal class TestableReflectHelper : ReflectHelper
 
     public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
     {
-        var hashcode = type.FullName.GetHashCode() + memberTypes.GetHashCode();
-        if (_customAttributes.ContainsKey(hashcode))
-        {
-            _customAttributes[hashcode] = _customAttributes[hashcode].Concat(values).ToArray();
-        }
-        else
-        {
-            _customAttributes[hashcode] = values;
-        }
+        var hashCode = type.FullName.GetHashCode() + memberTypes.GetHashCode();
+        _customAttributes[hashCode] = _customAttributes.TryGetValue(hashCode, out Attribute[] value)
+            ? value.Concat(values).ToArray()
+            : values;
     }
 
-    internal override Attribute[] GetCustomAttributeForAssembly(MemberInfo memberInfo, Type type)
+    internal override TAttribute[] GetCustomAttributeForAssembly<TAttribute>(MemberInfo memberInfo)
     {
-        var hashcode = MemberTypes.All.GetHashCode() + type.FullName.GetHashCode();
+        var hashCode = MemberTypes.All.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
 
-        if (_customAttributes.TryGetValue(hashcode, out Attribute[] value))
-        {
-            return value;
-        }
-        else
-        {
-            return Enumerable.Empty<Attribute>().ToArray();
-        }
+        return _customAttributes.TryGetValue(hashCode, out Attribute[] value)
+            ? value.OfType<TAttribute>().ToArray()
+            : Array.Empty<TAttribute>();
     }
 
-    internal override Attribute[] GetCustomAttributes(MemberInfo memberInfo, Type type)
+    internal override TAttribute[] GetCustomAttributes<TAttribute>(MemberInfo memberInfo)
     {
-        var hashcode = memberInfo.MemberType.GetHashCode() + type.FullName.GetHashCode();
+        var hashCode = memberInfo.MemberType.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
 
-        if (_customAttributes.TryGetValue(hashcode, out Attribute[] value))
-        {
-            return value;
-        }
-        else
-        {
-            return Enumerable.Empty<Attribute>().ToArray();
-        }
+        return _customAttributes.TryGetValue(hashCode, out Attribute[] value)
+            ? value.OfType<TAttribute>().ToArray()
+            : Array.Empty<TAttribute>();
     }
 }

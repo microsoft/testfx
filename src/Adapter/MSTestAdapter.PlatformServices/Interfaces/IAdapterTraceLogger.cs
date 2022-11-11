@@ -13,19 +13,19 @@ public interface IAdapterTraceLogger
     /// </summary>
     /// <param name="format"> The format. </param>
     /// <param name="args"> The args. </param>
-    void LogError(string format, params object[] args);
+    void LogError(string format, params object?[] args);
 
     /// <summary>
     /// Log a warning in a given format.
     /// </summary>
     /// <param name="format"> The format. </param>
     /// <param name="args"> The args. </param>
-    void LogWarning(string format, params object[] args);
+    void LogWarning(string format, params object?[] args);
 
     /// <summary>
     /// Log an information message in a given format.
     /// </summary>
     /// <param name="format"> The format. </param>
     /// <param name="args"> The args. </param>
-    void LogInfo(string format, params object[] args);
+    void LogInfo(string format, params object?[] args);
 }

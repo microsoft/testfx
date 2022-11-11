@@ -16,7 +16,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     /// </summary>
     /// <param name="format"> The format. </param>
     /// <param name="args"> The args. </param>
-    public void LogError(string format, params object[] args)
+    public void LogError(string format, params object?[] args)
     {
 #if !WINDOWS_UWP && !WIN_UI
         if (EqtTrace.IsErrorEnabled)
@@ -33,7 +33,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     /// </summary>
     /// <param name="format"> The format. </param>
     /// <param name="args"> The args. </param>
-    public void LogWarning(string format, params object[] args)
+    public void LogWarning(string format, params object?[] args)
     {
 #if !WINDOWS_UWP && !WIN_UI
         if (EqtTrace.IsWarningEnabled)
@@ -50,7 +50,7 @@ public class AdapterTraceLogger : IAdapterTraceLogger
     /// </summary>
     /// <param name="format"> The format. </param>
     /// <param name="args"> The args. </param>
-    public void LogInfo(string format, params object[] args)
+    public void LogInfo(string format, params object?[] args)
     {
 #if !WINDOWS_UWP && !WIN_UI
         if (EqtTrace.IsInfoEnabled)

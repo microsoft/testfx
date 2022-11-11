@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NETFRAMEWORK
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
-#if NETFRAMEWORK
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
@@ -68,10 +67,10 @@ internal class RuntimeTypeHelper
     /// <param name="match">Candidate matches.</param>
     /// <param name="cMatches">Number of matches.</param>
     /// <returns>The most derived method.</returns>
-    internal static MethodBase FindMostDerivedNewSlotMeth(MethodBase[] match, int cMatches)
+    internal static MethodBase? FindMostDerivedNewSlotMeth(MethodBase[] match, int cMatches)
     {
         int deepestHierarchy = 0;
-        MethodBase methWithDeepestHierarchy = null;
+        MethodBase? methWithDeepestHierarchy = null;
 
         for (int i = 0; i < cMatches; i++)
         {
@@ -86,10 +85,10 @@ internal class RuntimeTypeHelper
             {
                 if (methWithDeepestHierarchy != null)
                 {
-                    Debug.Assert(
-                        methWithDeepestHierarchy != null && ((match[i].CallingConvention & CallingConventions.VarArgs)
-                                                             | (methWithDeepestHierarchy.CallingConvention & CallingConventions.VarArgs)) != 0,
-                        "Calling conventions: " + match[i].CallingConvention + " - " + methWithDeepestHierarchy.CallingConvention);
+                    DebugEx.Assert(
+                        ((match[i].CallingConvention & CallingConventions.VarArgs)
+                        | (methWithDeepestHierarchy.CallingConvention & CallingConventions.VarArgs)) != 0,
+                        $"Calling conventions: {match[i].CallingConvention} - {methWithDeepestHierarchy.CallingConvention}");
                 }
 
                 throw new AmbiguousMatchException();
@@ -111,18 +110,13 @@ internal class RuntimeTypeHelper
     /// upon an array of types. This method should return null if no method matches
     /// the criteria.
     /// </summary>
-    /// <param name="bindingAttr">Binding specification.</param>
     /// <param name="match">Candidate matches.</param>
     /// <param name="types">Types.</param>
-    /// <param name="modifiers">Parameter modifiers.</param>
     /// <returns>Matching method. Null if none matches.</returns>
     [SuppressMessage("StyleCop.CSharp.NamingRules", "SA1305:FieldNamesMustNotUseHungarianNotation", Justification = "Reviewed. Suppression is OK here.")]
-    internal static MethodBase SelectMethod(BindingFlags bindingAttr, MethodBase[] match, Type[] types, ParameterModifier[] modifiers)
+    internal static MethodBase? SelectMethod(MethodBase[] match, Type[] types)
     {
-        if (match == null)
-        {
-            throw new ArgumentNullException(nameof(match));
-        }
+        _ = match ?? throw new ArgumentNullException(nameof(match));
 
         int i;
         int j;
@@ -251,12 +245,12 @@ internal class RuntimeTypeHelper
     internal static int FindMostSpecificMethod(
         MethodBase m1,
         int[] paramOrder1,
-        Type paramArrayType1,
+        Type? paramArrayType1,
         MethodBase m2,
         int[] paramOrder2,
-        Type paramArrayType2,
+        Type? paramArrayType2,
         Type[] types,
-        object[] args)
+        object?[]? args)
     {
         // Find the most specific method based on the parameters.
         int res = FindMostSpecific(
@@ -317,12 +311,12 @@ internal class RuntimeTypeHelper
     internal static int FindMostSpecific(
         ParameterInfo[] p1,
         int[] paramOrder1,
-        Type paramArrayType1,
+        Type? paramArrayType1,
         ParameterInfo[] p2,
         int[] paramOrder2,
-        Type paramArrayType2,
+        Type? paramArrayType2,
         Type[] types,
-        object[] args)
+        object?[]? args)
     {
         // A method using params is always less specific than one not using params
         if (paramArrayType1 != null && paramArrayType2 == null)
