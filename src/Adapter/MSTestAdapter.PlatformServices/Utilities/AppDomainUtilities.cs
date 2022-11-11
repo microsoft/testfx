@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
@@ -187,9 +186,6 @@ internal static class AppDomainUtilities
 
     internal static object CreateInstance(AppDomain appDomain, Type type, object?[]? arguments)
     {
-        DebugEx.Assert(appDomain != null, "appDomain is null");
-        DebugEx.Assert(type != null, "type is null");
-
         var typeAssemblyLocation = type.Assembly.Location;
         var fullFilePath = typeAssemblyLocation == null ? null : Path.Combine(appDomain.SetupInformation.ApplicationBase, Path.GetFileName(typeAssemblyLocation));
 
