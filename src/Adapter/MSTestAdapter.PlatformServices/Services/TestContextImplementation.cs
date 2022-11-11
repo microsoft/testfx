@@ -102,7 +102,6 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
         _threadSafeStringWriter = (ThreadSafeStringWriter)stringWriter;
         _properties = new Dictionary<string, object?>(properties);
-        CancellationTokenSource = new CancellationTokenSource();
         InitializeProperties();
 
 #if !WINDOWS_UWP
@@ -130,7 +129,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary? Properties => _properties as IDictionary;
+    public override IDictionary Properties => (IDictionary)_properties;
 
 #if !WINDOWS_UWP && !WIN_UI && !PORTABLE
     /// <inheritdoc/>
