@@ -4,8 +4,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+#if NETFRAMEWORK
 using System.Data;
 using System.Data.Common;
+#endif
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
@@ -20,12 +22,12 @@ public abstract class TestContext
     /// <summary>
     /// Gets test properties for a test.
     /// </summary>
-    public abstract IDictionary? Properties { get; }
+    public abstract IDictionary Properties { get; }
 
     /// <summary>
     /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted.
     /// </summary>
-    public virtual CancellationTokenSource? CancellationTokenSource { get; protected set; }
+    public virtual CancellationTokenSource CancellationTokenSource { get; protected set; } = new();
 
 #if NETFRAMEWORK
     /// <summary>
