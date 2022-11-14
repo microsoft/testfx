@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

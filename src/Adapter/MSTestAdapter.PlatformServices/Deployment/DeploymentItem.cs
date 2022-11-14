@@ -4,6 +4,7 @@
 using System;
 using System.Globalization;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #if !WINDOWS_UWP
@@ -140,10 +141,9 @@ internal class DeploymentItem
         DebugEx.Assert(SourcePath != null, "SourcePath");
         DebugEx.Assert(RelativeOutputDirectory != null, "RelativeOutputDirectory");
 
-        return
-            StringEx.IsNullOrEmpty(RelativeOutputDirectory) ?
-                string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItem, SourcePath) :
-                string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItemWithOutputDirectory, SourcePath, RelativeOutputDirectory);
+        return StringEx.IsNullOrEmpty(RelativeOutputDirectory)
+            ? string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItem, SourcePath)
+            : string.Format(CultureInfo.CurrentCulture, Resource.DeploymentItemWithOutputDirectory, SourcePath, RelativeOutputDirectory);
     }
 
     #endregion

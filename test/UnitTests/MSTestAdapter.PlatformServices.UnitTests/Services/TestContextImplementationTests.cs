@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.Common;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
 
 using Moq;
 

@@ -23,7 +23,6 @@
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <SupportedOSPlatformVersion>$(TargetPlatformMinVersion)</SupportedOSPlatformVersion>
     <RuntimeIdentifiers>win10-x86;win10-x64;win10-arm64</RuntimeIdentifiers>
-    <UseSharedResources>true</UseSharedResources>
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
     <!-- Remove after ARCADE transition -->
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
@@ -77,18 +76,16 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
-    <Compile Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.Designer.cs">
-      <Link>Resources\Resource.Designer.cs</Link>
+    <Compile Update="Resources\Resource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="$(RepoRoot)src\Adapter\PlatformServices.Shared\netstandard1.3\Resources\Resource.resx">
-      <Link>Resources\Resource.resx</Link>
+    <EmbeddedResource Update="Resources\Resource.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+      <!--<CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</CustomToolNamespace>-->
       <SubType>Designer</SubType>
-      <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
 

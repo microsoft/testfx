@@ -8,9 +8,8 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
+namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -41,7 +40,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources.Reso" +
-                            "urce", typeof(Resource).GetTypeInfo().Assembly);
+                            "urce", typeof(Resource).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

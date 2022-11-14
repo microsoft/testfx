@@ -7,6 +7,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Resources;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 /// <summary>
