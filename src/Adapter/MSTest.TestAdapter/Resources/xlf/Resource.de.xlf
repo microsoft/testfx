@@ -156,7 +156,7 @@ Fehler: {1}</target>
       </trans-unit>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}</source>
-        <target state="new">Während der Ausführung des Tests wurde eine Ausnahme ausgelöst. Wenn Sie eine Extension von "TestMethodAttribute" verwenden, wenden Sie sich bitte an den Anbieter. Fehlermeldung: {0}</target>
+        <target state="new">Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">
