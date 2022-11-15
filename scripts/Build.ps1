@@ -36,9 +36,6 @@ Param(
     [Alias("cl")]
     [Switch] $Clean,
 
-    [Alias("sr")]
-    [Switch] $SkipRestore,
-
     [Alias("cache")]
     [Switch] $ClearPackageCache,
 
@@ -58,7 +55,8 @@ Param(
     [Switch] $Force,
 
     [Alias("s")]
-    [String[]] $Steps = @("UpdateTPVersion", "Restore", "Build", "Publish")
+    [ValidateSet("InstallDotnet", "UpdateTPVersion", "Restore", "Build", "Pack")]
+    [String[]] $Steps = @("InstallDotnet", "UpdateTPVersion", "Restore", "Build", "Pack")
 )
 
 if ($Version) {
@@ -76,25 +74,24 @@ $TFB_FrameworkVersion = $FrameworkVersion
 $TFB_AdapterVersion = $AdapterVersion
 $TFB_VersionSuffix = $VersionSuffix
 $TFB_BuildVersion = $BuildVersionPrefix + "." + $BuildVersionSuffix
-$TFB_SkipRestore = $SkipRestore
 $TFB_Clean = $Clean
 $TFB_ClearPackageCache = $ClearPackageCache
 $TFB_UpdateXlf = $UpdateXlf
 $TFB_IsLocalizedBuild = $IsLocalizedBuild
-$TPB_BRANCH = "LOCALBRANCH"
-$TPB_COMMIT = "LOCALBUILD"
+$TFB_BRANCH = "LOCALBRANCH"
+$TFB_COMMIT = "LOCALBUILD"
 try {
-    $TPB_BRANCH = $env:BUILD_SOURCEBRANCH -replace "^refs/heads/"
-    if ([string]::IsNullOrWhiteSpace($TPB_BRANCH)) {
-        $TPB_BRANCH = git -C "." rev-parse --abbrev-ref HEAD
+    $TFB_BRANCH = $env:BUILD_SOURCEBRANCH -replace "^refs/heads/"
+    if ([string]::IsNullOrWhiteSpace($TFB_BRANCH)) {
+        $TFB_BRANCH = git -C "." rev-parse --abbrev-ref HEAD
     }
 }
 catch { }
 
 try {
-    $TPB_COMMIT = $env:BUILD_SOURCEVERSION
-    if ([string]::IsNullOrWhiteSpace($TPB_COMMIT)) {
-        $TPB_COMMIT = git -C "." rev-parse HEAD
+    $TFB_COMMIT = $env:BUILD_SOURCEVERSION
+    if ([string]::IsNullOrWhiteSpace($TFB_COMMIT)) {
+        $TFB_COMMIT = git -C "." rev-parse HEAD
     }
 }
 catch { }
@@ -111,13 +108,13 @@ $ErrorActionPreference = "Stop"
 #
 # Prints help text for the switches this script supports.
 #
-function Print-Help {
+function Write-Help {
     if (-not $Help) {
         return
     }
 
     Write-Host -object ""
-    Write-Host -object "********* MSTest Adapter Build Script *********"
+    Write-Host -object "********* MSTest Build Script *********"
     Write-Host -object ""
     Write-Host -object "  Help (-h)                        - [switch]   - Prints this help message."
     Write-Host -object "  Clean (-cl)                      - [switch]   - Indicates that this should be a clean build."
@@ -133,7 +130,7 @@ function Print-Help {
     Write-Host -object "  VersionSuffix (-vs)              - [string]   - Specifies the version suffix for the nuget packages."
     Write-Host -object "  Target                           - [string]   - Specifies the build target. Defaults to 'Build'."
     Write-Host -object ""
-    Write-Host -object "  Steps (-s)                       - [string[]] - List of build steps to run, valid steps: `"UpdateTPVersion`", `"Restore`", `"Build`", `"Publish`""
+    Write-Host -object "  Steps (-s)                       - [string[]] - List of build steps to run, valid steps: `"InstallDotnet`", `"UpdateTPVersion`", `"Restore`", `"Build`", `"Pack`""
 
     Write-Host -object ""
     Exit 0
@@ -142,19 +139,13 @@ function Print-Help {
 #
 # Restores packages for the solutions.
 #
-function Perform-Restore {
+function Restore-Package {
     $timer = Start-Timer
+    Write-Log "Restore-Package: Started."
 
-    Write-Log "Perform-Restore: Started."
-
-    if ($TFB_SkipRestore) {
-        Write-Log "Perform-Restore: Skipped."
-        return;
-    }
-
-    $msbuild = Locate-MSBuildPath
-    $nuget = Locate-NuGet
-    $nugetConfig = Locate-NuGetConfig
+    $msbuild = Find-MSBuildPath
+    $nuget = Find-NuGet
+    $nugetConfig = Find-NuGetConfig
     $toolset = ".\scripts\Toolset\tools.proj"
     if ($TFB_ClearPackageCache) {
         Write-Log "Clearing local package cache..."
@@ -169,16 +160,16 @@ function Perform-Restore {
         throw "The restore failed with an exit code of '$lastExitCode'."
     }
 
-    Write-Log "Perform-Restore: Completed. {$(Get-ElapsedTime($timer))}"
+    Write-Log "Restore-Package: Completed. {$(Get-ElapsedTime($timer))}"
 }
 
 #
 # Builds the solutions specified.
 #
-function Perform-Build {
+function Invoke-Build {
     $timer = Start-Timer
 
-    Write-Log "Perform-Build: Started."
+    Write-Log "Invoke-Build: Started."
 
     if ($TFB_Clean) {
         $foldersToDel = @( $TFB_Configuration, "TestAssets" )
@@ -195,12 +186,12 @@ function Perform-Build {
 
     Invoke-MSBuild -solution "TestFx.sln"
 
-    Write-Log "Perform-Build: Completed. {$(Get-ElapsedTime($timer))}"
+    Write-Log "Invoke-Build: Completed. {$(Get-ElapsedTime($timer))}"
 }
 
 function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExtension = "false", [switch]$NoRestore) {
-    $msbuild = Locate-MSBuild -hasVsixExtension $hasVsixExtension
-    $solutionPath = Locate-Item -relativePath $solution
+    $msbuild = Find-MSBuild -hasVsixExtension $hasVsixExtension
+    $solutionPath = Find-Item -relativePath $solution
     $logsDir = Get-LogsPath
 
     $fileName = [System.IO.Path]::GetFileNameWithoutExtension($solution)
@@ -217,8 +208,8 @@ function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExten
         "-p:IsLocalizedBuild=$TFB_IsLocalizedBuild",
         "-p:UpdateXlf=$TFB_UpdateXlf",
         "-p:BuildVersion=$TFB_BuildVersion",
-        "-p:BranchName=`"$TPB_BRANCH`"",
-        "-p:CommitHash=$TPB_COMMIT",
+        "-p:BranchName=`"$TFB_BRANCH`"",
+        "-p:CommitHash=$TFB_COMMIT",
         "-p:MajorMinorPatch=$TFB_FrameworkVersion",
         "-p:VersionSuffix=$TFB_VersionSuffix",
         "-restore:$restore",
@@ -228,7 +219,6 @@ function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExten
 
     Write-Log "    $buildTarget`: $solution..."
     & {
-        $PSNativeCommandArgumentPassing = 'Legacy'
         & "$msbuild" $argument;
     }
 
@@ -240,10 +230,10 @@ function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExten
 #
 # Creates Fx & Adapter nuget packages
 #
-function Create-NugetPackages {
+function New-NugetPackages {
     $timer = Start-Timer
 
-    Write-Log "Create-NugetPackages: Started."
+    Write-Log "New-NugetPackages: Started."
 
     $stagingDir = Join-Path $env:TF_OUT_DIR $TFB_Configuration
     $packageOutDir = Join-Path $stagingDir "MSTestPackages"
@@ -270,7 +260,7 @@ function Create-NugetPackages {
     Copy-Item -Path "$($env:TF_PACKAGES_DIR)\microsoft.testplatform.adapterutilities\$TestPlatformVersion\lib" -Destination "$($stagingDir)\Microsoft.TestPlatform.AdapterUtilities" -Recurse -Force
 
     # Call nuget pack on these components.
-    $nugetExe = Locate-Nuget
+    $nugetExe = Find-Nuget
 
     foreach ($file in $nuspecFiles) {
         $version = $TFB_FrameworkVersion
@@ -291,14 +281,14 @@ function Create-NugetPackages {
         $SystemPrivateUriVersion = Get-PackageVersion -PackageName "SystemPrivateUriVersion"
         $SystemXmlReaderWriterVersion = Get-PackageVersion -PackageName "SystemXmlReaderWriterVersion"
 
-        Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version``;Srcroot=$env:TF_SRC_DIR``;Packagesroot=$env:TF_PACKAGES_DIR``;TestPlatformVersion=$TestPlatformVersion``;MicrosoftNETCoreUniversalWindowsPlatformVersion=$MicrosoftNETCoreUniversalWindowsPlatformVersion``;SystemNetWebSocketsClientVersion=$SystemNetWebSocketsClientVersion``;SystemTextRegularExpressionsVersion=$SystemTextRegularExpressionsVersion``;SystemPrivateUriVersion=$SystemPrivateUriVersion``;SystemXmlReaderWriterVersion=$SystemXmlReaderWriterVersion``;SystemNetNameResolutionVersion=$SystemNetNameResolutionVersion``;NOWARN=`"NU5127,NU5128,NU5129`"``;BranchName=$TPB_BRANCH``;CommitHash=$TPB_COMMIT"
-        & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR`;TestPlatformVersion=$TestPlatformVersion`;MicrosoftNETCoreUniversalWindowsPlatformVersion=$MicrosoftNETCoreUniversalWindowsPlatformVersion`;SystemNetWebSocketsClientVersion=$SystemNetWebSocketsClientVersion`;SystemTextRegularExpressionsVersion=$SystemTextRegularExpressionsVersion`;SystemPrivateUriVersion=$SystemPrivateUriVersion`;SystemXmlReaderWriterVersion=$SystemXmlReaderWriterVersion`;SystemNetNameResolutionVersion=$SystemNetNameResolutionVersion`;NOWARN="NU5127,NU5128,NU5129"`;BranchName=$TPB_BRANCH`;CommitHash=$TPB_COMMIT
+        Write-Verbose "$nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version``;Srcroot=$env:TF_SRC_DIR``;Packagesroot=$env:TF_PACKAGES_DIR``;TestPlatformVersion=$TestPlatformVersion``;MicrosoftNETCoreUniversalWindowsPlatformVersion=$MicrosoftNETCoreUniversalWindowsPlatformVersion``;SystemNetWebSocketsClientVersion=$SystemNetWebSocketsClientVersion``;SystemTextRegularExpressionsVersion=$SystemTextRegularExpressionsVersion``;SystemPrivateUriVersion=$SystemPrivateUriVersion``;SystemXmlReaderWriterVersion=$SystemXmlReaderWriterVersion``;SystemNetNameResolutionVersion=$SystemNetNameResolutionVersion``;NOWARN=`"NU5127,NU5128,NU5129`"``;BranchName=$TFB_BRANCH``;CommitHash=$TFB_COMMIT"
+        & $nugetExe pack $stagingDir\$file -OutputDirectory $packageOutDir -Version $version -Properties Version=$version`;Srcroot=$env:TF_SRC_DIR`;Packagesroot=$env:TF_PACKAGES_DIR`;TestPlatformVersion=$TestPlatformVersion`;MicrosoftNETCoreUniversalWindowsPlatformVersion=$MicrosoftNETCoreUniversalWindowsPlatformVersion`;SystemNetWebSocketsClientVersion=$SystemNetWebSocketsClientVersion`;SystemTextRegularExpressionsVersion=$SystemTextRegularExpressionsVersion`;SystemPrivateUriVersion=$SystemPrivateUriVersion`;SystemXmlReaderWriterVersion=$SystemXmlReaderWriterVersion`;SystemNetNameResolutionVersion=$SystemNetNameResolutionVersion`;NOWARN="NU5127,NU5128,NU5129"`;BranchName=$TFB_BRANCH`;CommitHash=$TFB_COMMIT
         if ($lastExitCode -ne 0) {
             throw "Nuget pack failed with an exit code of '$lastExitCode'."
         }
     }
 
-    Write-Log "Create-NugetPackages: Complete. {$(Get-ElapsedTime($timer))}"
+    Write-Log "New-NugetPackages: Complete. {$(Get-ElapsedTime($timer))}"
 }
 
 function ShouldRunStep([string[]]$CurrentSteps) {
@@ -315,23 +305,31 @@ function ShouldRunStep([string[]]$CurrentSteps) {
     return $false
 }
 
-Print-Help
+Write-Help
 
-# We want to install required .NET CLI before restoring/building to ensure we always use latest patched version.
-Install-DotNetCli
+Write-Log "Build started: args = '$args'"
+Write-Log "MSTest environment variables: "
+Get-ChildItem env: | Where-Object -FilterScript { $_.Name.StartsWith("TF_") } | Format-Table
+Write-Log "MSTest build variables: "
+Get-Variable | Where-Object -FilterScript { $_.Name.StartsWith("TFB_") } | Format-Table
+
+if (ShouldRunStep @("InstallDotnet")) {
+    # We want to install required .NET CLI before restoring/building to ensure we always use latest patched version.
+    Install-DotNetCli
+}
 
 if (ShouldRunStep @("UpdateTPVersion")) {
     Sync-PackageVersions
 }
 
 if (ShouldRunStep @("UpdateTPVersion", "Restore")) {
-    Perform-Restore
+    Restore-Package
 }
 
 if (ShouldRunStep @("Build")) {
-    Perform-Build
+    Invoke-Build
 }
 
-if (ShouldRunStep @("Publish")) {
-    Create-NugetPackages
+if (ShouldRunStep @("Pack")) {
+    New-NugetPackages
 }

@@ -5,7 +5,7 @@
 
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("Debug", "Release")]
     [System.String] $Configuration = "Release"
 )
@@ -20,12 +20,10 @@ $TF_PortablePdbs = @("MSTestAdapter.PlatformServices\netstandard2.0\Microsoft.Vi
 
 $PdbConverterToolVersion = Get-PackageVersion -PackageName "MicrosoftDiaSymReaderPdb2PdbVersion"
 
-function Locate-PdbConverterTool
-{
+function Find-PdbConverterTool {
     $pdbConverter = Join-Path -path $TF_PACKAGES_DIR -ChildPath "Microsoft.DiaSymReader.Pdb2Pdb\$PdbConverterToolVersion\tools\Pdb2Pdb.exe"
 
-    if (!(Test-Path -path $pdbConverter))
-    {
+    if (!(Test-Path -path $pdbConverter)) {
         Get-ChildItem -Path $TF_PACKAGES_DIR -Recurse | Foreach-Object { Write-Host $_ }
         throw "Unable to locate Microsoft.DiaSymReader.Pdb2Pdb converter exe in path '$pdbConverter'."
     }
@@ -35,32 +33,27 @@ function Locate-PdbConverterTool
 
 }
 
-function ConvertPortablePdbToWindowsPdb
-{
-    foreach($TF_PortablePdb in $TF_PortablePdbs)
-    {
+function Convert-PortablePdbToWindowsPdb {
+    foreach ($TF_PortablePdb in $TF_PortablePdbs) {
         $portablePdbs += Join-Path -path $TF_OUT_DIR\$Configuration -childPath $TF_PortablePdb
     }
 
-    $pdbConverter = Locate-PdbConverterTool
+    $pdbConverter = Find-PdbConverterTool
 
-    foreach($portablePdb in $portablePdbs)
-    {
-	# First check if corresponding dll exists
-        $dllOrExePath = $portablePdb -replace ".pdb",".dll"
+    foreach ($portablePdb in $portablePdbs) {
+        # First check if corresponding dll exists
+        $dllOrExePath = $portablePdb -replace ".pdb", ".dll"
 
-		if(!(Test-Path -path $dllOrExePath))
-		{
-			# If no corresponding dll found, check if exe exists
-			$dllOrExePath = $portablePdb -replace ".pdb",".exe"
+        if (!(Test-Path -path $dllOrExePath)) {
+            # If no corresponding dll found, check if exe exists
+            $dllOrExePath = $portablePdb -replace ".pdb", ".exe"
 
-			if(!(Test-Path -path $dllOrExePath))
-            		{
-			    throw "Unable to locate dll/exe corresponding to $portablePdb"
-            		}
-		}
+            if (!(Test-Path -path $dllOrExePath)) {
+                throw "Unable to locate dll/exe corresponding to $portablePdb"
+            }
+        }
 
-        $fullpdb = $portablePdb -replace ".pdb",".pdbfull"
+        $fullpdb = $portablePdb -replace ".pdb", ".pdbfull"
 
         Write-Verbose "$pdbConverter $dll /pdb $portablePdb /out $fullpdb"
         & $pdbConverter $dllOrExePath /pdb $portablePdb /out $fullpdb
@@ -68,5 +61,5 @@ function ConvertPortablePdbToWindowsPdb
 }
 
 Write-Verbose "Converting Portable pdbs to Windows(Full) Pdbs..."
-ConvertPortablePdbToWindowsPdb
+Convert-PortablePdbToWindowsPdb
 

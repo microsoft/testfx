@@ -55,7 +55,7 @@ $TestFramework = ".NETCoreApp2.1"
 #
 # Prints help text for the switches this script supports.
 #
-function Print-Help {
+function Write-Help {
     if (-not $Help) {
         return
     }
@@ -168,5 +168,5 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
     }
 }
 
-Print-Help
+Write-Help
 Invoke-Test

@@ -3,7 +3,7 @@
 
 [CmdletBinding()]
 Param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("Debug", "Release")]
     [Alias("c")]
     [string] $Configuration = "Debug",
@@ -16,7 +16,7 @@ Param(
 #
 # Variables
 #
-if(-not [string]::IsNullOrWhiteSpace($ArtifactsDirectory)) {
+if (-not [string]::IsNullOrWhiteSpace($ArtifactsDirectory)) {
     $TF_OUT_DIR = $ArtifactsDirectory
 }
 
@@ -29,8 +29,7 @@ $TF_Configuration = $Configuration
 $TF_AssembliesPattern = @("Microsoft.VisualStudio.TestPlatform.*.dll", "Microsoft.TestPlatform.*.dll")
 $script:ErrorCount = 0
 
-function Test-Assembly ([string] $Path)
-{
+function Test-Assembly ([string] $Path) {
     $signature = Get-AuthenticodeSignature -FilePath $Path
 
     if ($signature.Status -eq "Valid") {
@@ -56,8 +55,7 @@ function Test-Assembly ([string] $Path)
     }
 }
 
-function Test-Assemblies ([string] $Path)
-{
+function Test-Assemblies ([string] $Path) {
     foreach ($pattern in $TF_AssembliesPattern) {
         Get-ChildItem -Recurse -Include $pattern $Path | Where-Object { (!$_.PSIsContainer) } | ForEach-Object {
             Test-Assembly $_.FullName
@@ -85,7 +83,8 @@ function Test-NugetPackage ([string] $Path) {
         Unzip $Path $out
 
         Test-Assemblies $out
-    } finally {
+    }
+    finally {
         if (Test-Path $out) {
             Remove-Item $out -Recurse -Force
         }
@@ -93,11 +92,10 @@ function Test-NugetPackage ([string] $Path) {
     }
 }
 
-function Test-NugetPackages
-{
+function Test-NugetPackages {
     Write-Debug  "Test-NugetPackages"
 
-    $nugetInstallPath = Locate-NuGet
+    $nugetInstallPath = Find-NuGet
     Write-Debug  "Using nuget.exe installed at $nugetInstallPath"
 
     $artifactsConfigDirectory = Join-Path $TF_OUT_DIR $TF_Configuration
@@ -108,7 +106,8 @@ function Test-NugetPackages
             Write-ToCI "Verifing $($_.FullName)" -type "group"
             & $nugetInstallPath verify -signature -CertificateFingerprint "3F9001EA83C560D712C24CF213C3D312CB3BFF51EE89435D3430BD06B5D0EECE;AA12DA22A49BCE7D5C1AE64CC1F3D892F150DA76140F210ABD2CBFFCA2C18A27;" $_.FullName
             Test-NugetPackage -path $_.FullName
-        } finally {
+        }
+        finally {
             Write-ToCI -type "endgroup"
         }
     }
@@ -116,27 +115,23 @@ function Test-NugetPackages
     Write-Debug  "Test-NugetPackages: Complete"
 }
 
-function Write-FailLog ([string] $message)
-{
+function Write-FailLog ([string] $message) {
     $script:ErrorCount = $script:ErrorCount + 1
     Write-ToCI -message $message -type "task.logissue type=error"
 }
 
-function Write-Debug ([string] $message)
-{
+function Write-Debug ([string] $message) {
     Write-ToCI -message $message -type "debug"
 }
 
-function Write-ToCI ([string] $message, [string]$type, [switch]$vso)
-{
-    if ($message -or $vso -or $type)
-    {
+function Write-ToCI ([string] $message, [string]$type, [switch]$vso) {
+    if ($message -or $vso -or $type) {
         $prefix = ""
         if ($vso) {
             $prefix = "vso"
         }
 
-        $color = if($type -eq "error") { "Red" } else { $Host.UI.RawUI.ForegroundColor }
+        $color = if ($type -eq "error") { "Red" } else { $Host.UI.RawUI.ForegroundColor }
         Write-Host "##$prefix[$type]$message" -ForegroundColor $color
     }
 }
@@ -146,7 +141,8 @@ try {
     Get-ChildItem variable:TF_*
     Write-Output ""
     Write-Output ""
-} finally {
+}
+finally {
     Write-ToCI -type "endgroup"
 }
 

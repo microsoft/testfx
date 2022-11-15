@@ -41,13 +41,13 @@ if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
     $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
 }
 
-function Create-Directory([string[]] $path) {
+function New-Directory([string[]] $path) {
     if (!(Test-Path -path $path)) {
         New-Item -path $path -force -itemType "Directory" | Out-Null
     }
 }
 
-function Download-File([string] $address, [string] $fileName) {
+function Get-WebFile([string] $address, [string] $fileName) {
     $webClient = New-Object -typeName "System.Net.WebClient"
     $webClient.DownloadFile($address, $fileName)
 }
@@ -61,8 +61,8 @@ function Get-ProductVersion([string[]] $path) {
     return $item.VersionInfo.ProductVersion
 }
 
-function Locate-MSBuild($hasVsixExtension = "false") {
-    $msbuildPath = Locate-MSBuildPath -hasVsixExtension $hasVsixExtension
+function Find-MSBuild($hasVsixExtension = "false") {
+    $msbuildPath = Find-MSBuildPath -hasVsixExtension $hasVsixExtension
     $msbuild = Join-Path -path $msbuildPath -childPath "MSBuild.exe"
 
     if (!(Test-Path -path $msbuild)) {
@@ -72,8 +72,8 @@ function Locate-MSBuild($hasVsixExtension = "false") {
     return Resolve-Path -path $msbuild
 }
 
-function Locate-MSBuildPath($hasVsixExtension = "false") {
-    $vsInstallPath = Locate-VsInstallPath -hasVsixExtension $hasVsixExtension
+function Find-MSBuildPath($hasVsixExtension = "false") {
+    $vsInstallPath = Find-VsInstallPath -hasVsixExtension $hasVsixExtension
 
     # first try to find the VS2019+ path
     try {
@@ -89,7 +89,7 @@ function Locate-MSBuildPath($hasVsixExtension = "false") {
     return $msbuildPath
 }
 
-function Locate-NuGet {
+function Find-NuGet {
     $rootPath = Join-Path -path $env:TF_PACKAGES_DIR -childPath "toolset"
     $nuget = Join-Path -path $rootPath -childPath "nuget.exe"
 
@@ -105,7 +105,7 @@ function Locate-NuGet {
     }
 
     New-Item $rootPath -ItemType Directory | Out-Null
-    Download-File -address "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/NuGet.exe" -fileName $nuget
+    Get-WebFile -address "https://dist.nuget.org/win-x86-commandline/v$nugetVersion/NuGet.exe" -fileName $nuget
 
     if (!(Test-Path -path $nuget)) {
         throw "The specified NuGet version ($nugetVersion) could not be downloaded."
@@ -114,27 +114,27 @@ function Locate-NuGet {
     return Resolve-Path -path $nuget
 }
 
-function Locate-NuGetConfig {
+function Find-NuGetConfig {
     $rootPath = $env:TF_ROOT_DIR
     $nugetConfig = Join-Path -path $rootPath -childPath "Nuget.config"
     return Resolve-Path -path $nugetConfig
 }
 
-function Locate-PackagesPath {
+function Find-PackagesPath {
     $rootPath = $env:TF_ROOT_DIR
     $packagesPath = Join-Path -path $rootPath -childPath "packages"
 
-    Create-Directory -path $packagesPath
+    New-Directory -path $packagesPath
     return Resolve-Path -path $packagesPath
 }
 
-function Locate-VsWhere {
-    $packagesPath = Locate-PackagesPath
+function Find-VsWhere {
+    $packagesPath = Find-PackagesPath
 
     $vswhere = Join-Path -path $packagesPath -childPath "vswhere\$vswhereVersion\tools\vswhere.exe"
     if (-not (Test-Path $vswhere)) {
-        $nuget = Locate-NuGet
-        $nugetConfig = Locate-NuGetConfig
+        $nuget = Find-NuGet
+        $nugetConfig = Find-NuGetConfig
 
         Write-Verbose "$nuget install vswhere -version $vswhereVersion -OutputDirectory $packagesPath -ConfigFile $nugetConfig -ExcludeVersion"
         & $nuget install vswhere -version $vswhereVersion -OutputDirectory $packagesPath -ConfigFile $nugetConfig -ExcludeVersion | Out-Null
@@ -144,8 +144,8 @@ function Locate-VsWhere {
     return $vswhere
 }
 
-function Locate-VsInstallPath($hasVsixExtension = "false") {
-    $vswhere = Locate-VsWhere
+function Find-VsInstallPath($hasVsixExtension = "false") {
+    $vswhere = Find-VsWhere
     $requiredPackageIds = @()
 
     $requiredPackageIds += "Microsoft.Component.MSBuild"
@@ -173,7 +173,7 @@ function Locate-VsInstallPath($hasVsixExtension = "false") {
     return Resolve-Path -path $vsInstallPath
 }
 
-function Locate-Item([string] $relativePath) {
+function Find-Item([string] $relativePath) {
     $rootPath = $env:TF_ROOT_DIR
     $itemPath = Join-Path -path $rootPath -childPath $relativePath
     return Resolve-Path -path $itemPath
@@ -191,7 +191,7 @@ function Get-LogsPath {
 
 function Get-VSTestPath {
     $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
-    $vstestPath = Join-Path -path (Locate-PackagesPath) "Microsoft.TestPlatform\$TestPlatformVersion\tools\net462\Common7\IDE\Extensions\TestPlatform\vstest.console.exe"
+    $vstestPath = Join-Path -path (Find-PackagesPath) "Microsoft.TestPlatform\$TestPlatformVersion\tools\net462\Common7\IDE\Extensions\TestPlatform\vstest.console.exe"
 
     return Resolve-Path -path $vstestPath
 }
@@ -226,7 +226,6 @@ function Replace-InFile($File, $RegEx, $ReplaceWith) {
 function Sync-PackageVersions {
     $versionsRegex = '(?mi)<(MicrosoftNETTestSdkVersion.*?)>(.*?)<\/MicrosoftNETTestSdkVersion>'
     $packageRegex = '(?mi)<package id="Microsoft\.TestPlatform([0-9a-z.]+)?" version="([0-9a-z.-]*)"'
-    $sourceRegex = '(?mi)(.+[a-z =]+\@?\")Microsoft\.TestPlatform\\([0-9.-a-z]+)\";'
 
     if ([String]::IsNullOrWhiteSpace($TestPlatformVersion)) {
         $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
@@ -235,7 +234,7 @@ function Sync-PackageVersions {
         Replace-InFile -File $TF_VERSIONS_FILE -RegEx $versionsRegex -ReplaceWith "<`$1>$TestPlatformVersion</MicrosoftNETTestSdkVersion>"
     }
 
-  (Get-ChildItem "$PSScriptRoot\..\src\*packages.config", "$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
+    (Get-ChildItem "$PSScriptRoot\..\src\*packages.config", "$PSScriptRoot\..\test\*packages.config" -Recurse) | ForEach-Object {
         Replace-InFile -File $_ -RegEx $packageRegex -ReplaceWith ('<package id="Microsoft.TestPlatform$1" version="{0}"' -f $TestPlatformVersion)
     }
 }
