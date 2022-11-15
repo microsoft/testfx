@@ -22,7 +22,7 @@
 
   <!-- Localization for Libraries -->
   <Target Name="TestFxLocalization" Condition=" '$(IsVsixProj)' == '' and '$(IsVsixProj)' !='true' " BeforeTargets="BeforeBuild" DependsOnTargets="GatherResxResources">
-    <CallTarget Targets="CreateLocalizeXLF;CreateLocalizeResx" Condition=" '$(HasResxResources)' == 'true' and '$(UseSharedResources)' == '' "/>
+    <!-- <CallTarget Targets="CreateLocalizeXLF;CreateLocalizeResx" Condition=" '$(HasResxResources)' == 'true' and '$(UseSharedResources)' == '' "/> -->
   </Target>
 
   <!-- Generate xlf files from Resources.resx by using command Build.cmd -uxlf -->
