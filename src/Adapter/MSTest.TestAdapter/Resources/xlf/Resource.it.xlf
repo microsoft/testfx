@@ -155,8 +155,8 @@ Errore: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ExecuteThrewException">
-        <source>Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}</source>
-        <target state="translated">È stata generata un'eccezione durante l'esecuzione del test. Se si usa l'estensione di TestMethodAttribute, contattare il fornitore. Messaggio di errore: {0}</target>
+        <source>Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}</source>
+        <target state="new">È stata generata un'eccezione durante l'esecuzione del test. Se si usa l'estensione di TestMethodAttribute, contattare il fornitore. Messaggio di errore: {0}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">
@@ -337,6 +337,88 @@ Errore: {1}</target>
         <source>Test '{0}' execution has been aborted.</source>
         <target state="translated">L'esecuzione del test '{0}' è stata interrotta.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="InvalidClassCleanupLifecycleValue">
+        <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
+        <target state="new">Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</target>
+        <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
+      </trans-unit>
+      <trans-unit id="CannotEnumerateDataSourceAttribute">
+        <source>Exception occurred while enumerating DataSourceAttribute on "{0}.{1}": {2}</source>
+        <target state="new">Exception occurred while enumerating DataSourceAttribute on "{0}.{1}": {2}</target>
+        <note>{0}: TypeName with namespace,
+{1}: Method name,
+{2}: Exception details</note>
+      </trans-unit>
+      <trans-unit id="CannotEnumerateDataSourceAttribute_MoreThenOneDefined">
+        <source>A test method can only contain one DataSourceAttribute, but found {2} on "{0}.{1}".</source>
+        <target state="new">A test method can only contain one DataSourceAttribute, but found {2} on "{0}.{1}".</target>
+        <note>{0}: TypeName with namespace, 
+{1}: Method name,
+{2}: Number of attributed defined.</note>
+      </trans-unit>
+      <trans-unit id="CannotEnumerateIDataSourceAttribute">
+        <source>Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</source>
+        <target state="new">Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</target>
+        <note>{0}: TypeName with namespace,
+{1}: Method name,
+{2}: Exception details</note>
+      </trans-unit>
+      <trans-unit id="ExceptionOccuredWhileGettingTheExceptionDescription">
+        <source>"{0}": (Failed to get exception description due to an exception of type "{1}".</source>
+        <target state="new">"{0}": (Failed to get exception description due to an exception of type "{1}".</target>
+        <note>{0}: Type of the original exception that we're trying to get the description of.
+{1}: Thrown exception</note>
+      </trans-unit>
+      <trans-unit id="ExceptionsThrown">
+        <source>Exceptions thrown:</source>
+        <target state="new">Exceptions thrown:</target>
+        <note>This is usually precedes by TestAssembly_AssemblyDiscoveryFailure message, and preceded by list of exceptions thrown in a test discovery session.</note>
+      </trans-unit>
+      <trans-unit id="FailedFetchAttributeCache">
+        <source>Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.</source>
+        <target state="new">Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="FailedToGetCustomAttribute">
+        <source>Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</source>
+        <target state="new">Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</target>
+        <note>{0}: Attribute full type name.
+{1}: Exception description</note>
+      </trans-unit>
+      <trans-unit id="OlderTFMVersionFound">
+        <source>An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</source>
+        <target state="new">An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="UTA_UserCodeThrewNullValueException">
+        <source>The called code threw an exception that was caught, but the exception value was null</source>
+        <target state="new">The called code threw an exception that was caught, but the exception value was null</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="OlderTFMVersionFoundClassCleanup">
+        <source>An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8.</source>
+        <target state="new">An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8.</target>
+        <note></note>
+      </trans-unit>
+      <trans-unit id="CannotExpandIDataSourceAttribute">
+        <source>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</source>
+        <target state="new">Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</target>
+        <note>{0}: TypeName with namespace, 
+{1}: Method name,
+{2}: CannotExpandIDataSourceAttribute_DuplicateDisplayName or CannotExpandIDataSourceAttribute_CannotSerialize</note>
+      </trans-unit>
+      <trans-unit id="CannotExpandIDataSourceAttribute_DuplicateDisplayName">
+        <source>Display name "{2}" on indexes {0} and {1} are duplicate. Display names should be unique.</source>
+        <target state="new">Display name "{2}" on indexes {0} and {1} are duplicate. Display names should be unique.</target>
+        <note>{0}, {1}: Zero based index if an element inside of an array
+{2}: Test display name.</note>
+      </trans-unit>
+      <trans-unit id="CannotExpandIDataSourceAttribute_CannotSerialize">
+        <source>Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</source>
+        <target state="new">Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</target>
+        <note>{0}: Zero based index if an element inside of an array,
+{1}: Test name</note>
       </trans-unit>
     </body>
   </file>
