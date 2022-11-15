@@ -9,7 +9,6 @@
   <!-- Default Localization folder. -->
   <PropertyGroup>
     <ResourceDirectory>$(ProjectDir)Resources</ResourceDirectory>
-    <SharedResourceDirectory>$(ProjectDir)..\PlatformServices.Shared\netstandard1.3\Resources</SharedResourceDirectory>
   </PropertyGroup>
 
   <Target Name="GatherResxResources">
@@ -21,15 +20,14 @@
     </PropertyGroup>
   </Target>
 
-  <!-- Localization for Libraries.
-  'UseSharedResources' flag is true for desktop and netcore as their resources are common and present at a shared location -->
+  <!-- Localization for Libraries -->
   <Target Name="TestFxLocalization" Condition=" '$(IsVsixProj)' == '' and '$(IsVsixProj)' !='true' " BeforeTargets="BeforeBuild" DependsOnTargets="GatherResxResources">
     <CallTarget Targets="CreateLocalizeXLF;CreateLocalizeResx" Condition=" '$(HasResxResources)' == 'true' and '$(UseSharedResources)' == '' "/>
-    <CallTarget Targets="CreateLocalizeXLFShared;CreateLocalizeResxShared" Condition=" '$(HasResxResources)' == 'true' and '$(UseSharedResources)' == 'true' "/>
   </Target>
 
   <!-- Generate xlf files from Resources.resx by using command Build.cmd -uxlf -->
   <Target Name="CreateLocalizeXLF" Condition=" '$(UpdateXlf)' == 'true' ">
+    <Message Importance="High" Text="Create localized xlf for '$(AssemblyName)' - '%(ResxLang.Identity)'" />
     <CreateItem Include="@(ResxResources)" AdditionalMetadata="Language=%(ResxLang.Identity)">
       <Output ItemName="LocResourceFile" TaskParameter="Include"/>
     </CreateItem>
@@ -37,32 +35,13 @@
     <Exec Command="$(NuGetPackageRoot)\fmdev.xlftool\$(FmDevXlfToolVersion)\tools\xlftool.exe update -Resx %(ResxResources.Identity) -Xlf $(ResourceDirectory)\xlf\%(ResxResources.Filename).xlf" />
   </Target>
 
-  <!-- Generate xlf files from Resources.resx for shared resources by using command Build.cmd -uxlf -->
-  <Target Name="CreateLocalizeXLFShared" Condition=" '$(UpdateXlf)' == 'true' ">
-    <CreateItem Include="@(ResxResources)" AdditionalMetadata="Language=%(ResxLang.Identity)">
-      <Output ItemName="LocResourceFile" TaskParameter="Include"/>
-    </CreateItem>
-    <Exec Command="$(NuGetPackageRoot)\fmdev.xlftool\$(FmDevXlfToolVersion)\tools\xlftool.exe update -Resx %(LocResourceFile.Identity) -Xlf $(SharedResourceDirectory)\xlf\%(LocResourceFile.Filename).%(LocResourceFile.Language).xlf" />
-    <Exec Command="$(NuGetPackageRoot)\fmdev.xlftool\$(FmDevXlfToolVersion)\tools\xlftool.exe update -Resx %(ResxResources.Identity) -Xlf $(SharedResourceDirectory)\xlf\%(ResxResources.Filename).xlf" />
-  </Target>
-
   <!-- Generate language specific resx files from the xlf files -->
   <Target Name="CreateLocalizeResx" Condition=" '$(IsLocalizedBuild)' == 'true' ">
+    <Message Importance="High" Text="Create localized resx for '$(AssemblyName)' - '%(ResxLang.Identity)'" />
     <CreateItem Include="@(ResxResources)" AdditionalMetadata="Language=%(ResxLang.Identity)">
       <Output ItemName="LocResourceFile" TaskParameter="Include"/>
     </CreateItem>
     <Exec Command="$(NuGetPackageRoot)\fmdev.xlftool\$(FmDevXlfToolVersion)\tools\xlftool.exe  writeTarget -Xlf $(ResourceDirectory)\xlf\%(LocResourceFile.Filename).%(LocResourceFile.Language).xlf -Resx $(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx -verbose" />
-    <ItemGroup>
-      <EmbeddedResource Include="$(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx" />
-    </ItemGroup>
-  </Target>
-
-  <!-- Generate language specific resx files from the xlf files for shared resources -->
-  <Target Name="CreateLocalizeResxShared" Condition=" '$(IsLocalizedBuild)' == 'true' ">
-    <CreateItem Include="@(ResxResources)" AdditionalMetadata="Language=%(ResxLang.Identity)">
-      <Output ItemName="LocResourceFile" TaskParameter="Include"/>
-    </CreateItem>
-    <Exec Command="$(NuGetPackageRoot)\fmdev.xlftool\$(FmDevXlfToolVersion)\tools\xlftool.exe  writeTarget -Xlf $(SharedResourceDirectory)\xlf\%(LocResourceFile.Filename).%(LocResourceFile.Language).xlf -Resx $(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx -verbose" />
     <ItemGroup>
       <EmbeddedResource Include="$(ResourceDirectory)\%(LocResourceFile.Filename).%(LocResourceFile.Language).resx" />
     </ItemGroup>
