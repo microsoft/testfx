@@ -67,6 +67,6 @@ public sealed class SuiteLifeCycleTestClass_ClassCleanupWithNoProperty : IDispos
     [ClassCleanup]
     public static void ClassCleanup()
     {
-        s_testContext.WriteLine("ClassCleanup was called");
+        s_testContext.WriteLine("ClassCleanup.WithNoProperty was called");
     }
 }

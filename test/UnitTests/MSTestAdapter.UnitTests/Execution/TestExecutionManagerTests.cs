@@ -177,42 +177,6 @@ public class TestExecutionManagerTests : TestContainer
         Verify(_frameworkHandle.TestCaseEndList.Count == 0);
     }
 
-    public void RunTestsShouldLogResultCleanupWarningsAsErrorsWhenTreatClassCleanupWarningsAsErrorsIsTrue()
-    {
-        // Arrange
-        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings> 
-                                              <MSTest>
-                                                 <TreatClassAndAssemblyCleanupWarningsAsErrors>true</TreatClassAndAssemblyCleanupWarningsAsErrors>
-                                              </MSTest>
-                                            </RunSettings>");
-        MSTestSettings.PopulateSettings(_runContext);
-        var testCase = GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
-        TestCase[] tests = new[] { testCase };
-
-        // Act
-        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
-
-        // Assert
-        Verify(_frameworkHandle.TestCaseEndList.Contains("TestMethod:Passed"));
-        Verify(_frameworkHandle.MessageList.Count == 1);
-        Verify(_frameworkHandle.MessageList[0].StartsWith("Error"));
-        Verify(_frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
-    }
-
-    public void RunTestsShouldLogResultOutput()
-    {
-        var testCase = GetTestCase(typeof(DummyTestClassWithFailingCleanupMethods), "TestMethod");
-        TestCase[] tests = new[] { testCase };
-
-        TestExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
-
-        // Warnings should get logged.
-        Verify(_frameworkHandle.MessageList.Count == 1);
-        Verify(_frameworkHandle.MessageList[0].StartsWith("Warning"));
-        Verify(_frameworkHandle.MessageList[0].Contains("ClassCleanupException"));
-    }
-
     public void RunTestsForTestShouldDeployBeforeExecution()
     {
         var testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");

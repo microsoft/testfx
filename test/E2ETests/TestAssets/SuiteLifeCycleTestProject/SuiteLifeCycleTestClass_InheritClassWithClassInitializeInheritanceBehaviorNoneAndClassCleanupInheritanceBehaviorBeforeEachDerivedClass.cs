@@ -18,37 +18,37 @@ public sealed class SuiteLifeCycleTestClass_InheritClassWithClassInitializeInher
 
     public SuiteLifeCycleTestClass_InheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass()
     {
-        s_testContext.WriteLine("Derived class Ctor was called");
+        s_testContext.WriteLine("Current Ctor was called");
     }
 
     [ClassInitialize]
     public static void DerivedClassInitialize(TestContext testContext)
     {
         s_testContext = testContext;
-        s_testContext.WriteLine("Derived ClassInitialize was called");
+        s_testContext.WriteLine("Current ClassInitialize was called");
     }
 
     [TestInitialize]
     public void DerivedClassTestInitialize()
     {
-        TestContext.WriteLine("Derived class TestInitialize was called");
+        TestContext.WriteLine("Current TestInitialize was called");
     }
 
     [TestMethod]
     public void DerivedClassTestMethod()
     {
-        TestContext.WriteLine("Derived class TestMethod was called");
+        TestContext.WriteLine("Current TestMethod was called");
     }
 
     [TestCleanup]
     public void DerivedClassTestCleanup()
     {
-        TestContext.WriteLine("Derived class TestCleanup was called");
+        TestContext.WriteLine("Current TestCleanup was called");
     }
 
     [ClassCleanup]
     public static void DerivedClassCleanup()
     {
-        s_testContext.WriteLine("Derived ClassCleanup was called");
+        s_testContext.WriteLine("Current ClassCleanup was called");
     }
 }

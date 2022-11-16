@@ -23,43 +23,43 @@ public class SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBeh
 
     public SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBehaviorNone()
     {
-        s_testContext.WriteLine("Ctor was called");
+        s_testContext.WriteLine("Base Ctor was called");
     }
 
     [ClassInitialize(InheritanceBehavior.None)]
     public static void ClassInitialize(TestContext testContext)
     {
         s_testContext = testContext;
-        s_testContext.WriteLine("ClassInitialize was called");
+        s_testContext.WriteLine("Base ClassInitialize.InheritanceBehaviorNone was called");
     }
 
     [TestInitialize]
     public void TestInitialize()
     {
-        TestContext.WriteLine("TestInitialize was called");
+        TestContext.WriteLine("Base TestInitialize was called");
     }
 
     [TestMethod]
     public void TestMethod()
     {
-        TestContext.WriteLine("TestMethod was called");
+        TestContext.WriteLine("Base TestMethod was called");
     }
 
     [TestCleanup]
     public void TestCleanup()
     {
-        TestContext.WriteLine("TestCleanup was called");
+        TestContext.WriteLine("Base TestCleanup was called");
     }
 
     public void Dispose()
     {
-        TestContext.WriteLine("Dispose was called");
+        TestContext.WriteLine("Base Dispose was called");
     }
 
 #if NET6_0_OR_GREATER
     public ValueTask DisposeAsync()
     {
-        TestContext.WriteLine("DisposeAsync was called");
+        TestContext.WriteLine("Base DisposeAsync was called");
         return ValueTask.CompletedTask;
     }
 #endif
@@ -67,6 +67,6 @@ public class SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBeh
     [ClassCleanup(InheritanceBehavior.None)]
     public static void ClassCleanup()
     {
-        s_testContext.WriteLine("ClassCleanup was called");
+        s_testContext.WriteLine("Base ClassCleanup.InheritanceBehaviorNone was called");
     }
 }

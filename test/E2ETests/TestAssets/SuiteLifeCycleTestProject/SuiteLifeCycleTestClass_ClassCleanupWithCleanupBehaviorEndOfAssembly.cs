@@ -67,6 +67,6 @@ public sealed class SuiteLifeCycleTestClass_ClassCleanupWithCleanupBehaviorEndOf
     [ClassCleanup(ClassCleanupBehavior.EndOfAssembly)]
     public static void ClassCleanup()
     {
-        s_testContext.WriteLine("ClassCleanup was called");
+        s_testContext.WriteLine("ClassCleanup.EndOfAssembly was called");
     }
 }
