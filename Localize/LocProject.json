@@ -16,11 +16,11 @@
             "LanguageSet": "VS_Main_Languages",
             "LocItems": [
                 {
-                    "SourceFile": "src\\Adapter\\PlatformServices.Shared\\netstandard1.3\\Resources\\xlf\\Resource.xlf",
+                    "SourceFile": "src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\Resource.xlf",
                     "Languages": "",
                     "CopyOption": "LangIDOnName",
-                    "OutputPath": "src\\Adapter\\PlatformServices.Shared\\netstandard1.3\\Resources\\xlf\\",
-                    "LclFile": "Localize\\lcl\\{Lang}\\src\\Adapter\\PlatformServices.Shared\\netstandard1.3\\Resources\\xlf\\Resource.xlf.lcl"
+                    "OutputPath": "src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\",
+                    "LclFile": "Localize\\lcl\\{Lang}\\src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\Resource.xlf.lcl"
                 }
             ]
         },
