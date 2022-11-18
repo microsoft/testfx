@@ -156,7 +156,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="UTA_ExecuteThrewException">
         <source>Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}</source>
-        <target state="new">Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}</target>
+        <target state="translated">執行測試時擲回例外狀況。如果您使用 TestMethodAttribute 的擴充功能，請連絡廠商。錯誤訊息: {0}，堆疊追蹤: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_NoTestResult">
@@ -340,83 +340,83 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="InvalidClassCleanupLifecycleValue">
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
-        <target state="new">Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</target>
+        <target state="translated">為 'ClassCleanupLifecycle' 指定的值 '{0}' 無效。支援的範圍為 {1}。</target>
         <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
       </trans-unit>
       <trans-unit id="CannotEnumerateDataSourceAttribute">
         <source>Exception occurred while enumerating DataSourceAttribute on "{0}.{1}": {2}</source>
-        <target state="new">Exception occurred while enumerating DataSourceAttribute on "{0}.{1}": {2}</target>
+        <target state="translated">列舉「{0}.{1}」上的 DataSourceAttribute 時發生例外狀況: {2}</target>
         <note>{0}: TypeName with namespace,
 {1}: Method name,
 {2}: Exception details</note>
       </trans-unit>
       <trans-unit id="CannotEnumerateDataSourceAttribute_MoreThenOneDefined">
         <source>A test method can only contain one DataSourceAttribute, but found {2} on "{0}.{1}".</source>
-        <target state="new">A test method can only contain one DataSourceAttribute, but found {2} on "{0}.{1}".</target>
+        <target state="translated">測試方法只能包含一個 DataSourceAttribute，但在「{0}.{1}」中發現 {2}。</target>
         <note>{0}: TypeName with namespace, 
 {1}: Method name,
 {2}: Number of attributed defined.</note>
       </trans-unit>
       <trans-unit id="CannotEnumerateIDataSourceAttribute">
         <source>Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</source>
-        <target state="new">Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</target>
+        <target state="translated">列舉「{0}.{1}」上的 IDataSource 屬性時發生例外狀況: {2}</target>
         <note>{0}: TypeName with namespace,
 {1}: Method name,
 {2}: Exception details</note>
       </trans-unit>
       <trans-unit id="ExceptionOccuredWhileGettingTheExceptionDescription">
         <source>"{0}": (Failed to get exception description due to an exception of type "{1}".</source>
-        <target state="new">"{0}": (Failed to get exception description due to an exception of type "{1}".</target>
+        <target state="translated">「{0}」: (因為類型「{1}」的例外狀況而無法取得例外狀況描述。</target>
         <note>{0}: Type of the original exception that we're trying to get the description of.
 {1}: Thrown exception</note>
       </trans-unit>
       <trans-unit id="ExceptionsThrown">
         <source>Exceptions thrown:</source>
-        <target state="new">Exceptions thrown:</target>
+        <target state="translated">擲回的例外狀況數:</target>
         <note>This is usually precedes by TestAssembly_AssemblyDiscoveryFailure message, and preceded by list of exceptions thrown in a test discovery session.</note>
       </trans-unit>
       <trans-unit id="FailedFetchAttributeCache">
         <source>Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.</source>
-        <target state="new">Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.</target>
+        <target state="translated">無法取得屬性快取。略過屬性繼承並落在 'type defines Attribute model' 中，因此我們有一些資料。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="FailedToGetCustomAttribute">
         <source>Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</source>
-        <target state="new">Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}</target>
+        <target state="translated">取得類型 {0} 擲回例外狀況的自訂屬性 (將會略過並使用反映方式): {1}</target>
         <note>{0}: Attribute full type name.
 {1}: Exception description</note>
       </trans-unit>
       <trans-unit id="OlderTFMVersionFound">
         <source>An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</source>
-        <target state="new">An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.</target>
+        <target state="translated">元件中已載入舊版的 MSTestV2 套件，如果測試探索相依於 '.runsettings' 檔案，則測試探索可能無法探索所有資料測試。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_UserCodeThrewNullValueException">
         <source>The called code threw an exception that was caught, but the exception value was null</source>
-        <target state="new">The called code threw an exception that was caught, but the exception value was null</target>
+        <target state="translated">被呼叫的程式碼擲回攔截到的例外狀況，但例外狀況值為 Null</target>
         <note></note>
       </trans-unit>
       <trans-unit id="OlderTFMVersionFoundClassCleanup">
         <source>An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8.</source>
-        <target state="new">An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8.</target>
+        <target state="translated">元件中已載入舊版的 MSTestV2 套件，測試清理方法可能無法如預期方式執行。請確定您的所有測試專案都參考了新版的 MSTest 套件 2.2.8 版。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute">
         <source>Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</source>
-        <target state="new">Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}</target>
+        <target state="translated">從「{0}.{1}」上的屬性展開 IDataSource 資料列時發生例外狀況: {2}</target>
         <note>{0}: TypeName with namespace, 
 {1}: Method name,
 {2}: CannotExpandIDataSourceAttribute_DuplicateDisplayName or CannotExpandIDataSourceAttribute_CannotSerialize</note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute_DuplicateDisplayName">
         <source>Display name "{2}" on indexes {0} and {1} are duplicate. Display names should be unique.</source>
-        <target state="new">Display name "{2}" on indexes {0} and {1} are duplicate. Display names should be unique.</target>
+        <target state="translated">索引 {0} 和 {1} 上的顯示名稱「{2}」重複。顯示名稱必須是唯一的。</target>
         <note>{0}, {1}: Zero based index if an element inside of an array
 {2}: Test display name.</note>
       </trans-unit>
       <trans-unit id="CannotExpandIDataSourceAttribute_CannotSerialize">
         <source>Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</source>
-        <target state="new">Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".</target>
+        <target state="translated">無法序列化「{1}"」索引 {0} 上的資料。透過「IDataSource」提供的所有資料應可序列化。如果您需要測試不可序列化的資料來源，請務必在測試元件上新增「TestDataSourceDiscovery」屬性，並將探索選項設定為「DuringExecution」。</target>
         <note>{0}: Zero based index if an element inside of an array,
 {1}: Test name</note>
       </trans-unit>
