@@ -19,10 +19,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Including `@(TestAdapterContent)` in the `None` ItemGroup to get the `CopyToOutputDirectory`
-         behavior be default, package consumers can opt-out of this behavior
-         by removing `@(TestAdapterContent)` from the `None` ItemGroup
-         i.e. `<None Remove="@(TestAdapterContent)" />` -->
+    <!--
+      Including `@(TestAdapterContent)` in the `None` ItemGroup to get the `CopyToOutputDirectory` behavior be default,
+      package consumers can opt-out of this behavior by removing `@(TestAdapterContent)` from the `None` ItemGroup
+      (i.e. `<None Remove="@(TestAdapterContent)" />`)
+      -->
     <None Include="@(TestAdapterContent)" />
   </ItemGroup>
 </Project>
