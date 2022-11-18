@@ -24,7 +24,7 @@
     </SignFilesDependsOn>
   </ItemGroup>
 
-  <Target Name="GatherLocalizedOutputsForSigning" DependsOnTargets="TestFxLocalization" Condition=" '$(IsTest)' == 'false' ">
+  <Target Name="GatherLocalizedOutputsForSigning" Condition=" '$(IsTest)' == 'false' ">
     <ItemGroup>
       <FilesToSign Include="$(OutDir)\**\$(AssemblyName).resources.dll">
         <Authenticode>Microsoft400</Authenticode>
