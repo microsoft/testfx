@@ -1,10 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Adapter\MSTestAdapter.PlatformServices\Resources\xlf\Resource.xlf" PsrId="308" SrcCul="en-US" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx" TgtCul="pl-PL">
+<LCX SchemaVersion="6.0" Name="D:\a\_work\1\s\src\Adapter\MSTestAdapter.PlatformServices\Resources\xlf\Resource.xlf" PsrId="308" FileType="1" SrcCul="en-US" TgtCul="pl-PL" xmlns="http://schemas.microsoft.com/locstudio/2006/6/lcx">
   <OwnedComments>
     <Cmt Name="Dev" />
     <Cmt Name="LcxAdmin" />
     <Cmt Name="Rccx" />
   </OwnedComments>
+  <Settings Name="@vsLocTools@\default.lss" Type="Lss" />
   <Item ItemId=";Xliff file" ItemType="0" PsrId="308" Leaf="false">
     <Disp Icon="Expand" Expand="true" Disp="true" LocTbl="false" />
     <Item ItemId=";Xliff Resources" ItemType="0" PsrId="308" Leaf="false">
@@ -12,135 +13,201 @@
       <Item ItemId=";CannotFindFile" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Could not find file '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nie można odnaleźć pliku „{0}”.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";Common_CannotBeNullOrEmpty" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The parameter should not be null or empty.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Parametr nie może mieć wartości null ani być pusty.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentErrorBadDeploymentItem" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test Run deployment issue: Bad deployment item: '{0}': output directory '{1}' specifies the item to be deployed outside deployment root directory which is not allowed.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Problem wdrażania przebiegu testu: nieprawidłowy element wdrożenia: „{0}”: katalog wyjściowy „{1}” określa element do wdrożenia poza głównym katalogiem wdrożenia. Taka sytuacja jest niedozwolona.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentErrorFailedToAccesOutputDirectory" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test Run deployment issue: Failed to access output directory '{1}' specified by deployment item '{0}', the item will not be deployed: {2}: {3}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Problem wdrażania przebiegu testu: nie można uzyskać dostępu do katalogu wyjściowego „{1}” określonego przy użyciu elementu wdrożenia „{0}”. Nie można wdrożyć elementu: {2}: {3}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentErrorFailedToAccessFile" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test Run deployment issue: Failed to access the file '{0}': {1}: {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Problem wdrażania przebiegu testu: nie można uzyskać dostępu do pliku „{0}”: {1}: {2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentErrorFailedToCopyWithOverwrite" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test Run deployment issue: Failed to copy file '{0}' to '{1}': {2}: {3}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Problem wdrażania przebiegu testu: nie można skopiować pliku „{0}” do „{1}”: {2}: {3}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentErrorFailedToDeployDependencies" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test Run deployment issue: Failed to deploy dependencies for test storage '{0}': {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Problem wdrażania przebiegu testu: nie można wdrożyć zależności dla magazynu testowego „{0}”: {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentErrorFailedToGetFileForDeploymentItem" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test Run deployment issue: Failed to get the file for {0}: {1}: {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Problem wdrażania przebiegu testu: nie można uzyskać pliku dla elementu {0}: {1}: {2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentErrorGettingSatellite" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test Run deployment issue: an error occurred while getting satellite assemblies for {0}: {1}: {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Problem wdrażania przebiegu testu: wystąpił błąd podczas pobierania zestawów satelickich dla elementu {0}: {1}: {2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentItem" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[deployment item '{0}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[element wdrożenia „{0}”]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentItemContainsInvalidCharacters" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid deployment item: the specified path '{0}' or output directory '{1}' contains illegal characters.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nieprawidłowy element wdrożenia: wybrana ścieżka „{0}” lub katalog wyjściowy „{1}” zawiera niedozwolone znaki.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentItemOutputDirectoryCannotBeNull" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid deployment item: the output directory cannot be null.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nieprawidłowy element wdrożenia: katalog wyjściowy nie może mieć wartości null.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentItemOutputDirectoryMustBeRelative" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid deployment item: the specified output directory '{0}' is not relative.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nieprawidłowy element wdrożenia: wybrany katalog wyjściowy „{0}” nie jest względny.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentItemPathCannotBeNullOrEmpty" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Invalid deployment item: the path must contain at least one character.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nieprawidłowy element wdrożenia: ścieżka musi zawierać co najmniej jeden znak.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";DeploymentItemWithOutputDirectory" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[deployment item '{0}' (output directory '{1}')]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[element wdrożenia „{0}” (katalog wyjściowy „{1}”)]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";InvalidSettingsXmlElement" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[MSTestAdapter encountered an unexpected element '{0}' in its settings '{1}'. Remove this element and try again.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Adapter MSTestAdapter napotkał nieoczekiwany element „{0}” w ustawieniach „{1}”. Usuń ten element i spróbuj ponownie.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";MissingDeploymentDependency" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test Run deployment issue: The assembly or module '{0}' was not found. Reason: {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Problem wdrażania przebiegu testu: nie znaleziono zestawu lub modułu „{0}”. Przyczyna: {1}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";MissingDeploymentDependencyWithoutReason" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test Run deployment issue: The assembly or module '{0}' was not found.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Problem wdrażania przebiegu testu: nie znaleziono zestawu lub modułu „{0}”.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";TestRunName" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0}_{1} {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[{0}_{1} {2}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_DataSourceConfigurationSectionMissing" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Data source '{0}' cannot be found in the test configuration settings]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[W ustawieniach konfiguracji testu nie można znaleźć źródła danych „{0}”]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";UTA_ErrorDataConnectionFailed" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The unit test adapter failed to connect to the data source or to read the data. For more information on troubleshooting this error, see "Troubleshooting Data-Driven Unit Tests" (http://go.microsoft.com/fwlink/?LinkId=62412) in the MSDN Library. Error details: {0}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Adapter testu jednostkowego nie mógł połączyć się ze źródłem danych lub odczytać danych. Aby uzyskać więcej informacji o rozwiązywaniu tego błędu, zobacz „Rozwiązywanie problemów z testami jednostkowymi sterowanymi danymi” (http://go.microsoft.com/fwlink/?LinkId=62412) w bibliotece MSDN. Szczegóły błędu: {0}]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";WrongNumberOfObjects" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Wrong number of objects for permutation. Should be greater than zero.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Nieprawidłowa liczba obiektów permutacji. Ta liczba powinna być większa od zera.]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
     </Item>
   </Item>
-<Settings Name="@vsLocTools@\default.lss" Type="Lss" /></LCX>
+</LCX>

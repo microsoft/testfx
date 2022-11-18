@@ -100,6 +100,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";ArgumentXMustDeriveFromClassY" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Type '{0}' is not assignable to '{1}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der Typ "{0}" kann nicht "{1}" zugewiesen werden.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";AssertionFailed" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[{0} failed. {1}]]></Val>
@@ -114,6 +123,15 @@
           <Val><![CDATA[async TestMethod with UITestMethodAttribute are not supported. Either remove async or use TestMethodAttribute.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA["async TestMethod" wird mit UITestMethodAttribute nicht unterstützt. Entfernen Sie "async", oder verwenden Sie TestMethodAttribute.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";AsyncUITestMethodWithNoDispatcherQueue" ItemType="0" PsrId="308" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[UITestMethodAttribute.DispatcherQueue darf nicht NULL sein. Um UITestMethodAttribute in einer WinUI-Desktop-App zu verwenden, denken Sie daran, die statische UITestMethodAttribute.DispatcherQueue während der Testinitialisierung festzulegen.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
