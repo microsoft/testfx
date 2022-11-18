@@ -39,7 +39,7 @@ jobs:
     displayName: 'Restore, Build and Package'
     inputs:
       filename: build.cmd
-      arguments: '-configuration $(BuildConfiguration)'
+      arguments: '-configuration $(BuildConfiguration) -CI'
       modifyEnvironment: false
 
   - task: BatchScript@1

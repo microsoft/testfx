@@ -16,4 +16,13 @@
     <AnalysisLevel>preview</AnalysisLevel>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <!-- Disable Xlf localization by default. Project containing .resx file have to opt-in  -->
+    <EnableXlfLocalization>false</EnableXlfLocalization>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(EnableXlfLocalization)' == 'true' ">
+    <PackageReference Include="Microsoft.DotNet.XliffTasks" Version="$(XliffTasksVersion)" PrivateAssets="all" />
+  </ItemGroup>
+
 </Project>
