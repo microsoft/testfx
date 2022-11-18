@@ -19,6 +19,60 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";CannotEnumerateDataSourceAttribute" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Exception occurred while enumerating DataSourceAttribute on "{0}.{1}": {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ausnahme beim Auflisten von DataSourceAttribute auf "{0}.{1}": {2}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CannotEnumerateDataSourceAttribute_MoreThenOneDefined" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[A test method can only contain one DataSourceAttribute, but found {2} on "{0}.{1}".]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Eine Testmethode kann nur ein DataSourceAttribute enthalten, {2} wurde jedoch auf "{0}.{1}" gefunden.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CannotEnumerateIDataSourceAttribute" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ausnahme beim Auflisten des IDataSource-Attributs für "{0}.{1}": {2}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CannotExpandIDataSourceAttribute" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Exception occurred while expanding IDataSource rows from attribute on "{0}.{1}": {2}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ausnahme beim Erweitern von IDataSource-Zeilen aus dem Attribut auf "{0}.{1}": {2}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CannotExpandIDataSourceAttribute_CannotSerialize" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Data on index {0} for "{1}" cannot be serialized. All data provided through "IDataSource" should be serializable. If you need to test non-serializable data sources, please make sure you add "TestDataSourceDiscovery" attribute on your test assembly and set the discovery option to "DuringExecution".]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Daten im Index {0} für "{1}" können nicht serialisiert werden. Alle über "IDataSource" bereitgestellten Daten sollten serialisierbar sein. Wenn Sie nicht serialisierbare Datenquellen testen müssen, stellen Sie sicher, dass Sie der Testassembly das Attribut "TestDataSourceDiscovery" hinzufügen und die Ermittlungsoption auf "DuringExecution" festlegen.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";CannotExpandIDataSourceAttribute_DuplicateDisplayName" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Display name "{2}" on indexes {0} and {1} are duplicate. Display names should be unique.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der Anzeigename "{2}" für Indizes {0} und {1} ist doppelt vorhanden. Anzeigenamen sollten eindeutig sein.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";Common_CannotBeNullOrEmpty" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[The parameter should not be null or empty.]]></Val>
@@ -91,6 +145,24 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";ExceptionOccuredWhileGettingTheExceptionDescription" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA["{0}": (Failed to get exception description due to an exception of type "{1}".]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA["{0}": (Fehler beim Abrufen der Ausnahmebeschreibung aufgrund einer Ausnahme vom Typ "{1}".]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";ExceptionsThrown" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Exceptions thrown:]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Ausgelöste Ausnahmen:]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";Execution_Test_Cancelled" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Test '{0}' execution has been aborted.]]></Val>
@@ -105,6 +177,33 @@
           <Val><![CDATA[Test '{0}' exceeded execution timeout period.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Der Test "{0}" hat das Ausführungstimeout überschritten.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";FailedFetchAttributeCache" ItemType="0" PsrId="308" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Failed to get attribute cache. Ignoring attribute inheritance and falling into 'type defines Attribute model', so that we have some data.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Fehler beim Abrufen des Attributcaches. Die Attributvererbung wird ignoriert und fällt in "type defines Attribute model", sodass einige Daten vorhanden sind.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";FailedToGetCustomAttribute" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Getting custom attributes for type {0} threw exception (will ignore and use the reflection way): {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Beim Abrufen von benutzerdefinierten Attributen für den Typ {0} wurde Ausnahme ausgelöst (wird ignoriert und die Reflektionsart verwendet): {1}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";InvalidClassCleanupLifecycleValue" ItemType="0" PsrId="308" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Für "ClassCleanupLifecycle" wurde ein ungültiger Wert "{0}" angegeben. Unterstützte Bereiche sind {1}.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -150,6 +249,24 @@
           <Val><![CDATA[Warning : A testsettings file or a vsmdi file is not supported with the MSTest V2 Adapter.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Warnung: Eine TESTSETTINGS-Datei oder eine VSMDI-Datei wird vom MSTest-V2-Adapter nicht unterstützt.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";OlderTFMVersionFound" ItemType="0" PsrId="308" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[An older version of MSTestV2 package is loaded in assembly, test discovery might fail to discover all data tests if they depend on `.runsettings` file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Eine ältere Version des MSTestV2-Pakets wird in die Assembly geladen. Bei der Testermittlung werden möglicherweise nicht alle Datentests ermittelt, wenn sie von der Datei ".runsettings" abhängen.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";OlderTFMVersionFoundClassCleanup" ItemType="0" PsrId="308" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[An older version of MSTestV2 package is loaded in assembly, test cleanup methods might not run as expected. Please make sure all your test projects references MSTest packages newer then version 2.2.8.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Eine ältere Version des MSTestV2-Pakets wird in die Assembly geladen. Testbereinigungsmethoden werden möglicherweise nicht wie erwartet ausgeführt. Stellen Sie sicher, dass alle Testprojekte auf MSTest-Pakete verweisen, die neuer als Version 2.2.8 sind.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -444,10 +561,13 @@
       </Item>
       <Item ItemId=";UTA_ExecuteThrewException" ItemType="0" PsrId="308" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}]]></Val>
+          <Val><![CDATA[Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}, Stack trace: {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Während der Ausführung des Tests wurde eine Ausnahme ausgelöst. Wenn Sie eine Extension von "TestMethodAttribute" verwenden, wenden Sie sich bitte an den Anbieter. Fehlermeldung: {0}]]></Val>
+            <Val><![CDATA[Ausnahme beim Ausführen des Tests. Wenn Sie die Erweiterung "TestMethodAttribute" verwenden, wenden Sie sich an den Hersteller. Fehlermeldung: {0}, Stapelüberwachung: {1}]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: {0}]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -582,6 +702,15 @@
           <Val><![CDATA[Unable to get type {0}. Error: {1}.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Der Typ "{0}" kann nicht abgerufen werden. Fehler: {1}.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";UTA_UserCodeThrewNullValueException" ItemType="0" PsrId="308" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The called code threw an exception that was caught, but the exception value was null]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der aufgerufene Code hat eine Ausnahme ausgelöst, die abgefangen wurde, aber der Ausnahmewert war NULL.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
