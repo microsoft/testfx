@@ -92,7 +92,7 @@
 
     <!-- Localization -->
     <!-- All TFMs share the same resx + TestAdapter depends on PlatformServices + TestFramework so all resources are available -->
-    <file src="MSTest.TestAdapter\net462\**\*.resources.dll" target="\build\_common\" />
+    <file src="MSTest.TestAdapter\net462\**\*.resources.dll" target="\build\_localization\" />
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />
