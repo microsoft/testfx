@@ -39,12 +39,6 @@ Param(
     [Alias("cache")]
     [Switch] $ClearPackageCache,
 
-    [Alias("uxlf")]
-    [Switch] $UpdateXlf,
-
-    [Alias("loc")]
-    [Switch] $IsLocalizedBuild,
-
     [Alias("tpv")]
     [string] $TestPlatformVersion = $null,
 
@@ -53,6 +47,8 @@ Param(
 
     [Alias("f")]
     [Switch] $Force,
+
+    [switch] $CI,
 
     [Alias("s")]
     [ValidateSet("InstallDotnet", "UpdateTPVersion", "Restore", "Build", "Pack")]
@@ -76,8 +72,7 @@ $TFB_VersionSuffix = $VersionSuffix
 $TFB_BuildVersion = $BuildVersionPrefix + "." + $BuildVersionSuffix
 $TFB_Clean = $Clean
 $TFB_ClearPackageCache = $ClearPackageCache
-$TFB_UpdateXlf = $UpdateXlf
-$TFB_IsLocalizedBuild = $IsLocalizedBuild
+$TFB_CI = $CI;
 $TFB_BRANCH = "LOCALBRANCH"
 $TFB_COMMIT = "LOCALBUILD"
 try {
@@ -120,8 +115,6 @@ function Write-Help {
     Write-Host -object "  Clean (-cl)                      - [switch]   - Indicates that this should be a clean build."
     Write-Host -object "  SkipRestore (-sr)                - [switch]   - Indicates nuget package restoration should be skipped."
     Write-Host -object "  ClearPackageCache (-cache)       - [switch]   - Indicates local package cache should be cleared before restore."
-    Write-Host -object "  Updatexlf (-uxlf)                - [switch]   - Indicates that there are resource changes and that these need to be copied to other languages as well."
-    Write-Host -object "  IsLocalizedBuild (-loc)          - [switch]   - Indicates that the build needs to generate resource assemblies as well."
     Write-Host -object "  DisallowPrereleaseMSBuild (-np)  - [switch]   - Uses an RTM version of MSBuild to build the projects"
     Write-Host -object ""
     Write-Host -object "  Configuration (-c)               - [string]   - Specifies the build configuration. Defaults to 'Debug'."
@@ -205,8 +198,6 @@ function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExten
     $argument = @("-t:$buildTarget",
         "-p:Configuration=$configuration",
         "-v:m",
-        "-p:IsLocalizedBuild=$TFB_IsLocalizedBuild",
-        "-p:UpdateXlf=$TFB_UpdateXlf",
         "-p:BuildVersion=$TFB_BuildVersion",
         "-p:BranchName=`"$TFB_BRANCH`"",
         "-p:CommitHash=$TFB_COMMIT",
@@ -216,6 +207,10 @@ function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExten
         "`"$solutionPath`"",
         "-bl:`"$binLog`"",
         "-m")
+
+    if (-not $TFB_CI) {
+        $argument += "-p:UpdateXlfOnBuild=true"
+    }
 
     Write-Log "    $buildTarget`: $solution..."
     & {

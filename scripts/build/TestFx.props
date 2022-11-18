@@ -3,7 +3,6 @@
   <PropertyGroup>
     <RepoRoot Condition=" '$(RepoRoot)' == '' ">$([MSBuild]::NormalizeDirectory('$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'LICENSE'))'))</RepoRoot>
     <ArtifactsBinDir Condition=" '$(ArtifactsBinDir)' == '' ">$(RepoRoot)artifacts\$(Configuration)\</ArtifactsBinDir>
-    <IsLocalizationEnabled Condition=" '$(UpdateXlf)' == 'true' or '$(IsLocalizedBuild)' == 'true' ">true</IsLocalizationEnabled>
     <IsTest Condition="$(MSBuildProjectDirectory.Contains('\test\'))">true</IsTest>
     <IsTest Condition=" '$(IsTest)' == '' ">false</IsTest>
   </PropertyGroup>

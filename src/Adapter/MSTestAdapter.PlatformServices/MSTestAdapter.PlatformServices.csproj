@@ -11,6 +11,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Nullable>enable</Nullable>
+    <EnableXlfLocalization>true</EnableXlfLocalization>
   </PropertyGroup>
 
   <!-- Properties specific to UWP -->

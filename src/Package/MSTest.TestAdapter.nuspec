@@ -82,9 +82,8 @@
     <file src="MSTest.TestAdapter\net462\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\net462\" />
 
     <!-- Localization -->
-    <file src="MSTest.TestAdapter\**\*.resources.dll" target="\build\_common\" />
-    <file src="MSTestAdapter.PlatformServices\net462\**\*.resources.dll" target="\build\_common\" />
-    <file src="TestFramework\**\*.resources.dll" target="build\_common\" />
+    <!-- All TFMs share the same resx + TestAdapter depends on PlatformServices + TestFramework so all resources are available -->
+    <file src="MSTest.TestAdapter\net462\**\*.resources.dll" target="\build\_common\" />
 
     <!-- Icon -->
     <file src="Icon.png" target="" />
