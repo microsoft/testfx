@@ -11,6 +11,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// Can have multiple instances of the attribute to specify more than one item.
 /// The item path can be absolute or relative, if relative, it is relative to RunConfig.RelativePathRoot.
 /// </summary>
+/// <remarks>
+/// If specified on a test class, the class needs to contain at least one test method. This means that the
+/// attribute cannot be combined with a test class that would contain only a AssemblyInitialize or ClassInitialize
+/// method.
+/// </remarks>
 /// <example>
 /// [DeploymentItem("file1.xml")]
 /// [DeploymentItem("file2.xml", "DataFiles")]
