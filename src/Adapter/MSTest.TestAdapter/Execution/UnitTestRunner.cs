@@ -42,6 +42,15 @@ internal class UnitTestRunner : MarshalByRefObject
     /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
     /// </summary>
     /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
+    public UnitTestRunner(MSTestSettings settings)
+        : this(settings, ReflectHelper.Instance, null, null)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
+    /// </summary>
+    /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
     public UnitTestRunner(MSTestSettings settings, CultureInfo? culture = null, CultureInfo? uiCulture = null)
         : this(settings, ReflectHelper.Instance, culture, uiCulture)
     {
