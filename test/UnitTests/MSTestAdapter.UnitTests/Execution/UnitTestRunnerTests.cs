@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
@@ -76,6 +77,33 @@ public class UnitTestRunnerTests : TestContainer
 
         Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
         Verify(MSTestSettings.CurrentSettings.TestSettingsFile == "DummyPath\\TestSettings1.testsettings");
+    }
+
+    public void ConstructorSetsLocalesCorrectly()
+    {
+        var currentCulture = CultureInfo.DefaultThreadCurrentCulture;
+        var currentUICulture = CultureInfo.DefaultThreadCurrentUICulture;
+
+        try
+        {
+            var cultureToSet = currentCulture is null || currentCulture.DisplayName != "it-it"
+                ? new CultureInfo("it-it")
+                : new CultureInfo("en-us");
+
+            var uiCultureToSet = currentUICulture is null || currentUICulture.DisplayName != "fr-fr"
+                ? new CultureInfo("fr-fr")
+                : new CultureInfo("en-us");
+
+            _ = new UnitTestRunner(new MSTestSettings(), cultureToSet, uiCultureToSet);
+
+            Verify(CultureInfo.DefaultThreadCurrentCulture == cultureToSet);
+            Verify(CultureInfo.DefaultThreadCurrentUICulture == uiCultureToSet);
+        }
+        finally
+        {
+            CultureInfo.DefaultThreadCurrentCulture = currentCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = currentUICulture;
+        }
     }
 
     #endregion
