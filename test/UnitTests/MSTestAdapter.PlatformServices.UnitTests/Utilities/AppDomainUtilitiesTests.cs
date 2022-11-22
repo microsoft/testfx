@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET462
+
 using System;
 using System.Xml;
 
@@ -8,7 +10,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 
 using TestFramework.ForTestingMSTest;
 
-#if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
 public class AppDomainUtilitiesTests : TestContainer
 {
@@ -65,7 +66,7 @@ public class AppDomainUtilitiesTests : TestContainer
         Verify(setup.GetConfigurationBytes() is null);
     }
 
-    public void GetTargetFrameworkVersionFromVersionStringShouldReturnDefaultVersionIfversionIsPortable()
+    public void GetTargetFrameworkVersionFromVersionStringShouldReturnDefaultVersionIfVersionIsPortable()
     {
         var expected = new Version();
 
@@ -75,7 +76,7 @@ public class AppDomainUtilitiesTests : TestContainer
         Verify(expected.Minor == version.Minor);
     }
 
-    public void GetTargetFrameworkVersionFromVersionStringShouldReturnCurrectVersion()
+    public void GetTargetFrameworkVersionFromVersionStringShouldReturnCorrectVersion()
     {
         var expected = new Version("4.5");
 
@@ -85,7 +86,7 @@ public class AppDomainUtilitiesTests : TestContainer
         Verify(expected.Minor == version.Minor);
     }
 
-#region Testable Implementations
+    #region Testable Implementations
 
     internal class TestableXmlUtilities : XmlUtilities
     {
@@ -117,4 +118,5 @@ public class AppDomainUtilitiesTests : TestContainer
 
     #endregion
 }
+
 #endif
