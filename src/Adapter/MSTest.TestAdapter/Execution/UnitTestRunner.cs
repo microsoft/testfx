@@ -43,16 +43,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
     public UnitTestRunner(MSTestSettings settings)
-        : this(settings, ReflectHelper.Instance, null, null)
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="UnitTestRunner"/> class.
-    /// </summary>
-    /// <param name="settings"> Specifies adapter settings that need to be instantiated in the domain running these tests. </param>
-    public UnitTestRunner(MSTestSettings settings, CultureInfo? culture = null, CultureInfo? uiCulture = null)
-        : this(settings, ReflectHelper.Instance, culture, uiCulture)
+        : this(settings, ReflectHelper.Instance)
     {
     }
 
@@ -61,20 +52,10 @@ internal class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="settings"> Specifies adapter settings. </param>
     /// <param name="reflectHelper"> The reflect Helper. </param>
-    internal UnitTestRunner(MSTestSettings settings, ReflectHelper reflectHelper, CultureInfo? culture = null, CultureInfo? uiCulture = null)
+    internal UnitTestRunner(MSTestSettings settings, ReflectHelper reflectHelper)
     {
         _reflectHelper = reflectHelper;
         _typeCache = new TypeCache(reflectHelper);
-
-        if (culture is not null)
-        {
-            CultureInfo.DefaultThreadCurrentCulture = culture;
-        }
-
-        if (uiCulture is not null)
-        {
-            CultureInfo.DefaultThreadCurrentUICulture = uiCulture;
-        }
 
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.

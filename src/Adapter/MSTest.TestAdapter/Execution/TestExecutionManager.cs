@@ -220,12 +220,7 @@ public class TestExecutionManager
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
-            new object[]
-            {
-                MSTestSettings.CurrentSettings,
-                CultureInfo.DefaultThreadCurrentCulture ?? Thread.CurrentThread.CurrentCulture,
-                CultureInfo.DefaultThreadCurrentUICulture ?? Thread.CurrentThread.CurrentUICulture,
-            })!;
+            new object[] { MSTestSettings.CurrentSettings })!;
 
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
