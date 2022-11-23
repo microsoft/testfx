@@ -18,48 +18,49 @@ public class SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBeh
 #endif
 {
     private static TestContext s_testContext;
+    protected static string s_messagePrefix = "";
 
     public TestContext TestContext { get; set; }
 
     public SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBehaviorBeforeEachDerivedClass()
     {
-        s_testContext.WriteLine("Base ctor was called");
+        s_testContext.WriteLine($"{s_messagePrefix}ctor was called");
     }
 
     [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void ClassInitialize(TestContext testContext)
     {
         s_testContext = testContext;
-        s_testContext.WriteLine("Base ClassInitialize.InheritanceBehaviorBeforeEachDerivedClass was called");
+        s_testContext.WriteLine($"{s_messagePrefix}ClassInitialize.InheritanceBehaviorBeforeEachDerivedClass was called");
     }
 
     [TestInitialize]
     public void TestInitialize()
     {
-        TestContext.WriteLine("Base TestInitialize was called");
+        TestContext.WriteLine($"{s_messagePrefix}TestInitialize was called");
     }
 
     [TestMethod]
     public void TestMethod()
     {
-        TestContext.WriteLine("Base TestMethod was called");
+        TestContext.WriteLine($"{s_messagePrefix}TestMethod was called");
     }
 
     [TestCleanup]
     public void TestCleanup()
     {
-        TestContext.WriteLine("Base TestCleanup was called");
+        TestContext.WriteLine($"{s_messagePrefix}TestCleanup was called");
     }
 
     public void Dispose()
     {
-        TestContext.WriteLine("Base Dispose was called");
+        TestContext.WriteLine($"{s_messagePrefix}Dispose was called");
     }
 
 #if NET6_0_OR_GREATER
     public ValueTask DisposeAsync()
     {
-        TestContext.WriteLine("Base DisposeAsync was called");
+        TestContext.WriteLine($"{s_messagePrefix}DisposeAsync was called");
         return ValueTask.CompletedTask;
     }
 #endif
@@ -67,6 +68,6 @@ public class SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBeh
     [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void ClassCleanup()
     {
-        s_testContext.WriteLine("Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called");
+        s_testContext.WriteLine($"{s_messagePrefix}ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called");
     }
 }

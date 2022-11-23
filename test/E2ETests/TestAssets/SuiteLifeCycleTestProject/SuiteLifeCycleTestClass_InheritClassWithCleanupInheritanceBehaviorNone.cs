@@ -15,6 +15,11 @@ public sealed class SuiteLifeCycleTestClass_InheritClassWithCleanupInheritanceBe
 
     public TestContext DerivedClassTestContext { get; set; }
 
+    static SuiteLifeCycleTestClass_InheritClassWithCleanupInheritanceBehaviorNone()
+    {
+        s_messagePrefix = "Base ";
+    }
+
     public SuiteLifeCycleTestClass_InheritClassWithCleanupInheritanceBehaviorNone()
     {
         s_testContext.WriteLine("Current Ctor was called");
