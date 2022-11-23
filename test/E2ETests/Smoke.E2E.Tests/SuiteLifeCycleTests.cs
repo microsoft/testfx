@@ -160,50 +160,50 @@ public class SuiteLifeCycleTests : CLITestBase
         caseInheritClassWithCleanupInheritanceBehaviorNone_ParentTestMethod.Messages.Single().Text.Should().Contain(
             targetFramework == "net6.0"
             ? """
-            Base Ctor was called
-            Current Ctor was called
-            Base TestInitialize was called
-            Current TestInitialize was called
-            Base TestMethod was called
-            Current TestCleanup was called
-            Base TestCleanup was called
-            Base DisposeAsync was called
-            Base Dispose was called
-            Current ClassCleanup was called
-            Base ClassCleanup.InheritanceBehaviorNone was called
-            Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-            Current ClassCleanup was called
-            Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-            ClassCleanup.EndOfAssembly was called
-            Current ClassCleanup was called
-            Base ClassCleanup.InheritanceBehaviorNone was called
-            Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-            ClassCleanup.WithNoProperty was called
-            Current ClassCleanup was called
-            AssemblyCleanup was called
-            """
+                Base Ctor was called
+                Current Ctor was called
+                Base TestInitialize was called
+                Current TestInitialize was called
+                Base TestMethod was called
+                Current TestCleanup was called
+                Base TestCleanup was called
+                Base DisposeAsync was called
+                Base Dispose was called
+                Current ClassCleanup was called
+                Base ClassCleanup.InheritanceBehaviorNone was called
+                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
+                Current ClassCleanup was called
+                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
+                ClassCleanup.EndOfAssembly was called
+                Current ClassCleanup was called
+                Base ClassCleanup.InheritanceBehaviorNone was called
+                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
+                ClassCleanup.WithNoProperty was called
+                Current ClassCleanup was called
+                AssemblyCleanup was called
+                """
             : """
-            Base Ctor was called
-            Current Ctor was called
-            Base TestInitialize was called
-            Current TestInitialize was called
-            Base TestMethod was called
-            Current TestCleanup was called
-            Base TestCleanup was called
-            Base Dispose was called
-            Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-            Base ClassCleanup.InheritanceBehaviorNone was called
-            Current ClassCleanup was called
-            Current ClassCleanup was called
-            ClassCleanup.WithNoProperty was called
-            Current ClassCleanup was called
-            Base ClassCleanup.InheritanceBehaviorNone was called
-            Current ClassCleanup was called
-            Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-            ClassCleanup.EndOfAssembly was called
-            Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-            AssemblyCleanup was called
-            """);
+                Base Ctor was called
+                Current Ctor was called
+                Base TestInitialize was called
+                Current TestInitialize was called
+                Base TestMethod was called
+                Current TestCleanup was called
+                Base TestCleanup was called
+                Base Dispose was called
+                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
+                Base ClassCleanup.InheritanceBehaviorNone was called
+                Current ClassCleanup was called
+                Current ClassCleanup was called
+                ClassCleanup.WithNoProperty was called
+                Current ClassCleanup was called
+                Base ClassCleanup.InheritanceBehaviorNone was called
+                Current ClassCleanup was called
+                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
+                ClassCleanup.EndOfAssembly was called
+                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
+                AssemblyCleanup was called
+                """);
 
         var caseClassInitializeAndCleanupWithInheritanceBehaviorNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBehaviorNone.TestMethod"));
         numberOfLines = caseClassInitializeAndCleanupWithInheritanceBehaviorNone.Messages.Single().Text.Split('\n').Length;
