@@ -427,7 +427,7 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper = reflectHelper ?? new ReflectHelper();
         }
 
-        public void MarkTestComplete(TestMethodInfo testMethodInfo, TestMethod testMethod, out bool shouldRunClassCleanup, out bool shouldRunAssimplyCleanup)
+        public void MarkTestComplete(TestMethodInfo testMethodInfo, TestMethod testMethod, out bool shouldRunClassCleanup, out bool shouldRunAssemblyCleanup)
         {
             shouldRunClassCleanup = false;
             var testsByClass = _remainingTestsByClass[testMethodInfo.TestClassName];
@@ -444,7 +444,7 @@ internal class UnitTestRunner : MarshalByRefObject
                     _remainingTestsByClass.Remove(testMethodInfo.TestClassName);
                 }
 
-                shouldRunAssimplyCleanup = _remainingTestsByClass.Count == 0;
+                shouldRunAssemblyCleanup = _remainingTestsByClass.Count == 0;
             }
         }
     }
