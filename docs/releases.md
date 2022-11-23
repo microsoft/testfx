@@ -1,5 +1,37 @@
 # Releases
 
+## 3.0.0-preview-20221122-01 (November 2022)
+
+* Propagate UI culture to appdomain [#1401](https://github.com/microsoft/testfx/pull/1401)
+* DeploymentItemAttribute only works for a test class with test method [#1399](https://github.com/microsoft/testfx/pull/1399)
+* Rename folder containing localization dlls in MSTest.TestAdapter NuGet package [#1398](https://github.com/microsoft/testfx/pull/1398)
+* Include localization in Test Framework NuGet [#1397](https://github.com/microsoft/testfx/pull/1397)
+* Remove DependsOnTargets="TestFxLocalization" for signing
+* Enable proper tooling for localization [#1393](https://github.com/microsoft/testfx/pull/1393)
+* Disable again the generation of localization files
+* Remove stale xlf.lcl files
+* Cleanup TestFx.Loc.props
+* Update xlf files [#1387](https://github.com/microsoft/testfx/pull/1387)
+* Reformat scripts
+* Re-enable localization of dlls in CI [#1386](https://github.com/microsoft/testfx/pull/1386)
+* Move platformservices localization files to the right folder [#1384](https://github.com/microsoft/testfx/pull/1384)
+* Remove unused build switch
+* Reformat and simplify build.ps1
+* Fix TestContext nullabilities [#1382](https://github.com/microsoft/testfx/pull/1382)
+* Fix ThrowsException methods return nullability [#1381](https://github.com/microsoft/testfx/pull/1381)
+* Replace other instances of Env.CurrentDir with Assembly.GetExecutingA… [#1380](https://github.com/microsoft/testfx/pull/1380)
+* Fix some failing debug assertions [#1379](https://github.com/microsoft/testfx/pull/1379)
+* Update testfx repo detection mechanism [#1378](https://github.com/microsoft/testfx/pull/1378)
+* Fix all markdown issues in releases.md
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-20221110-04...v3.0.0-preview-20221122-01)
+
+### Artifacts
+
+* MSTest: [3.0.0-preview-20221122-01](https://www.nuget.org/packages/MSTest/3.0.0-preview-20221122-01)
+* MSTest.TestFramework: [3.0.0-preview-20221122-01](https://www.nuget.org/packages/MSTest.TestFramework/3.0.0-preview-20221122-01)
+* MSTest.TestAdapter: [3.0.0-preview-20221122-01](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.0-preview-20221122-01)
+
 ## 3.0.0-preview-20221110-04 (November 2022)
 
 * Improve release notes generator [#1374](https://github.com/microsoft/testfx/pull/1374)
