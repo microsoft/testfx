@@ -325,8 +325,9 @@ public class SuiteLifeCycleTests : CLITestBase
                 LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestMethod was called
                 LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestCleanup was called
                 LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestCleanup was called
-                LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DisposeAsync was called
-                LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called
+                {(targetFramework == "net6.0"
+                    ? "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"
+                    : "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
                 """);
 
         // Locally, netfx calls seems to be respecting the order of the cleanup while it is not stable for netcore.
