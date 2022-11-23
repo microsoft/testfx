@@ -27,279 +27,319 @@ public class SuiteLifeCycleTests : CLITestBase
         InvokeVsTestForExecution(new[] { targetFramework + "\\" + Assembly }, targetFramework: targetFramework);
         RunEventsHandler.PassedTests.Should().HaveCount(15);  // The inherit class tests are called twice.
 
-        int numberOfLines;
-        var caseClassCleanupWithCleanupBehaviorEndOfAssembly = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_ClassCleanupWithCleanupBehaviorEndOfAssembly"));
-        numberOfLines = caseClassCleanupWithCleanupBehaviorEndOfAssembly.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 12 : 11)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseClassCleanupWithCleanupBehaviorEndOfAssembly.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassCleanupWithCleanupBehaviorEndOfAssembly.Messages.Single().Text.Should().Contain(
+        var caseClassCleanup = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanup.TestMethod"));
+        caseClassCleanup.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseClassCleanup.Messages.Single().Text.Should().Be(
             $"""
+            
+
+            TestContext Messages:
             AssemblyInit was called
-            ClassInitialize was called
-            Ctor was called
-            TestInitialize was called
-            TestMethod was called
-            TestCleanup was called
-            {(targetFramework == "net6.0" ? "DisposeAsync was called\r\nDispose was called" : "Dispose was called")}
+            LifeCycleClassCleanup.ClassInitialize was called
+            LifeCycleClassCleanup.ctor was called
+            LifeCycleClassCleanup.TestInitialize was called
+            LifeCycleClassCleanup.TestMethod was called
+            LifeCycleClassCleanup.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassCleanup.DisposeAsync was called\r\nLifeCycleClassCleanup.Dispose was called"
+                : "LifeCycleClassCleanup.Dispose was called")}
+
             """);
 
-        var caseClassCleanupWithCleanupBehaviorEndOfClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_ClassCleanupWithCleanupBehaviorEndOfClass"));
-        numberOfLines = caseClassCleanupWithCleanupBehaviorEndOfClass.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 12 : 11)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseClassCleanupWithCleanupBehaviorEndOfClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassCleanupWithCleanupBehaviorEndOfClass.Messages.Single().Text.Should().Contain(
+        var caseClassCleanupEndOfAssembly = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfAssembly"));
+        caseClassCleanupEndOfAssembly.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+
+        // We don't see "LifeCycleClassCleanupEndOfAssembly.ClassCleanup was called" because it will be attached to the
+        // latest test run.
+        caseClassCleanupEndOfAssembly.Messages.Single().Text.Should().Be(
             $"""
-            ClassInitialize was called
-            Ctor was called
-            TestInitialize was called
-            TestMethod was called
-            TestCleanup was called
-            {(targetFramework == "net6.0" ? "DisposeAsync was called\r\nDispose was called" : "Dispose was called")}
-            ClassCleanup.EndOfClass was called
+
+
+            TestContext Messages:
+            LifeCycleClassCleanupEndOfAssembly.ClassInitialize was called
+            LifeCycleClassCleanupEndOfAssembly.ctor was called
+            LifeCycleClassCleanupEndOfAssembly.TestInitialize was called
+            LifeCycleClassCleanupEndOfAssembly.TestMethod was called
+            LifeCycleClassCleanupEndOfAssembly.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassCleanupEndOfAssembly.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfAssembly.Dispose was called"
+                : "LifeCycleClassCleanupEndOfAssembly.Dispose was called")}
+            
             """);
 
-        var caseClassInitializeWithInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupWithInheritanceBehaviorNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_ClassInitializeWithInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupWithInheritanceBehaviorNone"));
-        numberOfLines = caseClassInitializeWithInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupWithInheritanceBehaviorNone.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 11 : 10)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseClassInitializeWithInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupWithInheritanceBehaviorNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassInitializeWithInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupWithInheritanceBehaviorNone.Messages.Single().Text.Should().Contain(
+        var caseClassCleanupEndOfClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfClass"));
+        caseClassCleanupEndOfClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseClassCleanupEndOfClass.Messages.Single().Text.Should().Be(
             $"""
-            ClassInitialize.InheritanceBehaviorBeforeEachDerivedClass was called
-            Ctor was called
-            TestInitialize was called
-            TestMethod was called
-            TestCleanup was called
-            {(targetFramework == "net6.0" ? "DisposeAsync was called\r\nDispose was called" : "Dispose was called")}
+            
+
+            TestContext Messages:
+            LifeCycleClassCleanupEndOfClass.ClassInitialize was called
+            LifeCycleClassCleanupEndOfClass.ctor was called
+            LifeCycleClassCleanupEndOfClass.TestInitialize was called
+            LifeCycleClassCleanupEndOfClass.TestMethod was called
+            LifeCycleClassCleanupEndOfClass.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassCleanupEndOfClass.DisposeAsync was called\r\nLifeCycleClassCleanupEndOfClass.Dispose was called"
+                : "LifeCycleClassCleanupEndOfClass.Dispose was called")}
+            LifeCycleClassCleanupEndOfClass.ClassCleanup was called
+            
             """);
 
-        var caseClassInitializeWithInheritanceBehaviorNoneAndClassCleanupWithInheritanceBehaviorBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_ClassInitializeWithInheritanceBehaviorNoneAndClassCleanupWithInheritanceBehaviorBeforeEachDerivedClass"));
-        numberOfLines = caseClassInitializeWithInheritanceBehaviorNoneAndClassCleanupWithInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 11 : 10)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseClassInitializeWithInheritanceBehaviorNoneAndClassCleanupWithInheritanceBehaviorBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassInitializeWithInheritanceBehaviorNoneAndClassCleanupWithInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Should().Contain(
+        var caseClassInitializeAndCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.TestMethod"));
+        caseClassInitializeAndCleanupBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);        
+        caseClassInitializeAndCleanupBeforeEachDerivedClass.Messages.Single().Text.Should().Be(
             $"""
-            ClassInitialize.InheritanceBehaviorNone was called
-            Ctor was called
-            TestInitialize was called
-            TestMethod was called
-            TestCleanup was called
-            {(targetFramework == "net6.0" ? "DisposeAsync was called\r\nDispose was called" : "Dispose was called")}
+            
+
+            TestContext Messages:
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.ClassInitialize was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.ctor was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.TestInitialize was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.TestMethod was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"
+                : "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")}
+            
             """);
 
-        var caseClassCleanupWithNoProperty = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_ClassCleanupWithNoProperty"));
-        numberOfLines = caseClassCleanupWithNoProperty.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 11 : 10)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseClassCleanupWithNoProperty.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassCleanupWithNoProperty.Messages.Single().Text.Should().Contain(
+        var caseClassInitializeAndCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeAndCleanupNone.TestMethod"));
+        caseClassInitializeAndCleanupNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseClassInitializeAndCleanupNone.Messages.Single().Text.Should().Be(
             $"""
-            ClassInitialize was called
-            Ctor was called
-            TestInitialize was called
-            TestMethod was called
-            TestCleanup was called
-            {(targetFramework == "net6.0" ? "DisposeAsync was called\r\nDispose was called" : "Dispose was called")}
+            
+
+            TestContext Messages:
+            LifeCycleClassInitializeAndCleanupNone.ClassInitialize was called
+            LifeCycleClassInitializeAndCleanupNone.ctor was called
+            LifeCycleClassInitializeAndCleanupNone.TestInitialize was called
+            LifeCycleClassInitializeAndCleanupNone.TestMethod was called
+            LifeCycleClassInitializeAndCleanupNone.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeAndCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupNone.Dispose was called"
+                : "LifeCycleClassInitializeAndCleanupNone.Dispose was called")}
+
             """);
 
-        var caseInheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_InheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass.DerivedClassTestMethod"));
-        numberOfLines = caseInheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 15 : 14)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseInheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseInheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Should().Contain(
+        var caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone"));
+        caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages.Single().Text.Should().Be(
             $"""
-            ClassInitialize.InheritanceBehaviorBeforeEachDerivedClass was called
-            Current ClassInitialize was called
-            Base ctor was called
-            Current Ctor was called
-            Base TestInitialize was called
-            Current TestInitialize was called
-            Current TestMethod was called
-            Current TestCleanup was called
-            Base TestCleanup was called
-            {(targetFramework == "net6.0" ? "Base DisposeAsync was called\r\nBase Dispose was called" : "Base Dispose was called")}
+            
+
+            TestContext Messages:
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestInitialize was called
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestMethod was called
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"
+                : "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")}
+            
             """);
 
-        // Test the parent test method.
-        var caseInheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass_ParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_InheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass.TestMethod"));
-        numberOfLines = caseInheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass_ParentTestMethod.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 13 : 12)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseInheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass_ParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseInheritClassWithCleanupInheritanceBehaviorBeforeEachDerivedClass_ParentTestMethod.Messages.Single().Text.Should().Contain(
+        var caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass"));
+        caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages.Single().Text.Should().Be(
             $"""
-            Base ctor was called
-            Current Ctor was called
-            Base TestInitialize was called
-            Current TestInitialize was called
-            Base TestMethod was called
-            Current TestCleanup was called
-            Base TestCleanup was called
-            {(targetFramework == "net6.0" ? "Base DisposeAsync was called\r\nBase Dispose was called" : "Base Dispose was called")}
+            
+
+            TestContext Messages:
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassInitialize was called
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ctor was called
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestInitialize was called
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestMethod was called
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"
+                : "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
+            
             """);
 
-        var caseInheritClassWithCleanupInheritanceBehaviorNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_InheritClassWithCleanupInheritanceBehaviorNone.DerivedClassTestMethod"));
-        numberOfLines = caseInheritClassWithCleanupInheritanceBehaviorNone.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 14 : 13)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseInheritClassWithCleanupInheritanceBehaviorNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseInheritClassWithCleanupInheritanceBehaviorNone.Messages.Single().Text.Should().Contain(
+        var caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.DerivedClassTestMethod"));
+        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClass.Messages.Single().Text.Should().Be(
             $"""
-            Current ClassInitialize was called
-            Base Ctor was called
-            Current Ctor was called
-            Base TestInitialize was called
-            Current TestInitialize was called
-            Current TestMethod was called
-            Current TestCleanup was called
-            Base TestCleanup was called
-            {(targetFramework == "net6.0" ? "Base DisposeAsync was called\r\nBase Dispose was called" : "Base Dispose was called")}
-            """);
+            
 
-        // Test the parent test method.
-        var caseInheritClassWithCleanupInheritanceBehaviorNone_ParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_InheritClassWithCleanupInheritanceBehaviorNone.TestMethod"));
-        numberOfLines = caseInheritClassWithCleanupInheritanceBehaviorNone_ParentTestMethod.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 25 : 24)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseInheritClassWithCleanupInheritanceBehaviorNone_ParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseInheritClassWithCleanupInheritanceBehaviorNone_ParentTestMethod.Messages.Single().Text.Should().Contain(
-            targetFramework == "net6.0"
-            ? """
-                Base Ctor was called
-                Current Ctor was called
-                Base TestInitialize was called
-                Current TestInitialize was called
-                Base TestMethod was called
-                Current TestCleanup was called
-                Base TestCleanup was called
-                Base DisposeAsync was called
-                Base Dispose was called
-                Current ClassCleanup was called
-                Base ClassCleanup.InheritanceBehaviorNone was called
-                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-                Current ClassCleanup was called
-                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-                ClassCleanup.EndOfAssembly was called
-                Current ClassCleanup was called
-                Base ClassCleanup.InheritanceBehaviorNone was called
-                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-                ClassCleanup.WithNoProperty was called
-                Current ClassCleanup was called
-                AssemblyCleanup was called
-                """
-            : """
-                Base Ctor was called
-                Current Ctor was called
-                Base TestInitialize was called
-                Current TestInitialize was called
-                Base TestMethod was called
-                Current TestCleanup was called
-                Base TestCleanup was called
-                Base Dispose was called
-                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-                Base ClassCleanup.InheritanceBehaviorNone was called
-                Current ClassCleanup was called
-                Current ClassCleanup was called
-                ClassCleanup.WithNoProperty was called
-                Current ClassCleanup was called
-                Base ClassCleanup.InheritanceBehaviorNone was called
-                Current ClassCleanup was called
-                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-                ClassCleanup.EndOfAssembly was called
-                Base ClassCleanup.InheritanceBehaviorBeforeEachDerivedClass was called
-                AssemblyCleanup was called
-                """);
-
-        var caseClassInitializeAndCleanupWithInheritanceBehaviorNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBehaviorNone.TestMethod"));
-        numberOfLines = caseClassInitializeAndCleanupWithInheritanceBehaviorNone.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 11 : 10)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseClassInitializeAndCleanupWithInheritanceBehaviorNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassInitializeAndCleanupWithInheritanceBehaviorNone.Messages.Single().Text.Should().Contain(
-            $"""
-            ClassInitialize.InheritanceBehaviorNone was called
-            Ctor was called
-            TestInitialize was called
-            TestMethod was called
-            TestCleanup was called
-            {(targetFramework == "net6.0" ? "DisposeAsync was called\r\nDispose was called" : "Dispose was called")}
-            """);
-
-        var caseClassInitializeAndCleanupWithInheritanceBehaviorBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBehaviorBeforeEachDerivedClass.TestMethod"));
-        numberOfLines = caseClassInitializeAndCleanupWithInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 11 : 10)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseClassInitializeAndCleanupWithInheritanceBehaviorBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassInitializeAndCleanupWithInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Should().Contain(
-            $"""
-            ClassInitialize.InheritanceBehaviorBeforeEachDerivedClass was called
-            ctor was called
-            TestInitialize was called
-            TestMethod was called
-            TestCleanup was called
-            {(targetFramework == "net6.0" ? "DisposeAsync was called\r\nDispose was called" : "Dispose was called")}
-            """);
-
-        var caseInheritClassWithClassInitializeInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupInheritanceBehaviorNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_InheritClassWithClassInitializeInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupInheritanceBehaviorNone.DerivedClassTestMethod"));
-        numberOfLines = caseInheritClassWithClassInitializeInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupInheritanceBehaviorNone.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 15 : 14)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseInheritClassWithClassInitializeInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupInheritanceBehaviorNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseInheritClassWithClassInitializeInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupInheritanceBehaviorNone.Messages.Single().Text.Should().Contain(
-            $"""
-            ClassInitialize.InheritanceBehaviorBeforeEachDerivedClass was called
-            Current ClassInitialize was called
-            Base Ctor was called
-            Current Ctor was called
-            Base TestInitialize was called
-            Current TestInitialize was called
-            Current TestMethod was called
-            Current TestCleanup was called
-            Base TestCleanup was called
-            {(targetFramework == "net6.0" ? "Base DisposeAsync was called\r\nBase Dispose was called" : "Base Dispose was called")}
+            TestContext Messages:
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.ClassInitialize was called
+            LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.ClassInitialize was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.ctor was called
+            LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.ctor was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.TestInitialize was called
+            LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.TestInitialize was called
+            LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.TestMethod was called
+            LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.TestCleanup was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"
+                : "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")}
+            
             """);
 
         // Test the parent test method.
-        var caseInheritClassWithClassInitializeInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupInheritanceBehaviorNone_ParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_InheritClassWithClassInitializeInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupInheritanceBehaviorNone.TestMethod"));
-        numberOfLines = caseInheritClassWithClassInitializeInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupInheritanceBehaviorNone_ParentTestMethod.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 13 : 12)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseInheritClassWithClassInitializeInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupInheritanceBehaviorNone_ParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseInheritClassWithClassInitializeInheritanceBehaviorBeforeEachDerivedClassAndClassCleanupInheritanceBehaviorNone_ParentTestMethod.Messages.Single().Text.Should().Contain(
+        var caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.TestMethod"));
+        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseDerivedClassInitializeAndCleanupBeforeEachDerivedClassParentTestMethod.Messages.Single().Text.Should().Be(
             $"""
-            Base Ctor was called
-            Current Ctor was called
-            Base TestInitialize was called
-            Current TestInitialize was called
-            Base TestMethod was called
-            Current TestCleanup was called
-            Base TestCleanup was called
-            {(targetFramework == "net6.0" ? "Base DisposeAsync was called\r\nBase Dispose was called" : "Base Dispose was called")}
+            
+
+            TestContext Messages:
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.ctor was called
+            LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.ctor was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.TestInitialize was called
+            LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.TestInitialize was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.TestMethod was called
+            LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.TestCleanup was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called"
+                : "LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.Dispose was called")}
+            
             """);
 
-        var caseInheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_InheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass.DerivedClassTestMethod"));
-        numberOfLines = caseInheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 14 : 13)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseInheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseInheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass.Messages.Single().Text.Should().Contain(
+        var caseDerivedClassInitializeAndCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupNone.DerivedClassTestMethod"));
+        caseDerivedClassInitializeAndCleanupNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseDerivedClassInitializeAndCleanupNone.Messages.Single().Text.Should().Be(
             $"""
-            Current ClassInitialize was called
-            Base Ctor was called
-            Current Ctor was called
-            Base TestInitialize was called
-            Current TestInitialize was called
-            Current TestMethod was called
-            Current TestCleanup was called
-            Base TestCleanup was called
-            {(targetFramework == "net6.0" ? "Base DisposeAsync was called\r\nBase Dispose was called" : "Base Dispose was called")}
+            
+
+            TestContext Messages:
+            LifeCycleDerivedClassInitializeAndCleanupNone.ClassInitialize was called
+            LifeCycleClassInitializeAndCleanupNone.ctor was called
+            LifeCycleDerivedClassInitializeAndCleanupNone.ctor was called
+            LifeCycleClassInitializeAndCleanupNone.TestInitialize was called
+            LifeCycleDerivedClassInitializeAndCleanupNone.TestInitialize was called
+            LifeCycleDerivedClassInitializeAndCleanupNone.TestMethod was called
+            LifeCycleDerivedClassInitializeAndCleanupNone.TestCleanup was called
+            LifeCycleClassInitializeAndCleanupNone.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeAndCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupNone.Dispose was called"
+                : "LifeCycleClassInitializeAndCleanupNone.Dispose was called")}
+            
             """);
 
         // Test the parent test method.
-        var caseInheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass_ParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("SuiteLifeCycleTestClass_InheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass.TestMethod"));
-        numberOfLines = caseInheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass_ParentTestMethod.Messages.Single().Text.Split('\n').Length;
-        Verify(numberOfLines == (targetFramework == "net6.0" ? 13 : 12)); // The number of the logs + 3 empty lines + 1 for the logs' header.
-        caseInheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass_ParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseInheritClassWithClassInitializeInheritanceBehaviorNoneAndClassCleanupInheritanceBehaviorBeforeEachDerivedClass_ParentTestMethod.Messages.Single().Text.Should().Contain(
+        var caseDerivedClassInitializeAndCleanupNoneParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeAndCleanupNone.TestMethod"));
+        caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseDerivedClassInitializeAndCleanupNoneParentTestMethod.Messages.Single().Text.Should().Be(
             $"""
-            Base Ctor was called
-            Current Ctor was called
-            Base TestInitialize was called
-            Current TestInitialize was called
-            Base TestMethod was called
-            Current TestCleanup was called
-            Base TestCleanup was called
-            {(targetFramework == "net6.0" ? "Base DisposeAsync was called\r\nBase Dispose was called" : "Base Dispose was called")}
+            
+
+            TestContext Messages:
+            LifeCycleClassInitializeAndCleanupNone.ctor was called
+            LifeCycleDerivedClassInitializeAndCleanupNone.ctor was called
+            LifeCycleClassInitializeAndCleanupNone.TestInitialize was called
+            LifeCycleDerivedClassInitializeAndCleanupNone.TestInitialize was called
+            LifeCycleClassInitializeAndCleanupNone.TestMethod was called
+            LifeCycleDerivedClassInitializeAndCleanupNone.TestCleanup was called
+            LifeCycleClassInitializeAndCleanupNone.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeAndCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeAndCleanupNone.Dispose was called"
+                : "LifeCycleClassInitializeAndCleanupNone.Dispose was called")}
+            
+            """);
+
+        var caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DerivedClassTestMethod"));
+        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Messages.Single().Text.Should().Be(
+            $"""
+            
+
+            TestContext Messages:
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called
+            LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassInitialize was called
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called
+            LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestInitialize was called
+            LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestInitialize was called
+            LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestMethod was called
+            LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestCleanup was called
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"
+                : "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")}
+            
+            """);
+
+        // Test the parent test method.
+        var caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestMethod"));
+        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNoneParentTestMethod.Messages.Single().Text.Should().Be(
+            $"""
+            
+
+            TestContext Messages:
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called
+            LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ctor was called
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestInitialize was called
+            LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestInitialize was called
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestMethod was called
+            LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestCleanup was called
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.DisposeAsync was called\r\nLifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called"
+                : "LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.Dispose was called")}
+            
+            """);
+
+        var caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DerivedClassTestMethod"));
+        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Messages.Single().Text.Should().Be(
+            $"""
+            
+
+            TestContext Messages:
+            LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassInitialize was called
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ctor was called
+            LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ctor was called
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestInitialize was called
+            LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestInitialize was called
+            LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestMethod was called
+            LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestCleanup was called
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"
+                : "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
+            
+            """);
+
+        // Test the parent test method.
+        // We are seeing all the ClassCleanup EndOfAssembly (or nothing set - as it's the default) being reported
+        // here as this is the last test to run.
+        var caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestMethod"));
+        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
+        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod.Messages.Single().Text.Should().Be(
+            $"""
+            
+
+            TestContext Messages:
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ctor was called
+            LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ctor was called
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestInitialize was called
+            LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestInitialize was called
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestMethod was called
+            LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestCleanup was called
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"
+                : "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
+            LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassCleanup was called
+            LifeCycleClassCleanup.ClassCleanup was called
+            LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassCleanup was called
+            LifeCycleDerivedClassInitializeAndCleanupNone.ClassCleanup was called
+            LifeCycleClassInitializeAndCleanupNone.ClassCleanup was called
+            LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.ClassCleanup was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.ClassCleanup was called
+            LifeCycleClassInitializeAndCleanupBeforeEachDerivedClass.ClassCleanup was called
+            LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called
+            LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called
+            LifeCycleClassCleanupEndOfAssembly.ClassCleanup was called
+            AssemblyCleanup was called
+            
             """);
     }
 }

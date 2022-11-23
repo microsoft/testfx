@@ -2,9 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
 #if NET6_0_OR_GREATER
-using System.Threading.Tasks; 
+using System.Threading.Tasks;
 #endif
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,55 +11,54 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace SuiteLifeCycleTestProject;
 
 [TestClass]
-public class SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBehaviorNone : IDisposable
+public class LifeCycleClassInitializeAndCleanupNone : IDisposable
 #if NET6_0_OR_GREATER
         , IAsyncDisposable 
 #endif
 {
     private static TestContext s_testContext;
-    protected static string s_messagePrefix = "";
-
+    
     public TestContext TestContext { get; set; }
 
-    public SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBehaviorNone()
+    public LifeCycleClassInitializeAndCleanupNone()
     {
-        s_testContext.WriteLine($"{s_messagePrefix}Ctor was called");
+        s_testContext.WriteLine("LifeCycleClassInitializeAndCleanupNone.ctor was called");
     }
 
     [ClassInitialize(InheritanceBehavior.None)]
     public static void ClassInitialize(TestContext testContext)
     {
         s_testContext = testContext;
-        s_testContext.WriteLine($"{s_messagePrefix}ClassInitialize.InheritanceBehaviorNone was called");
+        s_testContext.WriteLine("LifeCycleClassInitializeAndCleanupNone.ClassInitialize was called");
     }
 
     [TestInitialize]
     public void TestInitialize()
     {
-        TestContext.WriteLine($"{s_messagePrefix}TestInitialize was called");
+        TestContext.WriteLine("LifeCycleClassInitializeAndCleanupNone.TestInitialize was called");
     }
 
     [TestMethod]
     public void TestMethod()
     {
-        TestContext.WriteLine($"{s_messagePrefix}TestMethod was called");
+        TestContext.WriteLine("LifeCycleClassInitializeAndCleanupNone.TestMethod was called");
     }
 
     [TestCleanup]
     public void TestCleanup()
     {
-        TestContext.WriteLine($"{s_messagePrefix}TestCleanup was called");
+        TestContext.WriteLine("LifeCycleClassInitializeAndCleanupNone.TestCleanup was called");
     }
 
     public void Dispose()
     {
-        TestContext.WriteLine($"{s_messagePrefix}Dispose was called");
+        TestContext.WriteLine("LifeCycleClassInitializeAndCleanupNone.Dispose was called");
     }
 
 #if NET6_0_OR_GREATER
     public ValueTask DisposeAsync()
     {
-        TestContext.WriteLine($"{s_messagePrefix}DisposeAsync was called");
+        TestContext.WriteLine("LifeCycleClassInitializeAndCleanupNone.DisposeAsync was called");
         return ValueTask.CompletedTask;
     }
 #endif
@@ -68,6 +66,6 @@ public class SuiteLifeCycleTestClass_ClassInitializeAndCleanupWithInheritanceBeh
     [ClassCleanup(InheritanceBehavior.None)]
     public static void ClassCleanup()
     {
-        s_testContext.WriteLine($"{s_messagePrefix}ClassCleanup.InheritanceBehaviorNone was called");
+        s_testContext.WriteLine("LifeCycleClassInitializeAndCleanupNone.ClassCleanup was called");
     }
 }

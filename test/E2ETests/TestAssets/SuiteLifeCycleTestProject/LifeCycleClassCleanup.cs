@@ -2,9 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics;
 #if NET6_0_OR_GREATER
-using System.Threading.Tasks; 
+using System.Threading.Tasks;
 #endif
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -12,7 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace SuiteLifeCycleTestProject;
 
 [TestClass]
-public sealed class SuiteLifeCycleTestClass_ClassCleanupWithNoProperty : IDisposable
+public sealed class LifeCycleClassCleanup : IDisposable
 #if NET6_0_OR_GREATER
         , IAsyncDisposable 
 #endif
@@ -21,45 +20,45 @@ public sealed class SuiteLifeCycleTestClass_ClassCleanupWithNoProperty : IDispos
 
     public TestContext TestContext { get; set; }
 
-    public SuiteLifeCycleTestClass_ClassCleanupWithNoProperty()
+    public LifeCycleClassCleanup()
     {
-        s_testContext.WriteLine("Ctor was called");
+        s_testContext.WriteLine("LifeCycleClassCleanup.ctor was called");
     }
 
     [ClassInitialize]
     public static void ClassInitialize(TestContext testContext)
     {
         s_testContext = testContext;
-        s_testContext.WriteLine("ClassInitialize was called");
+        s_testContext.WriteLine("LifeCycleClassCleanup.ClassInitialize was called");
     }
 
     [TestInitialize]
     public void TestInitialize()
     {
-        TestContext.WriteLine("TestInitialize was called");
+        TestContext.WriteLine("LifeCycleClassCleanup.TestInitialize was called");
     }
 
     [TestMethod]
     public void TestMethod()
     {
-        TestContext.WriteLine("TestMethod was called");
+        TestContext.WriteLine("LifeCycleClassCleanup.TestMethod was called");
     }
 
     [TestCleanup]
     public void TestCleanup()
     {
-        TestContext.WriteLine("TestCleanup was called");
+        TestContext.WriteLine("LifeCycleClassCleanup.TestCleanup was called");
     }
 
     public void Dispose()
     {
-        TestContext.WriteLine("Dispose was called");
+        TestContext.WriteLine("LifeCycleClassCleanup.Dispose was called");
     }
 
 #if NET6_0_OR_GREATER
     public ValueTask DisposeAsync()
     {
-        TestContext.WriteLine("DisposeAsync was called");
+        TestContext.WriteLine("LifeCycleClassCleanup.DisposeAsync was called");
         return ValueTask.CompletedTask;
     }
 #endif
@@ -67,6 +66,6 @@ public sealed class SuiteLifeCycleTestClass_ClassCleanupWithNoProperty : IDispos
     [ClassCleanup]
     public static void ClassCleanup()
     {
-        s_testContext.WriteLine("ClassCleanup.WithNoProperty was called");
+        s_testContext.WriteLine("LifeCycleClassCleanup.ClassCleanup was called");
     }
 }

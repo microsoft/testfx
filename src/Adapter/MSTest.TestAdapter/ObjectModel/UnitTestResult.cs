@@ -183,14 +183,14 @@ public class UnitTestResult
 
         if (!StringEx.IsNullOrEmpty(DebugTrace))
         {
-            string debugTraceMessagesInStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.DebugTraceBanner, DebugTrace);
+            string debugTraceMessagesInStdOut = string.Format(CultureInfo.CurrentCulture, "{2}{2}{0}{2}{1}", Resource.DebugTraceBanner, DebugTrace, Environment.NewLine);
             TestResultMessage debugTraceMessage = new(TestResultMessage.StandardOutCategory, debugTraceMessagesInStdOut);
             testResult.Messages.Add(debugTraceMessage);
         }
 
         if (!StringEx.IsNullOrEmpty(TestContextMessages))
         {
-            string testContextMessagesInStdOut = string.Format(CultureInfo.InvariantCulture, "\n\n{0}\n{1}", Resource.TestContextMessageBanner, TestContextMessages);
+            string testContextMessagesInStdOut = string.Format(CultureInfo.InvariantCulture, "{2}{2}{0}{2}{1}", Resource.TestContextMessageBanner, TestContextMessages, Environment.NewLine);
             TestResultMessage testContextMessage = new(TestResultMessage.StandardOutCategory, testContextMessagesInStdOut);
             testResult.Messages.Add(testContextMessage);
         }
