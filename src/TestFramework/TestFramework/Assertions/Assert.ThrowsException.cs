@@ -79,7 +79,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static T ThrowsException<T>(Func<object> action)
+    public static T ThrowsException<T>(Func<object?> action)
         where T : Exception
     {
         return ThrowsException<T>(action, string.Empty, null);
@@ -105,7 +105,7 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static T ThrowsException<T>(Func<object> action, string message)
+    public static T ThrowsException<T>(Func<object?> action, string message)
         where T : Exception
     {
         return ThrowsException<T>(action, message, null);
@@ -134,10 +134,10 @@ public sealed partial class Assert
     /// <returns>
     /// The exception that was thrown.
     /// </returns>
-    public static T ThrowsException<T>(Func<object> action, string message, params object?[]? parameters)
+    public static T ThrowsException<T>(Func<object?> action, string message, params object?[]? parameters)
         where T : Exception
     {
-        return ThrowsException<T>(() => { action(); }, message, parameters);
+        return ThrowsException<T>(() => { _ = action(); }, message, parameters);
     }
 
     /// <summary>

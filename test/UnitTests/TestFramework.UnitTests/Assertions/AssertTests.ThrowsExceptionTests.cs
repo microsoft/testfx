@@ -43,6 +43,33 @@ public partial class AssertTests
         Verify(typeof(AssertFailedException) == ex.GetType());
         Verify(ex.Message.Contains("Assert.ThrowsException failed. Threw exception FormatException, but exception ArgumentException was expected."));
     }
+
+    public void ThrowsException_FuncArgument_AllowsToReturnNull()
+    {
+        var ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null));
+
+        Verify(ex is not null);
+        Verify(typeof(AssertFailedException) == ex.GetType());
+        Verify(ex.Message.Contains("Assert.ThrowsException failed. No exception thrown. ArgumentException exception was expected."));
+    }
+
+    public void ThrowsException_FuncArgumentOverloadWithMessage_AllowsToReturnNull()
+    {
+        var ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null, "message"));
+
+        Verify(ex is not null);
+        Verify(typeof(AssertFailedException) == ex.GetType());
+        Verify(ex.Message.Contains("Assert.ThrowsException failed. No exception thrown. ArgumentException exception was expected."));
+    }
+
+    public void ThrowsException_FuncArgumentOverloadWithMessagesAndParameters_AllowsToReturnNull()
+    {
+        var ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null, "message {0}", 1));
+
+        Verify(ex is not null);
+        Verify(typeof(AssertFailedException) == ex.GetType());
+        Verify(ex.Message.Contains("Assert.ThrowsException failed. No exception thrown. ArgumentException exception was expected."));
+    }
     #endregion
 
     #region ThrowsExceptionAsync tests.

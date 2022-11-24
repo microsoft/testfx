@@ -325,9 +325,9 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.That.get -> Microsoft
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Action! action) -> T!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Action! action, string! message) -> T!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Action! action, string! message, params object?[]? parameters) -> T!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Func<object!>! action) -> T!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Func<object!>! action, string! message) -> T!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Func<object!>! action, string! message, params object?[]? parameters) -> T!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Func<object?>! action) -> T!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Func<object?>! action, string! message) -> T!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Func<object?>! action, string! message, params object?[]? parameters) -> T!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExceptionAsync<T>(System.Func<System.Threading.Tasks.Task!>! action) -> System.Threading.Tasks.Task<T!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExceptionAsync<T>(System.Func<System.Threading.Tasks.Task!>! action, string! message) -> System.Threading.Tasks.Task<T!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExceptionAsync<T>(System.Func<System.Threading.Tasks.Task!>! action, string! message, params object?[]? parameters) -> System.Threading.Tasks.Task<T!>!
