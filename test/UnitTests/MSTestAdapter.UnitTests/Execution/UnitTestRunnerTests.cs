@@ -322,7 +322,7 @@ public class UnitTestRunnerTests : TestContainer
 
     public void RunCleanupShouldReturnNullOnNoCleanUpMethods()
     {
-        Verify(_unitTestRunner.RunCleanup() is null);
+        Verify(_unitTestRunner.RunClassAndAssemblyCleanup() is null);
     }
 
     public void RunCleanupShouldReturnCleanupResultsForAssemblyAndClassCleanupMethods()
@@ -351,7 +351,7 @@ public class UnitTestRunnerTests : TestContainer
             throw new NotImplementedException();
         };
 
-        var cleanupresult = _unitTestRunner.RunCleanup();
+        var cleanupresult = _unitTestRunner.RunClassAndAssemblyCleanup();
 
         Verify(assemblyCleanupCount == 1);
         Verify(classCleanupCount == 1);

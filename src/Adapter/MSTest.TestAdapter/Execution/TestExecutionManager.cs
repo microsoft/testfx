@@ -347,8 +347,6 @@ public class TestExecutionManager
             ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
         }
 
-        RunCleanup(frameworkHandle, testRunner);
-
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
     }
 
@@ -429,24 +427,6 @@ public class TestExecutionManager
         return testContextProperties;
     }
 
-    private static void RunCleanup(
-        ITestExecutionRecorder testExecutionRecorder,
-        UnitTestRunner testRunner)
-    {
-        // All cleanups (Class and Assembly) run at the end of test execution. Failures in these cleanup
-        // methods will be reported as Warnings.
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing cleanup methods.");
-        var cleanupResult = testRunner.RunCleanup();
-        PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed cleanup methods.");
-        if (cleanupResult != null)
-        {
-            // Do not attach the standard output and error messages to any test result. It is not
-            // guaranteed that a test method of same class would have run last. We will end up
-            // adding stdout to test method of another class.
-            LogCleanupResult(testExecutionRecorder, cleanupResult);
-        }
-    }
-
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]
     private void CacheSessionParameters(IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder)
     {
@@ -472,46 +452,6 @@ public class TestExecutionManager
         catch (Exception ex)
         {
             testExecutionRecorder.SendMessage(TestMessageLevel.Error, ex.Message);
-        }
-    }
-
-    /// <summary>
-    /// Log the parameter warnings on the parameter logger.
-    /// </summary>
-    /// <param name="testExecutionRecorder">Handle to record test start/end/results/messages.</param>
-    /// <param name="result">Result of the run operation.</param>
-    private static void LogCleanupResult(ITestExecutionRecorder testExecutionRecorder, RunCleanupResult result)
-    {
-        DebugEx.Assert(testExecutionRecorder != null, "Logger should not be null");
-
-        if (!StringEx.IsNullOrWhiteSpace(result.StandardOut))
-        {
-            testExecutionRecorder.SendMessage(TestMessageLevel.Informational, result.StandardOut);
-        }
-
-        if (!StringEx.IsNullOrWhiteSpace(result.DebugTrace))
-        {
-            testExecutionRecorder.SendMessage(TestMessageLevel.Informational, result.DebugTrace);
-        }
-
-        if (!StringEx.IsNullOrWhiteSpace(result.StandardError))
-        {
-            testExecutionRecorder.SendMessage(
-                MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,
-                result.StandardError);
-        }
-
-        if (result.Warnings != null)
-        {
-            foreach (string warning in result.Warnings)
-            {
-                if (!StringEx.IsNullOrWhiteSpace(warning))
-                {
-                    testExecutionRecorder.SendMessage(
-                        MSTestSettings.CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning,
-                        warning);
-                }
-            }
         }
     }
 }

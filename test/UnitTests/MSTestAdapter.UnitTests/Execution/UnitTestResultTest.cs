@@ -16,7 +16,7 @@ using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.O
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 public class UnitTestResultTest : TestContainer
 {
-    public void UnitTestResultConstrutorWithOutcomeAndErrorMessageShouldSetRequiredFields()
+    public void UnitTestResultConstructorWithOutcomeAndErrorMessageShouldSetRequiredFields()
     {
         UnitTestResult result = new(UnitTestOutcome.Error, "DummyMessage");
 
@@ -24,7 +24,7 @@ public class UnitTestResultTest : TestContainer
         Verify(result.ErrorMessage == "DummyMessage");
     }
 
-    public void UnitTestResultConstrutorWithTestFailedExceptionShouldSetRequiredFields()
+    public void UnitTestResultConstructorWithTestFailedExceptionShouldSetRequiredFields()
     {
         var stackTrace = new StackTraceInformation("trace", "filePath", 2, 3);
         TestFailedException ex = new(UnitTestOutcome.Error, "DummyMessage", stackTrace);
@@ -54,13 +54,13 @@ public class UnitTestResultTest : TestContainer
         var startTime = DateTimeOffset.Now;
         var endTime = DateTimeOffset.Now;
 
-        string runSettingxml =
+        string runSettingsXml =
             @"<RunSettings>
                     <MSTestV2>
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
         // Act
         var testResult = result.ToTestResult(testCase, startTime, endTime, adapterSettings);
@@ -84,16 +84,16 @@ public class UnitTestResultTest : TestContainer
             StandardOut = "DummyOutput",
         };
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-        string runSettingxml =
+        string runSettingsXml =
            @"<RunSettings>
                     <MSTestV2>
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
-        var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
-        Verify(testresult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
+        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
+        Verify(testResult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
     }
 
     public void ToTestResultForUniTestResultWithDebugTraceShouldReturnTestResultWithDebugTraceStdOutMessage()
@@ -103,14 +103,14 @@ public class UnitTestResultTest : TestContainer
             DebugTrace = "DummyDebugTrace",
         };
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-        string runSettingxml =
+        string runSettingsXml =
            @"<RunSettings>
                     <MSTestV2>
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
-        var testresult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
-        Verify(testresult.Messages.All(m => m.Text.Contains("\n\nDebug Trace:\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
+        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
+        Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nDebug Trace:\r\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
     }
 }

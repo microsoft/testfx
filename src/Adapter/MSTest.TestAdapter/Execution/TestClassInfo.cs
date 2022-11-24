@@ -286,7 +286,6 @@ public class TestClassInfo
                     finally
                     {
                         IsClassInitializeExecuted = true;
-                        (testContext as ITestContext)?.ClearDiagnosticMessages();
                     }
                 }
             }

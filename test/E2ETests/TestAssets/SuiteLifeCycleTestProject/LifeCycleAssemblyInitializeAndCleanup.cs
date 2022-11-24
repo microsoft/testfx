@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace SuiteLifeCycleTestProject;
 
 [TestClass]
-public class SuiteLifeCycleTestClass_AssemblyInitializeAndCleanup
+public class LifeCycleAssemblyInitializeAndCleanup
 {
     private static TestContext s_testContext;
 
