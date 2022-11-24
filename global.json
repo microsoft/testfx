@@ -8,12 +8,12 @@
         "Microsoft.VisualStudio.Component.VSSDK"
       ]
     },
-    "dotnet": "7.0.100-rc.1.22431.12",
+    "dotnet": "7.0.100",
     "vswhere": "2.5.2"
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "8.0.0-beta.22554.2",
-    "Microsoft.DotNet.Helix.Sdk": "8.0.0-beta.22554.2",
+    "Microsoft.DotNet.Arcade.Sdk": "8.0.0-beta.22572.5",
+    "Microsoft.DotNet.Helix.Sdk": "8.0.0-beta.22572.5",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }
