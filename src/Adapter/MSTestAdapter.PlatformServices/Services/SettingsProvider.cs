@@ -14,7 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 public class MSTestSettingsProvider : ISettingsProvider
 {
-#if !WINDOWS_UWP && !PORTABLE
+#if !WINDOWS_UWP
     /// <summary>
     /// Member variable for Adapter settings.
     /// </summary>
@@ -48,7 +48,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// <param name="reader">Reader to load the settings from.</param>
     public void Load(XmlReader reader)
     {
-#if !WINDOWS_UWP && !PORTABLE
+#if !WINDOWS_UWP
         ValidateArg.NotNull(reader, "reader");
         s_settings = MSTestAdapterSettings.ToSettings(reader);
 #endif
@@ -56,7 +56,7 @@ public class MSTestSettingsProvider : ISettingsProvider
 
     public IDictionary<string, object?> GetProperties(string source)
     {
-#if !WINDOWS_UWP && !PORTABLE
+#if !WINDOWS_UWP
         return TestDeployment.GetDeploymentInformation(source);
 #else
         return new Dictionary<string, object?>();

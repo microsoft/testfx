@@ -131,7 +131,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <inheritdoc/>
     public override IDictionary Properties => (IDictionary)_properties;
 
-#if !WINDOWS_UWP && !WIN_UI && !PORTABLE
+#if !WINDOWS_UWP && !WIN_UI
     /// <inheritdoc/>
     public override string? TestRunDirectory => GetStringPropertyValue(TestContextPropertyStrings.TestRunDirectory);
 
@@ -208,7 +208,7 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <inheritdoc/>
     public override void AddResultFile(string? fileName)
     {
-#if !WINDOWS_UWP && !WIN_UI && !PORTABLE
+#if !WINDOWS_UWP && !WIN_UI
         if (StringEx.IsNullOrEmpty(fileName))
         {
             throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
