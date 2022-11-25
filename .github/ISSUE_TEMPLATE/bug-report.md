@@ -1,7 +1,7 @@
 ---
 name: Bug report
-about: Report a bug in MSTest.
-labels: 'bug'
+about: Create a bug report to help us improve MSTest
+labels: [bug, need-triage]
 ---
 
 ## Describe the bug

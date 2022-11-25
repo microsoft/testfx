@@ -1,8 +1,7 @@
 ---
-name: MSTest feature suggestion
-about: Suggest a new feature
-title: ''
-labels: [feature-request]
+name: Feature request
+about: Suggest a new feature/idea for MSTest
+labels: [feature-request, need-triage]
 ---
 
 ## Summary
@@ -14,7 +13,7 @@ Brief summary of what this proposal is about.
 ## Background and Motivation
 
 <!--
-What is the problem we are solving and in what context did you encounter it?
+What is the problem you are solving and in what context did you encounter it?
 -->
 
 ## Proposed Feature
