@@ -214,10 +214,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
         Type type, List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
         TestIdGenerationStrategy testIdGenerationStrategy)
     {
-        var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
-        sourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(sourceLevelParameters)
-            ?? sourceLevelParameters
-            ?? new Dictionary<string, object?>();
+        var tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
+        tempSourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(tempSourceLevelParameters)
+            ?? tempSourceLevelParameters
+            ?? new Dictionary<string, object>();
+        var sourceLevelParameters = tempSourceLevelParameters.ToDictionary(x => x.Key, x => (object?)x.Value);
 
         string? typeFullName = null;
         var tests = new List<UnitTestElement>();

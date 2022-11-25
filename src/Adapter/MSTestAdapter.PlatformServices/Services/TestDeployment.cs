@@ -180,11 +180,11 @@ public class TestDeployment : ITestDeployment
     }
 
 #if !WINDOWS_UWP
-    internal static IDictionary<string, object?> GetDeploymentInformation(string source)
+    internal static IDictionary<string, object> GetDeploymentInformation(string source)
     {
-        var properties = new Dictionary<string, object?>();
+        var properties = new Dictionary<string, object>();
 
-        var applicationBaseDirectory = string.Empty;
+        string applicationBaseDirectory = string.Empty;
 
         // Run directories can be null in win8.
         if (RunDirectories == null && !StringEx.IsNullOrEmpty(source))
@@ -193,35 +193,35 @@ public class TestDeployment : ITestDeployment
             applicationBaseDirectory = Path.GetDirectoryName(source)!;
         }
 
-        properties[TestContextPropertyStrings.TestRunDirectory] =
+        properties[TestContext.TestRunDirectoryLabel] =
             RunDirectories != null
                 ? RunDirectories.RootDeploymentDirectory
                 : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.DeploymentDirectory] =
+        properties[TestContext.DeploymentDirectoryLabel] =
             RunDirectories != null
                 ? RunDirectories.OutDirectory
                 : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.ResultsDirectory] =
+        properties[TestContext.ResultsDirectoryLabel] =
             RunDirectories != null
                 ? RunDirectories.InDirectory
                 : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.TestRunResultsDirectory] =
+        properties[TestContext.TestRunResultsDirectoryLabel] =
             RunDirectories != null
                 ? RunDirectories.InMachineNameDirectory
                 : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.TestResultsDirectory] =
+        properties[TestContext.TestResultsDirectoryLabel] =
             RunDirectories != null
                 ? RunDirectories.InDirectory
                 : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.TestDir] =
+        properties[TestContext.TestDirLabel] =
             RunDirectories != null
                 ? RunDirectories.RootDeploymentDirectory
                 : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.TestDeploymentDir] =
+        properties[TestContext.TestDeploymentDirLabel] =
             RunDirectories != null
                 ? RunDirectories.OutDirectory
                 : applicationBaseDirectory;
-        properties[TestContextPropertyStrings.TestLogsDir] =
+        properties[TestContext.TestLogsDirLabel] =
             RunDirectories != null
                 ? RunDirectories.InMachineNameDirectory
                 : applicationBaseDirectory;

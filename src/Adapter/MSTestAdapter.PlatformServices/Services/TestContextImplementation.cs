@@ -7,14 +7,11 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
@@ -27,15 +24,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// The virtual string properties of the TestContext are retrieved from the property dictionary
 /// like GetProperty&lt;string&gt;("TestName") or GetProperty&lt;string&gt;("FullyQualifiedTestClassName").
 /// </summary>
-public class TestContextImplementation : UTF.TestContext, ITestContext
+public class TestContextImplementation : TestContext, ITestContext
 {
-#if !NETFRAMEWORK
-    private static readonly string FullyQualifiedTestClassNameLabel = nameof(FullyQualifiedTestClassName);
-    private static readonly string ManagedTypeLabel = nameof(ManagedType);
-    private static readonly string ManagedMethodLabel = nameof(ManagedMethod);
-    private static readonly string TestNameLabel = nameof(TestName);
-#endif
-
 #if !WINDOWS_UWP
     /// <summary>
     /// List of result files associated with the test.
@@ -101,8 +91,13 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 
         // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
         _threadSafeStringWriter = (ThreadSafeStringWriter)stringWriter;
-        _properties = new Dictionary<string, object?>(properties);
-        InitializeProperties();
+        _properties = new Dictionary<string, object?>(properties)
+        {
+            [FullyQualifiedTestClassNameLabel] = _testMethod.FullClassName,
+            [ManagedTypeLabel] = _testMethod.ManagedTypeName,
+            [ManagedMethodLabel] = _testMethod.ManagedMethodName,
+            [TestNameLabel] = _testMethod.Name,
+        };
 
 #if !WINDOWS_UWP
         _testResultFiles = new List<string>();
@@ -133,74 +128,42 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <inheritdoc/>
-    public override string? TestRunDirectory => GetStringPropertyValue(TestContextPropertyStrings.TestRunDirectory);
+    public override string? TestRunDirectory => base.TestRunDirectory;
 
     /// <inheritdoc/>
-    public override string? DeploymentDirectory => GetStringPropertyValue(TestContextPropertyStrings.DeploymentDirectory);
+    public override string? DeploymentDirectory => base.DeploymentDirectory;
 
     /// <inheritdoc/>
-    public override string? ResultsDirectory => GetStringPropertyValue(TestContextPropertyStrings.ResultsDirectory);
+    public override string? ResultsDirectory => base.ResultsDirectory;
 
     /// <inheritdoc/>
-    public override string? TestRunResultsDirectory => GetStringPropertyValue(TestContextPropertyStrings.TestRunResultsDirectory);
+    public override string? TestRunResultsDirectory => base.TestRunResultsDirectory;
 
     /// <inheritdoc/>
-    [SuppressMessage("Microsoft.Naming", "CA1702:CompoundWordsShouldBeCasedCorrectly", Justification = "TestResultsDirectory is what we need.")]
-    public override string? TestResultsDirectory
-    {
-        get
-        {
-            // In MSTest, it is actually "In\697105f7-004f-42e8-bccf-eb024870d3e9\User1", but
-            // we are setting it to "In" only because MSTest does not create this directory.
-            return GetStringPropertyValue(TestContextPropertyStrings.TestResultsDirectory);
-        }
-    }
+    public override string? TestResultsDirectory => base.TestResultsDirectory;
 
     /// <inheritdoc/>
-    public override string? TestDir => GetStringPropertyValue(TestContextPropertyStrings.TestDir);
+    public override string? TestDir => base.TestDir;
 
     /// <inheritdoc/>
-    public override string? TestDeploymentDir => GetStringPropertyValue(TestContextPropertyStrings.TestDeploymentDir);
+    public override string? TestDeploymentDir => base.TestDeploymentDir;
 
     /// <inheritdoc/>
-    public override string? TestLogsDir => GetStringPropertyValue(TestContextPropertyStrings.TestLogsDir);
+    public override string? TestLogsDir => base.TestLogsDir;
 
     /// <inheritdoc/>
-    public override string? FullyQualifiedTestClassName
-    {
-        get
-        {
+    public override string FullyQualifiedTestClassName => base.FullyQualifiedTestClassName!;
+
 #if NETFRAMEWORK
-            return GetStringPropertyValue(TestContextPropertyStrings.FullyQualifiedTestClassName);
-#else
-
-            return GetPropertyValue(FullyQualifiedTestClassNameLabel) as string;
-#endif
-
-        }
-    }
-#if NETFRAMEWORK
+    /// <inheritdoc/>
+    public override string ManagedType => base.ManagedType!;
 
     /// <inheritdoc/>
-    public override string? ManagedType => GetStringPropertyValue(TestContextPropertyStrings.ManagedType);
-
-    /// <inheritdoc/>
-    public override string? ManagedMethod => GetStringPropertyValue(TestContextPropertyStrings.ManagedMethod);
+    public override string ManagedMethod => base.ManagedMethod!;
 #endif
 
     /// <inheritdoc/>
-    public override string? TestName
-    {
-        get
-        {
-#if NETFRAMEWORK
-            return GetStringPropertyValue(TestContextPropertyStrings.TestName);
-#else
-
-            return GetPropertyValue(TestNameLabel) as string;
-#endif
-        }
-    }
+    public override string TestName => base.TestName!;
 #endif
 
     public UTF.TestContext Context => this;
@@ -385,8 +348,6 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
     /// <param name="propertyValue">The property value.</param>
     public void AddProperty(string propertyName, string propertyValue)
     {
-        _properties ??= new Dictionary<string, object?>();
-
         _properties.Add(propertyName, propertyValue);
     }
 
@@ -433,20 +394,6 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
 
     #endregion
 
-#if !NETFRAMEWORK
-    /// <summary>
-    /// Helper to safely fetch a property value.
-    /// </summary>
-    /// <param name="propertyName">Property Name.</param>
-    /// <returns>Property value.</returns>
-    private object? GetPropertyValue(string propertyName)
-    {
-        _properties.TryGetValue(propertyName, out var propertyValue);
-
-        return propertyValue;
-    }
-#endif
-
 #if NETFRAMEWORK
     /// <summary>
     /// Converts the parameter outcome to UTF outcome.
@@ -471,35 +418,4 @@ public class TestContextImplementation : UTF.TestContext, ITestContext
         }
     }
 #endif
-
-#if !WINDOWS_UWP
-    /// <summary>
-    /// Helper to safely fetch a property value.
-    /// </summary>
-    /// <param name="propertyName">Property Name.</param>
-    /// <returns>Property value.</returns>
-    private string? GetStringPropertyValue(string propertyName)
-    {
-        _properties.TryGetValue(propertyName, out var propertyValue);
-        return propertyValue as string;
-    }
-#endif
-
-    /// <summary>
-    /// Helper to initialize the properties.
-    /// </summary>
-    private void InitializeProperties()
-    {
-#if NETFRAMEWORK
-        _properties[TestContextPropertyStrings.FullyQualifiedTestClassName] = _testMethod.FullClassName;
-        _properties[TestContextPropertyStrings.ManagedType] = _testMethod.ManagedTypeName;
-        _properties[TestContextPropertyStrings.ManagedMethod] = _testMethod.ManagedMethodName;
-        _properties[TestContextPropertyStrings.TestName] = _testMethod.Name;
-#else
-        _properties[FullyQualifiedTestClassNameLabel] = _testMethod.FullClassName;
-        _properties[ManagedTypeLabel] = _testMethod.ManagedTypeName;
-        _properties[ManagedMethodLabel] = _testMethod.ManagedMethodName;
-        _properties[TestNameLabel] = _testMethod.Name;
-#endif
-    }
 }
