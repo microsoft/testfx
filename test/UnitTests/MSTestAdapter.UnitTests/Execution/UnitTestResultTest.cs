@@ -6,8 +6,11 @@ using System.Linq;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+
+using Moq;
 
 using TestFramework.ForTestingMSTest;
 
@@ -63,7 +66,7 @@ public class UnitTestResultTest : TestContainer
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
         // Act
-        var testResult = result.ToTestResult(testCase, startTime, endTime, adapterSettings);
+        var testResult = result.ToTestResult(testCase, startTime, endTime, "MachineName", adapterSettings);
 
         // Validate
         Verify(testCase == testResult.TestCase);
@@ -74,6 +77,7 @@ public class UnitTestResultTest : TestContainer
         Verify(testResult.ErrorStackTrace == "DummyStackTrace");
         Verify(startTime == testResult.StartTime);
         Verify(endTime == testResult.EndTime);
+        Verify(testResult.ComputerName == "MachineName");
         Verify(testResult.Messages.Count == 0);
     }
 
@@ -92,7 +96,7 @@ public class UnitTestResultTest : TestContainer
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
+        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
         Verify(testResult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
     }
 
@@ -110,7 +114,7 @@ public class UnitTestResultTest : TestContainer
                   </RunSettings>";
 
         MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
+        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
         Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nDebug Trace:\r\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
     }
 }
