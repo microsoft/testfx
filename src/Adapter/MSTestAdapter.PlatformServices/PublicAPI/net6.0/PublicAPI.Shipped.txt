@@ -19,12 +19,12 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDire
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDirectoryPath.RecursiveDirectoryPath(string! dirPath, bool includeSubDirectories) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDirectoryPath.InitializeLifetimeService() -> object!
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.DeploymentDirectory.get -> string?
-override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.FullyQualifiedTestClassName.get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.FullyQualifiedTestClassName.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ResultsDirectory.get -> string?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestDeploymentDir.get -> string?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestDir.get -> string?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestLogsDir.get -> string?
-override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestName.get -> string?
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestName.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestResultsDirectory.get -> string?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestRunDirectory.get -> string?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestRunResultsDirectory.get -> string?

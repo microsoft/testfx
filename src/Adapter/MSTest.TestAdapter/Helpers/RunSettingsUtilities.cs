@@ -37,13 +37,13 @@ internal class RunSettingsUtilities
     /// <param name="settingsXml">The runsettings xml.</param>
     /// <returns>The test run parameters.</returns>
     /// <remarks>If there is no test run parameters section defined in the settingsxml a blank dictionary is returned.</remarks>
-    internal static Dictionary<string, object?> GetTestRunParameters(string? settingsXml)
+    internal static Dictionary<string, object> GetTestRunParameters(string? settingsXml)
     {
         var nodeValue = GetNodeValue(settingsXml, Constants.TestRunParametersName, TestRunParameters.FromXml);
-        if (nodeValue == default(Dictionary<string, object?>))
+        if (nodeValue == default(Dictionary<string, object>))
         {
             // Return default.
-            nodeValue = new Dictionary<string, object?>();
+            nodeValue = new Dictionary<string, object>();
         }
 
         return nodeValue;

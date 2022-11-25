@@ -297,37 +297,35 @@ public class TestDeploymentTests : TestContainer
         var expectedProperties = new Dictionary<string, object>
         {
             {
-                TestContextPropertyStrings.TestRunDirectory,
+                TestContext.TestRunDirectoryLabel,
                 applicationBaseDirectory
             },
             {
-                TestContextPropertyStrings.DeploymentDirectory,
+                TestContext.DeploymentDirectoryLabel,
                 applicationBaseDirectory
             },
             {
-                TestContextPropertyStrings.ResultsDirectory,
+                TestContext.ResultsDirectoryLabel,
                 applicationBaseDirectory
             },
             {
-                TestContextPropertyStrings
-                .TestRunResultsDirectory,
+                TestContext.TestRunResultsDirectoryLabel,
                 applicationBaseDirectory
             },
             {
-                TestContextPropertyStrings
-                .TestResultsDirectory,
+                TestContext.TestResultsDirectoryLabel,
                 applicationBaseDirectory
             },
             {
-                TestContextPropertyStrings.TestDir,
+                TestContext.TestDirLabel,
                 applicationBaseDirectory
             },
             {
-                TestContextPropertyStrings.TestDeploymentDir,
+                TestContext.TestDeploymentDirLabel,
                 applicationBaseDirectory
             },
             {
-                TestContextPropertyStrings.TestLogsDir,
+                TestContext.TestLogsDirLabel,
                 applicationBaseDirectory
             },
         };
@@ -354,40 +352,14 @@ public class TestDeploymentTests : TestContainer
         // Assert.
         var expectedProperties = new Dictionary<string, object>
         {
-            {
-                TestContextPropertyStrings.TestRunDirectory,
-                testRunDirectories.RootDeploymentDirectory
-            },
-            {
-                TestContextPropertyStrings.DeploymentDirectory,
-                testRunDirectories.OutDirectory
-            },
-            {
-                TestContextPropertyStrings.ResultsDirectory,
-                testRunDirectories.InDirectory
-            },
-            {
-                TestContextPropertyStrings
-                .TestRunResultsDirectory,
-                testRunDirectories.InMachineNameDirectory
-            },
-            {
-                TestContextPropertyStrings
-                .TestResultsDirectory,
-                testRunDirectories.InDirectory
-            },
-            {
-                TestContextPropertyStrings.TestDir,
-                testRunDirectories.RootDeploymentDirectory
-            },
-            {
-                TestContextPropertyStrings.TestDeploymentDir,
-                testRunDirectories.OutDirectory
-            },
-            {
-                TestContextPropertyStrings.TestLogsDir,
-                testRunDirectories.InMachineNameDirectory
-            },
+            [TestContext.TestRunDirectoryLabel] = testRunDirectories.RootDeploymentDirectory,
+            [TestContext.DeploymentDirectoryLabel] = testRunDirectories.OutDirectory,
+            [TestContext.ResultsDirectoryLabel] = testRunDirectories.InDirectory,
+            [TestContext.TestRunResultsDirectoryLabel] = testRunDirectories.InMachineNameDirectory,
+            [TestContext.TestResultsDirectoryLabel] = testRunDirectories.InDirectory,
+            [TestContext.TestDirLabel] = testRunDirectories.RootDeploymentDirectory,
+            [TestContext.TestDeploymentDirLabel] = testRunDirectories.OutDirectory,
+            [TestContext.TestLogsDirLabel] = testRunDirectories.InMachineNameDirectory,
         };
 
         Verify(properties is not null);
@@ -413,40 +385,14 @@ public class TestDeploymentTests : TestContainer
         // Assert.
         var expectedProperties = new Dictionary<string, object>
         {
-            {
-                TestContextPropertyStrings.TestRunDirectory,
-                testRunDirectories.RootDeploymentDirectory
-            },
-            {
-                TestContextPropertyStrings.DeploymentDirectory,
-                testRunDirectories.OutDirectory
-            },
-            {
-                TestContextPropertyStrings.ResultsDirectory,
-                testRunDirectories.InDirectory
-            },
-            {
-                TestContextPropertyStrings
-                .TestRunResultsDirectory,
-                testRunDirectories.InMachineNameDirectory
-            },
-            {
-                TestContextPropertyStrings
-                .TestResultsDirectory,
-                testRunDirectories.InDirectory
-            },
-            {
-                TestContextPropertyStrings.TestDir,
-                testRunDirectories.RootDeploymentDirectory
-            },
-            {
-                TestContextPropertyStrings.TestDeploymentDir,
-                testRunDirectories.OutDirectory
-            },
-            {
-                TestContextPropertyStrings.TestLogsDir,
-                testRunDirectories.InMachineNameDirectory
-            },
+            [TestContext.TestRunDirectoryLabel] = testRunDirectories.RootDeploymentDirectory,
+            [TestContext.DeploymentDirectoryLabel] = testRunDirectories.OutDirectory,
+            [TestContext.ResultsDirectoryLabel] = testRunDirectories.InDirectory,
+            [TestContext.TestRunResultsDirectoryLabel] = testRunDirectories.InMachineNameDirectory,
+            [TestContext.TestResultsDirectoryLabel] = testRunDirectories.InDirectory,
+            [TestContext.TestDirLabel] = testRunDirectories.RootDeploymentDirectory,
+            [TestContext.TestDeploymentDirLabel] = testRunDirectories.OutDirectory,
+            [TestContext.TestLogsDirLabel] = testRunDirectories.InMachineNameDirectory,
         };
 
         Verify(properties is not null);

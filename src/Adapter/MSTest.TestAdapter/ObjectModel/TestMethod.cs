@@ -4,14 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
@@ -75,7 +73,7 @@ public sealed class TestMethod : ITestMethod
             throw new ArgumentNullException(nameof(method));
         }
 
-        ManagedNameHelper.GetManagedName(method, out var managedType, out var managedMethod, out var hierarchyValues);
+        ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out var hierarchyValues);
         hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
 
         ManagedTypeName = managedType;
