@@ -65,7 +65,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
         // Act
-        var testResult = result.ToTestResult(testCase, startTime, endTime, adapterSettings);
+        var testResult = result.ToTestResult(testCase, startTime, endTime, "MachineName", adapterSettings);
 
         // Validate
         Verify(testCase == testResult.TestCase);
@@ -95,7 +95,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
+        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
         Verify(testResult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
     }
 
@@ -115,7 +115,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
+        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
         Verify(testResult.Messages.All(m => m.Text.Contains("DummyError") && m.Category.Equals("StdErrMsgs")));
     }
 
@@ -135,7 +135,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
+        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
         Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nDebug Trace:\r\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
     }
 
@@ -155,7 +155,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
+        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
         Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nTestContext Messages:\r\nKeepMovingForward") && m.Category.Equals("StdOutMsgs")));
     }
 
@@ -175,7 +175,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
+        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
 
         Verify(testResult.Attachments.Count == 1);
         Verify(testResult.Attachments[0].Attachments[0].Description == "dummy://DummyFile.txt");
@@ -197,7 +197,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
+        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
 
         Verify(testResult.Attachments.Count == 0);
     }
@@ -224,7 +224,7 @@ public class UnitTestResultTests : TestContainer
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
-        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, adapterSettings);
+        var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
 
         Verify(executionId.Equals(testResult.GetPropertyValue(MSTest.TestAdapter.Constants.ExecutionIdProperty)));
         Verify(parentExecId.Equals(testResult.GetPropertyValue(MSTest.TestAdapter.Constants.ParentExecIdProperty)));

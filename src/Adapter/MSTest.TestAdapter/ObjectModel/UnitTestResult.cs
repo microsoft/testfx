@@ -148,9 +148,10 @@ public class UnitTestResult
     /// <param name="testCase"> The test Case. </param>
     /// <param name="startTime"> The start Time. </param>
     /// <param name="endTime"> The end Time. </param>
+    /// <param name="computerName">The computer name.</param>
     /// <param name="currentSettings">Current MSTest settings.</param>
     /// <returns> The <see cref="TestResult"/>. </returns>
-    internal TestResult ToTestResult(TestCase testCase, DateTimeOffset startTime, DateTimeOffset endTime, MSTestSettings currentSettings)
+    internal TestResult ToTestResult(TestCase testCase, DateTimeOffset startTime, DateTimeOffset endTime, string computerName, MSTestSettings currentSettings)
     {
         DebugEx.Assert(testCase != null, "testCase");
 
@@ -163,6 +164,7 @@ public class UnitTestResult
             Outcome = UnitTestOutcomeHelper.ToTestOutcome(Outcome, currentSettings),
             StartTime = startTime,
             EndTime = endTime,
+            ComputerName = computerName,
         };
 
         testResult.SetPropertyValue(Constants.ExecutionIdProperty, ExecutionId);

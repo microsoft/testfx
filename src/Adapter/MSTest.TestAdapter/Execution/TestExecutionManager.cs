@@ -31,6 +31,7 @@ public class TestExecutionManager
     /// Dictionary for test run parameters.
     /// </summary>
     private readonly IDictionary<string, object?> _sessionParameters;
+    private readonly IEnvironment _environment;
 
     /// <summary>
     /// Specifies whether the test run is canceled or not.
@@ -38,9 +39,15 @@ public class TestExecutionManager
     private TestRunCancellationToken? _cancellationToken;
 
     public TestExecutionManager()
+        : this(new EnvironmentWrapper())
+    {
+    }
+
+    internal TestExecutionManager(IEnvironment environment)
     {
         TestMethodFilter = new TestMethodFilter();
         _sessionParameters = new Dictionary<string, object?>();
+        _environment = environment;
     }
 
     /// <summary>
@@ -149,11 +156,6 @@ public class TestExecutionManager
 
     internal void SendTestResults(TestCase test, UnitTestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime, ITestExecutionRecorder testExecutionRecorder)
     {
-        if (!(unitTestResults?.Length > 0))
-        {
-            return;
-        }
-
         foreach (var unitTestResult in unitTestResults)
         {
             if (test == null)
@@ -161,7 +163,7 @@ public class TestExecutionManager
                 continue;
             }
 
-            var testResult = unitTestResult.ToTestResult(test, startTime, endTime, MSTestSettings.CurrentSettings);
+            var testResult = unitTestResult.ToTestResult(test, startTime, endTime, _environment.MachineName, MSTestSettings.CurrentSettings);
 
             if (unitTestResult.DatarowIndex >= 0)
             {
