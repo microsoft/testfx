@@ -22,7 +22,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 public class TestSourceHost : ITestSourceHost
 {
-#if !WINDOWS_UWP && !PORTABLE
+#if !WINDOWS_UWP
     private readonly string _sourceFileName;
     private string? _currentDirectory = null;
 #endif
@@ -64,7 +64,7 @@ public class TestSourceHost : ITestSourceHost
         : this(sourceFileName, runSettings, frameworkHandle, new AppDomainWrapper())
 #endif
     {
-#if !WINDOWS_UWP && !NETFRAMEWORK && !PORTABLE
+#if !WINDOWS_UWP && !NETFRAMEWORK
         _sourceFileName = sourceFileName;
 
         // Set the environment context.
@@ -226,12 +226,12 @@ public class TestSourceHost : ITestSourceHost
         ResetContext();
 
         GC.SuppressFinalize(this);
-#elif !WINDOWS_UWP && !PORTABLE
+#elif !WINDOWS_UWP
         ResetContext();
 #endif
     }
 
-#if !WINDOWS_UWP && !PORTABLE
+#if !WINDOWS_UWP
     /// <summary>
     /// Sets context required for running tests.
     /// </summary>

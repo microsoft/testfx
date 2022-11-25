@@ -8,11 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-#if !WINDOWS_UWP && !PORTABLE
+#if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-#if !WINDOWS_UWP && !PORTABLE
+#if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -27,7 +27,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 public class TestDeployment : ITestDeployment
 {
-#if !WINDOWS_UWP && !PORTABLE
+#if !WINDOWS_UWP
     #region Service Utility Variables
 
     private readonly DeploymentItemUtility _deploymentItemUtility;
@@ -79,7 +79,7 @@ public class TestDeployment : ITestDeployment
     /// <returns> A string of deployment items. </returns>
     public KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings)
     {
-#if WINDOWS_UWP || PORTABLE
+#if WINDOWS_UWP
         return null;
 #else
         return _deploymentItemUtility.GetDeploymentItems(method, _deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
@@ -91,7 +91,7 @@ public class TestDeployment : ITestDeployment
     /// </summary>
     public void Cleanup()
     {
-#if !WINDOWS_UWP && !PORTABLE
+#if !WINDOWS_UWP
         // Delete the deployment directory
         if (RunDirectories != null && _adapterSettings?.DeleteDeploymentDirectoryAfterTestRunIsComplete == true)
         {
@@ -110,7 +110,7 @@ public class TestDeployment : ITestDeployment
     /// <returns> The deployment output directory. </returns>
     public string? GetDeploymentDirectory()
     {
-#if WINDOWS_UWP || PORTABLE
+#if WINDOWS_UWP
         return null;
 #else
         return RunDirectories?.OutDirectory;
@@ -126,7 +126,7 @@ public class TestDeployment : ITestDeployment
     /// <returns> Return true if deployment is done. </returns>
     public bool Deploy(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle)
     {
-#if WINDOWS_UWP || PORTABLE
+#if WINDOWS_UWP
         return false;
 #else
         DebugEx.Assert(tests != null, "tests");
@@ -179,7 +179,7 @@ public class TestDeployment : ITestDeployment
 #endif
     }
 
-#if !WINDOWS_UWP && !PORTABLE
+#if !WINDOWS_UWP
     internal static IDictionary<string, object?> GetDeploymentInformation(string source)
     {
         var properties = new Dictionary<string, object?>();
