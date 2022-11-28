@@ -3,7 +3,6 @@
 
 #if !WINDOWS_UWP
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -26,12 +25,10 @@ public class TestRunDirectories
     /// </summary>
     internal const string DeploymentInDirectorySuffix = "In";
 
-#if NETFRAMEWORK
     /// <summary>
     /// The deployment out directory suffix.
     /// </summary>
     internal const string DeploymentOutDirectorySuffix = "Out";
-#endif
 
     public TestRunDirectories(string rootDirectory)
     {
@@ -49,39 +46,19 @@ public class TestRunDirectories
     /// Gets the In directory.
     /// </summary>
     public string InDirectory
-    {
-        get
-        {
-            return Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
-        }
-    }
+        => Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix);
 
     /// <summary>
     /// Gets the Out directory.
     /// </summary>
-    [SuppressMessage("Performance", "CA1822:Mark members as static", Justification = "Part of the public API")]
     public string OutDirectory
-    {
-        get
-        {
-#if NETFRAMEWORK
-            return Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
-#else
-            return Directory.GetCurrentDirectory();
-#endif
-        }
-    }
+        => Path.Combine(RootDeploymentDirectory, DeploymentOutDirectorySuffix);
 
     /// <summary>
     /// Gets In\MachineName directory.
     /// </summary>
     public string InMachineNameDirectory
-    {
-        get
-        {
-            return Path.Combine(Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
-        }
-    }
+        => Path.Combine(Path.Combine(RootDeploymentDirectory, DeploymentInDirectorySuffix), Environment.MachineName);
 }
 
 #endif

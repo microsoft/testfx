@@ -193,38 +193,14 @@ public class TestDeployment : ITestDeployment
             applicationBaseDirectory = Path.GetDirectoryName(source)!;
         }
 
-        properties[TestContext.TestRunDirectoryLabel] =
-            RunDirectories != null
-                ? RunDirectories.RootDeploymentDirectory
-                : applicationBaseDirectory;
-        properties[TestContext.DeploymentDirectoryLabel] =
-            RunDirectories != null
-                ? RunDirectories.OutDirectory
-                : applicationBaseDirectory;
-        properties[TestContext.ResultsDirectoryLabel] =
-            RunDirectories != null
-                ? RunDirectories.InDirectory
-                : applicationBaseDirectory;
-        properties[TestContext.TestRunResultsDirectoryLabel] =
-            RunDirectories != null
-                ? RunDirectories.InMachineNameDirectory
-                : applicationBaseDirectory;
-        properties[TestContext.TestResultsDirectoryLabel] =
-            RunDirectories != null
-                ? RunDirectories.InDirectory
-                : applicationBaseDirectory;
-        properties[TestContext.TestDirLabel] =
-            RunDirectories != null
-                ? RunDirectories.RootDeploymentDirectory
-                : applicationBaseDirectory;
-        properties[TestContext.TestDeploymentDirLabel] =
-            RunDirectories != null
-                ? RunDirectories.OutDirectory
-                : applicationBaseDirectory;
-        properties[TestContext.TestLogsDirLabel] =
-            RunDirectories != null
-                ? RunDirectories.InMachineNameDirectory
-                : applicationBaseDirectory;
+        properties[TestContext.TestRunDirectoryLabel] = RunDirectories?.RootDeploymentDirectory ?? applicationBaseDirectory;
+        properties[TestContext.DeploymentDirectoryLabel] = RunDirectories?.OutDirectory ?? applicationBaseDirectory;
+        properties[TestContext.ResultsDirectoryLabel] = RunDirectories?.InDirectory ?? applicationBaseDirectory;
+        properties[TestContext.TestRunResultsDirectoryLabel] = RunDirectories?.InMachineNameDirectory ?? applicationBaseDirectory;
+        properties[TestContext.TestResultsDirectoryLabel] = RunDirectories?.InDirectory ?? applicationBaseDirectory;
+        properties[TestContext.TestDirLabel] = RunDirectories?.RootDeploymentDirectory ?? applicationBaseDirectory;
+        properties[TestContext.TestDeploymentDirLabel] = RunDirectories?.OutDirectory ?? applicationBaseDirectory;
+        properties[TestContext.TestLogsDirLabel] = RunDirectories?.InMachineNameDirectory ?? applicationBaseDirectory;
 
         return properties;
     }
