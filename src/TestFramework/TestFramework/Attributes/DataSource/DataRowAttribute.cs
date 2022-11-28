@@ -52,7 +52,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     }
 
     /// <inheritdoc />
-    public string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
+    public virtual string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
     {
         if (!string.IsNullOrWhiteSpace(DisplayName))
         {
