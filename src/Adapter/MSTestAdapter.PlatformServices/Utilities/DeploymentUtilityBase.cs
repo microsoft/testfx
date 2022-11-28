@@ -66,14 +66,11 @@ internal abstract class DeploymentUtilityBase
         var rootDeploymentDirectory = GetRootDeploymentDirectory(resultsDirectory);
 
         var result = new TestRunDirectories(rootDeploymentDirectory);
-        var inDirectory = result.InDirectory;
-        var outDirectory = result.OutDirectory;
-        var inMachineDirectory = result.InMachineNameDirectory;
 
         FileUtility.CreateDirectoryIfNotExists(rootDeploymentDirectory);
-        FileUtility.CreateDirectoryIfNotExists(inDirectory);
-        FileUtility.CreateDirectoryIfNotExists(outDirectory);
-        FileUtility.CreateDirectoryIfNotExists(inMachineDirectory);
+        FileUtility.CreateDirectoryIfNotExists(result.InDirectory);
+        FileUtility.CreateDirectoryIfNotExists(result.OutDirectory);
+        FileUtility.CreateDirectoryIfNotExists(result.InMachineNameDirectory);
 
         return result;
     }
@@ -93,14 +90,9 @@ internal abstract class DeploymentUtilityBase
     /// <returns>The test results directory.</returns>
     public static string GetTestResultsDirectory(IRunContext? runContext)
     {
-        var resultsDirectory = !StringEx.IsNullOrEmpty(runContext?.TestRunDirectory) ? runContext.TestRunDirectory : null;
-
-        if (StringEx.IsNullOrEmpty(resultsDirectory))
-        {
-            resultsDirectory = Path.GetFullPath(Path.Combine(Path.GetTempPath(), TestRunDirectories.DefaultDeploymentRootDirectory));
-        }
-
-        return resultsDirectory;
+        return !StringEx.IsNullOrEmpty(runContext?.TestRunDirectory)
+            ? runContext.TestRunDirectory
+            : Path.GetFullPath(Path.Combine(Path.GetTempPath(), TestRunDirectories.DefaultDeploymentRootDirectory));
     }
 
     /// <summary>

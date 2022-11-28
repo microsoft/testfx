@@ -18,6 +18,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 using MSTestAdapter.PlatformServices.Tests.Utilities;
+using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 
 using TestFramework.ForTestingMSTest;
 
@@ -296,38 +297,14 @@ public class TestDeploymentTests : TestContainer
         var applicationBaseDirectory = Path.GetDirectoryName(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
         var expectedProperties = new Dictionary<string, object>
         {
-            {
-                TestContext.TestRunDirectoryLabel,
-                applicationBaseDirectory
-            },
-            {
-                TestContext.DeploymentDirectoryLabel,
-                applicationBaseDirectory
-            },
-            {
-                TestContext.ResultsDirectoryLabel,
-                applicationBaseDirectory
-            },
-            {
-                TestContext.TestRunResultsDirectoryLabel,
-                applicationBaseDirectory
-            },
-            {
-                TestContext.TestResultsDirectoryLabel,
-                applicationBaseDirectory
-            },
-            {
-                TestContext.TestDirLabel,
-                applicationBaseDirectory
-            },
-            {
-                TestContext.TestDeploymentDirLabel,
-                applicationBaseDirectory
-            },
-            {
-                TestContext.TestLogsDirLabel,
-                applicationBaseDirectory
-            },
+            [TestContext.TestRunDirectoryLabel] = applicationBaseDirectory,
+            [TestContext.DeploymentDirectoryLabel] = applicationBaseDirectory,
+            [TestContext.ResultsDirectoryLabel] = applicationBaseDirectory,
+            [TestContext.TestRunResultsDirectoryLabel] = applicationBaseDirectory,
+            [TestContext.TestResultsDirectoryLabel] = applicationBaseDirectory,
+            [TestContext.TestDirLabel] = applicationBaseDirectory,
+            [TestContext.TestDeploymentDirLabel] = applicationBaseDirectory,
+            [TestContext.TestLogsDirLabel] = applicationBaseDirectory,
         };
         Verify(properties is not null);
         Verify(expectedProperties.SequenceEqual(properties));

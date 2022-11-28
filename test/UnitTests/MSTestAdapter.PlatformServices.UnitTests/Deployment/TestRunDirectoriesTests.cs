@@ -13,10 +13,18 @@ public class TestRunDirectoriesTests : TestContainer
 {
     private readonly TestRunDirectories _testRunDirectories = new(@"C:\temp");
 
+    public void InDirectoryShouldReturnCorrectDirectory()
+    {
+        Verify(_testRunDirectories.InDirectory == @"C:\temp\In");
+    }
+
+    public void OutDirectoryShouldReturnCorrectDirectory()
+    {
+        Verify(_testRunDirectories.OutDirectory == @"C:\temp\Out");
+    }
+
     public void InMachineNameDirectoryShouldReturnMachineSpecificDeploymentDirectory()
     {
-        Verify(
-            Path.Combine(@"C:\temp\In", Environment.MachineName)
-            == _testRunDirectories.InMachineNameDirectory);
+        Verify(Path.Combine(@"C:\temp\In", Environment.MachineName) == _testRunDirectories.InMachineNameDirectory);
     }
 }
