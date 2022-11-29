@@ -230,6 +230,8 @@ internal class UnitTestElement
 
     private void SetTestCaseId(TestCase testCase, string testFullName)
     {
+        testCase.SetPropertyValue(Constants.TestIdGenerationStrategyProperty, (int)TestMethod.TestIdGenerationStrategy);
+
         switch (TestMethod.TestIdGenerationStrategy)
         {
 #pragma warning disable CS0618 // Type or member is obsolete
