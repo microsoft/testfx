@@ -123,6 +123,20 @@ public class DataRowAttributeTests : TestContainer
         Verify(displayName == "MyMethod (a)");
     }
 
+    public void GetDisplayName_AfterOverriding_GetsTheNewDisplayname()
+    {
+        // Arrange
+        var dataRow = new DummyDataRowAttribute(new[] { "a" });
+        var methodInfoMock = new Mock<MethodInfo>();
+        methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
+
+        // Act
+        var displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+
+        // Assert
+        Verify(displayName == "MyMethod");
+    }
+
     public void GetDisplayNameForArrayOfMultipleItems()
     {
         // Arrange
@@ -163,5 +177,23 @@ public class DataRowAttributeTests : TestContainer
 
         // Assert
         Verify(displayName == "MyMethod (System.String[],System.String[])");
+    }
+
+    private class DummyDataRowAttribute : DataRowAttribute
+    {
+        public DummyDataRowAttribute(object data)
+            : base(data)
+        {
+        }
+
+        public override string GetDisplayName(MethodInfo methodInfo, object[] data)
+        {
+            if (!string.IsNullOrWhiteSpace(DisplayName))
+            {
+                return DisplayName;
+            }
+
+            return methodInfo.Name;
+        }
     }
 }
