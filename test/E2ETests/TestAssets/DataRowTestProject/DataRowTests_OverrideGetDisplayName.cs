@@ -9,7 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace DataRowAttributeTestProject;
 
 [TestClass]
-public class DataRowTests_OverrideGetDisplayName : DataRowAttribute
+public class DataRowTests_OverrideGetDisplayName
 {
     [TestCategory("OverridedGetDiplayName")]
     [DummyDataRowAttribute]
