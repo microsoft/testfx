@@ -26,6 +26,7 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
+            null, // For legacy, there is an extra test result, being the parent and it has no display name
             "DataRowArraysTests (0,System.Int32[])",
             "DataRowArraysTests (0,System.Int32[])",
             "DataRowArraysTests (0,System.Int32[])");
@@ -47,6 +48,7 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
+            null, // For legacy, there is an extra test result, being the parent and it has no display name
             "DataRowStringTests ()",
             "DataRowStringTests ()",
             "DataRowStringTests ( )",
@@ -69,6 +71,7 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
+            null, // For legacy, there is an extra test result, being the parent and it has no display name
             "DynamicDataArraysTests (0,System.Int32[])",
             "DynamicDataArraysTests (0,System.Int32[])",
             "DynamicDataArraysTests (0,System.Int32[])");
@@ -90,6 +93,7 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
+            null, // For legacy, there is an extra test result, being the parent and it has no display name
             "DynamicDataTuplesTests ((1, text, True))",
             "DynamicDataTuplesTests ((1, text, False))");
 
@@ -110,6 +114,7 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
+            null, // For legacy, there is an extra test result, being the parent and it has no display name
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])",
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])",
             "DynamicDataGenericCollectionsTests (System.Collections.Generic.List`1[System.Int32],System.Collections.Generic.List`1[System.String],System.Collections.Generic.List`1[System.Boolean])",
@@ -132,6 +137,7 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
+            null, // For legacy, there is an extra test result, being the parent and it has no display name
             "Custom name",
             "Custom name",
             "Custom name");
@@ -153,6 +159,7 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
+            null, // For legacy, there is an extra test result, being the parent and it has no display name
             "Custom name",
             "Custom name");
 
@@ -173,6 +180,7 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
+            null, // For legacy, there is an extra test result, being the parent and it has no display name
             "Custom name",
             "Custom name",
             "Custom name",
