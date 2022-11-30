@@ -112,8 +112,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 continue;
             }
 
-            var testsInType = DiscoverTestsInType(assemblyFileName, RunSettingsXml, assembly, type, warningMessages,
-                discoverInternals, testDataSourceDiscovery, testIdGenerationStrategy);
+            var testsInType = DiscoverTestsInType(assemblyFileName, RunSettingsXml, type, warningMessages, discoverInternals,
+                testDataSourceDiscovery, testIdGenerationStrategy);
             tests.AddRange(testsInType);
         }
 
@@ -210,8 +210,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
     }
 
-    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string? runSettingsXml, Assembly assembly,
-        Type type, List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
+    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string? runSettingsXml, Type type,
+        List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
         TestIdGenerationStrategy testIdGenerationStrategy)
     {
         var tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
