@@ -49,7 +49,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(p
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DisplayName.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DisplayName.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.GetData(System.Reflection.MethodInfo! methodInfo) -> System.Collections.Generic.IEnumerable<object?[]!>!
-Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute.ConnectionString.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute.DataAccessMethod.get -> Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod

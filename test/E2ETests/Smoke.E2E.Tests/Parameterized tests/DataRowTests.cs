@@ -25,6 +25,16 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(5);
     }
 
+    public void GetDisplayName_AfterOverriding_GetsTheNewDisplayname()
+    {
+        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~OverridedGetDiplayName");
+
+        ValidatePassedTestsContain(
+            "Overrided DisplayName");
+
+        ValidatePassedTestsCount(1);
+    }
+
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
         InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");

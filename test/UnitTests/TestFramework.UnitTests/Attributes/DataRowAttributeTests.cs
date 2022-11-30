@@ -123,6 +123,19 @@ public class DataRowAttributeTests : TestContainer
         Verify(displayName == "MyMethod (a)");
     }
 
+    public void GetDisplayName_AfterOverriding_GetsTheNewDisplayname()
+    {
+        // Arrange
+        var dataRow = new DummyDataRowAttribute();
+        var methodInfoMock = new Mock<MethodInfo>();
+
+        // Act
+        var displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+
+        // Assert
+        Verify(displayName == "Overrided DisplayName");
+    }
+
     public void GetDisplayNameForArrayOfMultipleItems()
     {
         // Arrange
@@ -163,5 +176,18 @@ public class DataRowAttributeTests : TestContainer
 
         // Assert
         Verify(displayName == "MyMethod (System.String[],System.String[])");
+    }
+
+    private class DummyDataRowAttribute : DataRowAttribute
+    {
+        public DummyDataRowAttribute()
+            : base()
+        {
+        }
+
+        public override string GetDisplayName(MethodInfo methodInfo, object[] data)
+        {
+            return "Overrided DisplayName";
+        }
     }
 }
