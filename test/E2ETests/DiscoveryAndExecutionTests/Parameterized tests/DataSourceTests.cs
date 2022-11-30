@@ -18,7 +18,7 @@ public class DataSourceTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "CsvTestMethod");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(

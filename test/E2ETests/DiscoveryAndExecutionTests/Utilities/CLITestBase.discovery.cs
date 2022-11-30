@@ -35,9 +35,8 @@ public partial class CLITestBase : TestContainer
         return sink.DiscoveredTests;
     }
 
-    internal ReadOnlyCollection<TestResult> RunTests(string source, IEnumerable<TestCase> testCases)
+    internal ReadOnlyCollection<TestResult> RunTests(IEnumerable<TestCase> testCases)
     {
-        var settings = GetSettings(true);
         var testExecutionManager = new TestExecutionManager();
         var frameworkHandle = new InternalFrameworkHandle();
 
@@ -46,38 +45,6 @@ public partial class CLITestBase : TestContainer
     }
 
     #region Helper classes
-    private MSTestSettings GetSettings(bool captureDebugTraceValue)
-    {
-        string runSettingxml =
-             @"<RunSettings>
-                    <RunConfiguration>  
-                        <DisableAppDomain>True</DisableAppDomain>   
-                    </RunConfiguration>";
-
-        /*
-        var path = Path.GetDirectoryName(this.GetAssetFullPath(TestAssembly));
-
-        runSettingxml += @"
-                <MSTestV2>
-                    <AssemblyResolution>
-                        <Directory path = """ + path + @""" />
-                    </AssemblyResolution>
-                </MSTestV2>";
-        */
-
-        if (captureDebugTraceValue)
-        {
-            runSettingxml
-             += @"<MSTest>
-                        <CaptureTraceOutput>true</CaptureTraceOutput>
-                     </MSTest>";
-        }
-
-        runSettingxml += @"</RunSettings>";
-
-        return MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
-    }
-
     private class InternalLogger : IMessageLogger
     {
         public void SendMessage(TestMessageLevel testMessageLevel, string message)

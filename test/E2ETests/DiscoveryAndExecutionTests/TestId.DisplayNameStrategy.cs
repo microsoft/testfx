@@ -20,7 +20,7 @@ public partial class TestId : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowArraysTests");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -41,7 +41,7 @@ public partial class TestId : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowStringTests");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -64,7 +64,7 @@ public partial class TestId : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataArraysTests");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -85,7 +85,7 @@ public partial class TestId : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataTuplesTests");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -105,7 +105,7 @@ public partial class TestId : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataGenericCollectionsTests");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -127,7 +127,7 @@ public partial class TestId : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceArraysTests");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -148,7 +148,7 @@ public partial class TestId : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceTuplesTests");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -168,7 +168,7 @@ public partial class TestId : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceGenericCollectionsTests");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);

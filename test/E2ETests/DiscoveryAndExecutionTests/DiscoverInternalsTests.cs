@@ -18,7 +18,7 @@ public class DiscoverInternalsTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath);
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.AtLeastTestsDiscovered(
@@ -50,7 +50,7 @@ public class DiscoverInternalsTests : CLITestBase
 
         var targetTestCases = testCases.Where(t => t.DisplayName == "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)");
 
-        var testResults = RunTests(assemblyPath, targetTestCases);
+        var testResults = RunTests(targetTestCases);
 
         // Assert
         VerifyE2E.TestsPassed(

@@ -17,7 +17,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSimple");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -36,7 +36,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -52,7 +52,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSomeOptional");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -69,7 +69,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowParamsArgument");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -87,7 +87,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular&TestCategory~DataRowOptionalInvalidArguments");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -104,7 +104,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular.DataRowTestDouble");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -120,7 +120,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowTestMixed");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -135,7 +135,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowEnums");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -153,7 +153,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowNonSerializable");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsDiscovered(
@@ -174,7 +174,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Enums");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -249,7 +249,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_NonSerializablePaths");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -267,7 +267,7 @@ public class DataRowTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(

@@ -15,7 +15,7 @@ public class DynamicDataTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath);
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(
@@ -58,7 +58,7 @@ public class DynamicDataTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DynamicDataWithCategory");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(
