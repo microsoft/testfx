@@ -3,16 +3,14 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-
-using OM = Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 public class OutputTests : CLITestBase
@@ -35,22 +33,20 @@ public class OutputTests : CLITestBase
         // This allows us to capture output from tasks even when they are running in parallel.
 
         // Arrange
-        var assemblyPath = Path.IsPathRooted(testAssembly) ? testAssembly : GetAssetFullPath(testAssembly);
+        var assemblyPath = GetAssetFullPath(testAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
         var testResults = RunTests(assemblyPath, testCases);
 
         // Assert
+        testCases.Should().HaveCount(3);
         testResults.Should().HaveCount(3);
 
-        // TODO: Re-enable this once we figure out how to make that pass in our CI pipeline.
-        /*
         // Ensure that some tests are running in parallel, because otherwise the output just works correctly.
         var firstEnd = testResults.Min(t => t.EndTime);
         var someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
-        Assert.IsTrue(someStartedBeforeFirstEnded, "Tests must run in parallel, but there were no other tests that started, before the first one ended.");
-        */
+        someStartedBeforeFirstEnded.Should().BeTrue("Tests must run in parallel, but there were no other tests that started, before the first one ended.");
 
         ValidateOutputsAreNotMixed(testResults, "TestMethod1", new[] { "TestMethod2", "TestMethod3" });
         ValidateOutputsAreNotMixed(testResults, "TestMethod2", new[] { "TestMethod1", "TestMethod3" });
@@ -59,8 +55,9 @@ public class OutputTests : CLITestBase
         ValidateInitializationsAndCleanups(testResults);
     }
 
-    private static readonly Func<TestResultMessage, bool> IsDebugMessage = m => m.Category == "StdOutMsgs" && m.Text.StartsWith("\r\n\r\nDebug Trace:\r\n");
-    private static readonly Func<TestResultMessage, bool> IsStandardOutputMessage = m => m.Category == "StdOutMsgs" && !m.Text.StartsWith("\r\n\r\nDebug Trace:\r\n");
+    private static readonly string DebugTraceString = string.Format(CultureInfo.InvariantCulture, "{0}{0}Debug Trace:{0}", Environment.NewLine);
+    private static readonly Func<TestResultMessage, bool> IsDebugMessage = m => m.Category == "StdOutMsgs" && m.Text.StartsWith(DebugTraceString);
+    private static readonly Func<TestResultMessage, bool> IsStandardOutputMessage = m => m.Category == "StdOutMsgs" && !m.Text.StartsWith(DebugTraceString);
     private static readonly Func<TestResultMessage, bool> IsStandardErrorMessage = m => m.Category == "StdErrMsgs";
 
     private static void ValidateOutputsAreNotMixed(ReadOnlyCollection<TestResult> testResults, string methodName, string[] shouldNotContain)
