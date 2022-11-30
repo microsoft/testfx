@@ -194,6 +194,7 @@ public class UnitTestElementTests : TestContainer
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.Legacy) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
             Verify(expectedTestCase.Id == testCase.Id);
+            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty).Equals((int)TestIdGenerationStrategy.Legacy));
         }
     }
 
@@ -212,6 +213,8 @@ public class UnitTestElementTests : TestContainer
             {
                 Verify(expectedTestCase.Id != testCase.Id);
             }
+
+            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty).Equals((int)TestIdGenerationStrategy.DisplayName));
         }
     }
 
@@ -222,6 +225,7 @@ public class UnitTestElementTests : TestContainer
             var testCase = new UnitTestElement(new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, TestIdGenerationStrategy.FullyQualified) { DataType = dataType }).ToTestCase();
             var expectedTestCase = new TestCase(testCase.FullyQualifiedName, testCase.ExecutorUri, testCase.Source);
             Verify(expectedTestCase.Id != testCase.Id);
+            Verify(testCase.GetPropertyValue(Constants.TestIdGenerationStrategyProperty).Equals((int)TestIdGenerationStrategy.FullyQualified));
         }
     }
 
