@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,6 +19,7 @@ public sealed partial class Assert
     /// <exception cref="AssertInconclusiveException">
     /// Always thrown.
     /// </exception>
+    [DoesNotReturn]
     public static void Inconclusive()
     {
         Inconclusive(string.Empty, null);
@@ -33,6 +35,7 @@ public sealed partial class Assert
     /// <exception cref="AssertInconclusiveException">
     /// Always thrown.
     /// </exception>
+    [DoesNotReturn]
     public static void Inconclusive(string? message)
     {
         Inconclusive(message, null);
@@ -51,6 +54,7 @@ public sealed partial class Assert
     /// <exception cref="AssertInconclusiveException">
     /// Always thrown.
     /// </exception>
+    [DoesNotReturn]
     public static void Inconclusive(string? message, params object?[]? parameters)
     {
         string userMessage = BuildUserMessage(message, parameters);
