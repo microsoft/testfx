@@ -13,7 +13,7 @@ public class UnitTest2
 
     public TestContext TestContext { get; set; }
 
-    [ClassInitialize()]
+    [ClassInitialize]
     public static void ClassInitialize(TestContext _)
     {
         WriteLines("UnitTest2 - ClassInitialize");
@@ -32,16 +32,16 @@ public class UnitTest2
     }
 
 
-    [ClassCleanup()]
+    [ClassCleanup]
     public static void ClassCleanup()
     {
-        WriteLines($"UnitTest2 - ClassCleanup");
+        WriteLines("UnitTest2 - ClassCleanup");
     }
 
     [TestMethod]
     public async Task TestMethod1()
     {
-        WriteLines("UnitTest2 - TestMethod1");
+        WriteLines("UnitTest2 - TestMethod1 - Call 1");
         // This makes the outputs more likely to run into each other
         // when running in parallel.
         // It also makes the test longer, because we check in the test
@@ -49,29 +49,29 @@ public class UnitTest2
         // they actually run in parallel), and this gives us more leeway
         // on slower machines.
         await Task.Delay(Rng.Next(20, 50));
-        WriteLines("UnitTest2 - TestMethod1");
+        WriteLines("UnitTest2 - TestMethod1 - Call 2");
         await Task.Delay(Rng.Next(20, 50));
-        WriteLines("UnitTest2 - TestMethod1");
+        WriteLines("UnitTest2 - TestMethod1 - Call 3");
     }
 
     [TestMethod]
     public async Task TestMethod2()
     {
-        WriteLines("UnitTest2 - TestMethod2");
+        WriteLines("UnitTest2 - TestMethod2 - Call 1");
         await Task.Delay(Rng.Next(20, 50));
-        WriteLines("UnitTest2 - TestMethod2");
+        WriteLines("UnitTest2 - TestMethod2 - Call 2");
         await Task.Delay(Rng.Next(20, 50));
-        WriteLines("UnitTest2 - TestMethod2");
+        WriteLines("UnitTest2 - TestMethod2 - Call 3");
     }
 
     [TestMethod]
     public async Task TestMethod3()
     {
-        WriteLines("UnitTest2 - TestMethod3");
+        WriteLines("UnitTest2 - TestMethod3 - Call 1");
         await Task.Delay(Rng.Next(20, 50));
-        WriteLines("UnitTest2 - TestMethod3");
+        WriteLines("UnitTest2 - TestMethod3 - Call 2");
         await Task.Delay(Rng.Next(20, 50));
-        WriteLines("UnitTest2 - TestMethod3");
+        WriteLines("UnitTest2 - TestMethod3 - Call 3");
     }
 
     private static void WriteLines(string message)

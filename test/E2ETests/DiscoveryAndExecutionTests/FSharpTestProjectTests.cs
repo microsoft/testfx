@@ -17,7 +17,7 @@ public class FSharpTestProjectTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath);
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(testResults, "Test method passing with a . in it");

@@ -35,13 +35,13 @@ public class UnitTest1
     [ClassCleanup()]
     public static void ClassCleanup()
     {
-        WriteLines($"UnitTest1 - ClassCleanup");
+        WriteLines("UnitTest1 - ClassCleanup");
     }
 
     [TestMethod]
     public void TestMethod1()
     {
-        WriteLines("UnitTest1 - TestMethod1");
+        WriteLines("UnitTest1 - TestMethod1 - Call 1");
         // This makes the outputs more likely to run into each other
         // when running in parallel.
         // It also makes the test longer, because we check in the test
@@ -49,29 +49,29 @@ public class UnitTest1
         // they actually run in parallel), and this gives us more leeway
         // on slower machines.
         Thread.Sleep(Rng.Next(20, 50));
-        WriteLines("UnitTest1 - TestMethod1");
+        WriteLines("UnitTest1 - TestMethod1 - Call 2");
         Thread.Sleep(Rng.Next(20, 50));
-        WriteLines("UnitTest1 - TestMethod1");
+        WriteLines("UnitTest1 - TestMethod1 - Call 3");
     }
 
     [TestMethod]
     public void TestMethod2()
     {
-        WriteLines("UnitTest1 - TestMethod2");
+        WriteLines("UnitTest1 - TestMethod2 - Call 1");
         Thread.Sleep(Rng.Next(20, 50));
-        WriteLines("UnitTest1 - TestMethod2");
+        WriteLines("UnitTest1 - TestMethod2 - Call 2");
         Thread.Sleep(Rng.Next(20, 50));
-        WriteLines("UnitTest1 - TestMethod2");
+        WriteLines("UnitTest1 - TestMethod2 - Call 3");
     }
 
     [TestMethod]
     public void TestMethod3()
     {
-        WriteLines("UnitTest1 - TestMethod3");
+        WriteLines("UnitTest1 - TestMethod3 - Call 1");
         Thread.Sleep(Rng.Next(20, 50));
-        WriteLines("UnitTest1 - TestMethod3");
+        WriteLines("UnitTest1 - TestMethod3 - Call 2");
         Thread.Sleep(Rng.Next(20, 50));
-        WriteLines("UnitTest1 - TestMethod3");
+        WriteLines("UnitTest1 - TestMethod3 - Call 3");
     }
 
     private static void WriteLines(string message)

@@ -23,7 +23,7 @@ public class DataExtensibilityTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "CustomTestDataSourceTestMethod1");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(testResults, "CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
@@ -36,7 +36,7 @@ public class DataExtensibilityTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FxExtensibilityTestProject.AssertExTest");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(testResults, "BasicAssertExtensionTest", "ChainedAssertExtensionTest");
@@ -50,7 +50,7 @@ public class DataExtensibilityTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "(Name~CustomTestMethod1)|(Name~CustomTestClass1)");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(
@@ -77,7 +77,7 @@ public class DataExtensibilityTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "Name~CustomTestMethod2");
-        var testResults = RunTests(assemblyPath, testCases);
+        var testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
