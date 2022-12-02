@@ -1,6 +1,6 @@
 # Microsoft Test Framework
 
-Welcome to the "MSTest V2" repository, the evolution of the Microsoft Test Framework and Adapter. "MSTest V2" is currently in use in a variety of scenarios including:
+Welcome to the MSTest repository (starting from v2), home of the Microsoft Test Framework and Adapter. MSTest is currently in use in a variety of scenarios including:
 
 - in the relevant in-box unit test project templates (Visual Studio 2017 Preview 4 onwards)
 - in the Create Unit Tests wizard (Visual Studio 2017 Preview 4 onwards)
