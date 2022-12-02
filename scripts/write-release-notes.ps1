@@ -29,20 +29,18 @@ $repoUrl = $(if ((git -C $Path remote -v) -match "upstream") {
 # For stable release we choose only tags without any dash, for pre-release we choose all tags.
 $tags = git -C $Path tag -l --sort=refname | Where-Object { $_ -match "v\d+\.\d+\.\d+.*" -and (-not $Stable -or $_ -notlike '*-*') }
 
-$HasPackageVersion = ![string]::IsNullOrWhiteSpace($PackageVersion)
-
-if ($HasPackageVersion) {
+if ([string]::IsNullOrWhiteSpace($PackageVersion)) {
+    # normally we show changes between the latest two tags
+    $start, $end = $tags | Select-Object -Last 2
+    Write-Host "$start -- $end"
+    $tag = $end
+}
+else {
     # in CI we don't have the tag yet, so we show changes between the most recent tag, and this commit
     # we figure out the tag from the package version that is set by vsts-prebuild
     $start = $tags | Select-Object -Last 1
     $end = git -C $Path rev-parse HEAD
     $tag = "v$PackageVersion"
-}
-else {
-    # normally we show changes between the latest two tags
-    $start, $end = $tags | Select-Object -Last 2
-    Write-Host "$start -- $end"
-    $tag = $end
 }
 
 # # override the tags to use if you need
