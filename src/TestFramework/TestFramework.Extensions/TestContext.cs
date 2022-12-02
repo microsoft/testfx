@@ -165,12 +165,14 @@ public abstract class TestContext
     /// Begins a timer with the specified name.
     /// </summary>
     /// <param name="timerName"> Name of the timer.</param>
+    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
     public abstract void BeginTimer(string timerName);
 
     /// <summary>
     /// Ends a timer with the specified name.
     /// </summary>
     /// <param name="timerName"> Name of the timer.</param>
+    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
     public abstract void EndTimer(string timerName);
 #endif
 

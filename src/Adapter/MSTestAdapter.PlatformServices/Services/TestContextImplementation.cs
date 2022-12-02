@@ -183,12 +183,14 @@ public class TestContextImplementation : TestContext, ITestContext
 
 #if NETFRAMEWORK
     /// <inheritdoc/>
+    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
     public override void BeginTimer(string timerName)
     {
         throw new NotSupportedException();
     }
 
     /// <inheritdoc/>
+    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
     public override void EndTimer(string timerName)
     {
         throw new NotSupportedException();
