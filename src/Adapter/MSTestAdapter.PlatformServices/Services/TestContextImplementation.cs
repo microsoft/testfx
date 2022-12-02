@@ -169,7 +169,7 @@ public class TestContextImplementation : TestContext, ITestContext
     public UTF.TestContext Context => this;
 
     /// <inheritdoc/>
-    public override void AddResultFile(string? fileName)
+    public override void AddResultFile(string fileName)
     {
 #if !WINDOWS_UWP && !WIN_UI
         if (StringEx.IsNullOrEmpty(fileName))
