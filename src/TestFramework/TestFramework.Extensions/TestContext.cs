@@ -158,7 +158,7 @@ public abstract class TestContext
     /// <param name="fileName">
     /// The file Name.
     /// </param>
-    public abstract void AddResultFile(string? fileName);
+    public abstract void AddResultFile(string fileName);
 
 #if NETFRAMEWORK
     /// <summary>
@@ -180,7 +180,7 @@ public abstract class TestContext
     /// Used to write trace messages while the test is running.
     /// </summary>
     /// <param name="message">formatted message string.</param>
-    public abstract void Write(string message);
+    public abstract void Write(string? message);
 
     /// <summary>
     /// Used to write trace messages while the test is running.
@@ -193,7 +193,7 @@ public abstract class TestContext
     /// Used to write trace messages while the test is running.
     /// </summary>
     /// <param name="message">formatted message string.</param>
-    public abstract void WriteLine(string message);
+    public abstract void WriteLine(string? message);
 
     /// <summary>
     /// Used to write trace messages while the test is running.
