@@ -32,11 +32,6 @@
         <target state="translated">Ожидается: &lt;{1}&gt;. Отличается на фактическое значение: &lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreEqualDifferentTypesFailMsg">
-        <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
-        <target state="translated">Ожидается: &lt;{1} ({2})&gt;. Фактически: &lt;{3} ({4})&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="translated">Ожидается любое значение, кроме: &lt;{1}&gt;. Фактически: &lt;{2}&gt;. {0}</target>

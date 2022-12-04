@@ -240,9 +240,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(float expect
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(long expected, long actual, long delta) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(long expected, long actual, long delta, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(long expected, long actual, long delta, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(object? expected, object? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(object? expected, object? actual, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(object? expected, object? actual, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, string? message, params object?[]? parameters) -> void
@@ -264,9 +261,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(float not
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(long notExpected, long actual, long delta) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(long notExpected, long actual, long delta, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(long notExpected, long actual, long delta, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(object? notExpected, object? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(object? notExpected, object? actual, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(object? notExpected, object? actual, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string? message, params object?[]? parameters) -> void

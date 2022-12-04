@@ -32,11 +32,6 @@
         <target state="translated">Beklenen:&lt;{1}&gt;. Durum, gerçek değer için farklı:&lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="AreEqualDifferentTypesFailMsg">
-        <source>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</source>
-        <target state="translated">Beklenen:&lt;{1} ({2})&gt;. Gerçek:&lt;{3} ({4})&gt;. {0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="translated">Şunun dışında bir değer bekleniyor:&lt;{1}&gt;. Gerçek:&lt;{2}&gt;. {0}</target>

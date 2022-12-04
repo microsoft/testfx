@@ -107,15 +107,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}.
-        /// </summary>
-        internal static string AreEqualDifferentTypesFailMsg {
-            get {
-                return ResourceManager.GetString("AreEqualDifferentTypesFailMsg", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}.
         /// </summary>
         internal static string AreEqualFailMsg {
@@ -152,7 +143,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} must derive from {1}!.
+        ///   Looks up a localized string similar to Type &apos;{0}&apos; is not assignable to &apos;{1}&apos;..
         /// </summary>
         internal static string ArgumentXMustDeriveFromClassY {
             get {
