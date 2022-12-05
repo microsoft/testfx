@@ -276,12 +276,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? n
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame(object? notExpected, object? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame(object? notExpected, object? actual, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame(object? notExpected, object? actual, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame(object? expected, object? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame(object? expected, object? actual, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame(object? expected, object? actual, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Equals(object? objA, object? objB) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail() -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail(string? message) -> void

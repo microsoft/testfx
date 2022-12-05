@@ -17,6 +17,9 @@ public sealed partial class Assert
     /// Tests whether the specified objects both refer to the same object and
     /// throws an exception if the two inputs do not refer to the same object.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first object to compare. This is the value the test expects.
     /// </param>
@@ -27,7 +30,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame(object? expected, object? actual)
+    public static void AreSame<T>(T? expected, T? actual)
     {
         AreSame(expected, actual, string.Empty, null);
     }
@@ -36,6 +39,9 @@ public sealed partial class Assert
     /// Tests whether the specified objects both refer to the same object and
     /// throws an exception if the two inputs do not refer to the same object.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first object to compare. This is the value the test expects.
     /// </param>
@@ -51,7 +57,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame(object? expected, object? actual, string? message)
+    public static void AreSame<T>(T? expected, T? actual, string? message)
     {
         AreSame(expected, actual, message, null);
     }
@@ -60,6 +66,9 @@ public sealed partial class Assert
     /// Tests whether the specified objects both refer to the same object and
     /// throws an exception if the two inputs do not refer to the same object.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="expected">
     /// The first object to compare. This is the value the test expects.
     /// </param>
@@ -78,7 +87,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame(object? expected, object? actual, string? message, params object?[]? parameters)
+    public static void AreSame<T>(T? expected, T? actual, string? message, params object?[]? parameters)
     {
         if (ReferenceEquals(expected, actual))
         {
@@ -106,6 +115,9 @@ public sealed partial class Assert
     /// Tests whether the specified objects refer to different objects and
     /// throws an exception if the two inputs refer to the same object.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="notExpected">
     /// The first object to compare. This is the value the test expects not
     /// to match <paramref name="actual"/>.
@@ -117,7 +129,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame(object? notExpected, object? actual)
+    public static void AreNotSame<T>(T? notExpected, T? actual)
     {
         AreNotSame(notExpected, actual, string.Empty, null);
     }
@@ -126,6 +138,9 @@ public sealed partial class Assert
     /// Tests whether the specified objects refer to different objects and
     /// throws an exception if the two inputs refer to the same object.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="notExpected">
     /// The first object to compare. This is the value the test expects not
     /// to match <paramref name="actual"/>.
@@ -142,7 +157,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame(object? notExpected, object? actual, string? message)
+    public static void AreNotSame<T>(T? notExpected, T? actual, string? message)
     {
         AreNotSame(notExpected, actual, message, null);
     }
@@ -151,6 +166,9 @@ public sealed partial class Assert
     /// Tests whether the specified objects refer to different objects and
     /// throws an exception if the two inputs refer to the same object.
     /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
     /// <param name="notExpected">
     /// The first object to compare. This is the value the test expects not
     /// to match <paramref name="actual"/>.
@@ -170,7 +188,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> refers to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotSame(object? notExpected, object? actual, string? message, params object?[]? parameters)
+    public static void AreNotSame<T>(T? notExpected, T? actual, string? message, params object?[]? parameters)
     {
         if (ReferenceEquals(notExpected, actual))
         {
