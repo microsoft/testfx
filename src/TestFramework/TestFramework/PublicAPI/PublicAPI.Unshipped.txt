@@ -1,1 +1,7 @@
 ﻿virtual Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notExpected, T? actual) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notExpected, T? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notExpected, T? actual, string? message, params object?[]? parameters) -> void
