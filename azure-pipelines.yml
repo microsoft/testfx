@@ -90,7 +90,7 @@ stages:
       displayName: 'Restore, Build and Package'
       inputs:
         filename: build.cmd
-        arguments: '-configuration $(BuildConfiguration) -CI'
+        arguments: '-configuration $(_BuildConfig) -CI'
         modifyEnvironment: false
 
     #- ${{ if eq(variables._RunAsInternal, True) }}:
@@ -100,7 +100,7 @@ stages:
       displayName: 'Run All Tests'
       inputs:
         filename: test.cmd
-        arguments: '-configuration $(BuildConfiguration) -all -parallel'
+        arguments: '-configuration $(_BuildConfig) -all -parallel'
         modifyEnvironment: false
 
     #- ${{ if eq(variables._RunAsInternal, True) }}:
