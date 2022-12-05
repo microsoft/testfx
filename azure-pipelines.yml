@@ -20,7 +20,7 @@ variables:
     value: ${{ eq(variables._RunAsInternal, False) }}
 
   # Produce test-signed binaries for PR and Public builds
-  - ${{ if or(eq(variables._RunAsPublic, True), eq(variables._RunAsPR, True)) }}:
+  - ${{ if eq(variables._RunAsPublic, True) }}:
     - name: _SignType
       value: test
     - name: _SignArgs
