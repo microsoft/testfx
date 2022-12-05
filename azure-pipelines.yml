@@ -1,13 +1,16 @@
+# Branches that trigger a build on commit
 trigger:
 - main
 - rel/*
 
+# Branch(es) that trigger(s) build(s) on PR
 pr:
 - main
 - rel/*
 
 jobs:
 - job: Windows
+  timeoutInMinutes: 120
   pool:
     vmImage: 'windows-latest'
   variables:
