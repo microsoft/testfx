@@ -135,6 +135,9 @@
   <data name="AreEqualCaseFailMsg" xml:space="preserve">
     <value>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</value>
   </data>
+  <data name="AreEqualDifferentTypesFailMsg" xml:space="preserve">
+    <value>Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</value>
+  </data>
   <data name="AreNotEqualFailMsg" xml:space="preserve">
     <value>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</value>
   </data>
