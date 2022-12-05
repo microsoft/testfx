@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
@@ -309,5 +312,81 @@ public partial class AssertTests : TestContainer
         static void Action() => Assert.AreEqual(100E-2, 200E-2, 50E-2);
         var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
+    }
+
+    public void AreEqualTwoObjectsShouldFail()
+    {
+        static void Action() => Assert.AreEqual(new object(), new object());
+        var ex = VerifyThrows(Action);
+        Verify(ex is AssertFailedException);
+    }
+
+    public void AreEqualTwoObjectsDifferentTypeShouldFail()
+    {
+        static void Action() => Assert.AreEqual(new object(), 1);
+        var ex = VerifyThrows(Action);
+        Verify(ex is AssertFailedException);
+        Verify(ex.Message.Contains("Assert.AreEqual failed. Expected:<System.Object (System.Object)>. Actual:<1 (System.Int32)>."));
+    }
+
+    public void AreEqualWithTypeOverridingEqualsShouldWork()
+    {
+        var a = new TypeOverridesEquals();
+        var b = new TypeOverridesEquals();
+        Assert.AreEqual(a, b);
+    }
+
+    public void AreEqualWithTypeImplementingIEquatableShouldWork()
+    {
+        var a = new EquatableType();
+        var b = new EquatableType();
+        Assert.AreEqual(a, b);
+    }
+
+    public void AreEqualWithTypeOverridingEqualsUsingCustomerComparerShouldFail()
+    {
+        static void Action()
+        {
+            var a = new TypeOverridesEquals();
+            var b = new TypeOverridesEquals();
+            Assert.AreEqual(a, b, new TypeOverridesEqualsEqualityComparer());
+        }
+
+        var ex = VerifyThrows(Action);
+        Verify(ex is AssertFailedException);
+    }
+
+    private class TypeOverridesEquals
+    {
+        public override bool Equals(object obj)
+        {
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            throw new System.NotImplementedException();
+        }
+    }
+
+    private class EquatableType : IEquatable<EquatableType>
+    {
+        public bool Equals(EquatableType other)
+        {
+            return true;
+        }
+    }
+
+    private class TypeOverridesEqualsEqualityComparer : EqualityComparer<TypeOverridesEquals>
+    {
+        public override bool Equals(TypeOverridesEquals x, TypeOverridesEquals y)
+        {
+            return false;
+        }
+
+        public override int GetHashCode(TypeOverridesEquals obj)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

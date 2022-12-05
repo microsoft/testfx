@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -31,9 +32,31 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual<T>(T? expected, T? actual)
-    {
-        AreEqual(expected, actual, string.Empty, null);
-    }
+        => AreEqual(expected, actual, null, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified values are equal and throws an exception
+    /// if the two values are not equal. Different numeric types are treated
+    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first value to compare. This is the value the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second value to compare. This is the value produced by the code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer)
+        => AreEqual(expected, actual, comparer, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -59,9 +82,37 @@ public sealed partial class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual<T>(T? expected, T? actual, string? message)
-    {
-        AreEqual(expected, actual, message, null);
-    }
+        => AreEqual(expected, actual, null, message, null);
+
+    /// <summary>
+    /// Tests whether the specified values are equal and throws an exception
+    /// if the two values are not equal. Different numeric types are treated
+    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first value to compare. This is the value the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second value to compare. This is the value produced by the code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is not equal to <paramref name="expected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer, string? message)
+        => AreEqual(expected, actual, comparer, message, null);
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
@@ -90,19 +141,64 @@ public sealed partial class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual<T>(T? expected, T? actual, string? message, params object?[]? parameters)
-    {
-        if (!object.Equals(expected, actual))
-        {
-            string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.AreEqualFailMsg,
-                    userMessage,
-                    ReplaceNulls(expected),
-                    ReplaceNulls(actual));
+        => AreEqual(expected, actual, null, message, parameters);
 
-            ThrowAssertFailed("Assert.AreEqual", finalMessage);
+    /// <summary>
+    /// Tests whether the specified values are equal and throws an exception
+    /// if the two values are not equal. Different numeric types are treated
+    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first value to compare. This is the value the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second value to compare. This is the value produced by the code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is not equal to <paramref name="expected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer, string? message, params object?[]? parameters)
+    {
+        var localComparer = comparer ?? EqualityComparer<T>.Default;
+        if (localComparer.Equals(expected!, actual!))
+        {
+            return;
         }
+
+        string userMessage = BuildUserMessage(message, parameters);
+        string finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
+            ? string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualDifferentTypesFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                expected.GetType().FullName,
+                ReplaceNulls(actual),
+                actual.GetType().FullName)
+            : string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+
+        ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
 
     /// <summary>
@@ -124,9 +220,32 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual<T>(T? notExpected, T? actual)
-    {
-        AreNotEqual(notExpected, actual, string.Empty, null);
-    }
+        => AreNotEqual(notExpected, actual, null, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified values are unequal and throws an exception
+    /// if the two values are equal. Different numeric types are treated
+    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first value to compare. This is the value the test expects not
+    /// to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second value to compare. This is the value produced by the code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer)
+        => AreNotEqual(notExpected, actual, comparer, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
@@ -152,9 +271,37 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual<T>(T? notExpected, T? actual, string? message)
-    {
-        AreNotEqual(notExpected, actual, message, null);
-    }
+        => AreNotEqual(notExpected, actual, null, message, null);
+
+    /// <summary>
+    /// Tests whether the specified values are unequal and throws an exception
+    /// if the two values are equal. Different numeric types are treated
+    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first value to compare. This is the value the test expects not
+    /// to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second value to compare. This is the value produced by the code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is equal to <paramref name="notExpected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer, string? message)
+        => AreNotEqual(notExpected, actual, comparer, message, null);
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
@@ -183,18 +330,54 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual<T>(T? notExpected, T? actual, string? message, params object?[]? parameters)
+        => AreNotEqual(notExpected, actual, null, message, parameters);
+
+    /// <summary>
+    /// Tests whether the specified values are unequal and throws an exception
+    /// if the two values are equal. Different numeric types are treated
+    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="notExpected">
+    /// The first value to compare. This is the value the test expects not
+    /// to match <paramref name="actual"/>.
+    /// </param>
+    /// <param name="actual">
+    /// The second value to compare. This is the value produced by the code under test.
+    /// </param>
+    /// <param name="comparer">
+    /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
+    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is equal to <paramref name="notExpected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer, string? message, params object?[]? parameters)
     {
-        if (object.Equals(notExpected, actual))
+        var localComparer = comparer ?? EqualityComparer<T>.Default;
+        if (!localComparer.Equals(notExpected!, actual!))
         {
-            string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage = string.Format(
-                CultureInfo.CurrentCulture,
-                FrameworkMessages.AreNotEqualFailMsg,
-                userMessage,
-                ReplaceNulls(notExpected),
-                ReplaceNulls(actual));
-            ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
+            return;
         }
+
+        string userMessage = BuildUserMessage(message, parameters);
+        string finalMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            FrameworkMessages.AreNotEqualFailMsg,
+            userMessage,
+            ReplaceNulls(notExpected),
+            ReplaceNulls(actual));
+        ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
     }
 
     /// <summary>
