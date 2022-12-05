@@ -2,11 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -98,28 +94,12 @@ public sealed partial class Assert
         if (!object.Equals(expected, actual))
         {
             string userMessage = BuildUserMessage(message, parameters);
-            string finalMessage;
-            if (actual != null && expected != null && !actual.GetType().Equals(expected.GetType()))
-            {
-                // This is for cases like: Assert.AreEqual(42L, 42) -> Expected: <42>, Actual: <42>
-                finalMessage = string.Format(
-                    CultureInfo.CurrentCulture,
-                    FrameworkMessages.AreEqualDifferentTypesFailMsg,
-                    userMessage,
-                    ReplaceNulls(expected),
-                    expected.GetType().FullName,
-                    ReplaceNulls(actual),
-                    actual.GetType().FullName);
-            }
-            else
-            {
-                finalMessage = string.Format(
+            string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.AreEqualFailMsg,
                     userMessage,
                     ReplaceNulls(expected),
                     ReplaceNulls(actual));
-            }
 
             ThrowAssertFailed("Assert.AreEqual", finalMessage);
         }
@@ -215,152 +195,6 @@ public sealed partial class Assert
                 ReplaceNulls(actual));
             ThrowAssertFailed("Assert.AreNotEqual", finalMessage);
         }
-    }
-
-    /// <summary>
-    /// Tests whether the specified objects are equal and throws an exception
-    /// if the two objects are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
-    /// </summary>
-    /// <param name="expected">
-    /// The first object to compare. This is the object the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second object to compare. This is the object produced by the code under test.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to
-    /// <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual(object? expected, object? actual)
-    {
-        AreEqual(expected, actual, string.Empty, null);
-    }
-
-    /// <summary>
-    /// Tests whether the specified objects are equal and throws an exception
-    /// if the two objects are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
-    /// </summary>
-    /// <param name="expected">
-    /// The first object to compare. This is the object the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second object to compare. This is the object produced by the code under test.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
-    /// is not equal to <paramref name="expected"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to
-    /// <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual(object? expected, object? actual, string? message)
-    {
-        AreEqual(expected, actual, message, null);
-    }
-
-    /// <summary>
-    /// Tests whether the specified objects are equal and throws an exception
-    /// if the two objects are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
-    /// </summary>
-    /// <param name="expected">
-    /// The first object to compare. This is the object the tests expects.
-    /// </param>
-    /// <param name="actual">
-    /// The second object to compare. This is the object produced by the code under test.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
-    /// is not equal to <paramref name="expected"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="expected"/> is not equal to
-    /// <paramref name="actual"/>.
-    /// </exception>
-    public static void AreEqual(object? expected, object? actual, string? message, params object?[]? parameters)
-    {
-        AreEqual<object>(expected, actual, message, parameters);
-    }
-
-    /// <summary>
-    /// Tests whether the specified objects are unequal and throws an exception
-    /// if the two objects are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first object to compare. This is the value the test expects not
-    /// to match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second object to compare. This is the object produced by the code under test.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(object? notExpected, object? actual)
-    {
-        AreNotEqual(notExpected, actual, string.Empty, null);
-    }
-
-    /// <summary>
-    /// Tests whether the specified objects are unequal and throws an exception
-    /// if the two objects are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first object to compare. This is the value the test expects not
-    /// to match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second object to compare. This is the object produced by the code under test.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
-    /// is equal to <paramref name="notExpected"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(object? notExpected, object? actual, string? message)
-    {
-        AreNotEqual(notExpected, actual, message, null);
-    }
-
-    /// <summary>
-    /// Tests whether the specified objects are unequal and throws an exception
-    /// if the two objects are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
-    /// </summary>
-    /// <param name="notExpected">
-    /// The first object to compare. This is the value the test expects not
-    /// to match <paramref name="actual"/>.
-    /// </param>
-    /// <param name="actual">
-    /// The second object to compare. This is the object produced by the code under test.
-    /// </param>
-    /// <param name="message">
-    /// The message to include in the exception when <paramref name="actual"/>
-    /// is equal to <paramref name="notExpected"/>. The message is shown in
-    /// test results.
-    /// </param>
-    /// <param name="parameters">
-    /// An array of parameters to use when formatting <paramref name="message"/>.
-    /// </param>
-    /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
-    /// </exception>
-    public static void AreNotEqual(object? notExpected, object? actual, string? message, params object?[]? parameters)
-    {
-        AreNotEqual<object>(notExpected, actual, message, parameters);
     }
 
     /// <summary>

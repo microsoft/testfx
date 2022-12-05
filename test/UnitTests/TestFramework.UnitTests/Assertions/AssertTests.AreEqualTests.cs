@@ -11,14 +11,14 @@ public partial class AssertTests : TestContainer
 {
     public void AreNotEqualShouldFailWhenNotEqualType()
     {
-        static void Action() => Assert.AreNotEqual(null, null);
+        static void Action() => Assert.AreNotEqual(1, 1);
         var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void AreNotEqualShouldFailWhenNotEqualTypeWithMessage()
     {
-        var ex = VerifyThrows(() => Assert.AreNotEqual(null, null, "A Message"));
+        var ex = VerifyThrows(() => Assert.AreNotEqual(1, 1, "A Message"));
         Verify(ex != null);
         Verify(ex.Message.Contains("A Message"));
     }
