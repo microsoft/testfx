@@ -8,69 +8,134 @@ pr:
 - main
 - rel/*
 
-jobs:
-- job: Windows
-  timeoutInMinutes: 120
-  pool:
-    vmImage: 'windows-latest'
-  variables:
-    buildConfiguration: 'Release'
+variables:
+  # Cannot use key:value syntax in root defined variables
+  - name: TeamName
+    value: MSTest
+  - name: NuGet.Version
+    value: 5.8.1
+  - name: _RunAsInternal
+    value: ${{ and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}
+  - name: _RunAsPublic
+    value: ${{ eq(variables._RunAsInternal, False) }}
 
-  steps:
+  # Produce test-signed binaries for PR and Public builds
+  - ${{ if or(eq(variables._RunAsPublic, True), eq(variables._RunAsPR, True)) }}:
+    - name: _SignType
+      value: test
+    - name: _SignArgs
+      value: ''
+    - name: _Sign
+      value: False
 
-  - task: NuGetToolInstaller@0
-    displayName: 'Pull in NuGet 5.8.1'
-    inputs:
-      versionSpec: 5.8.1
+  # Produce real signed binaries for Internal builds
+  - ${{ if eq(variables._RunAsInternal, True) }}:
+    - name: _SignType
+      value: real
+    - name: _SignArgs
+      value: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName) /p:Sign=$(_Sign)
+    - name: _Sign
+      value: True
 
-  - task: PowerShell@2
-    displayName: 'Install Windows SDK'
-    inputs:
-      targetType: filePath
-      filePath: './scripts/Install-WindowsSDK.ps1'
-      failOnStderr: true
-      showWarnings: true
+stages:
 
-  - powershell: |
-      reg DELETE "HKLM\Software\Microsoft\StrongName\Verification" /f
-      reg ADD "HKLM\Software\Microsoft\StrongName\Verification\*,*" /f
-      reg DELETE "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification" /f
-      reg ADD "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification\*,*" /f
-    displayName: 'Disable strongname validation'
+- stage: Build
+  jobs:
 
-  - task: BatchScript@1
-    displayName: 'Restore, Build and Package'
-    inputs:
-      filename: build.cmd
-      arguments: '-configuration $(BuildConfiguration) -CI'
-      modifyEnvironment: false
+  - job: Windows
+    timeoutInMinutes: 120
+    pool:
+      ${{ if eq(variables._RunAsPublic, True) }}:
+        vmImage: windows-latest
+      ${{ if eq(variables._RunAsInternal, True) }}:
+        name: VSEngSS-MicroBuild2022-1ES
+        demands: Cmd
+    strategy:
+      matrix:
+        Release:
+          _BuildConfig: Release
+        ${{ if eq(variables._RunAsPublic, True) }}:
+          Debug:
+            _BuildConfig: Debug
+    steps:
+    - task: NuGetToolInstaller@0
+      displayName: 'Pull in NuGet $(NuGet.Version)'
+      inputs:
+        versionSpec: $(NuGet.Version)
 
-  - task: BatchScript@1
-    displayName: 'Run All Tests'
-    inputs:
-      filename: test.cmd
-      arguments: '-configuration $(BuildConfiguration) -all -parallel'
-      modifyEnvironment: false
+    - task: PowerShell@2
+      displayName: 'Install Windows SDK'
+      inputs:
+        targetType: filePath
+        filePath: './scripts/Install-WindowsSDK.ps1'
+        failOnStderr: true
+        showWarnings: true
 
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: 'Component Governance'
-    inputs:
-      scanType: 'Register'
-      verbosity: 'Verbose'
-      alertWarningLevel: 'High'
+    - ${{ if eq(variables._RunAsPublic, True) }}:
+      - powershell: |
+          reg DELETE "HKLM\Software\Microsoft\StrongName\Verification" /f
+          reg ADD "HKLM\Software\Microsoft\StrongName\Verification\*,*" /f
+          reg DELETE "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification" /f
+          reg ADD "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification\*,*" /f
+        displayName: 'Disable strongname validation'
 
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results **\*.trx'
-    inputs:
-      testResultsFormat: VSTest
-      testResultsFiles: '**\*.trx'
-    condition: succeededOrFailed()
+    #- ${{ if eq(variables._RunAsInternal, True) }}:
+    # Set version numbers
+    # Generate release notes
+    # Install Signing Plugin
+    # Install Swix Plugin
+    # Loc build
 
-- job: Markdownlint
-  pool:
-      vmImage: ubuntu-22.04
-  steps:
-    - script: sudo npm install -g markdownlint-cli@0.32.2
-      displayName: Install markdownlint-cli
-    - script: markdownlint '**/*.md'
-      displayName: Run markdownlint
+    - task: BatchScript@1
+      displayName: 'Restore, Build and Package'
+      inputs:
+        filename: build.cmd
+        arguments: '-configuration $(BuildConfiguration) -CI'
+        modifyEnvironment: false
+
+    #- ${{ if eq(variables._RunAsInternal, True) }}:
+    #Enable fusion log
+
+    - task: BatchScript@1
+      displayName: 'Run All Tests'
+      inputs:
+        filename: test.cmd
+        arguments: '-configuration $(BuildConfiguration) -all -parallel'
+        modifyEnvironment: false
+
+    #- ${{ if eq(variables._RunAsInternal, True) }}:
+    #Disable fusion log
+    #Sign packages
+    #Verify signing
+
+    - ${{ if eq(variables._RunAsPublic, True) }}:
+      - task: ComponentGovernanceComponentDetection@0
+        displayName: 'Component Governance'
+        inputs:
+          scanType: 'Register'
+          verbosity: 'Verbose'
+          alertWarningLevel: 'High'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results **\*.trx'
+      inputs:
+        testResultsFormat: VSTest
+        testResultsFiles: '**\*.trx'
+      condition: succeededOrFailed()
+
+    #- ${{ if eq(variables._RunAsInternal, True) }}:
+    #Publish loc artifacts
+    #Publish artifacts success/fail
+    #Publish nuget
+    #Convert to full pdb
+    #symbols
+    #micro build cleanup
+
+  - job: Markdownlint
+    pool:
+        vmImage: ubuntu-22.04
+    steps:
+      - script: sudo npm install -g markdownlint-cli@0.32.2
+        displayName: Install markdownlint-cli
+      - script: markdownlint '**/*.md'
+        displayName: Run markdownlint
