@@ -8,6 +8,12 @@ pr:
 - main
 - rel/*
 
+parameters:
+- name: isRTM
+  displayName: "Release a RTM version?"
+  type: boolean
+  default: False
+
 variables:
   # Cannot use key:value syntax in root defined variables
   - name: TeamName
@@ -79,12 +85,37 @@ stages:
           reg ADD "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification\*,*" /f
         displayName: 'Disable strongname validation'
 
-    #- ${{ if eq(variables._RunAsInternal, True) }}:
-    # Set version numbers
-    # Generate release notes
-    # Install Signing Plugin
-    # Install Swix Plugin
-    # Loc build
+    - ${{ if eq(variables._RunAsInternal, True) }}:
+      - task: PowerShell@2
+        displayName: Set version variables
+        inputs:
+          filePath: ./scripts/vsts-prebuild.ps1
+          arguments: -IsRtmBuild ${{ parameters.isRTM }}
+
+      - powershell: |
+          $script = "./scripts/write-release-notes.ps1"
+          $p = @{
+              Path = "$pwd"
+              PackageVersion = "$(TestAdapterNugetVersion)"
+          }
+
+          if (Test-Path $script) {
+              & "$script" @p
+          }
+          else {
+              Write-Host "Path '$script' does not exist, skipping."
+          }
+        displayName: 'Generate release notes'
+
+      - task: MicroBuildSigningPlugin@4
+        displayName: Install MicroBuild plugin for Signing
+        inputs:
+          signType: $(_SignType)
+          zipSources: true
+          feedSource: 'https://devdiv.pkgs.visualstudio.com/DefaultCollection/_packaging/MicroBuildToolset/nuget/v3/index.json'
+
+      # Install Swix Plugin
+      # Loc build
 
     - task: BatchScript@1
       displayName: 'Restore, Build and Package'
@@ -93,8 +124,10 @@ stages:
         arguments: '-configuration $(_BuildConfig) -CI'
         modifyEnvironment: false
 
-    #- ${{ if eq(variables._RunAsInternal, True) }}:
-    #Enable fusion log
+    - ${{ if eq(variables._RunAsInternal, True) }}:
+      - powershell: 'New-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\Software\Microsoft\Fusion -Name "EnableLog" -Value 1 -PropertyType "DWord" -Force'
+        errorActionPreference: continue
+        displayName: 'Enable FusionLog'
 
     - task: BatchScript@1
       displayName: 'Run All Tests'
@@ -103,10 +136,12 @@ stages:
         arguments: '-configuration $(_BuildConfig) -all -parallel'
         modifyEnvironment: false
 
-    #- ${{ if eq(variables._RunAsInternal, True) }}:
-    #Disable fusion log
-    #Sign packages
-    #Verify signing
+    - ${{ if eq(variables._RunAsInternal, True) }}:
+      - powershell: 'New-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\Software\Microsoft\Fusion -Name "EnableLog" -Value 0 -PropertyType "DWord" -Force'
+        errorActionPreference: continue
+        displayName: 'Disable FusionLog'
+      #Sign packages
+      #Verify signing
 
     - ${{ if eq(variables._RunAsPublic, True) }}:
       - task: ComponentGovernanceComponentDetection@0
