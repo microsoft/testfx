@@ -1,5 +1,62 @@
 # Releases
 
+## [3.0.0] - 2022-12-06
+
+See full log [here](https://github.com/microsoft/testfx/compare/v2.2.10...v3.0.0)
+
+Breaking changes announcements [#1274](https://github.com/microsoft/testfx/issues/1274)
+
+### Added
+
+* Assert.AreEqual/AreNotEqual overloads with IEquatable [#1433](https://github.com/microsoft/testfx/pull/1433)
+* Add DoesNotReturn attribute for Assert.Inconclusive methods [#1422](https://github.com/microsoft/testfx/pull/1422)
+* Allow to override GetDisplayName method from DataRowAttribute [#1413](https://github.com/microsoft/testfx/pull/1413)
+* Add computer name on the test result [#1409](https://github.com/microsoft/testfx/pull/1409)
+* Add public api analyzers [#1318](https://github.com/microsoft/testfx/pull/1318)
+* Enable nullable for TestAdapter project [#1370](https://github.com/microsoft/testfx/pull/1370)
+* Enable nullable for Platform Services [#1366](https://github.com/microsoft/testfx/pull/1366)
+* Enable nullables for Framework [#1365](https://github.com/microsoft/testfx/pull/1365)
+* Enable nullable for TestFramework.Extensions [#1363](https://github.com/microsoft/testfx/pull/1363)
+* Introduce strategies for test ID generation [#1306](https://github.com/microsoft/testfx/pull/1306)
+* Add support for AsyncDisposable cleanup [#1288](https://github.com/microsoft/testfx/pull/1288)
+* Add Assert.IsInstanceOfType<T> [#1241](https://github.com/microsoft/testfx/pull/1241)
+
+### Changed
+
+* Follow supported .NET frameworks:
+  * Dropped support for .NET Framework before 4.6.2 (net462)
+  * Dropped support for .NET Standard before 2.0 (netstandard2.0)  
+  * Dropped support for UWP before 16299
+  * Dropped support for WinUI before 18362
+  * Replaced support of .NET 5 by .NETCore 3.1 and .NET 6.0
+* Assert.AreSame/AreNotSame use generic instead of object [#1430](https://github.com/microsoft/testfx/pull/1430)
+* Make BeginTimer and EndTimer methods obsolete [#1425](https://github.com/microsoft/testfx/pull/1425)
+* Unify DeploymentDirectory location across target frameworks [#1414](https://github.com/microsoft/testfx/pull/1414)
+* Add class/assembly cleanup/init messages to first/last test [#1390](https://github.com/microsoft/testfx/pull/1390)
+* Document that DeploymentItemAttribute only works for a test class with test method [#1399](https://github.com/microsoft/testfx/pull/1399)
+* Use NewtonsoftJson v13.0.1 [#1361](https://github.com/microsoft/testfx/pull/1361)
+* Merge timeout behaviors for .NET Core and .NET Framework [#1296](https://github.com/microsoft/testfx/pull/1296)
+* Mark exceptions with SerializableAttribute [#1186](https://github.com/microsoft/testfx/pull/1186)
+ 
+### Removed
+
+* Remove Assert.AreEqual/AreNotEqual overloads with object object [#1429](https://github.com/microsoft/testfx/pull/1429)
+
+### Fixed
+
+* Propagate UI culture to appdomain [#1401](https://github.com/microsoft/testfx/pull/1401)
+* Include localization in Test Framework NuGet [#1397](https://github.com/microsoft/testfx/pull/1397)
+* Refactor available ctors for DataRowAttribute [#1332](https://github.com/microsoft/testfx/pull/1332)
+* Fix issue causing null ref when test class has no namespace [#1283](https://github.com/microsoft/testfx/pull/1283)
+* Unwrap real exception from TargetInvocationException [#1254](https://github.com/microsoft/testfx/pull/1254)
+* Fixed the case ignoring in AreEqual() with culture parameter [#1216](https://github.com/microsoft/testfx/pull/1216)
+
+### Artifacts
+
+* MSTest: [3.0.0](https://www.nuget.org/packages/MSTest/3.0.0)
+* MSTest.TestFramework: [3.0.0](https://www.nuget.org/packages/MSTest.TestFramework/3.0.0)
+* MSTest.TestAdapter: [3.0.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.0)
+
 ## 3.0.0-preview-20221122-01 (November 2022)
 
 * Propagate UI culture to appdomain [#1401](https://github.com/microsoft/testfx/pull/1401)
