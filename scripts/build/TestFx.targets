@@ -63,13 +63,19 @@
     <LegacyMinorVersion>0</LegacyMinorVersion>
     <MajorMinorPatch Condition=" '$(MajorMinorPatch)' == '' ">255.255.255</MajorMinorPatch>
     <VersionSuffix Condition=" '$(VersionSuffix)' == '' ">dev</VersionSuffix>
+    <FullVersion>$(MajorMinorPatch)-$(VersionSuffix)</FullVersion>
+    <!--
+      FIX ME: Currently for RTM builds VersionSuffix will be equal to '' (not emptry string), that's why we are not
+      checking '$(VersionSuffix)' == '' but $(VersionSuffix) == ''
+      -->
+    <FullVersion Condition=" $(VersionSuffix) == '' ">$(MajorMinorPatch)</FullVersion>
     <GeneratedAssemblyInfoFile Condition="'$(GeneratedAssemblyInfoFile)' ==''">$(IntermediateOutputPath)$(MSBuildProjectName).AssemblyInfo.cs</GeneratedAssemblyInfoFile>
     <Company>Microsoft Corporation</Company>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <AssemblyVersion>$(LegacyMajorVersion).$(LegacyMinorVersion).0.0</AssemblyVersion>
     <BuildVersion Condition=" '$(BuildVersion)' == '' ">$(LegacyMajorVersion).$(LegacyMinorVersion).$(TFBuildNumber)</BuildVersion>
     <FileVersion Condition=" '$(FileVersion)' == '' ">$(BuildVersion)</FileVersion>
-    <InformationalVersion>$(MajorMinorPatch)-$(VersionSuffix).Branch.$(BranchName).Sha.$(CommitHash)</InformationalVersion>
+    <InformationalVersion>$(FullVersion).Branch.$(BranchName).Sha.$(CommitHash)</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
