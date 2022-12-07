@@ -81,7 +81,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    public static void IsNotNull(object? value)
+    public static void IsNotNull([NotNull] object? value)
     {
         IsNotNull(value, string.Empty, null);
     }
@@ -100,7 +100,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    public static void IsNotNull(object? value, string? message)
+    public static void IsNotNull([NotNull] object? value, string? message)
     {
         IsNotNull(value, message, null);
     }
@@ -122,7 +122,7 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
-    public static void IsNotNull(object? value, string? message, params object?[]? parameters)
+    public static void IsNotNull([NotNull] object? value, string? message, params object?[]? parameters)
     {
         if (value == null)
         {
