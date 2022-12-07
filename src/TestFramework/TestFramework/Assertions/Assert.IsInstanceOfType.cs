@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -30,7 +31,7 @@ public sealed partial class Assert
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType(object? value, Type? expectedType)
+    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType)
     {
         IsInstanceOfType(value, expectedType, string.Empty, null);
     }
@@ -41,7 +42,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>(object? value)
+    public static void IsInstanceOfType<T>([NotNull] object? value)
     {
         IsInstanceOfType(value, typeof(T), string.Empty, null);
     }
@@ -67,7 +68,7 @@ public sealed partial class Assert
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType(object? value, Type? expectedType, string? message)
+    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message)
     {
         IsInstanceOfType(value, expectedType, message, null);
     }
@@ -78,7 +79,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>(object? value, string? message)
+    public static void IsInstanceOfType<T>([NotNull] object? value, string? message)
     {
         IsInstanceOfType(value, typeof(T), message, null);
     }
@@ -107,7 +108,7 @@ public sealed partial class Assert
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType(object? value, Type? expectedType, string? message, params object?[]? parameters)
+    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message, params object?[]? parameters)
     {
         if (expectedType == null || value == null)
         {
@@ -135,7 +136,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>(object? value, string? message, params object?[]? parameters)
+    public static void IsInstanceOfType<T>([NotNull] object? value, string? message, params object?[]? parameters)
     {
         IsInstanceOfType(value, typeof(T), message, parameters);
     }
@@ -156,7 +157,7 @@ public sealed partial class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object? value, Type? wrongType)
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType)
     {
         IsNotInstanceOfType(value, wrongType, string.Empty, null);
     }
@@ -193,7 +194,7 @@ public sealed partial class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object? value, Type? wrongType, string? message)
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message)
     {
         IsNotInstanceOfType(value, wrongType, message, null);
     }
@@ -233,7 +234,7 @@ public sealed partial class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object? value, Type? wrongType, string? message, params object?[]? parameters)
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message, params object?[]? parameters)
     {
         if (wrongType == null)
         {
