@@ -1,2 +1,2 @@
 ﻿#nullable enable
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod.TestIdGenerationStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
+
