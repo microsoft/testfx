@@ -106,15 +106,11 @@ public class TestSourceHost : ITestSourceHost
             EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths.ToArray()));
         }
 
-        // Case when DisableAppDomain setting is present in runsettings and no child-appdomain needs to be created
-        if (_isAppDomainCreationDisabled)
-        {
-            _parentDomainAssemblyResolver = new AssemblyResolver(resolutionPaths);
-            AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_parentDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName));
-        }
+        _parentDomainAssemblyResolver = new AssemblyResolver(resolutionPaths);
+        AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_parentDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName));
 
-        // Create child-appdomain and set assembly resolver on it
-        else
+        // Case when DisableAppDomain setting is present in runsettings and no child-appdomain needs to be created
+        if (!_isAppDomainCreationDisabled)
         {
             // Setup app-domain
             var appDomainSetup = new AppDomainSetup();
