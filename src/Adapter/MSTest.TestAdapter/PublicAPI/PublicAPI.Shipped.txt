@@ -98,6 +98,7 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.Is
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.ManagedMethodName.get -> string?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.ManagedTypeName.get -> string?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.Name.get -> string!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.TestIdGenerationStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.TestMethod(string! name, string! fullClassName, string! assemblyName, bool isAsync) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome.Error = 0 -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome
