@@ -73,4 +73,41 @@ public class DataRowTests_Regular
     {
 
     }
+
+    [TestMethod]
+    [DataRow(null)]
+    public void NullValue(object o)
+    {
+        Assert.IsNull(o);
+    }
+
+    [TestMethod]
+    [DataRow(new string[] { "" })]
+    public void OneStringArray(string[] lines)
+    {
+        Assert.AreEqual(1, lines.Length);
+    }
+
+    [TestMethod]
+    [DataRow(new string[] { "" }, new string[] { "1.4", "message" })]
+    public void TwoStringArrays(string[] input1, string[] input2)
+    {
+        Assert.AreEqual(1, input1.Length);
+        Assert.AreEqual(2, input2.Length);
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { "", 1 })]
+    public void OneObjectArray(object[] objects)
+    {
+        Assert.AreEqual(2, objects.Length);
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { "", 1 }, new object[] { 3 })]
+    public void TwoObjectArrays(object[] objects1, object[] objects2)
+    {
+        Assert.AreEqual(2, objects1.Length);
+        Assert.AreEqual(1, objects2.Length);
+    }
 }

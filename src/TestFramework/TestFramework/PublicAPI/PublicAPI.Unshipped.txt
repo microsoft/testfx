@@ -1,1 +1,11 @@
 ﻿#nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data1, object? data2) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data1, object? data2, object? data3) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data1, object? data2, object? data3, object? data4) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5, object? data6) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5, object? data6, object? data7) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5, object? data6, object? data7, object? data8) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5, object? data6, object? data7, object? data8, object? data9) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5, object? data6, object? data7, object? data8, object? data9, object? data10) -> void
