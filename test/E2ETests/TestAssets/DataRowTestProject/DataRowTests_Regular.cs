@@ -236,4 +236,11 @@ public class DataRowTests_Regular
         object[] o11, object[] o12, object[] o13, object[] o14, object[] o15, object[] o16)
     {
     }
+
+    [TestMethod]
+    [DataRow(1, 2, 3, 4, 5)]
+    public void MultipleIntegersWrappedWithParams(params int[] integers)
+    {
+        Assert.AreEqual(5, integers.Length);
+    }
 }

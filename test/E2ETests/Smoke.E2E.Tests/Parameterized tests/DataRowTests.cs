@@ -235,7 +235,8 @@ public class DataRowTests : CLITestBase
             "ThirteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
             "FourteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
             "FifteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
-            "SixteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])");
+            "SixteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "MultipleIntegersWrappedWithParams (1,2,3,4,5)");
 
         ValidateFailedTestsCount(0);
     }
