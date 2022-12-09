@@ -290,7 +290,26 @@ public class DataRowTests : CLITestBase
             "DataRowTestMixed (3,10,10,10,10,10,10,10,10)",
             "DataRowTestMixed (4,10,10,10,10,10,10,10,10)",
             "NullValueInData (john.doe@example.com,abc123,)",
-            "NullValueInData (john.doe@example.com,abc123,/unit/test)");
+            "NullValueInData (john.doe@example.com,abc123,/unit/test)",
+            "NullValue ()",
+            "OneStringArray (System.String[])",
+            "TwoStringArrays (System.String[],System.String[])",
+            "OneObjectArray (System.Object[])",
+            "TwoObjectArrays (System.Object[],System.Object[])",
+            "ThreeObjectArrays (System.Object[],System.Object[],System.Object[])",
+            "FourObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[])",
+            "FiveObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "SixObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "SevenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "EightObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "NineObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "TenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "ElevenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "TwelveObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "ThirteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "FourteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "FifteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
+            "SixteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])");
 
         VerifyE2E.FailedTestCount(testResults, 0);
     }

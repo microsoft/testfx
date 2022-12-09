@@ -142,6 +142,154 @@ public class DataRowAttribute : Attribute, ITestDataSource
         => Data = new object?[] { data1, data2, data3, data4, data5, data6, data7, data8, data9, data10 };
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="data1"> The first data object. </param>
+    /// <param name="data2"> The second data object. </param>
+    /// <param name="data3"> The third data object. </param>
+    /// <param name="data4"> The fourth data object. </param>
+    /// <param name="data5"> The fifth data object. </param>
+    /// <param name="data6"> The sixth data object. </param>
+    /// <param name="data7"> The seventh data object. </param>
+    /// <param name="data8"> The eight data object. </param>
+    /// <param name="data9"> The nineth data object. </param>
+    /// <param name="data10"> The tenth data object. </param>
+    /// <param name="data11"> The eleventh data object. </param>
+    public DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5, object? data6,
+        object? data7, object? data8, object? data9, object? data10, object? data11)
+        => Data = new object?[]
+        {
+            data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11,
+        };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="data1"> The first data object. </param>
+    /// <param name="data2"> The second data object. </param>
+    /// <param name="data3"> The third data object. </param>
+    /// <param name="data4"> The fourth data object. </param>
+    /// <param name="data5"> The fifth data object. </param>
+    /// <param name="data6"> The sixth data object. </param>
+    /// <param name="data7"> The seventh data object. </param>
+    /// <param name="data8"> The eight data object. </param>
+    /// <param name="data9"> The nineth data object. </param>
+    /// <param name="data10"> The tenth data object. </param>
+    /// <param name="data11"> The eleventh data object. </param>
+    /// <param name="data12"> The twelfth data object. </param>
+    public DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5, object? data6,
+        object? data7, object? data8, object? data9, object? data10, object? data11, object? data12)
+        => Data = new object?[]
+        {
+            data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11, data12,
+        };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="data1"> The first data object. </param>
+    /// <param name="data2"> The second data object. </param>
+    /// <param name="data3"> The third data object. </param>
+    /// <param name="data4"> The fourth data object. </param>
+    /// <param name="data5"> The fifth data object. </param>
+    /// <param name="data6"> The sixth data object. </param>
+    /// <param name="data7"> The seventh data object. </param>
+    /// <param name="data8"> The eight data object. </param>
+    /// <param name="data9"> The nineth data object. </param>
+    /// <param name="data10"> The tenth data object. </param>
+    /// <param name="data11"> The eleventh data object. </param>
+    /// <param name="data12"> The twelfth data object. </param>
+    /// <param name="data13"> The thirteen data object. </param>
+    public DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5, object? data6,
+        object? data7, object? data8, object? data9, object? data10, object? data11, object? data12, object? data13)
+        => Data = new object?[]
+        {
+            data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11,
+            data12, data13,
+        };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="data1"> The first data object. </param>
+    /// <param name="data2"> The second data object. </param>
+    /// <param name="data3"> The third data object. </param>
+    /// <param name="data4"> The fourth data object. </param>
+    /// <param name="data5"> The fifth data object. </param>
+    /// <param name="data6"> The sixth data object. </param>
+    /// <param name="data7"> The seventh data object. </param>
+    /// <param name="data8"> The eight data object. </param>
+    /// <param name="data9"> The nineth data object. </param>
+    /// <param name="data10"> The tenth data object. </param>
+    /// <param name="data11"> The eleventh data object. </param>
+    /// <param name="data12"> The twelfth data object. </param>
+    /// <param name="data13"> The thirteen data object. </param>
+    /// <param name="data14"> The fourteen data object. </param>
+    public DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5, object? data6,
+        object? data7, object? data8, object? data9, object? data10, object? data11, object? data12, object? data13,
+        object? data14)
+        => Data = new object?[]
+        {
+            data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11,
+            data12, data13, data14,
+        };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="data1"> The first data object. </param>
+    /// <param name="data2"> The second data object. </param>
+    /// <param name="data3"> The third data object. </param>
+    /// <param name="data4"> The fourth data object. </param>
+    /// <param name="data5"> The fifth data object. </param>
+    /// <param name="data6"> The sixth data object. </param>
+    /// <param name="data7"> The seventh data object. </param>
+    /// <param name="data8"> The eight data object. </param>
+    /// <param name="data9"> The nineth data object. </param>
+    /// <param name="data10"> The tenth data object. </param>
+    /// <param name="data11"> The eleventh data object. </param>
+    /// <param name="data12"> The twelfth data object. </param>
+    /// <param name="data13"> The thirteen data object. </param>
+    /// <param name="data14"> The fourteen data object. </param>
+    /// <param name="data15"> The fifteen data object. </param>
+    public DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5, object? data6,
+        object? data7, object? data8, object? data9, object? data10, object? data11, object? data12, object? data13,
+        object? data14, object? data15)
+        => Data = new object?[]
+        {
+            data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11,
+            data12, data13, data14, data15,
+        };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="data1"> The first data object. </param>
+    /// <param name="data2"> The second data object. </param>
+    /// <param name="data3"> The third data object. </param>
+    /// <param name="data4"> The fourth data object. </param>
+    /// <param name="data5"> The fifth data object. </param>
+    /// <param name="data6"> The sixth data object. </param>
+    /// <param name="data7"> The seventh data object. </param>
+    /// <param name="data8"> The eight data object. </param>
+    /// <param name="data9"> The nineth data object. </param>
+    /// <param name="data10"> The tenth data object. </param>
+    /// <param name="data11"> The eleventh data object. </param>
+    /// <param name="data12"> The twelfth data object. </param>
+    /// <param name="data13"> The thirteen data object. </param>
+    /// <param name="data14"> The fourteen data object. </param>
+    /// <param name="data15"> The fifteen data object. </param>
+    /// <param name="data16"> The sixteen data object. </param>
+    public DataRowAttribute(object? data1, object? data2, object? data3, object? data4, object? data5, object? data6,
+        object? data7, object? data8, object? data9, object? data10, object? data11, object? data12, object? data13,
+        object? data14, object? data15, object? data16)
+        => Data = new object?[]
+        {
+            data1, data2, data3, data4, data5, data6, data7, data8, data9, data10, data11,
+            data12, data13, data14, data15, data16,
+        };
+
+    /// <summary>
     /// Gets data for calling test method.
     /// </summary>
     public object?[] Data { get; }

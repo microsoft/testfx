@@ -120,10 +120,10 @@ public class DataRowAttributeTests : TestContainer
         var displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
-        Verify(displayName == "MyMethod (a)");
+        Verify(displayName == "MyMethod (System.String[])");
     }
 
-    public void GetDisplayName_AfterOverriding_GetsTheNewDisplayname()
+    public void GetDisplayName_AfterOverriding_GetsTheNewDisplayName()
     {
         // Arrange
         var dataRow = new DummyDataRowAttribute();
@@ -147,7 +147,7 @@ public class DataRowAttributeTests : TestContainer
         var displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
-        Verify(displayName == "MyMethod (a,b,c)");
+        Verify(displayName == "MyMethod (System.String[])");
     }
 
     public void GetDisplayNameForMultipleArraysOfOneItem()
