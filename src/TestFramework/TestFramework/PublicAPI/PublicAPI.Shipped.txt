@@ -44,7 +44,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod.Random = 1 -> Micr
 Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod.Sequential = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.Data.get -> object?[]!
-Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DisplayName.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DisplayName.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.GetData(System.Reflection.MethodInfo! methodInfo) -> System.Collections.Generic.IEnumerable<object?[]!>!
