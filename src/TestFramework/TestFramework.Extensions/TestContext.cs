@@ -160,22 +160,6 @@ public abstract class TestContext
     /// </param>
     public abstract void AddResultFile(string fileName);
 
-#if NETFRAMEWORK
-    /// <summary>
-    /// Begins a timer with the specified name.
-    /// </summary>
-    /// <param name="timerName"> Name of the timer.</param>
-    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
-    public abstract void BeginTimer(string timerName);
-
-    /// <summary>
-    /// Ends a timer with the specified name.
-    /// </summary>
-    /// <param name="timerName"> Name of the timer.</param>
-    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
-    public abstract void EndTimer(string timerName);
-#endif
-
     /// <summary>
     /// Used to write trace messages while the test is running.
     /// </summary>

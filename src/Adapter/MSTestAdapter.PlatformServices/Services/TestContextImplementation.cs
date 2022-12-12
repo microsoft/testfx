@@ -181,22 +181,6 @@ public class TestContextImplementation : TestContext, ITestContext
 #endif
     }
 
-#if NETFRAMEWORK
-    /// <inheritdoc/>
-    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
-    public override void BeginTimer(string timerName)
-    {
-        throw new NotSupportedException();
-    }
-
-    /// <inheritdoc/>
-    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
-    public override void EndTimer(string timerName)
-    {
-        throw new NotSupportedException();
-    }
-#endif
-
     /// <summary>
     /// When overridden in a derived class, used to write trace messages while the
     ///     test is running.
