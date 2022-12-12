@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics;
 #if NET6_0_OR_GREATER
 using System.Threading.Tasks;
 #endif
@@ -13,7 +14,7 @@ namespace SuiteLifeCycleTestProject;
 [TestClass]
 public sealed class LifeCycleClassCleanupEndOfClass : IDisposable
 #if NET6_0_OR_GREATER
-        , IAsyncDisposable 
+        , IAsyncDisposable
 #endif
 {
     private static TestContext s_testContext;
@@ -23,6 +24,9 @@ public sealed class LifeCycleClassCleanupEndOfClass : IDisposable
     public LifeCycleClassCleanupEndOfClass()
     {
         s_testContext.WriteLine("LifeCycleClassCleanupEndOfClass.ctor was called");
+        Console.WriteLine("Console: LifeCycleClassCleanupEndOfClass.ctor was called");
+        Trace.WriteLine("Trace: LifeCycleClassCleanupEndOfClass.ctor was called");
+        Debug.WriteLine("Debug: LifeCycleClassCleanupEndOfClass.ctor was called");
     }
 
     [ClassInitialize]
@@ -30,35 +34,53 @@ public sealed class LifeCycleClassCleanupEndOfClass : IDisposable
     {
         s_testContext = testContext;
         s_testContext.WriteLine("LifeCycleClassCleanupEndOfClass.ClassInitialize was called");
+        Console.WriteLine("Console: LifeCycleClassCleanupEndOfClass.ClassInitialize was called");
+        Trace.WriteLine("Trace: LifeCycleClassCleanupEndOfClass.ClassInitialize was called");
+        Debug.WriteLine("Debug: LifeCycleClassCleanupEndOfClass.ClassInitialize was called");
     }
 
     [TestInitialize]
     public void TestInitialize()
     {
         TestContext.WriteLine("LifeCycleClassCleanupEndOfClass.TestInitialize was called");
+        Console.WriteLine("Console: LifeCycleClassCleanupEndOfClass.TestInitialize was called");
+        Trace.WriteLine("Trace: LifeCycleClassCleanupEndOfClass.TestInitialize was called");
+        Debug.WriteLine("Debug: LifeCycleClassCleanupEndOfClass.TestInitialize was called");
     }
 
     [TestMethod]
     public void TestMethod()
     {
         TestContext.WriteLine("LifeCycleClassCleanupEndOfClass.TestMethod was called");
+        Console.WriteLine("Console: LifeCycleClassCleanupEndOfClass.TestMethod was called");
+        Trace.WriteLine("Trace: LifeCycleClassCleanupEndOfClass.TestMethod was called");
+        Debug.WriteLine("Debug: LifeCycleClassCleanupEndOfClass.TestMethod was called");
     }
 
     [TestCleanup]
     public void TestCleanup()
     {
         TestContext.WriteLine("LifeCycleClassCleanupEndOfClass.TestCleanup was called");
+        Console.WriteLine("Console: LifeCycleClassCleanupEndOfClass.TestCleanup was called");
+        Trace.WriteLine("Trace: LifeCycleClassCleanupEndOfClass.TestCleanup was called");
+        Debug.WriteLine("Debug: LifeCycleClassCleanupEndOfClass.TestCleanup was called");
     }
 
     public void Dispose()
     {
         TestContext.WriteLine("LifeCycleClassCleanupEndOfClass.Dispose was called");
+        Console.WriteLine("Console: LifeCycleClassCleanupEndOfClass.Dispose was called");
+        Trace.WriteLine("Trace: LifeCycleClassCleanupEndOfClass.Dispose was called");
+        Debug.WriteLine("Debug: LifeCycleClassCleanupEndOfClass.Dispose was called");
     }
 
 #if NET6_0_OR_GREATER
     public ValueTask DisposeAsync()
     {
         TestContext.WriteLine("LifeCycleClassCleanupEndOfClass.DisposeAsync was called");
+        Console.WriteLine("Console: LifeCycleClassCleanupEndOfClass.DisposeAsync was called");
+        Trace.WriteLine("Trace: LifeCycleClassCleanupEndOfClass.DisposeAsync was called");
+        Debug.WriteLine("Debug: LifeCycleClassCleanupEndOfClass.DisposeAsync was called");
         return ValueTask.CompletedTask;
     }
 #endif
@@ -67,5 +89,8 @@ public sealed class LifeCycleClassCleanupEndOfClass : IDisposable
     public static void ClassCleanup()
     {
         s_testContext.WriteLine("LifeCycleClassCleanupEndOfClass.ClassCleanup was called");
+        Console.WriteLine("Console: LifeCycleClassCleanupEndOfClass.ClassCleanup was called");
+        Trace.WriteLine("Trace: LifeCycleClassCleanupEndOfClass.ClassCleanup was called");
+        Debug.WriteLine("Debug: LifeCycleClassCleanupEndOfClass.ClassCleanup was called");
     }
 }

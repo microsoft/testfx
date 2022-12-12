@@ -29,7 +29,43 @@ public class SuiteLifeCycleTests : CLITestBase
 
         var caseClassCleanup = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanup.TestMethod"));
         caseClassCleanup.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
-        caseClassCleanup.Messages.Single().Text.Should().Be(
+        caseClassCleanup.Messages.Should().HaveCount(3);
+        caseClassCleanup.Messages[0].Text.Should().Be(
+            $"""
+            Console: AssemblyInit was called
+            Console: LifeCycleClassCleanup.ClassInitialize was called
+            Console: LifeCycleClassCleanup.ctor was called
+            Console: LifeCycleClassCleanup.TestInitialize was called
+            Console: LifeCycleClassCleanup.TestMethod was called
+            Console: LifeCycleClassCleanup.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "Console: LifeCycleClassCleanup.DisposeAsync was called\r\nConsole: LifeCycleClassCleanup.Dispose was called"
+                : "Console: LifeCycleClassCleanup.Dispose was called")}
+
+            """);
+        caseClassCleanup.Messages[1].Text.Should().Be(
+            $"""
+            
+
+            Debug Trace:
+            Trace: AssemblyInit was called
+            Debug: AssemblyInit was called
+            Trace: LifeCycleClassCleanup.ClassInitialize was called
+            Debug: LifeCycleClassCleanup.ClassInitialize was called
+            Trace: LifeCycleClassCleanup.ctor was called
+            Debug: LifeCycleClassCleanup.ctor was called
+            Trace: LifeCycleClassCleanup.TestInitialize was called
+            Debug: LifeCycleClassCleanup.TestInitialize was called
+            Trace: LifeCycleClassCleanup.TestMethod was called
+            Debug: LifeCycleClassCleanup.TestMethod was called
+            Trace: LifeCycleClassCleanup.TestCleanup was called
+            Debug: LifeCycleClassCleanup.TestCleanup was called
+            {(targetFramework == "net6.0"
+                ? "Trace: LifeCycleClassCleanup.DisposeAsync was called\r\nDebug: LifeCycleClassCleanup.DisposeAsync was called\r\nTrace: LifeCycleClassCleanup.Dispose was called\r\nDebug: LifeCycleClassCleanup.Dispose was called"
+                : "Trace: LifeCycleClassCleanup.Dispose was called\r\nDebug: LifeCycleClassCleanup.Dispose was called")}
+
+            """);
+        caseClassCleanup.Messages[2].Text.Should().Be(
             $"""
             
 
