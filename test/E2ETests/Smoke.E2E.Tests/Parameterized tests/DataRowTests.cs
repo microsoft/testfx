@@ -27,10 +27,10 @@ public class DataRowTests : CLITestBase
 
     public void GetDisplayName_AfterOverriding_GetsTheNewDisplayname()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~OverridedGetDiplayName");
+        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~OverriddenGetDisplayName");
 
         ValidatePassedTestsContain(
-            "Overrided DisplayName");
+            "Overridden DisplayName");
 
         ValidatePassedTestsCount(1);
     }

@@ -133,7 +133,7 @@ public class DataRowAttributeTests : TestContainer
         var displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
-        Verify(displayName == "Overrided DisplayName");
+        Verify(displayName == "Overridden DisplayName");
     }
 
     public void GetDisplayNameForArrayOfMultipleItems()
@@ -187,7 +187,7 @@ public class DataRowAttributeTests : TestContainer
 
         public override string GetDisplayName(MethodInfo methodInfo, object[] data)
         {
-            return "Overrided DisplayName";
+            return "Overridden DisplayName";
         }
     }
 }

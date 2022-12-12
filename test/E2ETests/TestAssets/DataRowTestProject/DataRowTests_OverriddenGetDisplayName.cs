@@ -9,10 +9,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace DataRowAttributeTestProject;
 
 [TestClass]
-public class DataRowTests_OverrideGetDisplayName
+public class DataRowTests_OverriddenGetDisplayName
 {
-    [TestCategory("OverridedGetDiplayName")]
-    [DummyDataRowAttribute]
+    [TestCategory("OverriddenGetDisplayName")]
+    [DummyDataRow]
     [TestMethod]
     public void TestMethod()
     {
@@ -28,7 +28,7 @@ public class DataRowTests_OverrideGetDisplayName
 
         public override string GetDisplayName(MethodInfo methodInfo, object[] data)
         {
-            return "Overrided DisplayName";
+            return "Overridden DisplayName";
         }
     }
 }
