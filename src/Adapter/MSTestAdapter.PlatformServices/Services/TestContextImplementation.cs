@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -15,7 +14,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod;
-using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -56,7 +54,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <summary>
     /// Unit test outcome.
     /// </summary>
-    private UTF.UnitTestOutcome _outcome;
+    private UnitTestOutcome _outcome;
 
 #if NETFRAMEWORK
     /// <summary>
@@ -107,13 +105,7 @@ public class TestContextImplementation : TestContext, ITestContext
     #region TestContext impl
 
     /// <inheritdoc/>
-    public override UTF.UnitTestOutcome CurrentTestOutcome
-    {
-        get
-        {
-            return _outcome;
-        }
-    }
+    public override UnitTestOutcome CurrentTestOutcome => _outcome;
 
 #if NETFRAMEWORK
     /// <inheritdoc/>
@@ -166,7 +158,7 @@ public class TestContextImplementation : TestContext, ITestContext
     public override string TestName => base.TestName!;
 #endif
 
-    public UTF.TestContext Context => this;
+    public TestContext Context => this;
 
     /// <inheritdoc/>
     public override void AddResultFile(string fileName)
@@ -295,13 +287,9 @@ public class TestContextImplementation : TestContext, ITestContext
     /// Set the unit-test outcome.
     /// </summary>
     /// <param name="outcome">The test outcome.</param>
-    public void SetOutcome(UTF.UnitTestOutcome outcome)
+    public void SetOutcome(UnitTestOutcome outcome)
     {
-#if NETFRAMEWORK
-        _outcome = ToUTF(outcome);
-#else
         _outcome = outcome;
-#endif
     }
 
     /// <summary>
@@ -395,29 +383,4 @@ public class TestContextImplementation : TestContext, ITestContext
     }
 
     #endregion
-
-#if NETFRAMEWORK
-    /// <summary>
-    /// Converts the parameter outcome to UTF outcome.
-    /// </summary>
-    /// <param name="outcome">The UTF outcome.</param>
-    /// <returns>test outcome.</returns>
-    private static UTF.UnitTestOutcome ToUTF(UTF.UnitTestOutcome outcome)
-    {
-        switch (outcome)
-        {
-            case UnitTestOutcome.Error:
-            case UnitTestOutcome.Failed:
-            case UnitTestOutcome.Inconclusive:
-            case UnitTestOutcome.Passed:
-            case UnitTestOutcome.Timeout:
-            case UnitTestOutcome.InProgress:
-                return outcome;
-
-            default:
-                Debug.Fail("Unknown outcome " + outcome);
-                return UnitTestOutcome.Unknown;
-        }
-    }
-#endif
 }
