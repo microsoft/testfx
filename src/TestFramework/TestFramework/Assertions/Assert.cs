@@ -110,7 +110,7 @@ public sealed partial class Assert
     /// <param name="parameters">
     /// The parameters.
     /// </param>
-    internal static void CheckParameterNotNull(object? param, string assertionName, string parameterName, string? message, params object?[]? parameters)
+    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName, string? message, params object?[]? parameters)
     {
         if (param == null)
         {
@@ -131,6 +131,7 @@ public sealed partial class Assert
     /// The converted string.
     /// </returns>
     [SuppressMessage("ReSharper", "RedundantToStringCall", Justification = "We are ensuring ToString() isn't overloaded in a way to misbehave")]
+    [return: NotNull]
     internal static string ReplaceNulls(object? input)
     {
         // Use the localized "(null)" string for null values.
