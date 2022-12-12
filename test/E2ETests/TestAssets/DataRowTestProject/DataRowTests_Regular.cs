@@ -73,4 +73,174 @@ public class DataRowTests_Regular
     {
 
     }
+
+    [TestMethod]
+    [DataRow(null)]
+    public void NullValue(object o)
+    {
+        Assert.IsNull(o);
+    }
+
+    [TestMethod]
+    [DataRow(new string[] { "" })]
+    public void OneStringArray(string[] lines)
+    {
+        Assert.AreEqual(1, lines.Length);
+    }
+
+    [TestMethod]
+    [DataRow(new string[] { "" }, new string[] { "1.4", "message" })]
+    public void TwoStringArrays(string[] input1, string[] input2)
+    {
+        Assert.AreEqual(1, input1.Length);
+        Assert.AreEqual(2, input2.Length);
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { "", 1 })]
+    public void OneObjectArray(object[] objects)
+    {
+        Assert.AreEqual(2, objects.Length);
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { "", 1 }, new object[] { 3 })]
+    public void TwoObjectArrays(object[] objects1, object[] objects2)
+    {
+        Assert.AreEqual(2, objects1.Length);
+        Assert.AreEqual(1, objects2.Length);
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 })]
+    public void ThreeObjectArrays(object[] o1, object[] o2, object[] o3)
+    {
+    }    
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 })]
+    public void FourObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 })]
+    public void FiveObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 }, new object[] { 6 })]
+    public void SixObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5, object[] o6)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 }, new object[] { 6 }, new object[] { 7 })]
+    public void SevenObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5, object[] o6, object[] o7)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 }, new object[] { 6 }, new object[] { 7 }, new object[] { 8 })]
+    public void EightObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5, object[] o6, object[] o7, object[] o8)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 }, new object[] { 6 }, new object[] { 7 }, new object[] { 8 },
+        new object[] { 9 })]
+    public void NineObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5, object[] o6, object[] o7, object[] o8, object[] o9)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 }, new object[] { 6 }, new object[] { 7 }, new object[] { 8 },
+        new object[] { 9 }, new object[] { 10 })]
+    public void TenObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5, object[] o6, object[] o7, object[] o8, object[] o9, object[] o10)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 }, new object[] { 6 }, new object[] { 7 }, new object[] { 8 },
+        new object[] { 9 }, new object[] { 10 }, new object[] { 11 })]
+    public void ElevenObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5, object[] o6, object[] o7, object[] o8, object[] o9, object[] o10,
+        object[] o11)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 }, new object[] { 6 }, new object[] { 7 }, new object[] { 8 },
+        new object[] { 9 }, new object[] { 10 }, new object[] { 11 }, new object[] { 12 })]
+    public void TwelveObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5, object[] o6, object[] o7, object[] o8, object[] o9, object[] o10,
+        object[] o11, object[] o12)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 }, new object[] { 6 }, new object[] { 7 }, new object[] { 8 },
+        new object[] { 9 }, new object[] { 10 }, new object[] { 11 }, new object[] { 12 },
+        new object[] { 13 })]
+    public void ThirteenObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5, object[] o6, object[] o7, object[] o8, object[] o9, object[] o10,
+        object[] o11, object[] o12, object[] o13)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 }, new object[] { 6 }, new object[] { 7 }, new object[] { 8 },
+        new object[] { 9 }, new object[] { 10 }, new object[] { 11 }, new object[] { 12 },
+        new object[] { 13 }, new object[] { 14 })]
+    public void FourteenObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5, object[] o6, object[] o7, object[] o8, object[] o9, object[] o10,
+        object[] o11, object[] o12, object[] o13, object[] o14)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 }, new object[] { 6 }, new object[] { 7 }, new object[] { 8 },
+        new object[] { 9 }, new object[] { 10 }, new object[] { 11 }, new object[] { 12 },
+        new object[] { 13 }, new object[] { 14 }, new object[] { 15 })]
+    public void FifteenObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5, object[] o6, object[] o7, object[] o8, object[] o9, object[] o10,
+        object[] o11, object[] o12, object[] o13, object[] o14, object[] o15)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 },
+        new object[] { 5 }, new object[] { 6 }, new object[] { 7 }, new object[] { 8 },
+        new object[] { 9 }, new object[] { 10 }, new object[] { 11 }, new object[] { 12 },
+        new object[] { 13 }, new object[] { 14 }, new object[] { 15 }, new object[] { 16 })]
+    public void SixteenObjectArrays(object[] o1, object[] o2, object[] o3, object[] o4,
+        object[] o5, object[] o6, object[] o7, object[] o8, object[] o9, object[] o10,
+        object[] o11, object[] o12, object[] o13, object[] o14, object[] o15, object[] o16)
+    {
+    }
+
+    [TestMethod]
+    [DataRow(1, 2, 3, 4, 5)]
+    public void MultipleIntegersWrappedWithParams(params int[] integers)
+    {
+        Assert.AreEqual(5, integers.Length);
+    }
 }

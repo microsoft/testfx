@@ -18,22 +18,276 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
     /// </summary>
-    /// <param name="data"> The data object. </param>
-    public DataRowAttribute(object? data)
-    {
-        // Need to have this constructor explicitly to fix a CLS compliance error.
-        Data = new object?[] { data };
-    }
+    public DataRowAttribute()
+        => Data = Array.Empty<object>();
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    // Need to have this constructor explicitly to fix a CLS compliance error.
+    public DataRowAttribute(object? arg1)
+        => Data = new object?[] { arg1 };
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
     /// </summary>
-    /// <param name="data"> More data. </param>
-    public DataRowAttribute(params object?[]? data)
-    {
-        // This actually means that the user wants to pass in a 'null' value to the test method.
-        Data = data ?? new object?[] { null };
-    }
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2)
+        => Data = new object?[] { arg1, arg2 };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3)
+        => Data = new object?[] { arg1, arg2, arg3 };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4)
+        => Data = new object?[] { arg1, arg2, arg3, arg4 };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5)
+        => Data = new object?[] { arg1, arg2, arg3, arg4, arg5 };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    /// <param name="arg6"> The sixth argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6)
+        => Data = new object?[] { arg1, arg2, arg3, arg4, arg5, arg6 };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    /// <param name="arg6"> The sixth argument. </param>
+    /// <param name="arg7"> The seventh argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6,
+        object? arg7)
+        => Data = new object?[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7 };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    /// <param name="arg6"> The sixth argument. </param>
+    /// <param name="arg7"> The seventh argument. </param>
+    /// <param name="arg8"> The eight argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6,
+        object? arg7, object? arg8)
+        => Data = new object?[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8 };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    /// <param name="arg6"> The sixth argument. </param>
+    /// <param name="arg7"> The seventh argument. </param>
+    /// <param name="arg8"> The eight argument. </param>
+    /// <param name="arg9"> The nineth argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6,
+        object? arg7, object? arg8, object? arg9)
+        => Data = new object?[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9 };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    /// <param name="arg6"> The sixth argument. </param>
+    /// <param name="arg7"> The seventh argument. </param>
+    /// <param name="arg8"> The eight argument. </param>
+    /// <param name="arg9"> The nineth argument. </param>
+    /// <param name="arg10"> The tenth argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6,
+        object? arg7, object? arg8, object? arg9, object? arg10)
+        => Data = new object?[] { arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    /// <param name="arg6"> The sixth argument. </param>
+    /// <param name="arg7"> The seventh argument. </param>
+    /// <param name="arg8"> The eight argument. </param>
+    /// <param name="arg9"> The nineth argument. </param>
+    /// <param name="arg10"> The tenth argument. </param>
+    /// <param name="arg11"> The eleventh argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6,
+        object? arg7, object? arg8, object? arg9, object? arg10, object? arg11)
+        => Data = new object?[]
+        {
+            arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11,
+        };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    /// <param name="arg6"> The sixth argument. </param>
+    /// <param name="arg7"> The seventh argument. </param>
+    /// <param name="arg8"> The eight argument. </param>
+    /// <param name="arg9"> The nineth argument. </param>
+    /// <param name="arg10"> The tenth argument. </param>
+    /// <param name="arg11"> The eleventh argument. </param>
+    /// <param name="arg12"> The twelfth argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6,
+        object? arg7, object? arg8, object? arg9, object? arg10, object? arg11, object? arg12)
+        => Data = new object?[]
+        {
+            arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12,
+        };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    /// <param name="arg6"> The sixth argument. </param>
+    /// <param name="arg7"> The seventh argument. </param>
+    /// <param name="arg8"> The eight argument. </param>
+    /// <param name="arg9"> The nineth argument. </param>
+    /// <param name="arg10"> The tenth argument. </param>
+    /// <param name="arg11"> The eleventh argument. </param>
+    /// <param name="arg12"> The twelfth argument. </param>
+    /// <param name="arg13"> The thirteen argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6,
+        object? arg7, object? arg8, object? arg9, object? arg10, object? arg11, object? arg12, object? arg13)
+        => Data = new object?[]
+        {
+            arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11,
+            arg12, arg13,
+        };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    /// <param name="arg6"> The sixth argument. </param>
+    /// <param name="arg7"> The seventh argument. </param>
+    /// <param name="arg8"> The eight argument. </param>
+    /// <param name="arg9"> The nineth argument. </param>
+    /// <param name="arg10"> The tenth argument. </param>
+    /// <param name="arg11"> The eleventh argument. </param>
+    /// <param name="arg12"> The twelfth argument. </param>
+    /// <param name="arg13"> The thirteen argument. </param>
+    /// <param name="arg14"> The fourteenth argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6,
+        object? arg7, object? arg8, object? arg9, object? arg10, object? arg11, object? arg12, object? arg13,
+        object? arg14)
+        => Data = new object?[]
+        {
+            arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11,
+            arg12, arg13, arg14,
+        };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    /// <param name="arg6"> The sixth argument. </param>
+    /// <param name="arg7"> The seventh argument. </param>
+    /// <param name="arg8"> The eight argument. </param>
+    /// <param name="arg9"> The nineth argument. </param>
+    /// <param name="arg10"> The tenth argument. </param>
+    /// <param name="arg11"> The eleventh argument. </param>
+    /// <param name="arg12"> The twelfth argument. </param>
+    /// <param name="arg13"> The thirteen argument. </param>
+    /// <param name="arg14"> The fourteenth argument. </param>
+    /// <param name="arg15"> The fifteenth argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6,
+        object? arg7, object? arg8, object? arg9, object? arg10, object? arg11, object? arg12, object? arg13,
+        object? arg14, object? arg15)
+        => Data = new object?[]
+        {
+            arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11,
+            arg12, arg13, arg14, arg15,
+        };
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// </summary>
+    /// <param name="arg1"> The first argument. </param>
+    /// <param name="arg2"> The second argument. </param>
+    /// <param name="arg3"> The third argument. </param>
+    /// <param name="arg4"> The fourth argument. </param>
+    /// <param name="arg5"> The fifth argument. </param>
+    /// <param name="arg6"> The sixth argument. </param>
+    /// <param name="arg7"> The seventh argument. </param>
+    /// <param name="arg8"> The eight argument. </param>
+    /// <param name="arg9"> The nineth argument. </param>
+    /// <param name="arg10"> The tenth argument. </param>
+    /// <param name="arg11"> The eleventh argument. </param>
+    /// <param name="arg12"> The twelfth argument. </param>
+    /// <param name="arg13"> The thirteen argument. </param>
+    /// <param name="arg14"> The fourteenth argument. </param>
+    /// <param name="arg15"> The fifteenth argument. </param>
+    /// <param name="arg16"> The sixteenth argument. </param>
+    public DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6,
+        object? arg7, object? arg8, object? arg9, object? arg10, object? arg11, object? arg12, object? arg13,
+        object? arg14, object? arg15, object? arg16)
+        => Data = new object?[]
+        {
+            arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11,
+            arg12, arg13, arg14, arg15, arg16,
+        };
 
     /// <summary>
     /// Gets data for calling test method.
