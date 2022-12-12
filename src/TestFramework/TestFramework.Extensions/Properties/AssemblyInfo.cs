@@ -11,7 +11,7 @@ using System.Runtime.Versioning;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: NeutralResourcesLanguage("en")]
-[assembly: CLSCompliant(false)]
+[assembly: CLSCompliant(true)]
 
 // Version information for an assembly consists of the following four values:
 //

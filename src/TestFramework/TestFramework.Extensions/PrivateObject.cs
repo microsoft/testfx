@@ -138,7 +138,9 @@ public class PrivateObject
             o = Activator.CreateInstance(type, ConstructorFlags, null, args, null);
         }
 
-        ConstructFrom(o);
+        _ = o ?? throw new ArgumentNullException(nameof(o));
+        _target = o;
+        _originalType = o.GetType();
     }
 
     /// <summary>
@@ -150,7 +152,8 @@ public class PrivateObject
     public PrivateObject(object obj)
     {
         _ = obj ?? throw new ArgumentNullException(nameof(obj));
-        ConstructFrom(obj);
+        _target = obj;
+        _originalType = obj.GetType();
     }
 
     /// <summary>
@@ -740,14 +743,6 @@ public class PrivateObject
 
             throw;
         }
-    }
-
-    [MemberNotNull(nameof(_target), nameof(_originalType))]
-    private void ConstructFrom(object obj)
-    {
-        _ = obj ?? throw new ArgumentNullException(nameof(obj));
-        _target = obj;
-        _originalType = obj.GetType();
     }
 
     private void BuildGenericMethodCacheForType(Type t)
