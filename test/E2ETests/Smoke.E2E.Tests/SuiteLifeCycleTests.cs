@@ -343,7 +343,6 @@ public class SuiteLifeCycleTests : CLITestBase
             
             """);
 
-        // Class cleanup with EndOfClass will appear in the parent logs in case of any inheritance behavior.
         var caseClassCleanupEndOfClassAndBeforeEachDerivedClass = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanupEndOfClassAndBeforeEachDerivedClass.TestMethod"));
         caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
         caseClassCleanupEndOfClassAndBeforeEachDerivedClass.Messages.Single().Text.Should().Be(
@@ -566,7 +565,7 @@ public class SuiteLifeCycleTests : CLITestBase
                     ? "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"
                     : "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
                 """);
-        var numberOfLines = caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod.Messages.Single().Text.Split('\n').Length;
+        var numberOfLines = caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethodMessageText.Split('\n').Length;
         Verify(numberOfLines == (targetFramework == "net6.0" ? 31 : 30)); // The number of the logs + 3 empty lines + 1 for the logs' header.
 
         // Locally, netfx calls seems to be respecting the order of the cleanup while it is not stable for netcore.
