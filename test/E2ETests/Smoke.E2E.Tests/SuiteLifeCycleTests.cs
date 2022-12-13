@@ -566,6 +566,8 @@ public class SuiteLifeCycleTests : CLITestBase
                     ? "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.DisposeAsync was called\r\nLifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called"
                     : "LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.Dispose was called")}
                 """);
+        var numberOfLines = caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod.Messages.Single().Text.Split('\n').Length;
+        Verify(numberOfLines == (targetFramework == "net6.0" ? 31 : 30)); // The number of the logs + 3 empty lines + 1 for the logs' header.
 
         // Locally, netfx calls seems to be respecting the order of the cleanup while it is not stable for netcore.
         // But local order is not the same on various machines. I am not sure whether we should be commiting to a
@@ -574,6 +576,14 @@ public class SuiteLifeCycleTests : CLITestBase
             "LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassCleanup was called");
         caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethodMessageText.Should().Contain(
             "LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.ClassCleanup was called");
+        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethodMessageText.Should().Contain(
+            "LifeCycleDerivedClassCleanupEndOfAssemblyAndNone.ClassCleanup was called");
+        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethodMessageText.Should().Contain(
+            "LifeCycleDerivedClassCleanupEndOfClassAndBeforeEachDerivedClass.ClassCleanup was called");
+        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethodMessageText.Should().Contain(
+            "LifeCycleDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.ClassCleanup was called");
+        caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethodMessageText.Should().Contain(
+            "LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassCleanup was called");
         caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethodMessageText.Should().Contain(
             "LifeCycleClassCleanupEndOfAssemblyAndNone.ClassCleanup was called");
         caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethodMessageText.Should().Contain(
