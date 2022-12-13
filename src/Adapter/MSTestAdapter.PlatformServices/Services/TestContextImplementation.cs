@@ -135,15 +135,6 @@ public class TestContextImplementation : TestContext, ITestContext
     public override string? TestResultsDirectory => base.TestResultsDirectory;
 
     /// <inheritdoc/>
-    public override string? TestDir => base.TestDir;
-
-    /// <inheritdoc/>
-    public override string? TestDeploymentDir => base.TestDeploymentDir;
-
-    /// <inheritdoc/>
-    public override string? TestLogsDir => base.TestLogsDir;
-
-    /// <inheritdoc/>
     public override string FullyQualifiedTestClassName => base.FullyQualifiedTestClassName!;
 
 #if NETFRAMEWORK
@@ -172,22 +163,6 @@ public class TestContextImplementation : TestContext, ITestContext
         _testResultFiles.Add(Path.GetFullPath(fileName));
 #endif
     }
-
-#if NETFRAMEWORK
-    /// <inheritdoc/>
-    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
-    public override void BeginTimer(string timerName)
-    {
-        throw new NotSupportedException();
-    }
-
-    /// <inheritdoc/>
-    [Obsolete("This method is only available for .NET framework and only throws NotSupportedException. It will be removed in a future update.")]
-    public override void EndTimer(string timerName)
-    {
-        throw new NotSupportedException();
-    }
-#endif
 
     /// <summary>
     /// When overridden in a derived class, used to write trace messages while the

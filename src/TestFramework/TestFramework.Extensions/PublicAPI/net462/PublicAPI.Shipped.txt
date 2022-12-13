@@ -1,8 +1,6 @@
 #nullable enable
-abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.BeginTimer(string! timerName) -> void
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataConnection.get -> System.Data.Common.DbConnection?
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DataRow.get -> System.Data.DataRow?
-abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.EndTimer(string! timerName) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement
 Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.ConnectionString.get -> string!
 Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceElement.ConnectionString.set -> void

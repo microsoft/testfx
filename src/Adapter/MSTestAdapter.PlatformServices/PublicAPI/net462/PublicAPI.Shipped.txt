@@ -50,18 +50,13 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSI
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.SetupConfiguration
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AssemblyResolver.InitializeLifetimeService() -> object?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.RecursiveDirectoryPath.InitializeLifetimeService() -> object!
-override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.BeginTimer(string! timerName) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.DataConnection.get -> System.Data.Common.DbConnection?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.DataRow.get -> System.Data.DataRow?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.DeploymentDirectory.get -> string?
-override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.EndTimer(string! timerName) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.FullyQualifiedTestClassName.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ManagedMethod.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ManagedType.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ResultsDirectory.get -> string?
-override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestDeploymentDir.get -> string?
-override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestDir.get -> string?
-override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestLogsDir.get -> string?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestName.get -> string!
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestResultsDirectory.get -> string?
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestRunDirectory.get -> string?
