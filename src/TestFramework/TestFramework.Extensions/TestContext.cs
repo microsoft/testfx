@@ -38,8 +38,11 @@ public abstract class TestContext
     internal static readonly string ResultsDirectoryLabel = nameof(ResultsDirectory);
     internal static readonly string TestRunResultsDirectoryLabel = nameof(TestRunResultsDirectory);
     internal static readonly string TestResultsDirectoryLabel = nameof(TestResultsDirectory);
+    [Obsolete("Remove when related property is removed.")]
     internal static readonly string TestDirLabel = nameof(TestDir);
+    [Obsolete("Remove when related property is removed.")]
     internal static readonly string TestDeploymentDirLabel = nameof(TestDeploymentDir);
+    [Obsolete("Remove when related property is removed.")]
     internal static readonly string TestLogsDirLabel = nameof(TestLogsDir);
 #endif
 
@@ -101,12 +104,14 @@ public abstract class TestContext
     /// Gets base directory for the test run, under which deployed files and result files are stored.
     /// Same as <see cref="TestRunDirectory"/>. Use that property instead.
     /// </summary>
+    [Obsolete("This property is deprecated, use TestRunDirectory instead. It will be removed in next version.")]
     public virtual string? TestDir => GetProperty<string>(TestDirLabel);
 
     /// <summary>
     /// Gets directory for files deployed for the test run. Typically a subdirectory of <see cref="TestRunDirectory"/>.
     /// Same as <see cref="DeploymentDirectory"/>. Use that property instead.
     /// </summary>
+    [Obsolete("This property is deprecated, use DeploymentDirectory instead. It will be removed in next version.")]
     public virtual string? TestDeploymentDir => GetProperty<string>(TestDeploymentDirLabel);
 
     /// <summary>
@@ -114,6 +119,7 @@ public abstract class TestContext
     /// Same as <see cref="TestRunResultsDirectory"/>. Use that property for test run result files, or
     /// <see cref="TestResultsDirectory"/> for test-specific result files instead.
     /// </summary>
+    [Obsolete("This property is deprecated, use TestRunResultsDirectory for test run result files or TestResultsDirectory for test-specific result files instead. It will be removed in next version.")]
     public virtual string? TestLogsDir => GetProperty<string>(TestLogsDirLabel);
 
     #endregion

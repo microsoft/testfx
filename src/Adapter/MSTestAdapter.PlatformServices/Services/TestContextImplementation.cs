@@ -135,15 +135,6 @@ public class TestContextImplementation : TestContext, ITestContext
     public override string? TestResultsDirectory => base.TestResultsDirectory;
 
     /// <inheritdoc/>
-    public override string? TestDir => base.TestDir;
-
-    /// <inheritdoc/>
-    public override string? TestDeploymentDir => base.TestDeploymentDir;
-
-    /// <inheritdoc/>
-    public override string? TestLogsDir => base.TestLogsDir;
-
-    /// <inheritdoc/>
     public override string FullyQualifiedTestClassName => base.FullyQualifiedTestClassName!;
 
 #if NETFRAMEWORK
