@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -31,7 +32,8 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual)
+    public static void AreEqual<T>(
+        [NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual)
         => AreEqual(expected, actual, null, string.Empty, null);
 
     /// <summary>
@@ -55,7 +57,9 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer)
+    public static void AreEqual<T>(
+        [NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual,
+        IEqualityComparer<T>? comparer)
         => AreEqual(expected, actual, comparer, string.Empty, null);
 
     /// <summary>
@@ -81,7 +85,9 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, string? message)
+    public static void AreEqual<T>(
+        [NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual,
+        string? message)
         => AreEqual(expected, actual, null, message, null);
 
     /// <summary>
@@ -111,7 +117,9 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer, string? message)
+    public static void AreEqual<T>(
+        [NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual,
+        IEqualityComparer<T>? comparer, string? message)
         => AreEqual(expected, actual, comparer, message, null);
 
     /// <summary>
@@ -140,7 +148,9 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, string? message, params object?[]? parameters)
+    public static void AreEqual<T>(
+        [NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual,
+        string? message, params object?[]? parameters)
         => AreEqual(expected, actual, null, message, parameters);
 
     /// <summary>
@@ -173,7 +183,9 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer, string? message, params object?[]? parameters)
+    public static void AreEqual<T>(
+        [NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual,
+        IEqualityComparer<T>? comparer, string? message, params object?[]? parameters)
     {
         var localComparer = comparer ?? EqualityComparer<T>.Default;
         if (localComparer.Equals(expected!, actual!))
@@ -400,9 +412,7 @@ public sealed partial class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(float expected, float actual, float delta)
-    {
-        AreEqual(expected, actual, delta, string.Empty, null);
-    }
+        => AreEqual(expected, actual, delta, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified floats are equal and throws an exception
@@ -429,9 +439,7 @@ public sealed partial class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(float expected, float actual, float delta, string? message)
-    {
-        AreEqual(expected, actual, delta, message, null);
-    }
+        => AreEqual(expected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified floats are equal and throws an exception
@@ -509,9 +517,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(float notExpected, float actual, float delta)
-    {
-        AreNotEqual(notExpected, actual, delta, string.Empty, null);
-    }
+        => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified floats are unequal and throws an exception
@@ -538,9 +544,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(float notExpected, float actual, float delta, string? message)
-    {
-        AreNotEqual(notExpected, actual, delta, message, null);
-    }
+        => AreNotEqual(notExpected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified floats are unequal and throws an exception
@@ -605,9 +609,7 @@ public sealed partial class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(decimal expected, decimal actual, decimal delta)
-    {
-        AreEqual(expected, actual, delta, string.Empty, null);
-    }
+        => AreEqual(expected, actual, delta, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified decimals are equal and throws an exception
@@ -634,9 +636,7 @@ public sealed partial class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(decimal expected, decimal actual, decimal delta, string? message)
-    {
-        AreEqual(expected, actual, delta, message, null);
-    }
+        => AreEqual(expected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified decimals are equal and throws an exception
@@ -701,9 +701,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta)
-    {
-        AreNotEqual(notExpected, actual, delta, string.Empty, null);
-    }
+        => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified decimals are unequal and throws an exception
@@ -730,9 +728,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(decimal notExpected, decimal actual, decimal delta, string? message)
-    {
-        AreNotEqual(notExpected, actual, delta, message, null);
-    }
+        => AreNotEqual(notExpected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified decimals are unequal and throws an exception
@@ -797,9 +793,7 @@ public sealed partial class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(long expected, long actual, long delta)
-    {
-        AreEqual(expected, actual, delta, string.Empty, null);
-    }
+        => AreEqual(expected, actual, delta, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified longs are equal and throws an exception
@@ -826,9 +820,7 @@ public sealed partial class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(long expected, long actual, long delta, string? message)
-    {
-        AreEqual(expected, actual, delta, message, null);
-    }
+        => AreEqual(expected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified longs are equal and throws an exception
@@ -893,9 +885,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(long notExpected, long actual, long delta)
-    {
-        AreNotEqual(notExpected, actual, delta, string.Empty, null);
-    }
+        => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified longs are unequal and throws an exception
@@ -922,9 +912,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(long notExpected, long actual, long delta, string? message)
-    {
-        AreNotEqual(notExpected, actual, delta, message, null);
-    }
+        => AreNotEqual(notExpected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified longs are unequal and throws an exception
@@ -989,9 +977,7 @@ public sealed partial class Assert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(double expected, double actual, double delta)
-    {
-        AreEqual(expected, actual, delta, string.Empty, null);
-    }
+        => AreEqual(expected, actual, delta, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified doubles are equal and throws an exception
@@ -1017,9 +1003,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(double expected, double actual, double delta, string? message)
-    {
-        AreEqual(expected, actual, delta, message, null);
-    }
+        => AreEqual(expected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified doubles are equal and throws an exception
@@ -1096,9 +1080,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(double notExpected, double actual, double delta)
-    {
-        AreNotEqual(notExpected, actual, delta, string.Empty, null);
-    }
+        => AreNotEqual(notExpected, actual, delta, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified doubles are unequal and throws an exception
@@ -1125,9 +1107,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(double notExpected, double actual, double delta, string? message)
-    {
-        AreNotEqual(notExpected, actual, delta, message, null);
-    }
+        => AreNotEqual(notExpected, actual, delta, message, null);
 
     /// <summary>
     /// Tests whether the specified doubles are unequal and throws an exception
@@ -1190,9 +1170,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(string? expected, string? actual, bool ignoreCase)
-    {
-        AreEqual(expected, actual, ignoreCase, string.Empty, null);
-    }
+        => AreEqual(expected, actual, ignoreCase, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified strings are equal and throws an exception
@@ -1217,9 +1195,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(string? expected, string? actual, bool ignoreCase, string? message)
-    {
-        AreEqual(expected, actual, ignoreCase, message, null);
-    }
+        => AreEqual(expected, actual, ignoreCase, message, null);
 
     /// <summary>
     /// Tests whether the specified strings are equal and throws an exception
@@ -1246,10 +1222,9 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, string? message, params object?[]? parameters)
-    {
-        AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
-    }
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, string? message,
+        params object?[]? parameters)
+        => AreEqual(expected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
 
     /// <summary>
     /// Tests whether the specified strings are equal and throws an exception
@@ -1266,15 +1241,13 @@ public sealed partial class Assert
     /// indicates a case-insensitive comparison.)
     /// </param>
     /// <param name="culture">
-    /// A CultureInfo object that supplies culture-specific comparison information.
+    /// A CultureInfo object that supplies culture-specific comparison information. If culture is null, the current culture is used.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo? culture)
-    {
-        AreEqual(expected, actual, ignoreCase, culture, string.Empty, null);
-    }
+        => AreEqual(expected, actual, ignoreCase, culture, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified strings are equal and throws an exception
@@ -1291,7 +1264,7 @@ public sealed partial class Assert
     /// indicates a case-insensitive comparison.)
     /// </param>
     /// <param name="culture">
-    /// A CultureInfo object that supplies culture-specific comparison information.
+    /// A CultureInfo object that supplies culture-specific comparison information. If culture is null, the current culture is used.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
@@ -1301,10 +1274,9 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo? culture, string? message)
-    {
-        AreEqual(expected, actual, ignoreCase, culture, message, null);
-    }
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo? culture,
+        string? message)
+        => AreEqual(expected, actual, ignoreCase, culture, message, null);
 
     /// <summary>
     /// Tests whether the specified strings are equal and throws an exception
@@ -1321,7 +1293,7 @@ public sealed partial class Assert
     /// indicates a case-insensitive comparison.)
     /// </param>
     /// <param name="culture">
-    /// A CultureInfo object that supplies culture-specific comparison information.
+    /// A CultureInfo object that supplies culture-specific comparison information. If culture is null, the current culture is used.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
@@ -1334,7 +1306,8 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo? culture, string? message, params object?[]? parameters)
+    public static void AreEqual(string? expected, string? actual, bool ignoreCase, CultureInfo? culture,
+        string? message, params object?[]? parameters)
     {
         CheckParameterNotNull(culture, "Assert.AreEqual", "culture", string.Empty);
         if (CompareInternal(expected, actual, ignoreCase, culture) == 0)
@@ -1388,9 +1361,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase)
-    {
-        AreNotEqual(notExpected, actual, ignoreCase, string.Empty, null);
-    }
+        => AreNotEqual(notExpected, actual, ignoreCase, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified strings are unequal and throws an exception
@@ -1416,9 +1387,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string? message)
-    {
-        AreNotEqual(notExpected, actual, ignoreCase, message, null);
-    }
+        => AreNotEqual(notExpected, actual, ignoreCase, message, null);
 
     /// <summary>
     /// Tests whether the specified strings are unequal and throws an exception
@@ -1446,10 +1415,9 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string? message, params object?[]? parameters)
-    {
-        AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
-    }
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase,
+        string? message, params object?[]? parameters)
+        => AreNotEqual(notExpected, actual, ignoreCase, CultureInfo.InvariantCulture, message, parameters);
 
     /// <summary>
     /// Tests whether the specified strings are unequal and throws an exception
@@ -1467,15 +1435,13 @@ public sealed partial class Assert
     /// indicates a case-insensitive comparison.)
     /// </param>
     /// <param name="culture">
-    /// A CultureInfo object that supplies culture-specific comparison information.
+    /// A CultureInfo object that supplies culture-specific comparison information. If culture is null, the current culture is used.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo? culture)
-    {
-        AreNotEqual(notExpected, actual, ignoreCase, culture, string.Empty, null);
-    }
+        => AreNotEqual(notExpected, actual, ignoreCase, culture, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified strings are unequal and throws an exception
@@ -1493,7 +1459,7 @@ public sealed partial class Assert
     /// indicates a case-insensitive comparison.)
     /// </param>
     /// <param name="culture">
-    /// A CultureInfo object that supplies culture-specific comparison information.
+    /// A CultureInfo object that supplies culture-specific comparison information. If culture is null, the current culture is used.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
@@ -1503,10 +1469,9 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo? culture, string? message)
-    {
-        AreNotEqual(notExpected, actual, ignoreCase, culture, message, null);
-    }
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase,
+        CultureInfo? culture, string? message)
+        => AreNotEqual(notExpected, actual, ignoreCase, culture, message, null);
 
     /// <summary>
     /// Tests whether the specified strings are unequal and throws an exception
@@ -1524,7 +1489,7 @@ public sealed partial class Assert
     /// indicates a case-insensitive comparison.)
     /// </param>
     /// <param name="culture">
-    /// A CultureInfo object that supplies culture-specific comparison information.
+    /// A CultureInfo object that supplies culture-specific comparison information. If culture is null, the current culture is used.
     /// </param>
     /// <param name="message">
     /// The message to include in the exception when <paramref name="actual"/>
@@ -1537,7 +1502,8 @@ public sealed partial class Assert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase, CultureInfo? culture, string? message, params object?[]? parameters)
+    public static void AreNotEqual(string? notExpected, string? actual, bool ignoreCase,
+        CultureInfo? culture, string? message, params object?[]? parameters)
     {
         CheckParameterNotNull(culture, "Assert.AreNotEqual", "culture", string.Empty);
         if (CompareInternal(notExpected, actual, ignoreCase, culture) != 0)

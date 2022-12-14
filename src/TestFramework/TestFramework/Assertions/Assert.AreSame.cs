@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -30,10 +31,8 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame<T>(T? expected, T? actual)
-    {
-        AreSame(expected, actual, string.Empty, null);
-    }
+    public static void AreSame<T>([NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual)
+        => AreSame(expected, actual, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified objects both refer to the same object and
@@ -57,10 +56,10 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame<T>(T? expected, T? actual, string? message)
-    {
-        AreSame(expected, actual, message, null);
-    }
+    public static void AreSame<T>(
+        [NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual,
+        string? message)
+        => AreSame(expected, actual, message, null);
 
     /// <summary>
     /// Tests whether the specified objects both refer to the same object and
@@ -87,7 +86,9 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame<T>(T? expected, T? actual, string? message, params object?[]? parameters)
+    public static void AreSame<T>(
+        [NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual,
+        string? message, params object?[]? parameters)
     {
         if (ReferenceEquals(expected, actual))
         {
@@ -130,9 +131,7 @@ public sealed partial class Assert
     /// as <paramref name="actual"/>.
     /// </exception>
     public static void AreNotSame<T>(T? notExpected, T? actual)
-    {
-        AreNotSame(notExpected, actual, string.Empty, null);
-    }
+        => AreNotSame(notExpected, actual, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified objects refer to different objects and
@@ -158,9 +157,7 @@ public sealed partial class Assert
     /// as <paramref name="actual"/>.
     /// </exception>
     public static void AreNotSame<T>(T? notExpected, T? actual, string? message)
-    {
-        AreNotSame(notExpected, actual, message, null);
-    }
+        => AreNotSame(notExpected, actual, message, null);
 
     /// <summary>
     /// Tests whether the specified objects refer to different objects and

@@ -23,9 +23,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
     public static void IsNull(object? value)
-    {
-        IsNull(value, string.Empty, null);
-    }
+        => IsNull(value, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified object is null and throws an exception
@@ -42,9 +40,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="value"/> is not null.
     /// </exception>
     public static void IsNull(object? value, string? message)
-    {
-        IsNull(value, message, null);
-    }
+        => IsNull(value, message, null);
 
     /// <summary>
     /// Tests whether the specified object is null and throws an exception
@@ -82,9 +78,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
     public static void IsNotNull([NotNull] object? value)
-    {
-        IsNotNull(value, string.Empty, null);
-    }
+        => IsNotNull(value, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified object is non-null and throws an exception
@@ -101,9 +95,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="value"/> is null.
     /// </exception>
     public static void IsNotNull([NotNull] object? value, string? message)
-    {
-        IsNotNull(value, message, null);
-    }
+        => IsNotNull(value, message, null);
 
     /// <summary>
     /// Tests whether the specified object is non-null and throws an exception

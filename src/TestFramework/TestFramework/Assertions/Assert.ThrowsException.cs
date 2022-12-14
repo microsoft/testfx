@@ -33,9 +33,7 @@ public sealed partial class Assert
     /// </returns>
     public static T ThrowsException<T>(Action action)
         where T : Exception
-    {
-        return ThrowsException<T>(action, string.Empty, null);
-    }
+        => ThrowsException<T>(action, string.Empty, null);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -59,9 +57,7 @@ public sealed partial class Assert
     /// </returns>
     public static T ThrowsException<T>(Action action, string message)
         where T : Exception
-    {
-        return ThrowsException<T>(action, message, null);
-    }
+        => ThrowsException<T>(action, message, null);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -81,9 +77,7 @@ public sealed partial class Assert
     /// </returns>
     public static T ThrowsException<T>(Func<object?> action)
         where T : Exception
-    {
-        return ThrowsException<T>(action, string.Empty, null);
-    }
+        => ThrowsException<T>(action, string.Empty, null);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -107,9 +101,7 @@ public sealed partial class Assert
     /// </returns>
     public static T ThrowsException<T>(Func<object?> action, string message)
         where T : Exception
-    {
-        return ThrowsException<T>(action, message, null);
-    }
+        => ThrowsException<T>(action, message, null);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -136,9 +128,7 @@ public sealed partial class Assert
     /// </returns>
     public static T ThrowsException<T>(Func<object?> action, string message, params object?[]? parameters)
         where T : Exception
-    {
-        return ThrowsException<T>(() => { _ = action(); }, message, parameters);
-    }
+        => ThrowsException<T>(() => { _ = action(); }, message, parameters);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -231,9 +221,8 @@ public sealed partial class Assert
     /// </returns>
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
         where T : Exception
-    {
-        return await ThrowsExceptionAsync<T>(action, string.Empty, null).ConfigureAwait(false);
-    }
+        => await ThrowsExceptionAsync<T>(action, string.Empty, null)
+            .ConfigureAwait(false);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)
@@ -253,9 +242,8 @@ public sealed partial class Assert
     /// </returns>
     public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
         where T : Exception
-    {
-        return await ThrowsExceptionAsync<T>(action, message, null).ConfigureAwait(false);
-    }
+        => await ThrowsExceptionAsync<T>(action, message, null)
+            .ConfigureAwait(false);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception of type <typeparamref name="T"/> (and not of derived type)

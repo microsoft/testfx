@@ -23,9 +23,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool condition)
-    {
-        IsTrue(condition, string.Empty, null);
-    }
+        => IsTrue(condition, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -38,9 +36,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition)
-    {
-        IsTrue(condition, string.Empty, null);
-    }
+        => IsTrue(condition, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -57,9 +53,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool condition, string? message)
-    {
-        IsTrue(condition, message, null);
-    }
+        => IsTrue(condition, message, null);
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -76,9 +70,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is false.
     /// </exception>
     public static void IsTrue([DoesNotReturnIf(false)] bool? condition, string? message)
-    {
-        IsTrue(condition, message, null);
-    }
+        => IsTrue(condition, message, null);
 
     /// <summary>
     /// Tests whether the specified condition is true and throws an exception
@@ -141,9 +133,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool condition)
-    {
-        IsFalse(condition, string.Empty, null);
-    }
+        => IsFalse(condition, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -156,9 +146,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition)
-    {
-        IsFalse(condition, string.Empty, null);
-    }
+        => IsFalse(condition, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -175,9 +163,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool condition, string? message)
-    {
-        IsFalse(condition, message, null);
-    }
+        => IsFalse(condition, message, null);
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
@@ -194,9 +180,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="condition"/> is true.
     /// </exception>
     public static void IsFalse([DoesNotReturnIf(true)] bool? condition, string? message)
-    {
-        IsFalse(condition, message, null);
-    }
+        => IsFalse(condition, message, null);
 
     /// <summary>
     /// Tests whether the specified condition is false and throws an exception
