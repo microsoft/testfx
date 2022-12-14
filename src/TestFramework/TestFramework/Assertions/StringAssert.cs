@@ -13,6 +13,8 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed class StringAssert
 {
+    private static readonly object[] Empty = Array.Empty<object>();
+
     #region Singleton constructor
 
     private StringAssert()
@@ -127,7 +129,7 @@ public sealed class StringAssert
     /// </exception>
     public static void Contains([NotNull] string? value, [NotNull] string? substring, string? message, StringComparison comparisonType)
     {
-        Contains(value, substring, message, comparisonType, Array.Empty<object>());
+        Contains(value, substring, message, comparisonType, Empty);
     }
 
     /// <summary>
@@ -236,7 +238,7 @@ public sealed class StringAssert
     /// </exception>
     public static void StartsWith([NotNull] string? value, [NotNull] string? substring, StringComparison comparisonType)
     {
-        StartsWith(value, substring, string.Empty, comparisonType, Array.Empty<object>());
+        StartsWith(value, substring, string.Empty, comparisonType, Empty);
     }
 
     /// <summary>
@@ -317,7 +319,7 @@ public sealed class StringAssert
     /// </exception>
     public static void StartsWith([NotNull] string? value, [NotNull] string? substring, string? message, StringComparison comparisonType)
     {
-        StartsWith(value, substring, message, comparisonType, Array.Empty<object>());
+        StartsWith(value, substring, message, comparisonType, Empty);
     }
 
     /// <summary>
@@ -398,7 +400,7 @@ public sealed class StringAssert
     /// </exception>
     public static void EndsWith([NotNull] string? value, [NotNull] string? substring, StringComparison comparisonType)
     {
-        EndsWith(value, substring, string.Empty, comparisonType, Array.Empty<object>());
+        EndsWith(value, substring, string.Empty, comparisonType, Empty);
     }
 
     /// <summary>
@@ -479,7 +481,7 @@ public sealed class StringAssert
     /// </exception>
     public static void EndsWith([NotNull] string? value, [NotNull] string? substring, string? message, StringComparison comparisonType)
     {
-        EndsWith(value, substring, message, comparisonType, Array.Empty<object>());
+        EndsWith(value, substring, message, comparisonType, Empty);
     }
 
     /// <summary>
