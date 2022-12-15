@@ -1145,7 +1145,7 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, IComparer comparer)
+    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer)
         => AreNotEqual(notExpected, actual, comparer, string.Empty, null);
 
     /// <summary>
@@ -1173,7 +1173,8 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, IComparer comparer, string? message)
+    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer,
+        string? message)
         => AreNotEqual(notExpected, actual, comparer, message, null);
 
     /// <summary>
