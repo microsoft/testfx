@@ -227,7 +227,7 @@ public class CollectionAssertTests : TestContainer
     public void CollectionAssertAreNotEqualComparerNullabilityPostConditions()
     {
         ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetCollection();
+        ICollection? collection2 = GetMatchingSuperSet();
         IComparer? comparer = GetComparer();
         CollectionAssert.AreNotEqual(collection1, collection2, comparer);
         comparer.ToString(); // no warning
@@ -236,7 +236,7 @@ public class CollectionAssertTests : TestContainer
     public void CollectionAssertAreNotEqualComparerMessageNullabilityPostConditions()
     {
         ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetCollection();
+        ICollection? collection2 = GetMatchingSuperSet();
         IComparer? comparer = GetComparer();
         CollectionAssert.AreNotEqual(collection1, collection2, comparer, "message");
         comparer.ToString(); // no warning
@@ -245,7 +245,7 @@ public class CollectionAssertTests : TestContainer
     public void CollectionAssertAreNotEqualComparerMessageParametersNullabilityPostConditions()
     {
         ICollection? collection1 = GetCollection();
-        ICollection? collection2 = GetCollection();
+        ICollection? collection2 = GetMatchingSuperSet();
         IComparer? comparer = GetComparer();
         CollectionAssert.AreNotEqual(collection1, collection2, comparer, "message format {0} {1}", 1, 2);
         comparer.ToString(); // no warning
