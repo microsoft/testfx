@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 
 using Microsoft.TestPlatform.AdapterUtilities;
@@ -172,6 +173,11 @@ public sealed class TestMethod : ITestMethod
     /// Gets or sets the display name set during discovery.
     /// </summary>
     internal string? DisplayName { get; set; }
+
+    internal string UniqueName
+        => HasManagedMethodAndTypeProperties
+        ? $"{ManagedTypeName}.{ManagedMethodName}->{string.Join(", ", SerializedData ?? Array.Empty<string>())}"
+        : $"{FullClassName}.{Name}->{string.Join(", ", SerializedData ?? Array.Empty<string>())}";
 
     internal TestMethod Clone() => (TestMethod)MemberwiseClone();
 }

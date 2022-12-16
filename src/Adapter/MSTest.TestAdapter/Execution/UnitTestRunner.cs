@@ -299,7 +299,7 @@ internal class UnitTestRunner : MarshalByRefObject
             _remainingTestsByClass = testsToRun.GroupBy(t => t.TestMethod.FullClassName)
                 .ToDictionary(
                     g => g.Key,
-                    g => new HashSet<string>(g.Select(t => t.DisplayName!)));
+                    g => new HashSet<string>(g.Select(t => t.TestMethod.UniqueName)));
             _lifecycleFromMsTest = lifecycleFromMsTest;
             _lifecycleFromAssembly = lifecycleFromAssembly;
             _reflectHelper = reflectHelper ?? new ReflectHelper();
@@ -311,7 +311,7 @@ internal class UnitTestRunner : MarshalByRefObject
             var testsByClass = _remainingTestsByClass[testMethodInfo.TestClassName];
             lock (testsByClass)
             {
-                testsByClass.Remove(testMethod.DisplayName!);
+                testsByClass.Remove(testMethod.UniqueName);
                 if (testsByClass.Count == 0)
                 {
                     _remainingTestsByClass.Remove(testMethodInfo.TestClassName);
