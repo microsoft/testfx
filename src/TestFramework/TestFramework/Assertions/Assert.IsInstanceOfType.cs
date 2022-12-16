@@ -32,20 +32,16 @@ public sealed partial class Assert
     /// of <paramref name="value"/>.
     /// </exception>
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType)
-    {
-        IsInstanceOfType(value, expectedType, string.Empty, null);
-    }
+        => IsInstanceOfType(value, expectedType, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified object is an instance of the generic
-    /// type and throws an exception if the generictype is not in the
+    /// type and throws an exception if the generic type is not in the
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>([NotNull] object? value)
-    {
-        IsInstanceOfType(value, typeof(T), string.Empty, null);
-    }
+        => IsInstanceOfType(value, typeof(T), string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
@@ -69,20 +65,16 @@ public sealed partial class Assert
     /// of <paramref name="value"/>.
     /// </exception>
     public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message)
-    {
-        IsInstanceOfType(value, expectedType, message, null);
-    }
+        => IsInstanceOfType(value, expectedType, message, null);
 
     /// <summary>
     /// Tests whether the specified object is an instance of the generic
-    /// type and throws an exception if the generictype is not in the
+    /// type and throws an exception if the generic type is not in the
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>([NotNull] object? value, string? message)
-    {
-        IsInstanceOfType(value, typeof(T), message, null);
-    }
+        => IsInstanceOfType(value, typeof(T), message, null);
 
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
@@ -108,7 +100,8 @@ public sealed partial class Assert
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message, params object?[]? parameters)
+    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message,
+        params object?[]? parameters)
     {
         if (expectedType == null || value == null)
         {
@@ -132,14 +125,12 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified object is an instance of the generic
-    /// type and throws an exception if the generictype is not in the
+    /// type and throws an exception if the generic type is not in the
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>([NotNull] object? value, string? message, params object?[]? parameters)
-    {
-        IsInstanceOfType(value, typeof(T), message, parameters);
-    }
+        => IsInstanceOfType(value, typeof(T), message, parameters);
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong
@@ -158,9 +149,7 @@ public sealed partial class Assert
     /// of <paramref name="value"/>.
     /// </exception>
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType)
-    {
-        IsNotInstanceOfType(value, wrongType, string.Empty, null);
-    }
+        => IsNotInstanceOfType(value, wrongType, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong generic
@@ -169,9 +158,7 @@ public sealed partial class Assert
     /// </summary>
     /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
     public static void IsNotInstanceOfType<T>(object? value)
-    {
-        IsNotInstanceOfType(value, typeof(T), string.Empty, null);
-    }
+        => IsNotInstanceOfType(value, typeof(T), string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong
@@ -195,9 +182,7 @@ public sealed partial class Assert
     /// of <paramref name="value"/>.
     /// </exception>
     public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message)
-    {
-        IsNotInstanceOfType(value, wrongType, message, null);
-    }
+        => IsNotInstanceOfType(value, wrongType, message, null);
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong generic
@@ -206,9 +191,7 @@ public sealed partial class Assert
     /// </summary>
     /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
     public static void IsNotInstanceOfType<T>(object? value, string? message)
-    {
-        IsNotInstanceOfType(value, typeof(T), message, null);
-    }
+        => IsNotInstanceOfType(value, typeof(T), message, null);
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong
@@ -234,7 +217,8 @@ public sealed partial class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message, params object?[]? parameters)
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message,
+        params object?[]? parameters)
     {
         if (wrongType == null)
         {
@@ -269,7 +253,5 @@ public sealed partial class Assert
     /// </summary>
     /// <typeparam name="T">The type that <paramref name="value"/> should not be.</typeparam>
     public static void IsNotInstanceOfType<T>(object? value, string? message, params object?[]? parameters)
-    {
-        IsNotInstanceOfType(value, typeof(T), message, parameters);
-    }
+        => IsNotInstanceOfType(value, typeof(T), message, parameters);
 }

@@ -21,9 +21,7 @@ public sealed partial class Assert
     /// </exception>
     [DoesNotReturn]
     public static void Inconclusive()
-    {
-        Inconclusive(string.Empty, null);
-    }
+        => Inconclusive(string.Empty, null);
 
     /// <summary>
     /// Throws an AssertInconclusiveException.
@@ -37,9 +35,7 @@ public sealed partial class Assert
     /// </exception>
     [DoesNotReturn]
     public static void Inconclusive(string? message)
-    {
-        Inconclusive(message, null);
-    }
+        => Inconclusive(message, null);
 
     /// <summary>
     /// Throws an AssertInconclusiveException.
@@ -58,6 +54,7 @@ public sealed partial class Assert
     public static void Inconclusive(string? message, params object?[]? parameters)
     {
         string userMessage = BuildUserMessage(message, parameters);
-        throw new AssertInconclusiveException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, "Assert.Inconclusive", userMessage));
+        throw new AssertInconclusiveException(
+            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, "Assert.Inconclusive", userMessage));
     }
 }

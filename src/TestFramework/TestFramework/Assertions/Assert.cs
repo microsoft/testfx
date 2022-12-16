@@ -42,11 +42,9 @@ public sealed partial class Assert
     /// </remarks>
     [return: NotNullIfNotNull(nameof(input))]
     public static string? ReplaceNullChars(string? input)
-    {
-        return StringEx.IsNullOrEmpty(input)
+        => StringEx.IsNullOrEmpty(input)
             ? input
             : input.Replace("\0", "\\0");
-    }
 
     /// <summary>
     /// Helper function that creates and throws an AssertionFailedException.
@@ -59,9 +57,8 @@ public sealed partial class Assert
     /// </param>
     [DoesNotReturn]
     internal static void ThrowAssertFailed(string assertionName, string? message)
-    {
-        throw new AssertFailedException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
-    }
+        => throw new AssertFailedException(
+            string.Format(CultureInfo.CurrentCulture, FrameworkMessages.AssertionFailed, assertionName, ReplaceNulls(message)));
 
     /// <summary>
     /// Builds the formatted message using the given user format message and parameters.
@@ -110,7 +107,8 @@ public sealed partial class Assert
     /// <param name="parameters">
     /// The parameters.
     /// </param>
-    internal static void CheckParameterNotNull(object? param, string assertionName, string parameterName, string? message, params object?[]? parameters)
+    internal static void CheckParameterNotNull([NotNull] object? param, string assertionName, string parameterName,
+        string? message, params object?[]? parameters)
     {
         if (param == null)
         {
@@ -131,6 +129,7 @@ public sealed partial class Assert
     /// The converted string.
     /// </returns>
     [SuppressMessage("ReSharper", "RedundantToStringCall", Justification = "We are ensuring ToString() isn't overloaded in a way to misbehave")]
+    [return: NotNull]
     internal static string ReplaceNulls(object? input)
     {
         // Use the localized "(null)" string for null values.
@@ -152,9 +151,7 @@ public sealed partial class Assert
     }
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo? culture)
-    {
-        return string.Compare(expected, actual, ignoreCase, culture);
-    }
+        => string.Compare(expected, actual, ignoreCase, culture);
 
     #region EqualsAssertion
 

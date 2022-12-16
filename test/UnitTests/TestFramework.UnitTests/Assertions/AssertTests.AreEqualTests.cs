@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -23,7 +25,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreNotEqual(1, 1, "A Message"));
         Verify(ex != null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreNotEqualShouldFailWhenNotEqualString()
@@ -37,7 +39,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreNotEqual("A", "A", "A Message"));
         Verify(ex != null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreNotEqualShouldFailWhenNotEqualStringAndCaseIgnored()
@@ -58,7 +60,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreNotEqual(1, 1, "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreNotEqualShouldFailWhenNotEqualLong()
@@ -72,7 +74,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreNotEqual(1L, 1L, "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreNotEqualShouldFailWhenNotEqualLongWithDelta()
@@ -93,7 +95,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreNotEqual(0.1M, 0.1M, "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreNotEqualShouldFailWhenNotEqualDecimalWithDelta()
@@ -114,7 +116,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreNotEqual(0.1, 0.1, "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreNotEqualShouldFailWhenNotEqualDoubleWithDelta()
@@ -135,7 +137,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreNotEqual(100E-2, 100E-2, "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreNotEqualShouldFailWhenNotEqualFloatWithDelta()
@@ -156,7 +158,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreEqual(null, "string", "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreEqual_WithTurkishCultureAndIgnoreCase_Throws()
@@ -206,7 +208,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreEqual("A", "a", "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreEqualShouldFailWhenNotEqualStringAndCaseIgnored()
@@ -227,7 +229,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreEqual(1, 2, "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreEqualShouldFailWhenNotEqualLong()
@@ -241,7 +243,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreEqual(1L, 2L, "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreEqualShouldFailWhenNotEqualLongWithDelta()
@@ -262,7 +264,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreEqual(0.1, 0.2, "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreEqualShouldFailWhenNotEqualDoubleWithDelta()
@@ -283,7 +285,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreEqual(0.1M, 0.2M, "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreEqualShouldFailWhenNotEqualDecimalWithDelta()
@@ -304,7 +306,7 @@ public partial class AssertTests : TestContainer
     {
         var ex = VerifyThrows(() => Assert.AreEqual(100E-2, 200E-2, "A Message"));
         Verify(ex is not null);
-        Verify(ex.Message.Contains("A Message"));
+        Verify(ex!.Message.Contains("A Message"));
     }
 
     public void AreEqualShouldFailWhenNotEqualFloatWithDelta()
@@ -326,7 +328,7 @@ public partial class AssertTests : TestContainer
         static void Action() => Assert.AreEqual(new object(), 1);
         var ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
-        Verify(ex.Message.Contains("Assert.AreEqual failed. Expected:<System.Object (System.Object)>. Actual:<1 (System.Int32)>."));
+        Verify(ex!.Message.Contains("Assert.AreEqual failed. Expected:<System.Object (System.Object)>. Actual:<1 (System.Int32)>."));
     }
 
     public void AreEqualWithTypeOverridingEqualsShouldWork()
@@ -356,9 +358,32 @@ public partial class AssertTests : TestContainer
         Verify(ex is AssertFailedException);
     }
 
+    public void AreEqualStringIgnoreCaseCultureInfoNullabilityPostConditions()
+    {
+        CultureInfo? cultureInfo = GetCultureInfo();
+        Assert.AreEqual("a", "a", false, cultureInfo);
+        _ = cultureInfo.Calendar; // no warning
+    }
+
+    public void AreEqualStringIgnoreCaseCultureInfoMessageNullabilityPostConditions()
+    {
+        CultureInfo? cultureInfo = GetCultureInfo();
+        Assert.AreEqual("a", "a", false, cultureInfo, "message");
+        _ = cultureInfo.Calendar; // no warning
+    }
+
+    public void AreEqualStringIgnoreCaseCultureInfoMessageParametersNullabilityPostConditions()
+    {
+        CultureInfo? cultureInfo = GetCultureInfo();
+        Assert.AreEqual("a", "a", false, cultureInfo, "message format {0} {1}", 1, 2);
+        _ = cultureInfo.Calendar; // no warning
+    }
+
+    private CultureInfo? GetCultureInfo() => CultureInfo.CurrentCulture;
+
     private class TypeOverridesEquals
     {
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return true;
         }
@@ -371,7 +396,7 @@ public partial class AssertTests : TestContainer
 
     private class EquatableType : IEquatable<EquatableType>
     {
-        public bool Equals(EquatableType other)
+        public bool Equals(EquatableType? other)
         {
             return true;
         }
@@ -379,7 +404,7 @@ public partial class AssertTests : TestContainer
 
     private class TypeOverridesEqualsEqualityComparer : EqualityComparer<TypeOverridesEquals>
     {
-        public override bool Equals(TypeOverridesEquals x, TypeOverridesEquals y)
+        public override bool Equals(TypeOverridesEquals? x, TypeOverridesEquals? y)
         {
             return false;
         }
