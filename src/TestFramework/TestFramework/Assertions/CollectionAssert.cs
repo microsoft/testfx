@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -49,13 +50,11 @@ public sealed class CollectionAssert
     /// The element that is expected to be in the collection.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="element"/> is not found in
-    /// <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> does not contain
+    /// element <paramref name="element"/>.
     /// </exception>
-    public static void Contains(ICollection collection, object? element)
-    {
-        Contains(collection, element, string.Empty, null);
-    }
+    public static void Contains([NotNull] ICollection? collection, object? element)
+        => Contains(collection, element, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collection contains the specified element
@@ -73,13 +72,11 @@ public sealed class CollectionAssert
     /// test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="element"/> is not found in
-    /// <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> does not contain
+    /// element <paramref name="element"/>.
     /// </exception>
-    public static void Contains(ICollection collection, object? element, string? message)
-    {
-        Contains(collection, element, message, null);
-    }
+    public static void Contains([NotNull] ICollection? collection, object? element, string? message)
+        => Contains(collection, element, message, null);
 
     /// <summary>
     /// Tests whether the specified collection contains the specified element
@@ -100,10 +97,11 @@ public sealed class CollectionAssert
     /// An array of parameters to use when formatting <paramref name="message"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="element"/> is not found in
-    /// <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> does not contain
+    /// element <paramref name="element"/>.
     /// </exception>
-    public static void Contains(ICollection collection, object? element, string? message, params object?[]? parameters)
+    public static void Contains([NotNull] ICollection? collection, object? element, string? message,
+        params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.Contains", "collection", string.Empty);
 
@@ -129,13 +127,11 @@ public sealed class CollectionAssert
     /// The element that is expected not to be in the collection.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="element"/> is found in
-    /// <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains
+    /// element <paramref name="element"/>.
     /// </exception>
-    public static void DoesNotContain(ICollection collection, object? element)
-    {
-        DoesNotContain(collection, element, string.Empty, null);
-    }
+    public static void DoesNotContain([NotNull] ICollection? collection, object? element)
+        => DoesNotContain(collection, element, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified
@@ -153,13 +149,11 @@ public sealed class CollectionAssert
     /// results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="element"/> is found in
-    /// <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains
+    /// element <paramref name="element"/>.
     /// </exception>
-    public static void DoesNotContain(ICollection collection, object? element, string? message)
-    {
-        DoesNotContain(collection, element, message, null);
-    }
+    public static void DoesNotContain([NotNull] ICollection? collection, object? element, string? message)
+        => DoesNotContain(collection, element, message, null);
 
     /// <summary>
     /// Tests whether the specified collection does not contain the specified
@@ -180,10 +174,11 @@ public sealed class CollectionAssert
     /// An array of parameters to use when formatting <paramref name="message"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if <paramref name="element"/> is found in
-    /// <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains
+    /// element <paramref name="element"/>.
     /// </exception>
-    public static void DoesNotContain(ICollection collection, object? element, string? message, params object?[]? parameters)
+    public static void DoesNotContain([NotNull] ICollection? collection, object? element, string? message,
+        params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.DoesNotContain", "collection", string.Empty);
 
@@ -204,12 +199,10 @@ public sealed class CollectionAssert
     /// The collection in which to search for null elements.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if a null element is found in <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
     /// </exception>
-    public static void AllItemsAreNotNull(ICollection collection)
-    {
-        AllItemsAreNotNull(collection, string.Empty, null);
-    }
+    public static void AllItemsAreNotNull([NotNull] ICollection? collection)
+        => AllItemsAreNotNull(collection, string.Empty, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are non-null and throws
@@ -223,12 +216,10 @@ public sealed class CollectionAssert
     /// contains a null element. The message is shown in test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if a null element is found in <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
     /// </exception>
-    public static void AllItemsAreNotNull(ICollection collection, string? message)
-    {
-        AllItemsAreNotNull(collection, message, null);
-    }
+    public static void AllItemsAreNotNull([NotNull] ICollection? collection, string? message)
+        => AllItemsAreNotNull(collection, message, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are non-null and throws
@@ -245,9 +236,10 @@ public sealed class CollectionAssert
     /// An array of parameters to use when formatting <paramref name="message"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if a null element is found in <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains a null element.
     /// </exception>
-    public static void AllItemsAreNotNull(ICollection collection, string? message, params object?[]? parameters)
+    public static void AllItemsAreNotNull([NotNull] ICollection? collection, string? message,
+        params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreNotNull", "collection", string.Empty);
         foreach (object? current in collection)
@@ -267,13 +259,11 @@ public sealed class CollectionAssert
     /// The collection in which to search for duplicate elements.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if a two or more equal elements are found in
-    /// <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains at least one duplicate
+    /// element.
     /// </exception>
-    public static void AllItemsAreUnique(ICollection collection)
-    {
-        AllItemsAreUnique(collection, string.Empty, null);
-    }
+    public static void AllItemsAreUnique([NotNull] ICollection? collection)
+        => AllItemsAreUnique(collection, string.Empty, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are unique or not and
@@ -288,13 +278,11 @@ public sealed class CollectionAssert
     /// test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if a two or more equal elements are found in
-    /// <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains at least one duplicate
+    /// element.
     /// </exception>
-    public static void AllItemsAreUnique(ICollection collection, string? message)
-    {
-        AllItemsAreUnique(collection, message, null);
-    }
+    public static void AllItemsAreUnique([NotNull] ICollection? collection, string? message)
+        => AllItemsAreUnique(collection, message, null);
 
     /// <summary>
     /// Tests whether all items in the specified collection are unique or not and
@@ -312,10 +300,11 @@ public sealed class CollectionAssert
     /// An array of parameters to use when formatting <paramref name="message"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if a two or more equal elements are found in
-    /// <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null, or <paramref name="collection"/> contains at least one duplicate
+    /// element.
     /// </exception>
-    public static void AllItemsAreUnique(ICollection collection, string? message, params object?[]? parameters)
+    public static void AllItemsAreUnique([NotNull] ICollection? collection, string? message,
+        params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreUnique", "collection", string.Empty);
 
@@ -381,13 +370,12 @@ public sealed class CollectionAssert
     /// The collection expected to be a superset of <paramref name="subset"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if an element in <paramref name="subset"/> is not found in
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or <paramref name="subset"/> contains at least one element not contained in
     /// <paramref name="superset"/>.
     /// </exception>
-    public static void IsSubsetOf(ICollection subset, ICollection superset)
-    {
-        IsSubsetOf(subset, superset, string.Empty, null);
-    }
+    public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset)
+        => IsSubsetOf(subset, superset, string.Empty, null);
 
     /// <summary>
     /// Tests whether one collection is a subset of another collection and
@@ -406,13 +394,12 @@ public sealed class CollectionAssert
     /// The message is shown in test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if an element in <paramref name="subset"/> is not found in
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or <paramref name="subset"/> contains at least one element not contained in
     /// <paramref name="superset"/>.
     /// </exception>
-    public static void IsSubsetOf(ICollection subset, ICollection superset, string? message)
-    {
-        IsSubsetOf(subset, superset, message, null);
-    }
+    public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
+        => IsSubsetOf(subset, superset, message, null);
 
     /// <summary>
     /// Tests whether one collection is a subset of another collection and
@@ -434,10 +421,12 @@ public sealed class CollectionAssert
     /// An array of parameters to use when formatting <paramref name="message"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if an element in <paramref name="subset"/> is not found in
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or <paramref name="subset"/> contains at least one element not contained in
     /// <paramref name="superset"/>.
     /// </exception>
-    public static void IsSubsetOf(ICollection subset, ICollection superset, string? message, params object?[]? parameters)
+    public static void IsSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message,
+        params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsSubsetOf", "subset", string.Empty);
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsSubsetOf", "superset", string.Empty);
@@ -459,13 +448,11 @@ public sealed class CollectionAssert
     /// The collection expected not to be a superset of <paramref name="subset"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if every element in <paramref name="subset"/> is also found in
-    /// <paramref name="superset"/>.
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
     /// </exception>
-    public static void IsNotSubsetOf(ICollection subset, ICollection superset)
-    {
-        IsNotSubsetOf(subset, superset, string.Empty, null);
-    }
+    public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset)
+        => IsNotSubsetOf(subset, superset, string.Empty, null);
 
     /// <summary>
     /// Tests whether one collection is not a subset of another collection and
@@ -484,13 +471,11 @@ public sealed class CollectionAssert
     /// The message is shown in test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if every element in <paramref name="subset"/> is also found in
-    /// <paramref name="superset"/>.
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
     /// </exception>
-    public static void IsNotSubsetOf(ICollection subset, ICollection superset, string? message)
-    {
-        IsNotSubsetOf(subset, superset, message, null);
-    }
+    public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message)
+        => IsNotSubsetOf(subset, superset, message, null);
 
     /// <summary>
     /// Tests whether one collection is not a subset of another collection and
@@ -512,10 +497,11 @@ public sealed class CollectionAssert
     /// An array of parameters to use when formatting <paramref name="message"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if every element in <paramref name="subset"/> is also found in
-    /// <paramref name="superset"/>.
+    /// <paramref name="subset"/> is null, or <paramref name="superset"/> is null,
+    /// or all elements of <paramref name="subset"/> are contained in <paramref name="superset"/>.
     /// </exception>
-    public static void IsNotSubsetOf(ICollection subset, ICollection superset, string? message, params object?[]? parameters)
+    public static void IsNotSubsetOf([NotNull] ICollection? subset, [NotNull] ICollection? superset, string? message,
+        params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(subset, "CollectionAssert.IsNotSubsetOf", "subset", string.Empty);
         Assert.CheckParameterNotNull(superset, "CollectionAssert.IsNotSubsetOf", "superset", string.Empty);
@@ -543,13 +529,12 @@ public sealed class CollectionAssert
     /// the code under test.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if an element was found in one of the collections but not
-    /// the other.
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if any element was found in one of the collections but not the other.
     /// </exception>
-    public static void AreEquivalent(ICollection? expected, ICollection? actual)
-    {
-        AreEquivalent(expected, actual, string.Empty, null);
-    }
+    public static void AreEquivalent(
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual)
+        => AreEquivalent(expected, actual, string.Empty, null);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
@@ -570,13 +555,13 @@ public sealed class CollectionAssert
     /// in test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if an element was found in one of the collections but not
-    /// the other.
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if any element was found in one of the collections but not the other.
     /// </exception>
-    public static void AreEquivalent(ICollection? expected, ICollection? actual, string? message)
-    {
-        AreEquivalent(expected, actual, message, null);
-    }
+    public static void AreEquivalent(
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
+        string? message)
+        => AreEquivalent(expected, actual, message, null);
 
     /// <summary>
     /// Tests whether two collections contain the same elements and throws an
@@ -600,10 +585,12 @@ public sealed class CollectionAssert
     /// An array of parameters to use when formatting <paramref name="message"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if an element was found in one of the collections but not
-    /// the other.
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if any element was found in one of the collections but not the other.
     /// </exception>
-    public static void AreEquivalent(ICollection? expected, ICollection? actual, string? message, params object?[]? parameters)
+    public static void AreEquivalent(
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
+        string? message, params object?[]? parameters)
     {
         // Check whether one is null while the other is not.
         if ((expected == null) != (actual == null))
@@ -611,8 +598,7 @@ public sealed class CollectionAssert
             Assert.ThrowAssertFailed("CollectionAssert.AreEquivalent", Assert.BuildUserMessage(message, parameters));
         }
 
-        // If the references are the same or both collections are null, they
-        // are equivalent.
+        // If the references are the same or both collections are null, they are equivalent.
         if (ReferenceEquals(expected, actual) || expected == null)
         {
             return;
@@ -668,13 +654,13 @@ public sealed class CollectionAssert
     /// the code under test.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if the two collections contained the same elements, including
-    /// the same number of duplicate occurrences of each element.
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if collections contain the same elements, including the same number of duplicate
+    /// occurrences of each element.
     /// </exception>
-    public static void AreNotEquivalent(ICollection? expected, ICollection? actual)
-    {
-        AreNotEquivalent(expected, actual, string.Empty, null);
-    }
+    public static void AreNotEquivalent(
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual)
+        => AreNotEquivalent(expected, actual, string.Empty, null);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -695,13 +681,14 @@ public sealed class CollectionAssert
     /// is shown in test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if the two collections contained the same elements, including
-    /// the same number of duplicate occurrences of each element.
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if collections contain the same elements, including the same number of duplicate
+    /// occurrences of each element.
     /// </exception>
-    public static void AreNotEquivalent(ICollection? expected, ICollection? actual, string? message)
-    {
-        AreNotEquivalent(expected, actual, message, null);
-    }
+    public static void AreNotEquivalent(
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
+        string? message)
+        => AreNotEquivalent(expected, actual, message, null);
 
     /// <summary>
     /// Tests whether two collections contain the different elements and throws an
@@ -725,10 +712,13 @@ public sealed class CollectionAssert
     /// An array of parameters to use when formatting <paramref name="message"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if the two collections contained the same elements, including
-    /// the same number of duplicate occurrences of each element.
+    /// <paramref name="expected"/> and <paramref name="actual"/> nullabilities don't match,
+    /// or if collections contain the same elements, including the same number of duplicate
+    /// occurrences of each element.
     /// </exception>
-    public static void AreNotEquivalent(ICollection? expected, ICollection? actual, string? message, params object?[]? parameters)
+    public static void AreNotEquivalent(
+        [NotNullIfNotNull(nameof(actual))] ICollection? expected, [NotNullIfNotNull(nameof(expected))] ICollection? actual,
+        string? message, params object?[]? parameters)
     {
         // Check whether one is null while the other is not.
         if ((expected == null) != (actual == null))
@@ -766,7 +756,7 @@ public sealed class CollectionAssert
         }
 
         // Search for a mismatched element.
-        if (!FindMismatchedElement(expected, actual, out var expectedCount, out var actualCount, out var mismatchedElement))
+        if (!FindMismatchedElement(expected, actual, out _, out _, out _))
         {
             string userMessage = Assert.BuildUserMessage(message, parameters);
             var finalMessage = string.Format(
@@ -794,14 +784,12 @@ public sealed class CollectionAssert
     /// The expected type of each element of <paramref name="collection"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if an element in <paramref name="collection"/> is null or
-    /// <paramref name="expectedType"/> is not in the inheritance hierarchy
-    /// of an element in <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null or, <paramref name="expectedType"/> is null,
+    /// or some elements of <paramref name="collection"/> do not inherit/implement
+    /// <paramref name="expectedType"/>.
     /// </exception>
-    public static void AllItemsAreInstancesOfType(ICollection collection, Type expectedType)
-    {
-        AllItemsAreInstancesOfType(collection, expectedType, string.Empty, null);
-    }
+    public static void AllItemsAreInstancesOfType([NotNull] ICollection? collection, [NotNull] Type? expectedType)
+        => AllItemsAreInstancesOfType(collection, expectedType, string.Empty, null);
 
     /// <summary>
     /// Tests whether all elements in the specified collection are instances
@@ -821,14 +809,13 @@ public sealed class CollectionAssert
     /// <paramref name="expectedType"/>. The message is shown in test results.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if an element in <paramref name="collection"/> is null or
-    /// <paramref name="expectedType"/> is not in the inheritance hierarchy
-    /// of an element in <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null or, <paramref name="expectedType"/> is null,
+    /// or some elements of <paramref name="collection"/> do not inherit/implement
+    /// <paramref name="expectedType"/>.
     /// </exception>
-    public static void AllItemsAreInstancesOfType(ICollection collection, Type expectedType, string? message)
-    {
-        AllItemsAreInstancesOfType(collection, expectedType, message, null);
-    }
+    public static void AllItemsAreInstancesOfType([NotNull] ICollection? collection, [NotNull] Type? expectedType,
+        string? message)
+        => AllItemsAreInstancesOfType(collection, expectedType, message, null);
 
     /// <summary>
     /// Tests whether all elements in the specified collection are instances
@@ -851,18 +838,19 @@ public sealed class CollectionAssert
     /// An array of parameters to use when formatting <paramref name="message"/>.
     /// </param>
     /// <exception cref="AssertFailedException">
-    /// Thrown if an element in <paramref name="collection"/> is null or
-    /// <paramref name="expectedType"/> is not in the inheritance hierarchy
-    /// of an element in <paramref name="collection"/>.
+    /// <paramref name="collection"/> is null or, <paramref name="expectedType"/> is null,
+    /// or some elements of <paramref name="collection"/> do not inherit/implement
+    /// <paramref name="expectedType"/>.
     /// </exception>
-    public static void AllItemsAreInstancesOfType(ICollection collection, Type expectedType, string? message, params object?[]? parameters)
+    public static void AllItemsAreInstancesOfType(
+        [NotNull] ICollection? collection, [NotNull] Type? expectedType, string? message, params object?[]? parameters)
     {
         Assert.CheckParameterNotNull(collection, "CollectionAssert.AllItemsAreInstancesOfType", "collection", string.Empty);
         Assert.CheckParameterNotNull(expectedType, "CollectionAssert.AllItemsAreInstancesOfType", "expectedType", string.Empty);
         int i = 0;
         foreach (object? element in collection)
         {
-            if (expectedType?.GetTypeInfo() is { } expectedTypeInfo
+            if (expectedType.GetTypeInfo() is { } expectedTypeInfo
                 && element?.GetType().GetTypeInfo() is { } elementTypeInfo
                 && !expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
             {
@@ -904,9 +892,7 @@ public sealed class CollectionAssert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual)
-    {
-        AreEqual(expected, actual, string.Empty, null);
-    }
+        => AreEqual(expected, actual, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -932,9 +918,7 @@ public sealed class CollectionAssert
     /// <paramref name="actual"/>.
     /// </exception>
     public static void AreEqual(ICollection? expected, ICollection? actual, string? message)
-    {
-        AreEqual(expected, actual, message, null);
-    }
+        => AreEqual(expected, actual, message, null);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -962,7 +946,8 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual, string? message, params object?[]? parameters)
+    public static void AreEqual(ICollection? expected, ICollection? actual, string? message,
+        params object?[]? parameters)
     {
         string reason = string.Empty;
         if (!AreCollectionsEqual(expected, actual, new ObjectComparer(), ref reason))
@@ -992,9 +977,7 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual)
-    {
-        AreNotEqual(notExpected, actual, string.Empty, null);
-    }
+        => AreNotEqual(notExpected, actual, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collections are unequal and throws an exception
@@ -1020,9 +1003,7 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
     public static void AreNotEqual(ICollection? notExpected, ICollection? actual, string? message)
-    {
-        AreNotEqual(notExpected, actual, message, null);
-    }
+        => AreNotEqual(notExpected, actual, message, null);
 
     /// <summary>
     /// Tests whether the specified collections are unequal and throws an exception
@@ -1050,7 +1031,8 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, string? message, params object?[]? parameters)
+    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, string? message,
+        params object?[]? parameters)
     {
         string reason = string.Empty;
         if (AreCollectionsEqual(notExpected, actual, new ObjectComparer(), ref reason))
@@ -1081,10 +1063,8 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual, IComparer comparer)
-    {
-        AreEqual(expected, actual, comparer, string.Empty, null);
-    }
+    public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer)
+        => AreEqual(expected, actual, comparer, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -1111,10 +1091,9 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual, IComparer comparer, string? message)
-    {
-        AreEqual(expected, actual, comparer, message, null);
-    }
+    public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
+        string? message)
+        => AreEqual(expected, actual, comparer, message, null);
 
     /// <summary>
     /// Tests whether the specified collections are equal and throws an exception
@@ -1144,7 +1123,8 @@ public sealed class CollectionAssert
     /// Thrown if <paramref name="expected"/> is not equal to
     /// <paramref name="actual"/>.
     /// </exception>
-    public static void AreEqual(ICollection? expected, ICollection? actual, IComparer comparer, string? message, params object?[]? parameters)
+    public static void AreEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
+        string? message, params object?[]? parameters)
     {
         string reason = string.Empty;
         if (!AreCollectionsEqual(expected, actual, comparer, ref reason))
@@ -1175,10 +1155,8 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, IComparer comparer)
-    {
-        AreNotEqual(notExpected, actual, comparer, string.Empty, null);
-    }
+    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer)
+        => AreNotEqual(notExpected, actual, comparer, string.Empty, null);
 
     /// <summary>
     /// Tests whether the specified collections are unequal and throws an exception
@@ -1205,10 +1183,9 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, IComparer comparer, string? message)
-    {
-        AreNotEqual(notExpected, actual, comparer, message, null);
-    }
+    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer,
+        string? message)
+        => AreNotEqual(notExpected, actual, comparer, message, null);
 
     /// <summary>
     /// Tests whether the specified collections are unequal and throws an exception
@@ -1238,7 +1215,8 @@ public sealed class CollectionAssert
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="notExpected"/> is equal to <paramref name="actual"/>.
     /// </exception>
-    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, IComparer comparer, string? message, params object?[]? parameters)
+    public static void AreNotEqual(ICollection? notExpected, ICollection? actual, [NotNull] IComparer? comparer,
+        string? message, params object?[]? parameters)
     {
         string reason = string.Empty;
         if (AreCollectionsEqual(notExpected, actual, comparer, ref reason))
@@ -1372,7 +1350,8 @@ public sealed class CollectionAssert
     /// <returns>
     /// true if a mismatched element was found; false otherwise.
     /// </returns>
-    private static bool FindMismatchedElement(ICollection expected, ICollection actual, out int expectedCount, out int actualCount, out object? mismatchedElement)
+    private static bool FindMismatchedElement(ICollection expected, ICollection actual, out int expectedCount,
+        out int actualCount, out object? mismatchedElement)
     {
         // $ CONSIDER: The current algorithm counts the number of occurrences of each
         // $ CONSIDER: element in each collection and then compares the count, resulting
@@ -1414,7 +1393,8 @@ public sealed class CollectionAssert
         return false;
     }
 
-    private static bool AreCollectionsEqual(ICollection? expected, ICollection? actual, IComparer comparer, ref string reason)
+    private static bool AreCollectionsEqual(ICollection? expected, ICollection? actual, [NotNull] IComparer? comparer,
+        ref string reason)
     {
         Assert.CheckParameterNotNull(comparer, "Assert.AreCollectionsEqual", "comparer", string.Empty);
         if (!ReferenceEquals(expected, actual))
