@@ -100,7 +100,8 @@ public sealed partial class Assert
     /// <paramref name="expectedType"/> is not in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message, params object?[]? parameters)
+    public static void IsInstanceOfType([NotNull] object? value, [NotNull] Type? expectedType, string? message,
+        params object?[]? parameters)
     {
         if (expectedType == null || value == null)
         {
@@ -216,7 +217,8 @@ public sealed partial class Assert
     /// <paramref name="wrongType"/> is in the inheritance hierarchy
     /// of <paramref name="value"/>.
     /// </exception>
-    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message, params object?[]? parameters)
+    public static void IsNotInstanceOfType(object? value, [NotNull] Type? wrongType, string? message,
+        params object?[]? parameters)
     {
         if (wrongType == null)
         {

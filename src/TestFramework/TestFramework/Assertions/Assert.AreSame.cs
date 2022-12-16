@@ -31,7 +31,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame<T>([NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual)
+    public static void AreSame<T>(T? expected, T? actual)
         => AreSame(expected, actual, string.Empty, null);
 
     /// <summary>
@@ -56,9 +56,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame<T>(
-        [NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual,
-        string? message)
+    public static void AreSame<T>(T? expected, T? actual, string? message)
         => AreSame(expected, actual, message, null);
 
     /// <summary>
@@ -86,9 +84,7 @@ public sealed partial class Assert
     /// Thrown if <paramref name="expected"/> does not refer to the same object
     /// as <paramref name="actual"/>.
     /// </exception>
-    public static void AreSame<T>(
-        [NotNullIfNotNull(nameof(actual))] T? expected, [NotNullIfNotNull(nameof(expected))] T? actual,
-        string? message, params object?[]? parameters)
+    public static void AreSame<T>(T? expected, T? actual, string? message, params object?[]? parameters)
     {
         if (ReferenceEquals(expected, actual))
         {
