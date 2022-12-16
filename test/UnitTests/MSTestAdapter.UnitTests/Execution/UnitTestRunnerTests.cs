@@ -318,49 +318,6 @@ public class UnitTestRunnerTests : TestContainer
 
     #endregion
 
-    #region RunCleanup Tests
-
-    public void RunCleanupShouldReturnNullOnNoCleanUpMethods()
-    {
-        Verify(_unitTestRunner.RunClassAndAssemblyCleanup() is null);
-    }
-
-    public void RunCleanupShouldReturnCleanupResultsForAssemblyAndClassCleanupMethods()
-    {
-        var type = typeof(DummyTestClassWithCleanupMethods);
-        var methodInfo = type.GetMethod("TestMethod");
-        var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
-
-        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
-            .Returns(Assembly.GetExecutingAssembly());
-
-        _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
-
-        var assemblyCleanupCount = 0;
-        var classCleanupCount = 0;
-
-        DummyTestClassWithCleanupMethods.AssemblyCleanupMethodBody = () =>
-            {
-                assemblyCleanupCount++;
-                throw new NotImplementedException();
-            };
-
-        DummyTestClassWithCleanupMethods.ClassCleanupMethodBody = () =>
-        {
-            classCleanupCount++;
-            throw new NotImplementedException();
-        };
-
-        var cleanupresult = _unitTestRunner.RunClassAndAssemblyCleanup();
-
-        Verify(assemblyCleanupCount == 1);
-        Verify(classCleanupCount == 1);
-        Verify(cleanupresult.Warnings.Count == 2);
-        Verify(cleanupresult.Warnings.All(w => w.Contains("NotImplemented")));
-    }
-
-    #endregion
-
     #region private helpers
 
     private MSTestSettings GetSettingsWithDebugTrace(bool captureDebugTraceValue)
