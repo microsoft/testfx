@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using FluentAssertions;
@@ -24,9 +23,134 @@ public class SuiteLifeCycleTests : CLITestBase
         ValidateTestRunLifecycle("net462");
     }
 
+    public void ValidateInheritanceBehavior()
+    {
+        InvokeVsTestForExecution(
+            new[] { "net462\\" + Assembly },
+            testCaseFilter: "FullyQualifiedName~LifecycleInheritance",
+            targetFramework: "net462");
+
+        RunEventsHandler.PassedTests.Should().HaveCount(10);
+
+        var testMethod1 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClass.TestMethod"));
+        testMethod1.Messages[0].Text.Should().Be(
+            """
+            Console: AssemblyInit was called
+            TestClassBaseEndOfClass: ClassInitialize
+            TestClassDerived_EndOfClass: TestMethod
+            TestClassBaseEndOfClass: ClassCleanup
+            
+            """);
+
+        var testMethod2 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssembly.TestMethod"));
+        testMethod2.Messages[0].Text.Should().Be(
+            """
+            TestClassBaseEndOfAssembly: ClassInitialize
+            TestClassDerived_EndOfAssembly: TestMethod
+            
+            """);
+
+        var testMethod3 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfClass.TestMethod"));
+        testMethod3.Messages[0].Text.Should().Be(
+            """
+            TestClassBaseEndOfClass: ClassInitialize
+            TestClassIntermediateEndOfClassBaseEndOfClass: ClassInitialize
+            TestClassDerivedEndOfClass_EndOfClassEndOfClass: TestMethod
+            TestClassDerivedEndOfClass_EndOfClassEndOfClass: ClassCleanup
+            TestClassIntermediateEndOfClassBaseEndOfClass: ClassCleanup
+            TestClassBaseEndOfClass: ClassCleanup
+            
+            """);
+
+        var testMethod4 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfClass.TestMethod"));
+        testMethod4.Messages[0].Text.Should().Be(
+            """
+            TestClassBaseEndOfClass: ClassInitialize
+            TestClassIntermediateEndOfClassBaseEndOfClass: ClassInitialize
+            TestClassDerived_EndOfClassEndOfClass: TestMethod
+            TestClassIntermediateEndOfClassBaseEndOfClass: ClassCleanup
+            TestClassBaseEndOfClass: ClassCleanup
+            
+            """);
+
+        var testMethod5 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfAssembly.TestMethod"));
+        testMethod5.Messages[0].Text.Should().Be(
+            """
+            TestClassBaseEndOfAssembly: ClassInitialize
+            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassInitialize
+            TestClassDerivedEndOfClass_EndOfClassEndOfAssembly: TestMethod
+            TestClassDerivedEndOfClass_EndOfClassEndOfAssembly: ClassCleanup
+            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassCleanup
+            TestClassBaseEndOfAssembly: ClassCleanup
+            
+            """);
+
+        var testMethod6 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfAssembly.TestMethod"));
+        testMethod6.Messages[0].Text.Should().Be(
+            """
+            TestClassBaseEndOfAssembly: ClassInitialize
+            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassInitialize
+            TestClassDerived_EndOfClassEndOfAssembly: TestMethod
+            TestClassIntermediateEndOfClassBaseEndOfAssembly: ClassCleanup
+            TestClassBaseEndOfAssembly: ClassCleanup
+            
+            """);
+
+        var testMethod7 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass.TestMethod"));
+        testMethod7.Messages[0].Text.Should().Be(
+            """
+            TestClassBaseEndOfClass: ClassInitialize
+            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassInitialize
+            TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass: TestMethod
+            TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass: ClassCleanup
+            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassCleanup
+            TestClassBaseEndOfClass: ClassCleanup
+            
+            """);
+
+        var testMethod8 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfClass.TestMethod"));
+        testMethod8.Messages[0].Text.Should().Be(
+            """
+            TestClassBaseEndOfClass: ClassInitialize
+            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassInitialize
+            TestClassDerived_EndOfAssemblyEndOfClass: TestMethod
+            TestClassIntermediateEndOfAssemblyBaseEndOfClass: ClassCleanup
+            TestClassBaseEndOfClass: ClassCleanup
+            
+            """);
+
+        var testMethod9 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly.TestMethod"));
+        testMethod9.Messages[0].Text.Should().Be(
+            """
+            TestClassBaseEndOfAssembly: ClassInitialize
+            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassInitialize
+            TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly: TestMethod
+            TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly: ClassCleanup
+            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassCleanup
+            TestClassBaseEndOfAssembly: ClassCleanup
+            
+            """);
+
+        var testMethod10 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfAssembly.TestMethod"));
+        testMethod10.Messages[0].Text.Should().Be(
+            """
+            TestClassBaseEndOfAssembly: ClassInitialize
+            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassInitialize
+            TestClassDerived_EndOfAssemblyEndOfAssembly: TestMethod
+            TestClassIntermediateEndOfAssemblyBaseEndOfAssembly: ClassCleanup
+            TestClassBaseEndOfAssembly: ClassCleanup
+            TestClassBaseEndOfAssembly: ClassCleanup
+            Console: AssemblyCleanup was called
+            
+            """);
+    }
+
     private void ValidateTestRunLifecycle(string targetFramework)
     {
-        InvokeVsTestForExecution(new[] { targetFramework + "\\" + Assembly }, targetFramework: targetFramework);
+        InvokeVsTestForExecution(
+            new[] { targetFramework + "\\" + Assembly },
+            testCaseFilter: "FullyQualifiedName~SuiteLifeCycleTestProject",
+            targetFramework: targetFramework);
         RunEventsHandler.PassedTests.Should().HaveCount(27);  // The inherit class tests are called twice.
 
         var caseClassCleanup = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanup.TestMethod"));
