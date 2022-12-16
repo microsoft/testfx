@@ -234,4 +234,58 @@ public class TestAssemblyInfo
             }
         }
     }
+
+    /// <summary>
+    /// Calls the assembly cleanup method in a thread-safe.
+    /// </summary>
+    /// <remarks>
+    /// It is a replacement for RunAssemblyCleanup but as we are in a bug-fix version, we do not want to touch
+    /// public API and so we introduced this method.
+    /// </remarks>
+    internal void ExecuteAssemblyCleanup()
+    {
+        if (AssemblyCleanupMethod == null)
+        {
+            return;
+        }
+
+        lock (_assemblyInfoExecuteSyncObject)
+        {
+            try
+            {
+                AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+            }
+            catch (Exception ex)
+            {
+                var realException = ex.InnerException ?? ex;
+
+                string errorMessage;
+
+                // special case AssertFailedException to trim off part of the stack trace
+                if (realException is AssertFailedException or AssertInconclusiveException)
+                {
+                    errorMessage = realException.Message;
+                }
+                else
+                {
+                    errorMessage = StackTraceHelper.GetExceptionMessage(realException);
+                }
+
+                var exceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
+                DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
+
+                throw new TestFailedException(
+                    UnitTestOutcome.Failed,
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
+                        AssemblyCleanupMethod.DeclaringType.Name,
+                        AssemblyCleanupMethod.Name,
+                        errorMessage,
+                        exceptionStackTraceInfo?.ErrorStackTrace),
+                    exceptionStackTraceInfo,
+                    realException);
+            }
+        }
+    }
 }

@@ -410,4 +410,74 @@ public class TestClassInfo
 
         return null;
     }
+
+    /// <summary>
+    /// Execute current and base class cleanups.
+    /// </summary>
+    /// <remarks>
+    /// This is a replacement for RunClassCleanup but as we are on a bug fix version, we do not want to change
+    /// the public API, hence this method.
+    /// </remarks>
+    internal void ExecuteClassCleanup()
+    {
+        if ((ClassCleanupMethod is null && BaseClassInitAndCleanupMethods.All(p => p.Item2 == null))
+            || IsClassCleanupExecuted)
+        {
+            return;
+        }
+
+        lock (_testClassExecuteSyncObject)
+        {
+            if (IsClassCleanupExecuted
+                || (!IsClassInitializeExecuted && ClassInitializeMethod is not null))
+            {
+                return;
+            }
+
+            MethodInfo? classCleanupMethod = null;
+
+            try
+            {
+                classCleanupMethod = ClassCleanupMethod;
+                classCleanupMethod?.InvokeAsSynchronousTask(null);
+                var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
+                while (baseClassCleanupQueue.Count > 0)
+                {
+                    classCleanupMethod = baseClassCleanupQueue.Dequeue();
+                    classCleanupMethod?.InvokeAsSynchronousTask(null);
+                }
+
+                IsClassCleanupExecuted = true;
+
+                return;
+            }
+            catch (Exception exception)
+            {
+                var realException = exception.InnerException ?? exception;
+                ClassCleanupException = realException;
+
+                // special case AssertFailedException to trim off part of the stack trace
+                string errorMessage = realException is AssertFailedException or AssertInconclusiveException
+                    ? realException.Message
+                    : StackTraceHelper.GetExceptionMessage(realException);
+
+                var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
+
+                var testFailedException = new TestFailedException(
+                    ObjectModelUnitTestOutcome.Failed,
+                    string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.UTA_ClassCleanupMethodWasUnsuccesful,
+                        classCleanupMethod!.DeclaringType!.Name,
+                        classCleanupMethod.Name,
+                        errorMessage,
+                        exceptionStackTraceInfo?.ErrorStackTrace),
+                    exceptionStackTraceInfo,
+                    realException);
+                ClassCleanupException = testFailedException;
+
+                throw testFailedException;
+            }
+        }
+    }
 }
