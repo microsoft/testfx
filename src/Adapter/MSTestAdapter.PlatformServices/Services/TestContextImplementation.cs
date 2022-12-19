@@ -47,11 +47,6 @@ public class TestContextImplementation : TestContext, ITestContext
     private bool _stringWriterDisposed = false;
 
     /// <summary>
-    /// Properties.
-    /// </summary>
-    private IDictionary<string, object?> _properties;
-
-    /// <summary>
     /// Unit test outcome.
     /// </summary>
     private UnitTestOutcome _outcome;
@@ -89,7 +84,7 @@ public class TestContextImplementation : TestContext, ITestContext
 
         // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
         _threadSafeStringWriter = (ThreadSafeStringWriter)stringWriter;
-        _properties = new Dictionary<string, object?>(properties)
+        Properties = new Dictionary<string, object?>(properties)
         {
             [FullyQualifiedTestClassNameLabel] = _testMethod.FullClassName,
             [ManagedTypeLabel] = _testMethod.ManagedTypeName,
@@ -116,7 +111,7 @@ public class TestContextImplementation : TestContext, ITestContext
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary<string, object?> Properties => _properties;
+    public override IDictionary<string, object?> Properties { get; }
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <inheritdoc/>
