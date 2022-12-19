@@ -292,13 +292,13 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <returns>True if found.</returns>
     public bool TryGetPropertyValue(string propertyName, out object? propertyValue)
     {
-        if (_properties == null)
+        if (Properties == null)
         {
             propertyValue = null;
             return false;
         }
 
-        return _properties.TryGetValue(propertyName, out propertyValue);
+        return Properties.TryGetValue(propertyName, out propertyValue);
     }
 
     /// <summary>
@@ -308,7 +308,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="propertyValue">The property value.</param>
     public void AddProperty(string propertyName, string propertyValue)
     {
-        _properties.Add(propertyName, propertyValue);
+        Properties.Add(propertyName, propertyValue);
     }
 
     /// <summary>
