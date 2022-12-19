@@ -84,7 +84,7 @@ function Invoke-Test {
     Write-Log "    Computing Test Containers."
     # Get all the test project folders. They should all be ending with ".Tests"
     $outDir = Join-Path $env:TF_OUT_DIR -ChildPath $TFT_Configuration
-    $testFolders = Get-ChildItem $outDir -Directory -Filter $env:TF_TESTS_OUTDIR_PATTERN | % { $_.FullName }
+    $testFolders = Get-ChildItem $outDir -Directory -Filter $env:TF_TESTS_OUTDIR_PATTERN | ForEach-Object { $_.FullName }
 
     # Get test assemblies from these folders that match the pattern specified.
     foreach ($container in $testFolders) {
@@ -138,6 +138,8 @@ function Run-Test([string[]] $testContainers, [string[]] $netCoreTestContainers)
     if ($TFT_Parallel) {
         $additionalArguments += "/parallel"
     }
+
+    $additionalArguments += "/ResultsDirectory:artifacts/TestResults/$Configuration"
 
     if ($testContainers.Count -gt 0) {
         if (!(Test-Path $vstestPath)) {
