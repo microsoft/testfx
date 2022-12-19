@@ -49,7 +49,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <summary>
     /// Properties.
     /// </summary>
-    private Dictionary<string, object?> _properties;
+    private IDictionary<string, object?> _properties;
 
     /// <summary>
     /// Unit test outcome.
@@ -116,7 +116,7 @@ public class TestContextImplementation : TestContext, ITestContext
 #endif
 
     /// <inheritdoc/>
-    public override Dictionary<string, object?> Properties => _properties;
+    public override IDictionary<string, object?> Properties => _properties;
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <inheritdoc/>

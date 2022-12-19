@@ -49,7 +49,7 @@ public abstract class TestContext
     /// <summary>
     /// Gets test properties for a test.
     /// </summary>
-    public abstract Dictionary<string, object?> Properties { get; }
+    public abstract IDictionary<string, object?> Properties { get; }
 
     /// <summary>
     /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted.
