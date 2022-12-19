@@ -10,7 +10,6 @@ using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -155,19 +154,19 @@ public class TestClassInfo
     {
         get
         {
-            if (BaseClassCleanupMethodsStack.Any())
+            // If class has a cleanup method, then it is executable.
+            if (ClassCleanupMethod is not null)
             {
-                // If any base cleanups were pushed to the stack we need to run them
                 return true;
             }
 
-            // If no class cleanup, then continue with the next one.
-            if (ClassCleanupMethod == null)
+            // Otherwise, if any base cleanups were pushed to the stack we need to run them
+            if (BaseClassCleanupMethodsStack.Any())
             {
-                return false;
+                return true;
             }
 
-            return true;
+            return false;
         }
     }
 
