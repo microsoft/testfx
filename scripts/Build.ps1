@@ -182,10 +182,21 @@ function Invoke-Build {
     Write-Log "Invoke-Build: Completed. {$(Get-ElapsedTime($timer))}"
 }
 
+
+function Get-LogPath {
+    $artifacts = Join-Path -Path $TF_OUT_DIR -ChildPath "log" | Join-Path -ChildPath $TFB_Configuration
+
+    if (-not (Test-Path $artifacts)) {
+        New-Item -Type Directory -Path $artifacts | Out-Null
+    }
+
+    return $artifacts
+}
+
 function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExtension = "false", [switch]$NoRestore) {
     $msbuild = Find-MSBuild -hasVsixExtension $hasVsixExtension
     $solutionPath = Find-Item -relativePath $solution
-    $logsDir = Get-LogsPath
+    $logsDir = Get-LogPath
 
     $fileName = [System.IO.Path]::GetFileNameWithoutExtension($solution)
     $binLog = Join-Path -path $logsDir -childPath "$fileName.$buildTarget.binlog"
@@ -196,7 +207,7 @@ function Invoke-MSBuild([string]$solution, $buildTarget = $Target, $hasVsixExten
     }
 
     $argument = @("-t:$buildTarget",
-        "-p:Configuration=$configuration",
+        "-p:Configuration=$TFB_Configuration",
         "-v:m",
         "-p:BuildVersion=$TFB_BuildVersion",
         "-p:BranchName=`"$TFB_BRANCH`"",
