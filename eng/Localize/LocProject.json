@@ -8,7 +8,7 @@
                     "Languages": "",
                     "CopyOption": "LangIDOnName",
                     "OutputPath": "src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\",
-                    "LclFile": "Localize\\lcl\\{Lang}\\src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\Resource.xlf.lcl"
+                    "LclFile": "eng\\Localize\\lcl\\{Lang}\\src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\Resource.xlf.lcl"
                 }
             ]
         },
@@ -20,7 +20,7 @@
                     "Languages": "",
                     "CopyOption": "LangIDOnName",
                     "OutputPath": "src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\",
-                    "LclFile": "Localize\\lcl\\{Lang}\\src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\Resource.xlf.lcl"
+                    "LclFile": "eng\\Localize\\lcl\\{Lang}\\src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\Resource.xlf.lcl"
                 }
             ]
         },
@@ -32,7 +32,7 @@
                     "Languages": "",
                     "CopyOption": "LangIDOnName",
                     "OutputPath": "src\\TestFramework\\TestFramework\\Resources\\xlf\\",
-                    "LclFile": "Localize\\lcl\\{Lang}\\src\\TestFramework\\TestFramework\\Resources\\xlf\\FrameworkMessages.xlf.lcl"
+                    "LclFile": "eng\\Localize\\lcl\\{Lang}\\src\\TestFramework\\TestFramework\\Resources\\xlf\\FrameworkMessages.xlf.lcl"
                 }
             ]
         }
