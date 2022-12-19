@@ -47,11 +47,6 @@ public class TestContextImplementation : TestContext, ITestContext
     private bool _stringWriterDisposed = false;
 
     /// <summary>
-    /// Properties.
-    /// </summary>
-    private IDictionary<string, object?> _properties;
-
-    /// <summary>
     /// Unit test outcome.
     /// </summary>
     private UnitTestOutcome _outcome;
@@ -89,7 +84,7 @@ public class TestContextImplementation : TestContext, ITestContext
 
         // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
         _threadSafeStringWriter = (ThreadSafeStringWriter)stringWriter;
-        _properties = new Dictionary<string, object?>(properties)
+        Properties = new Dictionary<string, object?>(properties)
         {
             [FullyQualifiedTestClassNameLabel] = _testMethod.FullClassName,
             [ManagedTypeLabel] = _testMethod.ManagedTypeName,
@@ -116,7 +111,7 @@ public class TestContextImplementation : TestContext, ITestContext
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary Properties => (IDictionary)_properties;
+    public override IDictionary<string, object?> Properties { get; }
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <inheritdoc/>
@@ -297,13 +292,13 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <returns>True if found.</returns>
     public bool TryGetPropertyValue(string propertyName, out object? propertyValue)
     {
-        if (_properties == null)
+        if (Properties == null)
         {
             propertyValue = null;
             return false;
         }
 
-        return _properties.TryGetValue(propertyName, out propertyValue);
+        return Properties.TryGetValue(propertyName, out propertyValue);
     }
 
     /// <summary>
@@ -313,7 +308,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="propertyValue">The property value.</param>
     public void AddProperty(string propertyName, string propertyValue)
     {
-        _properties.Add(propertyName, propertyValue);
+        Properties.Add(propertyName, propertyValue);
     }
 
     /// <summary>
