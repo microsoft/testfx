@@ -20,9 +20,7 @@ public sealed partial class Assert
     /// </exception>
     [DoesNotReturn]
     public static void Fail()
-    {
-        Fail(string.Empty, null);
-    }
+        => Fail(string.Empty, null);
 
     /// <summary>
     /// Throws an AssertFailedException.
@@ -36,9 +34,7 @@ public sealed partial class Assert
     /// </exception>
     [DoesNotReturn]
     public static void Fail(string? message)
-    {
-        Fail(message, null);
-    }
+        => Fail(message, null);
 
     /// <summary>
     /// Throws an AssertFailedException.
@@ -55,7 +51,5 @@ public sealed partial class Assert
     /// </exception>
     [DoesNotReturn]
     public static void Fail(string? message, params object?[]? parameters)
-    {
-        ThrowAssertFailed("Assert.Fail", BuildUserMessage(message, parameters));
-    }
+        => ThrowAssertFailed("Assert.Fail", BuildUserMessage(message, parameters));
 }
