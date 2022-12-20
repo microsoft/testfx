@@ -128,3 +128,8 @@ project.fragment.lock.json
 # ===========================
 .fake/
 .ionide/
+
+# Arcade files
+.dotnet/
+.packages/
+.tools/
