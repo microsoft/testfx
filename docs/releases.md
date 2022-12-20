@@ -1,5 +1,29 @@
 # Releases
 
+## 3.0.1 (December 2022)
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0...v3.0.1)
+
+### Fixed
+
+* Fix cleanup inheritance calls [#1475](https://github.com/microsoft/testfx/pull/1475)
+* Fix some race condition issue [#1477](https://github.com/microsoft/testfx/pull/1477)
+* Fix class/assembly cleanups log collect and attachment [#1470](https://github.com/microsoft/testfx/pull/1470)
+* Allow most APIs to accept nullable values or arguments [#1467](https://github.com/microsoft/testfx/pull/1467)
+* Add console, trace and debug writeline calls to the lifecycle integration tests [#1464](https://github.com/microsoft/testfx/pull/1464)
+* Revert Framework.Extension project to be CLSCompliant [#1450](https://github.com/microsoft/testfx/pull/1450)
+* Fix regressions with DataRow supported arguments [#1446](https://github.com/microsoft/testfx/pull/1446)
+* Add parent domain assembly resolver for netfx [#1443](https://github.com/microsoft/testfx/pull/1443)
+* Remove unneeded dash in InformationalVersion for RTM builds
+* Add NotNullAttribute postcondition to Assert APIs [#1441](https://github.com/microsoft/testfx/pull/1441)
+
+### Artifacts
+
+* MSTest: [3.0.1](https://www.nuget.org/packages/MSTest/3.0.1)
+* MSTest.TestFramework: [3.0.1](https://www.nuget.org/packages/MSTest.TestFramework/3.0.1)
+* MSTest.TestAdapter: [3.0.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.1)
+
+
 ## [3.0.0] - 2022-12-06
 
 See full log [here](https://github.com/microsoft/testfx/compare/v2.2.10...v3.0.0)
