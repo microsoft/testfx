@@ -175,7 +175,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         }
 
         // Take care of .netmodule's.
-        var modules = Array.Empty<Module>();
+        Module[] modules;
         try
         {
             EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Getting modules of {assembly.FullName}.");
@@ -189,7 +189,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         }
 
         // Assembly.GetModules() returns all modules including main one.
-        if (Array.Empty<Module>().Length > 1)
+        if (modules.Length > 1)
         {
             // The modules must be in the same directory as assembly that references them.
             foreach (Module m in modules)
