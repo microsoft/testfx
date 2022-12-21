@@ -41,13 +41,13 @@ Breaking changes announcements [#1274](https://github.com/microsoft/testfx/issue
 * Enable nullable for Platform Services [#1366](https://github.com/microsoft/testfx/pull/1366)
 * Enable nullables for Framework [#1365](https://github.com/microsoft/testfx/pull/1365)
 * Enable nullable for TestFramework.Extensions [#1363](https://github.com/microsoft/testfx/pull/1363)
-* Introduce strategies for test ID generation [#1306](https://github.com/microsoft/testfx/pull/1306)
+* [breaking change] Introduce strategies for test ID generation [#1306](https://github.com/microsoft/testfx/pull/1306)
 * Add support for AsyncDisposable cleanup [#1288](https://github.com/microsoft/testfx/pull/1288)
 * Add Assert.IsInstanceOfType<T> [#1241](https://github.com/microsoft/testfx/pull/1241)
 
 ### Changed
 
-* Follow supported .NET frameworks:
+* [breaking change] Follow supported .NET frameworks:
   * Dropped support for .NET Framework before 4.6.2 (net462)
   * Dropped support for .NET Standard before 2.0 (netstandard2.0)  
   * Dropped support for UWP before 16299
@@ -55,24 +55,24 @@ Breaking changes announcements [#1274](https://github.com/microsoft/testfx/issue
   * Replaced support of .NET 5 by .NETCore 3.1 and .NET 6.0
 * Assert.AreSame/AreNotSame use generic instead of object [#1430](https://github.com/microsoft/testfx/pull/1430)
 * Make BeginTimer and EndTimer methods obsolete [#1425](https://github.com/microsoft/testfx/pull/1425)
-* Unify DeploymentDirectory location across target frameworks [#1414](https://github.com/microsoft/testfx/pull/1414)
-* Add class/assembly cleanup/init messages to first/last test [#1390](https://github.com/microsoft/testfx/pull/1390)
+* [breaking change] Unify DeploymentDirectory location across target frameworks [#1414](https://github.com/microsoft/testfx/pull/1414)
+* [breaking change] Add class/assembly cleanup/init messages to first/last test [#1390](https://github.com/microsoft/testfx/pull/1390)
 * Document that DeploymentItemAttribute only works for a test class with test method [#1399](https://github.com/microsoft/testfx/pull/1399)
 * Use NewtonsoftJson v13.0.1 [#1361](https://github.com/microsoft/testfx/pull/1361)
-* Merge timeout behaviors for .NET Core and .NET Framework [#1296](https://github.com/microsoft/testfx/pull/1296)
+* [breaking change] Merge timeout behaviors for .NET Core and .NET Framework [#1296](https://github.com/microsoft/testfx/pull/1296)
 * Mark exceptions with SerializableAttribute [#1186](https://github.com/microsoft/testfx/pull/1186)
  
 ### Removed
 
-* Remove Assert.AreEqual/AreNotEqual overloads with object object [#1429](https://github.com/microsoft/testfx/pull/1429)
+* [breaking change] Remove Assert.AreEqual/AreNotEqual overloads with object object [#1429](https://github.com/microsoft/testfx/pull/1429)
 
 ### Fixed
 
 * Propagate UI culture to appdomain [#1401](https://github.com/microsoft/testfx/pull/1401)
 * Include localization in Test Framework NuGet [#1397](https://github.com/microsoft/testfx/pull/1397)
-* Refactor available ctors for DataRowAttribute [#1332](https://github.com/microsoft/testfx/pull/1332)
+* [breaking change] Refactor available ctors for DataRowAttribute [#1332](https://github.com/microsoft/testfx/pull/1332)
 * Fix issue causing null ref when test class has no namespace [#1283](https://github.com/microsoft/testfx/pull/1283)
-* Unwrap real exception from TargetInvocationException [#1254](https://github.com/microsoft/testfx/pull/1254)
+* [breaking change] Unwrap real exception from TargetInvocationException [#1254](https://github.com/microsoft/testfx/pull/1254)
 * Fixed the case ignoring in AreEqual() with culture parameter [#1216](https://github.com/microsoft/testfx/pull/1216)
 
 ### Artifacts
