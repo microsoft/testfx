@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -288,7 +289,7 @@ internal class UnitTestRunner : MarshalByRefObject
         private readonly ClassCleanupBehavior? _lifecycleFromMsTest;
         private readonly ClassCleanupBehavior _lifecycleFromAssembly;
         private readonly ReflectHelper _reflectHelper;
-        private readonly Dictionary<string, HashSet<string>> _remainingTestsByClass;
+        private readonly ConcurrentDictionary<string, HashSet<string>> _remainingTestsByClass;
 
         public ClassCleanupManager(
             IEnumerable<UnitTestElement> testsToRun,
@@ -296,25 +297,32 @@ internal class UnitTestRunner : MarshalByRefObject
             ClassCleanupBehavior lifecycleFromAssembly,
             ReflectHelper? reflectHelper = null)
         {
-            _remainingTestsByClass = testsToRun.GroupBy(t => t.TestMethod.FullClassName)
-                .ToDictionary(
-                    g => g.Key,
-                    g => new HashSet<string>(g.Select(t => t.TestMethod.UniqueName)));
+            _remainingTestsByClass =
+                new(testsToRun.GroupBy(t => t.TestMethod.FullClassName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => new HashSet<string>(g.Select(t => t.TestMethod.UniqueName))));
             _lifecycleFromMsTest = lifecycleFromMsTest;
             _lifecycleFromAssembly = lifecycleFromAssembly;
             _reflectHelper = reflectHelper ?? new ReflectHelper();
         }
 
-        public void MarkTestComplete(TestMethodInfo testMethodInfo, TestMethod testMethod, out bool shouldRunEndOfClassCleanup, out bool shouldRunEndOfAssemblyCleanup)
+        public void MarkTestComplete(TestMethodInfo testMethodInfo, TestMethod testMethod, out bool shouldRunEndOfClassCleanup,
+            out bool shouldRunEndOfAssemblyCleanup)
         {
             shouldRunEndOfClassCleanup = false;
-            var testsByClass = _remainingTestsByClass[testMethodInfo.TestClassName];
+            shouldRunEndOfAssemblyCleanup = false;
+            if (!_remainingTestsByClass.TryGetValue(testMethodInfo.TestClassName, out var testsByClass))
+            {
+                return;
+            }
+
             lock (testsByClass)
             {
                 testsByClass.Remove(testMethod.UniqueName);
                 if (testsByClass.Count == 0)
                 {
-                    _remainingTestsByClass.Remove(testMethodInfo.TestClassName);
+                    _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
                     if (testMethodInfo.Parent.HasExecutableCleanupMethod)
                     {
                         var cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)
@@ -325,7 +333,7 @@ internal class UnitTestRunner : MarshalByRefObject
                     }
                 }
 
-                shouldRunEndOfAssemblyCleanup = _remainingTestsByClass.Count == 0;
+                shouldRunEndOfAssemblyCleanup = _remainingTestsByClass.IsEmpty;
             }
         }
     }

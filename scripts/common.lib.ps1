@@ -179,16 +179,6 @@ function Find-Item([string] $relativePath) {
     return Resolve-Path -path $itemPath
 }
 
-function Get-LogsPath {
-    $artifacts = Join-Path -path $TF_OUT_DIR -childPath "logs"
-
-    if (-not (Test-Path $artifacts)) {
-        New-Item -Type Directory -Path $artifacts | Out-Null
-    }
-
-    return $artifacts
-}
-
 function Get-VSTestPath {
     $TestPlatformVersion = Get-PackageVersion -PackageName "MicrosoftNETTestSdkVersion"
     $vstestPath = Join-Path -path (Find-PackagesPath) "Microsoft.TestPlatform\$TestPlatformVersion\tools\net462\Common7\IDE\Extensions\TestPlatform\vstest.console.exe"

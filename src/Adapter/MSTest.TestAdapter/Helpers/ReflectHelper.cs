@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#nullable enable
-
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -487,14 +484,30 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Returns <see cref="ClassCleanupBehavior"/> if provided, otherwise <c>null</c>.</returns>
     internal virtual ClassCleanupBehavior? GetClassCleanupBehavior(TestClassInfo classInfo)
     {
-        if (classInfo.ClassCleanupMethod == null)
+        if (!classInfo.HasExecutableCleanupMethod)
         {
             return null;
         }
 
-        var sequencingAttribute = GetCustomAttributes<ClassCleanupAttribute>(classInfo.ClassCleanupMethod, true)?.FirstOrDefault();
+        var cleanupBehaviors =
+            new HashSet<ClassCleanupBehavior?>(
+                classInfo.BaseClassCleanupMethodsStack
+                .Select(x => x.GetCustomAttribute<ClassCleanupAttribute>(true)?.CleanupBehavior))
+            {
+                classInfo.ClassCleanupMethod?.GetCustomAttribute<ClassCleanupAttribute>(true)?.CleanupBehavior,
+            };
 
-        return sequencingAttribute?.CleanupBehavior;
+        if (cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfClass))
+        {
+            return ClassCleanupBehavior.EndOfClass;
+        }
+
+        if (cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfAssembly))
+        {
+            return ClassCleanupBehavior.EndOfAssembly;
+        }
+
+        return null;
     }
 
     /// <summary>

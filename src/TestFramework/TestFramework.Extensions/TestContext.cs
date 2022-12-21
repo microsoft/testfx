@@ -49,7 +49,7 @@ public abstract class TestContext
     /// <summary>
     /// Gets test properties for a test.
     /// </summary>
-    public abstract IDictionary Properties { get; }
+    public abstract IDictionary<string, object?> Properties { get; }
 
     /// <summary>
     /// Gets or sets the cancellation token source. This token source is canceled when test times out. Also when explicitly canceled the test will be aborted.
@@ -196,15 +196,10 @@ public abstract class TestContext
         where T : class
     {
         DebugEx.Assert(Properties is not null, "Properties is null");
-#if WINDOWS_UWP || WIN_UI
-        if (!((IDictionary<string, object>)Properties).TryGetValue(name, out object? propertyValue))
+        if (!Properties.TryGetValue(name, out object? propertyValue))
         {
             return null;
         }
-#else
-        // This old API doesn't throw when key is not found, but returns null.
-        object? propertyValue = Properties[name];
-#endif
 
         // If propertyValue has a value, but it's not the right type
         if (propertyValue is not null and not T)
