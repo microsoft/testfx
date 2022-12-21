@@ -28,7 +28,7 @@ function Find-PdbConverterTool {
         throw "Unable to locate Microsoft.DiaSymReader.Pdb2Pdb converter exe in path '$pdbConverter'."
     }
 
-    Write-Verbose "Microsoft.DiaSymReader.Pdb2Pdb converter path is : $pdbConverter"
+    Write-Debug "Microsoft.DiaSymReader.Pdb2Pdb converter path is $pdbConverter"
     return $pdbConverter
 
 }
@@ -55,11 +55,11 @@ function Convert-PortablePdbToWindowsPdb {
 
         $fullpdb = $portablePdb -replace ".pdb", ".pdbfull"
 
-        Write-Verbose "$pdbConverter $dll /pdb $portablePdb /out $fullpdb"
+        Write-Debug "$pdbConverter $dll /pdb $portablePdb /out $fullpdb"
         & $pdbConverter $dllOrExePath /pdb $portablePdb /out $fullpdb
     }
 }
 
-Write-Verbose "Converting Portable pdbs to Windows(Full) Pdbs..."
+Write-Debug "Converting Portable pdbs to Windows (Full) Pdbs..."
 Convert-PortablePdbToWindowsPdb
 
