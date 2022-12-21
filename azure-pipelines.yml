@@ -76,7 +76,8 @@ stages:
         timeoutInMinutes: 120
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
-            vmImage: 1es-windows-2022
+            name: NetCore-Public
+            demands: ImageOverride -equals windows.vs2022.amd64.open
           ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCore1ESPool-Internal
             demands: ImageOverride -equals 1es-windows-2022
