@@ -299,6 +299,10 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// </summary>
     public string? DisplayName { get; set; }
 
+    public string? DisplayNameMethod { get; set; }
+
+    public Type? DisplayNameMethodDeclaringType { get; set; }
+
     /// <inheritdoc />
     public IEnumerable<object?[]> GetData(MethodInfo methodInfo)
     {
@@ -311,6 +315,36 @@ public class DataRowAttribute : Attribute, ITestDataSource
         if (!string.IsNullOrWhiteSpace(DisplayName))
         {
             return DisplayName;
+        }
+
+        if (DisplayNameMethod != null)
+        {
+            var displayNameMethodDeclaringType = DisplayNameMethodDeclaringType ?? methodInfo.DeclaringType;
+            DebugEx.Assert(displayNameMethodDeclaringType is not null, "Declaring type of test data cannot be null.");
+
+            var method = displayNameMethodDeclaringType.GetTypeInfo().GetDeclaredMethod(DisplayNameMethod);
+            if (method == null)
+            {
+                throw new ArgumentNullException(string.Format("{0}", DisplayNameMethod));
+            }
+
+            var parameters = method.GetParameters();
+            if (parameters.Length != 2 ||
+                parameters[0].ParameterType != typeof(MethodInfo) ||
+                parameters[1].ParameterType != typeof(object[]) ||
+                method.ReturnType != typeof(string) ||
+                !method.IsStatic ||
+                !method.IsPublic)
+            {
+                throw new ArgumentNullException(
+                    string.Format(
+                        FrameworkMessages.DynamicDataDisplayName, // update this message
+                        DisplayNameMethod,
+                        typeof(string).Name,
+                        string.Join(", ", typeof(MethodInfo).Name, typeof(object[]).Name)));
+            }
+
+            return method.Invoke(null, new object?[] { methodInfo, data }) as string;
         }
 
         if (data != null)

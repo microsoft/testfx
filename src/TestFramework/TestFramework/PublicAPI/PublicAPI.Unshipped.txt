@@ -16,6 +16,10 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(o
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6, object? arg7, object? arg8, object? arg9, object? arg10, object? arg11, object? arg12, object? arg13, object? arg14) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6, object? arg7, object? arg8, object? arg9, object? arg10, object? arg11, object? arg12, object? arg13, object? arg14, object? arg15) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? arg1, object? arg2, object? arg3, object? arg4, object? arg5, object? arg6, object? arg7, object? arg8, object? arg9, object? arg10, object? arg11, object? arg12, object? arg13, object? arg14, object? arg15, object? arg16) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DisplayNameMethod.get -> string?
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DisplayNameMethod.set -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DisplayNameMethodDeclaringType.get -> System.Type?
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DisplayNameMethodDeclaringType.set -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, string? message, params object?[]? parameters) -> void
