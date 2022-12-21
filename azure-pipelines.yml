@@ -44,7 +44,7 @@ variables:
     - name: _Sign
       value: False
     - name: _BuildArgs
-      value: ''
+      value: ' '
 
   # Produce real signed binaries for Internal builds
   - ${{ if eq(variables._RunAsInternal, True) }}:
