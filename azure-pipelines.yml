@@ -15,6 +15,8 @@ pr:
       - .github/*
       - .devcontainer/*
       - docs/*
+      - .markdownlint.json
+      - .markdownlintignore
       - CODE_OF_CONDUCT.md
       - CONTRIBUTING.md
       - README.md
@@ -36,19 +38,15 @@ variables:
     value: ${{ and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}
   - name: _RunAsPublic
     value: ${{ eq(variables._RunAsInternal, False) }}
+  # Set default value for variables of PR and Public builds
+  - name: _SignType
+    value: test
+  - name: _SignArgs
+    value: ''
+  - name: _Sign
+    value: False
   - name: _BuildArgs
     value: ' '
-
-  # Produce test-signed binaries for PR and Public builds
-  - ${{ if eq(variables._RunAsPublic, True) }}:
-    - name: _SignType
-      value: test
-    - name: _SignArgs
-      value: ''
-    - name: _Sign
-      value: False
-    - name: _BuildArgs
-      value: ' '
 
   # Produce real signed binaries for Internal builds
   - ${{ if eq(variables._RunAsInternal, True) }}:
