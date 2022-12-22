@@ -338,7 +338,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
             {
                 throw new ArgumentNullException(
                     string.Format(
-                        FrameworkMessages.DynamicDataDisplayName, // update this message
+                        FrameworkMessages.DataRowDisplayNameMethod,
                         DisplayNameMethod,
                         typeof(string).Name,
                         string.Join(", ", typeof(MethodInfo).Name, typeof(object[]).Name)));

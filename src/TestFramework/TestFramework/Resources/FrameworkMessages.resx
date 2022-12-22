@@ -299,4 +299,7 @@ Stack Trace: {4}</value>
       - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
     </comment>
   </data>
+  <data name="DataRowDisplayNameMethod" xml:space="preserve">
+    <value>Method {0} must match the expected signature: public static {1} {0}({2}).</value>
+  </data>
 </root>

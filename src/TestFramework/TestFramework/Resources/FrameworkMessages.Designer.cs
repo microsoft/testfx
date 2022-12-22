@@ -10,7 +10,6 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -40,7 +39,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkMessages", typeof(FrameworkMessages).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkMessages", typeof(FrameworkMessages).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -265,6 +264,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string DataDrivenResultDisplayName {
             get {
                 return ResourceManager.GetString("DataDrivenResultDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Method {0} must match the expected signature: public static {1} {0}({2})..
+        /// </summary>
+        internal static string DataRowDisplayNameMethod {
+            get {
+                return ResourceManager.GetString("DataRowDisplayNameMethod", resourceCulture);
             }
         }
         

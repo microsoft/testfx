@@ -82,6 +82,11 @@
         <target state="translated">字串 '{0}' 未包含字串 '{1}'。{2}。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DataRowDisplayNameMethod">
+        <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
+        <target state="new">Method {0} must match the expected signature: public static {1} {0}({2}).</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
         <source>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</source>
         <target state="translated">集合中的項目數目不符。預期: &lt;{1}&gt;。實際: &lt;{2}&gt;。{0}</target>

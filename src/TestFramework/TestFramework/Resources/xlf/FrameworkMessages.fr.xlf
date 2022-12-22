@@ -82,6 +82,11 @@
         <target state="translated">La chaîne '{0}' ne contient pas la chaîne '{1}'. {2}.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DataRowDisplayNameMethod">
+        <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
+        <target state="new">Method {0} must match the expected signature: public static {1} {0}({2}).</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
         <source>The number of elements in the collections do not match. Expected:&lt;{1}&gt;. Actual:&lt;{2}&gt;.{0}</source>
         <target state="translated">Le nombre d'éléments dans les collections ne correspond pas. Attendu : &lt;{1}&gt;, Réel : &lt;{2}&gt;.{0}</target>
