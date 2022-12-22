@@ -34,6 +34,8 @@ variables:
     value: ${{ and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}
   - name: _RunAsPublic
     value: ${{ eq(variables._RunAsInternal, False) }}
+  - name: _BuildArgs
+    value: ' '
 
   # Produce test-signed binaries for PR and Public builds
   - ${{ if eq(variables._RunAsPublic, True) }}:
