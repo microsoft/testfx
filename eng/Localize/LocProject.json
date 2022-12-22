@@ -4,37 +4,29 @@
             "LanguageSet": "VS_Main_Languages",
             "LocItems": [
                 {
-                    "SourceFile": "src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\Resource.xlf",
-                    "Languages": "",
-                    "CopyOption": "LangIDOnName",
-                    "OutputPath": "src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\",
-                    "LclFile": "eng\\Localize\\lcl\\{Lang}\\src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\Resource.xlf.lcl"
+                    "OutputPath": ".\\src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\",
+                    "SourceFile": ".\\src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\Resource.xlf",
+                    "CopyOption": "LangIDOnName"
+                },
+                {
+                    "OutputPath": ".\\src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\",
+                    "SourceFile": ".\\src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\Resource.xlf",
+                    "CopyOption": "LangIDOnName"
+                },
+                {
+                    "OutputPath": ".\\src\\TestFramework\\TestFramework\\Resources\\xlf\\",
+                    "SourceFile": ".\\src\\TestFramework\\TestFramework\\Resources\\xlf\\FrameworkMessages.xlf",
+                    "CopyOption": "LangIDOnName"
                 }
             ]
         },
         {
             "LanguageSet": "VS_Main_Languages",
-            "LocItems": [
-                {
-                    "SourceFile": "src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\Resource.xlf",
-                    "Languages": "",
-                    "CopyOption": "LangIDOnName",
-                    "OutputPath": "src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\",
-                    "LclFile": "eng\\Localize\\lcl\\{Lang}\\src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\Resource.xlf.lcl"
-                }
-            ]
-        },
-        {
-            "LanguageSet": "VS_Main_Languages",
-            "LocItems": [
-                {
-                    "SourceFile": "src\\TestFramework\\TestFramework\\Resources\\xlf\\FrameworkMessages.xlf",
-                    "Languages": "",
-                    "CopyOption": "LangIDOnName",
-                    "OutputPath": "src\\TestFramework\\TestFramework\\Resources\\xlf\\",
-                    "LclFile": "eng\\Localize\\lcl\\{Lang}\\src\\TestFramework\\TestFramework\\Resources\\xlf\\FrameworkMessages.xlf.lcl"
-                }
-            ]
+            "CloneLanguageSet": "WiX_CloneLanguages",
+            "LssFiles": [
+                "wxl_loc.lss"
+            ],
+            "LocItems": []
         }
     ]
 }

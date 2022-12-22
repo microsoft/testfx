@@ -1,73 +1,246 @@
+# Branches that trigger a build on commit
 trigger:
 - main
 - rel/*
+- arcade
 
+# Branch(es) that trigger(s) build(s) on PR
 pr:
-- main
-- rel/*
+  branches:
+    include:
+    - main
+    - rel/*
+  paths:
+    exclude:
+      - .github/*
+      - .devcontainer/*
+      - CODE-OF-CONDUCT.md
+      - LICENSE
+      - SECURITY.md
 
-jobs:
-- job: Windows
-  pool:
-    vmImage: 'windows-latest'
-  variables:
-    buildConfiguration: 'Release'
+parameters:
+- name: isRTM
+  displayName: "Release a RTM version?"
+  type: boolean
+  default: False
 
-  steps:
+variables:
+  # Cannot use key:value syntax in root defined variables
+  - name: TeamName
+    value: MSTest
+  - name: Codeql.Enabled
+    value: true
+  - name: _RunAsInternal
+    value: ${{ and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}
+  - name: _RunAsPublic
+    value: ${{ eq(variables._RunAsInternal, False) }}
+  - name: _BuildArgs
+    value: ' '
 
-  - task: NuGetToolInstaller@0
-    displayName: 'Pull in NuGet 5.8.1'
-    inputs:
-      versionSpec: 5.8.1
+  # Produce test-signed binaries for PR and Public builds
+  - ${{ if eq(variables._RunAsPublic, True) }}:
+    - name: _SignType
+      value: test
+    - name: _SignArgs
+      value: ''
+    - name: _Sign
+      value: False
+    - name: _BuildArgs
+      value: ' '
 
-  - task: PowerShell@2
-    displayName: 'Install Windows SDK'
-    inputs:
-      targetType: filePath
-      filePath: './scripts/Install-WindowsSDK.ps1'
-      failOnStderr: true
-      showWarnings: true
+  # Produce real signed binaries for Internal builds
+  - ${{ if eq(variables._RunAsInternal, True) }}:
+    - name: _SignType
+      value: real
+    - name: _SignArgs
+      value: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName) /p:Sign=$(_Sign)
+    - name: _Sign
+      value: True
+    - name: _BuildArgs
+      value: '-FrameworkVersion $(TestFrameworkNugetVersion) -AdapterVersion $(TestAdapterNugetVersion) -VersionSuffix $(NugetVersionSuffix) -BuildVersionPrefix $(BuildVersionPrefix) -BuildVersionSuffix $(BuildVersionSuffix)'
 
-  - powershell: |
-      reg DELETE "HKLM\Software\Microsoft\StrongName\Verification" /f
-      reg ADD "HKLM\Software\Microsoft\StrongName\Verification\*,*" /f
-      reg DELETE "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification" /f
-      reg ADD "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification\*,*" /f
-    displayName: 'Disable strongname validation'
+stages:
 
-  - task: BatchScript@1
-    displayName: 'Restore, Build and Package'
-    inputs:
-      filename: build.cmd
-      arguments: '-configuration $(BuildConfiguration) -CI'
-      modifyEnvironment: false
+- stage: build
+  displayName: Build
+  jobs:
 
-  - task: BatchScript@1
-    displayName: 'Run All Tests'
-    inputs:
-      filename: test.cmd
-      arguments: '-configuration $(BuildConfiguration) -all -parallel'
-      modifyEnvironment: false
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableMicrobuild: true
+      enablePublishBuildArtifacts: true
+      enablePublishTestResults: true
+      enablePublishBuildAssets: false
+      enablePublishUsingPipelines: true
+      enableTelemetry: true
+      jobs:
+      - job: Windows
+        timeoutInMinutes: 120
+        pool:
+          ${{ if eq(variables._RunAsPublic, True) }}:
+            name: NetCore-Public
+            demands: ImageOverride -equals windows.vs2022.amd64.open
+          ${{ if eq(variables._RunAsInternal, True) }}:
+            name: NetCore1ESPool-Internal
+            demands: ImageOverride -equals 1es-windows-2022
+        strategy:
+          matrix:
+            Release:
+              _BuildConfig: Release
+            ${{ if eq(variables._RunAsPublic, True) }}:
+              Debug:
+                _BuildConfig: Debug
+        steps:
+        - task: PowerShell@2
+          displayName: 'Install Windows SDK'
+          inputs:
+            targetType: filePath
+            filePath: './scripts/Install-WindowsSDK.ps1'
+            failOnStderr: true
+            showWarnings: true
 
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: 'Component Governance'
-    inputs:
-      scanType: 'Register'
-      verbosity: 'Verbose'
-      alertWarningLevel: 'High'
+        - ${{ if eq(variables._RunAsPublic, True) }}:
+          - powershell: |
+              reg DELETE "HKLM\Software\Microsoft\StrongName\Verification" /f
+              reg ADD "HKLM\Software\Microsoft\StrongName\Verification\*,*" /f
+              reg DELETE "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification" /f
+              reg ADD "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification\*,*" /f
+            displayName: 'Disable strongname validation'
 
-  - task: PublishTestResults@2
-    displayName: 'Publish Test Results **\*.trx'
-    inputs:
-      testResultsFormat: VSTest
-      testResultsFiles: '**\*.trx'
-    condition: succeededOrFailed()
+        - ${{ if eq(variables._RunAsInternal, True) }}:
+          - task: PowerShell@2
+            displayName: Set version variables
+            inputs:
+              filePath: ./scripts/vsts-prebuild.ps1
+              arguments: -IsRtmBuild ${{ parameters.isRTM }}
+              failOnStderr: true
+              showWarnings: true
 
-- job: Markdownlint
-  pool:
-      vmImage: ubuntu-22.04
-  steps:
-    - script: sudo npm install -g markdownlint-cli@0.32.2
-      displayName: Install markdownlint-cli
-    - script: markdownlint '**/*.md'
-      displayName: Run markdownlint
+          - powershell: |
+              $script = "./scripts/write-release-notes.ps1"
+              $p = @{
+                  Path = "$pwd"
+                  PackageVersion = "$(TestAdapterNugetVersion)"
+              }
+
+              if (Test-Path $script) {
+                  & "$script" @p
+              }
+              else {
+                  Write-Host "Path '$script' does not exist, skipping."
+              }
+            displayName: 'Generate release notes'
+
+        - task: BatchScript@1
+          displayName: 'Restore, Build and Package'
+          inputs:
+            filename: build.cmd
+            arguments: '-configuration $(_BuildConfig) -CI $(_BuildArgs)'
+            modifyEnvironment: false
+
+        - ${{ if eq(variables._RunAsInternal, True) }}:
+          - powershell: 'New-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\Software\Microsoft\Fusion -Name "EnableLog" -Value 1 -PropertyType "DWord" -Force'
+            errorActionPreference: continue
+            displayName: 'Enable FusionLog'
+
+        - task: BatchScript@1
+          displayName: 'Run All Tests'
+          inputs:
+            filename: test.cmd
+            arguments: '-configuration $(_BuildConfig) -all -parallel'
+            modifyEnvironment: false
+
+        - ${{ if eq(variables._RunAsInternal, True) }}:
+          - powershell: 'New-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\Software\Microsoft\Fusion -Name "EnableLog" -Value 0 -PropertyType "DWord" -Force'
+            errorActionPreference: continue
+            displayName: 'Disable FusionLog'
+
+          - task: MSBuild@1
+            displayName: 'Sign NuGet packages'
+            inputs:
+              solution: src/package/sign/sign.proj
+              configuration: '$(_BuildConfig)'
+              msbuildArguments: '/t:SignNugetPackages /p:BuildConfiguration=$(_BuildConfig)'
+              createLogFile: true
+
+          - task: PowerShell@1
+            displayName: 'Verify signing of NuGet packages'
+            inputs:
+              scriptName: 'scripts/verify-sign.ps1'
+              arguments: '-configuration $(_BuildConfig)'
+
+        - ${{ if eq(variables._RunAsInternal, True) }}:
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Artifacts folder'
+            inputs:
+              targetPath: artifacts
+              artifact: MSTestV2
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish failed Artifacts folder'
+            inputs:
+              targetPath: artifacts
+            condition: failed()
+
+          - task: NuGetAuthenticate@0
+            displayName: 'NuGet Authenticate to test-tools feed'
+
+          - task: NuGetCommand@2
+            displayName: 'Publish NuGet packages to test-tools feed'
+            inputs:
+              command: push
+              packagesToPush: 'artifacts/**/MSTestPackages/*.nupkg;'
+              publishVstsFeed: 'public/test-tools'
+
+          - task: PowerShell@1
+            displayName: 'Portable to Full Pdb conversion'
+            inputs:
+              scriptName: scripts/PortableToFullPdb.ps1
+              arguments: '-configuration $(_BuildConfig)'
+
+          - task: CopyFiles@2
+            displayName: 'Collect Build Symbols'
+            inputs:
+              SourceFolder: '$(Build.SourcesDirectory)'
+              Contents: |
+                **/artifacts/$(_BuildConfig)/!(*.Tests|FxExtensibility|Automation.CLI|PlatformServices.NetCore)/**/*.pdb
+                **/artifacts/$(_BuildConfig)/PlatformServices.NetCore/**/*.pdbfull
+              TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
+
+          - task: PowerShell@1
+            displayName: 'Get Full Pdbs (from portable pdbs)'
+            inputs:
+              scriptType: inlineScript
+              workingFolder: '$(Build.ArtifactStagingDirectory)/symbols'
+              inlineScript: |
+                Write-Host "Renaming pdbfull to pdb..."
+                Get-ChildItem -Path *.pdbfull -Recurse | ForEach-Object {
+                  $OldName = $_.name;
+                  $NewName = $_.name -replace 'pdbfull','pdb';
+                  Rename-Item -Path $_.FullName -Newname $NewName;
+                  Write-Host "Renamed" +  $OldName + "to"  + $NewName
+                }
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Symbols Artifact'
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/symbols'
+              ArtifactName: Symbols
+
+  - ${{ if eq(variables._RunAsInternal, True) }}:
+    - template: /eng/common/templates/job/onelocbuild.yml
+      parameters:
+        UseCheckedInLocProjectJson: true
+        SkipLocProjectJsonGeneration: true
+        GitHubOrg: microsoft
+        MirrorRepo: testfx
+
+  - ${{ if eq(variables._RunAsPublic, True) }}:
+    - job: Markdownlint
+      pool:
+          vmImage: ubuntu-22.04
+      steps:
+        - script: sudo npm install -g markdownlint-cli@0.32.2
+          displayName: Install markdownlint-cli
+        - script: markdownlint '**/*.md'
+          displayName: Run markdownlint
