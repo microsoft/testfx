@@ -10,10 +10,15 @@ using System.IO;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+
+/*
+ * /!\ WARNING /!\
+ * DO NOT USE EQTTRACE IN THIS CLASS AS IT WILL CAUSE LOAD ISSUE BECAUSE OF THE APPDOMAIN
+ * ASSEMBLY RESOLVER SETUP.
+ */
 
 /// <summary>
 /// Utility function for Assembly related info
@@ -49,16 +54,11 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         Assembly? assembly;
         try
         {
-            EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Reflection loading {assemblyPath}.");
-
             // First time we load in LoadFromContext to avoid issues.
             assembly = _assemblyUtility.ReflectionOnlyLoadFrom(assemblyPath);
         }
         catch (Exception ex)
         {
-            EqtTrace.Error($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Reflection loading of {assemblyPath} failed:");
-            EqtTrace.Error(ex);
-
             warnings.Add(ex.Message);
             return Array.Empty<string>(); // Otherwise just return no dependencies.
         }
@@ -91,8 +91,9 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     /// </summary>
     /// <param name="path">Path of the assembly file.</param>
     /// <returns> String representation of the target dotNet framework e.g. .NETFramework,Version=v4.0. </returns>
-    internal string GetTargetFrameworkVersionStringFromPath(string path)
+    internal string GetTargetFrameworkVersionStringFromPath(string path, out string? errorMessage)
     {
+        errorMessage = null;
         if (!File.Exists(path))
         {
             return string.Empty;
@@ -105,17 +106,11 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         }
         catch (BadImageFormatException)
         {
-            if (EqtTrace.IsErrorEnabled)
-            {
-                EqtTrace.Error("AssemblyHelper:GetTargetFrameworkVersionString() caught BadImageFormatException. Falling to native binary.");
-            }
+            errorMessage = "AssemblyHelper:GetTargetFrameworkVersionString() caught BadImageFormatException. Falling to native binary.";
         }
         catch (Exception ex)
         {
-            if (EqtTrace.IsErrorEnabled)
-            {
-                EqtTrace.Error("AssemblyHelper:GetTargetFrameworkVersionString() Returning default. Unhandled exception: {0}.", ex);
-            }
+            errorMessage = $"AssemblyHelper:GetTargetFrameworkVersionString() Returning default. Unhandled exception: {ex}.";
         }
 
         return string.Empty;
@@ -168,7 +163,6 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     {
         DebugEx.Assert(assembly != null, "assembly");
 
-        EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Processing assembly {assembly.FullName}.");
         foreach (AssemblyName reference in assembly.GetReferencedAssemblies())
         {
             GetDependentAssembliesInternal(reference.FullName, result, visitedAssemblies, warnings);
@@ -178,7 +172,6 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         Module[] modules;
         try
         {
-            EqtTrace.Verbose($"AssemblyLoadWorker.GetFullPathToDependentAssemblies: Getting modules of {assembly.FullName}.");
             modules = assembly.GetModules();
         }
         catch (FileNotFoundException e)
@@ -249,8 +242,6 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         Assembly? assembly;
         try
         {
-            EqtTrace.Verbose($"AssemblyLoadWorker.GetDependentAssembliesInternal: Reflection loading {assemblyString}.");
-
             string postPolicyAssembly = AppDomain.CurrentDomain.ApplyPolicy(assemblyString);
             DebugEx.Assert(!StringEx.IsNullOrEmpty(postPolicyAssembly), "postPolicyAssembly");
 
@@ -259,15 +250,11 @@ internal class AssemblyLoadWorker : MarshalByRefObject
         }
         catch (Exception ex)
         {
-            EqtTrace.Error($"AssemblyLoadWorker.GetDependentAssembliesInternal: Reflection loading {assemblyString} failed:.");
-            EqtTrace.Error(ex);
-
             string warning = string.Format(CultureInfo.CurrentCulture, Resource.MissingDeploymentDependency, assemblyString, ex.Message);
             warnings.Add(warning);
             return;
         }
 
-        EqtTrace.Verbose($"AssemblyLoadWorker.GetDependentAssembliesInternal: Assembly {assemblyString} was added as dependency.");
         result.Add(assembly.Location);
 
         ProcessChildren(assembly, result, visitedAssemblies, warnings);
