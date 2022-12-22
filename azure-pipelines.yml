@@ -14,8 +14,10 @@ pr:
     exclude:
       - .github/*
       - .devcontainer/*
-      - CODE-OF-CONDUCT.md
-      - LICENSE
+      - docs/*
+      - CODE_OF_CONDUCT.md
+      - CONTRIBUTING.md
+      - README.md
       - SECURITY.md
 
 parameters:
@@ -234,13 +236,3 @@ stages:
         SkipLocProjectJsonGeneration: true
         GitHubOrg: microsoft
         MirrorRepo: testfx
-
-  - ${{ if eq(variables._RunAsPublic, True) }}:
-    - job: Markdownlint
-      pool:
-          vmImage: ubuntu-22.04
-      steps:
-        - script: sudo npm install -g markdownlint-cli@0.32.2
-          displayName: Install markdownlint-cli
-        - script: markdownlint '**/*.md'
-          displayName: Run markdownlint
