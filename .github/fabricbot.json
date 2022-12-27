@@ -132,7 +132,7 @@
             {
               "name": "hasLabel",
               "parameters": {
-                "label": "Status: No Recent Activity"
+                "label": "State: No Recent Activity"
               }
             }
           ]
@@ -141,7 +141,7 @@
           {
             "name": "removeLabel",
             "parameters": {
-              "label": "Status: No Recent Activity"
+              "label": "State: No Recent Activity"
             }
           }
         ],
@@ -165,7 +165,7 @@
             {
               "name": "hasLabel",
               "parameters": {
-                "label": "Status: No Recent Activity"
+                "label": "State: No Recent Activity"
               }
             }
           ]
@@ -174,7 +174,7 @@
           {
             "name": "removeLabel",
             "parameters": {
-              "label": "Status: No Recent Activity"
+              "label": "State: No Recent Activity"
             }
           }
         ],
@@ -274,7 +274,7 @@
           {
             "name": "hasLabel",
             "parameters": {
-              "label": "Status: No Recent Activity"
+              "label": "State: No Recent Activity"
             }
           },
           {
@@ -388,7 +388,7 @@
           {
             "name": "noLabel",
             "parameters": {
-              "label": "Status: No Recent Activity"
+              "label": "State: No Recent Activity"
             }
           }
         ],
@@ -396,7 +396,7 @@
           {
             "name": "addLabel",
             "parameters": {
-              "label": "Status: No Recent Activity"
+              "label": "State: No Recent Activity"
             }
           },
           {
@@ -526,7 +526,7 @@
         "inPrLabelText": "Status: In PR",
         "fixedLabelText": "Status: Fixed",
         "fixedLabelEnabled": true,
-        "label_inPr": "Resolution: In-PR",
+        "label_inPr": "State: In-PR",
         "label_fixed": "Resolution: Fixed"
       }
     }
