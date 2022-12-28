@@ -222,25 +222,11 @@ stages:
                   Write-Host "Renamed" +  $OldName + "to"  + $NewName
                 }
 
-          - task: ms-vscs-artifact.build-tasks.artifactSymbolTask-1.artifactSymbolTask@0
-            displayName: 'Publish Symbols to Artifact Services (symweb)'
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Symbols Artifact'
             inputs:
-              symbolServiceURI: 'https://microsoft.artifacts.visualstudio.com/DefaultCollection'
-              requestName: '$(system.teamProject)/$(Build.DefinitionName)/$(Build.BuildNumber)/$(System.JobAttempt)'
-              sourcePath: '$(Build.ArtifactStagingDirectory)/symbols'
-              expirationInDays: 3654
-              usePat: false
-              append: false
-
-          - task: ms-vscs-artifact.build-tasks.artifactSymbolTask-1.artifactSymbolTask@0
-            displayName: 'Publish Symbols to Artifact Services (public)'
-            inputs:
-              symbolServiceURI: 'https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection'
-              requestName: '$(system.teamProject)/$(Build.DefinitionName)/$(Build.BuildNumber)/$(System.JobAttempt)'
-              sourcePath: '$(Build.ArtifactStagingDirectory)/symbols'
-              expirationInDays: 3654
-              usePat: false
-              append: false
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)/symbols'
+              ArtifactName: Symbols
 
   - ${{ if eq(variables._RunAsInternal, True) }}:
     - template: /eng/common/templates/job/onelocbuild.yml
