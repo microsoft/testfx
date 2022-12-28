@@ -21,6 +21,7 @@
   <ItemGroup>
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
     <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
+    <PackageReference Include="StrongNamer" Version="$(StrongNamerVersion)" />
   </ItemGroup>
 
 </Project>
