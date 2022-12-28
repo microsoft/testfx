@@ -51,9 +51,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Package", "Package", "{E374
 		src\Package\MSTest.Internal.TestFx.Documentation.nuspec = src\Package\MSTest.Internal.TestFx.Documentation.nuspec
 		src\Package\MSTest.nuspec = src\Package\MSTest.nuspec
 		src\Package\MSTest.TestAdapter.nuspec = src\Package\MSTest.TestAdapter.nuspec
-		src\Package\MSTest.TestAdapter.symbols.nuspec = src\Package\MSTest.TestAdapter.symbols.nuspec
 		src\Package\MSTest.TestFramework.nuspec = src\Package\MSTest.TestFramework.nuspec
-		src\Package\MSTest.TestFramework.symbols.nuspec = src\Package\MSTest.TestFramework.symbols.nuspec
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTestAdapter.UnitTests", "test\UnitTests\MSTestAdapter.UnitTests\MSTestAdapter.UnitTests.csproj", "{1CEB5743-70BF-475E-91BC-0AEBD63835B7}"
