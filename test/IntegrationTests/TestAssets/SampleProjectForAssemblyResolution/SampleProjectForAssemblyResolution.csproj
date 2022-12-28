@@ -5,7 +5,6 @@
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>$(RepoRoot)artifacts\TestAssets\IntegrationTests</OutputPath>
-    <AssemblyOriginatorKeyFile>$(RepoRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
 </Project>

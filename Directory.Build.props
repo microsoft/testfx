@@ -18,4 +18,8 @@
     <AnalysisLevel>preview</AnalysisLevel>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <StrongNameKeyId>Microsoft</StrongNameKeyId>
+  </PropertyGroup>
+
 </Project>
