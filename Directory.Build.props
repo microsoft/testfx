@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <Import Project="scripts\build\TestFx.props" />
+
+  <!-- <Import Project="scripts\build\TestFx.props" /> -->
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   <Import Project="eng\TFMConfiguration.props" />
 
   <!-- Language configuration -->
@@ -15,14 +17,5 @@
     <!-- default to max warnlevel -->
     <AnalysisLevel>preview</AnalysisLevel>
   </PropertyGroup>
-
-  <PropertyGroup>
-    <!-- Disable Xlf localization by default. Project containing .resx file have to opt-in  -->
-    <EnableXlfLocalization>false</EnableXlfLocalization>
-  </PropertyGroup>
-
-  <ItemGroup Condition=" '$(EnableXlfLocalization)' == 'true' ">
-    <PackageReference Include="Microsoft.DotNet.XliffTasks" Version="$(XliffTasksVersion)" PrivateAssets="all" />
-  </ItemGroup>
 
 </Project>
