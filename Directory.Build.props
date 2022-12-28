@@ -20,6 +20,8 @@
 
   <PropertyGroup>
     <StrongNameKeyId>Microsoft</StrongNameKeyId>
+    <Copyright>$(CopyrightMicrosoft)</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
 </Project>
