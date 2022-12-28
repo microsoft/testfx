@@ -3,8 +3,6 @@
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
     <IsPackable>false</IsPackable>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(RepoRoot)artifacts\TestAssets\</OutputPath>
     <DefineConstants>$(DefineConstants);DISPLAY_NAME_TEST_ID</DefineConstants>
   </PropertyGroup>
 

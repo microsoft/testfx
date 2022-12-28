@@ -3,8 +3,6 @@
     <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     <FrameworkIdentifier>NetCore</FrameworkIdentifier>
     <IsPackable>false</IsPackable>
-    <OutputPath>$(RepoRoot)artifacts\TestAssets\</OutputPath>
-    <CheckEolTargetFramework>false</CheckEolTargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

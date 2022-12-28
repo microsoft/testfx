@@ -6,8 +6,6 @@
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
     <IsPackable>false</IsPackable>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(RepoRoot)artifacts\TestAssets\DesktopDeployment\$(DependencyCopyBehavior)\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>

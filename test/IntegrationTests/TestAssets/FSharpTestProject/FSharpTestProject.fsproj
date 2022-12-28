@@ -4,8 +4,6 @@
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(RepoRoot)artifacts\TestAssets\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
