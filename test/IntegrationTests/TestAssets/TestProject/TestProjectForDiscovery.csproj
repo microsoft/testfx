@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{771B0933-B811-4002-B455-823C1CC96505}</ProjectGuid>
+    <ProjectGuid>{B3419F35-A31F-4CAA-A606-034D5DB669A2}</ProjectGuid>
     <RootNamespace>TestProjectForDiscovery</RootNamespace>
     <AssemblyName>TestProjectForDiscovery</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
@@ -34,7 +34,7 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
-    <ProjectReference Include="$(RepoRoot)test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj" />
+    <ProjectReference Include="$(RepoRoot)test\IntegrationTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj" />
   </ItemGroup>
 
 </Project>

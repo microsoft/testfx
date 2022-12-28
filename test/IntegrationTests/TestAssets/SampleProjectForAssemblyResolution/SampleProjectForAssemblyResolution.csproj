@@ -4,7 +4,7 @@
     <TargetFramework>net462</TargetFramework>
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <OutputPath>$(RepoRoot)artifacts\TestAssets\ComponentTests</OutputPath>
+    <OutputPath>$(RepoRoot)artifacts\TestAssets\IntegrationTests</OutputPath>
     <AssemblyOriginatorKeyFile>$(RepoRoot)scripts\build\key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 

@@ -3,8 +3,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>net462</TargetFrameworks>
-    <RootNamespace>MSTestAdapter.PlatformServices.Desktop.ComponentTests</RootNamespace>
-    <AssemblyName>PlatformServices.Desktop.ComponentTests</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -16,12 +14,11 @@
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\Adapter\MSTestAdapter.PlatformServices\MSTestAdapter.PlatformServices.csproj" />
-    <ProjectReference Include="$(RepoRoot)test\ComponentTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj" />
-    <ProjectReference Include="$(RepoRoot)test\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
+    <ProjectReference Include="$(RepoRoot)test\IntegrationTests\TestAssets\SampleFrameworkExtensions\SampleFrameworkExtensions.csproj" />
+    <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
     <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
   </ItemGroup>
