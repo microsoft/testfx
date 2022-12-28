@@ -8,7 +8,6 @@
     <UsingToolXliff>false</UsingToolXliff>
     <MicrosoftNETTestSdkVersion>17.4.1</MicrosoftNETTestSdkVersion>
     <!-- Toolset -->
-    <MicroBuildCoreVersion>0.2.0</MicroBuildCoreVersion>
     <NuGetFrameworksVersion>5.11.0</NuGetFrameworksVersion>
     <VsWhereVersion>2.5.2</VsWhereVersion>
     <MicrosoftInternalDiaInteropVersion>14.0.0</MicrosoftInternalDiaInteropVersion>
