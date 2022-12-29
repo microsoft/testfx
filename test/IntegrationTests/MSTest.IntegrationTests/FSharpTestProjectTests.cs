@@ -1,19 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.IO;
-
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+namespace MSTest.IntegrationTests;
 public class FSharpTestProjectTests : CLITestBase
 {
-    private const string TestAssembly = "FSharpTestProject.dll";
+    private const string TestAssetName = "FSharpTestProject";
 
     public void TestFSharpTestsWithSpaceAndDotInName()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName, targetFramework: "net472");
 
         // Act
         var testCases = DiscoverTests(assemblyPath);

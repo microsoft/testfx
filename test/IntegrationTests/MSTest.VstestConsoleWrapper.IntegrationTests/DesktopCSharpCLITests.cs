@@ -3,13 +3,13 @@
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace Microsoft.MSTestV2.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class DesktopCSharpCLITests : CLITestBase
 {
-    private const string X86DebugTestProject = "DesktopTestProjectx86Debug.dll";
-    private const string X64DebugTestProject = "DesktopTestProjectx64Debug.dll";
-    private const string X86ReleaseTestProject = "DesktopTestProjectx86Release.dll";
-    private const string X64ReleaseTestProject = "DesktopTestProjectx64Release.dll";
+    private const string X86DebugTestProject = "DesktopTestProjectx86Debug";
+    private const string X64DebugTestProject = "DesktopTestProjectx64Debug";
+    private const string X86ReleaseTestProject = "DesktopTestProjectx86Release";
+    private const string X64ReleaseTestProject = "DesktopTestProjectx64Release";
     private const string RunSetting =
         @"<RunSettings>   
                 <RunConfiguration>  

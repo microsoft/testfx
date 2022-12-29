@@ -3,16 +3,16 @@
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace MSTestAdapter.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class DynamicDataTests : CLITestBase
 {
-    private const string TestAssembly = "DynamicDataTestProject.dll";
+    private const string TestAssetName = "DynamicDataTestProject";
 
     public void ExecuteDynamicDataTests()
     {
         // Arrange & Act
         InvokeVsTestForExecution(
-            new string[] { TestAssembly },
+            new string[] { TestAssetName },
             testCaseFilter: "DynamicDataTest");
 
         // Assert

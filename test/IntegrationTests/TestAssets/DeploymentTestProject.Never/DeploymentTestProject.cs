@@ -1,12 +1,13 @@
+﻿using System.Diagnostics;
 using System.IO;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace DeploymentTestProjectNetCore;
+namespace DeploymentTestProject;
 
-[DeploymentItem(@"..\..\..\test\IntegrationTests\TestAssets\DeploymentTestProjectNetCore\DeploymentFile.xml")]
+[DeploymentItem(@"..\..\..\..\..\test\IntegrationTests\TestAssets\DeploymentTestProject.Never\DeploymentFile.xml")]
 [TestClass]
-public class DeploymentTestProjectNetCore
+public class DeploymentTestProject
 {
     [TestMethod]
     public void PassIfFilePresent()
@@ -20,7 +21,7 @@ public class DeploymentTestProjectNetCore
         Assert.IsFalse(File.Exists("EmptyDataFile.xml"));
     }
 
-    [DeploymentItem(@"..\..\..\test\IntegrationTests\TestAssets\DeploymentTestProjectNetCore\TestCaseDeploymentFile.xml")]
+    [DeploymentItem(@"..\..\..\..\..\test\IntegrationTests\TestAssets\DeploymentTestProject.Never\TestCaseDeploymentFile.xml")]
     [TestMethod]
     public void PassIfDeclaredFilesPresent()
     {

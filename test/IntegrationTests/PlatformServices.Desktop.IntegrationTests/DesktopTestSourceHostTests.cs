@@ -23,8 +23,9 @@ public class DesktopTestSourceHostTests : TestContainer
 
     public void ParentDomainShouldHonorSearchDirectoriesSpecifiedInRunsettings()
     {
+        string sampleProjectDirPath = Path.GetDirectoryName(GetTestAssemblyPath("SampleProjectForAssemblyResolution"));
         string runSettingXml =
-        @"<RunSettings>
+        $@"<RunSettings>
                 <RunConfiguration>
                     <DisableAppDomain>True</DisableAppDomain>
                 </RunConfiguration>
@@ -32,13 +33,15 @@ public class DesktopTestSourceHostTests : TestContainer
                     <AssemblyResolution>
                         <Directory path = "" % Temp %\directory"" includeSubDirectories = ""true"" />
                         <Directory path = ""C:\windows"" includeSubDirectories = ""false"" />
-                        <Directory path = "".\ComponentTests"" />
+                        <Directory path = ""{sampleProjectDirPath}"" />
                     </AssemblyResolution>
                 </MSTestV2>
              </RunSettings>";
 
-        var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
-        _testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingXml).Object, null);
+        _testSourceHost = new TestSourceHost(
+            GetTestAssemblyPath("DesktopTestProjectx86Debug"),
+            GetMockedIRunSettings(runSettingXml).Object,
+            null);
         _testSourceHost.SetupHost();
 
         // Loading SampleProjectForAssemblyResolution.dll should not throw.
@@ -48,8 +51,10 @@ public class DesktopTestSourceHostTests : TestContainer
 
     public void ChildDomainResolutionPathsShouldHaveSearchDirectoriesSpecifiedInRunsettings()
     {
+        string sampleProjectPath = GetTestAssemblyPath("SampleProjectForAssemblyResolution");
+        string sampleProjectDirPath = Path.GetDirectoryName(sampleProjectPath);
         string runSettingXml =
-        @"<RunSettings>
+        $@"<RunSettings>
                 <RunConfiguration>
                     <DisableAppDomain>False</DisableAppDomain>
                 </RunConfiguration>
@@ -57,17 +62,18 @@ public class DesktopTestSourceHostTests : TestContainer
                     <AssemblyResolution>
                         <Directory path = "" % Temp %\directory"" includeSubDirectories = ""true"" />
                         <Directory path = ""C:\windows"" includeSubDirectories = ""false"" />
-                        <Directory path = "".\ComponentTests"" />
+                        <Directory path = ""{sampleProjectDirPath}"" />
                     </AssemblyResolution>
                 </MSTestV2>
              </RunSettings>";
 
-        var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
-        _testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingXml).Object, null);
+        _testSourceHost = new TestSourceHost(
+            GetTestAssemblyPath("DesktopTestProjectx86Debug"),
+            GetMockedIRunSettings(runSettingXml).Object,
+            null);
         _testSourceHost.SetupHost();
 
-        var assemblyResolution = "ComponentTests\\SampleProjectForAssemblyResolution.dll";
-        var asm = Assembly.LoadFrom(assemblyResolution);
+        var asm = Assembly.LoadFrom(sampleProjectPath);
         var type = asm.GetType("SampleProjectForAssemblyResolution.SerializableTypeThatShouldBeLoaded");
 
         // Creating instance of SampleProjectForAssemblyResolution should not throw.
@@ -77,7 +83,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
     public void DisposeShouldUnloadChildAppDomain()
     {
-        var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug.dll");
+        var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug");
         _testSourceHost = new TestSourceHost(testSource, null, null);
         _testSourceHost.SetupHost();
 
@@ -89,12 +95,35 @@ public class DesktopTestSourceHostTests : TestContainer
         _testSourceHost.AppDomain.Should().BeNull();
     }
 
-    private static string GetTestAssemblyPath(string assemblyName)
+    private static string GetArtifactsBinDir()
     {
-        var currentAssemblyDirectory = new FileInfo(typeof(DesktopTestSourceHostTests).Assembly.Location).Directory;
-        var testAssetPath = Path.Combine(currentAssemblyDirectory.Parent.Parent.Parent.FullName, "TestAssets");
+        var artifactsBinDirPath = Path.GetFullPath(Path.Combine(
+            typeof(DesktopTestSourceHostTests).Assembly.Location,
+            "..",
+            "..",
+            "..",
+            ".."));
+        Directory.Exists(artifactsBinDirPath).Should().BeTrue($"artifacts bin dir '{artifactsBinDirPath}' should exist");
 
-        return Path.Combine(testAssetPath, assemblyName);
+        return artifactsBinDirPath;
+    }
+
+    private static string GetTestAssemblyPath(string assetName)
+    {
+        var testAssetPath = Path.Combine(
+            GetArtifactsBinDir(),
+            assetName,
+#if DEBUG
+            "Debug",
+#else
+            "Release",
+#endif
+            "net462",
+            assetName + ".dll");
+
+        File.Exists(testAssetPath).Should().BeTrue($"Test asset '{testAssetPath}' should exist");
+
+        return testAssetPath;
     }
 
     private static Mock<IRunSettings> GetMockedIRunSettings(string runSettingXml)

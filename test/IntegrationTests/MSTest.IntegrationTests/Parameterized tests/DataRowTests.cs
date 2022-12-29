@@ -1,19 +1,17 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.IO;
-
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+namespace MSTest.IntegrationTests;
 public class DataRowTests : CLITestBase
 {
-    private const string TestAssembly = "DataRowTestProject.dll";
+    private const string TestAssetName = "DataRowTestProject";
 
     public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerivedClassHasDataRows_SimpleDataRows()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSimple");
@@ -32,7 +30,7 @@ public class DataRowTests : CLITestBase
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
@@ -48,7 +46,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSomeOptional");
@@ -65,7 +63,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsExecuteWithParamsArrayParameter()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowParamsArgument");
@@ -83,7 +81,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsFailWhenInvalidArgumentsProvided()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular&TestCategory~DataRowOptionalInvalidArguments");
@@ -100,7 +98,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldSerializeDoublesProperly()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular.DataRowTestDouble");
@@ -116,7 +114,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldSerializeMixedTypesProperly()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowTestMixed");
@@ -131,7 +129,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldSerializeEnumsProperly()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowEnums");
@@ -149,7 +147,7 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldHandleNonSerializableValues()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowNonSerializable");
@@ -170,7 +168,7 @@ public class DataRowTests : CLITestBase
     public void ExecuteDataRowTests_Enums()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Enums");
@@ -245,7 +243,7 @@ public class DataRowTests : CLITestBase
     public void ExecuteDataRowTests_NonSerializablePaths()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_NonSerializablePaths");
@@ -263,7 +261,7 @@ public class DataRowTests : CLITestBase
     public void ExecuteDataRowTests_Regular()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular");

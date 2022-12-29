@@ -3,13 +3,11 @@
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace MSTestAdapter.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class DeploymentTests : CLITestBase
 {
-    private const string TestAssemblyDependency = "DesktopDeployment\\Never\\DeploymentTestProject.dll";
-    private const string TestAssemblyMSBuild = "DesktopDeployment\\PreserveNewest\\DeploymentTestProject.dll";
-    private const string TestAssemblyNetCore21 = "netcoreapp2.1\\DeploymentTestProjectNetCore.dll";
-    private const string TestAssemblyNetCore31 = "netcoreapp3.1\\DeploymentTestProjectNetCore.dll";
+    private const string TestAssetNever = "DeploymentTestProject.Never";
+    private const string TestAssetPreserveNewest = "DeploymentTestProject.PreserveNewest";
     private const string RunSetting =
          @"<RunSettings>   
                 <MSTestV2>
@@ -17,43 +15,30 @@ public class DeploymentTests : CLITestBase
                 </MSTestV2>
             </RunSettings>";
 
-    public void ValidateTestSourceDependencyDeployment()
+    public void ValidateTestSourceDependencyDeployment_net462()
+        => ValidateTestSourceDependencyDeployment("net462");
+
+    public void ValidateTestSourceDependencyDeployment_netcoreapp31()
+        => ValidateTestSourceDependencyDeployment("netcoreapp3.1");
+
+    private void ValidateTestSourceDependencyDeployment(string targetFramework)
     {
-        InvokeVsTestForExecution(new string[] { TestAssemblyDependency });
+        InvokeVsTestForExecution(new string[] { TestAssetNever }, targetFramework: targetFramework);
         ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.FailIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
         ValidateFailedTestsContain(true, "DeploymentTestProject.DeploymentTestProject.PassIfFilePresent");
     }
 
-    public void ValidateTestSourceLocationDeployment()
+    public void ValidateTestSourceLocationDeployment_net462()
+        => ValidateTestSourceLocationDeployment("net462");
+
+    // TODO: Fix me
+    private void ValidateTestSourceLocationDeployment_netcoreapp31()
+        => ValidateTestSourceLocationDeployment("netcoreapp3.1");
+
+    public void ValidateTestSourceLocationDeployment(string targetFramework)
     {
-        InvokeVsTestForExecution(new string[] { TestAssemblyMSBuild }, RunSetting);
+        InvokeVsTestForExecution(new string[] { TestAssetPreserveNewest }, RunSetting, targetFramework: targetFramework);
         ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.PassIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
         ValidateFailedTestsContain(true, "DeploymentTestProject.DeploymentTestProject.FailIfFilePresent");
-    }
-
-    public void ValidateTestSourceLocationDeploymentNetCore3_1()
-    {
-        InvokeVsTestForExecution(new string[] { TestAssemblyNetCore31 }, null);
-        ValidatePassedTestsContain("DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.FailIfFilePresent", "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfDeclaredFilesPresent");
-        ValidateFailedTestsContain(true, "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfFilePresent");
-    }
-
-    // TODO @haplois | @evangelink: We need to work on our netcoreapp2.1 tests.
-    /*
-    [TestMethod]
-    public void ValidateTestSourceLocationDeploymentNetCore2_1()
-    {
-        // StackTrace isn't included in release builds with netcoreapp2.1.
-        const bool validateStackTrace =
-#if DEBUG
-        true;
-#else
-        false;
-#endif
-
-        this.InvokeVsTestForExecution(new string[] { TestAssemblyNetCore21 }, null);
-        this.ValidatePassedTestsContain("DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.FailIfFilePresent", "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfDeclaredFilesPresent");
-        this.ValidateFailedTestsContain(TestAssemblyMSBuild, validateStackTrace, "DeploymentTestProjectNetCore.DeploymentTestProjectNetCore.PassIfFilePresent");
-    }
-    */
+    }    
 }

@@ -33,9 +33,15 @@ public class ReflectionUtilityTests : TestContainer
         var testAssetPath =
             Path.Combine(
                 currentAssemblyDirectory.Parent.Parent.Parent.FullName,
-                "TestAssets",
-                currentAssemblyDirectory.Name /* TFM (e.g. net462) */);
-        _testAsset = Assembly.ReflectionOnlyLoadFrom(Path.Combine(testAssetPath, "TestProjectForDiscovery.dll"));
+                "TestProjectForDiscovery",
+#if DEBUG
+                "Debug",
+#else
+                "Release",
+#endif
+                currentAssemblyDirectory.Name /* TFM (e.g. net462) */,
+                "TestProjectForDiscovery.dll");
+        _testAsset = Assembly.ReflectionOnlyLoadFrom(testAssetPath);
 
         // This is needed for System assemblies.
         AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);

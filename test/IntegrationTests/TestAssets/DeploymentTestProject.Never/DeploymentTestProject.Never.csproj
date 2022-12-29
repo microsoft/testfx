@@ -1,11 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <DependencyCopyBehavior Condition=" '$(DependencyCopyBehavior)' == '' ">Never</DependencyCopyBehavior>
-  </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
     <IsPackable>false</IsPackable>
+    <DependencyCopyBehavior>Never</DependencyCopyBehavior>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,10 +12,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,10 +26,4 @@
     </None>
   </ItemGroup>
 
-  <Target Name="CleanWithPreserveNewest" AfterTargets="Clean" Condition=" '$(DependencyCopyBehavior)' == 'Never' ">
-    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Clean" Properties="DependencyCopyBehavior=PreserveNewest" />
-  </Target>
-  <Target Name="BuildWithPreserveNewest" AfterTargets="Rebuild;Build" Condition=" '$(DependencyCopyBehavior)' == 'Never' ">
-    <MSBuild Projects="$(MSBuildProjectFullPath)" Properties="DependencyCopyBehavior=PreserveNewest" />
-  </Target>
 </Project>

@@ -22,6 +22,12 @@
   <PropertyGroup>
     <Copyright>$(CopyrightMicrosoft)</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!--
+      It appears that AssemblyVersion should always be set to 14.0.0.0 for some backward compatibility cases,
+      but we don't have any information about these cases.
+     -->
+    <AssemblyVersion>14.0.0.0</AssemblyVersion>
+    <AssemblyFileVersion>14.0.0.0</AssemblyFileVersion>
   </PropertyGroup>
 
   <!-- Sign config -->

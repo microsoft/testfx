@@ -3,14 +3,14 @@
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace MSTestAdapter.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class AssertExtensibilityTests : CLITestBase
 {
-    private const string TestAssembly = "FxExtensibilityTestProject.dll";
+    private const string TestAssetName = "FxExtensibilityTestProject";
 
     public void ExecuteAssertExtensibilityTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly });
+        InvokeVsTestForExecution(new string[] { TestAssetName });
         ValidatePassedTestsContain(
             "FxExtensibilityTestProject.AssertExTest.BasicAssertExtensionTest",
             "FxExtensibilityTestProject.AssertExTest.ChainedAssertExtensionTest");

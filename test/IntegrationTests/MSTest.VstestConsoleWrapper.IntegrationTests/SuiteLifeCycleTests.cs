@@ -8,10 +8,10 @@ using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace MSTestAdapter.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class SuiteLifeCycleTests : CLITestBase
 {
-    private const string Assembly = "SuiteLifeCycleTestProject.dll";
+    private const string TestAssetName = "SuiteLifeCycleTestProject";
 
     public void ValidateTestRunLifecycle_net6()
     {
@@ -26,7 +26,7 @@ public class SuiteLifeCycleTests : CLITestBase
     public void ValidateInheritanceBehavior()
     {
         InvokeVsTestForExecution(
-            new[] { "net462\\" + Assembly },
+            new[] { TestAssetName },
             testCaseFilter: "FullyQualifiedName~LifecycleInheritance",
             targetFramework: "net462");
 
@@ -148,7 +148,7 @@ public class SuiteLifeCycleTests : CLITestBase
     private void ValidateTestRunLifecycle(string targetFramework)
     {
         InvokeVsTestForExecution(
-            new[] { targetFramework + "\\" + Assembly },
+            new[] { TestAssetName },
             testCaseFilter: "FullyQualifiedName~SuiteLifeCycleTestProject",
             targetFramework: targetFramework);
         RunEventsHandler.PassedTests.Should().HaveCount(27);  // The inherit class tests are called twice.

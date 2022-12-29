@@ -6,15 +6,15 @@ using System.Linq;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+namespace MSTest.IntegrationTests;
 public class DiscoverInternalsTests : CLITestBase
 {
-    private const string TestAssembly = "DiscoverInternalsProject.dll";
+    private const string TestAsset = "DiscoverInternalsProject";
 
     public void InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);
 
         // Act
         var testCases = DiscoverTests(assemblyPath);
@@ -30,7 +30,7 @@ public class DiscoverInternalsTests : CLITestBase
     public void AnInternalTestClassDerivedFromAPublicAbstractGenericBaseClassForAnInternalTypeIsDiscovered()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);
 
         // Act
         var testCases = DiscoverTests(assemblyPath);
@@ -43,7 +43,7 @@ public class DiscoverInternalsTests : CLITestBase
 
     public void AnInternalTypeCanBeUsedInADynamicDataTestMethod()
     {
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
+        var assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);
 
         // Act
         var testCases = DiscoverTests(assemblyPath);

@@ -117,9 +117,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataRowTestProject", "test\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataSourceTestProject", "test\IntegrationTests\TestAssets\DataSourceTestProject\DataSourceTestProject.csproj", "{60116E14-11A3-47DF-B730-8A28ABD9B7AF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeploymentTestProject", "test\IntegrationTests\TestAssets\DeploymentTestProject\DeploymentTestProject.csproj", "{CA6A4A5A-CFDE-440B-898E-FF6FBA405540}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeploymentTestProject.Never", "test\IntegrationTests\TestAssets\DeploymentTestProject.Never\DeploymentTestProject.Never.csproj", "{CA6A4A5A-CFDE-440B-898E-FF6FBA405540}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeploymentTestProjectNetCore", "test\IntegrationTests\TestAssets\DeploymentTestProjectNetCore\DeploymentTestProjectNetCore.csproj", "{9C81E66B-5DFE-4130-982E-64EF8D7F6A60}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DeploymentTestProject.PreserveNewest", "test\IntegrationTests\TestAssets\DeploymentTestProject.PreserveNewest\DeploymentTestProject.PreserveNewest.csproj", "{9C81E66B-5DFE-4130-982E-64EF8D7F6A60}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DesktopTestProjectx64Debug", "test\IntegrationTests\TestAssets\DesktopTestProjectx64Debug\DesktopTestProjectx64Debug.csproj", "{BE21907B-A4C1-41D7-A2EF-5C73A33090A0}"
 EndProject
@@ -173,7 +173,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFramework.ForTestingMST
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest", "src\Package\MSTest\MSTest.csproj", "{ED8534D1-3136-4915-8071-5547E8D84DC3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Internal.TestFx.Documentation", "src\Package\MSTest.Internal.TestFx.Documentation\MSTest.Internal.TestFx.Documentation.csproj", "{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Internal.TestFx.Documentation", "src\Package\MSTest.Internal.TestFx.Documentation\MSTest.Internal.TestFx.Documentation.csproj", "{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

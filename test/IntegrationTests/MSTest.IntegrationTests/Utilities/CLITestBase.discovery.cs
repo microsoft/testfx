@@ -30,7 +30,7 @@ public partial class CLITestBase : TestContainer
         var logger = new InternalLogger();
         var sink = new InternalSink();
 
-        string runSettingXml = GetRunSettingXml(string.Empty, GetTestAdapterPath());
+        string runSettingXml = GetRunSettingXml(string.Empty);
         var context = new InternalDiscoveryContext(runSettingXml, testCaseFilter);
 
         unitTestDiscoverer.DiscoverTestsInSource(assemblyPath, logger, sink, context);

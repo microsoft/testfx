@@ -32,12 +32,12 @@ public partial class CLITestBase : TestContainer
     /// </summary>
     /// <param name="sources">Collection of test containers.</param>
     /// <param name="runSettings">Run settings for execution.</param>
-    public void InvokeVsTestForDiscovery(string[] sources, string runSettings = "")
+    public void InvokeVsTestForDiscovery(string[] sources, string runSettings = "", string targetFramework = null)
     {
-        ExpandTestSourcePaths(sources);
+        ExpandTestSourcePaths(sources, targetFramework);
 
         _discoveryEventsHandler = new DiscoveryEventsHandler();
-        string runSettingXml = GetRunSettingXml(runSettings, GetTestAdapterPath());
+        string runSettingXml = GetRunSettingXml(runSettings);
 
         s_vsTestConsoleWrapper.DiscoverTests(sources, runSettingXml, _discoveryEventsHandler);
     }
@@ -48,12 +48,12 @@ public partial class CLITestBase : TestContainer
     /// <param name="sources">List of test assemblies.</param>
     /// <param name="runSettings">Run settings for execution.</param>
     /// <param name="testCaseFilter">Test Case filter for execution.</param>
-    public void InvokeVsTestForExecution(string[] sources, string runSettings = "", string testCaseFilter = null, string targetFramework = "")
+    public void InvokeVsTestForExecution(string[] sources, string runSettings = "", string testCaseFilter = null, string targetFramework = null)
     {
-        ExpandTestSourcePaths(sources);
+        ExpandTestSourcePaths(sources, targetFramework);
 
         RunEventsHandler = new RunEventsHandler();
-        string runSettingXml = GetRunSettingXml(runSettings, GetTestAdapterPath(), targetFramework);
+        string runSettingXml = GetRunSettingXml(runSettings);
 
         s_vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, RunEventsHandler);
         if (RunEventsHandler.Errors.Any())
@@ -62,15 +62,31 @@ public partial class CLITestBase : TestContainer
         }
     }
 
+    public static string GetNugetPackageFolder()
+    {
+        var nugetPackagesFolderPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
+        if (!string.IsNullOrEmpty(nugetPackagesFolderPath))
+        {
+            Directory.Exists(nugetPackagesFolderPath).Should().BeTrue($"NuGet package folder '{nugetPackagesFolderPath}' should exist");
+
+            return nugetPackagesFolderPath;
+        }
+
+        var userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
+        var nugetPackagesFolder = Path.Combine(userProfile, ".nuget", "packages");
+        Directory.Exists(nugetPackagesFolder).Should().BeTrue($"NuGet package folder '{nugetPackagesFolder}' should exist");
+
+        return nugetPackagesFolder;
+    }
+
     /// <summary>
     /// Gets the path to <c>vstest.console.exe</c>.
     /// </summary>
     /// <returns>Full path to <c>vstest.console.exe</c>.</returns>
     public string GetConsoleRunnerPath()
     {
-        var vstestConsolePath = Path.Combine(GetRepositoryRootFolder(), PackagesFolder, TestPlatformCLIPackageName, GetTestPlatformVersion(), VstestConsoleRelativePath);
-
-        File.Exists(vstestConsolePath).Should().BeTrue("GetConsoleRunnerPath: Path not found: {0}", vstestConsolePath);
+        var vstestConsolePath = Path.Combine(GetNugetPackageFolder(), TestPlatformCLIPackageName, GetTestPlatformVersion(), VstestConsoleRelativePath);
+        File.Exists(vstestConsolePath).Should().BeTrue($"Microsoft.TestPlatform folder '{vstestConsolePath}' should exist");
 
         return vstestConsolePath;
     }
@@ -272,7 +288,7 @@ public partial class CLITestBase : TestContainer
     /// Converts relative paths to absolute.
     /// </summary>
     /// <param name="paths">An array of file paths, elements may be modified to absolute paths.</param>
-    private void ExpandTestSourcePaths(string[] paths)
+    private void ExpandTestSourcePaths(string[] paths, string targetFramework = null)
     {
         for (var i = 0; i < paths.Length; i++)
         {
@@ -280,7 +296,7 @@ public partial class CLITestBase : TestContainer
 
             if (!Path.IsPathRooted(path))
             {
-                paths[i] = GetAssetFullPath(path);
+                paths[i] = GetAssetFullPath(path, targetFramework: targetFramework);
             }
             else
             {

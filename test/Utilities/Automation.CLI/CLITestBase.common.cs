@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.IO;
 using System.Xml;
 
@@ -12,18 +11,23 @@ using TestFramework.ForTestingMSTest;
 namespace Microsoft.MSTestV2.CLIAutomation;
 public partial class CLITestBase : TestContainer
 {
-    private const string TestAssetsFolder = "TestAssets";
-    private const string PackagesFolder = "packages";
     private const string EngineeringFolder = "eng";
-    private const string ArtifactsFolder = "artifacts";
+
+    private const string Configuration =
+#if DEBUG
+        "Debug";
+#else
+        "Release";
+#endif
 
     // This value is automatically updated by "build.ps1" script.
     private const string TestPlatformCLIPackageName = "Microsoft.TestPlatform";
     private const string VstestConsoleRelativePath = @"tools\net462\Common7\IDE\Extensions\TestPlatform\vstest.console.exe";
+    private const string DefaultTargetFramework = "net462";
 
     protected XmlDocument ReadVersionProps()
     {
-        var versionPropsFilePath = Path.Combine(GetRepositoryRootFolder(), EngineeringFolder, "Versions.props");
+        var versionPropsFilePath = Path.Combine(GetArtifactsBinFolderPath(), "..", "..", EngineeringFolder, "Versions.props");
         using var fileStream = File.OpenRead(versionPropsFilePath);
         using var xmlTextReader = new XmlTextReader(fileStream) { Namespaces = false };
         var versionPropsXml = new XmlDocument();
@@ -40,44 +44,24 @@ public partial class CLITestBase : TestContainer
         return testSdkVersion.InnerText;
     }
 
-    protected string GetRepositoryRootFolder()
+    protected string GetArtifactsBinFolderPath()
     {
         var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
-        return Path.Combine(assemblyLocation, @"..\..\..\..\..");
+        var artifactsBinFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\.."));
+        Directory.Exists(artifactsBinFolder).Should().BeTrue();
+
+        return artifactsBinFolder;
     }
 
-    /// <summary>
-    /// Gets the path of test assets folder.
-    /// </summary>
-    /// <returns>Path to testassets folder.</returns>
-    protected string GetAssetFolderPath() => Path.Combine(GetRepositoryRootFolder(), ArtifactsFolder, TestAssetsFolder);
-
-    /// <summary>
-    /// Gets the full path to a test asset.
-    /// </summary>
-    /// <param name="assetName">Name of the asset with extension. E.g. <c>SimpleUnitTest.dll</c>.</param>
-    /// <returns>Full path to the test asset.</returns>
-    /// <remarks>
-    /// Test assets follow several conventions:
-    /// (a) They are built for provided build configuration.
-    /// (b) Name of the test asset matches the parent directory name. E.g. <c>TestAssets\SimpleUnitTest\SimpleUnitTest.xproj</c> must
-    /// produce <c>TestAssets\SimpleUnitTest\bin\Debug\SimpleUnitTest.dll</c>
-    /// (c) TestAssets are copied over to a central location i.e. "TestAssets\artifacts\*.*".
-    /// </remarks>
-    protected string GetAssetFullPath(string assetName)
+    protected string GetAssetFullPath(string assetName, string configuration = null, string targetFramework = null)
     {
-        var assetPath = Path.GetFullPath(Path.Combine(GetAssetFolderPath(), assetName));
+        configuration ??= Configuration;
+        targetFramework ??= DefaultTargetFramework;
+        var assetPath = Path.GetFullPath(Path.Combine(GetArtifactsBinFolderPath(), assetName, configuration, targetFramework, assetName + ".dll"));
+        File.Exists(assetPath).Should().BeTrue($"asset '{assetPath}' should exist");
 
-        // GetTestAsset: Path not found.
-        File.Exists(assetPath).Should().BeTrue();
         return assetPath;
-    }
-
-    protected string GetTestAdapterPath()
-    {
-        var testAdapterPath = Path.Combine(GetRepositoryRootFolder(), ArtifactsFolder, TestAssetsFolder);
-        return testAdapterPath;
     }
 
     /// <summary>
@@ -86,9 +70,8 @@ public partial class CLITestBase : TestContainer
     /// or generates new runSettings with testAdapterPath if runSettings is Empty.
     /// </summary>
     /// <param name="settingsXml">RunSettings provided for discovery/execution.</param>
-    /// <param name="testAdapterPath">Full path to TestAdapter.</param>
     /// <returns>RunSettingXml as string.</returns>
-    protected string GetRunSettingXml(string settingsXml, string testAdapterPath, string targetFramework = "")
+    protected string GetRunSettingXml(string settingsXml)
     {
         if (string.IsNullOrEmpty(settingsXml))
         {
@@ -102,7 +85,7 @@ public partial class CLITestBase : TestContainer
         }
 
         XmlElement root = doc.DocumentElement;
-        RunConfiguration runConfiguration = new(Path.Combine(testAdapterPath, targetFramework));
+        RunConfiguration runConfiguration = new("");
         XmlElement runConfigElement = runConfiguration.ToXml();
         if (root[runConfiguration.SettingsName] == null)
         {

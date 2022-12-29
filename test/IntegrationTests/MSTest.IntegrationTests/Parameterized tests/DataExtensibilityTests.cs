@@ -1,14 +1,12 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.IO;
-
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+namespace MSTest.IntegrationTests;
 public class DataExtensibilityTests : CLITestBase
 {
-    private const string TestAssembly = "FxExtensibilityTestProject.dll";
+    private const string TestAssetName = "FxExtensibilityTestProject";
 
     /*
         Add tests for:
@@ -19,7 +17,7 @@ public class DataExtensibilityTests : CLITestBase
     public void CustomTestDataSourceTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "CustomTestDataSourceTestMethod1");
@@ -32,7 +30,7 @@ public class DataExtensibilityTests : CLITestBase
     public void AssertExtensibilityTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FxExtensibilityTestProject.AssertExTest");
@@ -46,7 +44,7 @@ public class DataExtensibilityTests : CLITestBase
     public void ExecuteCustomTestExtensibilityTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "(Name~CustomTestMethod1)|(Name~CustomTestClass1)");
@@ -73,7 +71,7 @@ public class DataExtensibilityTests : CLITestBase
     public void ExecuteCustomTestExtensibilityWithTestDataTests()
     {
         // Arrange
-        var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "Name~CustomTestMethod2");

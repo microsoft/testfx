@@ -6,12 +6,11 @@ using System.Linq;
 using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
-using Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 
-namespace DiscoveryAndExecutionTests;
+namespace MSTest.IntegrationTests;
 public partial class TestId : CLITestBase
 {
-    private const string DisplayNameStrategyDll = "TestIdProject.DisplayNameStrategy.dll";
+    private const string DisplayNameStrategyDll = "TestIdProject.DisplayNameStrategy";
 
     public void TestIdUniqueness_DataRowArray_DisplayNameStrategy()
     {

@@ -3,18 +3,18 @@
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace MSTestAdapter.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class ParallelExecutionTests : CLITestBase
 {
-    private const string ClassParallelTestAssembly = "ParallelClassesTestProject.dll";
-    private const string MethodParallelTestAssembly = "ParallelMethodsTestProject.dll";
-    private const string DoNotParallelizeTestAssembly = "DoNotParallelizeTestProject.dll";
+    private const string ClassParallelTestAssetName = "ParallelClassesTestProject";
+    private const string MethodParallelTestAssetName = "ParallelMethodsTestProject";
+    private const string DoNotParallelizeTestAssetName = "DoNotParallelizeTestProject";
     private const int TestMethodWaitTimeInMS = 1000;
     private const int OverheadTimeInMS = 3000;
 
     public void AllMethodsShouldRunInParallel()
     {
-        InvokeVsTestForExecution(new string[] { MethodParallelTestAssembly });
+        InvokeVsTestForExecution(new string[] { MethodParallelTestAssetName });
 
         // Parallel level of 2
         // There are a total of 6 methods each with a sleep of TestMethodWaitTimeInMS.
@@ -34,7 +34,7 @@ public class ParallelExecutionTests : CLITestBase
 
     public void AllClassesShouldRunInParallel()
     {
-        InvokeVsTestForExecution(new string[] { ClassParallelTestAssembly });
+        InvokeVsTestForExecution(new string[] { ClassParallelTestAssetName });
 
         // Parallel level of 2
         // There are a total of 3 classes - C1 (2 tests), C2(3 tests), C3(2 tests) with a sleep of TestMethodWaitTimeInMS.
@@ -65,9 +65,9 @@ public class ParallelExecutionTests : CLITestBase
   	            </MSTest>  
             </RunSettings>";
 
-        InvokeVsTestForExecution(new string[] { DoNotParallelizeTestAssembly }, RunSetting);
+        InvokeVsTestForExecution(new string[] { DoNotParallelizeTestAssetName }, RunSetting);
 
-        // DoNotParallelize set for Assembly
+        // DoNotParallelize set for TestAssetName
         // There are a total of 2 classes - C1 (3 tests), C2 (3 tests) with a sleep of TestMethodWaitTimeInMS.
         // So this should not exceed 5 * TestMethodWaitTimeInMS seconds + 2.5 seconds overhead.
         ValidateTestRunTime((5 * TestMethodWaitTimeInMS) + OverheadTimeInMS);

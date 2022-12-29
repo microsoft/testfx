@@ -3,11 +3,11 @@
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace MSTestAdapter.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class CompatTests : CLITestBase
 {
-    private const string OldAdapterTestProject = "CompatTests\\CompatTestProject.dll";
-    private const string LatestAdapterTestProject = "DesktopTestProjectx86Debug.dll";
+    private const string OldAdapterTestProject = "CompatTestProject";
+    private const string LatestAdapterTestProject = "DesktopTestProjectx86Debug";
 
     public void DiscoverCompatTests()
     {

@@ -15,5 +15,15 @@
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" PrivateAssets="all" />
     <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
   </ItemGroup>
-  
+
+  <!--<Target Name="CopyTestPlatform" AfterTargets="Build">
+    <MakeDir Directories="$(ArtifactsTmpDir)Microsoft.TestPlatform" />
+    <Message Importance="high" Text="Copying '$(NUGET_PACKAGES)Microsoft.TestPlatform\$(MicrosoftNETTestSdkVersion)\tools\net462\' to '$(ArtifactsTmpDir)Microsoft.TestPlatform'" />
+
+    <ItemGroup>
+      <MicrosoftTestPlatform Include="$(NUGET_PACKAGES)Microsoft.TestPlatform\$(MicrosoftNETTestSdkVersion)\tools\net462\**\*.*" />
+      <Copy SourceFiles="@(MicrosoftTestPlatform)" DestinationFolder="$(ArtifactsTmpDir)Microsoft.TestPlatform" SkipUnchangedFiles="true" />
+    </ItemGroup>
+  </Target>-->
+
 </Project>

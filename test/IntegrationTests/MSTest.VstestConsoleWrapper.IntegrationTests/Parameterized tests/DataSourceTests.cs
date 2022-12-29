@@ -3,17 +3,17 @@
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace MSTestAdapter.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class DataSourceTests : CLITestBase
 {
-    private const string TestAssembly = "DataSourceTestProject.dll";
+    private const string TestAssetName = "DataSourceTestProject";
 
     // TODO @haplois | @evangelink: This test fails under CI - will be fixed in a future PR (marked as private to ignore the test)
     private void ExecuteCsvTestDataSourceTests()
     {
         // Arrange & Act
         InvokeVsTestForExecution(
-            new string[] { TestAssembly },
+            new string[] { TestAssetName },
             testCaseFilter: "CsvTestMethod");
 
         // Assert

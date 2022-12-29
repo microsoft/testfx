@@ -11,28 +11,28 @@ using FluentAssertions;
 using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+namespace MSTest.IntegrationTests;
 public class OutputTests : CLITestBase
 {
-    private const string TestAssembly = "OutputTestProject.dll";
+    private const string TestAssetName = "OutputTestProject";
 
     public void OutputIsNotMixedWhenTestsRunInParallel()
     {
-        ValidateOutputForClass(TestAssembly, "UnitTest1");
+        ValidateOutputForClass("UnitTest1");
     }
 
     public void OutputIsNotMixedWhenAsyncTestsRunInParallel()
     {
-        ValidateOutputForClass(TestAssembly, "UnitTest2");
+        ValidateOutputForClass("UnitTest2");
     }
 
-    private void ValidateOutputForClass(string testAssembly, string className)
+    private void ValidateOutputForClass(string className)
     {
         // LogMessageListener uses an implementation of a string writer that captures output per async context.
         // This allows us to capture output from tasks even when they are running in parallel.
 
         // Arrange
-        var assemblyPath = GetAssetFullPath(testAssembly);
+        var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();

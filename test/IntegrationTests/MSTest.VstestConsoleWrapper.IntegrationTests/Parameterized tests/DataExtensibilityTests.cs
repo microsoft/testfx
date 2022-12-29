@@ -3,20 +3,20 @@
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace MSTestAdapter.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class DataExtensibilityTests : CLITestBase
 {
-    private const string TestAssembly = "FxExtensibilityTestProject.dll";
+    private const string TestAssetName = "FxExtensibilityTestProject";
 
     public void ExecuteTestDataSourceExtensibilityTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly });
+        InvokeVsTestForExecution(new string[] { TestAssetName });
         ValidatePassedTestsContain("CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
     }
 
     public void ExecuteDynamicDataExtensibilityTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly });
+        InvokeVsTestForExecution(new string[] { TestAssetName });
         ValidatePassedTestsContain(
             "DynamicDataTestMethod1 (string,2,True)",
             "DynamicDataTestMethod2 (string,4,True)",
@@ -32,7 +32,7 @@ public class DataExtensibilityTests : CLITestBase
 
     public void ExecuteCustomTestExtensibilityTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly });
+        InvokeVsTestForExecution(new string[] { TestAssetName });
 
         ValidatePassedTestsContain(
             "CustomTestMethod1 - Execution number 1",
@@ -51,7 +51,7 @@ public class DataExtensibilityTests : CLITestBase
 
     public void ExecuteCustomTestExtensibilityWithTestDataTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~CustomTestExTests.CustomTestMethod2");
+        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "FullyQualifiedName~CustomTestExTests.CustomTestMethod2");
 
         ValidatePassedTests(
             "CustomTestMethod2 (B)",

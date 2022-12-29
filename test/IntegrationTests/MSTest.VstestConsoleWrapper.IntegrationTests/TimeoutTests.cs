@@ -8,10 +8,10 @@ using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace MSTestAdapter.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class TimeoutTests : CLITestBase
 {
-    private const string TimeoutTestAssembly = "TimeoutTestProject.dll";
+    private const string TestAssetName = "TimeoutTestProject";
 
     public void ValidateTimeoutTests_net462()
     {
@@ -25,7 +25,7 @@ public class TimeoutTests : CLITestBase
 
     private void ValidateTimeoutTests(string targetFramework)
     {
-        InvokeVsTestForExecution(new string[] { targetFramework + "\\" + TimeoutTestAssembly }, testCaseFilter: "TimeoutTest|RegularTest");
+        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TimeoutTest|RegularTest", targetFramework: targetFramework);
 
         ValidateFailedTestsCount(targetFramework == "net462" ? 5 : 4);
 
@@ -46,6 +46,10 @@ public class TimeoutTests : CLITestBase
 
         // We should find the <TargetFramework>/TimeoutTestOutput.txt file, as it's our way to validate
         // that when the timeout expires it cancels the test context token.
-        File.Exists(GetAssetFullPath(targetFramework + "\\" + "TimeoutTestOutput.txt")).Should().BeTrue();
+        var timeoutFile = Path.Combine(
+            GetAssetFullPath(TestAssetName, targetFramework: targetFramework),
+            "..",
+            "TimeoutTestOutput.txt");
+        File.Exists(timeoutFile).Should().BeTrue();
     }
 }

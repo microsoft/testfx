@@ -3,14 +3,14 @@
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace MSTestAdapter.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class DataRowTests : CLITestBase
 {
-    private const string TestAssembly = "DataRowTestProject.dll";
+    private const string TestAssetName = "DataRowTestProject";
 
     public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerivedClassHasDataRows_SimpleDataRows()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowSimple");
+        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TestCategory~DataRowSimple");
 
         ValidatePassedTestsContain(
             "DataRowTestMethod (BaseString1)",
@@ -25,9 +25,9 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsCount(5);
     }
 
-    public void GetDisplayName_AfterOverriding_GetsTheNewDisplayname()
+    public void GetDisplayName_AfterOverriding_GetsTheNewDisplayName()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~OverriddenGetDisplayName");
+        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TestCategory~OverriddenGetDisplayName");
 
         ValidatePassedTestsContain(
             "Overridden DisplayName");
@@ -37,7 +37,7 @@ public class DataRowTests : CLITestBase
 
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
+        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
 
         ValidatePassedTestsContain(
             "DataRowTestMethod (DerivedString1)",
@@ -49,7 +49,7 @@ public class DataRowTests : CLITestBase
 
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowSomeOptional");
+        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TestCategory~DataRowSomeOptional");
 
         ValidatePassedTestsContain(
             "DataRowTestMethodWithSomeOptionalParameters (123)",
@@ -62,7 +62,7 @@ public class DataRowTests : CLITestBase
 
     public void DataRowsExecuteWithAllOptionalParameters()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowAllOptional");
+        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TestCategory~DataRowAllOptional");
 
         ValidatePassedTestsContain(
             "DataRowTestMethodWithAllOptionalParameters ()",
@@ -76,7 +76,7 @@ public class DataRowTests : CLITestBase
 
     public void DataRowsExecuteWithParamsArrayParameter()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~DataRowParamsArgument");
+        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TestCategory~DataRowParamsArgument");
 
         ValidatePassedTestsContain(
             "DataRowTestMethodWithParamsParameters (2)",
@@ -90,7 +90,7 @@ public class DataRowTests : CLITestBase
 
     public void DataRowsFailWhenInvalidArgumentsProvided()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "FullyQualifiedName~DataRowTests_Regular&TestCategory~DataRowOptionalInvalidArguments");
+        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "FullyQualifiedName~DataRowTests_Regular&TestCategory~DataRowOptionalInvalidArguments");
 
         ValidatePassedTestsContain(
             "DataRowTestMethodFailsWithInvalidArguments ()",
@@ -105,7 +105,7 @@ public class DataRowTests : CLITestBase
     {
         // Arrange & Act
         InvokeVsTestForExecution(
-            new string[] { TestAssembly },
+            new string[] { TestAssetName },
             testCaseFilter: "FullyQualifiedName~DataRowTests_Enums");
 
         // Assert
@@ -177,7 +177,7 @@ public class DataRowTests : CLITestBase
     {
         // Arrange & Act
         InvokeVsTestForExecution(
-            new string[] { TestAssembly },
+            new string[] { TestAssetName },
             testCaseFilter: "FullyQualifiedName~DataRowTests_NonSerializablePaths");
 
         // Assert
@@ -193,7 +193,7 @@ public class DataRowTests : CLITestBase
     {
         // Arrange & Act
         InvokeVsTestForExecution(
-            new string[] { TestAssembly },
+            new string[] { TestAssetName },
             testCaseFilter: "FullyQualifiedName~DataRowTests_Regular");
 
         // Assert

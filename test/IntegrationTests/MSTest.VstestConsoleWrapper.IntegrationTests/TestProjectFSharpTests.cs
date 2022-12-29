@@ -3,14 +3,14 @@
 
 using Microsoft.MSTestV2.CLIAutomation;
 
-namespace MSTestAdapter.Smoke.E2ETests;
+namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class TestProjectFSharpTests : CLITestBase
 {
-    private const string TestAssembly = "FSharpTestProject.dll";
+    private const string TestAssetName = "FSharpTestProject";
 
     public void ExecuteCustomTestExtensibilityTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssembly });
+        InvokeVsTestForExecution(new string[] { TestAssetName }, targetFramework: "net472");
         ValidatePassedTestsContain("Test method passing with a . in it");
         ValidateFailedTestsCount(0);
         ValidatePassedTestsCount(1);

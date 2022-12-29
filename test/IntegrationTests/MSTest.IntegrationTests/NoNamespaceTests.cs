@@ -8,15 +8,15 @@ using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
-namespace Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
+namespace MSTest.IntegrationTests;
 public class NoNamespaceTests : CLITestBase
 {
-    private const string TestAssembly = "HierarchyProject.dll";
+    private const string TestAssetName = "HierarchyProject";
 
     public void TestsAreDiscoveredWithExpectedHierarchy()
     {
         // Arrange & Act
-        var testCases = DiscoverTests(GetAssetFullPath(TestAssembly));
+        var testCases = DiscoverTests(GetAssetFullPath(TestAssetName));
 
         // Assert
         testCases.Should().HaveCount(2);
