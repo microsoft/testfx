@@ -9,7 +9,7 @@
     <IsPackable>true</IsPackable>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <NuspecFile>$(RepoRoot)src\Package\MSTest.TestAdapter.nuspec</NuspecFile>
+    <NuspecFile>MSTest.TestAdapter.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageId>MSTest.TestAdapter</PackageId>
     <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>

@@ -47,12 +47,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Package", "Package", "{E374A3A6-C364-4890-B315-D60F5C682B6E}"
-	ProjectSection(SolutionItems) = preProject
-		src\Package\MSTest.Internal.TestFx.Documentation.nuspec = src\Package\MSTest.Internal.TestFx.Documentation.nuspec
-		src\Package\MSTest.nuspec = src\Package\MSTest.nuspec
-		src\Package\MSTest.TestAdapter.nuspec = src\Package\MSTest.TestAdapter.nuspec
-		src\Package\MSTest.TestFramework.nuspec = src\Package\MSTest.TestFramework.nuspec
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTestAdapter.UnitTests", "test\UnitTests\MSTestAdapter.UnitTests\MSTestAdapter.UnitTests.csproj", "{1CEB5743-70BF-475E-91BC-0AEBD63835B7}"
 EndProject
@@ -176,6 +170,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Automation.CLI", "test\Utilities\Automation.CLI\Automation.CLI.csproj", "{35E90097-976B-4FF5-B55F-2F51561D7A33}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFramework.ForTestingMSTest", "test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj", "{17CE999F-F3D1-48B4-A18F-8BA050C3A4AD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest", "src\Package\MSTest\MSTest.csproj", "{ED8534D1-3136-4915-8071-5547E8D84DC3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Internal.TestFx.Documentation", "src\Package\MSTest.Internal.TestFx.Documentation\MSTest.Internal.TestFx.Documentation.csproj", "{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -347,6 +345,14 @@ Global
 		{17CE999F-F3D1-48B4-A18F-8BA050C3A4AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{17CE999F-F3D1-48B4-A18F-8BA050C3A4AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{17CE999F-F3D1-48B4-A18F-8BA050C3A4AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED8534D1-3136-4915-8071-5547E8D84DC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED8534D1-3136-4915-8071-5547E8D84DC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED8534D1-3136-4915-8071-5547E8D84DC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED8534D1-3136-4915-8071-5547E8D84DC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -409,6 +415,8 @@ Global
 		{CA5D66E2-7244-4E72-AFB6-58A826A30B74} = {C9F82701-0E0F-4E61-B05B-AE387E7631F6}
 		{35E90097-976B-4FF5-B55F-2F51561D7A33} = {33D3029D-E653-4929-BB31-C714178C4BEE}
 		{17CE999F-F3D1-48B4-A18F-8BA050C3A4AD} = {33D3029D-E653-4929-BB31-C714178C4BEE}
+		{ED8534D1-3136-4915-8071-5547E8D84DC3} = {E374A3A6-C364-4890-B315-D60F5C682B6E}
+		{37F9538E-DD88-40DA-8A32-85D6C2A7FD46} = {E374A3A6-C364-4890-B315-D60F5C682B6E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}
