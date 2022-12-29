@@ -1,8 +1,0 @@
-<Project>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" />
-    <PackageReference Include="Microsoft.Internal.Dia.Interop" Version="$(MicrosoftInternalDiaInteropVersion)" />
-    <PackageReference Include="MSTest.Internal.TestFx.Localized.Documentation" Version="$(MsTestInternalTestFxLocalizedDocumentationVersion)" />
-    <PackageReference Include="Microsoft.VisualStudio.QualityTools" Version="$(VisualStudioQualityToolsUnitTestFrameworkVersion)" developmentDependency="true" />
-  </ItemGroup>
-</Project>
