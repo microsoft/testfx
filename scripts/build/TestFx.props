@@ -25,12 +25,6 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
-  <!-- WARNING remove this when SDK-style project conversion is being done. -->
-  <PropertyGroup>
-    <CompileDependsOn>GenerateAssemblyInfoFile;$(CompileDependsOn)</CompileDependsOn>
-  </PropertyGroup>
-  <!-- / WARNING remove this when SDK-style project conversion is being done. -->
-
   <!-- Code analysis settings -->
   <PropertyGroup>
     <RunCodeAnalysis>false</RunCodeAnalysis>

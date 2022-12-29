@@ -18,10 +18,20 @@
     <AnalysisLevel>preview</AnalysisLevel>
   </PropertyGroup>
 
+  <!-- Build & pack config -->
   <PropertyGroup>
-    <StrongNameKeyId>Microsoft</StrongNameKeyId>
     <Copyright>$(CopyrightMicrosoft)</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <!-- Sign config -->
+  <PropertyGroup>
+    <StrongNameKeyId>Microsoft</StrongNameKeyId>
+  </PropertyGroup>
+
+  <!-- Test config -->
+  <PropertyGroup>
+    <UseVSTestRunner>true</UseVSTestRunner>
   </PropertyGroup>
 
 </Project>
