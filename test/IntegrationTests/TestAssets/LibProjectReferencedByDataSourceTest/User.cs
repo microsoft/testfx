@@ -14,12 +14,12 @@ public class UserService
 {
     public User ParseUserData(string data)
     {
-        var splittedData = data.Split(';');
+        var splitData = data.Split(';');
 
         return new User()
         {
-            FirstName = splittedData[0],
-            LastName = splittedData[1]
+            FirstName = splitData[0],
+            LastName = splitData[1],
         };
     }
 }

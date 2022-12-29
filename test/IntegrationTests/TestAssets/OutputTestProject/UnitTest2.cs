@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
@@ -14,7 +17,7 @@ public class UnitTest2
     public TestContext TestContext { get; set; }
 
     [ClassInitialize]
-    public static void ClassInitialize(TestContext _)
+    public static void ClassInitialize(TestContext testContext)
     {
         WriteLines("UnitTest2 - ClassInitialize");
     }
@@ -31,7 +34,6 @@ public class UnitTest2
         WriteLines("UnitTest2 - TestCleanup");
     }
 
-
     [ClassCleanup]
     public static void ClassCleanup()
     {
@@ -42,6 +44,7 @@ public class UnitTest2
     public async Task TestMethod1()
     {
         WriteLines("UnitTest2 - TestMethod1 - Call 1");
+
         // This makes the outputs more likely to run into each other
         // when running in parallel.
         // It also makes the test longer, because we check in the test

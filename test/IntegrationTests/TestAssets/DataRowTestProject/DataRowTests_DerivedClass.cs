@@ -31,7 +31,7 @@ public class DataRowTests_DerivedClass : DataRowTests_BaseClass
 
     [TestCategory("DataRowAllOptional")]
     [TestMethod]
-    [DataRow()]
+    [DataRow]
     [DataRow(123)]
     [DataRow(123, "DerivedOptionalString4")]
     [DataRow(123, "DerivedOptionalString5", "DerivedOptionalString6")]
@@ -54,14 +54,13 @@ public class DataRowTests_DerivedClass : DataRowTests_BaseClass
     [TestCategory("DataRowOptionalInvalidArguments")]
     [TestMethod]
     [ExpectedException(typeof(System.Reflection.TargetParameterCountException))]
-    [DataRow()]
+    [DataRow]
     [DataRow(2)]
     [DataRow(2, "DerivedRequiredArgument", "DerivedOptionalArgument", "DerivedExtraArgument")]
     public void DataRowTestMethodFailsWithInvalidArguments(int i1, string requiredString, string s1 = null)
     {
         Assert.Fail();
     }
-
 
     [TestMethod]
     [DataRow(10.01d, 20.01d)]
@@ -111,6 +110,6 @@ public class DataRowTests_DerivedClass : DataRowTests_BaseClass
         Beta,
         Gamma,
         Delta,
-        Epsilon
+        Epsilon,
     }
 }

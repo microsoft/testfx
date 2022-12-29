@@ -100,7 +100,7 @@ public class AssemblyLoadWorkerTests : TestContainer
         Verify(dependentAssemblies.Contains(utfAssembly));
     }
 
-#region Testable Implementations
+    #region Testable Implementations
 
     private class TestableAssembly : Assembly
     {
@@ -173,6 +173,6 @@ public class AssemblyLoadWorkerTests : TestContainer
         }
     }
 
-#endregion
+    #endregion
 }
 #endif

@@ -8,5 +8,7 @@ namespace SomeNamespace.WithMultipleLevels;
 public class ClassWithNamespace
 {
     [TestMethod]
-    public void MyMethodUnderTest() { }
+    public void MyMethodUnderTest()
+    {
+    }
 }

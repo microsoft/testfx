@@ -1,18 +1,18 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
-
-using LibProjectReferencedByDataSourceTest;
 
 using DynamicDataTestProject;
 
+using LibProjectReferencedByDataSourceTest;
+
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Linq;
 
 namespace DataSourceTestProject;
 
@@ -148,8 +148,8 @@ public class DynamicDataTests
             new User()
             {
                 FirstName = "John",
-                LastName = "Doe"
-            }
+                LastName = "Doe",
+            },
         };
 
         yield return new object[]
@@ -158,8 +158,8 @@ public class DynamicDataTests
             new User()
             {
                 FirstName = "Jane",
-                LastName = "Doe"
-            }
+                LastName = "Doe",
+            },
         };
     }
 
@@ -173,8 +173,8 @@ public class DynamicDataTests
                 new User()
                 {
                     FirstName = "John",
-                    LastName = "Doe"
-                }
+                    LastName = "Doe",
+                },
             };
 
             yield return new object[]
@@ -183,8 +183,8 @@ public class DynamicDataTests
                 new User()
                 {
                     FirstName = "Jane",
-                    LastName = "Doe"
-                }
+                    LastName = "Doe",
+                },
             };
         }
     }
@@ -218,9 +218,6 @@ public class DynamicDataTests
 
     public class ExampleClass
     {
-        /// <summary>
-        /// Dictionary with JToken TValue.
-        /// </summary>
         [JsonProperty("jTokenDictionary")]
         public IDictionary<string, JToken> JTokenDictionary { get; set; }
     }

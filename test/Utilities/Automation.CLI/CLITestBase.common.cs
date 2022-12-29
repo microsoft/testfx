@@ -85,7 +85,7 @@ public partial class CLITestBase : TestContainer
         }
 
         XmlElement root = doc.DocumentElement;
-        RunConfiguration runConfiguration = new("");
+        RunConfiguration runConfiguration = new(string.Empty);
         XmlElement runConfigElement = runConfiguration.ToXml();
         if (root[runConfiguration.SettingsName] == null)
         {

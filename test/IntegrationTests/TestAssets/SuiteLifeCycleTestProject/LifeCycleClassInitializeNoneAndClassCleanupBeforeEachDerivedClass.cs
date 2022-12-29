@@ -12,13 +12,15 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace SuiteLifeCycleTestProject;
 
 [TestClass]
-public class LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass : IDisposable
+public class LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass
 #if NET6_0_OR_GREATER
-        , IAsyncDisposable 
+    : IDisposable, IAsyncDisposable
+#else
+    : IDisposable
 #endif
 {
     private static TestContext s_testContext;
-    
+
     public TestContext TestContext { get; set; }
 
     public LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass()

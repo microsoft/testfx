@@ -39,7 +39,7 @@ public class TestIdCases
     [DataRow("")]
     [DataRow(" ")] // space
     [DataRow("  ")] // tab
-    public void DataRowStringTests(string _)
+    public void DataRowStringTests(string s)
     {
     }
 
@@ -62,7 +62,7 @@ public class TestIdCases
 
     [DataTestMethod]
     [DynamicData(nameof(TuplesData))]
-    public void DynamicDataTuplesTests((int i, string s, bool b) _)
+    public void DynamicDataTuplesTests((int I, string S, bool B) tuple)
     {
     }
 
@@ -77,7 +77,7 @@ public class TestIdCases
 
     [DataTestMethod]
     [DynamicData(nameof(GenericCollectionsData))]
-    public void DynamicDataGenericCollectionsTests(List<int> _, List<string> __, List<bool> ___)
+    public void DynamicDataGenericCollectionsTests(List<int> integers, List<string> strings, List<bool> bools)
     {
     }
 
@@ -108,7 +108,7 @@ public class TestIdCases
 
     [DataTestMethod]
     [TuplesDataSource]
-    public void TestDataSourceTuplesTests((int i, string s, bool b) _)
+    public void TestDataSourceTuplesTests((int I, string S, bool B) tuple)
     {
     }
 
@@ -121,7 +121,7 @@ public class TestIdCases
 
     [DataTestMethod]
     [GenericCollectionsDataSource]
-    public void TestDataSourceGenericCollectionsTests(List<int> _, List<string> __, List<bool> ___)
+    public void TestDataSourceGenericCollectionsTests(List<int> integers, List<string> strings, List<bool> bools)
     {
     }
 

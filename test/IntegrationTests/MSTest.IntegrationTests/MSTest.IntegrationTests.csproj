@@ -4,7 +4,7 @@
   <PropertyGroup>
     <TargetFramework>net462</TargetFramework>
     <IsPackable>false</IsPackable>
-    <NoWarn>1685</NoWarn>
+    <NoWarn>$(NoWarn),1685</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

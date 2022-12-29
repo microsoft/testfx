@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 using System.Collections.Generic;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -11,6 +10,7 @@ namespace FxExtensibilityTestProject;
 public class CustomTestExTests
 {
     private static int s_customTestMethod1ExecutionCount;
+
     [IterativeTestMethod(5)]
     public void CustomTestMethod1()
     {
@@ -28,6 +28,7 @@ public class CustomTestExTests
     }
 
     private static int s_customTestClass1ExecutionCount;
+
     [TestMethod]
     public void CustomTestClass1()
     {
@@ -55,6 +56,7 @@ public class IterativeTestMethodAttribute : TestMethodAttribute
             {
                 testResult.DisplayName = $"{testMethod.TestMethodName} - Execution number {count + 1}";
             }
+
             results.AddRange(testResults);
         }
 
@@ -73,7 +75,10 @@ public class IterativeTestClassAttribute : TestClassAttribute
 
     public override TestMethodAttribute GetTestMethodAttribute(TestMethodAttribute testMethodAttribute)
     {
-        if (testMethodAttribute is IterativeTestMethodAttribute) return testMethodAttribute;
+        if (testMethodAttribute is IterativeTestMethodAttribute)
+        {
+            return testMethodAttribute;
+        }
 
         return new IterativeTestMethodAttribute(_stabilityThreshold);
     }

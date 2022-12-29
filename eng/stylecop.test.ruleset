@@ -13,5 +13,8 @@
     <!-- Allow interfaces to be defined after types to accommodate dummy implementations in the same test file. -->
     <Rule Id="SA1201" Action="None" />
     <Rule Id="SA1649" Action="None" />
+
+    <!-- Enumeration items should be documented -->
+    <Rule Id="SA1602" Action="None" />
   </Rules>
 </RuleSet>

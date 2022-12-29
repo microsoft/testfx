@@ -10,7 +10,8 @@ public class DataSourceTests
 {
     public TestContext TestContext { get; set; }
 
-    [TestMethod, DataSource("Microsoft.VisualStudio.TestTools.DataSource.CSV", "|DataDirectory|\\a.csv", "a#csv", DataAccessMethod.Sequential)]
+    [TestMethod]
+    [DataSource("Microsoft.VisualStudio.TestTools.DataSource.CSV", "|DataDirectory|\\a.csv", "a#csv", DataAccessMethod.Sequential)]
     public void CsvTestMethod()
     {
         Assert.AreEqual(1, TestContext.DataRow["Item1"]);

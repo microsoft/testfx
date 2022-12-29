@@ -1,10 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using LibProjectReferencedByDataSourceTest;
-
 using System.Collections.Generic;
 using System.Reflection;
+
+using LibProjectReferencedByDataSourceTest;
 
 namespace DynamicDataTestProject;
 
@@ -18,8 +18,8 @@ public class DataProvider
             new User()
             {
                 FirstName = "John",
-                LastName = "Doe"
-            }
+                LastName = "Doe",
+            },
         };
 
         yield return new object[]
@@ -28,8 +28,8 @@ public class DataProvider
             new User()
             {
                 FirstName = "Jane",
-                LastName = "Doe"
-            }
+                LastName = "Doe",
+            },
         };
     }
 
@@ -43,8 +43,8 @@ public class DataProvider
                 new User()
                 {
                     FirstName = "John",
-                    LastName = "Doe"
-                }
+                    LastName = "Doe",
+                },
             };
 
             yield return new object[]
@@ -53,8 +53,8 @@ public class DataProvider
                 new User()
                 {
                     FirstName = "Jane",
-                    LastName = "Doe"
-                }
+                    LastName = "Doe",
+                },
             };
         }
     }

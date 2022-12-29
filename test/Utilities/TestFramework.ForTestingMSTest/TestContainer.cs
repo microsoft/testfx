@@ -16,8 +16,6 @@ public abstract class TestContainer : IDisposable
 {
     internal static readonly string IsVerifyException = nameof(IsVerifyException);
 
-    protected bool IsDisposed { get; private set; }
-
     /// <summary>
     /// Initializes a new instance of the <see cref="TestContainer"/> class.
     /// Constructor is used to provide some initialization before each test.
@@ -25,6 +23,8 @@ public abstract class TestContainer : IDisposable
     public TestContainer()
     {
     }
+
+    protected bool IsDisposed { get; private set; }
 
     /// <summary>
     /// Override this method to provide some cleanup after each test.

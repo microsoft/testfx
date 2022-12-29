@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 using System.Collections.Generic;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,7 +9,7 @@ namespace FxExtensibilityTestProject;
 [TestClass]
 public class DynamicDataExTests
 {
-    static IEnumerable<object[]> ReusableTestDataProperty
+    private static IEnumerable<object[]> ReusableTestDataProperty
     {
         get
         {
@@ -18,7 +17,7 @@ public class DynamicDataExTests
         }
     }
 
-    static IEnumerable<object[]> ReusableTestDataMethod()
+    private static IEnumerable<object[]> ReusableTestDataMethod()
     {
         return new[] { new object[] { "string", 4, true } };
     }

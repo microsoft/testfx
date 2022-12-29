@@ -7,5 +7,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class ClassWithNoNamespace
 {
     [TestMethod]
-    public void MyMethodUnderTest() { }
+    public void MyMethodUnderTest()
+    {
+    }
 }

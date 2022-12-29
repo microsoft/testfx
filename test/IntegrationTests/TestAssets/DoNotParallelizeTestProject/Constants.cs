@@ -4,7 +4,7 @@
 // Parallel configuration
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[assembly: DoNotParallelize()]
+[assembly: DoNotParallelize]
 
 namespace DoNotParallelizeTestProject;
 

@@ -175,12 +175,75 @@ public class DataRowTests_Enums
     }
     #endregion
 
-    public enum SByteEnum : sbyte { Alfa = sbyte.MinValue, Beta, Gamma, Delta, Epsilon }
-    public enum ByteEnum : byte { Alfa, Beta, Gamma, Delta, Epsilon }
-    public enum ShortEnum : short { Alfa = byte.MaxValue + 1, Beta, Gamma, Delta, Epsilon }
-    public enum UShortEnum : ushort { Alfa = short.MaxValue + 1, Beta, Gamma, Delta, Epsilon }
-    public enum IntEnum { Alfa = ushort.MaxValue + 1, Beta, Gamma, Delta, Epsilon }
-    public enum UIntEnum : uint { Alfa = ((uint)int.MaxValue) + 1, Beta, Gamma, Delta, Epsilon }
-    public enum LongEnum : long { Alfa = ((long)uint.MaxValue) + 1, Beta, Gamma, Delta, Epsilon }
-    public enum ULongEnum : ulong { Alfa = ((ulong)long.MaxValue) + 1, Beta, Gamma, Delta, Epsilon }
+    public enum SByteEnum : sbyte
+    {
+        Alfa = sbyte.MinValue,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum ByteEnum : byte
+    {
+        Alfa,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum ShortEnum : short
+    {
+        Alfa = byte.MaxValue + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum UShortEnum : ushort
+    {
+        Alfa = short.MaxValue + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum IntEnum
+    {
+        Alfa = ushort.MaxValue + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum UIntEnum : uint
+    {
+        Alfa = ((uint)int.MaxValue) + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum LongEnum : long
+    {
+        Alfa = ((long)uint.MaxValue) + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum ULongEnum : ulong
+    {
+        Alfa = ((ulong)long.MaxValue) + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
 }

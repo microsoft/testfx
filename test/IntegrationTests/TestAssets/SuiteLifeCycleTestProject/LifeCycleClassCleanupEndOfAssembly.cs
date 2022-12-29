@@ -12,9 +12,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace SuiteLifeCycleTestProject;
 
 [TestClass]
-public sealed class LifeCycleClassCleanupEndOfAssembly : IDisposable
+public sealed class LifeCycleClassCleanupEndOfAssembly
 #if NET6_0_OR_GREATER
-        , IAsyncDisposable 
+    : IDisposable, IAsyncDisposable
+#else
+    : IDisposable
 #endif
 {
     private static TestContext s_testContext;

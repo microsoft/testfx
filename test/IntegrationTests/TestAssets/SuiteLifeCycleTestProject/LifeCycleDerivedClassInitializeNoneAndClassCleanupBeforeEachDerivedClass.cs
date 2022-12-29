@@ -15,7 +15,7 @@ public sealed class LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEach
     private static TestContext s_testContext;
 
     public TestContext DerivedClassTestContext { get; set; }
-    
+
     public LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass()
     {
         s_testContext.WriteLine("LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ctor was called");

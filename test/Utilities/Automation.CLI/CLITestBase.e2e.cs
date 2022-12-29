@@ -19,13 +19,13 @@ public partial class CLITestBase : TestContainer
     private static VsTestConsoleWrapper s_vsTestConsoleWrapper;
     private DiscoveryEventsHandler _discoveryEventsHandler;
 
-    protected RunEventsHandler RunEventsHandler { get; private set; }
-
     public CLITestBase()
     {
         s_vsTestConsoleWrapper = new VsTestConsoleWrapper(GetConsoleRunnerPath());
         s_vsTestConsoleWrapper.StartSession();
     }
+
+    protected RunEventsHandler RunEventsHandler { get; private set; }
 
     /// <summary>
     /// Invokes <c>vstest.console</c> to discover tests in the provided sources.

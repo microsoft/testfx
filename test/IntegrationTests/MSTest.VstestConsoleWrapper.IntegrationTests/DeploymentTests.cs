@@ -40,5 +40,5 @@ public class DeploymentTests : CLITestBase
         InvokeVsTestForExecution(new string[] { TestAssetPreserveNewest }, RunSetting, targetFramework: targetFramework);
         ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.PassIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
         ValidateFailedTestsContain(true, "DeploymentTestProject.DeploymentTestProject.FailIfFilePresent");
-    }    
+    }
 }

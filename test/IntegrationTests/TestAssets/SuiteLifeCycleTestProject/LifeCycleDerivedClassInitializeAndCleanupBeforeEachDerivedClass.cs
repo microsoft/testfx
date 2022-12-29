@@ -69,4 +69,3 @@ public sealed class LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedCl
         Debug.WriteLine("Debug: LifeCycleDerivedClassInitializeAndCleanupBeforeEachDerivedClass.ClassCleanup was called");
     }
 }
-

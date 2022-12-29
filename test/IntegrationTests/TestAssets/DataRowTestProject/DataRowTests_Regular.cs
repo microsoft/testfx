@@ -31,14 +31,13 @@ public class DataRowTests_Regular
     [TestCategory("DataRowOptionalInvalidArguments")]
     [TestMethod]
     [ExpectedException(typeof(System.Reflection.TargetParameterCountException))]
-    [DataRow()]
+    [DataRow]
     [DataRow(2)]
     [DataRow(2, "DerivedRequiredArgument", "DerivedOptionalArgument", "DerivedExtraArgument")]
     public void DataRowTestMethodFailsWithInvalidArguments(int i1, string requiredString, string s1 = null)
     {
         Assert.Fail();
     }
-
 
     [TestMethod]
     [DataRow(10.01d, 20.01d)]
@@ -71,7 +70,6 @@ public class DataRowTests_Regular
     [DataRow("john.doe@example.com", "abc123", "/unit/test")]
     public void NullValueInData(string email, string password, string returnUrl)
     {
-
     }
 
     [TestMethod]
@@ -115,7 +113,7 @@ public class DataRowTests_Regular
     [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 })]
     public void ThreeObjectArrays(object[] o1, object[] o2, object[] o3)
     {
-    }    
+    }
 
     [TestMethod]
     [DataRow(new object[] { 1 }, new object[] { 2 }, new object[] { 3 }, new object[] { 4 })]

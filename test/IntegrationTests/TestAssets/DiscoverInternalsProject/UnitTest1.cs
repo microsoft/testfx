@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [assembly: DiscoverInternals]
@@ -64,11 +64,10 @@ internal class DynamicDataTest
     [DynamicData(nameof(DynamicData), DynamicDataSourceType.Property)]
     internal void DynamicDataTestMethod(SerializableInternalType serializableInternalType)
     {
-
     }
 
     public static IEnumerable<object[]> DynamicData => new[]
     {
-        new object[] { new SerializableInternalType() }
+        new object[] { new SerializableInternalType() },
     };
 }
