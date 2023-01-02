@@ -7,6 +7,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -21,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 public class TestClassInfo
 {
-    private readonly object _testClassExecuteSyncObject;
+    private SemaphoreSlim _testClassExecuteSemaphore;
     private MethodInfo? _classCleanupMethod;
     private MethodInfo? _classInitializeMethod;
     private MethodInfo? _testCleanupMethod;
@@ -48,6 +50,7 @@ public class TestClassInfo
         DebugEx.Assert(classAttribute != null, "ClassAttribute should not be null");
 
         ClassType = type;
+        _testClassExecuteSemaphore = new(0, 1);
         Constructor = constructor;
         TestContextProperty = testContextProperty;
         BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
@@ -56,7 +59,6 @@ public class TestClassInfo
         BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
         Parent = parent;
         ClassAttribute = classAttribute;
-        _testClassExecuteSyncObject = new object();
     }
 
     /// <summary>
@@ -229,7 +231,7 @@ public class TestClassInfo
     /// <param name="testContext"> The test context. </param>
     /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public void RunClassInitialize(TestContext testContext)
+    public async Task RunClassInitialize(TestContext testContext)
     {
         // If no class initialize and no base class initialize, return
         if (ClassInitializeMethod is null && !BaseClassInitAndCleanupMethods.Any(p => p.Item1 != null))
@@ -250,7 +252,8 @@ public class TestClassInfo
         {
             // Acquiring a lock is usually a costly operation which does not need to be
             // performed every time if the class initialization is already executed.
-            lock (_testClassExecuteSyncObject)
+            await _testClassExecuteSemaphore.WaitAsync();
+            try
             {
                 // Perform a check again.
                 if (!IsClassInitializeExecuted)
@@ -265,7 +268,10 @@ public class TestClassInfo
                         {
                             var baseInitCleanupMethods = baseClassInitializeStack.Pop();
                             initializeMethod = baseInitCleanupMethods.Item1;
-                            initializeMethod?.InvokeAsSynchronousTask(null, testContext);
+                            if (initializeMethod != null)
+                            {
+                                await initializeMethod.InvokeAsSynchronousTask(null, testContext);
+                            }
 
                             if (baseInitCleanupMethods.Item2 != null)
                             {
@@ -275,7 +281,10 @@ public class TestClassInfo
 
                         initializeMethod = null;
 
-                        ClassInitializeMethod?.InvokeAsSynchronousTask(null, testContext);
+                        if (ClassInitializeMethod != null)
+                        {
+                            await ClassInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -287,6 +296,10 @@ public class TestClassInfo
                         IsClassInitializeExecuted = true;
                     }
                 }
+            }
+            finally
+            {
+                _testClassExecuteSemaphore.Release();
             }
         }
 
@@ -330,7 +343,7 @@ public class TestClassInfo
     /// <returns>
     /// Any exception that can be thrown as part of a class cleanup as warning messages.
     /// </returns>
-    public string? RunClassCleanup(ClassCleanupBehavior classCleanupLifecycle = ClassCleanupBehavior.EndOfAssembly)
+    public async Task<string?> RunClassCleanup(ClassCleanupBehavior classCleanupLifecycle = ClassCleanupBehavior.EndOfAssembly)
     {
         if (ClassCleanupMethod is null && BaseClassInitAndCleanupMethods.All(p => p.Item2 == null))
         {
@@ -342,7 +355,8 @@ public class TestClassInfo
             return null;
         }
 
-        lock (_testClassExecuteSyncObject)
+        await _testClassExecuteSemaphore.WaitAsync();
+        try
         {
             if (IsClassCleanupExecuted)
             {
@@ -356,12 +370,18 @@ public class TestClassInfo
                 try
                 {
                     classCleanupMethod = ClassCleanupMethod;
-                    classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    if (classCleanupMethod != null)
+                    {
+                        await classCleanupMethod.InvokeAsSynchronousTask(null);
+                    }
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
                     while (baseClassCleanupQueue.Count > 0)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        classCleanupMethod?.InvokeAsSynchronousTask(null);
+                        if (classCleanupMethod != null)
+                        {
+                            await classCleanupMethod.InvokeAsSynchronousTask(null);
+                        }
                     }
 
                     IsClassCleanupExecuted = true;
@@ -406,6 +426,10 @@ public class TestClassInfo
                 }
             }
         }
+        finally
+        {
+            _testClassExecuteSemaphore.Release();
+        }
 
         return null;
     }
@@ -417,7 +441,7 @@ public class TestClassInfo
     /// This is a replacement for RunClassCleanup but as we are on a bug fix version, we do not want to change
     /// the public API, hence this method.
     /// </remarks>
-    internal void ExecuteClassCleanup()
+    internal async Task ExecuteClassCleanup()
     {
         if ((ClassCleanupMethod is null && BaseClassInitAndCleanupMethods.All(p => p.Item2 == null))
             || IsClassCleanupExecuted)
@@ -425,8 +449,10 @@ public class TestClassInfo
             return;
         }
 
-        lock (_testClassExecuteSyncObject)
+        await _testClassExecuteSemaphore.WaitAsync();
+        try
         {
+
             if (IsClassCleanupExecuted
                 || (!IsClassInitializeExecuted && ClassInitializeMethod is not null))
             {
@@ -438,12 +464,19 @@ public class TestClassInfo
             try
             {
                 classCleanupMethod = ClassCleanupMethod;
-                classCleanupMethod?.InvokeAsSynchronousTask(null);
+                if (classCleanupMethod != null)
+                {
+                    await classCleanupMethod.InvokeAsSynchronousTask(null);
+                }
+
                 var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
                 while (baseClassCleanupQueue.Count > 0)
                 {
                     classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                    classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    if (classCleanupMethod != null)
+                    {
+                        await classCleanupMethod.InvokeAsSynchronousTask(null);
+                    }
                 }
 
                 IsClassCleanupExecuted = true;
@@ -477,6 +510,10 @@ public class TestClassInfo
 
                 throw testFailedException;
             }
+        }
+        finally
+        {
+            _testClassExecuteSemaphore.Release();
         }
     }
 }

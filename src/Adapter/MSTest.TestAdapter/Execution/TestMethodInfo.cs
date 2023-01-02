@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -102,7 +103,7 @@ public class TestMethodInfo : ITestMethod
     ///  Arguments to pass to test method. (E.g. For data driven).
     /// </param>
     /// <returns>Result of test method invocation.</returns>
-    public virtual TestResult Invoke(object?[]? arguments)
+    public virtual async Task<TestResult> Invoke(object?[]? arguments)
     {
         Stopwatch watch = new();
         TestResult? result = null;
@@ -121,7 +122,7 @@ public class TestMethodInfo : ITestMethod
                 }
                 else
                 {
-                    result = ExecuteInternal(arguments);
+                    result = await ExecuteInternal(arguments);
                 }
             }
             finally
@@ -235,7 +236,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="arguments">Arguments to be passed to the method.</param>
     /// <returns>The result of the execution.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private TestResult ExecuteInternal(object?[]? arguments)
+    private async Task<TestResult> ExecuteInternal(object?[]? arguments)
     {
         DebugEx.Assert(TestMethod != null, "UnitTestExecuter.DefaultTestMethodInvoke: testMethod = null.");
 
@@ -257,10 +258,10 @@ public class TestMethodInfo : ITestMethod
                     // For any failure after this point, we must run TestCleanup
                     testContextSetup = true;
 
-                    if (RunTestInitializeMethod(classInstance, result))
+                    if (await RunTestInitializeMethod(classInstance, result))
                     {
                         hasTestInitializePassed = true;
-                        TestMethod.InvokeAsSynchronousTask(classInstance, arguments);
+                        await TestMethod.InvokeAsSynchronousTask(classInstance, arguments);
                         result.Outcome = UTF.UnitTestOutcome.Passed;
                     }
                 }
@@ -323,7 +324,7 @@ public class TestMethodInfo : ITestMethod
         // crashing the process. This was blocking writing an extension for Dynamic Timeout in VSO.
         if (classInstance != null && testContextSetup)
         {
-            RunTestCleanupMethod(classInstance, result);
+            await RunTestCleanupMethod(classInstance, result);
         }
 
         if (testRunnerException != null)
@@ -458,7 +459,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="classInstance">Instance of TestClass.</param>
     /// <param name="result">Instance of TestResult.</param>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private void RunTestCleanupMethod(object classInstance, TestResult result)
+    private async Task RunTestCleanupMethod(object classInstance, TestResult result)
     {
         DebugEx.Assert(classInstance != null, "classInstance != null");
         DebugEx.Assert(result != null, "result != null");
@@ -470,12 +471,19 @@ public class TestMethodInfo : ITestMethod
             {
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
-                testCleanupMethod?.InvokeAsSynchronousTask(classInstance, null);
+                if (testCleanupMethod != null)
+                {
+                    await testCleanupMethod.InvokeAsSynchronousTask(classInstance, null);
+                }
+
                 var baseTestCleanupQueue = new Queue<MethodInfo>(Parent.BaseTestCleanupMethodsQueue);
                 while (baseTestCleanupQueue.Count > 0)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupMethod?.InvokeAsSynchronousTask(classInstance, null);
+                    if (testCleanupMethod != null)
+                    {
+                        await testCleanupMethod.InvokeAsSynchronousTask(classInstance, null);
+                    }
                 }
             }
             finally
@@ -559,7 +567,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="result">Instance of TestResult.</param>
     /// <returns>True if the TestInitialize method(s) did not throw an exception.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private bool RunTestInitializeMethod(object classInstance, TestResult result)
+    private async Task<bool> RunTestInitializeMethod(object classInstance, TestResult result)
     {
         DebugEx.Assert(classInstance != null, "classInstance != null");
         DebugEx.Assert(result != null, "result != null");
@@ -573,11 +581,17 @@ public class TestMethodInfo : ITestMethod
             while (baseTestInitializeStack.Count > 0)
             {
                 testInitializeMethod = baseTestInitializeStack.Pop();
-                testInitializeMethod?.InvokeAsSynchronousTask(classInstance, null);
+                if (testInitializeMethod != null)
+                {
+                    await testInitializeMethod.InvokeAsSynchronousTask(classInstance, null);
+                }
             }
 
             testInitializeMethod = Parent.TestInitializeMethod;
-            testInitializeMethod?.InvokeAsSynchronousTask(classInstance, null);
+            if (testInitializeMethod != null)
+            {
+                await testInitializeMethod.InvokeAsSynchronousTask(classInstance, null);
+            }
 
             return true;
         }
@@ -718,11 +732,11 @@ public class TestMethodInfo : ITestMethod
         TestResult? result = null;
         Exception? failure = null;
 
-        void ExecuteAsyncAction()
+        async Task ExecuteAsyncAction()
         {
             try
             {
-                result = ExecuteInternal(arguments);
+                result = await ExecuteInternal(arguments);
             }
             catch (Exception ex)
             {
@@ -731,7 +745,7 @@ public class TestMethodInfo : ITestMethod
         }
 
         CancellationToken cancelToken = TestMethodOptions.TestContext!.Context.CancellationTokenSource!.Token;
-        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.Timeout, cancelToken))
+        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(async () => await ExecuteAsyncAction(), TestMethodOptions.Timeout, cancelToken))
         {
             if (failure != null)
             {

@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace TestFramework.ForTestingMSTest;
 
@@ -62,6 +63,26 @@ public abstract class TestContainer : IDisposable
         {
             Throw(expression, caller, filePath, lineNumber);
         }
+    }
+
+    public static async Task<Exception> VerifyThrows(
+        Func<Task> action,
+        [CallerArgumentExpression(nameof(action))] string? expression = default,
+        [CallerMemberName] string? caller = default,
+        [CallerFilePath] string? filePath = default,
+        [CallerLineNumber] int lineNumber = default)
+    {
+        try
+        {
+            await action();
+        }
+        catch (Exception ex)
+        {
+            return ex;
+        }
+
+        Throw(expression, caller, filePath, lineNumber);
+        return null;
     }
 
     public static Exception VerifyThrows(

@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
@@ -18,5 +19,5 @@ public interface IThreadOperations
     /// <param name="timeout">Timeout for the specified action in milliseconds.</param>
     /// <param name="cancelToken">Token to cancel the execution.</param>
     /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
-    bool Execute(Action action, int timeout, CancellationToken cancelToken);
+    bool Execute(Func<Task> action, int timeout, CancellationToken cancelToken);
 }

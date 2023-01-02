@@ -233,7 +233,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => { throw new Exception("Dummy Exception"); });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
-        var results = testMethodRunner.RunTestMethod();
+        var results = await testMethodRunner.RunTestMethod();
         Verify(results[0].Outcome == AdapterTestOutcome.Failed);
         Verify(results[0].ErrorMessage.Contains("Exception thrown while executing test"));
     }
@@ -288,7 +288,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Passed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
-        var results = testMethodRunner.RunTestMethod();
+        var results = await testMethodRunner.RunTestMethod();
 
         // Since data is not provided, tests run normally giving passed as outcome.
         Verify(results[0].Outcome == AdapterTestOutcome.Passed);
@@ -299,7 +299,7 @@ public class TestMethodRunnerTests : TestContainer
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult() { Outcome = UTF.UnitTestOutcome.Failed });
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
 
-        var results = testMethodRunner.RunTestMethod();
+        var results = await testMethodRunner.RunTestMethod();
 
         // Since data is not provided, tests run normally giving passed as outcome.
         Verify(results[0].Outcome == AdapterTestOutcome.Failed);
@@ -320,7 +320,7 @@ public class TestMethodRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
 
-        var results = testMethodRunner.RunTestMethod();
+        var results = await testMethodRunner.RunTestMethod();
 
         // check for outcome
         Verify(results[0].Outcome == AdapterTestOutcome.Passed);
@@ -349,7 +349,7 @@ public class TestMethodRunnerTests : TestContainer
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
 
-        var results = testMethodRunner.RunTestMethod();
+        var results = await testMethodRunner.RunTestMethod();
         Verify(results[0].Outcome == AdapterTestOutcome.Inconclusive);
     }
 
@@ -366,7 +366,7 @@ public class TestMethodRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
 
-        var results = testMethodRunner.RunTestMethod();
+        var results = await testMethodRunner.RunTestMethod();
 
         // check for datarowIndex
         Verify(results[0].DatarowIndex == 0);
@@ -392,7 +392,7 @@ public class TestMethodRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
 
-        var results = testMethodRunner.RunTestMethod();
+        var results = await testMethodRunner.RunTestMethod();
 
         // check for datarowIndex as only DataSource Tests are Run
         Verify(results[0].DatarowIndex == 0);
@@ -418,13 +418,13 @@ public class TestMethodRunnerTests : TestContainer
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
 
-        var results = testMethodRunner.RunTestMethod();
+        var results = await testMethodRunner.RunTestMethod();
 
         Verify(results.Length == 1);
         Verify(results[0].DisplayName == "DataRowTestDisplayName");
     }
 
-    public void RunTestMethodShouldFillInDisplayNameWithDataRowArgumentsIfNoDisplayNameIsProvidedForDataDrivenTests()
+    public async Task RunTestMethodShouldFillInDisplayNameWithDataRowArgumentsIfNoDisplayNameIsProvidedForDataDrivenTests()
     {
         UTF.TestResult testResult = new();
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
@@ -441,13 +441,13 @@ public class TestMethodRunnerTests : TestContainer
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
 
-        var results = testMethodRunner.RunTestMethod();
+        var results = await testMethodRunner.RunTestMethod();
 
         Verify(results.Length == 1);
         Verify(results[0].DisplayName == "DummyTestMethod (2,DummyString)");
     }
 
-    public void RunTestMethodShouldSetResultFilesIfPresentForDataDrivenTests()
+    public async Task RunTestMethodShouldSetResultFilesIfPresentForDataDrivenTests()
     {
         UTF.TestResult testResult = new()
         {
@@ -467,7 +467,7 @@ public class TestMethodRunnerTests : TestContainer
         // Setup mocks
         _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
 
-        var results = testMethodRunner.RunTestMethod();
+        var results = await testMethodRunner.RunTestMethod();
         Verify(results[0].ResultFiles.ToList().Contains("C:\\temp.txt"));
         Verify(results[1].ResultFiles.ToList().Contains("C:\\temp.txt"));
     }

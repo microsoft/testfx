@@ -208,7 +208,7 @@ public class TestExecutionManager
     /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
     /// <param name="source">The test container for the tests.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    private void ExecuteTestsInSource(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
+    private async Task ExecuteTestsInSource(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(source), "Source cannot be empty");
 
@@ -313,8 +313,7 @@ public class TestExecutionManager
 
                 for (int i = 0; i < parallelWorkers; i++)
                 {
-                    tasks.Add(Task.Factory.StartNew(
-                        () =>
+                    tasks.Add(Task.Factory.StartNew(async () =>
                         {
                             while (!queue!.IsEmpty)
                             {
@@ -326,7 +325,7 @@ public class TestExecutionManager
 
                                 if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
                                 {
-                                    ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
+                                    await ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
                                 }
                             }
                         },
@@ -341,12 +340,12 @@ public class TestExecutionManager
             // Queue the non parallel set
             if (nonParallelizableTestSet != null)
             {
-                ExecuteTestsWithTestRunner(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner);
+                await ExecuteTestsWithTestRunner(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner);
             }
         }
         else
         {
-            ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
+            await ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
         }
 
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
@@ -369,7 +368,7 @@ public class TestExecutionManager
         }
     }
 
-    private void ExecuteTestsWithTestRunner(
+    private async Task ExecuteTestsWithTestRunner(
         IEnumerable<TestCase> tests,
         ITestExecutionRecorder testExecutionRecorder,
         string source,
@@ -394,7 +393,7 @@ public class TestExecutionManager
             // Run single test passing test context properties to it.
             var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
             var testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
-            var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
+            var unitTestResult = await testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 
