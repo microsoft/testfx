@@ -130,12 +130,20 @@ stages:
               }
             displayName: 'Generate release notes'
 
+        - task: DotNetCoreCLI@2
+          inputs:
+            command: 'info'
+
         - task: BatchScript@1
           displayName: 'Restore, Build and Package'
           inputs:
             filename: build.cmd
             arguments: '-configuration $(_BuildConfig) -CI $(_BuildArgs)'
             modifyEnvironment: false
+
+        - task: DotNetCoreCLI@2
+          inputs:
+            command: 'info'
 
         - ${{ if eq(variables._RunAsInternal, True) }}:
           - powershell: 'New-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\Software\Microsoft\Fusion -Name "EnableLog" -Value 1 -PropertyType "DWord" -Force'
