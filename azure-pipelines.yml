@@ -130,6 +130,8 @@ stages:
               }
             displayName: 'Generate release notes'
 
+        # This steps help to understand versions of .NET runtime installed on the machine,
+        # which is useful to diagnose some governance issues.
         - task: DotNetCoreCLI@2
           inputs:
             command: custom
@@ -141,11 +143,6 @@ stages:
             filename: build.cmd
             arguments: '-configuration $(_BuildConfig) -CI $(_BuildArgs)'
             modifyEnvironment: false
-
-        - task: DotNetCoreCLI@2
-          inputs:
-            command: custom
-            custom: '--info'
 
         - ${{ if eq(variables._RunAsInternal, True) }}:
           - powershell: 'New-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\Software\Microsoft\Fusion -Name "EnableLog" -Value 1 -PropertyType "DWord" -Force'
