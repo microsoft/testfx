@@ -21,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 public class TestAssemblyInfo
 {
-    private readonly SemaphoreSlim _assemblyInfoExecuteSemaphore = new(0, 1);
+    private readonly SemaphoreSlim _assemblyInfoExecuteSemaphore;
 
     private MethodInfo? _assemblyInitializeMethod;
     private MethodInfo? _assemblyCleanupMethod;
@@ -32,6 +32,7 @@ public class TestAssemblyInfo
     /// <param name="assembly">Sets the <see cref="Assembly"/> this class is representing. </param>
     internal TestAssemblyInfo(Assembly assembly)
     {
+        _assemblyInfoExecuteSemaphore = new(0, 1);
         Assembly = assembly;
     }
 
