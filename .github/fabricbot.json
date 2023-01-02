@@ -3,49 +3,14 @@
   "tasks": [
     {
       "taskType": "trigger",
-      "capabilityId": "AutoMerge",
-      "subCapability": "AutoMerge",
-      "version": "1.0",
-      "config": {
-        "label": "auto-merge",
-        "taskName": "Auto-merge pull requests",
-        "minMinutesOpen": "3",
-        "mergeType": "squash",
-        "deleteBranches": true,
-        "removeLabelOnPush": true,
-        "requireAllStatuses": true,
-        "usePrDescriptionAsCommitMessage": true,
-        "requireAllStatuses_exemptList": [
-          "dependabot"
-        ],
-        "allowAutoMergeInstructionsWithoutLabel": false,
-        "conditionalMergeTypes": [],
-        "enforceDMPAsStatus": true
-      },
-      "id": "JuMdi8HG5hj"
-    },
-    {
-      "taskType": "trigger",
       "capabilityId": "IssueResponder",
-      "subCapability": "PullRequestResponder",
+      "subCapability": "IssuesOnlyResponder",
       "version": "1.0",
-      "id": "2NIutwdw7",
       "config": {
+        "taskName": "Add needs triage label to new issues",
         "conditions": {
           "operator": "and",
           "operands": [
-            {
-              "name": "prTargetsBranch",
-              "parameters": {
-                "branchName": "master"
-              }
-            },
-            {
-              "name": "activitySenderHasPermissions",
-              "parameters": {
-                "permissions": "write"
-              }
-            },
             {
               "name": "isAction",
               "parameters": {
@@ -53,79 +18,516 @@
               }
             },
             {
-              "operator": "or",
+              "operator": "not",
               "operands": [
                 {
-                  "operator": "and",
-                  "operands": [
-                    {
-                      "name": "titleContains",
-                      "parameters": {
-                        "titlePattern": "Localized file check-in by OneLocBuild Task: Build definition ID 4138: Build ID: Build ID [0-9]+",
-                        "isRegex": true
-                      }
-                    },
-                    {
-                      "name": "isActivitySender",
-                      "parameters": {
-                        "user": "testplatform-bot"
-                      }
-                    }
-                  ]
-                },
+                  "name": "isPartOfProject",
+                  "parameters": {}
+                }
+              ]
+            },
+            {
+              "operator": "not",
+              "operands": [
                 {
-                  "operator": "and",
-                  "operands": [
-                    {
-                      "name": "titleContains",
-                      "parameters": {
-                        "titlePattern": "LEGO\\: Pull request from lego\\/[a-z0-9_\\-]* to master",
-                        "isRegex": true
-                      }
-                    },
-                    {
-                      "name": "isActivitySender",
-                      "parameters": {
-                        "user": "csigs"
-                      }
-                    }
-                  ]
+                  "name": "isAssignedToSomeone",
+                  "parameters": {}
                 }
               ]
             }
           ]
         },
-        "eventType": "pull_request",
-        "eventNames": [
-          "pull_request",
-          "issues",
-          "project_card"
-        ],
-        "taskName": "Auto-merge Localization PRs",
         "actions": [
           {
-            "name": "approvePullRequest",
-            "parameters": {
-              "comment": "Localization PR auto-approved."
-            }
-          },
-          {
             "name": "addLabel",
             "parameters": {
-              "label": "localization"
-            }
-          },
-          {
-            "name": "addLabel",
-            "parameters": {
-              "label": "auto-merge"
+              "label": "Needs: Triage :mag:"
             }
           }
         ],
-        "dangerZone": {
-          "respondToBotActions": true,
-          "acceptRespondToBotActions": true
-        }
+        "eventType": "issue",
+        "eventNames": [
+          "issues",
+          "project_card"
+        ]
+      }
+    },
+    {
+      "taskType": "trigger",
+      "capabilityId": "IssueResponder",
+      "subCapability": "IssueCommentResponder",
+      "version": "1.0",
+      "config": {
+        "taskName": "Replace needs author feedback label with needs attention label when the author comments on an issue",
+        "conditions": {
+          "operator": "and",
+          "operands": [
+            {
+              "name": "isAction",
+              "parameters": {
+                "action": "created"
+              }
+            },
+            {
+              "name": "isActivitySender",
+              "parameters": {
+                "user": {
+                  "type": "author"
+                }
+              }
+            },
+            {
+              "name": "hasLabel",
+              "parameters": {
+                "label": "Needs: Author Feedback"
+              }
+            },
+            {
+              "name": "isOpen",
+              "parameters": {}
+            }
+          ]
+        },
+        "actions": [
+          {
+            "name": "addLabel",
+            "parameters": {
+              "label": "Needs: Attention :wave:"
+            }
+          },
+          {
+            "name": "removeLabel",
+            "parameters": {
+              "label": "Needs: Author Feedback"
+            }
+          }
+        ],
+        "eventType": "issue",
+        "eventNames": [
+          "issue_comment"
+        ]
+      }
+    },
+    {
+      "taskType": "trigger",
+      "capabilityId": "IssueResponder",
+      "subCapability": "IssuesOnlyResponder",
+      "version": "1.0",
+      "config": {
+        "taskName": "Remove no recent activity label from issues",
+        "conditions": {
+          "operator": "and",
+          "operands": [
+            {
+              "operator": "not",
+              "operands": [
+                {
+                  "name": "isAction",
+                  "parameters": {
+                    "action": "closed"
+                  }
+                }
+              ]
+            },
+            {
+              "name": "hasLabel",
+              "parameters": {
+                "label": "State: No Recent Activity"
+              }
+            }
+          ]
+        },
+        "actions": [
+          {
+            "name": "removeLabel",
+            "parameters": {
+              "label": "State: No Recent Activity"
+            }
+          }
+        ],
+        "eventType": "issue",
+        "eventNames": [
+          "issues",
+          "project_card"
+        ]
+      }
+    },
+    {
+      "taskType": "trigger",
+      "capabilityId": "IssueResponder",
+      "subCapability": "IssueCommentResponder",
+      "version": "1.0",
+      "config": {
+        "taskName": "Remove no recent activity label when an issue is commented on",
+        "conditions": {
+          "operator": "and",
+          "operands": [
+            {
+              "name": "hasLabel",
+              "parameters": {
+                "label": "State: No Recent Activity"
+              }
+            }
+          ]
+        },
+        "actions": [
+          {
+            "name": "removeLabel",
+            "parameters": {
+              "label": "State: No Recent Activity"
+            }
+          }
+        ],
+        "eventType": "issue",
+        "eventNames": [
+          "issue_comment"
+        ]
+      }
+    },
+    {
+      "taskType": "scheduled",
+      "capabilityId": "ScheduledSearch",
+      "subCapability": "ScheduledSearch",
+      "version": "1.1",
+      "config": {
+        "taskName": "Close stale issues",
+        "frequency": [
+          {
+            "weekDay": 0,
+            "hours": [
+              1,
+              7,
+              13,
+              19
+            ]
+          },
+          {
+            "weekDay": 1,
+            "hours": [
+              1,
+              7,
+              13,
+              19
+            ]
+          },
+          {
+            "weekDay": 2,
+            "hours": [
+              1,
+              7,
+              13,
+              19
+            ]
+          },
+          {
+            "weekDay": 3,
+            "hours": [
+              1,
+              7,
+              13,
+              19
+            ]
+          },
+          {
+            "weekDay": 4,
+            "hours": [
+              1,
+              7,
+              13,
+              19
+            ]
+          },
+          {
+            "weekDay": 5,
+            "hours": [
+              1,
+              7,
+              13,
+              19
+            ]
+          },
+          {
+            "weekDay": 6,
+            "hours": [
+              1,
+              7,
+              13,
+              19
+            ]
+          }
+        ],
+        "searchTerms": [
+          {
+            "name": "isIssue",
+            "parameters": {}
+          },
+          {
+            "name": "isOpen",
+            "parameters": {}
+          },
+          {
+            "name": "hasLabel",
+            "parameters": {
+              "label": "Needs: Author Feedback"
+            }
+          },
+          {
+            "name": "hasLabel",
+            "parameters": {
+              "label": "State: No Recent Activity"
+            }
+          },
+          {
+            "name": "noActivitySince",
+            "parameters": {
+              "days": 10
+            }
+          }
+        ],
+        "actions": [
+          {
+            "name": "closeIssue",
+            "parameters": {}
+          }
+        ]
+      }
+    },
+    {
+      "taskType": "scheduled",
+      "capabilityId": "ScheduledSearch",
+      "subCapability": "ScheduledSearch",
+      "version": "1.1",
+      "config": {
+        "taskName": "Add no recent activity label to issues",
+        "frequency": [
+          {
+            "weekDay": 0,
+            "hours": [
+              2,
+              8,
+              14,
+              20
+            ]
+          },
+          {
+            "weekDay": 1,
+            "hours": [
+              2,
+              8,
+              14,
+              20
+            ]
+          },
+          {
+            "weekDay": 2,
+            "hours": [
+              2,
+              8,
+              14,
+              20
+            ]
+          },
+          {
+            "weekDay": 3,
+            "hours": [
+              2,
+              8,
+              14,
+              20
+            ]
+          },
+          {
+            "weekDay": 4,
+            "hours": [
+              2,
+              8,
+              14,
+              20
+            ]
+          },
+          {
+            "weekDay": 5,
+            "hours": [
+              2,
+              8,
+              14,
+              20
+            ]
+          },
+          {
+            "weekDay": 6,
+            "hours": [
+              2,
+              8,
+              14,
+              20
+            ]
+          }
+        ],
+        "searchTerms": [
+          {
+            "name": "isIssue",
+            "parameters": {}
+          },
+          {
+            "name": "isOpen",
+            "parameters": {}
+          },
+          {
+            "name": "hasLabel",
+            "parameters": {
+              "label": "Needs: Author Feedback"
+            }
+          },
+          {
+            "name": "noActivitySince",
+            "parameters": {
+              "days": 4
+            }
+          },
+          {
+            "name": "noLabel",
+            "parameters": {
+              "label": "State: No Recent Activity"
+            }
+          }
+        ],
+        "actions": [
+          {
+            "name": "addLabel",
+            "parameters": {
+              "label": "State: No Recent Activity"
+            }
+          },
+          {
+            "name": "addReply",
+            "parameters": {
+              "comment": "This issue has been automatically marked as stale because it has been marked as requiring author feedback but has not had any activity for **4 days**. It will be closed if no further activity occurs **within 10 days of this comment**."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "taskType": "scheduled",
+      "capabilityId": "ScheduledSearch",
+      "subCapability": "ScheduledSearch",
+      "version": "1.1",
+      "config": {
+        "taskName": "Close duplicate issues",
+        "frequency": [
+          {
+            "weekDay": 0,
+            "hours": [
+              3,
+              9,
+              15,
+              21
+            ]
+          },
+          {
+            "weekDay": 1,
+            "hours": [
+              3,
+              9,
+              15,
+              21
+            ]
+          },
+          {
+            "weekDay": 2,
+            "hours": [
+              3,
+              9,
+              15,
+              21
+            ]
+          },
+          {
+            "weekDay": 3,
+            "hours": [
+              3,
+              9,
+              15,
+              21
+            ]
+          },
+          {
+            "weekDay": 4,
+            "hours": [
+              3,
+              9,
+              15,
+              21
+            ]
+          },
+          {
+            "weekDay": 5,
+            "hours": [
+              3,
+              9,
+              15,
+              21
+            ]
+          },
+          {
+            "weekDay": 6,
+            "hours": [
+              3,
+              9,
+              15,
+              21
+            ]
+          }
+        ],
+        "searchTerms": [
+          {
+            "name": "isIssue",
+            "parameters": {}
+          },
+          {
+            "name": "isOpen",
+            "parameters": {}
+          },
+          {
+            "name": "hasLabel",
+            "parameters": {
+              "label": "Resolution: Duplicate"
+            }
+          },
+          {
+            "name": "noActivitySince",
+            "parameters": {
+              "days": 1
+            }
+          }
+        ],
+        "actions": [
+          {
+            "name": "addReply",
+            "parameters": {
+              "comment": "This issue has been marked as duplicate and has not had any activity for **1 day**. It will be closed for housekeeping purposes."
+            }
+          },
+          {
+            "name": "closeIssue",
+            "parameters": {}
+          }
+        ]
+      }
+    },
+    {
+      "taskType": "trigger",
+      "capabilityId": "InPrLabel",
+      "subCapability": "InPrLabel",
+      "version": "1.0",
+      "config": {
+        "taskName": "Add 'In-PR' label on issue when an open pull request is targeting it",
+        "inPrLabelText": "Status: In PR",
+        "fixedLabelText": "Status: Fixed",
+        "fixedLabelEnabled": true,
+        "label_inPr": "State: In-PR",
+        "label_fixed": "Resolution: Fixed"
       }
     }
   ],

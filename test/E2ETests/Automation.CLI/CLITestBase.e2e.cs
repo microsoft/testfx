@@ -124,6 +124,21 @@ public partial class CLITestBase : TestContainer
     }
 
     /// <summary>
+    /// Validates if the test results have the specified set of failed tests.
+    /// </summary>
+    /// <param name="validateStackTraceInfo">Whether or not to validate the error stack trace.</param>
+    /// <param name="failedTests">Set of failed tests.</param>
+    /// <remarks>
+    /// Provide the full test name similar to this format SampleTest.TestCode.TestMethodFailed.
+    /// Also validates whether these tests have stack trace info.
+    /// </remarks>
+    public void ValidateFailedTests(bool validateStackTraceInfo, params string[] failedTests)
+    {
+        ValidateFailedTestsCount(failedTests.Length);
+        ValidateFailedTestsContain(validateStackTraceInfo, failedTests);
+    }
+
+    /// <summary>
     /// Validates the count of failed tests.
     /// </summary>
     /// <param name="expectedFailedTestsCount">Expected failed tests count.</param>

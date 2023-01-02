@@ -7,7 +7,7 @@
 
 ## Summary
 
-This details the MSTest V2 framework extensibility for attributes that are traits for a test.  
+This details the MSTest V2 framework extensibility for attributes that are traits for a test.
 
 ## Motivation
 
@@ -94,7 +94,7 @@ Users can then filter tests in VS IDE Test Explorer based on this Test Property.
 Trait:"CustomTraitProperty" Trait:"234"
 ```
 
-This would provide extension writers with the same level of functionality that TestProperty already has with filtering and reporting plus the added ease of having a strongly typed trait.  
+This would provide extension writers with the same level of functionality that TestProperty already has with filtering and reporting plus the added ease of having a strongly typed trait.
 
 ### Requirements from Test Platform
 
