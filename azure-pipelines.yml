@@ -2,7 +2,6 @@
 trigger:
 - main
 - rel/*
-- arcade
 
 # Branch(es) that trigger(s) build(s) on PR
 pr:
