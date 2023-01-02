@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reflection.Metadata;
+
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTestAdapter.Smoke.E2ETests;
@@ -33,6 +35,18 @@ public class DataRowTests : CLITestBase
             "Overridden DisplayName");
 
         ValidatePassedTestsCount(1);
+    }
+
+    public void GetDisplayName_WithDisplayNameMethodAndDeclaringType()
+    {
+        InvokeVsTestForExecution(new string[] { TestAssembly }, testCaseFilter: "TestCategory~GetCustomDisplayName");
+
+        ValidatePassedTestsContain(
+            "Custom DataRowTest_WithDisplayNameMethod_passes with 1 parameters",
+            "Custom DataRowTest_WithDisplayNameMethodOtherType_Passes with 1 parameters");
+
+        ValidatePassedTestsCount(2);
+        ValidateFailedTestsCount(1);
     }
 
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()

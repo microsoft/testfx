@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -13,6 +14,134 @@ using TestFramework.ForTestingMSTest;
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
 public class DataRowAttributeTests : TestContainer
 {
+    private readonly DummyDataRowTestClass _dummyTestClass;
+    private readonly MethodInfo _testMethodInfo;
+    private DataRowAttribute _dataRowAttribute;
+
+    public DataRowAttributeTests()
+    {
+        _dummyTestClass = new DummyDataRowTestClass();
+        _testMethodInfo = _dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("TestMethod1");
+        _dataRowAttribute = new DataRowAttribute();
+    }
+
+    public void GetDisplayName_WithDisplayNameMethod_ShouldReturnDisplayName()
+    {
+        var data = new object[] { 1, 2, 3 };
+
+        _dataRowAttribute.DisplayNameMethod = "GetCustomDisplayName";
+        var displayName = _dataRowAttribute.GetDisplayName(_testMethodInfo, data);
+        Verify(displayName == "DataRowTestWithDisplayNameMethod TestMethod1 with 3 parameters");
+    }
+
+    public void GetDisplayName_WithDisplayNameMethodInDifferentClass_ShouldReturnDisplayName()
+    {
+        var data = new object[] { 1, 2, 3 };
+
+        _dataRowAttribute.DisplayNameMethod = "GetCustomDisplayName2";
+        _dataRowAttribute.DisplayNameMethodDeclaringType = typeof(DummyDataRowTestClass2);
+        var displayName = _dataRowAttribute.GetDisplayName(_testMethodInfo, data);
+        Verify(displayName == "DataRowTestWithDisplayNameMethod TestMethod1 with 3 parameters");
+    }
+
+    public void GetDisplayName_WithDisplayNameMethodMissingParameters_ShouldThrowException()
+    {
+        void Action()
+        {
+            var data = new object[] { 1, 2, 3 };
+
+            _dataRowAttribute.DisplayNameMethod = "GetDisplayNameMethodWithMissingParameters";
+            var displayName = _dataRowAttribute.GetDisplayName(_testMethodInfo, data);
+        }
+
+        var ex = VerifyThrows(Action);
+        Verify(ex is ArgumentNullException);
+    }
+
+    public void GetDisplayName_WithDisplayNameMethodInvalidReturnType_ShouldThrowException()
+    {
+        void Action()
+        {
+            var data = new object[] { 1, 2, 3 };
+
+            _dataRowAttribute.DisplayNameMethod = "GetDisplayNameMethodWithInvalidReturnType";
+            var displayName = _dataRowAttribute.GetDisplayName(_testMethodInfo, data);
+        }
+
+        var ex = VerifyThrows(Action);
+        Verify(ex is ArgumentNullException);
+    }
+
+    public void GetDisplayName_WithDisplayNameMethodInvalidFirstParameterType_ShouldThrowException()
+    {
+        void Action()
+        {
+            var data = new object[] { 1, 2, 3 };
+
+            _dataRowAttribute.DisplayNameMethod = "GetDisplayNameMethodWithInvalidFirstParameterType";
+            var displayName = _dataRowAttribute.GetDisplayName(_testMethodInfo, data);
+        }
+
+        var ex = VerifyThrows(Action);
+        Verify(ex is ArgumentNullException);
+    }
+
+    public void GetDisplayName_WithDisplayNameMethodInvalidSecondParameterType_ShouldThrowException()
+    {
+        void Action()
+        {
+            var data = new object[] { 1, 2, 3 };
+
+            _dataRowAttribute.DisplayNameMethod = "GetDisplayNameMethodWithInvalidSecondParameterType";
+            var displayName = _dataRowAttribute.GetDisplayName(_testMethodInfo, data);
+        }
+
+        var ex = VerifyThrows(Action);
+        Verify(ex is ArgumentNullException);
+    }
+
+    public void GetDisplayName_WithDisplayNameMethodNonStatic_ShouldThrowException()
+    {
+        void Action()
+        {
+            var data = new object[] { 1, 2, 3 };
+
+            _dataRowAttribute.DisplayNameMethod = "GetDisplayNameMethodNonStatic";
+            var displayName = _dataRowAttribute.GetDisplayName(_testMethodInfo, data);
+        }
+
+        var ex = VerifyThrows(Action);
+        Verify(ex is ArgumentNullException);
+    }
+
+    public void GetDisplayName_WithDisplayNameMethodPrivate_ShouldThrowException()
+    {
+        void Action()
+        {
+            var data = new object[] { 1, 2, 3 };
+
+            _dataRowAttribute.DisplayNameMethod = "GetDisplayNameMethodPrivate";
+            var displayName = _dataRowAttribute.GetDisplayName(_testMethodInfo, data);
+        }
+
+        var ex = VerifyThrows(Action);
+        Verify(ex is ArgumentNullException);
+    }
+
+    public void GetDisplayName_WithMissingDisplayNameMethod_ShouldThrowException()
+    {
+        void Action()
+        {
+            var data = new object[] { 1, 2, 3 };
+
+            _dataRowAttribute.DisplayNameMethod = "MissingCustomDisplayNameMethod";
+            var displayName = _dataRowAttribute.GetDisplayName(_testMethodInfo, data);
+        }
+
+        var ex = VerifyThrows(Action);
+        Verify(ex is ArgumentNullException);
+    }
+
     public void DefaultConstructorSetsEmptyArrayPassed()
     {
         var dataRow = new DataRowAttribute();
@@ -188,6 +317,128 @@ public class DataRowAttributeTests : TestContainer
         public override string GetDisplayName(MethodInfo methodInfo, object[] data)
         {
             return "Overridden DisplayName";
+        }
+    }
+
+    [TestClass]
+    private class DummyDataRowTestClass
+    {
+        [TestMethod]
+        [DataRow(new[] { 1, 2, 3 })]
+        public void TestMethod1()
+        {
+        }
+
+        /// <summary>
+        /// Custom display name method with missing parameters.
+        /// </summary>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetDisplayNameMethodWithMissingParameters()
+        {
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Custom display name method with invalid return type.
+        /// </summary>
+        public static void GetDisplayNameMethodWithInvalidReturnType()
+        {
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Custom display name method with invalid first parameter type.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetDisplayNameMethodWithInvalidFirstParameterType(string methodInfo, object[] data)
+        {
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Custom display name method with invalid second parameter.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetDisplayNameMethodWithInvalidSecondParameterType(MethodInfo methodInfo, string data)
+        {
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Custom display name method that is not static.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public string GetDisplayNameMethodNonStatic(MethodInfo methodInfo, object[] data)
+        {
+            throw new InvalidOperationException();
+        }
+
+        /// <summary>
+        /// Custom display name method that is private.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        private static string GetDisplayNameMethodPrivate(MethodInfo methodInfo, object[] data)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public static string GetCustomDisplayName(MethodInfo methodInfo, object[] data)
+        {
+            return string.Format("DataRowTestWithDisplayNameMethod {0} with {1} parameters", methodInfo.Name, data.Length);
+        }
+    }
+
+    private class DummyDataRowTestClass2
+    {
+        /// <summary>
+        /// The custom display name method.
+        /// </summary>
+        /// <param name="methodInfo">
+        /// The method info of test method.
+        /// </param>
+        /// <param name="data">
+        /// The test data which is passed to test method.
+        /// </param>
+        /// <returns>
+        /// The <see cref="string"/>.
+        /// </returns>
+        public static string GetCustomDisplayName2(MethodInfo methodInfo, object[] data)
+        {
+            return string.Format("DataRowTestWithDisplayNameMethod {0} with {1} parameters", methodInfo.Name, data.Length);
         }
     }
 }
