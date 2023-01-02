@@ -37,6 +37,11 @@
         <target state="new">Expected:&lt;{1} ({2})&gt;. Actual:&lt;{3} ({4})&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DataRowDisplayNameMethod">
+        <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
+        <target state="new">Method {0} must match the expected signature: public static {1} {0}({2}).</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreNotEqualFailMsg">
         <source>Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</source>
         <target state="new">Expected any value except:&lt;{1}&gt;. Actual:&lt;{2}&gt;. {0}</target>

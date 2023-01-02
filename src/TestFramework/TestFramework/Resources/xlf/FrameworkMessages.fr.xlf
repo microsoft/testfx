@@ -27,6 +27,11 @@
         <target state="new">Expected a difference no greater than &lt;{3}&gt; between expected value &lt;{1}&gt; and actual value &lt;{2}&gt;. {0}</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="DataRowDisplayNameMethod">
+        <source>Method {0} must match the expected signature: public static {1} {0}({2}).</source>
+        <target state="new">Method {0} must match the expected signature: public static {1} {0}({2}).</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AreEqualCaseFailMsg">
         <source>Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</source>
         <target state="new">Expected:&lt;{1}&gt;. Case is different for actual value:&lt;{2}&gt;. {0}</target>
