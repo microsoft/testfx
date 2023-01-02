@@ -745,7 +745,7 @@ public class TestMethodInfo : ITestMethod
         }
 
         CancellationToken cancelToken = TestMethodOptions.TestContext!.Context.CancellationTokenSource!.Token;
-        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(async () => await ExecuteAsyncAction(), TestMethodOptions.Timeout, cancelToken))
+        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.Timeout, cancelToken))
         {
             if (failure != null)
             {
