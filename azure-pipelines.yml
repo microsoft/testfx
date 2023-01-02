@@ -69,6 +69,7 @@ stages:
       enableMicrobuild: true
       enablePublishBuildArtifacts: true
       enablePublishTestResults: true
+      testResultsFormat: 'vstest'
       enablePublishBuildAssets: false
       enablePublishUsingPipelines: true
       enableTelemetry: true
