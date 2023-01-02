@@ -132,7 +132,8 @@ stages:
 
         - task: DotNetCoreCLI@2
           inputs:
-            command: 'info'
+            command: custom
+            custom: '--info'
 
         - task: BatchScript@1
           displayName: 'Restore, Build and Package'
@@ -143,7 +144,8 @@ stages:
 
         - task: DotNetCoreCLI@2
           inputs:
-            command: 'info'
+            command: custom
+            custom: '--info'
 
         - ${{ if eq(variables._RunAsInternal, True) }}:
           - powershell: 'New-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\Software\Microsoft\Fusion -Name "EnableLog" -Value 1 -PropertyType "DWord" -Force'
