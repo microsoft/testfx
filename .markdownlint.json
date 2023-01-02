@@ -1,5 +1,8 @@
 {
     "default": true,
+    "MD009": {
+      "br_spaces": 0
+    },
     "MD013": false,
     "MD046": {
       "style": "fenced"

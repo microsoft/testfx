@@ -241,9 +241,9 @@ internal class DeploymentUtility : DeploymentUtilityBase
         // Note: if this is not an assembly we simply return empty array, also:
         //       we do recursive search and report missing.
         string[] references = AssemblyUtility.GetFullPathToDependentAssemblies(testSource, configFile, out var warningList);
-        if (warningList != null && warningList.Count > 0)
+        foreach (var warning in warningList)
         {
-            warnings = warnings.Concat(warningList).ToList();
+            warnings.Add(warning);
         }
 
         if (EqtTrace.IsInfoEnabled)

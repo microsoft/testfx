@@ -118,7 +118,14 @@ internal static class AppDomainUtilities
                 typeof(AssemblyLoadWorker),
                 null);
 
-            return assemblyLoadWorker.GetTargetFrameworkVersionStringFromPath(testSourcePath);
+            var targetFramework = assemblyLoadWorker.GetTargetFrameworkVersionStringFromPath(testSourcePath, out var errorMessage);
+
+            if (errorMessage is not null)
+            {
+                EqtTrace.Error(errorMessage);
+            }
+
+            return targetFramework;
         }
         catch (Exception exception)
         {

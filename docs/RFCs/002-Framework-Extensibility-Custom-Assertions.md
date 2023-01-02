@@ -7,7 +7,7 @@
 
 ## Summary
 
-This details the MSTest V2 framework extensibility for extending the Assert class to add custom assertions.  
+This details the MSTest V2 framework extensibility for extending the Assert class to add custom assertions.
 
 ## Motivation
 
