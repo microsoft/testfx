@@ -52,8 +52,14 @@ Param(
 
     [Alias("s")]
     [ValidateSet("InstallDotnet", "UpdateTPVersion", "Restore", "Build", "Pack")]
-    [String[]] $Steps = @("InstallDotnet", "UpdateTPVersion", "Restore", "Build", "Pack")
+    [String[]] $Steps = @("InstallDotnet", "UpdateTPVersion", "Restore", "Build", "Pack"),
+
+    [Parameter(ValueFromRemainingArguments=$true)][String[]]$remainingArgs
 )
+
+if ($remainingArgs.Count -gt 0) {
+    throw "Unexpected arguments"
+}
 
 if ($Version) {
     $FrameworkVersion = $AdapterVersion = $Version

@@ -53,8 +53,7 @@ public class DesktopCSharpCLITests : CLITestBase
         RunAllTestsAndValidateResults(sources, RunSetting);
     }
 
-    // TODO: no stack trace for failed test both for x86 and x64 but that's checked only for x86 (Marked as private to ignore the test)
-    private void RunAllTestsx86Release()
+    public void RunAllTestsx86Release()
     {
         string[] sources = { X86ReleaseTestProject };
         RunAllTestsAndValidateResults(sources);
@@ -77,7 +76,7 @@ public class DesktopCSharpCLITests : CLITestBase
     {
         InvokeVsTestForExecution(sources, runSettings);
         ValidatePassedTests("SampleUnitTestProject.UnitTest1.PassingTest");
-        ValidateFailedTests("SampleUnitTestProject.UnitTest1.FailingTest");
+        ValidateFailedTests(false, "SampleUnitTestProject.UnitTest1.FailingTest");
         ValidateSkippedTests("SampleUnitTestProject.UnitTest1.SkippingTest");
     }
 }

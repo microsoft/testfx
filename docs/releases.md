@@ -1,5 +1,17 @@
 # Releases
 
+## 3.0.2 (December 2022)
+
+* Fix issue cannot load Microsoft.TestPlatform.CoreUtilities [#1502](https://github.com/microsoft/testfx/pull/1502)
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.0.1...v3.0.2)
+
+### Artifacts
+
+* MSTest: [3.0.2](https://www.nuget.org/packages/MSTest/3.0.2)
+* MSTest.TestFramework: [3.0.2](https://www.nuget.org/packages/MSTest.TestFramework/3.0.2)
+* MSTest.TestAdapter: [3.0.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.2)
+
 ## 3.0.1 (December 2022)
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0...v3.0.1)
