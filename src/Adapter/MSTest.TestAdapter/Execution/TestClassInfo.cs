@@ -50,7 +50,6 @@ public class TestClassInfo
         DebugEx.Assert(classAttribute != null, "ClassAttribute should not be null");
 
         ClassType = type;
-        _testClassExecuteSemaphore = new(0, 1);
         Constructor = constructor;
         TestContextProperty = testContextProperty;
         BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
@@ -59,6 +58,7 @@ public class TestClassInfo
         BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
         Parent = parent;
         ClassAttribute = classAttribute;
+        _testClassExecuteSemaphore = new(0, 1);
     }
 
     /// <summary>
