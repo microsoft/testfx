@@ -91,11 +91,11 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             var taskCompletionSource = new TaskCompletionSource<object?>();
 
-            if (!dispatcher.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+            if (!dispatcher.TryEnqueue(DispatcherQueuePriority.Normal, async () =>
                 {
                     try
                     {
-                        result = testMethod.Invoke(Array.Empty<object>());
+                        result = await testMethod.Invoke(Array.Empty<object>());
                         taskCompletionSource.SetResult(null);
                     }
                     catch (Exception e)
