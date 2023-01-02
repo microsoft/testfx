@@ -130,6 +130,13 @@ stages:
               }
             displayName: 'Generate release notes'
 
+        # This steps help to understand versions of .NET runtime installed on the machine,
+        # which is useful to diagnose some governance issues.
+        - task: DotNetCoreCLI@2
+          inputs:
+            command: custom
+            custom: '--info'
+
         - task: BatchScript@1
           displayName: 'Restore, Build and Package'
           inputs:
