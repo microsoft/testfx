@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
@@ -23,7 +24,7 @@ using TestFramework.ForTestingMSTest;
 namespace Microsoft.MSTestV2.CLIAutomation;
 public partial class CLITestBase : TestContainer
 {
-    internal ReadOnlyCollection<TestCase> DiscoverTests(string assemblyPath, string testCaseFilter = null)
+    internal ImmutableArray<TestCase> DiscoverTests(string assemblyPath, string testCaseFilter = null)
     {
         var unitTestDiscoverer = new UnitTestDiscoverer();
         var logger = new InternalLogger();
@@ -37,13 +38,13 @@ public partial class CLITestBase : TestContainer
         return sink.DiscoveredTests;
     }
 
-    internal ReadOnlyCollection<TestResult> RunTests(IEnumerable<TestCase> testCases)
+    internal ImmutableArray<TestResult> RunTests(IEnumerable<TestCase> testCases)
     {
         var testExecutionManager = new TestExecutionManager();
         var frameworkHandle = new InternalFrameworkHandle();
 
         testExecutionManager.ExecuteTests(testCases, null, frameworkHandle, false);
-        return frameworkHandle.GetFlattenedTestResults().ToList().AsReadOnly();
+        return frameworkHandle.GetFlattenedTestResults();
     }
 
     #region Helper classes
@@ -59,7 +60,7 @@ public partial class CLITestBase : TestContainer
     {
         private readonly List<TestCase> _testCases = new();
 
-        public ReadOnlyCollection<TestCase> DiscoveredTests => _testCases.AsReadOnly();
+        public ImmutableArray<TestCase> DiscoveredTests => _testCases.ToImmutableArray();
 
         public void SendTestCase(TestCase discoveredTest) => _testCases.Add(discoveredTest);
     }
@@ -104,16 +105,16 @@ public partial class CLITestBase : TestContainer
     private class InternalFrameworkHandle : IFrameworkHandle
     {
         private readonly List<string> _messageList = new();
-        private readonly ConcurrentDictionary<TestCase, List<TestResult>> _testResults = new();
+        private readonly ConcurrentDictionary<TestCase, ConcurrentBag<TestResult>> _testResults = new();
 
         private TestCase _activeTest;
-        private List<TestResult> _activeResults;
+        private ConcurrentBag<TestResult> _activeResults;
 
         public bool EnableShutdownAfterTestRun { get; set; }
 
         public void RecordStart(TestCase testCase)
         {
-            _activeResults = _testResults.GetOrAdd(testCase, _ => new List<TestResult>());
+            _activeResults = _testResults.GetOrAdd(testCase, _ => new());
             _activeTest = testCase;
         }
 
@@ -129,18 +130,24 @@ public partial class CLITestBase : TestContainer
             _activeResults.Add(testResult);
         }
 
-        public IEnumerable<TestResult> GetFlattenedTestResults() => _testResults.SelectMany(i => i.Value);
+        public ImmutableArray<TestResult> GetFlattenedTestResults()
+        {
+            var allTestResults = _testResults.SelectMany(i => i.Value).ToImmutableArray();
+            allTestResults.Should().NotContainNulls();
 
-        public IEnumerable<KeyValuePair<TestCase, List<TestResult>>> GetTestResults() => _testResults;
+            return allTestResults;
+        }
 
-        public void RecordAttachments(IList<AttachmentSet> attachmentSets) => throw new NotImplementedException();
+        public void RecordAttachments(IList<AttachmentSet> attachmentSets)
+            => throw new NotImplementedException();
 
         public void SendMessage(TestMessageLevel testMessageLevel, string message)
         {
             _messageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
         }
 
-        public int LaunchProcessWithDebuggerAttached(string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables) => throw new NotImplementedException();
+        public int LaunchProcessWithDebuggerAttached(string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables)
+            => throw new NotImplementedException();
     }
     #endregion
 }
