@@ -670,7 +670,8 @@ public class TestExecutionManagerTests : TestContainer
             MSTestSettings.PopulateSettings(_runContext);
             _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-            Verify(DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count == 2);
+            Verify(_enqueuedParallelTestsCount == 2);
+            Verify(DummyTestClassWithDoNotParallelizeMethods.ParallelizableTestsThreadIds.Count is 1 or 2);
             Verify(DummyTestClassWithDoNotParallelizeMethods.UnParallelizableTestsThreadIds.Count == 1);
             Verify(DummyTestClassWithDoNotParallelizeMethods.LastParallelizableTestRun.TimeOfDay.TotalMilliseconds <= DummyTestClassWithDoNotParallelizeMethods.FirstUnParallelizableTestRun.TimeOfDay.TotalMilliseconds);
         }

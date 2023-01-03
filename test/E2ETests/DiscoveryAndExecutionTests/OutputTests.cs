@@ -38,6 +38,7 @@ public class OutputTests : CLITestBase
         // Act
         var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
         testCases.Should().HaveCount(3);
+        testCases.Should().NotContainNulls();
 
         var testResults = RunTests(testCases);
         testResults.Should().HaveCount(3);
