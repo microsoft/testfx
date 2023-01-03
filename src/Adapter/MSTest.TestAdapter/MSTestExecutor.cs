@@ -38,7 +38,7 @@ public class MSTestExecutor : ITestExecutor
     /// </summary>
     public TestExecutionManager TestExecutionManager { get; protected set; }
 
-    public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
+    public async Task RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from testcases.");
 
