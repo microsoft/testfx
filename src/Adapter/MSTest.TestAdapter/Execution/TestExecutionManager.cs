@@ -333,24 +333,24 @@ public class TestExecutionManager
 
                             if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
                             {
-                                ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
+                                await ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
                             }
                         }
                     }));
                 }
 
-                Task.WaitAll(tasks.ToArray());
+                await Task.WhenAll(tasks.ToArray());
             }
 
             // Queue the non parallel set
             if (nonParallelizableTestSet != null)
             {
-                ExecuteTestsWithTestRunner(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner);
+                await ExecuteTestsWithTestRunner(nonParallelizableTestSet, frameworkHandle, source, sourceLevelParameters, testRunner);
             }
         }
         else
         {
-            ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
+            await ExecuteTestsWithTestRunner(testsToRun, frameworkHandle, source, sourceLevelParameters, testRunner);
         }
 
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
@@ -373,7 +373,7 @@ public class TestExecutionManager
         }
     }
 
-    private void ExecuteTestsWithTestRunner(
+    private async Task ExecuteTestsWithTestRunner(
         IEnumerable<TestCase> tests,
         ITestExecutionRecorder testExecutionRecorder,
         string source,
@@ -398,7 +398,7 @@ public class TestExecutionManager
             // Run single test passing test context properties to it.
             var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
             var testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
-            var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
+            var unitTestResult = await testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 
