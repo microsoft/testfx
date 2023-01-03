@@ -38,7 +38,7 @@ public class MSTestExecutor : ITestExecutor
     /// </summary>
     public TestExecutionManager TestExecutionManager { get; protected set; }
 
-    public async Task RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
+    public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from testcases.");
 
@@ -68,11 +68,13 @@ public class MSTestExecutor : ITestExecutor
         }
 
         _cancellationToken = new TestRunCancellationToken();
-        await TestExecutionManager.RunTests(tests, runContext, frameworkHandle, _cancellationToken);
+        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, _cancellationToken)
+            .GetAwaiter()
+            .GetResult();
         _cancellationToken = null;
     }
 
-    public async Task RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
+    public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from sources.");
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
@@ -102,7 +104,9 @@ public class MSTestExecutor : ITestExecutor
 
         sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);
         _cancellationToken = new TestRunCancellationToken();
-        await TestExecutionManager.RunTests(sources, runContext, frameworkHandle, _cancellationToken);
+        TestExecutionManager.RunTests(sources, runContext, frameworkHandle, _cancellationToken)
+            .GetAwaiter()
+            .GetResult();
 
         _cancellationToken = null;
     }
