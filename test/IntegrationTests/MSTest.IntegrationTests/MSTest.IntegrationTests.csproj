@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn),1685</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="$(RepoRoot)test\Utilities\Automation.CLI\CLITestBase.common.cs" Link="Utilities\CLITestBase.common.cs" />
+    <Compile Include="$(RepoRoot)test\Utilities\Automation.CLI\RunConfiguration.cs" Link="Utilities\RunConfiguration.cs" />
+    <Compile Include="$(RepoRoot)test\Utilities\Automation.CLI\XmlRunSettingsUtilities.cs" Link="Utilities\XmlRunSettingsUtilities.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+  </ItemGroup>
+
+</Project>

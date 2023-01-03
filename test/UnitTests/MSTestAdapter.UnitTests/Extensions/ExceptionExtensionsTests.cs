@@ -13,7 +13,7 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
 
 /// <summary>
-/// Tests for <see cref="ExceptionExtensions"/> class.
+/// Tests for <see cref="MSTest.TestAdapter.Extensions.ExceptionExtensions"/> class.
 /// </summary>
 public class ExceptionExtensionsTests : TestContainer
 {

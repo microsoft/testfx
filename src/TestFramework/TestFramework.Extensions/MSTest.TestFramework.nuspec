@@ -1,0 +1,68 @@
+﻿<?xml version="1.0"?>
+<package >
+  <metadata>
+    $CommonMetadataElements$
+    <dependencies>
+      <group targetFramework="netstandard2.0" />
+      <group targetFramework="net462" />
+      <group targetFramework="uap10.0" />
+      <group targetFramework="netcoreapp3.1" />
+      <group targetFramework="net6.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    $CommonFileElements$
+
+    <!-- netstandard2.0 -->
+    <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netstandard2.0\" />
+    <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netstandard2.0\" />
+    <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\netstandard2.0\" />
+    <file src="netstandard2.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\netstandard2.0\" />
+    <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netstandard2.0\" />
+    <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netstandard2.0\" />
+    <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\netstandard2.0\" />
+
+    <!-- net462 -->
+    <file src="net462\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net462\" />
+    <file src="net462\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net462\" />
+    <file src="net462\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\net462\" />
+    <file src="net462\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net462\" />
+    <file src="net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\net462\" />
+    <file src="net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\net462\" />
+    <file src="net462\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\net462\" />
+
+    <!-- uap10.0 -->
+    <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\uap10.0\" />
+    <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\uap10.0\" />
+    <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\uap10.0\" />
+    <file src="uap10.0.16299\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\uap10.0\" />
+    <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\uap10.0\" />
+    <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\uap10.0\" />
+    <file src="uap10.0.16299\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\uap10.0\" />
+
+    <!-- netcoreapp3.1 -->
+    <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="lib\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp3.1\" />
+    <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="lib\netcoreapp3.1\" />
+
+    <!-- net6.0 -->
+    <file src="$RepoRoot$src\Adapter\Build\Net6\MSTest.TestFramework.targets" target="build\net6.0\" />
+    <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net6.0\" />
+    <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net6.0\" />
+    <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.pdb" target="lib\net6.0\" />
+    <file src="net6.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net6.0\" />
+    <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net6.0\" />
+    <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net6.0\" />
+    <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="build\net6.0\" />
+    <file src="net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll" target="build\net6.0\winui\" />
+    <file src="net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="build\net6.0\winui\" />
+    <file src="net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.pdb" target="build\net6.0\winui\" />
+
+    <!-- Source code -->
+    <file src="$srcroot$\**\*.cs" target="src" />
+  </files>
+</package>
