@@ -24,9 +24,10 @@ public class ThreadOperationsTests : TestContainer
     public void ExecuteShouldStartTheActionOnANewThread()
     {
         int actionThreadID = 0;
-        void Action()
+        Task Action()
         {
             actionThreadID = Environment.CurrentManagedThreadId;
+            return Task.CompletedTask;
         }
 
         CancellationTokenSource tokenSource = new();
@@ -36,7 +37,7 @@ public class ThreadOperationsTests : TestContainer
 
     public void ExecuteShouldReturnFalseIfTheActionTimesOut()
     {
-        static void Action() => Task.Delay(100).Wait();
+        static Task Action() => Task.Delay(100);
 
         CancellationTokenSource tokenSource = new();
         Verify(!_asyncOperations.Execute(Action, 1, tokenSource.Token));

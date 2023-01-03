@@ -4,6 +4,7 @@
 #if WINDOWS_UWP
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
