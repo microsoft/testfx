@@ -105,6 +105,14 @@ stages:
             failOnStderr: true
             showWarnings: true
 
+        # This steps help to understand versions of .NET runtime installed on the machine,
+        # which is useful to diagnose some governance issues.
+        - task: DotNetCoreCLI@2
+          displayName: 'dotnet --info'
+          inputs:
+            command: custom
+            custom: '--info'
+
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -117,6 +125,13 @@ stages:
             -configuration $(_BuildConfig)
           name: Test
           displayName: Test
+
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish Test Results folders'
+          inputs:
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+            ArtifactName: TestResults
+          condition: failed()
 
         - ${{ if eq(variables._RunAsInternal, True) }}:
           - task: NuGetAuthenticate@0
