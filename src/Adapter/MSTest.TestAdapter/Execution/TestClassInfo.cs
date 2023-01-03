@@ -374,6 +374,7 @@ public class TestClassInfo
                     {
                         await classCleanupMethod.InvokeAsSynchronousTask(null);
                     }
+
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
                     while (baseClassCleanupQueue.Count > 0)
                     {
@@ -452,7 +453,6 @@ public class TestClassInfo
         await _testClassExecuteSemaphore.WaitAsync();
         try
         {
-
             if (IsClassCleanupExecuted
                 || (!IsClassInitializeExecuted && ClassInitializeMethod is not null))
             {
