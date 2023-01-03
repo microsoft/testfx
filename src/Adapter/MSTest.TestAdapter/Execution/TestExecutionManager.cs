@@ -67,7 +67,7 @@ public class TestExecutionManager
     /// <param name="runContext">Context to use when executing the tests.</param>
     /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
     /// <param name="runCancellationToken">Test run cancellation token.</param>
-    public void RunTests(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
+    public async Task RunTests(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
     {
         DebugEx.Assert(tests != null, "tests");
         DebugEx.Assert(runContext != null, "runContext");
@@ -90,7 +90,7 @@ public class TestExecutionManager
         }
     }
 
-    public void RunTests(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
+    public async Task RunTests(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
     {
         _cancellationToken = cancellationToken;
 
@@ -336,7 +336,7 @@ public class TestExecutionManager
 
                 for (int i = 0; i < parallelWorkers; i++)
                 {
-                    tasks.Add(NewFunction(queue, sourceLevelParameters, testRunner,_cancellationToken,frameworkHandle, source));
+                    tasks.Add(NewFunction(queue, sourceLevelParameters, testRunner, _cancellationToken, frameworkHandle, source));
                 }
 
                 Task.WaitAll(tasks.ToArray());
