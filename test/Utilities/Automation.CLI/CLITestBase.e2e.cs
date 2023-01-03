@@ -67,16 +67,16 @@ public partial class CLITestBase : TestContainer
         var nugetPackagesFolderPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
         if (!string.IsNullOrEmpty(nugetPackagesFolderPath))
         {
-            Directory.Exists(nugetPackagesFolderPath).Should().BeTrue($"NuGet package folder '{nugetPackagesFolderPath}' should exist");
+            Directory.Exists(nugetPackagesFolderPath).Should().BeTrue($"Found environment variable 'NUGET_PACKAGES' and NuGet package folder '{nugetPackagesFolderPath}' should exist");
 
             return nugetPackagesFolderPath;
         }
 
         var userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
-        var nugetPackagesFolder = Path.Combine(userProfile, ".nuget", "packages");
-        Directory.Exists(nugetPackagesFolder).Should().BeTrue($"NuGet package folder '{nugetPackagesFolder}' should exist");
+        nugetPackagesFolderPath = Path.Combine(userProfile, ".nuget", "packages");
+        Directory.Exists(nugetPackagesFolderPath).Should().BeTrue($"NuGet package folder '{nugetPackagesFolderPath}' should exist");
 
-        return nugetPackagesFolder;
+        return nugetPackagesFolderPath;
     }
 
     /// <summary>
