@@ -29,7 +29,7 @@ parameters:
 
 variables:
   # Cannot use key:value syntax in root defined variables
-  - name: TeamName
+  - name: _TeamName
     value: MSTest
   - name: Codeql.Enabled
     value: true
@@ -44,19 +44,25 @@ variables:
     value: ''
   - name: _Sign
     value: False
-  - name: _BuildArgs
+  - name: _InternalBuildArgs
     value: ' '
 
   # Produce real signed binaries for Internal builds
   - ${{ if eq(variables._RunAsInternal, True) }}:
+    - group: DotNet-Symbol-Server-Pats
     - name: _SignType
       value: real
     - name: _SignArgs
       value: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName) /p:Sign=$(_Sign)
     - name: _Sign
       value: True
-    - name: _BuildArgs
-      value: '-FrameworkVersion $(TestFrameworkNugetVersion) -AdapterVersion $(TestAdapterNugetVersion) -VersionSuffix $(NugetVersionSuffix) -BuildVersionPrefix $(BuildVersionPrefix) -BuildVersionSuffix $(BuildVersionSuffix)'
+    - name: _InternalBuildArgs
+      value: /p:DotNetSignType=$(_SignType)
+        /p:TeamName=$(_TeamName)
+        /p:DotNetPublishUsingPipelines=true
+        /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+        /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+        /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
 
 stages:
 
@@ -70,7 +76,7 @@ stages:
       enablePublishBuildArtifacts: true
       enablePublishTestResults: true
       testResultsFormat: 'vstest'
-      enablePublishBuildAssets: false
+      enablePublishBuildAssets: true
       enablePublishUsingPipelines: true
       enableTelemetry: true
       jobs:
@@ -95,101 +101,43 @@ stages:
           displayName: 'Install Windows SDK'
           inputs:
             targetType: filePath
-            filePath: './scripts/Install-WindowsSDK.ps1'
+            filePath: './eng/Install-WindowsSDK.ps1'
             failOnStderr: true
             showWarnings: true
-
-        - ${{ if eq(variables._RunAsPublic, True) }}:
-          - powershell: |
-              reg DELETE "HKLM\Software\Microsoft\StrongName\Verification" /f
-              reg ADD "HKLM\Software\Microsoft\StrongName\Verification\*,*" /f
-              reg DELETE "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification" /f
-              reg ADD "HKLM\Software\Wow6432Node\Microsoft\StrongName\Verification\*,*" /f
-            displayName: 'Disable strongname validation'
-
-        - ${{ if eq(variables._RunAsInternal, True) }}:
-          - task: PowerShell@2
-            displayName: Set version variables
-            inputs:
-              filePath: ./scripts/vsts-prebuild.ps1
-              arguments: -IsRtmBuild ${{ parameters.isRTM }}
-              failOnStderr: true
-              showWarnings: true
-
-          - powershell: |
-              $script = "./scripts/write-release-notes.ps1"
-              $p = @{
-                  Path = "$pwd"
-                  PackageVersion = "$(TestAdapterNugetVersion)"
-              }
-
-              if (Test-Path $script) {
-                  & "$script" @p
-              }
-              else {
-                  Write-Host "Path '$script' does not exist, skipping."
-              }
-            displayName: 'Generate release notes'
 
         # This steps help to understand versions of .NET runtime installed on the machine,
         # which is useful to diagnose some governance issues.
         - task: DotNetCoreCLI@2
+          displayName: 'dotnet --info'
           inputs:
             command: custom
             custom: '--info'
 
-        - task: BatchScript@1
-          displayName: 'Restore, Build and Package'
+        - script: eng\common\CIBuild.cmd
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            $(_InternalBuildArgs)
+            /p:Test=false
+          name: Build
+          displayName: Build
+
+        # -ci is allowing to import some environment variables and some required configurations
+        - script: Test.cmd
+            -configuration $(_BuildConfig)
+            -ci
+          name: Test
+          displayName: Test
+
+        # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
+        # through the console or trx
+        - task: PublishBuildArtifacts@1
+          displayName: 'Publish Test Results folders'
           inputs:
-            filename: build.cmd
-            arguments: '-configuration $(_BuildConfig) -CI $(_BuildArgs)'
-            modifyEnvironment: false
+            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+            ArtifactName: TestResults
+          condition: failed()
 
         - ${{ if eq(variables._RunAsInternal, True) }}:
-          - powershell: 'New-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\Software\Microsoft\Fusion -Name "EnableLog" -Value 1 -PropertyType "DWord" -Force'
-            errorActionPreference: continue
-            displayName: 'Enable FusionLog'
-
-        - task: BatchScript@1
-          displayName: 'Run All Tests'
-          inputs:
-            filename: test.cmd
-            arguments: '-configuration $(_BuildConfig) -all -parallel'
-            modifyEnvironment: false
-
-        - ${{ if eq(variables._RunAsInternal, True) }}:
-          - powershell: 'New-ItemProperty -Path Registry::HKEY_LOCAL_MACHINE\Software\Microsoft\Fusion -Name "EnableLog" -Value 0 -PropertyType "DWord" -Force'
-            errorActionPreference: continue
-            displayName: 'Disable FusionLog'
-
-          - task: MSBuild@1
-            displayName: 'Sign NuGet packages'
-            inputs:
-              solution: src/package/sign/sign.proj
-              configuration: '$(_BuildConfig)'
-              msbuildArguments: '/t:SignNugetPackages /p:BuildConfiguration=$(_BuildConfig)'
-              createLogFile: true
-
-          - task: PowerShell@1
-            displayName: 'Verify signing of NuGet packages'
-            inputs:
-              scriptName: 'scripts/verify-sign.ps1'
-              arguments: '-configuration $(_BuildConfig)'
-
-        - ${{ if eq(variables._RunAsInternal, True) }}:
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish Artifacts folder'
-            inputs:
-              targetPath: artifacts
-              artifact: MSTestV2
-
-          - task: PublishPipelineArtifact@1
-            displayName: 'Publish failed Artifacts folder'
-            inputs:
-              targetPath: artifacts
-              artifact: 'MSTest Fail $(System.JobAttempt)'
-            condition: failed()
-
           - task: NuGetAuthenticate@0
             displayName: 'NuGet Authenticate to test-tools feed'
 
@@ -197,43 +145,8 @@ stages:
             displayName: 'Publish NuGet packages to test-tools feed'
             inputs:
               command: push
-              packagesToPush: 'artifacts/**/MSTestPackages/*.nupkg;'
+              packagesToPush: 'artifacts/packages/**/*.nupkg;'
               publishVstsFeed: 'public/test-tools'
-
-          - task: PowerShell@1
-            displayName: 'Portable to Full Pdb conversion'
-            inputs:
-              scriptName: scripts/PortableToFullPdb.ps1
-              arguments: '-configuration $(_BuildConfig)'
-
-          - task: CopyFiles@2
-            displayName: 'Collect Build Symbols'
-            inputs:
-              SourceFolder: '$(Build.SourcesDirectory)'
-              Contents: |
-                **/artifacts/$(_BuildConfig)/!(*.Tests|FxExtensibility|Automation.CLI|PlatformServices.NetCore)/**/*.pdb
-                **/artifacts/$(_BuildConfig)/PlatformServices.NetCore/**/*.pdbfull
-              TargetFolder: '$(Build.ArtifactStagingDirectory)/symbols'
-
-          - task: PowerShell@1
-            displayName: 'Get Full Pdbs (from portable pdbs)'
-            inputs:
-              scriptType: inlineScript
-              workingFolder: '$(Build.ArtifactStagingDirectory)/symbols'
-              inlineScript: |
-                Write-Host "Renaming pdbfull to pdb..."
-                Get-ChildItem -Path *.pdbfull -Recurse | ForEach-Object {
-                  $OldName = $_.name;
-                  $NewName = $_.name -replace 'pdbfull','pdb';
-                  Rename-Item -Path $_.FullName -Newname $NewName;
-                  Write-Host "Renamed" +  $OldName + "to"  + $NewName
-                }
-
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Symbols Artifact'
-            inputs:
-              PathtoPublish: '$(Build.ArtifactStagingDirectory)/symbols'
-              ArtifactName: Symbols
 
   - ${{ if eq(variables._RunAsInternal, True) }}:
     - template: /eng/common/templates/job/onelocbuild.yml
@@ -242,3 +155,8 @@ stages:
         SkipLocProjectJsonGeneration: true
         GitHubOrg: microsoft
         MirrorRepo: testfx
+
+- ${{ if eq(variables._RunAsInternal, True) }}:
+  - template: eng\common\templates\post-build\post-build.yml
+    parameters:
+      publishingInfraVersion: 3

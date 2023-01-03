@@ -5,11 +5,8 @@
 
 using System;
 using System.Collections;
-using System.Collections.Immutable;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-using NuGet.Frameworks;
 
 using TestFramework.ForTestingMSTest;
 

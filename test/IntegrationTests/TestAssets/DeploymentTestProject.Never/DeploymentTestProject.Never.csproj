@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net462;netcoreapp3.1</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <DependencyCopyBehavior>Never</DependencyCopyBehavior>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="DeploymentFile.xml">
+      <CopyToOutputDirectory>$(DependencyCopyBehavior)</CopyToOutputDirectory>
+    </None>
+    <None Update="EmptyDataFile.xml">
+      <CopyToOutputDirectory>$(DependencyCopyBehavior)</CopyToOutputDirectory>
+    </None>
+    <None Update="TestCaseDeploymentFile.xml">
+      <CopyToOutputDirectory>$(DependencyCopyBehavior)</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

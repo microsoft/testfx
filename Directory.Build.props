@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <Import Project="scripts\build\TestFx.props" />
-  <Import Project="eng\TFMConfiguration.props" />
+
+  <!-- <Import Project="scripts\build\TestFx.props" /> -->
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+
+  <PropertyGroup>
+    <RepoRoot Condition=" '$(RepoRoot)' == '' ">$([MSBuild]::NormalizeDirectory('$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'LICENSE'))'))</RepoRoot>
+    <IsSourceFile>false</IsSourceFile>
+    <IsSourceFile Condition="$([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src/')) OR $([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src\'))">true</IsSourceFile>
+  </PropertyGroup>
 
   <!-- Language configuration -->
   <PropertyGroup>
@@ -14,15 +21,84 @@
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <!-- default to max warnlevel -->
     <AnalysisLevel>preview</AnalysisLevel>
+    <CodeAnalysisRuleSet>$(RepoRoot)eng\stylecop.test.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition=" '$(IsSourceFile)' == 'true' ">$(RepoRoot)eng\stylecop.ruleset</CodeAnalysisRuleSet>
+    <!--
+        Make sure any documentation comments which are included in code get checked for syntax during the build, but do
+        not report warnings for missing comments.
+
+        CS1573: Parameter 'parameter' has no matching param tag in the XML comment for 'parameter' (but other parameters do)
+        CS1591: Missing XML comment for publicly visible type or member 'Type_or_Member'
+      -->
+    <DocumentationFile>$(OutputPath)$(AssemblyName).xml</DocumentationFile>
+    <NoWarn>$(NoWarn),1573,1591,1712</NoWarn>
   </PropertyGroup>
 
+  <!-- The TFMs to build and test against. -->
   <PropertyGroup>
-    <!-- Disable Xlf localization by default. Project containing .resx file have to opt-in  -->
-    <EnableXlfLocalization>false</EnableXlfLocalization>
+    <NetCoreAppCurrentVersion>6.0</NetCoreAppCurrentVersion>
+    <NetCoreAppCurrentIdentifier>.NETCoreApp</NetCoreAppCurrentIdentifier>
+    <NetCoreAppCurrentTargetFrameworkMoniker>$(NetCoreAppCurrentIdentifier),Version=v$(NetCoreAppCurrentVersion)</NetCoreAppCurrentTargetFrameworkMoniker>
+    <MicrosoftNetCoreAppFrameworkName>Microsoft.NETCore.App</MicrosoftNetCoreAppFrameworkName>
+    <NetCoreAppCurrentBrandName>.NET $(NetCoreAppCurrentVersion)</NetCoreAppCurrentBrandName>
+    <NetCoreAppCurrent>net$(NetCoreAppCurrentVersion)</NetCoreAppCurrent>
+    <NetCoreAppMinimum>netcoreapp3.1</NetCoreAppMinimum>
+
+    <NetCoreAppToolCurrentVersion>6.0</NetCoreAppToolCurrentVersion>
+    <NetCoreAppToolCurrent>net$(NetCoreAppToolCurrentVersion)</NetCoreAppToolCurrent>
+    <NetCoreAppCurrentToolTargetFrameworkMoniker>$(NetCoreAppCurrentIdentifier),Version=v$(NetCoreAppToolCurrentVersion)</NetCoreAppCurrentToolTargetFrameworkMoniker>
+
+    <NetCoreAppLatestStableVersion>6.0</NetCoreAppLatestStableVersion>
+    <NetCoreAppLatestStablePackageBaselineVersion>$(NetCoreAppLatestStableVersion).0</NetCoreAppLatestStablePackageBaselineVersion>
+    <NetCoreAppLatestStable>net$(NetCoreAppLatestStableVersion)</NetCoreAppLatestStable>
+
+    <UwpMinimum>uap10.0.16299</UwpMinimum>
+    <WinUiMinimum>net6.0-windows10.0.18362.0</WinUiMinimum>
+
+    <NetFrameworkMinimum>net462</NetFrameworkMinimum>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(EnableXlfLocalization)' == 'true' ">
-    <PackageReference Include="Microsoft.DotNet.XliffTasks" Version="$(XliffTasksVersion)" PrivateAssets="all" />
+  <!-- Build & pack config -->
+  <PropertyGroup>
+    <Copyright>$(CopyrightMicrosoft)</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!--
+      It appears that AssemblyVersion should always be set to 14.0.0.0 for some backward compatibility cases,
+      but we don't have any information about these cases.
+     -->
+    <AssemblyVersion>14.0.0.0</AssemblyVersion>
+    <AssemblyFileVersion>14.0.0.0</AssemblyFileVersion>
+  </PropertyGroup>
+
+  <!-- Sign config -->
+  <PropertyGroup>
+    <StrongNameKeyId>Microsoft</StrongNameKeyId>
+  </PropertyGroup>
+
+  <!-- Test config -->
+  <PropertyGroup>
+    <UseVSTestRunner>true</UseVSTestRunner>
+  </PropertyGroup>
+
+  <!--
+    Include PublicApi analyzers into all projects that are in our src directory.
+    Use relative path between the project and the root to avoid including the analyzer if the path above the root contains 'src' (e.g. C:\src\vstest).
+  -->
+  <ItemGroup Condition="$([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src/')) OR $([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src\'))">
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(RoslynPublicApiAnalyzersVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="$(RepoRoot)eng\stylecop.json">
+      <Link>stylecop.json</Link>
+    </AdditionalFiles>
+    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>

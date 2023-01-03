@@ -6,6 +6,30 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NuspecFile>MSTest.TestAdapter.nuspec</NuspecFile>
+    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
+    <PackageId>MSTest.TestAdapter</PackageId>
+    <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
+    <PackageDescription>
+      MSTest is Microsoft supported Test Framework.
+
+      This package includes the adapter logic to discover and run tests. For access to the testing framework, install the MSTest.TestFramework package.
+
+      Supported platforms:
+      - .NET 4.6.2+
+      - .NET Core 3.1+
+      - .NET 6.0
+      - .NET 6.0 Windows.18362+
+      - UWP 10.0.16299
+    </PackageDescription>
+    <!-- Nothing in lib but that's expected -->
+    <NoWarn>$(NoWarn);NU5127;NU5128</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
@@ -31,11 +55,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" IncludeAssets="all" />
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -58,12 +79,10 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <Target Name="CopyMSBuildScriptsFiles" DependsOnTargets="CoreCompile" AfterTargets="CoreCompile">
-    <ItemGroup>
-      <FileToCopy Include="$(ProjectDir)..\Build\**\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(FileToCopy)" DestinationFiles="@(FileToCopy->'$(OutDir)..\..\Build\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="True" OverwriteReadOnlyFiles="True" Retries="3" RetryDelayMilliseconds="500" UseHardlinksIfPossible="False" UseSymboliclinksIfPossible="False" ErrorIfLinkFails="False" Condition="@(FileToCopy-&gt;Count()) &gt; 0">
-      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
-    </Copy>
-  </Target>
+  <ItemGroup Label="NuGet">
+    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
+    <NuspecProperty Include="ArtifactsBinDir=$(ArtifactsBinDir)" />
+    <NuspecProperty Include="Configuration=$(Configuration)" />
+  </ItemGroup>
+
 </Project>

@@ -5,6 +5,28 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <NuspecFile>MSTest.TestFramework.nuspec</NuspecFile>
+    <NuspecBasePath>$(OutputPath)</NuspecBasePath>
+    <PackageId>MSTest.TestFramework</PackageId>
+    <PackageTags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
+    <PackageDescription>
+      MSTest is Microsoft supported Test Framework.
+
+      This package includes the libraries for writing tests with MSTest. To ensure discovery and execution of your tests, install the MSTest.TestAdapter package.
+
+      Supported platforms:
+      - .NET 4.6.2+
+      - .NET Core 3.1+
+      - .NET 6.0
+      - .NET 6.0 Windows.18362+
+      - UWP 10.0.16299
+    </PackageDescription>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestTools.UnitTesting</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
@@ -53,9 +75,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)" PrivateAssets="all">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' " Include="Microsoft.WindowsAppSDK" Version="$(MicrosoftWindowsAppSDKVersion)" />
   </ItemGroup>
 
@@ -74,6 +93,10 @@
     <!-- Framework specific API -->
     <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\$(TargetFramework)\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup Label="NuGet">
+    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
   </ItemGroup>
 
 </Project>
