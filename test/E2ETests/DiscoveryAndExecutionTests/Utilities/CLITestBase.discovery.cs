@@ -10,6 +10,8 @@ using System.Linq;
 
 using DiscoveryAndExecutionTests.Utilities;
 
+using FluentAssertions;
+
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -123,6 +125,7 @@ public partial class CLITestBase : TestContainer
 
         public void RecordResult(TestResult testResult)
         {
+            testResult.Should().NotBeNull();
             _activeResults.Add(testResult);
         }
 
