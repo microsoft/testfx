@@ -21,7 +21,7 @@ public class ThreadOperationsTests : TestContainer
         _asyncOperations = new ThreadOperations();
     }
 
-    public void ExecuteShouldStartTheActionOnANewThread()
+    public async Task ExecuteShouldStartTheActionOnANewThread()
     {
         int actionThreadID = 0;
         Task Action()
@@ -31,15 +31,15 @@ public class ThreadOperationsTests : TestContainer
         }
 
         CancellationTokenSource tokenSource = new();
-        Verify(_asyncOperations.Execute(Action, 1000, tokenSource.Token));
+        Verify(await _asyncOperations.Execute(Action, 1000, tokenSource.Token));
         Verify(Environment.CurrentManagedThreadId != actionThreadID);
     }
 
-    public void ExecuteShouldReturnFalseIfTheActionTimesOut()
+    public async Task ExecuteShouldReturnFalseIfTheActionTimesOut()
     {
         static Task Action() => Task.Delay(100);
 
         CancellationTokenSource tokenSource = new();
-        Verify(!_asyncOperations.Execute(Action, 1, tokenSource.Token));
+        Verify(!(await  _asyncOperations.Execute(Action, 1, tokenSource.Token)));
     }
 }

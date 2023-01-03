@@ -29,7 +29,7 @@ public class DesktopThreadOperationsTests : TestContainer
             actionThreadID = Environment.CurrentManagedThreadId;
         }
 
-        Verify(_asyncOperations.Execute(Action, 1000, cancellationTokenSource.Token));
+        Verify(await _asyncOperations.Execute(Action, 1000, cancellationTokenSource.Token));
         Verify(Environment.CurrentManagedThreadId != actionThreadID);
     }
 
@@ -40,7 +40,7 @@ public class DesktopThreadOperationsTests : TestContainer
 
         // act
         cancellationTokenSource.CancelAfter(100);
-        var result = _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
+        var result = await _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
 
         // validate
         Verify(!result, "The execution failed to abort");
@@ -53,7 +53,7 @@ public class DesktopThreadOperationsTests : TestContainer
         cancellationTokenSource.Cancel();
 
         // act
-        var result = _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
+        var result = await _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
 
         // validate
         Verify(!result, "The execution failed to abort");
