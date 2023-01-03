@@ -68,7 +68,7 @@ public class MSTestExecutor : ITestExecutor
         }
 
         _cancellationToken = new TestRunCancellationToken();
-        await TestExecutionManager.RunTests(tests, runContext, frameworkHandle, _cancellationToken)
+        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, _cancellationToken)
             .GetAwaiter()
             .GetResult();
         _cancellationToken = null;
