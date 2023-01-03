@@ -75,7 +75,7 @@ public class TestExecutionManager
     /// <param name="runContext">Context to use when executing the tests.</param>
     /// <param name="frameworkHandle">Handle to the framework to record results and to do framework operations.</param>
     /// <param name="runCancellationToken">Test run cancellation token.</param>
-    public void RunTests(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
+    public async Task RunTests(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken runCancellationToken)
     {
         DebugEx.Assert(tests != null, "tests");
         DebugEx.Assert(runContext != null, "runContext");
@@ -90,7 +90,7 @@ public class TestExecutionManager
         CacheSessionParameters(runContext, frameworkHandle);
 
         // Execute the tests
-        ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
+        await ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
 
         if (!HasAnyTestFailed)
         {
@@ -98,7 +98,7 @@ public class TestExecutionManager
         }
     }
 
-    public void RunTests(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
+    public async Task RunTests(IEnumerable<string> sources, IRunContext? runContext, IFrameworkHandle frameworkHandle, TestRunCancellationToken cancellationToken)
     {
         _cancellationToken = cancellationToken;
 
@@ -130,7 +130,7 @@ public class TestExecutionManager
         CacheSessionParameters(runContext, frameworkHandle);
 
         // Run tests.
-        ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
+        await ExecuteTests(tests, runContext, frameworkHandle, isDeploymentDone);
 
         if (!HasAnyTestFailed)
         {
@@ -145,7 +145,7 @@ public class TestExecutionManager
     /// <param name="runContext">The run context.</param>
     /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    internal virtual void ExecuteTests(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
+    internal virtual async Task ExecuteTests(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
     {
         var testsBySource = from test in tests
                             group test by test.Source into testGroup
@@ -153,7 +153,7 @@ public class TestExecutionManager
 
         foreach (var group in testsBySource)
         {
-            ExecuteTestsInSource(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone);
+            await ExecuteTestsInSource(group.Tests, runContext, frameworkHandle, group.Source, isDeploymentDone);
         }
     }
 
@@ -216,7 +216,7 @@ public class TestExecutionManager
     /// <param name="frameworkHandle">Handle to record test start/end/results.</param>
     /// <param name="source">The test container for the tests.</param>
     /// <param name="isDeploymentDone">Indicates if deployment is done.</param>
-    private void ExecuteTestsInSource(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
+    private async Task ExecuteTestsInSource(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle, string source, bool isDeploymentDone)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(source), "Source cannot be empty");
 
