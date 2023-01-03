@@ -311,27 +311,32 @@ public class TestExecutionManager
 
                 var tasks = new List<Task>();
 
+                async Task NewFunction(
+                    ConcurrentQueue<IEnumerable<TestCase>>? queue,
+                    IDictionary<string, object> dictionary,
+                    UnitTestRunner unitTestRunner,
+                    TestRunCancellationToken? cancellationToken,
+                    ITestExecutionRecorder frameworkHandle,
+                    string source)
+                {
+                    while (!queue!.IsEmpty)
+                    {
+                        if (cancellationToken != null && cancellationToken.Canceled)
+                        {
+                            // if a cancellation has been requested, do not queue any more test runs.
+                            break;
+                        }
+
+                        if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
+                        {
+                            await ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, dictionary, unitTestRunner);
+                        }
+                    }
+                }
+
                 for (int i = 0; i < parallelWorkers; i++)
                 {
-                    tasks.Add(Task.Factory.StartNew(async () =>
-                        {
-                            while (!queue!.IsEmpty)
-                            {
-                                if (_cancellationToken != null && _cancellationToken.Canceled)
-                                {
-                                    // if a cancellation has been requested, do not queue any more test runs.
-                                    break;
-                                }
-
-                                if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
-                                {
-                                    await ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
-                                }
-                            }
-                        },
-                        CancellationToken.None,
-                        TaskCreationOptions.LongRunning,
-                        TaskScheduler.Default));
+                    tasks.Add(NewFunction(queue, sourceLevelParameters, testRunner,_cancellationToken,frameworkHandle, source));
                 }
 
                 Task.WaitAll(tasks.ToArray());
