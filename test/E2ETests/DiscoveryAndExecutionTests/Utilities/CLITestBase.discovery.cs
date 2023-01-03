@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 using DiscoveryAndExecutionTests.Utilities;
 
@@ -35,12 +36,12 @@ public partial class CLITestBase : TestContainer
         return sink.DiscoveredTests;
     }
 
-    internal ReadOnlyCollection<TestResult> RunTests(IEnumerable<TestCase> testCases)
+    internal async Task<ReadOnlyCollection<TestResult>> RunTests(IEnumerable<TestCase> testCases)
     {
         var testExecutionManager = new TestExecutionManager();
         var frameworkHandle = new InternalFrameworkHandle();
 
-        testExecutionManager.ExecuteTests(testCases, null, frameworkHandle, false);
+        await testExecutionManager.ExecuteTests(testCases, null, frameworkHandle, false);
         return frameworkHandle.GetFlattenedTestResults().ToList().AsReadOnly();
     }
 

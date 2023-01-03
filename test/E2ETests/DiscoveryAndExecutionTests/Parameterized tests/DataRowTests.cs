@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO;
+using System.Threading.Tasks;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
@@ -10,14 +11,14 @@ public class DataRowTests : CLITestBase
 {
     private const string TestAssembly = "DataRowTestProject.dll";
 
-    public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerivedClassHasDataRows_SimpleDataRows()
+    public async Task ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerivedClassHasDataRows_SimpleDataRows()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSimple");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -29,14 +30,14 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethod (DerivedString2)");
     }
 
-    public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
+    public async Task ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -45,14 +46,14 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethod (DerivedString2)");
     }
 
-    public void DataRowsExecuteWithRequiredAndOptionalParameters()
+    public async Task DataRowsExecuteWithRequiredAndOptionalParameters()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSomeOptional");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -62,14 +63,14 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString2,DerivedOptionalString3)");
     }
 
-    public void DataRowsExecuteWithParamsArrayParameter()
+    public async Task DataRowsExecuteWithParamsArrayParameter()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowParamsArgument");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -80,14 +81,14 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2,DerivedParamsArg3)");
     }
 
-    public void DataRowsFailWhenInvalidArgumentsProvided()
+    public async Task DataRowsFailWhenInvalidArgumentsProvided()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular&TestCategory~DataRowOptionalInvalidArguments");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -97,14 +98,14 @@ public class DataRowTests : CLITestBase
             "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
     }
 
-    public void DataRowsShouldSerializeDoublesProperly()
+    public async Task DataRowsShouldSerializeDoublesProperly()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular.DataRowTestDouble");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -113,14 +114,14 @@ public class DataRowTests : CLITestBase
             "DataRowTestDouble (10.02,20.02)");
     }
 
-    public void DataRowsShouldSerializeMixedTypesProperly()
+    public async Task DataRowsShouldSerializeMixedTypesProperly()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowTestMixed");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -128,14 +129,14 @@ public class DataRowTests : CLITestBase
             "DataRowTestMixed (10,10,10,10,10,10,10,10)");
     }
 
-    public void DataRowsShouldSerializeEnumsProperly()
+    public async Task DataRowsShouldSerializeEnumsProperly()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowEnums");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -146,14 +147,14 @@ public class DataRowTests : CLITestBase
             "DataRowEnums (Gamma)");
     }
 
-    public void DataRowsShouldHandleNonSerializableValues()
+    public async Task DataRowsShouldHandleNonSerializableValues()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowNonSerializable");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsDiscovered(
@@ -167,14 +168,14 @@ public class DataRowTests : CLITestBase
             "DataRowNonSerializable (DataRowTestProject.DataRowTests_DerivedClass)");
     }
 
-    public void ExecuteDataRowTests_Enums()
+    public async Task ExecuteDataRowTests_Enums()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Enums");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -242,14 +243,14 @@ public class DataRowTests : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 
-    public void ExecuteDataRowTests_NonSerializablePaths()
+    public async Task ExecuteDataRowTests_NonSerializablePaths()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_NonSerializablePaths");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -260,14 +261,14 @@ public class DataRowTests : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 
-    public void ExecuteDataRowTests_Regular()
+    public async Task ExecuteDataRowTests_Regular()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(

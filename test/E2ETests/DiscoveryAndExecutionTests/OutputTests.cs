@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 using FluentAssertions;
 
@@ -27,7 +28,7 @@ public class OutputTests : CLITestBase
         ValidateOutputForClass(TestAssembly, "UnitTest2");
     }
 
-    private void ValidateOutputForClass(string testAssembly, string className)
+    private async Task ValidateOutputForClass(string testAssembly, string className)
     {
         // LogMessageListener uses an implementation of a string writer that captures output per async context.
         // This allows us to capture output from tasks even when they are running in parallel.
@@ -37,7 +38,7 @@ public class OutputTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         testCases.Should().HaveCount(3);

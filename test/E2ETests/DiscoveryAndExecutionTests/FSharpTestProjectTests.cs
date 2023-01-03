@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO;
+using System.Threading.Tasks;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
@@ -10,14 +11,14 @@ public class FSharpTestProjectTests : CLITestBase
 {
     private const string TestAssembly = "FSharpTestProject.dll";
 
-    public void TestFSharpTestsWithSpaceAndDotInName()
+    public async Task TestFSharpTestsWithSpaceAndDotInName()
     {
         // Arrange
         var assemblyPath = Path.IsPathRooted(TestAssembly) ? TestAssembly : GetAssetFullPath(TestAssembly);
 
         // Act
         var testCases = DiscoverTests(assemblyPath);
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(testResults, "Test method passing with a . in it");

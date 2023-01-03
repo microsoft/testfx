@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Linq;
+using System.Threading.Tasks;
 
 using FluentAssertions;
 
@@ -9,18 +10,19 @@ using Microsoft.MSTestV2.CLIAutomation;
 using Microsoft.MSTestV2.Smoke.DiscoveryAndExecutionTests;
 
 namespace DiscoveryAndExecutionTests;
+
 public partial class TestId : CLITestBase
 {
     private const string DisplayNameStrategyDll = "TestIdProject.DisplayNameStrategy.dll";
 
-    public void TestIdUniqueness_DataRowArray_DisplayNameStrategy()
+    public async Task TestIdUniqueness_DataRowArray_DisplayNameStrategy()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(DisplayNameStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowArraysTests");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -34,14 +36,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_DataRowString_DisplayNameStrategy()
+    public async Task TestIdUniqueness_DataRowString_DisplayNameStrategy()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(DisplayNameStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowStringTests");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -57,14 +59,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().HaveCount(3);
     }
 
-    public void TestIdUniqueness_DynamicDataArrays_DisplayNameStrategy()
+    public async Task TestIdUniqueness_DynamicDataArrays_DisplayNameStrategy()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(DisplayNameStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataArraysTests");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -78,14 +80,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_DynamicDataTuple_DisplayNameStrategy()
+    public async Task TestIdUniqueness_DynamicDataTuple_DisplayNameStrategy()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(DisplayNameStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataTuplesTests");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -98,14 +100,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
     }
 
-    public void TestIdUniqueness_DynamicDataGenericCollections_DisplayNameStrategy()
+    public async Task TestIdUniqueness_DynamicDataGenericCollections_DisplayNameStrategy()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(DisplayNameStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DynamicDataGenericCollectionsTests");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -120,14 +122,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_TestDataSourceArrays_DisplayNameStrategy()
+    public async Task TestIdUniqueness_TestDataSourceArrays_DisplayNameStrategy()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(DisplayNameStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceArraysTests");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -141,14 +143,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_TestDataSourceTuples_DisplayNameStrategy()
+    public async Task TestIdUniqueness_TestDataSourceTuples_DisplayNameStrategy()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(DisplayNameStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceTuplesTests");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
@@ -161,14 +163,14 @@ public partial class TestId : CLITestBase
         testResults.Select(x => x.TestCase.Id.ToString()).Distinct().Should().ContainSingle();
     }
 
-    public void TestIdUniqueness_TestDataSourceGenericCollections_DisplayNameStrategy()
+    public async Task TestIdUniqueness_TestDataSourceGenericCollections_DisplayNameStrategy()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(DisplayNameStrategyDll);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~TestDataSourceGenericCollectionsTests");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.FailedTestCount(testResults, 0);
