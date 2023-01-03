@@ -2,11 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 
 using FluentAssertions;
 
@@ -28,7 +26,7 @@ public class OutputTests : CLITestBase
         ValidateOutputForClass(TestAssembly, "UnitTest2");
     }
 
-    private async Task ValidateOutputForClass(string testAssembly, string className)
+    private void ValidateOutputForClass(string testAssembly, string className)
     {
         // LogMessageListener uses an implementation of a string writer that captures output per async context.
         // This allows us to capture output from tasks even when they are running in parallel.
@@ -38,12 +36,14 @@ public class OutputTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
-        var testResults = await RunTests(testCases);
+        testCases.Should().HaveCount(3);
+        testCases.Should().NotContainNulls();
+
+        var testResults = RunTests(testCases);
+        testResults.Should().HaveCount(3);
+        testResults.Should().NotContainNulls();
 
         // Assert
-        testCases.Should().HaveCount(3);
-        testResults.Should().HaveCount(3);
-
         // Ensure that some tests are running in parallel, because otherwise the output just works correctly.
         var firstEnd = testResults.Min(t => t.EndTime);
         var someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
@@ -61,21 +61,21 @@ public class OutputTests : CLITestBase
     private static readonly Func<TestResultMessage, bool> IsStandardOutputMessage = m => m.Category == "StdOutMsgs" && !m.Text.StartsWith(DebugTraceString);
     private static readonly Func<TestResultMessage, bool> IsStandardErrorMessage = m => m.Category == "StdErrMsgs";
 
-    private static void ValidateOutputsAreNotMixed(ReadOnlyCollection<TestResult> testResults, string methodName, string[] shouldNotContain)
+    private static void ValidateOutputsAreNotMixed(IEnumerable<TestResult> testResults, string methodName, string[] shouldNotContain)
     {
         ValidateOutputIsNotMixed(testResults, methodName, shouldNotContain, IsStandardOutputMessage);
         ValidateOutputIsNotMixed(testResults, methodName, shouldNotContain, IsStandardErrorMessage);
         ValidateOutputIsNotMixed(testResults, methodName, shouldNotContain, IsDebugMessage);
     }
 
-    private static void ValidateInitializationsAndCleanups(ReadOnlyCollection<TestResult> testResults)
+    private static void ValidateInitializationsAndCleanups(IEnumerable<TestResult> testResults)
     {
         ValidateInitializeAndCleanup(testResults, IsStandardOutputMessage);
         ValidateInitializeAndCleanup(testResults, IsStandardErrorMessage);
         ValidateInitializeAndCleanup(testResults, IsDebugMessage);
     }
 
-    private static void ValidateOutputIsNotMixed(ReadOnlyCollection<TestResult> testResults, string methodName, string[] shouldNotContain, Func<TestResultMessage, bool> messageFilter)
+    private static void ValidateOutputIsNotMixed(IEnumerable<TestResult> testResults, string methodName, string[] shouldNotContain, Func<TestResultMessage, bool> messageFilter)
     {
         // Make sure that the output between methods is not mixed. And that every method has test initialize and cleanup.
         var testMethod = testResults.Single(t => t.DisplayName == methodName);
@@ -92,7 +92,7 @@ public class OutputTests : CLITestBase
         message.Text.Should().NotContainAny(shouldNotContain);
     }
 
-    private static void ValidateInitializeAndCleanup(ReadOnlyCollection<TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
+    private static void ValidateInitializeAndCleanup(IEnumerable<TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
     {
         // It is not deterministic where the class initialize and class cleanup will run, so we look at all tests, to make sure it is includes somewhere.
         var output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));
