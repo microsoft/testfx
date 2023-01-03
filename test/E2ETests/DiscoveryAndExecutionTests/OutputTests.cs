@@ -37,12 +37,13 @@ public class OutputTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
+        testCases.Should().HaveCount(3);
+
         var testResults = RunTests(testCases);
+        testResults.Should().HaveCount(3);
+        testResults.Should().NotContainNulls();
 
         // Assert
-        testCases.Should().HaveCount(3);
-        testResults.Should().HaveCount(3);
-
         // Ensure that some tests are running in parallel, because otherwise the output just works correctly.
         var firstEnd = testResults.Min(t => t.EndTime);
         var someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
