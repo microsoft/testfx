@@ -24,7 +24,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// </returns>
     /// Throws <exception cref="NotSupportedException"> when run on an async test method.
     /// </exception>
-    public override Task<TestResult[]> Execute(ITestMethod testMethod)
+    public override async Task<TestResult[]> Execute(ITestMethod testMethod)
     {
         var attribute = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
         if (attribute.Length > 0)
