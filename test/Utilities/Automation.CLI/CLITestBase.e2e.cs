@@ -85,8 +85,28 @@ public partial class CLITestBase : TestContainer
     /// <returns>Full path to <c>vstest.console.exe</c>.</returns>
     public string GetConsoleRunnerPath()
     {
-        var vstestConsolePath = Path.Combine(GetNugetPackageFolder(), TestPlatformCLIPackageName, GetTestPlatformVersion(), VstestConsoleRelativePath);
-        File.Exists(vstestConsolePath).Should().BeTrue($"Microsoft.TestPlatform folder '{vstestConsolePath}' should exist");
+        var testPlatformNuGetPackageFolder = Path.Combine(
+            GetNugetPackageFolder(),
+            TestPlatformCLIPackageName,
+            GetTestPlatformVersion());
+        if (!Directory.Exists(testPlatformNuGetPackageFolder))
+        {
+            throw new DirectoryNotFoundException($"Test platform NuGet package folder '{testPlatformNuGetPackageFolder}' does not exist");
+        }
+
+        var vstestConsolePath = Path.Combine(
+            testPlatformNuGetPackageFolder,
+            "tools",
+            "net462",
+            "Common7",
+            "IDE",
+            "Extensions",
+            "TestPlatform",
+            "vstest.console.exe");
+        if (!File.Exists(vstestConsolePath))
+        {
+            throw new InvalidOperationException($"Could not find vstest.console.exe in {vstestConsolePath}");
+        }
 
         return vstestConsolePath;
     }

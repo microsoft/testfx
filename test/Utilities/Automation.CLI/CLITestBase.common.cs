@@ -22,7 +22,6 @@ public partial class CLITestBase : TestContainer
 
     // This value is automatically updated by "build.ps1" script.
     private const string TestPlatformCLIPackageName = "Microsoft.TestPlatform";
-    private const string VstestConsoleRelativePath = @"tools\net462\Common7\IDE\Extensions\TestPlatform\vstest.console.exe";
     private const string DefaultTargetFramework = "net462";
 
     protected XmlDocument ReadVersionProps()

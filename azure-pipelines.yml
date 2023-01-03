@@ -101,7 +101,7 @@ stages:
           displayName: 'Install Windows SDK'
           inputs:
             targetType: filePath
-            filePath: './scripts/Install-WindowsSDK.ps1'
+            filePath: './eng/Install-WindowsSDK.ps1'
             failOnStderr: true
             showWarnings: true
 
@@ -121,11 +121,15 @@ stages:
           name: Build
           displayName: Build
 
+        # -ci is allowing to import some environment variables and some required configurations
         - script: Test.cmd
             -configuration $(_BuildConfig)
+            -ci
           name: Test
           displayName: Test
 
+        # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
+        # through the console or trx
         - task: PublishBuildArtifacts@1
           displayName: 'Publish Test Results folders'
           inputs:
