@@ -26,7 +26,7 @@ public class ThreadOperations : IThreadOperations
         try
         {
             var task = action();
-            if (await Task.WhenAny(task, Task.Delay(timeout), cancelToken) == task)
+            if (await Task.WhenAny(task, Task.Delay(timeout, cancelToken)) == task)
             {
                 return true;
             }
