@@ -118,7 +118,7 @@ public class TestMethodInfo : ITestMethod
             {
                 if (IsTimeoutSet)
                 {
-                    result = ExecuteInternalWithTimeout(arguments);
+                    result = await ExecuteInternalWithTimeout(arguments);
                 }
                 else
                 {
@@ -725,7 +725,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="arguments">The arguments to be passed.</param>
     /// <returns>The result of execution.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private TestResult ExecuteInternalWithTimeout(object?[]? arguments)
+    private async Task<TestResult> ExecuteInternalWithTimeout(object?[]? arguments)
     {
         DebugEx.Assert(IsTimeoutSet, "Timeout should be set");
 
@@ -745,7 +745,7 @@ public class TestMethodInfo : ITestMethod
         }
 
         CancellationToken cancelToken = TestMethodOptions.TestContext!.Context.CancellationTokenSource!.Token;
-        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.Timeout, cancelToken))
+        if (await PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.Timeout, cancelToken))
         {
             if (failure != null)
             {
