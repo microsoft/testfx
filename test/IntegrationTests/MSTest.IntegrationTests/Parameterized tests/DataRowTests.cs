@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
+
 public class DataRowTests : CLITestBase
 {
     private const string TestAssetName = "DataRowTestProject";
