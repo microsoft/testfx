@@ -395,7 +395,7 @@ public class TestExecutionManagerTests : TestContainer
         Verify(DummyTestClass.TestContextProperties is not null);
     }
 
-    public void RunTestsForMultipleSourcesShouldRunEachTestJustOnce()
+    public async Task RunTestsForMultipleSourcesShouldRunEachTestJustOnce()
     {
         int testsCount = 0;
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location, Assembly.GetExecutingAssembly().Location };
@@ -407,7 +407,7 @@ public class TestExecutionManagerTests : TestContainer
             },
         };
 
-        testableTestExecutionmanager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
+        await testableTestExecutionmanager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
         Verify(testsCount == 4);
     }
 
@@ -1187,6 +1187,7 @@ internal class TestableTestExecutionManager : TestExecutionManager
     internal override Task ExecuteTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle, bool isDeploymentDone)
     {
         ExecuteTestsWrapper?.Invoke(tests, runContext, frameworkHandle, isDeploymentDone);
+        return Task.CompletedTask;
     }
 
     internal override UnitTestDiscoverer GetUnitTestDiscoverer()
