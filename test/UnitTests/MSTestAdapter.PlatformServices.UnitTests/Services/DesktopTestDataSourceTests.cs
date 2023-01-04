@@ -6,7 +6,6 @@ using System.Data;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using Moq;
@@ -67,7 +66,7 @@ public class DesktopTestDataSourceTests : TestContainer
         _mockTestContext.Verify(tc => tc.SetDataConnection(It.IsAny<object>()), Times.Once);
     }
 
-#region Dummy implementation
+    #region Dummy implementation
 
     public class DummyTestClass
     {

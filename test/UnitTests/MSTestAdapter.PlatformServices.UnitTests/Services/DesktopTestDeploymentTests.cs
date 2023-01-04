@@ -40,7 +40,7 @@ public class DesktopTestDeploymentTests : TestContainer
         MSTestSettingsProvider.Reset();
     }
 
-#region Deploy tests
+    #region Deploy tests
 
     public void DeployShouldDeployFilesInASourceAndReturnTrue()
     {
@@ -113,9 +113,9 @@ public class DesktopTestDeploymentTests : TestContainer
         _mockFileUtility.Verify(fu => fu.CreateDirectoryIfNotExists(testRunDirectories.RootDeploymentDirectory), Times.Once);
     }
 
-#endregion
+    #endregion
 
-#region private methods
+    #region private methods
 
     private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
     {
@@ -172,7 +172,7 @@ public class DesktopTestDeploymentTests : TestContainer
             new DeploymentUtility(deploymentItemUtility, mockAssemblyUtility.Object, _mockFileUtility.Object),
             _mockFileUtility.Object);
     }
-#endregion
+    #endregion
 }
 
 #endif

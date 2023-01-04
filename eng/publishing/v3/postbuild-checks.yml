@@ -1,9 +1,0 @@
-jobs:
-- job:
-  displayName: Post-build Checks
-  dependsOn: setupMaestroVars
-  variables:
-    - name: TargetChannels
-      value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.TargetChannels'] ]
-  pool:
-    vmImage: 'windows-2019'
