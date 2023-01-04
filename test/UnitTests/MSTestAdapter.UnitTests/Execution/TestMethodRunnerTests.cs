@@ -21,10 +21,12 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
+
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+
 public class TestMethodRunnerTests : TestContainer
 {
     private readonly TestMethodRunner _globalTestMethodRunner;

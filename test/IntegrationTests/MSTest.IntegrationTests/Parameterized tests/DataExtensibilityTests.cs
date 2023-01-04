@@ -3,6 +3,7 @@
 
 using System.IO;
 using System.Threading.Tasks;
+
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
