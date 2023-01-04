@@ -228,29 +228,29 @@ public class TestAssemblyInfoTests : TestContainer
 
     #region Run Assembly Cleanup tests
 
-    public void RunAssemblyCleanupShouldNotInvokeIfAssemblyCleanupIsNull()
+    public async Task RunAssemblyCleanupShouldNotInvokeIfAssemblyCleanupIsNull()
     {
         var assemblycleanupCallCount = 0;
         DummyTestClass.AssemblyCleanupMethodBody = () => assemblycleanupCallCount++;
 
         _testAssemblyInfo.AssemblyCleanupMethod = null;
 
-        Verify((await _testAssemblyInfo.RunAssemblyCleanup()) is null);
+        Verify(await _testAssemblyInfo.RunAssemblyCleanup() is null);
         Verify(assemblycleanupCallCount == 0);
     }
 
-    public void RunAssemblyCleanupShouldInvokeIfAssemblyCleanupMethod()
+    public async Task RunAssemblyCleanupShouldInvokeIfAssemblyCleanupMethod()
     {
         var assemblycleanupCallCount = 0;
         DummyTestClass.AssemblyCleanupMethodBody = () => assemblycleanupCallCount++;
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod");
 
-        Verify((await _testAssemblyInfo.RunAssemblyCleanup()) is null);
+        Verify(await _testAssemblyInfo.RunAssemblyCleanup() is null);
         Verify(assemblycleanupCallCount == 1);
     }
 
-    public void RunAssemblyCleanupShouldReturnAssertFailureExceptionDetails()
+    public async Task RunAssemblyCleanupShouldReturnAssertFailureExceptionDetails()
     {
         DummyTestClass.AssemblyCleanupMethodBody = () => UTF.Assert.Fail("Test Failure.");
 
@@ -260,7 +260,7 @@ public class TestAssemblyInfoTests : TestContainer
             "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Fail failed. Test Failure.. StackTrace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnAssertFailureExceptionDetails>"));
     }
 
-    public void RunAssemblyCleanupShouldReturnAssertInconclusiveExceptionDetails()
+    public async Task RunAssemblyCleanupShouldReturnAssertInconclusiveExceptionDetails()
     {
         DummyTestClass.AssemblyCleanupMethodBody = () => UTF.Assert.Inconclusive("Test Inconclusive.");
 
@@ -270,7 +270,7 @@ public class TestAssemblyInfoTests : TestContainer
             "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: Assert.Inconclusive failed. Test Inconclusive.. StackTrace:    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnAssertInconclusiveExceptionDetails>"));
     }
 
-    public void RunAssemblyCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
+    public async Task RunAssemblyCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
     {
         DummyTestClass.AssemblyCleanupMethodBody = () => { throw new ArgumentException("Argument Exception"); };
 

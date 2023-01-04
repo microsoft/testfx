@@ -1393,8 +1393,8 @@ public class TestMethodInfoTests : TestContainer
         try
         {
             testablePlatformServiceProvider.MockThreadOperations.
-                Setup(tho => tho.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).
-                Returns(true).
+                Setup(tho => tho.Execute(It.IsAny<Func<Task>>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).
+                Returns(Task.FromResult(true)).
                 Callback((Action a, int timeout, CancellationToken token) =>
                 {
                     a.Invoke();
