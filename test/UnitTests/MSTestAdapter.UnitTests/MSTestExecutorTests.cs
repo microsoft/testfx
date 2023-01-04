@@ -97,7 +97,7 @@ public class MSTestExecutorTests : TestContainer
             </RunSettings>";
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        await _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
+        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         // Test should not start if TestSettings is given.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
@@ -118,7 +118,7 @@ public class MSTestExecutorTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
         // Act.
-        await _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
+        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         // Assert.
         _mockFrameworkHandle.Verify(fh => fh.RecordStart(It.IsAny<TestCase>()), Times.Never);
@@ -133,7 +133,7 @@ public class MSTestExecutorTests : TestContainer
             </RunSettings>";
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        await _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
+        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         Verify(MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
     }
@@ -149,7 +149,7 @@ public class MSTestExecutorTests : TestContainer
             </RunSettings>";
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-        await _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
+        _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
 
         Verify(!MSTestSettings.RunConfigurationSettings.CollectSourceInformation);
     }
