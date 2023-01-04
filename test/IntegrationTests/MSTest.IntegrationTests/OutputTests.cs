@@ -18,14 +18,14 @@ public class OutputTests : CLITestBase
 {
     private const string TestAssetName = "OutputTestProject";
 
-    public void OutputIsNotMixedWhenTestsRunInParallel()
+    public async Task OutputIsNotMixedWhenTestsRunInParallel()
     {
-        ValidateOutputForClass("UnitTest1");
+        await ValidateOutputForClass("UnitTest1");
     }
 
-    public void OutputIsNotMixedWhenAsyncTestsRunInParallel()
+    public async Task OutputIsNotMixedWhenAsyncTestsRunInParallel()
     {
-        ValidateOutputForClass("UnitTest2");
+        await ValidateOutputForClass("UnitTest2");
     }
 
     private async Task ValidateOutputForClass(string className)

@@ -220,7 +220,7 @@ public class TestMethodInfoTests : TestContainer
 
     #region TestClass constructor setup
 
-    public void TestMethodInfoInvokeShouldCreateNewInstanceOfTestClassOnEveryCall()
+    public async Task TestMethodInfoInvokeShouldCreateNewInstanceOfTestClassOnEveryCall()
     {
         var ctorCallCount = 0;
         DummyTestClass.TestConstructorMethodBody = () => ctorCallCount++;
@@ -270,11 +270,11 @@ public class TestMethodInfoTests : TestContainer
         Verify(errorMessage == result.TestFailureException.Message);
     }
 
-    public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows()
+    public async Task TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows()
     {
         DummyTestClass.TestConstructorMethodBody = () => { throw new NotImplementedException("dummyExceptionMessage"); };
 
-        var exception = _testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
+        var exception = (await _testMethodInfo.Invoke(null)).TestFailureException as TestFailedException;
 
         Verify(exception is not null);
         Verify(
@@ -282,13 +282,13 @@ public class TestMethodInfoTests : TestContainer
             "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows>b__"));
     }
 
-    public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrowsWithoutInnerException()
+    public async Task TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrowsWithoutInnerException()
     {
         var ctorInfo = typeof(DummyTestClassWithParameterizedCtor).GetConstructors().Single();
         var testClass = new TestClassInfo(typeof(DummyTestClassWithParameterizedCtor), ctorInfo, _testContextProperty, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(_methodInfo, testClass, _testMethodOptions);
 
-        var exception = method.Invoke(null).TestFailureException as TestFailedException;
+        var exception = (await method.Invoke(null)).TestFailureException as TestFailedException;
 
         Verify(exception is not null);
         Verify(
@@ -1235,7 +1235,7 @@ public class TestMethodInfoTests : TestContainer
             PlatformServiceProvider.Instance = testablePlatformServiceProvider;
 
             testablePlatformServiceProvider.MockThreadOperations.Setup(
-             to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
+             to => to.Execute(It.IsAny<Func<Task>>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(false));
             _testMethodOptions.Timeout = 1;
 
             var method = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions);
@@ -1256,7 +1256,7 @@ public class TestMethodInfoTests : TestContainer
             PlatformServiceProvider.Instance = testablePlatformServiceProvider;
 
             testablePlatformServiceProvider.MockThreadOperations.Setup(
-             to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Callback((Action action, int timeoOut, CancellationToken cancelToken) =>
+             to => to.Execute(It.IsAny<Func<Task>>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Callback((Action action, int timeoOut, CancellationToken cancelToken) =>
              {
                  try
                  {
