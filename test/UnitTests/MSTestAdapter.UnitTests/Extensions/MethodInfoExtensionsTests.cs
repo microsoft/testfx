@@ -317,7 +317,7 @@ public class MethodInfoExtensionsTests : TestContainer
 
     #region InvokeAsSynchronousTask tests
 
-    public void MethodInfoInvokeAsSynchronousTaskWaitsForCompletionOfAMethodWhichReturnsTask()
+    public async Task MethodInfoInvokeAsSynchronousTaskWaitsForCompletionOfAMethodWhichReturnsTask()
     {
         var testMethodCalled = false;
         DummyTestClass2.DummyAsyncMethodBody = (x, y) => Task.Run(
@@ -336,7 +336,7 @@ public class MethodInfoExtensionsTests : TestContainer
         Verify(testMethodCalled);
     }
 
-    public void MethodInfoInvokeAsSynchronousTaskExecutesAMethodWhichDoesNotReturnATask()
+    public async Task MethodInfoInvokeAsSynchronousTaskExecutesAMethodWhichDoesNotReturnATask()
     {
         var testMethodCalled = false;
         DummyTestClass2.DummyMethodBody = (x, y) =>
@@ -357,7 +357,7 @@ public class MethodInfoExtensionsTests : TestContainer
         Verify(testMethodCalled);
     }
 
-    public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButWereNotProvided()
+    public async Task InvokeAsSynchronousShouldThrowIfParametersWereExpectedButWereNotProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         var dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
@@ -373,7 +373,7 @@ public class MethodInfoExtensionsTests : TestContainer
         }
     }
 
-    public void InvokeAsSynchronousShouldNotThrowIfParametersWereExpectedAndWereProvided()
+    public async Task InvokeAsSynchronousShouldNotThrowIfParametersWereExpectedAndWereProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         var dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
