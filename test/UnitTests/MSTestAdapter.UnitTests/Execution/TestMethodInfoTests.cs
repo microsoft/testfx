@@ -1207,7 +1207,7 @@ public class TestMethodInfoTests : TestContainer
             PlatformServiceProvider.Instance = testablePlatformServiceProvider;
 
             testablePlatformServiceProvider.MockThreadOperations.Setup(
-             to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(false);
+             to => to.Execute(It.IsAny<Func<Task>>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(false));
             _testMethodOptions.Timeout = 1;
             var method = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions);
 
