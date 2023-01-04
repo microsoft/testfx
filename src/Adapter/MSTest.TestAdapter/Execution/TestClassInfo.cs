@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 public class TestClassInfo
 {
-    private SemaphoreSlim _testClassExecuteSemaphore;
+    private readonly SemaphoreSlim _testClassExecuteSemaphore;
     private MethodInfo? _classCleanupMethod;
     private MethodInfo? _classInitializeMethod;
     private MethodInfo? _testCleanupMethod;
