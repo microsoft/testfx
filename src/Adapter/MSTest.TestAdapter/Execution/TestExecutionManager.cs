@@ -32,7 +32,6 @@ public class TestExecutionManager
     /// </summary>
     private readonly IDictionary<string, object> _sessionParameters;
     private readonly IEnvironment _environment;
-    private readonly Func<Action, Task> _taskFactory;
 
     /// <summary>
     /// Specifies whether the test run is canceled or not.
@@ -49,12 +48,6 @@ public class TestExecutionManager
         TestMethodFilter = new TestMethodFilter();
         _sessionParameters = new Dictionary<string, object>();
         _environment = environment;
-        _taskFactory = taskFactory
-            ?? (action => Task.Factory.StartNew(
-                action,
-                CancellationToken.None,
-                TaskCreationOptions.LongRunning,
-                TaskScheduler.Default));
     }
 
     /// <summary>
@@ -320,22 +313,19 @@ public class TestExecutionManager
 
                 for (int i = 0; i < parallelWorkers; i++)
                 {
-                    tasks.Add(_taskFactory(() =>
+                    while (!queue!.IsEmpty)
                     {
-                        while (!queue!.IsEmpty)
+                        if (_cancellationToken != null && _cancellationToken.Canceled)
                         {
-                            if (_cancellationToken != null && _cancellationToken.Canceled)
-                            {
-                                // if a cancellation has been requested, do not queue any more test runs.
-                                break;
-                            }
-
-                            if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
-                            {
-                                await ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner);
-                            }
+                            // if a cancellation has been requested, do not queue any more test runs.
+                            break;
                         }
-                    }));
+
+                        if (queue.TryDequeue(out IEnumerable<TestCase>? testSet))
+                        {
+                            tasks.Add(ExecuteTestsWithTestRunner(testSet, frameworkHandle, source, sourceLevelParameters, testRunner));
+                        }
+                    }
                 }
 
                 await Task.WhenAll(tasks.ToArray());

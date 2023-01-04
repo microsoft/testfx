@@ -40,6 +40,6 @@ public class ThreadOperationsTests : TestContainer
         static Task Action() => Task.Delay(100);
 
         CancellationTokenSource tokenSource = new();
-        Verify(!(await  _asyncOperations.Execute(Action, 1, tokenSource.Token)));
+        Verify(!(await _asyncOperations.Execute(Action, 1, tokenSource.Token)));
     }
 }
