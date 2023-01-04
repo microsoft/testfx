@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -84,7 +85,9 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
                     out var testClassInstance))
                 {
                     // Only run test if test setup was successful.
-                    TryRunTest(testMethod, testClassInstance, testCase.DisplayName, testResult, frameworkHandle);
+                    TryRunTest(testMethod, testClassInstance, testCase.DisplayName, testResult, frameworkHandle)
+                        .GetAwaiter()
+                        .GetResult();
                 }
 
                 // Always call teardown even if previous steps failed because we want to try to clean as much as we can.
@@ -179,7 +182,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
 
                 var testContainerPublicMethods = testContainerType.DeclaredMethods.Where(memberInfo =>
                     memberInfo.IsPublic
-                    && memberInfo.ReturnType == typeof(void)
+                    && (memberInfo.ReturnType == typeof(void) || memberInfo.ReturnType == typeof(Task))
                     && memberInfo.GetParameters().Length == 0);
 
                 // TODO: Fail if no public method?
@@ -255,13 +258,16 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
         }
     }
 
-    private static bool TryRunTest(MethodInfo testMethod, object testClassInstance, string testDisplayName,
+    private static async Task<bool> TryRunTest(MethodInfo testMethod, object testClassInstance, string testDisplayName,
         TestResult testResult, IMessageLogger? logger)
     {
         try
         {
             LogMessage(logger, TestMessageLevel.Informational, $"Executing test '{testDisplayName}'");
-            testMethod.Invoke(testClassInstance, null);
+            if (testMethod.Invoke(testClassInstance, null) is Task task)
+            {
+                await task;
+            }
 
             return true;
         }
