@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -19,20 +20,21 @@ public class DesktopThreadOperationsTests : TestContainer
         _asyncOperations = new ThreadOperations();
     }
 
-    public void ExecuteShouldRunActionOnANewThread()
+    public async Task ExecuteShouldRunActionOnANewThread()
     {
         int actionThreadID = 0;
         var cancellationTokenSource = new CancellationTokenSource();
-        void Action()
+        Task Action()
         {
             actionThreadID = Environment.CurrentManagedThreadId;
+            return Task.CompletedTask;
         }
 
         Verify(await _asyncOperations.Execute(Action, 1000, cancellationTokenSource.Token));
         Verify(Environment.CurrentManagedThreadId != actionThreadID);
     }
 
-    public void TokenCancelShouldAbortExecutingAction()
+    public async Task TokenCancelShouldAbortExecutingAction()
     {
         // setup
         var cancellationTokenSource = new CancellationTokenSource();
@@ -45,7 +47,7 @@ public class DesktopThreadOperationsTests : TestContainer
         Verify(!result, "The execution failed to abort");
     }
 
-    public void TokenCancelShouldAbortIfAlreadyCanceled()
+    public async Task TokenCancelShouldAbortIfAlreadyCanceled()
     {
         // setup
         var cancellationTokenSource = new CancellationTokenSource();
