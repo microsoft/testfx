@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -46,12 +47,12 @@ public class IterativeTestMethodAttribute : TestMethodAttribute
         _stabilityThreshold = stabilityThreshold;
     }
 
-    public override TestResult[] Execute(ITestMethod testMethod)
+    public override async Task<TestResult[]> Execute(ITestMethod testMethod)
     {
         var results = new List<TestResult>();
         for (int count = 0; count < _stabilityThreshold; count++)
         {
-            var testResults = base.Execute(testMethod);
+            var testResults = await base.Execute(testMethod);
             foreach (var testResult in testResults)
             {
                 testResult.DisplayName = $"{testMethod.TestMethodName} - Execution number {count + 1}";
