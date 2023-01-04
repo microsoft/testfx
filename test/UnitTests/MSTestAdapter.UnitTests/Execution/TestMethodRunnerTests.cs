@@ -489,10 +489,10 @@ public class TestMethodRunnerTests : TestContainer
             _invokeTest = invoke;
         }
 
-        public override UTF.TestResult Invoke(object[] arguments)
+        public override Task<UTF.TestResult> Invoke(object[] arguments)
         {
             // Ignore args for now
-            return _invokeTest();
+            return Task.FromResult(_invokeTest());
         }
     }
 
