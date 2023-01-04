@@ -876,7 +876,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
     }
 
-    public void TestMethodInfoInvokeShouldCallTestCleanupEvenIfTestInitializeMethodThrows()
+    public async Task TestMethodInfoInvokeShouldCallTestCleanupEvenIfTestInitializeMethodThrows()
     {
         var testCleanupMethodCalled = false;
         DummyTestClass.TestInitializeMethodBody = classInstance => { throw new NotImplementedException(); };
@@ -884,7 +884,7 @@ public class TestMethodInfoTests : TestContainer
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
-        var result = _testMethodInfo.Invoke(null);
+        var result = await _testMethodInfo.Invoke(null);
 
         Verify(testCleanupMethodCalled);
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
