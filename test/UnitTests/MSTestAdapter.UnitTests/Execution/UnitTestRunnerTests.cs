@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -81,29 +82,29 @@ public class UnitTestRunnerTests : TestContainer
 
     #region RunSingleTest tests
 
-    public void RunSingleTestShouldThrowIfTestMethodIsNull()
+    public async Task RunSingleTestShouldThrowIfTestMethodIsNull()
     {
-        void A() => _unitTestRunner.RunSingleTest(null, null);
-        var ex = VerifyThrows(A);
+        Task A() => _unitTestRunner.RunSingleTest(null, null);
+        var ex = await VerifyThrows(A);
         Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
-    public void RunSingleTestShouldThrowIfTestRunParamtersIsNull()
+    public async Task RunSingleTestShouldThrowIfTestRunParamtersIsNull()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
-        void A() => _unitTestRunner.RunSingleTest(testMethod, null);
-        var ex = VerifyThrows(A);
+        Task A() => _unitTestRunner.RunSingleTest(testMethod, null);
+        var ex = await VerifyThrows(A);
         Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
-    public void RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()
+    public async Task RunSingleTestShouldReturnTestResultIndicateATestNotFoundIfTestMethodCannotBeFound()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
 
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        var results = await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -111,7 +112,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results[0].ErrorMessage == "Test method M was not found.");
     }
 
-    public void RunSingleTestShouldReturnTestResultIndicatingNotRunnableTestIfTestMethodCannotBeRun()
+    public async Task RunSingleTestShouldReturnTestResultIndicatingNotRunnableTestIfTestMethodCannotBeRun()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
         var methodInfo = type.GetMethod("TestMethodWithNullCustomPropertyName");
@@ -120,7 +121,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        var results = await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         var expectedMessage = string.Format(
             "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
@@ -133,7 +134,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(expectedMessage == results[0].ErrorMessage);
     }
 
-    public void ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassAndHasMessage()
+    public async Task ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassAndHasMessage()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassWithMessage);
         var methodInfo = type.GetMethod("TestMethod");
@@ -142,7 +143,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        var results = await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -150,7 +151,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results[0].ErrorMessage == "IgnoreTestClassMessage");
     }
 
-    public void ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassButHasNoMessage()
+    public async Task ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestClassButHasNoMessage()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClass);
         var methodInfo = type.GetMethod("TestMethod");
@@ -159,7 +160,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        var results = await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -167,7 +168,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results[0].ErrorMessage == string.Empty);
     }
 
-    public void ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodAndHasMessage()
+    public async Task ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodAndHasMessage()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreTestWithMessage);
         var methodInfo = type.GetMethod("TestMethod");
@@ -176,7 +177,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        var results = await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -184,7 +185,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results[0].ErrorMessage == "IgnoreTestMessage");
     }
 
-    public void ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodButHasNoMessage()
+    public async Task ExecuteShouldSkipTestAndSkipFillingIgnoreMessageIfIgnoreAttributeIsPresentOnTestMethodButHasNoMessage()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreTest);
         var methodInfo = type.GetMethod("TestMethod");
@@ -193,7 +194,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        var results = await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -201,7 +202,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results[0].ErrorMessage == string.Empty);
     }
 
-    public void ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethod()
+    public async Task ExecuteShouldSkipTestAndFillInClassIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethod()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassAndIgnoreTestWithMessage);
         var methodInfo = type.GetMethod("TestMethod");
@@ -210,7 +211,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        var results = await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -218,7 +219,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results[0].ErrorMessage == "IgnoreTestClassMessage");
     }
 
-    public void ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethodButClassHasNoMessage()
+    public async Task ExecuteShouldSkipTestAndFillInMethodIgnoreMessageIfIgnoreAttributeIsPresentOnBothClassAndMethodButClassHasNoMessage()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithIgnoreClassWithNoMessageAndIgnoreTestWithMessage);
         var methodInfo = type.GetMethod("TestMethod");
@@ -227,7 +228,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        var results = await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -235,7 +236,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results[0].ErrorMessage == "IgnoreTestMessage");
     }
 
-    public void RunSingleTestShouldReturnTestResultIndicatingFailureIfThereIsAnyTypeInspectionExceptionWhenInspectingTestMethod()
+    public async Task RunSingleTestShouldReturnTestResultIndicatingFailureIfThereIsAnyTypeInspectionExceptionWhenInspectingTestMethod()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
         var testMethod = new TestMethod("ImaginaryTestMethod", type.FullName, "A", isAsync: false);
@@ -243,7 +244,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        var results = await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         var expectedMessage = string.Format(
             "Method {0}.{1} does not exist.",
@@ -256,7 +257,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(expectedMessage == results[0].ErrorMessage);
     }
 
-    public void RunSingleTestShouldReturnTestResultsForAPassingTestMethod()
+    public async Task RunSingleTestShouldReturnTestResultsForAPassingTestMethod()
     {
         var type = typeof(TypeCacheTests.DummyTestClassWithTestMethods);
         var methodInfo = type.GetMethod("TestMethod");
@@ -265,7 +266,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
 
-        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        var results = await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
         Verify(results.Length == 1);
@@ -273,7 +274,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(results[0].ErrorMessage is null);
     }
 
-    public void RunSingleTestShouldSetTestsAsInProgressInTestContext()
+    public async Task RunSingleTestShouldSetTestsAsInProgressInTestContext()
     {
         var type = typeof(DummyTestClass);
         var methodInfo = type.GetMethod("TestMethodToTestInProgress");
@@ -283,14 +284,14 @@ public class UnitTestRunnerTests : TestContainer
             .Returns(Assembly.GetExecutingAssembly());
 
         // Asserting in the test method execution flow itself.
-        var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        var results = await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(results is not null);
         Verify(results.Length == 1);
         Verify(results[0].Outcome == UnitTestOutcome.Passed);
     }
 
-    public void RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
+    public async Task RunSingleTestShouldCallAssemblyInitializeAndClassInitializeMethodsInOrder()
     {
         var mockReflectHelper = new Mock<ReflectHelper>();
         _unitTestRunner = new UnitTestRunner(new MSTestSettings(), mockReflectHelper.Object);
@@ -309,7 +310,7 @@ public class UnitTestRunnerTests : TestContainer
         DummyTestClassWithInitializeMethods.AssemblyInitializeMethodBody = () => { validator <<= 2; };
         DummyTestClassWithInitializeMethods.ClassInitializeMethodBody = () => { validator >>= 2; };
 
-        _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
+        await _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         Verify(validator == 1);
     }
