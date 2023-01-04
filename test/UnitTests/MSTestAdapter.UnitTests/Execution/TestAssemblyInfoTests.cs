@@ -143,7 +143,7 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = (tc) => UTF.Assert.Inconclusive("Test Inconclusive");
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
+        var exception = await VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
 
         Verify(_testAssemblyInfo.AssemblyInitializationException is not null);
     }
@@ -153,7 +153,7 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = tc => UTF.Assert.Fail("Test failure");
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
+        var exception = (await VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext))) as TestFailedException;
 
         Verify(exception is not null);
         Verify(exception.Outcome == UnitTestOutcome.Failed);
@@ -171,7 +171,7 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
+        var exception = (await VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext))) as TestFailedException;
 
         Verify(exception is not null);
         Verify(exception.Outcome == UnitTestOutcome.Inconclusive);
@@ -189,7 +189,7 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = tc => { throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message")); };
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
+        var exception = (await VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext))) as TestFailedException;
 
         Verify(exception is not null);
         Verify(exception.Outcome == UnitTestOutcome.Failed);
@@ -209,7 +209,7 @@ public class TestAssemblyInfoTests : TestContainer
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
         _testAssemblyInfo.AssemblyInitializationException = new TestFailedException(UnitTestOutcome.Failed, "Cached Test failure");
 
-        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
+        var exception = (await VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext))) as TestFailedException;
 
         Verify(exception is not null);
         Verify(exception.Outcome == UnitTestOutcome.Failed);
@@ -221,7 +221,7 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = (tc) => { Verify(tc == _testContext); };
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        _testAssemblyInfo.RunAssemblyInitialize(_testContext);
+        await _testAssemblyInfo.RunAssemblyInitialize(_testContext);
     }
 
     #endregion
