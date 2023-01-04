@@ -20,8 +20,8 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInf
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo.AssemblyInitializeMethod.get -> System.Reflection.MethodInfo?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo.HasExecutableCleanupMethod.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo.IsAssemblyInitializeExecuted.get -> bool
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo.RunAssemblyCleanup() -> string?
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo.RunAssemblyInitialize(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! testContext) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo.RunAssemblyCleanup() -> System.Threading.Tasks.Task<string?>!
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo.RunAssemblyInitialize(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! testContext) -> System.Threading.Tasks.Task
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.BaseClassCleanupMethodsStack.get -> System.Collections.Generic.Stack<System.Reflection.MethodInfo!>!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.BaseClassInitAndCleanupMethods.get -> System.Collections.Generic.Queue<System.Tuple<System.Reflection.MethodInfo?, System.Reflection.MethodInfo?>!>!
