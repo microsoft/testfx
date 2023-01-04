@@ -41,7 +41,14 @@ public class DesktopThreadOperationsTests : TestContainer
 
         // act
         cancellationTokenSource.CancelAfter(100);
-        var result = await _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
+        var result = await _asyncOperations.Execute(
+            () =>
+            {
+                Thread.Sleep(10000);
+                return Task.CompletedTask;
+            },
+            100000,
+            cancellationTokenSource.Token);
 
         // validate
         Verify(!result, "The execution failed to abort");
@@ -54,7 +61,14 @@ public class DesktopThreadOperationsTests : TestContainer
         cancellationTokenSource.Cancel();
 
         // act
-        var result = await _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
+        var result = await _asyncOperations.Execute(
+            () =>
+            {
+                Thread.Sleep(10000);
+                return Task.CompletedTask;
+            },
+            100000,
+            cancellationTokenSource.Token);
 
         // validate
         Verify(!result, "The execution failed to abort");
