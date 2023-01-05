@@ -167,6 +167,7 @@ public class SuiteLifeCycleTests : CLITestBase
             {(targetFramework == "net6.0"
                 ? "Console: LifeCycleClassCleanup.DisposeAsync was called\r\nConsole: LifeCycleClassCleanup.Dispose was called"
                 : "Console: LifeCycleClassCleanup.Dispose was called")}
+            Console: LifeCycleClassCleanup.ClassCleanup was called
 
             """);
         caseClassCleanup.Messages[1].Text.Should().Be(
@@ -185,7 +186,8 @@ public class SuiteLifeCycleTests : CLITestBase
                     + "\r\n"
                     + GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanup.Dispose was called")
                 : GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanup.Dispose was called"))}
-
+            {GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanup.ClassCleanup was called")}
+            
             """);
         caseClassCleanup.Messages[2].Text.Should().Be(
             $"""
@@ -201,6 +203,7 @@ public class SuiteLifeCycleTests : CLITestBase
             {(targetFramework == "net6.0"
                 ? "LifeCycleClassCleanup.DisposeAsync was called\r\nLifeCycleClassCleanup.Dispose was called"
                 : "LifeCycleClassCleanup.Dispose was called")}
+            LifeCycleClassCleanup.ClassCleanup was called
 
             """);
 
@@ -1568,7 +1571,6 @@ public class SuiteLifeCycleTests : CLITestBase
         var expectedRemainingMessages =
             """
             Console: LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassCleanup was called
-            Console: LifeCycleClassCleanup.ClassCleanup was called
             Console: LifeCycleClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.ClassCleanup was called
             Console: LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassCleanup was called
             Console: LifeCycleDerivedClassCleanupEndOfAssemblyAndNone.ClassCleanup was called
@@ -1624,7 +1626,6 @@ public class SuiteLifeCycleTests : CLITestBase
             {GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeAndCleanupNone.ClassCleanup was called")}
             {GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanupEndOfAssemblyAndNone.ClassCleanup was called")}
             {GenerateTraceDebugPrefixedMessage("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called")}
-            {GenerateTraceDebugPrefixedMessage("LifeCycleClassCleanup.ClassCleanup was called")}
             {GenerateTraceDebugPrefixedMessage("LifeCycleDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassCleanup was called")}
             {GenerateTraceDebugPrefixedMessage("LifeCycleClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called")}
             {GenerateTraceDebugPrefixedMessage("LifeCycleDerivedClassInitializeAndCleanupNone.ClassCleanup was called")}
@@ -1676,7 +1677,6 @@ public class SuiteLifeCycleTests : CLITestBase
             LifeCycleDerivedClassCleanupEndOfAssemblyAndBeforeEachDerivedClass.ClassCleanup was called
             LifeCycleDerivedClassCleanupEndOfClassAndNone.ClassCleanup was called
             LifeCycleClassCleanupEndOfAssemblyAndNone.ClassCleanup was called
-            LifeCycleClassCleanup.ClassCleanup was called
             LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassCleanup was called
             LifeCycleDerivedClassInitializeAndCleanupNone.ClassCleanup was called
             LifeCycleClassInitializeAndCleanupNone.ClassCleanup was called

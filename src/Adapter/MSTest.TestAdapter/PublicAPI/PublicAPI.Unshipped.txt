@@ -1,1 +1,2 @@
 ﻿#nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.RunClassCleanup(Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior classCleanupLifecycle = Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfClass) -> string?

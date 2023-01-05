@@ -1,4 +1,6 @@
 ﻿#nullable enable
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfAssembly = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfClass = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? arg1) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? arg1, object? arg2) -> void

@@ -14,7 +14,7 @@ public class ClassCleanupExecutionAttribute : Attribute
     /// <summary>
     /// Default class cleanup execution.
     /// </summary>
-    public static readonly ClassCleanupBehavior DefaultClassCleanupLifecycle = ClassCleanupBehavior.EndOfAssembly;
+    public static readonly ClassCleanupBehavior DefaultClassCleanupLifecycle = ClassCleanupBehavior.EndOfClass;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ClassCleanupExecutionAttribute"/> class.
