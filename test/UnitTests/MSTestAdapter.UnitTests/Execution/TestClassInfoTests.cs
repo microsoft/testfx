@@ -491,7 +491,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
-        var classCleanup = _testClassInfo.RunClassCleanup();
+        var classCleanup = _testClassInfo.RunClassCleanup(UTF.ClassCleanupBehavior.EndOfAssembly);
 
         // Assert
         Verify(classCleanup.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed."));
@@ -506,7 +506,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
-        var classCleanup = _testClassInfo.RunClassCleanup();
+        var classCleanup = _testClassInfo.RunClassCleanup(UTF.ClassCleanupBehavior.EndOfAssembly);
 
         // Assert
         Verify(classCleanup.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed."));
@@ -521,7 +521,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
-        var classCleanup = _testClassInfo.RunClassCleanup();
+        var classCleanup = _testClassInfo.RunClassCleanup(UTF.ClassCleanupBehavior.EndOfAssembly);
 
         // Assert
         Verify(classCleanup.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed."));
@@ -539,7 +539,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.BaseClassCleanupMethodsStack.Push(baseClassCleanupMethod);
 
         // Act
-        var classCleanup = _testClassInfo.RunClassCleanup();
+        var classCleanup = _testClassInfo.RunClassCleanup(UTF.ClassCleanupBehavior.EndOfAssembly);
 
         // Assert
         Verify(classCleanup.StartsWith("Class Cleanup method DummyBaseTestClass.CleanupClassMethod failed."));
