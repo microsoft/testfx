@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Runtime.Serialization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
@@ -59,5 +60,34 @@ public class DataSerializationHelperTests : TestContainer
         Verify(actual[0].GetType() == typeof(DateTime));
         Verify(actual[0].Equals(source));
         Verify(((DateTime)actual[0]).Kind.Equals(source.Kind));
+    }
+
+    public void DataSerializerShouldRoundTripReadOnlyData()
+    {
+        var source = new ReadOnlyDataWrapper { ReadOnlyData = new ReadOnlyDataType(42) };
+
+        var actual = DataSerializationHelper.Deserialize(
+            DataSerializationHelper.Serialize(new object[] { source }));
+
+        Verify(actual.Length == 1);
+        Verify(actual[0].GetType() == typeof(ReadOnlyDataWrapper));
+        Verify(((ReadOnlyDataWrapper)actual[0]).ReadOnlyData.Equals(source));
+    }
+
+    public class ReadOnlyDataWrapper
+    {
+        public ReadOnlyDataType ReadOnlyData { get; set; }
+    }
+
+    [DataContract]
+    public readonly struct ReadOnlyDataType
+    {
+        public ReadOnlyDataType(int a)
+        {
+            A = a;
+        }
+
+        [DataMember]
+        public int A { get; }
     }
 }

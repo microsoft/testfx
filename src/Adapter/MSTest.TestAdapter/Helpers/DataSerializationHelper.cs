@@ -13,6 +13,7 @@ internal static class DataSerializationHelper
     private static readonly ConcurrentDictionary<string, DataContractJsonSerializer> SerializerCache = new();
     private static readonly DataContractJsonSerializerSettings SerializerSettings = new()
     {
+        SerializeReadOnlyTypes = true,
         UseSimpleDictionaryFormat = true,
         EmitTypeInformation = System.Runtime.Serialization.EmitTypeInformation.Always,
         DateTimeFormat = new System.Runtime.Serialization.DateTimeFormat("O", System.Globalization.CultureInfo.InvariantCulture),
