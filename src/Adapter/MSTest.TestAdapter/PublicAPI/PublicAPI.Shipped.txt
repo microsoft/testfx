@@ -15,6 +15,7 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListe
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.StandardError.get -> string!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.StandardOutput.get -> string!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.RunClassCleanup(Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior classCleanupLifecycle = Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfClass) -> string?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo.AssemblyCleanupMethod.get -> System.Reflection.MethodInfo?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo.AssemblyInitializationException.get -> System.Exception?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo.AssemblyInitializeMethod.get -> System.Reflection.MethodInfo?
