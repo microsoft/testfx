@@ -153,6 +153,7 @@ public class SuiteLifeCycleTests : CLITestBase
             targetFramework: targetFramework);
         RunEventsHandler.PassedTests.Should().HaveCount(27);  // The inherit class tests are called twice.
 
+        // The cleanup will appear in this case as the default ClassCleanup is EndOfClass.
         var caseClassCleanup = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.Contains("LifeCycleClassCleanup.TestMethod"));
         caseClassCleanup.Outcome.Should().Be(Microsoft.VisualStudio.TestPlatform.ObjectModel.TestOutcome.Passed);
         caseClassCleanup.Messages.Should().HaveCount(3);
