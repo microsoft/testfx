@@ -53,6 +53,7 @@ public class MSTestSettings
         CaptureDebugTraces = true;
         MapInconclusiveToFailed = false;
         MapNotRunnableToFailed = true;
+        TreatDiscoveryWarningsAsErrors = false;
         EnableBaseClassTestMethodsFromOtherAssemblies = true;
         ForcedLegacyMode = false;
         TestSettingsFile = null;
@@ -108,6 +109,11 @@ public class MSTestSettings
     public bool MapNotRunnableToFailed { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether a not test discovery warnings should be treated as errors.
+    /// </summary>
+    public bool TreatDiscoveryWarningsAsErrors { get; private set; }
+
+    /// <summary>
     /// Gets a value indicating whether to enable discovery of test methods from base classes in a different assembly from the inheriting test class.
     /// </summary>
     public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
@@ -161,6 +167,7 @@ public class MSTestSettings
         CurrentSettings.TestSettingsFile = settings.TestSettingsFile;
         CurrentSettings.MapInconclusiveToFailed = settings.MapInconclusiveToFailed;
         CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
+        CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
         CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
         CurrentSettings.ClassCleanupLifecycle = settings.ClassCleanupLifecycle;
         CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
@@ -289,6 +296,7 @@ public class MSTestSettings
         //     <CaptureTraceOutput>true</CaptureTraceOutput>
         //     <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
         //     <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
+        //     <TreatDiscoveryWarningsAsErrors>false</TreatDiscoveryWarningsAsErrors>
         //     <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
         //     <TestTimeout>5000</TestTimeout>
         //     <TreatClassAndAssemblyCleanupWarningsAsErrors>false</TreatClassAndAssemblyCleanupWarningsAsErrors>
@@ -385,6 +393,16 @@ public class MSTestSettings
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.MapNotRunnableToFailed = result;
+                            }
+
+                            break;
+                        }
+
+                    case "TREATDISCOVERYWARNINGSASERRORS":
+                        {
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.TreatDiscoveryWarningsAsErrors = result;
                             }
 
                             break;

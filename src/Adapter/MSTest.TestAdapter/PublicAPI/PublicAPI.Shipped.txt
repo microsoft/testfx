@@ -85,6 +85,7 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.Paralleliz
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.TestSettingsFile.get -> string?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.TestTimeout.get -> int
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.TreatClassAndAssemblyCleanupWarningsAsErrors.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.TreatDiscoveryWarningsAsErrors.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.AssemblyName.get -> string!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.DeclaringAssemblyName.get -> string?
