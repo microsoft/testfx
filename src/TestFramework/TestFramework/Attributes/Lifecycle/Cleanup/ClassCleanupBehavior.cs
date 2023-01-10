@@ -9,12 +9,12 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public enum ClassCleanupBehavior
 {
     /// <summary>
-    /// Run at end of assembly.
-    /// </summary>
-    EndOfAssembly,
-
-    /// <summary>
     /// Run at end of class.
     /// </summary>
     EndOfClass,
+
+    /// <summary>
+    /// Run at end of assembly.
+    /// </summary>
+    EndOfAssembly,
 }

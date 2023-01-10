@@ -38,7 +38,7 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.H
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.IsClassCleanupExecuted.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.IsClassInitializeExecuted.get -> bool
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.Parent.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo!
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.RunClassCleanup(Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior classCleanupLifecycle = Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfAssembly) -> string?
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.RunClassCleanup(Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior classCleanupLifecycle = Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfClass) -> string?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.RunClassInitialize(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext! testContext) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.TestCleanupMethod.get -> System.Reflection.MethodInfo?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestClassInfo.TestContextProperty.get -> System.Reflection.PropertyInfo?

@@ -22,8 +22,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupA
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.CleanupBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior?
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.InheritanceBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
-Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfAssembly = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
-Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfClass = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfAssembly = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfClass = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute.ClassCleanupExecutionAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute.ClassCleanupExecutionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior cleanupBehavior) -> void
@@ -326,7 +326,6 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.That.get ->
 static Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage(string! format, params object?[]! args) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.OnLogMessage -> Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessageHandler?
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.That.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
-static readonly Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute.DefaultClassCleanupLifecycle -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
 static readonly Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute.DefaultDataAccessMethod -> Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod
 static readonly Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute.DefaultProviderName -> string!
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
