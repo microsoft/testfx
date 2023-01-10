@@ -170,8 +170,6 @@ See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-2
 * Add net6.0 tests for PlatformServices [#1233](https://github.com/microsoft/testfx/pull/1233)
 * Add Assert.IsInstanceOfType<T> [#1241](https://github.com/microsoft/testfx/pull/1241)
 * Add some simple test framwork to allow testing MSTest [#1242](https://github.com/microsoft/testfx/pull/1242)
-* Add MSTest.nuspec to VS items
-* Add Write-Verbose on content of Get-ChildItem
 * Merge testfx-docs repo here and update links [#1326](https://github.com/microsoft/testfx/pull/1326)
 * Install required .NET before build instead of before test [#1290](https://github.com/microsoft/testfx/pull/1290)
 * Allow mirroring. **BYPASS_SECRET_SCANNING**
@@ -275,14 +273,8 @@ See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-2
   
 ### Removed
   
-* Remove skipping check for x64 [#1350](https://github.com/microsoft/testfx/pull/1350)
 * Remove class/assembly initialization messages from logs. [#1339](https://github.com/microsoft/testfx/pull/1339)
 * Remove unexpected dll in target [#1308](https://github.com/microsoft/testfx/pull/1308)
-* Remove PlatformServices.Shared.Unit.Tests [#1270](https://github.com/microsoft/testfx/pull/1270)
-* Remove unused build step [#1266](https://github.com/microsoft/testfx/pull/1266)
-* Remove PlatformServices.Portable [#1258](https://github.com/microsoft/testfx/pull/1258)
-* Remove un-needed files
-* Remove ProjectGuid and simplify ProjectReference calls [#1185](https://github.com/microsoft/testfx/pull/1185)
 * Remove test adapter nuget uap dependencies [#1195](https://github.com/microsoft/testfx/pull/1195)
 * Remove broken UWP unit test [#1295](https://github.com/microsoft/testfx/pull/1295)
 
