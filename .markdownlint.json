@@ -4,6 +4,9 @@
       "br_spaces": 0
     },
     "MD013": false,
+    "MD024": {
+      "siblings_only": true
+    },
     "MD046": {
       "style": "fenced"
     },
