@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
@@ -75,7 +76,7 @@ internal class TestMethodRunner
     /// Executes a test.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal UnitTestResult[] Execute()
+    internal async Task<UnitTestResult[]> Execute()
     {
         string? initializationLogs = string.Empty;
         string? initializationTrace = string.Empty;
@@ -92,8 +93,8 @@ internal class TestMethodRunner
                 {
                     // Run the assembly and class Initialize methods if required.
                     // Assembly or class initialize can throw exceptions in which case we need to ensure that we fail the test.
-                    _testMethodInfo.Parent.Parent.RunAssemblyInitialize(_testContext.Context);
-                    _testMethodInfo.Parent.RunClassInitialize(_testContext.Context);
+                    await _testMethodInfo.Parent.Parent.RunAssemblyInitialize(_testContext.Context);
+                    await _testMethodInfo.Parent.RunClassInitialize(_testContext.Context);
                 }
                 finally
                 {
@@ -106,7 +107,7 @@ internal class TestMethodRunner
 
             // Listening to log messages when running the test method with its Test Initialize and cleanup later on in the stack.
             // This allows us to differentiate logging when data driven methods are used.
-            result = RunTestMethod();
+            result = await RunTestMethod();
         }
         catch (TestFailedException ex)
         {
@@ -145,7 +146,7 @@ internal class TestMethodRunner
     /// Runs the test method.
     /// </summary>
     /// <returns>The test results.</returns>
-    internal UnitTestResult[] RunTestMethod()
+    internal async Task<UnitTestResult[]> RunTestMethod()
     {
         DebugEx.Assert(_test != null, "Test should not be null.");
         DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
@@ -159,16 +160,16 @@ internal class TestMethodRunner
             if (_test.DataType == DynamicDataType.ITestDataSource)
             {
                 var data = DataSerializationHelper.Deserialize(_test.SerializedData);
-                var testResults = ExecuteTestWithDataSource(null, data);
+                var testResults = await ExecuteTestWithDataSource(null, data);
                 results.AddRange(testResults);
             }
-            else if (ExecuteDataSourceBasedTests(results))
+            else if (await ExecuteDataSourceBasedTests(results))
             {
                 isDataDriven = true;
             }
             else
             {
-                var testResults = ExecuteTest(_testMethodInfo);
+                var testResults = await ExecuteTest(_testMethodInfo);
 
                 foreach (var testResult in testResults)
                 {
@@ -236,7 +237,7 @@ internal class TestMethodRunner
         return unitTestResults;
     }
 
-    private bool ExecuteDataSourceBasedTests(List<TestResult> results)
+    private async Task<bool> ExecuteDataSourceBasedTests(List<TestResult> results)
     {
         var isDataDriven = false;
 
@@ -269,7 +270,7 @@ internal class TestMethodRunner
 
                         foreach (object dataRow in dataRows)
                         {
-                            TestResult[] testResults = ExecuteTestWithDataRow(dataRow, rowIndex++);
+                            TestResult[] testResults = await ExecuteTestWithDataRow(dataRow, rowIndex++);
                             results.AddRange(testResults);
                         }
                     }
@@ -308,7 +309,7 @@ internal class TestMethodRunner
                     {
                         try
                         {
-                            var testResults = ExecuteTestWithDataSource(testDataSource, data);
+                            var testResults = await ExecuteTestWithDataSource(testDataSource, data);
 
                             results.AddRange(testResults);
                         }
@@ -324,12 +325,12 @@ internal class TestMethodRunner
         return isDataDriven;
     }
 
-    private TestResult[] ExecuteTestWithDataSource(UTF.ITestDataSource? testDataSource, object?[]? data)
+    private async Task<TestResult[]> ExecuteTestWithDataSource(UTF.ITestDataSource? testDataSource, object?[]? data)
     {
         var stopwatch = Stopwatch.StartNew();
 
         _testMethodInfo.SetArguments(data);
-        var testResults = ExecuteTest(_testMethodInfo);
+        var testResults = await ExecuteTest(_testMethodInfo);
         stopwatch.Stop();
 
         var hasDisplayName = !StringEx.IsNullOrWhiteSpace(_test.DisplayName);
@@ -356,7 +357,7 @@ internal class TestMethodRunner
         return testResults;
     }
 
-    private TestResult[] ExecuteTestWithDataRow(object dataRow, int rowIndex)
+    private async Task<TestResult[]> ExecuteTestWithDataRow(object dataRow, int rowIndex)
     {
         var displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, _test.DisplayName, rowIndex);
         Stopwatch? stopwatch = null;
@@ -366,7 +367,7 @@ internal class TestMethodRunner
         {
             stopwatch = Stopwatch.StartNew();
             _testContext.SetDataRow(dataRow);
-            testResults = ExecuteTest(_testMethodInfo);
+            testResults = await ExecuteTest(_testMethodInfo);
         }
         finally
         {
@@ -384,11 +385,11 @@ internal class TestMethodRunner
         return testResults;
     }
 
-    private TestResult[] ExecuteTest(TestMethodInfo testMethodInfo)
+    private async Task<TestResult[]> ExecuteTest(TestMethodInfo testMethodInfo)
     {
         try
         {
-            return _testMethodInfo.TestMethodOptions.Executor!.Execute(testMethodInfo);
+            return await _testMethodInfo.TestMethodOptions.Executor!.Execute(testMethodInfo);
         }
         catch (Exception ex)
         {

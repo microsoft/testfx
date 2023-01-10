@@ -3,6 +3,7 @@
 
 using System;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -57,7 +58,7 @@ public interface ITestMethod
     /// <remarks>
     /// This call handles asynchronous test methods as well.
     /// </remarks>
-    TestResult Invoke(object[]? arguments);
+    Task<TestResult> Invoke(object[]? arguments);
 
     /// <summary>
     /// Get all attributes of the test method.

@@ -8,6 +8,7 @@ using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 using DiscoveryAndExecutionTests.Utilities;
 
@@ -38,12 +39,12 @@ public partial class CLITestBase : TestContainer
         return sink.DiscoveredTests;
     }
 
-    internal ImmutableArray<TestResult> RunTests(IEnumerable<TestCase> testCases)
+    internal async Task<ImmutableArray<TestResult>> RunTests(IEnumerable<TestCase> testCases)
     {
         var testExecutionManager = new TestExecutionManager();
         var frameworkHandle = new InternalFrameworkHandle();
 
-        testExecutionManager.ExecuteTests(testCases, null, frameworkHandle, false);
+        await testExecutionManager.ExecuteTests(testCases, null, frameworkHandle, false);
         return frameworkHandle.GetFlattenedTestResults();
     }
 

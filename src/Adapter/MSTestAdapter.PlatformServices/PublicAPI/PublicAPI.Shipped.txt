@@ -57,7 +57,7 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITe
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHost.CreateInstanceForType(System.Type! type, object?[]? args) -> object?
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestSourceHost.SetupHost() -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IThreadOperations
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IThreadOperations.Execute(System.Action! action, int timeout, System.Threading.CancellationToken cancelToken) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IThreadOperations.Execute(System.Func<System.Threading.Tasks.Task!>! action, int timeout, System.Threading.CancellationToken cancelToken) -> System.Threading.Tasks.Task<bool>!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITraceListener
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITraceListener.Dispose() -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITraceListener.GetWriter() -> System.IO.TextWriter?
@@ -115,7 +115,7 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestSourceHos
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestSourceHost.SetupHost() -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestSourceHost.TestSourceHost(string! sourceFileName, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IRunSettings? runSettings, Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IFrameworkHandle? frameworkHandle) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ThreadOperations
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ThreadOperations.Execute(System.Action! action, int timeout, System.Threading.CancellationToken cancelToken) -> bool
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ThreadOperations.Execute(System.Func<System.Threading.Tasks.Task!>! action, int timeout, System.Threading.CancellationToken cancelToken) -> System.Threading.Tasks.Task<bool>!
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ThreadOperations.ThreadOperations() -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ThreadSafeStringWriter
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.ThreadSafeStringWriter.ThreadSafeStringWriter(System.IFormatProvider! formatProvider, string! outputType) -> void

@@ -21,24 +21,25 @@ public class ThreadOperationsTests : TestContainer
         _asyncOperations = new ThreadOperations();
     }
 
-    public void ExecuteShouldStartTheActionOnANewThread()
+    public async Task ExecuteShouldStartTheActionOnANewThread()
     {
         int actionThreadID = 0;
-        void Action()
+        Task Action()
         {
             actionThreadID = Environment.CurrentManagedThreadId;
+            return Task.CompletedTask;
         }
 
         CancellationTokenSource tokenSource = new();
-        Verify(_asyncOperations.Execute(Action, 1000, tokenSource.Token));
+        Verify(await _asyncOperations.Execute(Action, 1000, tokenSource.Token));
         Verify(Environment.CurrentManagedThreadId != actionThreadID);
     }
 
-    public void ExecuteShouldReturnFalseIfTheActionTimesOut()
+    public async Task ExecuteShouldReturnFalseIfTheActionTimesOut()
     {
-        static void Action() => Task.Delay(100).Wait();
+        static Task Action() => Task.Delay(100);
 
         CancellationTokenSource tokenSource = new();
-        Verify(!_asyncOperations.Execute(Action, 1, tokenSource.Token));
+        Verify(!(await _asyncOperations.Execute(Action, 1, tokenSource.Token)));
     }
 }

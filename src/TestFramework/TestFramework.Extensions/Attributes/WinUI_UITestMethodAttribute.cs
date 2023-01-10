@@ -58,7 +58,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// </returns>
     /// Throws <exception cref="NotSupportedException"> when run on an async test method.
     /// </exception>
-    public override TestResult[] Execute(ITestMethod testMethod)
+    public override async Task<TestResult[]> Execute(ITestMethod testMethod)
     {
         var attribute = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
         if (attribute.Length > 0)
@@ -80,7 +80,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             try
             {
-                result = testMethod.Invoke(null);
+                result = await testMethod.Invoke(null);
             }
             catch (Exception e)
             {
@@ -91,11 +91,11 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             var taskCompletionSource = new TaskCompletionSource<object?>();
 
-            if (!dispatcher.TryEnqueue(DispatcherQueuePriority.Normal, () =>
+            if (!dispatcher.TryEnqueue(DispatcherQueuePriority.Normal, async () =>
                 {
                     try
                     {
-                        result = testMethod.Invoke(Array.Empty<object>());
+                        result = await testMethod.Invoke(Array.Empty<object>());
                         taskCompletionSource.SetResult(null);
                     }
                     catch (Exception e)

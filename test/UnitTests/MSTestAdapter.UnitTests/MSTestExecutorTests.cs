@@ -46,11 +46,11 @@ public class MSTestExecutorTests : TestContainer
         var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
         TestCase[] tests = new[] { testCase };
         string runSettingxml =
-        @"<RunSettings>   
-                    <MSTest>   
+        @"<RunSettings>
+                    <MSTest>
                         <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                        <ForcedLegacyMode>true</ForcedLegacyMode>    
-                        <IgnoreTestImpact>true</IgnoreTestImpact>  
+                        <ForcedLegacyMode>true</ForcedLegacyMode>
+                        <IgnoreTestImpact>true</IgnoreTestImpact>
                     </MSTest>
             </RunSettings>";
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
@@ -66,8 +66,8 @@ public class MSTestExecutorTests : TestContainer
         var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
         TestCase[] tests = new[] { testCase };
         string runSettingxml =
-        @"<RunSettings>   
-                    <MSTest>   
+        @"<RunSettings>
+                    <MSTest>
                         <Parallelize>
                           <Scope>Pond</Scope>
                         </Parallelize>
@@ -89,9 +89,9 @@ public class MSTestExecutorTests : TestContainer
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingxml =
         @"<RunSettings>
-                    <MSTest>   
+                    <MSTest>
                         <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                        <ForcedLegacyMode>true</ForcedLegacyMode>    
+                        <ForcedLegacyMode>true</ForcedLegacyMode>
                         <IgnoreTestImpact>true</IgnoreTestImpact>
                     </MSTest>
             </RunSettings>";
@@ -107,8 +107,8 @@ public class MSTestExecutorTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingxml =
-        @"<RunSettings>   
-                    <MSTest>   
+        @"<RunSettings>
+                    <MSTest>
                         <Parallelize>
                           <Scope>Pond</Scope>
                         </Parallelize>

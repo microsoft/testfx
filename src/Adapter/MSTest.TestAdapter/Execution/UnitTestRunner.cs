@@ -9,6 +9,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Security;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -109,7 +110,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <param name="testMethod"> The test Method. </param>
     /// <param name="testContextProperties"> The test context properties. </param>
     /// <returns> The <see cref="UnitTestResult"/>. </returns>
-    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties)
+    internal async Task<UnitTestResult[]> RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties)
     {
         if (testMethod == null)
         {
@@ -142,15 +143,15 @@ internal class UnitTestRunner : MarshalByRefObject
                 }
 
                 DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
-                RunRequiredCleanups(testContext, testMethodInfo, testMethod, notRunnableResult);
+                await RunRequiredCleanups(testContext, testMethodInfo, testMethod, notRunnableResult);
 
                 return notRunnableResult;
             }
 
             DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
-            var result = testMethodRunner.Execute();
-            RunRequiredCleanups(testContext, testMethodInfo, testMethod, result);
+            var result = await testMethodRunner.Execute();
+            await RunRequiredCleanups(testContext, testMethodInfo, testMethod, result);
             return result;
         }
         catch (TypeInspectionException ex)
@@ -160,7 +161,7 @@ internal class UnitTestRunner : MarshalByRefObject
         }
     }
 
-    private void RunRequiredCleanups(ITestContext testContext, TestMethodInfo testMethodInfo, TestMethod testMethod, UnitTestResult[] results)
+    private async Task RunRequiredCleanups(ITestContext testContext, TestMethodInfo testMethodInfo, TestMethod testMethod, UnitTestResult[] results)
     {
         bool shouldRunClassCleanup = false;
         bool shouldRunClassAndAssemblyCleanup = false;
@@ -171,7 +172,7 @@ internal class UnitTestRunner : MarshalByRefObject
         {
             if (shouldRunClassCleanup)
             {
-                testMethodInfo.Parent.ExecuteClassCleanup();
+                await testMethodInfo.Parent.ExecuteClassCleanup();
             }
 
             if (shouldRunClassAndAssemblyCleanup)
@@ -179,13 +180,13 @@ internal class UnitTestRunner : MarshalByRefObject
                 var classInfoCache = _typeCache.ClassInfoListWithExecutableCleanupMethods;
                 foreach (var classInfo in classInfoCache)
                 {
-                    classInfo.ExecuteClassCleanup();
+                    await classInfo.ExecuteClassCleanup();
                 }
 
                 var assemblyInfoCache = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
                 foreach (var assemblyInfo in assemblyInfoCache)
                 {
-                    assemblyInfo.ExecuteAssemblyCleanup();
+                    await assemblyInfo.ExecuteAssemblyCleanup();
                 }
             }
         }

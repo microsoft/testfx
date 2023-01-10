@@ -5,6 +5,8 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -19,7 +21,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 public class TestAssemblyInfo
 {
-    private readonly object _assemblyInfoExecuteSyncObject;
+    private readonly SemaphoreSlim _assemblyInfoExecuteSemaphore;
 
     private MethodInfo? _assemblyInitializeMethod;
     private MethodInfo? _assemblyCleanupMethod;
@@ -30,7 +32,7 @@ public class TestAssemblyInfo
     /// <param name="assembly">Sets the <see cref="Assembly"/> this class is representing. </param>
     internal TestAssemblyInfo(Assembly assembly)
     {
-        _assemblyInfoExecuteSyncObject = new object();
+        _assemblyInfoExecuteSemaphore = new(0, 1);
         Assembly = assembly;
     }
 
@@ -112,7 +114,7 @@ public class TestAssemblyInfo
     /// <param name="testContext"> The test context. </param>
     /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public void RunAssemblyInitialize(TestContext testContext)
+    public async Task RunAssemblyInitialize(TestContext testContext)
     {
         // No assembly initialize => nothing to do.
         if (AssemblyInitializeMethod == null)
@@ -130,14 +132,15 @@ public class TestAssemblyInfo
         {
             // Acquiring a lock is usually a costly operation which does not need to be
             // performed every time if the assembly initialization is already executed.
-            lock (_assemblyInfoExecuteSyncObject)
+            await _assemblyInfoExecuteSemaphore.WaitAsync();
+            try
             {
                 // Perform a check again.
                 if (!IsAssemblyInitializeExecuted)
                 {
                     try
                     {
-                        AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                        await AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
                     }
                     catch (Exception ex)
                     {
@@ -148,6 +151,10 @@ public class TestAssemblyInfo
                         IsAssemblyInitializeExecuted = true;
                     }
                 }
+            }
+            finally
+            {
+                _assemblyInfoExecuteSemaphore.Release();
             }
         }
 
@@ -192,46 +199,48 @@ public class TestAssemblyInfo
     /// Any exception that can be thrown as part of a assembly cleanup as warning messages.
     /// </returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public string? RunAssemblyCleanup()
+    public async Task<string?> RunAssemblyCleanup()
     {
         if (AssemblyCleanupMethod == null)
         {
             return null;
         }
 
-        lock (_assemblyInfoExecuteSyncObject)
+        await _assemblyInfoExecuteSemaphore.WaitAsync();
+        try
         {
-            try
+            await AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            var realException = ex.InnerException ?? ex;
+
+            string errorMessage;
+
+            // special case AssertFailedException to trim off part of the stack trace
+            if (realException is AssertFailedException or AssertInconclusiveException)
             {
-                AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
-
-                return null;
+                errorMessage = realException.Message;
             }
-            catch (Exception ex)
+            else
             {
-                var realException = ex.InnerException ?? ex;
-
-                string errorMessage;
-
-                // special case AssertFailedException to trim off part of the stack trace
-                if (realException is AssertFailedException or AssertInconclusiveException)
-                {
-                    errorMessage = realException.Message;
-                }
-                else
-                {
-                    errorMessage = StackTraceHelper.GetExceptionMessage(realException);
-                }
-
-                DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
-                return string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
-                    AssemblyCleanupMethod.DeclaringType.Name,
-                    AssemblyCleanupMethod.Name,
-                    errorMessage,
-                    StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                errorMessage = StackTraceHelper.GetExceptionMessage(realException);
             }
+
+            DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
+            return string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
+                AssemblyCleanupMethod.DeclaringType.Name,
+                AssemblyCleanupMethod.Name,
+                errorMessage,
+                StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+        }
+        finally
+        {
+            _assemblyInfoExecuteSemaphore.Release();
         }
     }
 
@@ -242,50 +251,53 @@ public class TestAssemblyInfo
     /// It is a replacement for RunAssemblyCleanup but as we are in a bug-fix version, we do not want to touch
     /// public API and so we introduced this method.
     /// </remarks>
-    internal void ExecuteAssemblyCleanup()
+    internal async Task ExecuteAssemblyCleanup()
     {
         if (AssemblyCleanupMethod == null)
         {
             return;
         }
 
-        lock (_assemblyInfoExecuteSyncObject)
+        await _assemblyInfoExecuteSemaphore.WaitAsync();
+
+        try
         {
-            try
+            await AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+        }
+        catch (Exception ex)
+        {
+            var realException = ex.InnerException ?? ex;
+
+            string errorMessage;
+
+            // special case AssertFailedException to trim off part of the stack trace
+            if (realException is AssertFailedException or AssertInconclusiveException)
             {
-                AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+                errorMessage = realException.Message;
             }
-            catch (Exception ex)
+            else
             {
-                var realException = ex.InnerException ?? ex;
-
-                string errorMessage;
-
-                // special case AssertFailedException to trim off part of the stack trace
-                if (realException is AssertFailedException or AssertInconclusiveException)
-                {
-                    errorMessage = realException.Message;
-                }
-                else
-                {
-                    errorMessage = StackTraceHelper.GetExceptionMessage(realException);
-                }
-
-                var exceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
-                DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
-
-                throw new TestFailedException(
-                    UnitTestOutcome.Failed,
-                    string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
-                        AssemblyCleanupMethod.DeclaringType.Name,
-                        AssemblyCleanupMethod.Name,
-                        errorMessage,
-                        exceptionStackTraceInfo?.ErrorStackTrace),
-                    exceptionStackTraceInfo,
-                    realException);
+                errorMessage = StackTraceHelper.GetExceptionMessage(realException);
             }
+
+            var exceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
+            DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
+
+            throw new TestFailedException(
+                UnitTestOutcome.Failed,
+                string.Format(
+                    CultureInfo.CurrentCulture,
+                    Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
+                    AssemblyCleanupMethod.DeclaringType.Name,
+                    AssemblyCleanupMethod.Name,
+                    errorMessage,
+                    exceptionStackTraceInfo?.ErrorStackTrace),
+                exceptionStackTraceInfo,
+                realException);
+        }
+        finally
+        {
+            _assemblyInfoExecuteSemaphore.Release();
         }
     }
 }

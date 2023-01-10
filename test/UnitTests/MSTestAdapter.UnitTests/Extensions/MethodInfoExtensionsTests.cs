@@ -317,7 +317,7 @@ public class MethodInfoExtensionsTests : TestContainer
 
     #region InvokeAsSynchronousTask tests
 
-    public void MethodInfoInvokeAsSynchronousTaskWaitsForCompletionOfAMethodWhichReturnsTask()
+    public async Task MethodInfoInvokeAsSynchronousTaskWaitsForCompletionOfAMethodWhichReturnsTask()
     {
         var testMethodCalled = false;
         DummyTestClass2.DummyAsyncMethodBody = (x, y) => Task.Run(
@@ -331,12 +331,12 @@ public class MethodInfoExtensionsTests : TestContainer
         var dummyTestClass = new DummyTestClass2();
         var dummyAsyncMethod = typeof(DummyTestClass2).GetMethod("DummyAsyncMethod");
 
-        dummyAsyncMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
+        await dummyAsyncMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
 
         Verify(testMethodCalled);
     }
 
-    public void MethodInfoInvokeAsSynchronousTaskExecutesAMethodWhichDoesNotReturnATask()
+    public async Task MethodInfoInvokeAsSynchronousTaskExecutesAMethodWhichDoesNotReturnATask()
     {
         var testMethodCalled = false;
         DummyTestClass2.DummyMethodBody = (x, y) =>
@@ -352,19 +352,19 @@ public class MethodInfoExtensionsTests : TestContainer
         var dummyTestClass = new DummyTestClass2();
         var dummyMethod = typeof(DummyTestClass2).GetMethod("DummyMethod");
 
-        dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
+        await dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
 
         Verify(testMethodCalled);
     }
 
-    public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButWereNotProvided()
+    public async Task InvokeAsSynchronousShouldThrowIfParametersWereExpectedButWereNotProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         var dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
         try
         {
             // Should throw exception of type TestFailedException
-            dummyMethod.InvokeAsSynchronousTask(dummyTestClass, null);
+            await dummyMethod.InvokeAsSynchronousTask(dummyTestClass, null);
         }
         catch (TestFailedException ex)
         {
@@ -373,13 +373,13 @@ public class MethodInfoExtensionsTests : TestContainer
         }
     }
 
-    public void InvokeAsSynchronousShouldNotThrowIfParametersWereExpectedAndWereProvided()
+    public async Task InvokeAsSynchronousShouldNotThrowIfParametersWereExpectedAndWereProvided()
     {
         var dummyTestClass = new DummyTestClass2();
         var dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
 
-        void Action() => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
-        Action();
+        Task Action() => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
+        await Action();
     }
 
     #endregion

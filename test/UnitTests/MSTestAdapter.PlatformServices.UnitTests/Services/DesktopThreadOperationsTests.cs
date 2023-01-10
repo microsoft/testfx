@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -19,40 +20,55 @@ public class DesktopThreadOperationsTests : TestContainer
         _asyncOperations = new ThreadOperations();
     }
 
-    public void ExecuteShouldRunActionOnANewThread()
+    public async Task ExecuteShouldRunActionOnANewThread()
     {
         int actionThreadID = 0;
         var cancellationTokenSource = new CancellationTokenSource();
-        void Action()
+        Task Action()
         {
             actionThreadID = Environment.CurrentManagedThreadId;
+            return Task.CompletedTask;
         }
 
-        Verify(_asyncOperations.Execute(Action, 1000, cancellationTokenSource.Token));
+        Verify(await _asyncOperations.Execute(Action, 1000, cancellationTokenSource.Token));
         Verify(Environment.CurrentManagedThreadId != actionThreadID);
     }
 
-    public void TokenCancelShouldAbortExecutingAction()
+    public async Task TokenCancelShouldAbortExecutingAction()
     {
         // setup
         var cancellationTokenSource = new CancellationTokenSource();
 
         // act
         cancellationTokenSource.CancelAfter(100);
-        var result = _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
+        var result = await _asyncOperations.Execute(
+            () =>
+            {
+                Thread.Sleep(10000);
+                return Task.CompletedTask;
+            },
+            100000,
+            cancellationTokenSource.Token);
 
         // validate
         Verify(!result, "The execution failed to abort");
     }
 
-    public void TokenCancelShouldAbortIfAlreadyCanceled()
+    public async Task TokenCancelShouldAbortIfAlreadyCanceled()
     {
         // setup
         var cancellationTokenSource = new CancellationTokenSource();
         cancellationTokenSource.Cancel();
 
         // act
-        var result = _asyncOperations.Execute(() => { Thread.Sleep(10000); }, 100000, cancellationTokenSource.Token);
+        var result = await _asyncOperations.Execute(
+            () =>
+            {
+                Thread.Sleep(10000);
+                return Task.CompletedTask;
+            },
+            100000,
+            cancellationTokenSource.Token);
 
         // validate
         Verify(!result, "The execution failed to abort");

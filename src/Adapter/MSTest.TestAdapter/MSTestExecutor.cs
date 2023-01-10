@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -67,7 +68,9 @@ public class MSTestExecutor : ITestExecutor
         }
 
         _cancellationToken = new TestRunCancellationToken();
-        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, _cancellationToken);
+        TestExecutionManager.RunTests(tests, runContext, frameworkHandle, _cancellationToken)
+            .GetAwaiter()
+            .GetResult();
         _cancellationToken = null;
     }
 
@@ -101,7 +104,9 @@ public class MSTestExecutor : ITestExecutor
 
         sources = PlatformServiceProvider.Instance.TestSource.GetTestSources(sources);
         _cancellationToken = new TestRunCancellationToken();
-        TestExecutionManager.RunTests(sources, runContext, frameworkHandle, _cancellationToken);
+        TestExecutionManager.RunTests(sources, runContext, frameworkHandle, _cancellationToken)
+            .GetAwaiter()
+            .GetResult();
 
         _cancellationToken = null;
     }

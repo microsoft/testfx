@@ -21,12 +21,12 @@ public class ThreadOperations : IThreadOperations
     /// <param name="timeout">Timeout for the specified action in milliseconds.</param>
     /// <param name="cancelToken">Token to cancel the execution.</param>
     /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
-    public bool Execute(Action action, int timeout, CancellationToken cancelToken)
+    public async Task<bool> Execute(Func<Task> action, int timeout, CancellationToken cancelToken)
     {
         try
         {
-            var executionTask = Task.Run(action, cancelToken);
-            if (executionTask.Wait(timeout, cancelToken))
+            var task = action();
+            if (await Task.WhenAny(task, Task.Delay(timeout, cancelToken)) == task)
             {
                 return true;
             }

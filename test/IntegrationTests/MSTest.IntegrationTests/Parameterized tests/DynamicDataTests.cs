@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Threading.Tasks;
+
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
@@ -8,14 +10,14 @@ public class DynamicDataTests : CLITestBase
 {
     private const string TestAssetName = "DynamicDataTestProject";
 
-    public void ExecuteDynamicDataTests()
+    public async Task ExecuteDynamicDataTests()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath);
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(
@@ -51,14 +53,14 @@ public class DynamicDataTests : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
     }
 
-    public void ExecuteDynamicDataTestsWithCategoryFilter()
+    public async Task ExecuteDynamicDataTestsWithCategoryFilter()
     {
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath, "TestCategory~DynamicDataWithCategory");
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(

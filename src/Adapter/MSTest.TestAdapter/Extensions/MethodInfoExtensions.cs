@@ -141,7 +141,7 @@ internal static class MethodInfoExtensions
     /// <param name="parameters">
     /// Arguments for the methodInfo invoke.
     /// </param>
-    internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? parameters)
+    internal static async Task InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? parameters)
     {
         var methodParameters = methodInfo.GetParameters();
 
@@ -152,9 +152,10 @@ internal static class MethodInfoExtensions
             throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, Resource.UTA_TestMethodExpectedParameters);
         }
 
-        var task = methodInfo.Invoke(classInstance, parameters) as Task;
-
         // If methodInfo is an Async method, wait for returned task
-        task?.GetAwaiter().GetResult();
+        if (methodInfo.Invoke(classInstance, parameters) is Task task)
+        {
+            await task;
+        }
     }
 }

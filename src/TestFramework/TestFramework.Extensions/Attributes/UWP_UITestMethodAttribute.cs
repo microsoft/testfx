@@ -4,6 +4,7 @@
 #if WINDOWS_UWP
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 
@@ -23,7 +24,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// </returns>
     /// Throws <exception cref="NotSupportedException"> when run on an async test method.
     /// </exception>
-    public override TestResult[] Execute(ITestMethod testMethod)
+    public override async Task<TestResult[]> Execute(ITestMethod testMethod)
     {
         var attribute = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
         if (attribute.Length > 0)
@@ -32,12 +33,12 @@ public class UITestMethodAttribute : TestMethodAttribute
         }
 
         TestResult? result = null;
-        Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
+        await Windows.ApplicationModel.Core.CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(
             Windows.UI.Core.CoreDispatcherPriority.Normal,
-            () =>
+            async () =>
             {
-                result = testMethod.Invoke(null);
-            }).AsTask().GetAwaiter().GetResult();
+                result = await testMethod.Invoke(null);
+            });
 
         return new TestResult[] { result! };
     }

@@ -3,6 +3,7 @@
 
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 using Microsoft.MSTestV2.CLIAutomation;
 
@@ -11,14 +12,14 @@ public class DiscoverInternalsTests : CLITestBase
 {
     private const string TestAsset = "DiscoverInternalsProject";
 
-    public void InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
+    public async Task InternalTestClassesAreDiscoveredWhenTheDiscoverInternalsAttributeIsPresent()
     {
         // Arrange
         var assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);
 
         // Act
         var testCases = DiscoverTests(assemblyPath);
-        var testResults = RunTests(testCases);
+        var testResults = await RunTests(testCases);
 
         // Assert
         VerifyE2E.AtLeastTestsDiscovered(
@@ -41,7 +42,7 @@ public class DiscoverInternalsTests : CLITestBase
             "EqualityIsCaseInsensitive");
     }
 
-    public void AnInternalTypeCanBeUsedInADynamicDataTestMethod()
+    public async Task AnInternalTypeCanBeUsedInADynamicDataTestMethod()
     {
         var assemblyPath = Path.IsPathRooted(TestAsset) ? TestAsset : GetAssetFullPath(TestAsset);
 
@@ -50,7 +51,7 @@ public class DiscoverInternalsTests : CLITestBase
 
         var targetTestCases = testCases.Where(t => t.DisplayName == "DynamicDataTestMethod (DiscoverInternalsProject.SerializableInternalType)");
 
-        var testResults = RunTests(targetTestCases);
+        var testResults = await RunTests(targetTestCases);
 
         // Assert
         VerifyE2E.TestsPassed(
