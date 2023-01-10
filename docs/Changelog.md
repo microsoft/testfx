@@ -41,7 +41,6 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0...v3.0.1)
 * MSTest.TestFramework: [3.0.1](https://www.nuget.org/packages/MSTest.TestFramework/3.0.1)
 * MSTest.TestAdapter: [3.0.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.1)
 
-
 ## [3.0.0] - 2022-12-06
 
 See full log [here](https://github.com/microsoft/testfx/compare/v2.2.10...v3.0.0)
@@ -61,13 +60,13 @@ Breaking changes announcements [#1274](https://github.com/microsoft/testfx/issue
 * Enable nullable for TestFramework.Extensions [#1363](https://github.com/microsoft/testfx/pull/1363)
 * [breaking change] Introduce strategies for test ID generation [#1306](https://github.com/microsoft/testfx/pull/1306)
 * Add support for AsyncDisposable cleanup [#1288](https://github.com/microsoft/testfx/pull/1288)
-* Add Assert.IsInstanceOfType<T> [#1241](https://github.com/microsoft/testfx/pull/1241)
+* Add Assert.IsInstanceOfType\<T\> [#1241](https://github.com/microsoft/testfx/pull/1241)
 
 ### Changed
 
 * [breaking change] Follow supported .NET frameworks:
   * Dropped support for .NET Framework before 4.6.2 (net462)
-  * Dropped support for .NET Standard before 2.0 (netstandard2.0)  
+  * Dropped support for .NET Standard before 2.0 (netstandard2.0)
   * Dropped support for UWP before 16299
   * Dropped support for WinUI before 18362
   * Replaced support of .NET 5 by .NETCore 3.1 and .NET 6.0
@@ -79,7 +78,7 @@ Breaking changes announcements [#1274](https://github.com/microsoft/testfx/issue
 * Use NewtonsoftJson v13.0.1 [#1361](https://github.com/microsoft/testfx/pull/1361)
 * [breaking change] Merge timeout behaviors for .NET Core and .NET Framework [#1296](https://github.com/microsoft/testfx/pull/1296)
 * Mark exceptions with SerializableAttribute [#1186](https://github.com/microsoft/testfx/pull/1186)
- 
+
 ### Removed
 
 * [breaking change] Remove Assert.AreEqual/AreNotEqual overloads with object object [#1429](https://github.com/microsoft/testfx/pull/1429)
@@ -102,14 +101,15 @@ Breaking changes announcements [#1274](https://github.com/microsoft/testfx/issue
 ## [3.0.0-preview-20221122-01] - 2022-11-23
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-20221110-04...v3.0.0-preview-20221122-01)
-  
+
 ### Added
-  
+
 * Enable proper tooling for localization [#1393](https://github.com/microsoft/testfx/pull/1393)
 * Include localization in Test Framework NuGet [#1397](https://github.com/microsoft/testfx/pull/1397)
 * Propagate UI culture to appdomain [#1401](https://github.com/microsoft/testfx/pull/1401)
-  
+
 ### Changed
+  
 * Disable again the generation of localization files
 * Cleanup TestFx.Loc.props
 * Update xlf files [#1387](https://github.com/microsoft/testfx/pull/1387)
@@ -122,7 +122,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-2
 * Rename folder containing localization dlls in MSTest.TestAdapter NuGet package [#1398](https://github.com/microsoft/testfx/pull/1398)
 
 ### Fixed
-  
+
 * Fix TestContext nullabilities [#1382](https://github.com/microsoft/testfx/pull/1382)
 * Fix ThrowsException methods return nullability [#1381](https://github.com/microsoft/testfx/pull/1381)
 * Fix all markdown issues in releases.md
