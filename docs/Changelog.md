@@ -109,7 +109,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-2
 * Propagate UI culture to appdomain [#1401](https://github.com/microsoft/testfx/pull/1401)
 
 ### Changed
-  
+
 * Disable again the generation of localization files
 * Cleanup TestFx.Loc.props
 * Update xlf files [#1387](https://github.com/microsoft/testfx/pull/1387)
@@ -128,9 +128,9 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-2
 * Fix all markdown issues in releases.md
 * Fix some failing debug assertions [#1379](https://github.com/microsoft/testfx/pull/1379)
 * DeploymentItemAttribute only works for a test class with test method [#1399](https://github.com/microsoft/testfx/pull/1399)
-  
+
 ### Removed
-  
+
 * Remove unused build switch
 * Remove DependsOnTargets="TestFxLocalization" for signing
 * Remove stale xlf.lcl files
@@ -144,9 +144,9 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-2
 ## [3.0.0-preview-20221110-04] - 2022-11-11
 
 See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-20220810-02...v3.0.0-preview-20221110-04)
- 
+
 ### Added
-  
+
 * Enable and fix CA1806 violations [#1227](https://github.com/microsoft/testfx/pull/1227)
 * Enable and fix CA1822 (make member static) violations [#1226](https://github.com/microsoft/testfx/pull/1226)
 * Enable and fix performance analyzers [#1223](https://github.com/microsoft/testfx/pull/1223)
@@ -160,7 +160,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-2
 * Added version parameter to build script [#1264](https://github.com/microsoft/testfx/pull/1264)
 * Add WinUI tests to PlatformServices [#1234](https://github.com/microsoft/testfx/pull/1234)
 * Add net6.0 tests for PlatformServices [#1233](https://github.com/microsoft/testfx/pull/1233)
-* Add Assert.IsInstanceOfType<T> [#1241](https://github.com/microsoft/testfx/pull/1241)
+* Add Assert.IsInstanceOfType\<T\> [#1241](https://github.com/microsoft/testfx/pull/1241)
 * Add some simple test framwork to allow testing MSTest [#1242](https://github.com/microsoft/testfx/pull/1242)
 * Merge testfx-docs repo here and update links [#1326](https://github.com/microsoft/testfx/pull/1326)
 * Install required .NET before build instead of before test [#1290](https://github.com/microsoft/testfx/pull/1290)
@@ -170,7 +170,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-2
 * Align MicrosoftDiaSymReaderPdb2PdbVersion with arcade one
 * Use Foreach-Object to display contents
 * Define and apply field naming conventions [#1198](https://github.com/microsoft/testfx/pull/1198)
-  
+
 ### Changed
 
 * Improve release notes generator [#1374](https://github.com/microsoft/testfx/pull/1374)
@@ -242,9 +242,9 @@ See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-2
 * Apply modern C# features/syntaxes [#1183](https://github.com/microsoft/testfx/pull/1183)
 * Rename MSTest.CoreAdapter into MSTest.TestAdapter [#1181](https://github.com/microsoft/testfx/pull/1181)
 * Move test projects to SDK style [#1179](https://github.com/microsoft/testfx/pull/1179)
-  
+
 ### Fixed
-  
+
 * Fix broken tests and refactor test API [#1352](https://github.com/microsoft/testfx/pull/1352)
 * Fix issue causing null ref when test class has no namespace [#1283](https://github.com/microsoft/testfx/pull/1283)
 * Fix localization path
@@ -262,7 +262,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-2
 * Fixed the case ignoring in AreEqual() with culture parameter [#1216](https://github.com/microsoft/testfx/pull/1216)
 * Fix behavior for netcore TFMs [#1230](https://github.com/microsoft/testfx/pull/1230)
 * Fixed package restore.
-  
+
 ### Removed
   
 * Remove class/assembly initialization messages from logs. [#1339](https://github.com/microsoft/testfx/pull/1339)
