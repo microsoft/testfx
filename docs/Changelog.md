@@ -155,15 +155,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-2
 * Enable nullable for Platform Services [#1366](https://github.com/microsoft/testfx/pull/1366)
 * Enable nullables for Framework [#1365](https://github.com/microsoft/testfx/pull/1365)
 * Enable nullable for TestFramework.Extensions [#1363](https://github.com/microsoft/testfx/pull/1363)
-* Add temporary hack to avoid 6.0.11 restore issue [#1357](https://github.com/microsoft/testfx/pull/1357)
-* Add test case for StackOverflow issue [#1353](https://github.com/microsoft/testfx/pull/1353)
-* Introduce strategies for test ID generation [#1306](https://github.com/microsoft/testfx/pull/1306)
-* Add markdownlint CI leg [#1344](https://github.com/microsoft/testfx/pull/1344)
 * Add tests to document test suite messages [#1313](https://github.com/microsoft/testfx/pull/1313)
-* Add more tests for parameterized tests [#1330](https://github.com/microsoft/testfx/pull/1330)
-* Add screenshot for test filtering in VS [#1329](https://github.com/microsoft/testfx/pull/1329)
-* Add public api analyzers [#1318](https://github.com/microsoft/testfx/pull/1318)
-* Add temporary hack to avoid 6.0.10 restore issue [#1311](https://github.com/microsoft/testfx/pull/1311)
 * Add support for AsyncDisposable cleanup [#1288](https://github.com/microsoft/testfx/pull/1288)
 * Added version parameter to build script [#1264](https://github.com/microsoft/testfx/pull/1264)
 * Add WinUI tests to PlatformServices [#1234](https://github.com/microsoft/testfx/pull/1234)
@@ -275,8 +267,6 @@ See full log [here](https://github.com/microsoft/testfx/compare/v2.3.0-preview-2
   
 * Remove class/assembly initialization messages from logs. [#1339](https://github.com/microsoft/testfx/pull/1339)
 * Remove unexpected dll in target [#1308](https://github.com/microsoft/testfx/pull/1308)
-* Remove test adapter nuget uap dependencies [#1195](https://github.com/microsoft/testfx/pull/1195)
-* Remove broken UWP unit test [#1295](https://github.com/microsoft/testfx/pull/1295)
 
 ### Artifacts
 
