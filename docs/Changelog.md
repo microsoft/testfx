@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## [Stable release 3.0.2] - 2022-12-27
+## [3.0.2] - 2022-12-27
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.0.1...v3.0.2)
 
@@ -18,7 +18,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.1...v3.0.2)
 * MSTest.TestFramework: [3.0.2](https://www.nuget.org/packages/MSTest.TestFramework/3.0.2)
 * MSTest.TestAdapter: [3.0.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.2)
 
-## [Stable release 3.0.1] - 2022-12-20
+## [3.0.1] - 2022-12-20
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0...v3.0.1)
 
@@ -42,7 +42,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0...v3.0.1)
 * MSTest.TestAdapter: [3.0.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.1)
 
 
-## [Stable release 3.0.0] - 2022-12-06
+## [3.0.0] - 2022-12-06
 
 See full log [here](https://github.com/microsoft/testfx/compare/v2.2.10...v3.0.0)
 
@@ -324,7 +324,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.3.0-preview-20220810-02](https://www.nuget.org/packages/MSTest.TestFramework/2.3.0-preview-20220810-02)
 * MSTest.TestAdapter: [2.3.0-preview-20220810-02](https://www.nuget.org/packages/MSTest.TestAdapter/2.3.0-preview-20220810-02)
 
-## [Stable release 2.2.10] - 2022-04-26
+## [2.2.10] - 2022-04-26
 
 * [x] [Run dotnet format whitespace](https://github.com/microsoft/testfx/pull/1085)
 
@@ -363,7 +363,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.10-preview-20220414-01](https://www.nuget.org/packages/MSTest.TestFramework/2.2.10-preview-20220414-01)
 * MSTest.TestAdapter: [2.2.10-preview-20220414-01](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.10-preview-20220414-01)
 
-## [Stable release 2.2.9] 2022-04-08
+## [2.2.9] 2022-04-08
 
 ### Parallel output
 
@@ -397,7 +397,7 @@ Due to the way that class and assembly initialize, and cleanup are invoked, thei
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.8...v2.2.9)
 
-## [Stable release 2.2.8] - 2021-11-23
+## [2.2.8] - 2021-11-23
 
 - [x] Dependency version updates.
 * [x] [Added internal versioning](https://github.com/microsoft/testfx/pull/1012)
@@ -420,7 +420,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.8](https://www.nuget.org/packages/MSTest.TestFramework/2.2.8)
 * MSTest.TestAdapter: [2.2.8](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.8)
 
-## [Stable release 2.2.7] - 2021-09-03
+## [2.2.7] - 2021-09-03
 * [x] [Fixed missing strong-name and Authenticode signatures](https://github.com/microsoft/testfx/pull/956)
 * [x] [Resolve dependencies from GAC](https://github.com/microsoft/testfx/pull/951)
 
@@ -431,7 +431,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.7](https://www.nuget.org/packages/MSTest.TestFramework/2.2.7)
 * MSTest.TestAdapter: [2.2.7](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.7)
 
-## [Stable release 2.2.6] - 2021-08-25
+## [2.2.6] - 2021-08-25
 
 - [x] Allow opting-out of ITestDataSource test discovery.
 * [x] [Enable internal testclass discovery (#937)](https://github.com/microsoft/testfx/pull/944)
@@ -444,7 +444,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.6](https://www.nuget.org/packages/MSTest.TestFramework/2.2.6)
 * MSTest.TestAdapter: [2.2.6](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.6)
 
-## [Stable release 2.2.5] - 2021-06-28
+## [2.2.5] - 2021-06-28
 
 * [x] [Fixes #799 by testing logged messages against "null or whitespace" instead of "null or empty"](https://github.com/microsoft/testfx/pull/892)
 * [x] [Added missing framework references for WinUI](https://github.com/microsoft/testfx/pull/890)
@@ -461,7 +461,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.5](https://www.nuget.org/packages/MSTest.TestFramework/2.2.5)
 * MSTest.TestAdapter: [2.2.5](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.5)
 
-## [Stable release 2.2.4] - 2021-05-25
+## [2.2.4] - 2021-05-25
 
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/0b95a26282eae17f896d732381e5c77b9a603382...v2.2.4)
 
@@ -484,7 +484,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.4-preview-20210331-02](https://www.nuget.org/packages/MSTest.TestFramework/2.2.4-preview-20210331-02)
 * MSTest.TestAdapter: [2.2.4-preview-20210331-02](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.4-preview-20210331-02)
 
-## [Stable release 2.2.3] - 2021-03-16
+## [2.2.3] - 2021-03-16
 
 - [x] [Added missing library to the NuGet package.](https://github.com/microsoft/testfx/pull/798)
 
@@ -495,7 +495,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.3](https://www.nuget.org/packages/MSTest.TestFramework/2.2.3)
 * MSTest.TestAdapter: [2.2.3](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.3)
 
-## [Stable release 2.2.2] - 2021-03-15
+## [2.2.2] - 2021-03-15
 
 - [x] [NuGet package dependencies fixed.](https://github.com/microsoft/testfx/pull/797)
 * [x] [Missing assembly added to TestAdapter package](https://github.com/microsoft/testfx/pull/796)
@@ -509,7 +509,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.2](https://www.nuget.org/packages/MSTest.TestFramework/2.2.2)
 * MSTest.TestAdapter: [2.2.2](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.2)
 
-## [Stable release 2.2.1] - 2021-03-01
+## [2.2.1] - 2021-03-01
 
 - [x] [Prepend MSTest to log messages, without formatting](https://github.com/microsoft/testfx/pull/785)
 * [x] [TestPlatform version updated to v16.9.1](https://github.com/microsoft/testfx/pull/784)
@@ -565,7 +565,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.2.0-preview-20201126-03](https://www.nuget.org/packages/MSTest.TestFramework/2.2.0-preview-20201126-03)
 * MSTest.TestAdapter: [2.2.0-preview-20201126-03](https://www.nuget.org/packages/MSTest.TestAdapter/2.2.0-preview-20201126-03)
 
-## [Stable release 2.1.2] - 2020-06-08
+## [2.1.2] - 2020-06-08
 
 - [x] [Set IsClassInitializeExecuted=true after base class init to avoid repeated class init calls](https://github.com/microsoft/testfx/pull/705)
 * [x] [enhance documentation on when the TestCleanup is executed](https://github.com/microsoft/testfx/pull/709)
@@ -581,7 +581,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.1.2](https://www.nuget.org/packages/MSTest.TestFramework/2.1.2)
 * MSTest.TestAdapter: [2.1.2](https://www.nuget.org/packages/MSTest.TestAdapter/2.1.2)
 
-## [Stable release 2.1.1] - 2020-04-01
+## [2.1.1] - 2020-04-01
 
 - [x] [Add FSharp E2E test](https://github.com/microsoft/testfx/pull/683)
 * [x] [remove unused usings](https://github.com/microsoft/testfx/pull/694)
@@ -597,7 +597,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * MSTest.TestFramework: [2.1.1](https://www.nuget.org/packages/MSTest.TestFramework/2.1.1)
 * MSTest.TestAdapter: [2.1.1](https://www.nuget.org/packages/MSTest.TestAdapter/2.1.1)
 
-## [Stable release 2.1.0] - 2020-02-03
+## [2.1.0] - 2020-02-03
 
 - [x] [Fix parameters in tests](https://github.com/microsoft/testfx/pull/680)
 * [x] [Fix bugs in parent class init/cleanup logic](https://github.com/microsoft/testfx/pull/660)
@@ -633,7 +633,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [2.1.0-beta](https://www.nuget.org/packages/MSTest.TestFramework/2.1.0-beta)
 * MSTest.TestAdapter: [2.1.0-beta](https://www.nuget.org/packages/MSTest.TestAdapter/2.1.0-beta)
 
-## [Stable release 2.0.0] 2019-09-03
+## [2.0.0] 2019-09-03
 
 * [x] [Implemented 'AddResultFile' for NetCore TestContext](https://github.com/Microsoft/testfx/pull/609)
 * [x] [Datarow tests - support methods with optional parameters](https://github.com/Microsoft/testfx/pull/604)
@@ -675,7 +675,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [2.0.0-beta2](https://www.nuget.org/packages/MSTest.TestFramework/2.0.0-beta2)
 * MSTest.TestAdapter: [2.0.0-beta2](https://www.nuget.org/packages/MSTest.TestAdapter/2.0.0-beta2)
 
-## [Stable release 1.4.0] - 2018-11-26
+## [1.4.0] - 2018-11-26
 
 * [x] (BREAKING CHANGE) [Description, WorkItem, CssIteration, CssProjectStructure Attributes will not be treated as traits](https://github.com/Microsoft/testfx/pull/482)
 * [x] [Added new runsettings configuration to deploy all files from test source location i.e. DeployTestSourceDependencies](https://github.com/Microsoft/testfx/pull/391) [enhancement]
@@ -702,7 +702,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.4.0-beta](https://www.nuget.org/packages/MSTest.TestFramework/1.4.0-beta)
 * MSTest.TestAdapter: [1.4.0-beta](https://www.nuget.org/packages/MSTest.TestAdapter/1.4.0-beta)
 
-## [Stable release 1.3.2] - 2018-06-06
+## [1.3.2] - 2018-06-06
 
 * [x] [Hierarchical view support for data-driven tests](https://github.com/Microsoft/testfx/pull/417)
 
@@ -713,7 +713,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.3.2](https://www.nuget.org/packages/MSTest.TestFramework/1.3.2)
 * MSTest.TestAdapter: [1.3.2](https://www.nuget.org/packages/MSTest.TestAdapter/1.3.2)
 
-## [Stable release 1.3.1] - 2018-05-25
+## [1.3.1] - 2018-05-25
 
 * [x] [AppDomain creation should honor runsettings](https://github.com/Microsoft/testfx/pull/427)
 * [x] [Don't delete resource folder while clean/rebuild](https://github.com/Microsoft/testfx/pull/424)
@@ -725,7 +725,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.3.1](https://www.nuget.org/packages/MSTest.TestFramework/1.3.1)
 * MSTest.TestAdapter: [1.3.1](https://www.nuget.org/packages/MSTest.TestAdapter/1.3.1)
 
-## [Stable release 1.3.0] - 2018-05-11
+## [1.3.0] - 2018-05-11
 
 * [x] [TestTimeout configurable via RunSettings](https://github.com/Microsoft/testfx/pull/403) [enhancement]
 * [x] [Customize display name for DynamicDataAttribute](https://github.com/Microsoft/testfx/pull/373) [Contributed by [Brad Stoney](https://github.com/bstoney)] [enhancement]
@@ -760,7 +760,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.3.0-beta2](https://www.nuget.org/packages/MSTest.TestFramework/1.3.0-beta2)
 * MSTest.TestAdapter: [1.3.0-beta2](https://www.nuget.org/packages/MSTest.TestAdapter/1.3.0-beta2)
 
-## [Stable release 1.2.1] - 2018-04-05
+## [1.2.1] - 2018-04-05
 
 * [x] [Fixing Key collision for test run parameters](https://github.com/Microsoft/testfx/pull/328)
 * [x] [Don't call Class Cleanup if Class Init not called](https://github.com/Microsoft/testfx/pull/372)
@@ -772,7 +772,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.2.1](https://www.nuget.org/packages/MSTest.TestFramework/1.2.1)
 * MSTest.TestAdapter: [1.2.1](https://www.nuget.org/packages/MSTest.TestAdapter/1.2.1)
 
-## [Stable release 1.2.0] - 2017-10-11
+## [1.2.0] - 2017-10-11
 
 * [x] [DataSourceAttribute Implementation](https://github.com/Microsoft/testfx/pull/238)
 * [x] [Adding support for DiaNavigation in UWP test adapter](https://github.com/Microsoft/testfx/pull/258)
@@ -815,7 +815,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.2.0-beta](https://www.nuget.org/packages/MSTest.TestFramework/1.2.0-beta)
 * MSTest.TestAdapter: [1.2.0-beta](https://www.nuget.org/packages/MSTest.TestAdapter/1.2.0-beta)
 
-## [Stable release 1.1.18] - 2017-06-01
+## [1.1.18] - 2017-06-01
 
 * [x] [Ability to provide a reason for Ignored tests](https://github.com/Microsoft/testfx/issues/126) [enhancement]
 * [x] [VB unit test project templates that ship in VS 2017 do not reference MSTest V2 nuget packages](https://github.com/Microsoft/testfx/issues/132) [enhancement]
@@ -831,7 +831,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.1.18](https://www.nuget.org/packages/MSTest.TestFramework/1.1.18)
 * MSTest.TestAdapter: [1.1.18](https://www.nuget.org/packages/MSTest.TestAdapter/1.1.18)
 
-## [Stable release 1.1.17] - 2017-04-21
+## [1.1.17] - 2017-04-21
 
 * [x] [Console.WriteLine support for .NetCore Projects](https://github.com/Microsoft/testfx/issues/18) [enhancement]
 * [x] [Inheritance support for base classes that resides in different assemblies](https://github.com/Microsoft/testfx/issues/23) [enhancement]
@@ -847,7 +847,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.1.17](https://www.nuget.org/packages/MSTest.TestFramework/1.1.17)
 * MSTest.TestAdapter: [1.1.17](https://www.nuget.org/packages/MSTest.TestAdapter/1.1.17)
 
-## [Stable release 1.1.14] - 2017-03-31
+## [1.1.14] - 2017-03-31
 
 * [x] [Ability to add custom assertions](https://github.com/Microsoft/testfx/issues/116) [enhancement]
 * [x] [Problems with null in DataRow](https://github.com/Microsoft/testfx/issues/70)
@@ -859,7 +859,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * MSTest.TestFramework: [1.1.14](https://www.nuget.org/packages/MSTest.TestFramework/1.1.14)
 * MSTest.TestAdapter: [1.1.14](https://www.nuget.org/packages/MSTest.TestAdapter/1.1.14)
 
-## [Stable release 1.1.13] - 2017-03-10
+## [1.1.13] - 2017-03-10
 
 * [x] [Tests with Deployment Item do not run](https://github.com/Microsoft/testfx/issues/91)
 * [x] [Run tests fail intermittently with a disconnected from server exception](https://github.com/Microsoft/testfx/issues/28)
@@ -872,7 +872,7 @@ This is also the first release from GitHub and with source code building against
 * MSTest.TestFramework: [1.1.13](https://www.nuget.org/packages/MSTest.TestFramework/1.1.13)
 * MSTest.TestAdapter: [1.1.13](https://www.nuget.org/packages/MSTest.TestAdapter/1.1.13)
 
-## [Stable release 1.1.11] - 2017-02-17
+## [1.1.11] - 2017-02-17
 
 Initial release.
 
