@@ -693,7 +693,7 @@ A list of changes since last release are available [here](https://github.com/mic
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v2.1.0-beta...v2.1.0-beta2)
 
 ### Changed
-  
+
 * [Friendly test names](https://github.com/microsoft/testfx/pull/466)
 
 ### Artifacts
@@ -743,7 +743,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/2.0.0-beta2...v2.0.0-beta4)
 
-### Changed 
+### Changed
 
 * [Deployment Item support in .NET Core](https://github.com/Microsoft/testfx/pull/565)
 * [Support for CancellationTokenSource in TestContext to help in timeout scenario](https://github.com/Microsoft/testfx/pull/585)
@@ -826,7 +826,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 
 A list of changes since last release are available [here](https://github.com/Microsoft/testfx/compare/v1.3.0...v1.3.1)
 
-### Changed 
+### Changed
 
 * [AppDomain creation should honor runsettings](https://github.com/Microsoft/testfx/pull/427)
 * [Don't delete resource folder while clean/rebuild](https://github.com/Microsoft/testfx/pull/424)
