@@ -327,7 +327,7 @@ A list of changes since last release are available [here](https://github.com/mic
 ### Fixed
   
 * [Test execution bugs in specific TFMs addressed.](https://github.com/microsoft/testfx/pull/1071)
- 
+
 ### Artifacts
 
 * MSTest: [2.2.10](https://www.nuget.org/packages/MSTest/2.2.10)
@@ -392,7 +392,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * [Downgrade uwp](https://github.com/microsoft/testfx/pull/1008)
 * [Add DoesNotReturnIf to Assert.IsTrue/Assert.IsFalse](https://github.com/microsoft/testfx/pull/1005)
 * [Implement Class Cleanup Lifecycle selection](https://github.com/microsoft/testfx/pull/968)
- 
+
 ### Changed
 
 * Dependency version updates.
@@ -493,7 +493,7 @@ A list of changes since last release are available [here](https://github.com/mic
 ### Changed
   
 * [Some code clean-up and refactoring](https://github.com/microsoft/testfx/pull/800)
- 
+
 ### Fixed
   
 * [Fix StackOverflowException in StringAssert.DoesNotMatch](https://github.com/microsoft/testfx/pull/806)
@@ -541,7 +541,7 @@ A list of changes since last release are available [here](https://github.com/mic
 A list of changes since last release are available [here](https://github.com/microsoft/testfx/compare/v2.2.0-preview-20210115-03...v2.2.1)
   
 ### Added
- 
+
 * [Merge parameters safely](https://github.com/microsoft/testfx/pull/778)
 * [Merge settings safely](https://github.com/microsoft/testfx/pull/771)
 
@@ -614,6 +614,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * [Fix null ref bug when base class cleanup fails when there is no derived class cleanup method](https://github.com/microsoft/testfx/pull/716)
 
 ### Removed
+
 * [Load specific types from adapter](https://github.com/microsoft/testfx/pull/746)
 
 ### Artifacts
@@ -762,7 +763,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 * (BREAKING CHANGE) [TestContext Properties type fixed to be IDictionary](https://github.com/Microsoft/testfx/pull/563)
 * [Base class data rows should not be executed](https://github.com/Microsoft/testfx/pull/546)
 * [Setting option for marking not runnable tests as failed](https://github.com/Microsoft/testfx/pull/524)
- 
+
 ### Artifacts
 
 * MSTest.TestFramework: [2.0.0-beta2](https://www.nuget.org/packages/MSTest.TestFramework/2.0.0-beta2)
@@ -779,7 +780,7 @@ A list of changes since last release are available [here](https://github.com/Mic
 ### Changed
   
 * (BREAKING CHANGE) [Description, WorkItem, CssIteration, CssProjectStructure Attributes will not be treated as traits](https://github.com/Microsoft/testfx/pull/482)
- * [Allow test methods returning Task to run without suppling async keyword](https://github.com/Microsoft/testfx/pull/510) [Contributed by [Paul Spangler](https://github.com/spanglerco)]
+* [Allow test methods returning Task to run without suppling async keyword](https://github.com/Microsoft/testfx/pull/510) [Contributed by [Paul Spangler](https://github.com/spanglerco)]
   
 ### Removed
   
@@ -815,7 +816,6 @@ A list of changes since last release are available [here](https://github.com/Mic
 ### Changed
   
 * [Hierarchical view support for data-driven tests](https://github.com/Microsoft/testfx/pull/417)
-
 
 ### Artifacts
 
