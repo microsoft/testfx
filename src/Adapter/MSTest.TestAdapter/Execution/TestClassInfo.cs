@@ -330,7 +330,7 @@ public class TestClassInfo
     /// <returns>
     /// Any exception that can be thrown as part of a class cleanup as warning messages.
     /// </returns>
-    public string? RunClassCleanup(ClassCleanupBehavior classCleanupLifecycle = ClassCleanupBehavior.EndOfAssembly)
+    public string? RunClassCleanup(ClassCleanupBehavior classCleanupLifecycle = ClassCleanupBehavior.EndOfClass)
     {
         if (ClassCleanupMethod is null && BaseClassInitAndCleanupMethods.All(p => p.Item2 == null))
         {

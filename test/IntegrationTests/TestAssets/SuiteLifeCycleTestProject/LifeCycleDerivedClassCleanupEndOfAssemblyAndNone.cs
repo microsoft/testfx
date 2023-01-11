@@ -60,7 +60,7 @@ public sealed class LifeCycleDerivedClassCleanupEndOfAssemblyAndNone : LifeCycle
         Debug.WriteLine("Debug: LifeCycleDerivedClassCleanupEndOfAssemblyAndNone.TestCleanup was called");
     }
 
-    [ClassCleanup]
+    [ClassCleanup(ClassCleanupBehavior.EndOfAssembly)]
     public static void DerivedClassCleanup()
     {
         s_testContext.WriteLine("LifeCycleDerivedClassCleanupEndOfAssemblyAndNone.ClassCleanup was called");
