@@ -15,11 +15,6 @@
     <EnableXlfLocalization>true</EnableXlfLocalization>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.XML</DocumentationFile>
-    <LocDocumentationSubPath>Core</LocDocumentationSubPath>
-  </PropertyGroup>
-
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>

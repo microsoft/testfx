@@ -33,14 +33,10 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Nullable>enable</Nullable>
-    <DocumentationFile>$(OutputPath)\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.XML</DocumentationFile>
-    <!-- Following path will be overridden by specific TFMs -->
-    <LocDocumentationSubPath>Extensions\Core</LocDocumentationSubPath>
   </PropertyGroup>
 
   <!-- WinUI specific properties -->
   <PropertyGroup Condition=" '$(TargetFramework)' == '$(WinUiMinimum)' ">
-    <LocDocumentationSubPath>Extensions\WinUI</LocDocumentationSubPath>
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
     <TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
@@ -50,10 +46,6 @@
   <!-- UWP specific properties -->
   <PropertyGroup Condition=" '$(TargetFramework)' == '$(UwpMinimum)' ">
     <DefineConstants>$(DefineConstants);NETFX_CORE;WINDOWS_UWP</DefineConstants>
-    <LocDocumentationSubPath>Extensions\UWP</LocDocumentationSubPath>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == '$(NetFrameworkMinimum)' ">
-    <LocDocumentationSubPath>Extensions\Desktop</LocDocumentationSubPath>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
