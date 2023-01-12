@@ -25,7 +25,7 @@ The main features of MSTest v2 are documented through a list of RFCs:
 - [DynamicData Attribute for Data Driven Tests](RFCs/006-DynamicData-Attribute.md)
 - [DataSource Attribute Vs ITestDataSource](RFCs/007-DataSource-Attribute-VS-ITestDataSource.md)
 - [Test case timeout via runsettings](RFCs/008-TestCase-Timeout.md)
-
+- [MSTest element via runsettings](https://learn.microsoft.com/en-us/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file?view=vs-2019#mstest-element)
 ## Releases
 
 You can find all features and bugs fixed in all our releases by looking at [releases.md](releases.md).
