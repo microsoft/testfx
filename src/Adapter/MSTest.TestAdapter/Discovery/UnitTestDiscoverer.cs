@@ -60,6 +60,8 @@ internal class UnitTestDiscoverer
     {
         var testElements = _assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out var warnings);
 
+        var treatDiscoveryWarningsAsErrors = MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors;
+
         // log the warnings
         foreach (var warning in warnings)
         {
@@ -68,7 +70,7 @@ internal class UnitTestDiscoverer
                 source,
                 warning);
             var message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
-            logger.SendMessage(TestMessageLevel.Warning, message);
+            logger.SendMessage(treatDiscoveryWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning, message);
         }
 
         // No tests found => nothing to do
