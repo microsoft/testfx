@@ -109,7 +109,7 @@ public class MSTestSettings
     public bool MapNotRunnableToFailed { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating whether a not test discovery warnings should be treated as errors.
+    /// Gets a value indicating whether or not test discovery warnings should be treated as errors.
     /// </summary>
     public bool TreatDiscoveryWarningsAsErrors { get; private set; }
 
