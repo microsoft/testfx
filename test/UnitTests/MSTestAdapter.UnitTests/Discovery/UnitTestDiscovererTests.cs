@@ -94,6 +94,33 @@ public class UnitTestDiscovererTests : TestContainer
         _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Warning, It.IsAny<string>()), Times.Once);
     }
 
+    public void DiscoverTestsInSourceShouldSendBackHandleTreatAsError()
+    {
+        // Setup mocks.
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(Source))
+            .Returns(Source);
+        _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.DoesFileExist(Source))
+            .Returns(false);
+
+        string settingsXml =
+        @"<?xml version=""1.0"" encoding=""utf-8""?>
+                <RunSettings>
+                    <MSTestV2>
+                        <TreatDiscoveryWarningsAsErrors>True</TreatDiscoveryWarningsAsErrors>
+                    </MSTestV2>
+                </RunSettings>";
+
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
+
+        // Act
+        MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
+
+        _unitTestDiscoverer.DiscoverTestsInSource(Source, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object, _mockDiscoveryContext.Object);
+
+        // Assert.
+        _mockMessageLogger.Verify(lm => lm.SendMessage(TestMessageLevel.Error, It.IsAny<string>()), Times.Once);
+    }
+
     public void DiscoverTestsInSourceShouldSendBackTestCasesDiscovered()
     {
         // Setup mocks.

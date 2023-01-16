@@ -260,6 +260,33 @@ public class MSTestSettingsTests : TestContainer
         Verify(adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
     }
 
+    public void TreatDiscoveryWarningsAsErrorsShouldBeFalseByDefault()
+    {
+        string runSettingxml =
+            @"<RunSettings>
+                    <MSTestV2>
+                    </MSTestV2>
+                  </RunSettings>";
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+        Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
+    }
+
+    public void TreatDiscoveryWarningsAsErrorsShouldBeConsumedFromRunSettingsWhenSpecified()
+    {
+        string runSettingxml =
+            @"<RunSettings>
+                    <MSTestV2>
+                        <TreatDiscoveryWarningsAsErrors>True</TreatDiscoveryWarningsAsErrors>
+                    </MSTestV2>
+                  </RunSettings>";
+
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+
+        Verify(adapterSettings.TreatDiscoveryWarningsAsErrors);
+    }
+
     public void ParallelizationSettingsShouldNotBeSetByDefault()
     {
         string runSettingxml =
@@ -873,6 +900,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(!adapterSettings.MapInconclusiveToFailed);
         Verify(adapterSettings.MapNotRunnableToFailed);
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
+        Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsIsNull()
@@ -884,6 +912,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(!adapterSettings.MapInconclusiveToFailed);
         Verify(adapterSettings.MapNotRunnableToFailed);
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
+        Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
 
     public void PopulateSettingsShouldInitializeDefaultSettingsWhenRunSettingsXmlIsEmpty()
@@ -896,6 +925,7 @@ public class MSTestSettingsTests : TestContainer
         Verify(!adapterSettings.MapInconclusiveToFailed);
         Verify(adapterSettings.MapNotRunnableToFailed);
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
+        Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
 
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()

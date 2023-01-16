@@ -54,30 +54,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTestAdapter.PlatformServi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFramework.UnitTests", "test\UnitTests\TestFramework.UnitTests\TestFramework.UnitTests.csproj", "{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "toolPackages", "toolPackages", "{1701E9E5-E06B-45FE-B860-6A83BBAEE6A9}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eng", "eng", "{FE0DF239-0D81-46CA-9277-3342009E83F9}"
 	ProjectSection(SolutionItems) = preProject
-		scripts\toolset\packages.config = scripts\toolset\packages.config
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "stylecop", "stylecop", "{FE0DF239-0D81-46CA-9277-3342009E83F9}"
-	ProjectSection(SolutionItems) = preProject
-		scripts\build\stylecop.json = scripts\build\stylecop.json
-		scripts\build\stylecop.ruleset = scripts\build\stylecop.ruleset
-		scripts\build\stylecop.test.ruleset = scripts\build\stylecop.test.ruleset
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "targets", "targets", "{F60B647A-E14C-48AF-9BD6-89F44EB60115}"
-	ProjectSection(SolutionItems) = preProject
-		scripts\build\TestFx.Loc.props = scripts\build\TestFx.Loc.props
-		scripts\build\TestFx.props = scripts\build\TestFx.props
-		scripts\build\TestFx.targets = scripts\build\TestFx.targets
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{BCF525B1-E67F-486D-B091-06A8BB8A2793}"
-	ProjectSection(SolutionItems) = preProject
-		scripts\Build.ps1 = scripts\Build.ps1
-		scripts\common.lib.ps1 = scripts\common.lib.ps1
-		scripts\test.ps1 = scripts\test.ps1
+		eng\stylecop.json = eng\stylecop.json
+		eng\stylecop.ruleset = eng\stylecop.ruleset
+		eng\stylecop.test.ruleset = eng\stylecop.test.ruleset
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{92F8E9A2-903E-4025-99BC-7DC478D5466D}"
@@ -366,10 +347,7 @@ Global
 		{1CEB5743-70BF-475E-91BC-0AEBD63835B7} = {BB874DF1-44FE-415A-B634-A6B829107890}
 		{599833DC-EC5A-40CA-B5CF-DEF719548EEF} = {BB874DF1-44FE-415A-B634-A6B829107890}
 		{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2} = {BB874DF1-44FE-415A-B634-A6B829107890}
-		{1701E9E5-E06B-45FE-B860-6A83BBAEE6A9} = {929A3EDE-893B-4801-82BA-01FD947291CB}
 		{FE0DF239-0D81-46CA-9277-3342009E83F9} = {929A3EDE-893B-4801-82BA-01FD947291CB}
-		{F60B647A-E14C-48AF-9BD6-89F44EB60115} = {929A3EDE-893B-4801-82BA-01FD947291CB}
-		{BCF525B1-E67F-486D-B091-06A8BB8A2793} = {929A3EDE-893B-4801-82BA-01FD947291CB}
 		{A82770C0-1FF5-43C7-8790-471D5E4F8D6E} = {92F8E9A2-903E-4025-99BC-7DC478D5466D}
 		{D11C6664-1C4E-48F0-AA92-7F5BADC6F82C} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 		{35D010CC-CDF2-4115-BCFB-E2E3D21C1055} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
