@@ -4,29 +4,26 @@
             "LanguageSet": "VS_Main_Languages",
             "LocItems": [
                 {
-                    "OutputPath": ".\\src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\",
+                    "LclFile": "eng\\Localize\\loc\\{Lang}\\src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\Resource.xlf.lcl",
                     "SourceFile": ".\\src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\Resource.xlf",
-                    "CopyOption": "LangIDOnName"
+                    "CopyOption": "LangIDOnName",
+                    "OutputPath": ".\\src\\Adapter\\MSTest.TestAdapter\\Resources\\xlf\\"
                 },
                 {
-                    "OutputPath": ".\\src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\",
+                    "LclFile": "eng\\Localize\\loc\\{Lang}\\src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\Resource.xlf.lcl",
                     "SourceFile": ".\\src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\Resource.xlf",
-                    "CopyOption": "LangIDOnName"
+                    "CopyOption": "LangIDOnName",
+                    "OutputPath": ".\\src\\Adapter\\MSTestAdapter.PlatformServices\\Resources\\xlf\\"
                 },
                 {
-                    "OutputPath": ".\\src\\TestFramework\\TestFramework\\Resources\\xlf\\",
+                    "LclFile": "eng\\Localize\\loc\\{Lang}\\src\\TestFramework\\TestFramework\\Resources\\xlf\\Resource.xlf.lcl",
                     "SourceFile": ".\\src\\TestFramework\\TestFramework\\Resources\\xlf\\FrameworkMessages.xlf",
-                    "CopyOption": "LangIDOnName"
+                    "CopyOption": "LangIDOnName",
+                    "OutputPath": ".\\src\\TestFramework\\TestFramework\\Resources\\xlf\\"
                 }
-            ]
-        },
-        {
-            "LanguageSet": "VS_Main_Languages",
-            "CloneLanguageSet": "WiX_CloneLanguages",
-            "LssFiles": [
-                "wxl_loc.lss"
             ],
-            "LocItems": []
+            "LssFiles": [],
+            "CloneLanguageSet": ""
         }
     ]
 }
