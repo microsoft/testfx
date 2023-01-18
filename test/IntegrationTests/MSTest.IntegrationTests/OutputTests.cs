@@ -34,8 +34,15 @@ public class OutputTests : CLITestBase
         // Arrange
         var assemblyPath = GetAssetFullPath(TestAssetName);
 
+        string runSettingxml =
+        @"<RunSettings>   
+                <RunConfiguration>  
+                    <DisableAppDomain>False</DisableAppDomain>   
+                </RunConfiguration>  
+            </RunSettings>";
+
         // Act
-        var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
+        var testCases = DiscoverTests(assemblyPath, null, runSettingxml).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
         testCases.Should().HaveCount(3);
         testCases.Should().NotContainNulls();
 
