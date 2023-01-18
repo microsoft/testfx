@@ -61,10 +61,12 @@ public class OutputTests : CLITestBase
         var someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
         someStartedBeforeFirstEnded.Should().BeTrue("Tests must run in parallel, but there were no other tests that started, before the first one ended.");
 
-        ValidateOutputIsNotMixed(testResults, "TestMethod2(DataRow1)", new[] { "TestMethod1", "TestMethod3" }, IsStandardOutputMessage, "TestMethod2 (DataRow1)");
-        ValidateOutputIsNotMixed(testResults, "TestMethod2(DataRow2)", new[] { "TestMethod1", "TestMethod3" }, IsStandardOutputMessage, "TestMethod2 (DataRow2)");
-        ValidateOutputIsNotMixed(testResults, "TestMethod1", new[] { "TestMethod2(DataRow1)", "TestMethod2(DataRow2)", "TestMethod3" }, IsStandardOutputMessage);
-        ValidateOutputIsNotMixed(testResults, "TestMethod3", new[] { "TestMethod1", "TestMethod2(DataRow1)", "TestMethod2(DataRow2)", }, IsStandardOutputMessage);
+        ValidateOutputIsNotMixed(testResults, "TestMethod2(DataRowValue1)", new[] { "TestMethod1", "TestMethod3" }, IsStandardOutputMessage, "TestMethod2 (DataRowValue1)");
+        ValidateOutputIsNotMixed(testResults, "TestMethod2(DataRowValue2)", new[] { "TestMethod1", "TestMethod3" }, IsStandardOutputMessage, "TestMethod2 (DataRowValue2)");
+        ValidateOutputIsNotMixed(testResults, "TestMethod1", new[] { "TestMethod2(DataRowValue1)", "TestMethod2(DataRowValue2)", "TestMethod3" }, IsStandardOutputMessage);
+        ValidateOutputIsNotMixed(testResults, "TestMethod3", new[] { "TestMethod1", "TestMethod2(DataRowValue1)", "TestMethod2(DataRowValue2)", }, IsStandardOutputMessage);
+
+        ValidateInitializeAndCleanup(testResults, IsStandardOutputMessage);
     }
 
     private void ValidateOutputForClass(string className, string runSettingXml = "")

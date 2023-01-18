@@ -62,8 +62,8 @@ public class UnitTest3
     }
 
     [TestMethod]
-    [DataRow("DataRow1")]
-    [DataRow("DataRow2")]
+    [DataRow("DataRowValue1")]
+    [DataRow("DataRowValue2")]
     public void TestMethod2(string dataRowValu)
     {
         TestContext.WriteLine($"UnitTest3 - TestMethod2({dataRowValu}) - Call 1");
