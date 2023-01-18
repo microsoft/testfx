@@ -1,4 +1,7 @@
 {
+  "sdk": {
+    "version": "8.0.100-alpha.1.23061.8"
+  },
   "tools": {
     "vs": {
       "version": "16.0",
