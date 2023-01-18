@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Collections.Specialized;
+using System.Data;
 using System.Threading;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -60,13 +62,15 @@ public class UnitTest3
     }
 
     [TestMethod]
-    public void TestMethod2()
+    [DataRow("DataRow1")]
+    [DataRow("DataRow2")]
+    public void TestMethod2(string dataRowValu)
     {
-        TestContext.WriteLine("UnitTest3 - TestMethod2 - Call 1");
+        TestContext.WriteLine($"UnitTest3 - TestMethod2({dataRowValu}) - Call 1");
         Thread.Sleep(Rng.Next(20, 50));
-        TestContext.WriteLine("UnitTest3 - TestMethod2 - Call 2");
+        TestContext.WriteLine($"UnitTest3 - TestMethod2({dataRowValu}) - Call 2");
         Thread.Sleep(Rng.Next(20, 50));
-        TestContext.WriteLine("UnitTest3 - TestMethod2 - Call 3");
+        TestContext.WriteLine($"UnitTest3 - TestMethod2({dataRowValu}) - Call 3");
     }
 
     [TestMethod]

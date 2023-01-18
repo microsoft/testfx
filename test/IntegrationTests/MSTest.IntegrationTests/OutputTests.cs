@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -46,12 +47,12 @@ public class OutputTests : CLITestBase
         var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
-        testCases.Should().HaveCount(3);
+        var testCases = DiscoverTests(assemblyPath, null, RunSettingXml).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
+        testCases.Should().HaveCount(4);
         testCases.Should().NotContainNulls();
 
         var testResults = RunTests(testCases);
-        testResults.Should().HaveCount(3);
+        testResults.Should().HaveCount(4);
         testResults.Should().NotContainNulls();
 
         // Assert
@@ -60,11 +61,10 @@ public class OutputTests : CLITestBase
         var someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
         someStartedBeforeFirstEnded.Should().BeTrue("Tests must run in parallel, but there were no other tests that started, before the first one ended.");
 
-        ValidateOutputIsNotMixed(testResults, "TestMethod1", new[] { "TestMethod2", "TestMethod3" }, IsStandardOutputMessage);
-        ValidateOutputIsNotMixed(testResults, "TestMethod2", new[] { "TestMethod1", "TestMethod3" }, IsStandardOutputMessage);
-        ValidateOutputIsNotMixed(testResults, "TestMethod3", new[] { "TestMethod1", "TestMethod2" }, IsStandardOutputMessage);
-
-        ValidateInitializeAndCleanup(testResults, IsStandardOutputMessage);
+        ValidateOutputIsNotMixed(testResults, "TestMethod2(DataRow1)", new[] { "TestMethod1", "TestMethod3" }, IsStandardOutputMessage, "TestMethod2 (DataRow1)");
+        ValidateOutputIsNotMixed(testResults, "TestMethod2(DataRow2)", new[] { "TestMethod1", "TestMethod3" }, IsStandardOutputMessage, "TestMethod2 (DataRow2)");
+        ValidateOutputIsNotMixed(testResults, "TestMethod1", new[] { "TestMethod2(DataRow1)", "TestMethod2(DataRow2)", "TestMethod3" }, IsStandardOutputMessage);
+        ValidateOutputIsNotMixed(testResults, "TestMethod3", new[] { "TestMethod1", "TestMethod2(DataRow1)", "TestMethod2(DataRow2)", }, IsStandardOutputMessage);
     }
 
     private void ValidateOutputForClass(string className, string runSettingXml = "")
@@ -116,10 +116,10 @@ public class OutputTests : CLITestBase
         ValidateInitializeAndCleanup(testResults, IsDebugMessage);
     }
 
-    private static void ValidateOutputIsNotMixed(IEnumerable<TestResult> testResults, string methodName, string[] shouldNotContain, Func<TestResultMessage, bool> messageFilter)
+    private static void ValidateOutputIsNotMixed(IEnumerable<TestResult> testResults, string methodName, string[] shouldNotContain, Func<TestResultMessage, bool> messageFilter, string dataRowDisplayName = null)
     {
         // Make sure that the output between methods is not mixed. And that every method has test initialize and cleanup.
-        var testMethod = testResults.Single(t => t.DisplayName == methodName);
+        var testMethod = testResults.Single(t => t.DisplayName == (dataRowDisplayName ?? methodName));
 
         // Test method {methodName} was not found.
         testMethod.Should().NotBeNull();
