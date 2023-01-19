@@ -18,6 +18,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
+    /// The equality is based on "System.Collections.Generic.IEqualityComparer{T}".
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -37,6 +38,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
+    /// The equality is based on "System.Collections.Generic.IEqualityComparer{T}".
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -60,6 +62,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
+    /// The equality is based on "System.Collections.Generic.IEqualityComparer{T}".
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -85,6 +88,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
+    /// The equality is based on the provided Comparer parameter.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -114,6 +118,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
+    /// The equality is based on "System.Collections.Generic.IEqualityComparer{T}".
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -142,6 +147,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
     /// if the two values are not equal.
+    /// The equality is based on the provided Comparer parameter.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -200,6 +206,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
     /// if the two values are equal.
+    /// The equality is based on "System.Collections.Generic.IEqualityComparer{T}".
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -220,6 +227,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
     /// if the two values are equal.
+    /// The equality is based on the provided Comparer parameter.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -244,6 +252,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
     /// if the two values are equal.
+    /// The equality is based on "System.Collections.Generic.IEqualityComparer{T}".
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -269,6 +278,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
     /// if the two values are equal.
+    /// The equality is based on the provided Comparer parameter.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -298,6 +308,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
     /// if the two values are equal.
+    /// The equality is based on "System.Collections.Generic.IEqualityComparer{T}".
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -326,6 +337,7 @@ public sealed partial class Assert
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
     /// if the two values are equal.
+    /// The equality is based on the provided Comparer parameter.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
