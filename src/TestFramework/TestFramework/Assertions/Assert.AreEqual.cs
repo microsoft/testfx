@@ -51,7 +51,7 @@ public sealed partial class Assert
     /// </param>
     /// <param name="comparer">
     /// The <see cref="System.Collections.Generic.IEqualityComparer{T}"/> implementation to use when comparing keys,
-    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// or null to use the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>./>.
     /// </param>
     /// <exception cref="AssertFailedException">
     /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
