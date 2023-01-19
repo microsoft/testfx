@@ -19,7 +19,7 @@
     <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netstandard2.0\" />
     <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\netstandard2.0\" />
     <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\netstandard2.0\" />
-    <file src="netstandard2.0\**\Microsoft.TestPlatform.AdapterUtilities.*.dll" target="build\netstandard2.0\" />
+    <file src="netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\netstandard2.0\" />
 
     <!-- uap10.0 -->
     <file src="$RepoRoot$src\Adapter\Build\Universal\MSTest.TestAdapter.props" target="build\uap10.0\MSTest.TestAdapter.props" />
@@ -28,7 +28,7 @@
     <file src="$ArtifactsBinDir$MSTestAdapter.PlatformServices\$Configuration$\uap10.0.16299\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\uap10.0\" />
     <file src="$ArtifactsBinDir$MSTestAdapter.PlatformServices\$Configuration$\uap10.0.16299\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\uap10.0\" />
     <file src="netstandard2.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\uap10.0\" />
-    <file src="netstandard2.0\**\Microsoft.TestPlatform.AdapterUtilities.*.dll" target="build\uap10.0\" />
+    <file src="netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\uap10.0\" />
 
     <!-- netcoreapp3.1 -->
     <file src="$RepoRoot$src\Adapter\Build\NetCore\MSTest.TestAdapter.props" target="build\netcoreapp3.1\" />
@@ -36,7 +36,7 @@
     <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\netcoreapp3.1\" />
     <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\netcoreapp3.1\" />
     <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\netcoreapp3.1\" />
-    <file src="netstandard2.0\**\Microsoft.TestPlatform.AdapterUtilities.*.dll" target="build\netcoreapp3.1\" />
+    <file src="netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\netcoreapp3.1\" />
 
     <!-- net6.0 -->
     <file src="$RepoRoot$src\Adapter\Build\Net6\MSTest.TestAdapter.props" target="build\net6.0\MSTest.TestAdapter.props" />
@@ -47,7 +47,7 @@
     <file src="$ArtifactsBinDir$MSTestAdapter.PlatformServices\$Configuration$\net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net6.0\winui\" />
     <file src="$ArtifactsBinDir$MSTestAdapter.PlatformServices\$Configuration$\net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\net6.0\winui\" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\net6.0\" />
-    <file src="netstandard2.0\**\Microsoft.TestPlatform.AdapterUtilities.*.dll" target="build\net6.0\" />
+    <file src="netstandard2.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\net6.0\" />
 
     <!-- net462 -->
     <file src="$RepoRoot$src\Adapter\Build\Desktop\MSTest.TestAdapter.props" target="build\net462\" />
@@ -56,7 +56,7 @@
     <file src="net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net462\" />
     <file src="net462\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.pdb" target="build\net462\" />
     <file src="net462\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\net462\" />
-    <file src="net462\**\Microsoft.TestPlatform.AdapterUtilities.*.dll" target="build\net462\" />
+    <file src="net462\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\net462\" />
 
     <!-- Localization -->
     <!-- All TFMs share the same resx + TestAdapter depends on PlatformServices + TestFramework so all resources are available -->

@@ -3,8 +3,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 
 using FluentAssertions;
 
@@ -16,17 +18,58 @@ public class OutputTests : CLITestBase
 {
     private const string TestAssetName = "OutputTestProject";
 
+    private const string RunSettingXml =
+        @"<RunSettings>   
+                <RunConfiguration>  
+                    <DisableAppDomain>False</DisableAppDomain>   
+                </RunConfiguration>  
+            </RunSettings>";
+
     public void OutputIsNotMixedWhenTestsRunInParallel()
     {
-        ValidateOutputForClass("UnitTest1");
+        ValidateOutputForClass("UnitTest1", RunSettingXml);
     }
 
     public void OutputIsNotMixedWhenAsyncTestsRunInParallel()
     {
-        ValidateOutputForClass("UnitTest2");
+        ValidateOutputForClass("UnitTest2", RunSettingXml);
     }
 
-    private void ValidateOutputForClass(string className)
+    public void TestContextWriteLine_WhenTestsRunInParallel_OutputIsNotMixed()
+    {
+        // By default no appDomain.
+        ValidateTestContextOutputForClass("UnitTest3");
+    }
+
+    private void ValidateTestContextOutputForClass(string className)
+    {
+        // Arrange
+        var assemblyPath = GetAssetFullPath(TestAssetName);
+
+        // Act
+        var testCases = DiscoverTests(assemblyPath, null, RunSettingXml).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
+        testCases.Should().HaveCount(4);
+        testCases.Should().NotContainNulls();
+
+        var testResults = RunTests(testCases);
+        testResults.Should().HaveCount(4);
+        testResults.Should().NotContainNulls();
+
+        // Assert
+        // Ensure that some tests are running in parallel, because otherwise the output just works correctly.
+        var firstEnd = testResults.Min(t => t.EndTime);
+        var someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
+        someStartedBeforeFirstEnded.Should().BeTrue("Tests must run in parallel, but there were no other tests that started, before the first one ended.");
+
+        ValidateOutputIsNotMixed(testResults, "TestMethod2(DataRowValue1)", new[] { "TestMethod1", "TestMethod3" }, IsStandardOutputMessage, "TestMethod2 (DataRowValue1)");
+        ValidateOutputIsNotMixed(testResults, "TestMethod2(DataRowValue2)", new[] { "TestMethod1", "TestMethod3" }, IsStandardOutputMessage, "TestMethod2 (DataRowValue2)");
+        ValidateOutputIsNotMixed(testResults, "TestMethod1", new[] { "TestMethod2(DataRowValue1)", "TestMethod2(DataRowValue2)", "TestMethod3" }, IsStandardOutputMessage);
+        ValidateOutputIsNotMixed(testResults, "TestMethod3", new[] { "TestMethod1", "TestMethod2(DataRowValue1)", "TestMethod2(DataRowValue2)", }, IsStandardOutputMessage);
+
+        ValidateInitializeAndCleanup(testResults, IsStandardOutputMessage);
+    }
+
+    private void ValidateOutputForClass(string className, string runSettingXml = "")
     {
         // LogMessageListener uses an implementation of a string writer that captures output per async context.
         // This allows us to capture output from tasks even when they are running in parallel.
@@ -35,7 +78,7 @@ public class OutputTests : CLITestBase
         var assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
+        var testCases = DiscoverTests(assemblyPath, null, runSettingXml).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
         testCases.Should().HaveCount(3);
         testCases.Should().NotContainNulls();
 
@@ -75,10 +118,10 @@ public class OutputTests : CLITestBase
         ValidateInitializeAndCleanup(testResults, IsDebugMessage);
     }
 
-    private static void ValidateOutputIsNotMixed(IEnumerable<TestResult> testResults, string methodName, string[] shouldNotContain, Func<TestResultMessage, bool> messageFilter)
+    private static void ValidateOutputIsNotMixed(IEnumerable<TestResult> testResults, string methodName, string[] shouldNotContain, Func<TestResultMessage, bool> messageFilter, string dataRowDisplayName = null)
     {
         // Make sure that the output between methods is not mixed. And that every method has test initialize and cleanup.
-        var testMethod = testResults.Single(t => t.DisplayName == methodName);
+        var testMethod = testResults.Single(t => t.DisplayName == (dataRowDisplayName ?? methodName));
 
         // Test method {methodName} was not found.
         testMethod.Should().NotBeNull();
