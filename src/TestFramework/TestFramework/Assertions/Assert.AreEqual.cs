@@ -17,8 +17,7 @@ public sealed partial class Assert
 {
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -37,8 +36,7 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -61,8 +59,7 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -87,8 +84,7 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -117,8 +113,7 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -146,8 +141,7 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -205,8 +199,7 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -226,8 +219,7 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -251,8 +243,7 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -277,8 +268,7 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -307,8 +297,7 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -336,8 +325,7 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
