@@ -1,2 +1,3 @@
 ﻿#nullable enable
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.TreatDiscoveryWarningsAsErrors.get -> bool
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.TestMethod.UniqueName.get -> string!
