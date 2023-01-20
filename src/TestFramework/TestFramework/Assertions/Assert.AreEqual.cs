@@ -17,8 +17,8 @@ public sealed partial class Assert
 {
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
+    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -37,8 +37,8 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
+    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -61,8 +61,8 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
+    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -87,8 +87,8 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
+    /// The equality is computed using the provided <paramref name="comparer"/> parameter.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -117,8 +117,8 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
+    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -146,8 +146,8 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are equal and throws an exception
-    /// if the two values are not equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are not equal.
+    /// The equality is computed using the provided <paramref name="comparer"/> parameter.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -205,8 +205,8 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
+    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -226,8 +226,8 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
+    /// The equality is computed using the provided <paramref name="comparer"/> parameter.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -251,8 +251,8 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
+    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -277,8 +277,8 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
+    /// The equality is computed using the provided <paramref name="comparer"/> parameter.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -307,8 +307,8 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
+    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
@@ -336,8 +336,8 @@ public sealed partial class Assert
 
     /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
-    /// if the two values are equal. Different numeric types are treated
-    /// as unequal even if the logical values are equal. 42L is not equal to 42.
+    /// if the two values are equal.
+    /// The equality is computed using the provided <paramref name="comparer"/> parameter.
     /// </summary>
     /// <typeparam name="T">
     /// The type of values to compare.
