@@ -70,7 +70,7 @@ Breaking changes announcements [#1274](https://github.com/microsoft/testfx/issue
   * Dropped support for UWP before 16299
   * Dropped support for WinUI before 18362
   * Replaced support of .NET 5 by .NETCore 3.1 and .NET 6.0
-* Assert.AreSame/AreNotSame use generic instead of object [#1430](https://github.com/microsoft/testfx/pull/1430)
+* [breaking change] Assert.AreSame/AreNotSame use generic instead of object [#1430](https://github.com/microsoft/testfx/pull/1430)
 * Make BeginTimer and EndTimer methods obsolete [#1425](https://github.com/microsoft/testfx/pull/1425)
 * [breaking change] Unify DeploymentDirectory location across target frameworks [#1414](https://github.com/microsoft/testfx/pull/1414)
 * [breaking change] Add class/assembly cleanup/init messages to first/last test [#1390](https://github.com/microsoft/testfx/pull/1390)
