@@ -86,7 +86,8 @@ internal class TestMethodRunner
 
         try
         {
-            using (LogMessageListener logListener = new(_captureDebugTraces))
+            DebugEx.Assert(_testMethodInfo.LoggingUniqueId is not null, "LoggingUniqueId should have been set");
+            using (LogMessageListener logListener = new(_captureDebugTraces, _testMethodInfo.LoggingUniqueId))
             {
                 try
                 {

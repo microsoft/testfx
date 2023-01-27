@@ -11,7 +11,7 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListe
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.GetAndClearDebugTrace() -> string?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.GetAndClearStandardError() -> string?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.GetAndClearStandardOutput() -> string?
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.LogMessageListener(bool captureDebugTraces) -> void
+Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.LogMessageListener(bool captureDebugTraces, string! uniquePrefix = "") -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.StandardError.get -> string!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.LogMessageListener.StandardOutput.get -> string!
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo

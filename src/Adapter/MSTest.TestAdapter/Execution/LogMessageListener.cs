@@ -39,11 +39,11 @@ public class LogMessageListener : IDisposable
     /// Initializes a new instance of the <see cref="LogMessageListener"/> class.
     /// </summary>
     /// <param name="captureDebugTraces">Captures debug traces if true.</param>
-    public LogMessageListener(bool captureDebugTraces)
+    public LogMessageListener(bool captureDebugTraces, string uniquePrefix = "")
     {
         // Cache the original output/error streams and replace it with the own stream.
-        _redirectedStandardOutput = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out");
-        _redirectedStandardError = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "err");
+        _redirectedStandardOutput = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, uniquePrefix + "out");
+        _redirectedStandardError = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, uniquePrefix + "err");
 
         Logger.OnLogMessage += _redirectedStandardOutput.WriteLine;
 
@@ -75,7 +75,7 @@ public class LogMessageListener : IDisposable
         {
             if (s_listenerCount == 0)
             {
-                s_redirectedDebugTrace = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "trace");
+                s_redirectedDebugTrace = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, uniquePrefix + "trace");
                 s_traceListener = PlatformServiceProvider.Instance.GetTraceListener(s_redirectedDebugTrace);
                 _traceListenerManager.Add(s_traceListener);
             }

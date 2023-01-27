@@ -118,7 +118,8 @@ internal class UnitTestRunner : MarshalByRefObject
 
         try
         {
-            using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
+            string loggingUniqueId = Guid.NewGuid().ToString();
+            using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, loggingUniqueId + "context");
             var properties = new Dictionary<string, object?>(testContextProperties);
             var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
             testContext.SetOutcome(UTF.UnitTestOutcome.InProgress);
@@ -128,6 +129,11 @@ internal class UnitTestRunner : MarshalByRefObject
                 testMethod,
                 testContext,
                 MSTestSettings.CurrentSettings.CaptureDebugTraces);
+
+            if (testMethodInfo is not null)
+            {
+                testMethodInfo.LoggingUniqueId = loggingUniqueId;
+            }
 
             if (_classCleanupManager == null && testMethodInfo != null && testMethodInfo.Parent.HasExecutableCleanupMethod)
             {
@@ -166,7 +172,8 @@ internal class UnitTestRunner : MarshalByRefObject
         bool shouldRunClassAndAssemblyCleanup = false;
         _classCleanupManager?.MarkTestComplete(testMethodInfo, testMethod, out shouldRunClassCleanup, out shouldRunClassAndAssemblyCleanup);
 
-        using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
+        DebugEx.Assert(testMethodInfo.LoggingUniqueId is not null, "LoggingUniqueId should have been set");
+        using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces, testMethodInfo.LoggingUniqueId);
         try
         {
             if (shouldRunClassCleanup)

@@ -85,6 +85,8 @@ public class TestMethodInfo : ITestMethod
     /// </summary>
     internal TestMethodOptions TestMethodOptions { get; }
 
+    internal string? LoggingUniqueId { get; set; }
+
     public Attribute[]? GetAllAttributes(bool inherit)
     {
         return ReflectHelper.GetCustomAttributes(TestMethod, inherit) as Attribute[];
@@ -110,7 +112,8 @@ public class TestMethodInfo : ITestMethod
         // check if arguments are set for data driven tests
         arguments ??= Arguments;
 
-        using (LogMessageListener listener = new(TestMethodOptions.CaptureDebugTraces))
+        DebugEx.Assert(LoggingUniqueId is not null, "LoggingUniqueId should have been set");
+        using (LogMessageListener listener = new(TestMethodOptions.CaptureDebugTraces, LoggingUniqueId))
         {
             watch.Start();
             try
