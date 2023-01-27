@@ -153,6 +153,7 @@ stages:
       parameters:
         GitHubOrg: microsoft
         MirrorRepo: testfx
+        LclSource: lclFilesfromPackage
         LclPackageId: 'LCL-JUNO-PROD-TESTFX'
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
