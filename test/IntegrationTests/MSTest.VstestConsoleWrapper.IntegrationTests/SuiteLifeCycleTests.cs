@@ -30,7 +30,7 @@ public class SuiteLifeCycleTests : CLITestBase
             testCaseFilter: "FullyQualifiedName~LifecycleInheritance",
             targetFramework: "net462");
 
-        RunEventsHandler.PassedTests.Should().HaveCount(10);
+        RunEventsHandler.PassedTests.Should().HaveCount(3);
 
         var testMethod1 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClass.TestMethod"));
         testMethod1.Messages[0].Text.Should().Be(
@@ -62,7 +62,8 @@ public class SuiteLifeCycleTests : CLITestBase
             TestClassDerived_EndOfClassEndOfClass: TestMethod
             TestClassIntermediateEndOfClassBaseEndOfClass: ClassCleanup
             TestClassBaseEndOfClass: ClassCleanup
-            
+            Console: AssemblyCleanup was called
+
             """);
     }
 
