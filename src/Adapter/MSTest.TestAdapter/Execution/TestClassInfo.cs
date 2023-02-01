@@ -395,14 +395,9 @@ public class TestClassInfo
                         errorMessage,
                         exceptionStackTraceInfo?.ErrorStackTrace);
 
-                    if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
-                    {
-                        var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
-                        ClassCleanupException = testFailedException;
-                        return testFailedException.Message;
-                    }
-
-                    return errorMessage;
+                    var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
+                    ClassCleanupException = testFailedException;
+                    return testFailedException.Message;
                 }
             }
         }
