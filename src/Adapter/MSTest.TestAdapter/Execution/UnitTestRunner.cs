@@ -118,7 +118,6 @@ internal class UnitTestRunner : MarshalByRefObject
 
         try
         {
-            string loggingUniqueId = Guid.NewGuid().ToString();
             using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
             var properties = new Dictionary<string, object?>(testContextProperties);
             var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
