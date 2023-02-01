@@ -12,9 +12,4 @@ public enum ClassCleanupBehavior
     /// Run at end of class.
     /// </summary>
     EndOfClass,
-
-    /// <summary>
-    /// Run at end of assembly.
-    /// </summary>
-    EndOfAssembly,
 }

@@ -399,7 +399,7 @@ public class TestClassInfo
                     {
                         var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
                         ClassCleanupException = testFailedException;
-                        throw testFailedException;
+                        return testFailedException.Message;
                     }
 
                     return errorMessage;

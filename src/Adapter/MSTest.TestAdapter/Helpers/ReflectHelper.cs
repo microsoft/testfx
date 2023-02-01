@@ -478,39 +478,6 @@ internal class ReflectHelper : MarshalByRefObject
     }
 
     /// <summary>
-    /// Gets the class cleanup lifecycle for the class, if set.
-    /// </summary>
-    /// <param name="classInfo">The class to inspect.</param>
-    /// <returns>Returns <see cref="ClassCleanupBehavior"/> if provided, otherwise <c>null</c>.</returns>
-    internal virtual ClassCleanupBehavior? GetClassCleanupBehavior(TestClassInfo classInfo)
-    {
-        if (!classInfo.HasExecutableCleanupMethod)
-        {
-            return null;
-        }
-
-        var cleanupBehaviors =
-            new HashSet<ClassCleanupBehavior?>(
-                classInfo.BaseClassCleanupMethodsStack
-                .Select(x => x.GetCustomAttribute<ClassCleanupAttribute>(true)?.CleanupBehavior))
-            {
-                classInfo.ClassCleanupMethod?.GetCustomAttribute<ClassCleanupAttribute>(true)?.CleanupBehavior,
-            };
-
-        if (cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfClass))
-        {
-            return ClassCleanupBehavior.EndOfClass;
-        }
-
-        if (cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfAssembly))
-        {
-            return ClassCleanupBehavior.EndOfAssembly;
-        }
-
-        return null;
-    }
-
-    /// <summary>
     /// KeyValue pairs that are provided by TestPropertyAttributes of the given test method.
     /// </summary>
     /// <param name="testPropertyProvider">The member to inspect.</param>

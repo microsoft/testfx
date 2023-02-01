@@ -22,7 +22,6 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupA
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.CleanupBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior?
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.InheritanceBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
-Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfAssembly = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfClass = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute.ClassCleanupExecutionAttribute() -> void

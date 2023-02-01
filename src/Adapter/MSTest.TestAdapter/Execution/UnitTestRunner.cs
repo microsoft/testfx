@@ -118,6 +118,7 @@ internal class UnitTestRunner : MarshalByRefObject
 
         try
         {
+            string loggingUniqueId = Guid.NewGuid().ToString();
             using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
             var properties = new Dictionary<string, object?>(testContextProperties);
             var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
@@ -325,11 +326,7 @@ internal class UnitTestRunner : MarshalByRefObject
                     _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
                     if (testMethodInfo.Parent.HasExecutableCleanupMethod)
                     {
-                        var cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)
-                            ?? _lifecycleFromMsTest
-                            ?? _lifecycleFromAssembly;
-
-                        shouldRunEndOfClassCleanup = cleanupLifecycle == ClassCleanupBehavior.EndOfClass;
+                        shouldRunEndOfClassCleanup = true;
                     }
                 }
 
