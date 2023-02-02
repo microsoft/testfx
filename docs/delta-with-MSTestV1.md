@@ -42,8 +42,8 @@ Listed are the difference in behavior of MSTest V2 w.r.t MSTest V1:
 Here are the features that are not supported:
 
 1. Tests cannot be included into an "Ordered Test".
-2. The`.testsettings` file does not support:
-   * Configuring The adapter.
+2. Changes to the `.testsettings` file:
+   * Can no longer be used to configure the adapter.
    * The `LegacySettings` tag.
 3. The adapter does not support test lists specified as a `.vsmdi` file.
 4. The `Coded UI Test Project`, and the `Web Performance and Load Test Project` types are not supported.
