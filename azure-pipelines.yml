@@ -151,11 +151,10 @@ stages:
   - ${{ if eq(variables._RunAsInternal, True) }}:
     - template: /eng/common/templates/job/onelocbuild.yml
       parameters:
-        UseCheckedInLocProjectJson: true
-        SkipLocProjectJsonGeneration: true
         GitHubOrg: microsoft
         MirrorRepo: testfx
-        LclPackageId: LCL-JUNO-PROD-TESTFX
+        LclSource: lclFilesfromPackage
+        LclPackageId: 'LCL-JUNO-PROD-TESTFX'
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml
