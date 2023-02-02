@@ -44,7 +44,7 @@ Here are the features that are not supported:
 1. Tests cannot be included into an "Ordered Test".
 2. Changes to the `.testsettings` file:
    * Can no longer be used to configure the adapter.
-   * The `LegacySettings` tag.
+   * No longer support The `<LegacySettings>`so you can't use it to set attributes e.g.: `DeploymentItem`.
 3. The adapter does not support test lists specified as a `.vsmdi` file.
 4. The `Coded UI Test Project`, and the `Web Performance and Load Test Project` types are not supported.
 5. Association with a testcase item in TFS is not supported.
