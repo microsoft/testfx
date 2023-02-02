@@ -348,16 +348,6 @@ internal class ReflectHelper : MarshalByRefObject
             !.Any(); // TODO: Investigate if we rely on NRE
 
     /// <summary>
-    /// Gets the class cleanup lifecycle set on an assembly.
-    /// </summary>
-    /// <param name="assembly"> The test assembly. </param>
-    /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
-    internal static ClassCleanupExecutionAttribute? GetClassCleanupAttribute(Assembly assembly)
-        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute))
-            !.OfType<ClassCleanupExecutionAttribute>() // TODO: Investigate if we rely on NRE
-            .FirstOrDefault();
-
-    /// <summary>
     /// Gets custom attributes at the class and assembly for a method.
     /// </summary>
     /// <param name="attributeProvider">Method Info or Member Info or a Type.</param>

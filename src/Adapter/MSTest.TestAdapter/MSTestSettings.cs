@@ -119,11 +119,6 @@ public class MSTestSettings
     public bool EnableBaseClassTestMethodsFromOtherAssemblies { get; private set; }
 
     /// <summary>
-    /// Gets a value indicating where class cleanup should occur.
-    /// </summary>
-    public ClassCleanupBehavior? ClassCleanupLifecycle { get; private set; }
-
-    /// <summary>
     /// Gets the number of threads/workers to be used for parallelization.
     /// </summary>
     public int? ParallelizationWorkers { get; private set; }
@@ -169,7 +164,6 @@ public class MSTestSettings
         CurrentSettings.MapNotRunnableToFailed = settings.MapNotRunnableToFailed;
         CurrentSettings.TreatDiscoveryWarningsAsErrors = settings.TreatDiscoveryWarningsAsErrors;
         CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies = settings.EnableBaseClassTestMethodsFromOtherAssemblies;
-        CurrentSettings.ClassCleanupLifecycle = settings.ClassCleanupLifecycle;
         CurrentSettings.ParallelizationWorkers = settings.ParallelizationWorkers;
         CurrentSettings.ParallelizationScope = settings.ParallelizationScope;
         CurrentSettings.DisableParallelization = settings.DisableParallelization;
@@ -343,26 +337,6 @@ public class MSTestSettings
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.EnableBaseClassTestMethodsFromOtherAssemblies = result;
-                            }
-
-                            break;
-                        }
-
-                    case "CLASSCLEANUPLIFECYCLE":
-                        {
-                            var value = reader.ReadInnerXml();
-                            if (TryParseEnum(value, out ClassCleanupBehavior lifecycle))
-                            {
-                                settings.ClassCleanupLifecycle = lifecycle;
-                            }
-                            else
-                            {
-                                throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidClassCleanupLifecycleValue,
-                                        value,
-                                        string.Join(", ", Enum.GetNames(typeof(ClassCleanupBehavior)))));
                             }
 
                             break;

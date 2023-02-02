@@ -16,7 +16,7 @@ public class TestClassBaseEndOfClass
         Console.WriteLine("TestClassBaseEndOfClass: ClassInitialize");
     }
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void BaseClassCleanup()
     {
         Console.WriteLine("TestClassBaseEndOfClass: ClassCleanup");
@@ -32,7 +32,7 @@ public class TestClassIntermediateEndOfClassBaseEndOfClass : TestClassBaseEndOfC
         Console.WriteLine("TestClassIntermediateEndOfClassBaseEndOfClass: ClassInitialize");
     }
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void IntermediateClassCleanup()
     {
         Console.WriteLine("TestClassIntermediateEndOfClassBaseEndOfClass: ClassCleanup");
@@ -58,7 +58,7 @@ public class TestClassDerivedEndOfClass_EndOfClassEndOfClass : TestClassIntermed
         Console.WriteLine("TestClassDerivedEndOfClass_EndOfClassEndOfClass: TestMethod");
     }
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfClass)]
+    [ClassCleanup]
     public static void ClassCleanup()
     {
         Console.WriteLine("TestClassDerivedEndOfClass_EndOfClassEndOfClass: ClassCleanup");
