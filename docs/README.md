@@ -17,6 +17,7 @@ You can find the main differences with MSTest v1 in [Deltas w.r.t MSTest V1](del
 
 The main features of MSTest v2 are documented through a list of RFCs:
 
+- [Writing your first test with mstest](https://learn.microsoft.com/dotnet/core/testing/unit-testing-with-mstest)
 - [Framework Extensibility Trait Attributes](RFCs/001-Framework-Extensibility-Trait-Attributes.md)
 - [Framework Extensibility for Custom Assertions](RFCs/002-Framework-Extensibility-Custom-Assertions.md)
 - [Customize Running tests](RFCs/003-Customize-Running-Tests.md)
