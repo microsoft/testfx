@@ -17,6 +17,7 @@ You can find the main differences with MSTest v1 in [Deltas w.r.t MSTest V1](del
 
 The main features of MSTest v2 are documented through a list of RFCs:
 
+- [Writing your first test with mstest](https://learn.microsoft.com/dotnet/core/testing/unit-testing-with-mstest)
 - [Framework Extensibility Trait Attributes](RFCs/001-Framework-Extensibility-Trait-Attributes.md)
 - [Framework Extensibility for Custom Assertions](RFCs/002-Framework-Extensibility-Custom-Assertions.md)
 - [Customize Running tests](RFCs/003-Customize-Running-Tests.md)
@@ -26,6 +27,9 @@ The main features of MSTest v2 are documented through a list of RFCs:
 - [DataSource Attribute Vs ITestDataSource](RFCs/007-DataSource-Attribute-VS-ITestDataSource.md)
 - [Test case timeout via runsettings](RFCs/008-TestCase-Timeout.md)
 - [MSTest element via runsettings](https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#mstest-element)
+- [Use the MSTest framework in unit tests](https://learn.microsoft.com/visualstudio/test/using-microsoft-visualstudio-testtools-unittesting-members-in-unit-tests)
+- [Create a data-driven unit test](https://learn.microsoft.com/visualstudio/test/how-to-create-a-data-driven-unit-test)
+- [Run selected unit tests](https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests?pivots=mstest)
 - [Upgrade from MSTestV1 to MSTestV2](https://learn.microsoft.com/visualstudio/test/mstest-update-to-mstestv2)
 
 ## Releases
