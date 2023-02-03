@@ -30,6 +30,7 @@ The main features of MSTest v2 are documented through a list of RFCs:
 - [Use the MSTest framework in unit tests](https://learn.microsoft.com/visualstudio/test/using-microsoft-visualstudio-testtools-unittesting-members-in-unit-tests)
 - [Create a data-driven unit test](https://learn.microsoft.com/visualstudio/test/how-to-create-a-data-driven-unit-test)
 - [Run selected unit tests](https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests?pivots=mstest)
+- [Upgrade from MSTestV1 to MSTestV2](https://learn.microsoft.com/visualstudio/test/mstest-update-to-mstestv2)
 
 ## Releases
 
