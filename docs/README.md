@@ -26,6 +26,7 @@ The main features of MSTest v2 are documented through a list of RFCs:
 - [DataSource Attribute Vs ITestDataSource](RFCs/007-DataSource-Attribute-VS-ITestDataSource.md)
 - [Test case timeout via runsettings](RFCs/008-TestCase-Timeout.md)
 - [MSTest element via runsettings](https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#mstest-element)
+- [Upgrade from MSTestV1 to MSTestV2](https://learn.microsoft.com/visualstudio/test/mstest-update-to-mstestv2)
 
 ## Releases
 
