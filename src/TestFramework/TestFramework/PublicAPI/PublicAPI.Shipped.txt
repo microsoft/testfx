@@ -17,7 +17,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertI
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior inheritanceBehavior) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.InheritanceBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior?
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.InheritanceBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute.ClassInitializeAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute.ClassInitializeAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior inheritanceBehavior) -> void

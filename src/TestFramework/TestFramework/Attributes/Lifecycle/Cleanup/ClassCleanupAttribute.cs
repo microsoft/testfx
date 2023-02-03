@@ -15,7 +15,7 @@ public sealed class ClassCleanupAttribute : Attribute
     /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
     /// </summary>
     public ClassCleanupAttribute()
-        : this(null)
+        : this(InheritanceBehavior.None)
     {
     }
 
@@ -26,17 +26,6 @@ public sealed class ClassCleanupAttribute : Attribute
     /// Specifies the ClassCleanup Inheritance Behavior.
     /// </param>
     public ClassCleanupAttribute(InheritanceBehavior inheritanceBehavior)
-        : this(new InheritanceBehavior?(inheritanceBehavior))
-    {
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ClassCleanupAttribute"/> class.
-    /// </summary>
-    /// <param name="inheritanceBehavior">
-    /// Specifies the ClassCleanup Inheritance Behavior.
-    /// </param>
-    private ClassCleanupAttribute(InheritanceBehavior? inheritanceBehavior)
     {
         InheritanceBehavior = inheritanceBehavior;
     }
@@ -44,5 +33,5 @@ public sealed class ClassCleanupAttribute : Attribute
     /// <summary>
     /// Gets the Inheritance Behavior.
     /// </summary>
-    public InheritanceBehavior? InheritanceBehavior { get; }
+    public InheritanceBehavior InheritanceBehavior { get; }
 }
