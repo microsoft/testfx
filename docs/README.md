@@ -26,6 +26,9 @@ The main features of MSTest v2 are documented through a list of RFCs:
 - [DataSource Attribute Vs ITestDataSource](RFCs/007-DataSource-Attribute-VS-ITestDataSource.md)
 - [Test case timeout via runsettings](RFCs/008-TestCase-Timeout.md)
 - [MSTest element via runsettings](https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#mstest-element)
+- [Use the MSTest framework in unit tests](https://learn.microsoft.com/visualstudio/test/using-microsoft-visualstudio-testtools-unittesting-members-in-unit-tests)
+- [Create a data-driven unit test](https://learn.microsoft.com/visualstudio/test/how-to-create-a-data-driven-unit-test)
+- [Run selected unit tests](https://learn.microsoft.com/dotnet/core/testing/selective-unit-tests?pivots=mstest)
 
 ## Releases
 
