@@ -1,6 +1,6 @@
 {
   "sdk": {
-    "version": "8.0.100-alpha.1.23061.8"
+    "version": "8.0.100-alpha.1.23074.25"
   },
   "tools": {
     "vs": {
@@ -11,17 +11,17 @@
         "Microsoft.VisualStudio.Component.VSSDK"
       ]
     },
-    "dotnet": "8.0.100-alpha.1.23061.8",
+    "dotnet": "8.0.100-alpha.1.23074.25",
     "runtimes": {
       "dotnet": [
-        "6.0.12",
+        "6.0.13",
         "3.1.32"
       ]
     }
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "8.0.0-beta.23101.1",
-    "Microsoft.DotNet.Helix.Sdk": "8.0.0-beta.23101.1",
+    "Microsoft.DotNet.Arcade.Sdk": "8.0.0-beta.23103.1",
+    "Microsoft.DotNet.Helix.Sdk": "8.0.0-beta.23103.1",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

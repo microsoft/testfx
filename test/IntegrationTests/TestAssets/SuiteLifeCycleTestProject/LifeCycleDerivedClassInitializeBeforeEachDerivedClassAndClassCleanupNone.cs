@@ -61,7 +61,7 @@ public sealed class LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClas
         Debug.WriteLine("Debug: LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.TestCleanup was called");
     }
 
-    [ClassCleanup(ClassCleanupBehavior.EndOfAssembly)]
+    [ClassCleanup]
     public static void DerivedClassCleanup()
     {
         s_testContext.WriteLine("LifeCycleDerivedClassInitializeBeforeEachDerivedClassAndClassCleanupNone.ClassCleanup was called");
