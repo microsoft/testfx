@@ -59,6 +59,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eng", "eng", "{FE0DF239-0D8
 		eng\stylecop.json = eng\stylecop.json
 		eng\stylecop.ruleset = eng\stylecop.ruleset
 		eng\stylecop.test.ruleset = eng\stylecop.test.ruleset
+		eng\Versions.props = eng\Versions.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{92F8E9A2-903E-4025-99BC-7DC478D5466D}"

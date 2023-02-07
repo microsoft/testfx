@@ -68,7 +68,7 @@
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
     <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
-    <MoqVersion>4.18.1</MoqVersion>
+    <MoqVersion>4.18.4</MoqVersion>
     <MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>3.8.0</MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
     <NuGetVersion>5.6.0-preview.2.6489</NuGetVersion>
