@@ -6,7 +6,7 @@ using System;
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 /// <summary>
-/// Used to specify deployment item (file or directory) per-test deployment for copying files or folders specified as deployment items to the <see cref="Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.DeploymentDirectory"/>.
+/// Used to specify deployment item (file or directory) per-test deployment for copying files or folders specified as deployment items to the <see cref="TestContext"/>.DeploymentDirectory.
 /// Deployment directory is where all the deployment items are present along with TestSource dll.
 /// Can be specified on test class or test method.
 /// Can have multiple instances of the attribute to specify more than one item.
