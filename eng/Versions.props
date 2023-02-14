@@ -24,7 +24,7 @@
     <CommandLineParserVersion>2.2.1</CommandLineParserVersion>
     <CredentialManagementVersion>1.0.2</CredentialManagementVersion>
     <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
-    <FluentAssertionsVersion>6.7.0</FluentAssertionsVersion>
+    <FluentAssertionsVersion>6.9.0</FluentAssertionsVersion>
     <HandlebarsNetVersion>1.10.1</HandlebarsNetVersion>
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
     <log4netVersion>2.0.10</log4netVersion>
@@ -42,12 +42,12 @@
     <MicrosoftCodeAnalysisAnalyzersVersion>2.6.3</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisCSharpVersion>2.9.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftDataAnalysisVersion>0.1.0</MicrosoftDataAnalysisVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>8.0.0-beta.23103.1</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>8.0.0-beta.23110.3</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.6.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.20258.6</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.21228.1</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetSignToolVersion>8.0.0-beta.23103.1</MicrosoftDotNetSignToolVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>8.0.0-beta.23103.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetSignToolVersion>8.0.0-beta.23110.3</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>8.0.0-beta.23110.3</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21264.3</MicrosoftDotNetXHarnessCLIVersion>
     <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>2.1.1</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
     <MicrosoftExtensionsDependencyInjectionVersion>2.1.1</MicrosoftExtensionsDependencyInjectionVersion>
@@ -68,13 +68,13 @@
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
     <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
-    <MoqVersion>4.18.1</MoqVersion>
+    <MoqVersion>4.18.4</MoqVersion>
     <MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>3.8.0</MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
     <NuGetVersion>5.6.0-preview.2.6489</NuGetVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <OctokitVersion>0.32.0</OctokitVersion>
-    <RoslynPublicApiAnalyzersVersion>3.3.4-beta1.22403.2</RoslynPublicApiAnalyzersVersion>
+    <RoslynPublicApiAnalyzersVersion>3.3.4</RoslynPublicApiAnalyzersVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.435</StyleCopAnalyzersVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
