@@ -143,14 +143,12 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <inheritdoc/>
     public override void AddResultFile(string fileName)
     {
-#if !WIN_UI
         if (StringEx.IsNullOrEmpty(fileName))
         {
             throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
         }
 
         _testResultFiles.Add(Path.GetFullPath(fileName));
-#endif
     }
 
     /// <summary>
@@ -311,7 +309,6 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <returns>Results files generated in run.</returns>
     public IList<string>? GetResultFiles()
     {
-#if !WIN_UI
         if (!_testResultFiles.Any())
         {
             return null;
@@ -323,10 +320,6 @@ public class TestContextImplementation : TestContext, ITestContext
         _testResultFiles.Clear();
 
         return results;
-#else
-        // Returns null as this feature is not supported in ASP .net and UWP
-        return null;
-#endif
     }
 
     /// <summary>
