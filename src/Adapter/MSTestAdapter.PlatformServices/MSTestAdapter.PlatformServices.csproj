@@ -26,19 +26,6 @@
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
-    <Prefer32Bit Condition=" '$(Platform)' != 'AnyCPU' ">true</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <UseVSHostingProcess Condition=" '$(Platform)' != 'AnyCPU' ">false</UseVSHostingProcess>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" />
   </ItemGroup>

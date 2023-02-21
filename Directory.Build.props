@@ -65,6 +65,11 @@
     <AssemblyFileVersion>14.0.0.0</AssemblyFileVersion>
     <!-- Prevent warning about deprecated target frameworks -->
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <!-- PDB -->
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>embedded</DebugType>
+    <!-- Default to all packages generating a corresponding symbol package -->
+    <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
 
   <!-- Sign config -->

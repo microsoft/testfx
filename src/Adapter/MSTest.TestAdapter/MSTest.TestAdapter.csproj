@@ -7,8 +7,6 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <IncludeSymbols>true</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <NuspecFile>MSTest.TestAdapter.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageId>MSTest.TestAdapter</PackageId>
@@ -38,17 +36,6 @@
     <Nullable>enable</Nullable>
     <!-- Force NuGet package dependencies to be copied to the output directory so we can embed AdapterUtilities in our NuGet. -->
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <DefineConstants>$(DefineConstants);DEBUG;CODE_ANALYSIS</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
   </PropertyGroup>
 
   <ItemGroup>
