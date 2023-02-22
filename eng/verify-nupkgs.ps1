@@ -23,15 +23,15 @@ function Test-NuGetPackages {
         "MSTest"                                      = 5;
     }
 
-    $packageDirectory = Resolve-Path (Join-Path $PSScriptRoot "../artifacts/packages/$configuration")
-    $tmpDirectory = Resolve-Path (Join-Path $PSScriptRoot "../artifacts/tmp/$configuration")
+    $packageDirectory = Resolve-Path "$PSScriptRoot/../artifacts/packages/$configuration"
+    $tmpDirectory = Resolve-Path "$PSScriptRoot/../artifacts/tmp/$configuration"
     $nugetPackages = Get-ChildItem -Filter "*.nupkg" $packageDirectory -Recurse -Exclude "*.symbols.nupkg" | ForEach-Object { $_.FullName }
 
     Write-Host "Unzipping NuGet packages."
-    $unzipNugetPackageDirs = New-Object System.Collections.Generic.List[System.Object]
+    $unzipNugetPackageDirs = @()
     foreach ($nugetPackage in $nugetPackages) {
-        $unzipNugetPackageDir = $(Join-Path $tmpDirectory $(Get-Item $nugetPackage).BaseName)
-        $unzipNugetPackageDirs.Add($unzipNugetPackageDir)
+        $unzipNugetPackageDir = $(Join-Path $tmpDirectory (Get-Item $nugetPackage).BaseName)
+        $unzipNugetPackageDirs += $unzipNugetPackageDir
 
         if (Test-Path -Path $unzipNugetPackageDir) {
             Remove-Item -Force -Recurse $unzipNugetPackageDir
@@ -48,9 +48,9 @@ function Test-NuGetPackages {
     $errors = @()
     foreach ($unzipNugetPackageDir in $unzipNugetPackageDirs) {
         try {
-            $packageFullName = (Get-Item $unzipNugetPackageDir).BaseName
-            $versionIndex = $packageFullName.LastIndexOf($version)
-            $packageKey = $packageFullName.Substring(0, $versionIndex - 1) # Remove last dot
+            $packageName = (Get-Item $unzipNugetPackageDir).BaseName
+            $versionIndex = $packageName.LastIndexOf($version)
+            $packageKey = $packageName.Substring(0, $versionIndex - 1) # Remove last dot
             Write-Verbose "Verifying package '$packageKey'."
 
             $actualNumOfFiles = (Get-ChildItem -Recurse -File -Path $unzipNugetPackageDir).Count
@@ -59,7 +59,7 @@ function Test-NuGetPackages {
             }
         }
         finally {
-            if ($null -ne $unzipNugetPackageDir -and (Test-Path $unzipNugetPackageDir)) {
+            if (Test-Path $unzipNugetPackageDir) {
                 Remove-Item -Force -Recurse $unzipNugetPackageDir | Out-Null
             }
         }
