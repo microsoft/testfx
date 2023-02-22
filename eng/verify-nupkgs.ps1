@@ -40,8 +40,12 @@ function Test-NuGetPackages {
         Unzip $nugetPackage $unzipNugetPackageDir
     }
 
-    $version = [string]([xml](Get-Content $PSScriptRoot\Versions.props)).Project.PropertyGroup.VersionPrefix
-    $version = $version.Trim()
+    $versionPropsXml = [xml](Get-Content $PSScriptRoot\Versions.props)
+    $version = $versionPropsXml.Project.PropertyGroup.VersionPrefix | Where-Object { $null -ne $_ } | Select-Object -First 1
+    if ($null -eq $version) {
+        throw "version is null"
+    }
+
     Write-Verbose "Package version is '$version'."
 
     Write-Host "Verifying NuGet packages files."
