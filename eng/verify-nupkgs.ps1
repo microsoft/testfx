@@ -17,10 +17,10 @@ function Unzip {
 function Test-NuGetPackages {
     Write-Host "Starting Test-NuGetPackages."
     $expectedNumOfFiles = @{
-        "MSTest.Internal.TestFx.Documentation"        = 58;
-        "MSTest.TestFramework"                        = 21;
-        "MSTest.TestAdapter"                          = 602;
-        "MSTest"                                      = 16;
+        "MSTest.Internal.TestFx.Documentation"        = 10;
+        "MSTest.TestFramework"                        = 93;
+        "MSTest.TestAdapter"                          = 112;
+        "MSTest"                                      = 5;
     }
 
     $packageDirectory = Resolve-Path (Join-Path $PSScriptRoot "../artifacts/packages/$configuration")
@@ -40,7 +40,8 @@ function Test-NuGetPackages {
         Unzip $nugetPackage $unzipNugetPackageDir
     }
 
-    $version = ([xml](Get-Content $PSScriptRoot\Versions.props)).Project.PropertyGroup.VersionPrefix
+    $version = [string]([xml](Get-Content $PSScriptRoot\Versions.props)).Project.PropertyGroup.VersionPrefix
+    $version = $version.Trim()
     Write-Verbose "Package version is '$version'."
 
     Write-Host "Verifying NuGet packages files."
@@ -49,8 +50,6 @@ function Test-NuGetPackages {
         try {
             $packageFullName = (Get-Item $unzipNugetPackageDir).BaseName
             $versionIndex = $packageFullName.LastIndexOf($version)
-            Write-Verbose "Found $version at index $versionIndex in $packageFullName"
-
             $packageKey = $packageFullName.Substring(0, $versionIndex - 1) # Remove last dot
             Write-Verbose "Verifying package '$packageKey'."
 
