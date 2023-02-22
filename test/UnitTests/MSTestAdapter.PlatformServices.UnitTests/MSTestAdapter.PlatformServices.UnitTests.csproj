@@ -13,7 +13,7 @@
     <DefineConstants>$(DefineConstants);WIN_UI</DefineConstants>
   </PropertyGroup>
 
-  <!-- Keep the property DebugType, otherwise DesktopFileOperationsTests.DisposeNavigationSessionShouldDisposeNavigationSessionInstance fails -->
+  <!-- Keep the property DebugType as some tests rely on specific pdb type -->
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugType>full</DebugType>
   </PropertyGroup>
