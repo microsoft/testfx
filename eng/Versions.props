@@ -6,8 +6,8 @@
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>17.4.1</MicrosoftNETTestSdkVersion>
-    <!-- Opt-out repo features -->
-    <UsingToolXliff>false</UsingToolXliff>
+    <!-- Use xliff task tool to ensure creation of resx from xlf at build. True is default value but we want to set it explicitly -->
+    <UsingToolXliff>true</UsingToolXliff>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <MicrosoftWindowsAppSDKVersion>1.0.0</MicrosoftWindowsAppSDKVersion>
@@ -105,10 +105,6 @@
     <SystemValueTupleVersion>4.3.0</SystemValueTupleVersion>
     <SystemXmlReaderWriterVersion>4.3.1</SystemXmlReaderWriterVersion>
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
-    <XliffTasksVersion>1.0.0-beta.22513.1</XliffTasksVersion>
-    <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
-    <XUnitVersion>2.4.1</XUnitVersion>
-    <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
   </PropertyGroup>
   <PropertyGroup>
     <UsingToolMicrosoftNetCompilers>true</UsingToolMicrosoftNetCompilers>
