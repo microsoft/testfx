@@ -121,6 +121,13 @@ stages:
           name: Build
           displayName: Build
 
+        - task: PowerShell@2
+          displayName: 'Verify NuGet packages file count'
+          inputs:
+            targetType: filePath
+            filePath: '.\eng\verify-nupkgs.ps1'
+            arguments: '-configuration $(_BuildConfig)'
+
         # -ci is allowing to import some environment variables and some required configurations
         - script: Test.cmd
             -configuration $(_BuildConfig)
