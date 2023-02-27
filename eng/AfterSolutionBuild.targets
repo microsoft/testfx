@@ -1,6 +1,6 @@
 <Project>
 
-  <Target Name="_VerifyNuGetPackages" AfterTargets="Pack" Condition="'$(DotNetBuildFromSource)' != 'true'">
+  <Target Name="_VerifyNuGetPackages" AfterTargets="Pack" Condition=" '$(OS)' == 'Windows_NT' ">
     <Exec Command="powershell -NoProfile -NoLogo -ExecutionPolicy Bypass $(RepositoryEngineeringDir)\verify-nupkgs.ps1 -configuration $(Configuration)" />
   </Target>
 
