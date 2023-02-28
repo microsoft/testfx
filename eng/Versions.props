@@ -31,4 +31,7 @@
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.435</StyleCopAnalyzersVersion>
   </PropertyGroup>
+  <PropertyGroup Label="Arcade dependencies">
+    <MicrosoftNetCompilersToolsetVersion>4.6.0-1.23073.4</MicrosoftNetCompilersToolsetVersion>
+  </PropertyGroup>
 </Project>
