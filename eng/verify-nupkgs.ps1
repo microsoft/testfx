@@ -6,6 +6,8 @@ Param(
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
+$ErrorActionPreference = 'Stop'
+
 function Unzip {
     param([string]$zipfile, [string]$outpath)
 
@@ -14,8 +16,8 @@ function Unzip {
     [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath)
 }
 
-function Test-NuGetPackages {
-    Write-Host "Starting Test-NuGetPackages."
+function Confirm-NugetPackages {
+    Write-Verbose "Starting Confirm-NugetPackages."
     $expectedNumOfFiles = @{
         "MSTest.Internal.TestFx.Documentation"        = 10;
         "MSTest.TestFramework"                        = 93;
@@ -27,7 +29,7 @@ function Test-NuGetPackages {
     $tmpDirectory = Resolve-Path "$PSScriptRoot/../artifacts/tmp/$configuration"
     $nugetPackages = Get-ChildItem -Filter "*.nupkg" $packageDirectory -Recurse -Exclude "*.symbols.nupkg" | ForEach-Object { $_.FullName }
 
-    Write-Host "Unzipping NuGet packages."
+    Write-Verbose "Unzipping NuGet packages."
     $unzipNugetPackageDirs = @()
     foreach ($nugetPackage in $nugetPackages) {
         $unzipNugetPackageDir = $(Join-Path $tmpDirectory (Get-Item $nugetPackage).BaseName)
@@ -48,7 +50,7 @@ function Test-NuGetPackages {
 
     Write-Verbose "Package version is '$version'."
 
-    Write-Host "Verifying NuGet packages files."
+    Write-Verbose "Verifying NuGet packages files."
     $errors = @()
     foreach ($unzipNugetPackageDir in $unzipNugetPackageDirs) {
         try {
@@ -70,10 +72,10 @@ function Test-NuGetPackages {
     }
 
     if ($errors) {
-        Write-Error "There are $($errors.Count) errors:`n$($errors -join "`n")"
+        Write-Error "Validation of NuGet packages failed with $($errors.Count) errors:`n$($errors -join "`n")"
+    } else {
+        Write-Host "Successfully validated content of NuGet packages"
     }
-
-    Write-Host "Completed Test-NuGetPackages."
 }
 
-Test-NuGetPackages
+Confirm-NugetPackages
