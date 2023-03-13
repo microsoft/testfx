@@ -2,6 +2,7 @@
 <Project>
 
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+  <Import Project="$(RepositoryEngineeringDir)Analyzers.props" />
 
   <PropertyGroup>
     <RepoRoot Condition=" '$(RepoRoot)' == '' ">$([MSBuild]::NormalizeDirectory('$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'LICENSE'))'))</RepoRoot>
@@ -17,11 +18,6 @@
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
     <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <!-- default to max warnlevel -->
-    <AnalysisLevel>preview</AnalysisLevel>
-    <CodeAnalysisRuleSet>$(RepoRoot)eng\stylecop.test.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSet Condition=" '$(IsSourceFile)' == 'true' ">$(RepoRoot)eng\stylecop.ruleset</CodeAnalysisRuleSet>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!--
         Make sure any documentation comments which are included in code get checked for syntax during the build, but do
@@ -69,6 +65,11 @@
     <AssemblyFileVersion>14.0.0.0</AssemblyFileVersion>
     <!-- Prevent warning about deprecated target frameworks -->
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <!-- PDB -->
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>embedded</DebugType>
+    <!-- Default to all packages generating a corresponding symbol package -->
+    <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
 
   <!-- Sign config -->
@@ -80,26 +81,5 @@
   <PropertyGroup>
     <UseVSTestRunner>true</UseVSTestRunner>
   </PropertyGroup>
-
-  <!--
-    Include PublicApi analyzers into all projects that are in our src directory.
-    Use relative path between the project and the root to avoid including the analyzer if the path above the root contains 'src' (e.g. C:\src\vstest).
-  -->
-  <ItemGroup Condition="$([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src/')) OR $([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src\'))">
-    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(RoslynPublicApiAnalyzersVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <AdditionalFiles Include="$(RepoRoot)eng\stylecop.json">
-      <Link>stylecop.json</Link>
-    </AdditionalFiles>
-    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
 
 </Project>

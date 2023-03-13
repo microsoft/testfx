@@ -145,7 +145,7 @@ stages:
             displayName: 'Publish NuGet packages to test-tools feed'
             inputs:
               command: push
-              packagesToPush: 'artifacts/packages/**/*.nupkg;'
+              packagesToPush: 'artifacts/packages/$(_BuildConfig)/**/*.nupkg;!artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg'
               publishVstsFeed: 'public/test-tools'
 
   - ${{ if eq(variables._RunAsInternal, True) }}:
