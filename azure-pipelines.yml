@@ -23,7 +23,7 @@ pr:
 
 parameters:
 - name: isRTM
-  displayName: "Release a RTM version?"
+  displayName: "Produce RTM version?"
   type: boolean
   default: False
 
@@ -63,6 +63,10 @@ variables:
         /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
         /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+
+  - ${{ if eq(parameters.isRTM, True) }}:
+    - name: _InternalBuildArgs
+      value: $(_InternalBuildArgs) /p:DotNetFinalVersionKind=release
 
 stages:
 
