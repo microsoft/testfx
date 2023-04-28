@@ -1,7 +1,12 @@
 # Branches that trigger a build on commit
 trigger:
-- main
-- rel/*
+  branches:
+    include:
+    - main
+    - rel/*
+    exclude:
+    - rel/2.*
+    - rel/3.0.*
 
 # Branch(es) that trigger(s) build(s) on PR
 pr:
