@@ -12,7 +12,7 @@
   </PropertyGroup>
   <PropertyGroup Label="MSTest dependencies">
     <!-- Test Platform, .NET Test SDK and Object Model  -->
-    <MicrosoftNETTestSdkVersion>17.4.1</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>17.5.0</MicrosoftNETTestSdkVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <MicrosoftWindowsAppSDKVersion>1.0.0</MicrosoftWindowsAppSDKVersion>
@@ -24,7 +24,7 @@
     <!-- CVE-2019-0820 -->
     <SystemDiagnosticsTextWriterTraceListenerVersion>4.3.0</SystemDiagnosticsTextWriterTraceListenerVersion>
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
-    <FluentAssertionsVersion>6.9.0</FluentAssertionsVersion>
+    <FluentAssertionsVersion>6.10.0</FluentAssertionsVersion>
     <MoqVersion>4.18.4</MoqVersion>
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
     <RoslynPublicApiAnalyzersVersion>3.3.4</RoslynPublicApiAnalyzersVersion>

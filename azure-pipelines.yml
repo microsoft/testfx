@@ -1,7 +1,12 @@
 # Branches that trigger a build on commit
 trigger:
-- main
-- rel/*
+  branches:
+    include:
+    - main
+    - rel/*
+    exclude:
+    - rel/2.*
+    - rel/3.0.*
 
 # Branch(es) that trigger(s) build(s) on PR
 pr:
@@ -23,7 +28,7 @@ pr:
 
 parameters:
 - name: isRTM
-  displayName: "Release a RTM version?"
+  displayName: "Produce RTM version?"
   type: boolean
   default: False
 
@@ -63,6 +68,10 @@ variables:
         /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
         /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+
+  - ${{ if eq(parameters.isRTM, True) }}:
+    - name: _InternalBuildArgs
+      value: $(_InternalBuildArgs) /p:DotNetFinalVersionKind=release
 
 stages:
 
