@@ -110,7 +110,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-2
 
 ### Changed
 
-* we have started using some new features from newer versions of Test Platform and one of them is causing this change of display in VS. eg. to see grouping by "Traits" + "Class" you have to select them both from VS dropdown not only "Traits" like old versions.
+* Visual Studio grouping tests by `Traits` rendering has changed. To keep something similar to the past, you will have to use group by `Traits` + `Class`. [#1634](https://github.com/microsoft/testfx/issues/1634)
 * Disable again the generation of localization files
 * Cleanup TestFx.Loc.props
 * Update xlf files [#1387](https://github.com/microsoft/testfx/pull/1387)
