@@ -291,7 +291,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * [Assert failure messages](https://github.com/microsoft/testfx/pull/1172)
 * [Ensure assertions do not fail with FormatException](https://github.com/microsoft/testfx/pull/1126)
 * [Prevent format exceptions when parameters array is empty](https://github.com/microsoft/testfx/pull/1124)
-* [main] Update dependencies from dotnet/arcade](https://github.com/microsoft/testfx/pull/1098)
+* [\[main\] Update dependencies from dotnet/arcade](https://github.com/microsoft/testfx/pull/1098)
 
 ### Fixed
 
@@ -340,7 +340,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 * [Fix write conflicts in parallel output](https://github.com/microsoft/testfx/pull/1068)
 * [Fixed test run executable files.](https://github.com/microsoft/testfx/pull/1064)
-* [[UITestMethod] should invoke test method with null](https://github.com/microsoft/testfx/pull/1045)
+* [\[UITestMethod\] should invoke test method with null](https://github.com/microsoft/testfx/pull/1045)
 
 ### Artifacts
 
