@@ -110,6 +110,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-2
 
 ### Changed
 
+* Visual Studio grouping tests by `Traits` rendering has changed. To keep something similar to the past, you will have to use group by `Traits` + `Class`. [#1634](https://github.com/microsoft/testfx/issues/1634)
 * Disable again the generation of localization files
 * Cleanup TestFx.Loc.props
 * Update xlf files [#1387](https://github.com/microsoft/testfx/pull/1387)
