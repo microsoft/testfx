@@ -110,6 +110,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0-preview-2
 
 ### Changed
 
+* Visual Studio grouping tests by `Traits` rendering has changed. To keep something similar to the past, you will have to use group by `Traits` + `Class`. [#1634](https://github.com/microsoft/testfx/issues/1634)
 * Disable again the generation of localization files
 * Cleanup TestFx.Loc.props
 * Update xlf files [#1387](https://github.com/microsoft/testfx/pull/1387)
@@ -291,7 +292,7 @@ A list of changes since last release are available [here](https://github.com/mic
 * [Assert failure messages](https://github.com/microsoft/testfx/pull/1172)
 * [Ensure assertions do not fail with FormatException](https://github.com/microsoft/testfx/pull/1126)
 * [Prevent format exceptions when parameters array is empty](https://github.com/microsoft/testfx/pull/1124)
-* [main] Update dependencies from dotnet/arcade](https://github.com/microsoft/testfx/pull/1098)
+* [\[main\] Update dependencies from dotnet/arcade](https://github.com/microsoft/testfx/pull/1098)
 
 ### Fixed
 
@@ -340,7 +341,7 @@ A list of changes since last release are available [here](https://github.com/mic
 
 * [Fix write conflicts in parallel output](https://github.com/microsoft/testfx/pull/1068)
 * [Fixed test run executable files.](https://github.com/microsoft/testfx/pull/1064)
-* [[UITestMethod] should invoke test method with null](https://github.com/microsoft/testfx/pull/1045)
+* [\[UITestMethod\] should invoke test method with null](https://github.com/microsoft/testfx/pull/1045)
 
 ### Artifacts
 
