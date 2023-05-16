@@ -12,7 +12,7 @@
   </PropertyGroup>
   <PropertyGroup Label="MSTest dependencies">
     <!-- Test Platform, .NET Test SDK and Object Model  -->
-    <MicrosoftNETTestSdkVersion>17.5.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>17.6.0</MicrosoftNETTestSdkVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <MicrosoftWindowsAppSDKVersion>1.0.0</MicrosoftWindowsAppSDKVersion>
