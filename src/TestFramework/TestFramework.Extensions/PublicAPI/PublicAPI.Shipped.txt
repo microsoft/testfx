@@ -1,6 +1,6 @@
 ﻿#nullable enable
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.AddResultFile(string! fileName) -> void
-abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.Generic.IDictionary<string!, object?>!
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Properties.get -> System.Collections.IDictionary!
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Write(string! format, params object?[]! args) -> void
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.Write(string? message) -> void
 abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.WriteLine(string! format, params object?[]! args) -> void
