@@ -90,7 +90,7 @@ internal class UnitTestRunner : MarshalByRefObject
     {
         // We can't transport the Enum across AppDomain boundaries because of backwards and forwards compatibility.
         // So we're converting here if we can, or falling back to the default.
-        var lifecycle = ClassCleanupBehavior.EndOfClass;
+        var lifecycle = ClassCleanupBehavior.EndOfAssembly;
         if (classCleanupLifecycle != null && Enum.IsDefined(typeof(ClassCleanupBehavior), classCleanupLifecycle))
         {
             lifecycle = (ClassCleanupBehavior)classCleanupLifecycle;

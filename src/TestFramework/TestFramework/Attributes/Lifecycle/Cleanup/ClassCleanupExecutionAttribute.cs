@@ -12,10 +12,15 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public class ClassCleanupExecutionAttribute : Attribute
 {
     /// <summary>
+    /// Default class cleanup execution.
+    /// </summary>
+    public static readonly ClassCleanupBehavior DefaultClassCleanupLifecycle = ClassCleanupBehavior.EndOfAssembly;
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="ClassCleanupExecutionAttribute"/> class.
     /// </summary>
     public ClassCleanupExecutionAttribute()
-        : this(ClassCleanupBehavior.EndOfClass)
+        : this(DefaultClassCleanupLifecycle)
     {
     }
 
