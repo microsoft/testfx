@@ -85,10 +85,21 @@ internal class UnitTestRunner : MarshalByRefObject
     /// and all inputs must be serializable from host process.
     /// </summary>
     /// <param name="testsToRun">the list of tests that will be run in this execution.</param>
-    internal void InitializeClassCleanupManager(ICollection<UnitTestElement> testsToRun)
+    /// <param name="classCleanupLifecycle">The assembly level class cleanup lifecycle.</param>
+    internal void InitializeClassCleanupManager(ICollection<UnitTestElement> testsToRun, int? classCleanupLifecycle)
     {
+        // We can't transport the Enum across AppDomain boundaries because of backwards and forwards compatibility.
+        // So we're converting here if we can, or falling back to the default.
+        var lifecycle = ClassCleanupBehavior.EndOfClass;
+        if (classCleanupLifecycle != null && Enum.IsDefined(typeof(ClassCleanupBehavior), classCleanupLifecycle))
+        {
+            lifecycle = (ClassCleanupBehavior)classCleanupLifecycle;
+        }
+
         _classCleanupManager = new ClassCleanupManager(
             testsToRun,
+            MSTestSettings.CurrentSettings.ClassCleanupLifecycle,
+            lifecycle,
             _reflectHelper);
     }
 
@@ -275,11 +286,15 @@ internal class UnitTestRunner : MarshalByRefObject
 
     private class ClassCleanupManager
     {
+        private readonly ClassCleanupBehavior? _lifecycleFromMsTest;
+        private readonly ClassCleanupBehavior _lifecycleFromAssembly;
         private readonly ReflectHelper _reflectHelper;
         private readonly ConcurrentDictionary<string, HashSet<string>> _remainingTestsByClass;
 
         public ClassCleanupManager(
             IEnumerable<UnitTestElement> testsToRun,
+            ClassCleanupBehavior? lifecycleFromMsTest,
+            ClassCleanupBehavior lifecycleFromAssembly,
             ReflectHelper? reflectHelper = null)
         {
             _remainingTestsByClass =
@@ -287,6 +302,8 @@ internal class UnitTestRunner : MarshalByRefObject
                     .ToDictionary(
                         g => g.Key,
                         g => new HashSet<string>(g.Select(t => t.TestMethod.UniqueName))));
+            _lifecycleFromMsTest = lifecycleFromMsTest;
+            _lifecycleFromAssembly = lifecycleFromAssembly;
             _reflectHelper = reflectHelper ?? new ReflectHelper();
         }
 
@@ -308,7 +325,11 @@ internal class UnitTestRunner : MarshalByRefObject
                     _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
                     if (testMethodInfo.Parent.HasExecutableCleanupMethod)
                     {
-                        shouldRunEndOfClassCleanup = true;
+                        var cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)
+                            ?? _lifecycleFromMsTest
+                            ?? _lifecycleFromAssembly;
+
+                        shouldRunEndOfClassCleanup = cleanupLifecycle == ClassCleanupBehavior.EndOfClass;
                     }
                 }
 
