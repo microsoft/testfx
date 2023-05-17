@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
-using System.Text;
 
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
@@ -174,42 +173,10 @@ public sealed class TestMethod : ITestMethod
     /// </summary>
     internal string? DisplayName { get; set; }
 
-    public string UniqueName
-    {
-        get
-        {
-            var uniqueNameBuilder = new StringBuilder();
-
-            if (HasManagedMethodAndTypeProperties)
-            {
-                uniqueNameBuilder.Append(ManagedTypeName);
-                uniqueNameBuilder.Append('.');
-                uniqueNameBuilder.Append(ManagedMethodName);
-            }
-            else
-            {
-                uniqueNameBuilder.Append(FullClassName);
-                uniqueNameBuilder.Append('.');
-                uniqueNameBuilder.Append(Name);
-            }
-
-            if (SerializedData is not null)
-            {
-                uniqueNameBuilder.Append("->");
-                for (int i = 0; i < SerializedData.Length; i++)
-                {
-                    if (i > 0)
-                    {
-                        uniqueNameBuilder.Append(", ");
-                    }
-
-                    uniqueNameBuilder.Append(SerializedData[i]);
-                }
-            }
-
-            return uniqueNameBuilder.ToString();
-        }
-    }
+    internal string UniqueName
+        => HasManagedMethodAndTypeProperties
+        ? $"{ManagedTypeName}.{ManagedMethodName}->{string.Join(", ", SerializedData ?? Array.Empty<string>())}"
+        : $"{FullClassName}.{Name}->{string.Join(", ", SerializedData ?? Array.Empty<string>())}";
 
     internal TestMethod Clone() => (TestMethod)MemberwiseClone();
 }

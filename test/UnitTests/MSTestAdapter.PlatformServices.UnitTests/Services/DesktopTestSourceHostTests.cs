@@ -84,16 +84,8 @@ public class DesktopTestSourceHostTests : TestContainer
         // Setup
         DummyClass dummyClass = new();
         int currentAppDomainId = dummyClass.AppDomainId;
-        string runSettingxml =
-        @"<RunSettings>   
-                <RunConfiguration>  
-                    <DisableAppDomain>False</DisableAppDomain>   
-                </RunConfiguration>  
-            </RunSettings>";
-        var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
-        TestSourceHost sut = new(Assembly.GetExecutingAssembly().Location, mockRunSettings.Object, null);
+        TestSourceHost sut = new(Assembly.GetExecutingAssembly().Location, null, null);
         sut.SetupHost();
 
         // Execute
@@ -111,18 +103,9 @@ public class DesktopTestSourceHostTests : TestContainer
     {
         // Arrange
         DummyClass dummyClass = new();
-        string runSettingxml =
-        @"<RunSettings>   
-                <RunConfiguration>  
-                    <DisableAppDomain>False</DisableAppDomain>   
-                </RunConfiguration>  
-            </RunSettings>";
-        var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
         var location = typeof(TestSourceHost).Assembly.Location;
-
-        Mock<TestSourceHost> sourceHost = new(location, mockRunSettings.Object, null) { CallBase = true };
+        Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
 
         try
         {
@@ -197,20 +180,11 @@ public class DesktopTestSourceHostTests : TestContainer
     {
         // Arrange
         var frameworkHandle = new Mock<IFrameworkHandle>();
-        string runSettingxml =
-        @"<RunSettings>   
-                <RunConfiguration>  
-                    <DisableAppDomain>False</DisableAppDomain>   
-                </RunConfiguration>  
-            </RunSettings>";
-        var mockRunSettings = new Mock<IRunSettings>();
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
-
         var testableAppDomain = new Mock<IAppDomain>();
+
         testableAppDomain.Setup(ad => ad.CreateDomain(It.IsAny<string>(), It.IsAny<Evidence>(), It.IsAny<AppDomainSetup>())).Returns(AppDomain.CurrentDomain);
         testableAppDomain.Setup(ad => ad.Unload(It.IsAny<AppDomain>())).Throws(new CannotUnloadAppDomainException());
-
-        var sourceHost = new TestSourceHost(typeof(DesktopTestSourceHostTests).Assembly.Location, mockRunSettings.Object, frameworkHandle.Object, testableAppDomain.Object);
+        var sourceHost = new TestSourceHost(typeof(DesktopTestSourceHostTests).Assembly.Location, null, frameworkHandle.Object, testableAppDomain.Object);
         sourceHost.SetupHost();
 
         // Act

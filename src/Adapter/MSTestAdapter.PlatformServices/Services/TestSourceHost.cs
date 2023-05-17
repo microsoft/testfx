@@ -83,7 +83,7 @@ public class TestSourceHost : ITestSourceHost
         SetContext(sourceFileName);
 
         // Set isAppDomainCreationDisabled flag
-        _isAppDomainCreationDisabled = MSTestAdapterSettings.IsAppDomainCreationDisabled(_runSettings?.SettingsXml);
+        _isAppDomainCreationDisabled = _runSettings != null && MSTestAdapterSettings.IsAppDomainCreationDisabled(_runSettings.SettingsXml);
     }
 
     /// <summary>
