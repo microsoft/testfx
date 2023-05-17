@@ -384,4 +384,7 @@ Error: {1}</value>
     <comment>{0}: Zero based index if an element inside of an array,
 {1}: Test name</comment>
   </data>
+  <data name="AssemblyResolutionIsOnlyWorkingWithNetFramework" xml:space="preserve">
+    <value>Note that AssemblyResolution is only being applied when using .NET Framework target.</value>
+  </data>
 </root>

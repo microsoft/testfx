@@ -10,7 +10,6 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -40,7 +39,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.Resource", typeof(Resource).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.Resource", typeof(Resource).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -58,6 +57,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note that AssemblyResolution is only being applied when using .NET Framework target..
+        /// </summary>
+        internal static string AssemblyResolutionIsOnlyWorkingWithNetFramework {
+            get {
+                return ResourceManager.GetString("AssemblyResolutionIsOnlyWorkingWithNetFramework", resourceCulture);
             }
         }
         

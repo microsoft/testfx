@@ -44,7 +44,7 @@ public class MSTestAdapterSettings
     /// <summary>
     ///  Gets list of paths recursive or non recursive paths.
     /// </summary>
-    protected List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
+    public List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
 
     /// <summary>
     /// Convert the parameter xml to TestSettings.
