@@ -87,7 +87,7 @@ public class LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass
     }
 #endif
 
-    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass, ClassCleanupBehavior.EndOfAssembly)]
+    [ClassCleanup(InheritanceBehavior.BeforeEachDerivedClass)]
     public static void ClassCleanup()
     {
         s_testContext.WriteLine("LifeCycleClassInitializeNoneAndClassCleanupBeforeEachDerivedClass.ClassCleanup was called");
