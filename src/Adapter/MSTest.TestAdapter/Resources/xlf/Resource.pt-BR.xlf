@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="pt-BR">
     <body>
+      <trans-unit id="AssemblyResolutionIsOnlyWorkingWithNetFramework">
+        <source>Note that AssemblyResolution is only being applied when using .NET Framework target.</source>
+        <target state="new">Note that AssemblyResolution is only being applied when using .NET Framework target.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">Teste '{0}' ultrapassou o período de tempo limite de execução.</target>
