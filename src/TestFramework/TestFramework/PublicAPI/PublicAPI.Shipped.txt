@@ -16,8 +16,18 @@ Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertI
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(string! msg, System.Exception! ex) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior cleanupBehavior) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior inheritanceBehavior) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior inheritanceBehavior, Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior cleanupBehavior) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.CleanupBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior?
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.InheritanceBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfAssembly = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior.EndOfClass = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute.ClassCleanupExecutionAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute.ClassCleanupExecutionAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior cleanupBehavior) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute.CleanupBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute.ClassInitializeAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute.ClassInitializeAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior inheritanceBehavior) -> void

@@ -324,6 +324,93 @@ public class TestClassInfo
     }
 
     /// <summary>
+    /// Run class cleanup methods.
+    /// </summary>
+    /// <param name="classCleanupLifecycle">The current lifecycle position that ClassCleanup is executing from.</param>
+    /// <returns>
+    /// Any exception that can be thrown as part of a class cleanup as warning messages.
+    /// </returns>
+    public string? RunClassCleanup(ClassCleanupBehavior classCleanupLifecycle = ClassCleanupBehavior.EndOfClass)
+    {
+        if (ClassCleanupMethod is null && BaseClassInitAndCleanupMethods.All(p => p.Item2 == null))
+        {
+            return null;
+        }
+
+        if (IsClassCleanupExecuted)
+        {
+            return null;
+        }
+
+        lock (_testClassExecuteSyncObject)
+        {
+            if (IsClassCleanupExecuted)
+            {
+                return null;
+            }
+
+            if (IsClassInitializeExecuted || ClassInitializeMethod is null)
+            {
+                MethodInfo? classCleanupMethod = null;
+
+                try
+                {
+                    classCleanupMethod = ClassCleanupMethod;
+                    classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
+                    while (baseClassCleanupQueue.Count > 0)
+                    {
+                        classCleanupMethod = baseClassCleanupQueue.Dequeue();
+                        classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    }
+
+                    IsClassCleanupExecuted = true;
+
+                    return null;
+                }
+                catch (Exception exception)
+                {
+                    var realException = exception.InnerException ?? exception;
+                    ClassCleanupException = realException;
+
+                    string errorMessage;
+
+                    // special case AssertFailedException to trim off part of the stack trace
+                    if (realException is AssertFailedException or AssertInconclusiveException)
+                    {
+                        errorMessage = realException.Message;
+                    }
+                    else
+                    {
+                        errorMessage = StackTraceHelper.GetExceptionMessage(realException);
+                    }
+
+                    var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
+
+                    errorMessage = string.Format(
+                        CultureInfo.CurrentCulture,
+                        Resource.UTA_ClassCleanupMethodWasUnsuccesful,
+                        classCleanupMethod!.DeclaringType!.Name,
+                        classCleanupMethod.Name,
+                        errorMessage,
+                        exceptionStackTraceInfo?.ErrorStackTrace);
+
+                    if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
+                    {
+                        var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
+                        ClassCleanupException = testFailedException;
+                        throw testFailedException;
+                    }
+
+                    return errorMessage;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Execute current and base class cleanups.
     /// </summary>
     /// <remarks>

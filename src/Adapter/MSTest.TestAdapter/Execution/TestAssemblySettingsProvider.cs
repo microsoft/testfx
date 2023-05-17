@@ -47,6 +47,12 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
 
         testAssemblySettings.CanParallelizeAssembly = !ReflectHelper.IsDoNotParallelizeSet(testAssembly);
 
+        var classCleanupSequencingAttribute = ReflectHelper.GetClassCleanupAttribute(testAssembly);
+        if (classCleanupSequencingAttribute != null)
+        {
+            testAssemblySettings.ClassCleanupLifecycle = classCleanupSequencingAttribute.CleanupBehavior;
+        }
+
         return testAssemblySettings;
     }
 }
