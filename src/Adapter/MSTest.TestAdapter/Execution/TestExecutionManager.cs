@@ -360,7 +360,7 @@ public class TestExecutionManager
         try
         {
             var unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
-            testRunner.InitializeClassCleanupManager(unitTestElements);
+            testRunner.InitializeClassCleanupManager(unitTestElements, (int)sourceSettings.ClassCleanupLifecycle);
         }
         catch (Exception ex)
         {

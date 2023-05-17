@@ -348,6 +348,16 @@ internal class ReflectHelper : MarshalByRefObject
             !.Any(); // TODO: Investigate if we rely on NRE
 
     /// <summary>
+    /// Gets the class cleanup lifecycle set on an assembly.
+    /// </summary>
+    /// <param name="assembly"> The test assembly. </param>
+    /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
+    internal static ClassCleanupExecutionAttribute? GetClassCleanupAttribute(Assembly assembly)
+        => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute))
+            !.OfType<ClassCleanupExecutionAttribute>() // TODO: Investigate if we rely on NRE
+            .FirstOrDefault();
+
+    /// <summary>
     /// Gets custom attributes at the class and assembly for a method.
     /// </summary>
     /// <param name="attributeProvider">Method Info or Member Info or a Type.</param>
@@ -465,6 +475,39 @@ internal class ReflectHelper : MarshalByRefObject
         return ignoreAttribute is null || ignoreAttribute.Length == 0
             ? null
             : ignoreAttribute[0].IgnoreMessage;
+    }
+
+    /// <summary>
+    /// Gets the class cleanup lifecycle for the class, if set.
+    /// </summary>
+    /// <param name="classInfo">The class to inspect.</param>
+    /// <returns>Returns <see cref="ClassCleanupBehavior"/> if provided, otherwise <c>null</c>.</returns>
+    internal virtual ClassCleanupBehavior? GetClassCleanupBehavior(TestClassInfo classInfo)
+    {
+        if (!classInfo.HasExecutableCleanupMethod)
+        {
+            return null;
+        }
+
+        var cleanupBehaviors =
+            new HashSet<ClassCleanupBehavior?>(
+                classInfo.BaseClassCleanupMethodsStack
+                .Select(x => x.GetCustomAttribute<ClassCleanupAttribute>(true)?.CleanupBehavior))
+            {
+                classInfo.ClassCleanupMethod?.GetCustomAttribute<ClassCleanupAttribute>(true)?.CleanupBehavior,
+            };
+
+        if (cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfClass))
+        {
+            return ClassCleanupBehavior.EndOfClass;
+        }
+
+        if (cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfAssembly))
+        {
+            return ClassCleanupBehavior.EndOfAssembly;
+        }
+
+        return null;
     }
 
     /// <summary>

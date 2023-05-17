@@ -130,7 +130,7 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListener
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TraceListenerWrapper.TraceListenerWrapper(System.IO.TextWriter! textWriter) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.AddResultFile(string! fileName) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.CurrentTestOutcome.get -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
-override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Properties.get -> System.Collections.Generic.IDictionary<string!, object?>!
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Properties.get -> System.Collections.IDictionary!
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Write(string! format, params object?[]! args) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.Write(string? message) -> void
 override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.WriteLine(string! format, params object?[]! args) -> void

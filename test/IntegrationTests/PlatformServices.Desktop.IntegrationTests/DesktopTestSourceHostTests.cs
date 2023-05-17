@@ -84,13 +84,7 @@ public class DesktopTestSourceHostTests : TestContainer
     public void DisposeShouldUnloadChildAppDomain()
     {
         var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug");
-        string runSettingXml =
-        $@"<RunSettings>
-                <RunConfiguration>
-                    <DisableAppDomain>False</DisableAppDomain>
-                </RunConfiguration>
-             </RunSettings>";
-        _testSourceHost = new TestSourceHost(testSource, GetMockedIRunSettings(runSettingXml).Object, null);
+        _testSourceHost = new TestSourceHost(testSource, null, null);
         _testSourceHost.SetupHost();
 
         // Check that child appdomain was indeed created
@@ -98,19 +92,6 @@ public class DesktopTestSourceHostTests : TestContainer
         _testSourceHost.Dispose();
 
         // Check that child-appdomain is now unloaded.
-        _testSourceHost.AppDomain.Should().BeNull();
-    }
-
-    public void RunSettings_WithoutSetDisableAppDomain_WillNotCreatAppDomain()
-    {
-        // Arrange
-        var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug");
-        _testSourceHost = new TestSourceHost(testSource, null, null);
-
-        // AcT
-        _testSourceHost.SetupHost();
-
-        // Assert
         _testSourceHost.AppDomain.Should().BeNull();
     }
 

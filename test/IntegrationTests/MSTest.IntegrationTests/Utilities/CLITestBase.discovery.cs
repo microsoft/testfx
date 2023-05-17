@@ -24,13 +24,13 @@ using TestFramework.ForTestingMSTest;
 namespace Microsoft.MSTestV2.CLIAutomation;
 public partial class CLITestBase : TestContainer
 {
-    internal ImmutableArray<TestCase> DiscoverTests(string assemblyPath, string testCaseFilter = null, string settingsXml = "")
+    internal ImmutableArray<TestCase> DiscoverTests(string assemblyPath, string testCaseFilter = null)
     {
         var unitTestDiscoverer = new UnitTestDiscoverer();
         var logger = new InternalLogger();
         var sink = new InternalSink();
 
-        string runSettingXml = GetRunSettingXml(settingsXml);
+        string runSettingXml = GetRunSettingXml(string.Empty);
         var context = new InternalDiscoveryContext(runSettingXml, testCaseFilter);
 
         unitTestDiscoverer.DiscoverTestsInSource(assemblyPath, logger, sink, context);
