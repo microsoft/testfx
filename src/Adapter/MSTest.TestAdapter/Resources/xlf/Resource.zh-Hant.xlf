@@ -3,8 +3,8 @@
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="zh-Hant">
     <body>
       <trans-unit id="AssemblyResolutionIsOnlyWorkingWithNetFramework">
-        <source>Note that AssemblyResolution is only being applied when using .NET Framework target.</source>
-        <target state="new">Note that AssemblyResolution is only being applied when using .NET Framework target.</target>
+        <source>The runsettings 'AssemblyResolution' entries are only supported in .NET Framework. If your tests are working consider removing this entry otherwise you will need to make sure all dependent assemblies are found in the ouput directory of your test.</source>
+        <target state="new">The runsettings 'AssemblyResolution' entries are only supported in .NET Framework. If your tests are working consider removing this entry otherwise you will need to make sure all dependent assemblies are found in the ouput directory of your test.</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
