@@ -61,7 +61,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Note that AssemblyResolution is only being applied when using .NET Framework target..
+        ///   Looks up a localized string similar to The runsettings &apos;AssemblyResolution&apos; entries are only supported in .NET Framework. If your tests are working consider removing this entry otherwise you will need to make sure all dependent assemblies are found in the ouput directory of your test..
         /// </summary>
         internal static string AssemblyResolutionIsOnlyWorkingWithNetFramework {
             get {
