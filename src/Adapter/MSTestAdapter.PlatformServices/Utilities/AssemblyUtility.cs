@@ -215,6 +215,17 @@ internal class AssemblyUtility
         AppDomain? appDomain = null;
         try
         {
+            // Force loading the resource assembly into the current domain so that we can get the resource strings even
+            // when the custom assembly resolver kicks in.
+            // This should not be required based on the algorithm followed during the satellite assembly resolution
+            // https://learn.microsoft.com/dotnet/core/extensions/package-and-deploy-resources#net-framework-resource-fallback-process
+            // BUT for some unknown reason the point 10 is not working as explained.
+            // Satellite resolution should fallback to the NeutralResourcesLanguageAttribute that we set to en but don't
+            // resulting in a FileNotFoundException.
+            // See https://github.com/microsoft/testfx/issues/1598 for the error and https://github.com/microsoft/vstest/pull/4150
+            // for the idea of the fix.
+            _ = string.Format(CultureInfo.InvariantCulture, Resource.CannotFindFile, string.Empty);
+
             appDomain = AppDomain.CreateDomain("Dependency finder domain", null, setupInfo);
             if (EqtTrace.IsInfoEnabled)
             {
