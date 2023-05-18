@@ -384,7 +384,4 @@ Error: {1}</value>
     <comment>{0}: Zero based index if an element inside of an array,
 {1}: Test name</comment>
   </data>
-  <data name="AssemblyResolutionIsOnlyWorkingWithNetFramework" xml:space="preserve">
-    <value>The runsettings 'AssemblyResolution' entries are only supported in .NET Framework. If your tests are working consider removing this entry otherwise you will need to make sure all dependent assemblies are found in the ouput directory of your test.</value>
-  </data>
 </root>

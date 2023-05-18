@@ -9,6 +9,7 @@ using System.IO;
 using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -125,6 +126,17 @@ public class MSTestAdapterSettings
         }
 
         return settings;
+    }
+
+    public static void ValidateSettings(IMessageLogger logger)
+    {
+#if !NETFRAMEWORK
+        MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
+        if (settings.SearchDirectories.Count > 1)
+        {
+            logger.SendMessage(TestMessageLevel.Warning, Resource.AssemblyResolutionIsOnlyWorkingWithNetFramework);
+        }
+#endif
     }
 
     public static bool IsAppDomainCreationDisabled(string? settingsXml)

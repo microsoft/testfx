@@ -52,14 +52,7 @@ public class MSTestDiscoverer : ITestDiscoverer
         try
         {
             MSTestSettings.PopulateSettings(discoveryContext);
-
-#if !NETFRAMEWORK
-            MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
-            if (settings.SearchDirectories.Count > 1)
-            {
-                logger.SendMessage(TestMessageLevel.Warning, Resource.AssemblyResolutionIsOnlyWorkingWithNetFramework);
-            }
-#endif
+            MSTestAdapterSettings.ValidateSettings(logger);
         }
         catch (AdapterSettingsException ex)
         {
