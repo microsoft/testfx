@@ -463,7 +463,7 @@ public class MSTestSettings
         return settings;
     }
 
-    public static void ValidateSettings(IMessageLogger logger)
+    internal static void ValidateSettings(IMessageLogger logger)
     {
         MSTestAdapterSettings.ValidateSettings(logger);
     }
