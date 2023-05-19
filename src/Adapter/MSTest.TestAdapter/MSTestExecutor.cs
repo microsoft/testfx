@@ -53,7 +53,6 @@ public class MSTestExecutor : ITestExecutor
         try
         {
             MSTestSettings.PopulateSettings(runContext);
-            MSTestSettings.ValidateSettings(frameworkHandle);
         }
         catch (AdapterSettingsException ex)
         {
