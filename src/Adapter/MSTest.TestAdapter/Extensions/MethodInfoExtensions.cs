@@ -152,7 +152,17 @@ internal static class MethodInfoExtensions
             throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, Resource.UTA_TestMethodExpectedParameters);
         }
 
-        var task = methodInfo.Invoke(classInstance, parameters) as Task;
+        Task? task;
+        if (parameters is not null
+            && methodParameters?.Length == 1
+            && methodParameters[0].ParameterType == typeof(object[]))
+        {
+            task = methodInfo.Invoke(classInstance, new[] { parameters }) as Task;
+        }
+        else
+        {
+            task = methodInfo.Invoke(classInstance, parameters) as Task;
+        }
 
         // If methodInfo is an Async method, wait for returned task
         task?.GetAwaiter().GetResult();

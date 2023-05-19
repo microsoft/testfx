@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -72,24 +71,24 @@ internal class TypeCache : MarshalByRefObject
     /// <summary>
     /// Gets Class Info cache which has cleanup methods to execute.
     /// </summary>
-    public ImmutableArray<TestClassInfo> ClassInfoListWithExecutableCleanupMethods =>
-        _classInfoCache.Values.Where(classInfo => classInfo.HasExecutableCleanupMethod).ToImmutableArray();
+    public TestClassInfo[] ClassInfoListWithExecutableCleanupMethods =>
+        _classInfoCache.Values.Where(classInfo => classInfo.HasExecutableCleanupMethod).ToArray();
 
     /// <summary>
     /// Gets Assembly Info cache which has cleanup methods to execute.
     /// </summary>
-    public ImmutableArray<TestAssemblyInfo> AssemblyInfoListWithExecutableCleanupMethods =>
-        _testAssemblyInfoCache.Values.Where(assemblyInfo => assemblyInfo.HasExecutableCleanupMethod).ToImmutableArray();
+    public TestAssemblyInfo[] AssemblyInfoListWithExecutableCleanupMethods =>
+        _testAssemblyInfoCache.Values.Where(assemblyInfo => assemblyInfo.HasExecutableCleanupMethod).ToArray();
 
     /// <summary>
     /// Gets the set of cached assembly info values.
     /// </summary>
-    public ImmutableArray<TestAssemblyInfo> AssemblyInfoCache => _testAssemblyInfoCache.Values.ToImmutableArray();
+    public TestAssemblyInfo[] AssemblyInfoCache => _testAssemblyInfoCache.Values.ToArray();
 
     /// <summary>
     /// Gets the set of cached class info values.
     /// </summary>
-    public ImmutableArray<TestClassInfo> ClassInfoCache => _classInfoCache.Values.ToImmutableArray();
+    public TestClassInfo[] ClassInfoCache => _classInfoCache.Values.ToArray();
 
     /// <summary>
     /// Get the test method info corresponding to the parameter test Element.
