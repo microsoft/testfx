@@ -23,6 +23,39 @@ public class ThreadOperations : IThreadOperations
     /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
     public bool Execute(Action action, int timeout, CancellationToken cancelToken)
     {
+#if NETFRAMEWORK
+        if (cancelToken.IsCancellationRequested)
+        {
+            return false;
+        }
+
+        Thread executionThread = new(new ThreadStart(action))
+        {
+            IsBackground = true,
+            Name = "MSTest Test Execution Thread",
+        };
+
+        var isUserCancelled = false;
+        cancelToken.Register(() => isUserCancelled = true);
+
+        // This is not ideal and should be replaced with a mechanism that use STA thread only for tests that need it
+        // (based on user configuration). We are currently relying on testhost to be STA or MTA and will run ALL tests
+        // in this mode which is not ideal for different hosting mechanism not for performance.
+        executionThread.SetApartmentState(Thread.CurrentThread.GetApartmentState());
+        executionThread.Start();
+
+        if (executionThread.Join(timeout))
+        {
+            if (isUserCancelled)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
+#else
         try
         {
             var executionTask = Task.Run(action, cancelToken);
@@ -41,5 +74,6 @@ public class ThreadOperations : IThreadOperations
             // Task execution canceled.
             return false;
         }
+#endif
     }
 }
