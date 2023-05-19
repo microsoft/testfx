@@ -45,7 +45,11 @@ public class MSTestAdapterSettings
     /// <summary>
     ///  Gets list of paths recursive or non recursive paths.
     /// </summary>
-    public List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
+    protected List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
+
+#if !NETFRAMEWORK
+    private static bool s_isAssemblyResolutionSet;
+#endif
 
     /// <summary>
     /// Convert the parameter xml to TestSettings.
@@ -69,6 +73,9 @@ public class MSTestAdapterSettings
         //     </AssemblyResolution>
         // </MSTestV2>
         MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
+#if !NETFRAMEWORK
+        s_isAssemblyResolutionSet = false;
+#endif
 
         if (!reader.IsEmptyElement)
         {
@@ -82,6 +89,9 @@ public class MSTestAdapterSettings
                 {
                     case "ASSEMBLYRESOLUTION":
                         {
+#if !NETFRAMEWORK
+                            s_isAssemblyResolutionSet = true;
+#endif
                             settings.ReadAssemblyResolutionPath(reader);
                             break;
                         }
@@ -132,7 +142,7 @@ public class MSTestAdapterSettings
     {
 #if !NETFRAMEWORK
         MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
-        if (settings.SearchDirectories.Count > 1)
+        if (s_isAssemblyResolutionSet)
         {
             logger.SendMessage(TestMessageLevel.Warning, Resource.AssemblyResolutionIsOnlyWorkingWithNetFramework);
         }

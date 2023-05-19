@@ -52,7 +52,7 @@ public class MSTestDiscoverer : ITestDiscoverer
         try
         {
             MSTestSettings.PopulateSettings(discoveryContext);
-            MSTestAdapterSettings.ValidateSettings(logger);
+            MSTestSettings.ValidateSettings(logger);
         }
         catch (AdapterSettingsException ex)
         {

@@ -1,2 +1,3 @@
 ﻿#nullable enable
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.TreatDiscoveryWarningsAsErrors.get -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.ValidateSettings(Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging.IMessageLogger! logger) -> void
