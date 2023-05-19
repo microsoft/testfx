@@ -52,6 +52,8 @@ public class MSTestExecutor : ITestExecutor
         // Populate the runsettings.
         try
         {
+            // No need to call ValidateSettings after PopulateSettings here as we know this path follows discover path
+            // which would have printed the warning already.
             MSTestSettings.PopulateSettings(runContext);
         }
         catch (AdapterSettingsException ex)
@@ -86,6 +88,7 @@ public class MSTestExecutor : ITestExecutor
         try
         {
             MSTestSettings.PopulateSettings(runContext);
+            MSTestSettings.ValidateSettings(frameworkHandle);
         }
         catch (AdapterSettingsException ex)
         {

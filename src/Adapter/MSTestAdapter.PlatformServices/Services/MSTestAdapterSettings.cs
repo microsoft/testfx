@@ -9,12 +9,15 @@ using System.IO;
 using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 public class MSTestAdapterSettings
 {
+    private bool _isAssemblyResolutionSet;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestAdapterSettings"/> class.
     /// </summary>
@@ -82,6 +85,7 @@ public class MSTestAdapterSettings
                     case "ASSEMBLYRESOLUTION":
                         {
                             settings.ReadAssemblyResolutionPath(reader);
+                            settings._isAssemblyResolutionSet = true;
                             break;
                         }
 
@@ -125,6 +129,16 @@ public class MSTestAdapterSettings
         }
 
         return settings;
+    }
+
+    internal void ValidateSettings(IMessageLogger logger)
+    {
+        if (_isAssemblyResolutionSet)
+        {
+#if !NETFRAMEWORK
+            logger.SendMessage(TestMessageLevel.Warning, Resource.AssemblyResolutionIsOnlyWorkingWithNetFramework);
+#endif
+        }
     }
 
     public static bool IsAppDomainCreationDisabled(string? settingsXml)
