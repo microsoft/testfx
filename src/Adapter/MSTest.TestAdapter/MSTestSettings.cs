@@ -465,7 +465,7 @@ public class MSTestSettings
 
     internal static void ValidateSettings(IMessageLogger logger)
     {
-        MSTestAdapterSettings.ValidateSettings(logger);
+        MSTestSettingsProvider.Settings.ValidateSettings(logger);
     }
 
     private static void SetParallelSettings(XmlReader reader, MSTestSettings settings)

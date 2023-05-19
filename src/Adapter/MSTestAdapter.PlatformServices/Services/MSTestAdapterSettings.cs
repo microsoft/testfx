@@ -16,6 +16,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 public class MSTestAdapterSettings
 {
+    private bool _isAssemblyResolutionSet;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestAdapterSettings"/> class.
     /// </summary>
@@ -47,10 +49,6 @@ public class MSTestAdapterSettings
     /// </summary>
     protected List<RecursiveDirectoryPath> SearchDirectories { get; private set; }
 
-#if !NETFRAMEWORK
-    private static bool s_isAssemblyResolutionSet;
-#endif
-
     /// <summary>
     /// Convert the parameter xml to TestSettings.
     /// </summary>
@@ -73,9 +71,6 @@ public class MSTestAdapterSettings
         //     </AssemblyResolution>
         // </MSTestV2>
         MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
-#if !NETFRAMEWORK
-        s_isAssemblyResolutionSet = false;
-#endif
 
         if (!reader.IsEmptyElement)
         {
@@ -89,10 +84,8 @@ public class MSTestAdapterSettings
                 {
                     case "ASSEMBLYRESOLUTION":
                         {
-#if !NETFRAMEWORK
-                            s_isAssemblyResolutionSet = true;
-#endif
                             settings.ReadAssemblyResolutionPath(reader);
+                            settings._isAssemblyResolutionSet = true;
                             break;
                         }
 
@@ -138,14 +131,14 @@ public class MSTestAdapterSettings
         return settings;
     }
 
-    public static void ValidateSettings(IMessageLogger logger)
+    internal void ValidateSettings(IMessageLogger logger)
     {
-#if !NETFRAMEWORK
-        if (s_isAssemblyResolutionSet)
+        if (_isAssemblyResolutionSet)
         {
+#if !NETFRAMEWORK
             logger.SendMessage(TestMessageLevel.Warning, Resource.AssemblyResolutionIsOnlyWorkingWithNetFramework);
-        }
 #endif
+        }
     }
 
     public static bool IsAppDomainCreationDisabled(string? settingsXml)
