@@ -141,7 +141,6 @@ public class MSTestAdapterSettings
     public static void ValidateSettings(IMessageLogger logger)
     {
 #if !NETFRAMEWORK
-        MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
         if (s_isAssemblyResolutionSet)
         {
             logger.SendMessage(TestMessageLevel.Warning, Resource.AssemblyResolutionIsOnlyWorkingWithNetFramework);

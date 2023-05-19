@@ -52,6 +52,7 @@ public class MSTestExecutor : ITestExecutor
         // Populate the runsettings.
         try
         {
+            // We don't call here tha validateSettings function as we alredy call it in the discover tests.
             MSTestSettings.PopulateSettings(runContext);
         }
         catch (AdapterSettingsException ex)
