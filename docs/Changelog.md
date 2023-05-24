@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [3.0.3] - 2023-05-24
+
+* Revert change for timeout test execution [#1675](https://github.com/Microsoft/testfx/pull/1675)
+* Fix assembly resolution error [#1670](https://github.com/Microsoft/testfx/pull/1670)
+* Revert usage of System.Collections.Immutable for TypeCache
+* Remove DataRowAttribute argument count limitation [#1646](https://github.com/Microsoft/testfx/pull/1646)
+* Use Test Platform 17.4.1 instead of 17.4.0
+
+See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.2...v3.0.3)
+
+### Artifacts
+
+* MSTest: [3.0.3](https://www.nuget.org/packages/MSTest/3.0.3)
+* MSTest.TestFramework: [3.0.3](https://www.nuget.org/packages/MSTest.TestFramework/3.0.3)
+* MSTest.TestAdapter: [3.0.3](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.3)
+
 ## [3.0.2] - 2022-12-27
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.0.1...v3.0.2)
