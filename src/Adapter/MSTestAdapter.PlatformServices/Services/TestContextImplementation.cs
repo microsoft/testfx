@@ -24,12 +24,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 public class TestContextImplementation : TestContext, ITestContext
 {
-#if !WINDOWS_UWP
     /// <summary>
     /// List of result files associated with the test.
     /// </summary>
     private readonly IList<string> _testResultFiles;
-#endif
 
     /// <summary>
     /// Writer on which the messages given by the user should be written.
@@ -96,10 +94,7 @@ public class TestContextImplementation : TestContext, ITestContext
             [ManagedMethodLabel] = _testMethod.ManagedMethodName,
             [TestNameLabel] = _testMethod.Name,
         };
-
-#if !WINDOWS_UWP
         _testResultFiles = new List<string>();
-#endif
     }
 
     #region TestContext impl
@@ -154,14 +149,12 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <inheritdoc/>
     public override void AddResultFile(string fileName)
     {
-#if !WINDOWS_UWP && !WIN_UI
         if (StringEx.IsNullOrEmpty(fileName))
         {
             throw new ArgumentException(Resource.Common_CannotBeNullOrEmpty, nameof(fileName));
         }
 
         _testResultFiles.Add(Path.GetFullPath(fileName));
-#endif
     }
 
     /// <summary>
@@ -322,7 +315,6 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <returns>Results files generated in run.</returns>
     public IList<string>? GetResultFiles()
     {
-#if !WINDOWS_UWP && !WIN_UI
         if (!_testResultFiles.Any())
         {
             return null;
@@ -334,10 +326,6 @@ public class TestContextImplementation : TestContext, ITestContext
         _testResultFiles.Clear();
 
         return results;
-#else
-        // Returns null as this feature is not supported in ASP .net and UWP
-        return null;
-#endif
     }
 
     /// <summary>

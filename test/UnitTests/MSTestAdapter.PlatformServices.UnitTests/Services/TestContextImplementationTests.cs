@@ -135,7 +135,6 @@ public class TestContextImplementationTests : TestContainer
         Verify(_testContextImplementation.Properties[property.Key].Equals(property.Value));
     }
 
-#if !WIN_UI && !WINDOWS_UWP
     public void AddResultFileShouldThrowIfFileNameIsNull()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
@@ -181,7 +180,6 @@ public class TestContextImplementationTests : TestContainer
         Verify(resultsFiles.Contains("C:\\files\\file1.txt"));
         Verify(resultsFiles.Contains("C:\\files\\files2.html"));
     }
-#endif
 
     public void WriteShouldWriteToStringWriter()
     {
@@ -382,19 +380,6 @@ public class TestContextImplementationTests : TestContainer
         Verify(resultFiles is null);
     }
 
-#if WIN_UI
-    public void GetResultFilesShouldAlwaysReturnNull()
-    {
-        _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
-
-        _testContextImplementation.AddResultFile("C:\\files\\myfile.txt");
-        _testContextImplementation.AddResultFile("C:\\files\\myfile2.txt");
-
-        var resultFiles = _testContextImplementation.GetResultFiles();
-
-        Verify(resultFiles is null);
-    }
-#else
     public void GetResultFilesShouldReturnListOfAddedResultFiles()
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
@@ -408,6 +393,5 @@ public class TestContextImplementationTests : TestContainer
         Verify(resultFiles.Contains("C:\\files\\myfile.txt"));
         Verify(resultFiles.Contains("C:\\files\\myfile2.txt"));
     }
-#endif
 #endif
 }
