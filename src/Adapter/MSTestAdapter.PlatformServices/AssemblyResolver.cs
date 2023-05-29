@@ -43,6 +43,18 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     private const string LoggerAssemblyName = "Microsoft.TestPlatform.CoreUtilities";
 
     /// <summary>
+    /// The name of the current assembly resources file.
+    /// </summary>
+    /// <remarks>
+    /// When resolving the resources for the current assembly, we need to make sure that we do not log. Otherwise, we will end
+    /// up either failing or at least printing warning messages to the user about how we could not load the resources dll even
+    /// when it's not an error. For example, set a culture outside of supported cultures (e.g. en-gb) and you will have an error
+    /// saying we could not find en-gb resource dll which is normal. For more information,
+    /// <see href="https://github.com/microsoft/testfx/issues/1598" />.
+    /// </remarks>
+    private const string PlatformServicesResourcesName = "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.resources";
+
+    /// <summary>
     /// This will have the list of all directories read from runsettings.
     /// </summary>
     private readonly Queue<RecursiveDirectoryPath> _directoryList;
@@ -587,7 +599,8 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         // Logger assembly was in `Microsoft.VisualStudio.TestPlatform.ObjectModel` assembly in legacy versions and we need to omit it as well.
         if (!StringEx.IsNullOrEmpty(assemblyName)
             && !assemblyName.StartsWith(LoggerAssemblyName)
-            && !assemblyName.StartsWith(LoggerAssemblyNameLegacy))
+            && !assemblyName.StartsWith(LoggerAssemblyNameLegacy)
+            && !assemblyName.StartsWith(PlatformServicesResourcesName))
         {
             loggerAction.Invoke();
         }
