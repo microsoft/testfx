@@ -184,12 +184,9 @@ internal class DeploymentUtility : DeploymentUtilityBase
                     string satelliteDir = Path.GetDirectoryName(satellite).TrimEnd(
                         new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
 
-                    DebugEx.Assert(!StringEx.IsNullOrEmpty(satelliteDir), "DeploymentManager.DoDeployment: got empty satellite dir!");
-                    DebugEx.Assert(satelliteDir.Length > itemDir.Length + 1, "DeploymentManager.DoDeployment: wrong satellite dir length!");
-
-                    string localeDir = satelliteDir.Substring(itemDir.Length + 1);
-                    DebugEx.Assert(!StringEx.IsNullOrEmpty(localeDir), "DeploymentManager.DoDeployment: got empty dir name for satellite dir!");
-
+                    string localeDir = itemDir.Length > satelliteDir.Length
+                        ? satelliteDir.Substring(itemDir.Length + 1)
+                        : string.Empty;
                     string relativeOutputDir = Path.Combine(item.RelativeOutputDirectory, localeDir);
 
                     // Now finally add the item!
