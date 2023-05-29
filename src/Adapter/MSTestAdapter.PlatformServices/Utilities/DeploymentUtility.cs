@@ -185,8 +185,8 @@ internal class DeploymentUtility : DeploymentUtilityBase
                         new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
 
                     string localeDir = itemDir.Length > satelliteDir.Length
-                        ? satelliteDir.Substring(itemDir.Length + 1)
-                        : string.Empty;
+                        ? string.Empty
+                        : satelliteDir.Substring(itemDir.Length + 1);
                     string relativeOutputDir = Path.Combine(item.RelativeOutputDirectory, localeDir);
 
                     // Now finally add the item!
