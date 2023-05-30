@@ -8,7 +8,7 @@
   <PropertyGroup Label="Arcade settings">
     <!-- Use xliff task tool to ensure creation of resx from xlf at build. True is default value but we want to set it explicitly -->
     <UsingToolXliff>true</UsingToolXliff>
-    <UsingToolMicrosoftNetCompilers>true</UsingToolMicrosoftNetCompilers>
+    <UsingToolMicrosoftNetCompilers>false</UsingToolMicrosoftNetCompilers>
   </PropertyGroup>
   <PropertyGroup Label="MSTest dependencies">
     <!-- Test Platform, .NET Test SDK and Object Model  -->
