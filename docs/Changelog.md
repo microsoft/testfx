@@ -6,10 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [3.0.4] - 2023-06-01
 
+See full log [here](https://github.com/microsoft/testfx/compare/v3.0.3...v3.0.4)
+
+### Fixed
+
 * Fix out of range exception in deployment tool [#1682](https://github.com/microsoft/testfx/pull/1682)
 * Fix issue/crash with deployment items and disabled app domains [#1681](https://github.com/microsoft/testfx/pull/1681)
-
-See full log [here](https://github.com/microsoft/testfx/compare/v3.0.3...v3.0.4)
 
 ### Artifacts
 
