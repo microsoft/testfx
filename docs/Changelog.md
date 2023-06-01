@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [3.0.4] - 2023-06-01
+
+* Fix out of range exception in deployment tool [#1682](https://github.com/microsoft/testfx/pull/1682)
+* Fix issue/crash with deployment items and disabled app domains [#1681](https://github.com/microsoft/testfx/pull/1681)
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.0.3...v3.0.4)
+
+### Artifacts
+
+* MSTest: [3.0.4](https://www.nuget.org/packages/MSTest/3.0.4)
+* MSTest.TestFramework: [3.0.4](https://www.nuget.org/packages/MSTest.TestFramework/3.0.4)
+* MSTest.TestAdapter: [3.0.4](https://www.nuget.org/packages/MSTest.TestAdapter/3.0.4)
+
 ## [3.0.3] - 2023-05-24
 
 See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.2...v3.0.3)
