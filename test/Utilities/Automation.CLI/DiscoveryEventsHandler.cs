@@ -52,12 +52,13 @@ public class DiscoveryEventsHandler : ITestDiscoveryEventsHandler
 
     public void HandleLogMessage(TestMessageLevel level, string? message)
     {
-        if (!_messagesBuilder.ContainsKey(level))
+        if (!_messagesBuilder.TryGetValue(level, out ImmutableArray<string?>.Builder? value))
         {
-            _messagesBuilder.Add(level, ImmutableArray.CreateBuilder<string?>());
+            value = ImmutableArray.CreateBuilder<string?>();
+            _messagesBuilder.Add(level, value);
         }
 
-        _messagesBuilder[level].Add(message);
+        value.Add(message);
 
         switch (level)
         {

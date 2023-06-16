@@ -1,27 +1,28 @@
 {
   "sdk": {
-    "version": "8.0.100-preview.3.23178.7"
+    "version": "8.0.100-preview.5.23303.2"
   },
   "tools": {
     "vs": {
-      "version": "16.0",
+      "version": "17.6",
       "components": [
         "Microsoft.Net.Component.4.5.2.TargetingPack",
         "Microsoft.VisualStudio.Windows.Build",
         "Microsoft.VisualStudio.Component.VSSDK"
       ]
     },
-    "dotnet": "8.0.100-preview.3.23178.7",
+    "dotnet": "8.0.100-preview.5.23303.2",
     "runtimes": {
       "dotnet": [
         "6.0.13",
         "3.1.32"
       ]
-    }
+    },
+    "xcopy-msbuild": "17.6.0-2"
   },
   "msbuild-sdks": {
-    "Microsoft.DotNet.Arcade.Sdk": "8.0.0-beta.23269.1",
-    "Microsoft.DotNet.Helix.Sdk": "8.0.0-beta.23269.1",
+    "Microsoft.DotNet.Arcade.Sdk": "8.0.0-beta.23314.1",
+    "Microsoft.DotNet.Helix.Sdk": "8.0.0-beta.23314.1",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

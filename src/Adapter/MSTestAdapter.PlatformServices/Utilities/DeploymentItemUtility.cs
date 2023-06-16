@@ -48,16 +48,16 @@ internal class DeploymentItemUtility
     /// <returns> The <see cref="IList{T}"/> of deployment items on a class. </returns>
     internal IList<DeploymentItem> GetClassLevelDeploymentItems(Type type, ICollection<string> warnings)
     {
-        if (!_classLevelDeploymentItems.ContainsKey(type))
+        if (!_classLevelDeploymentItems.TryGetValue(type, out IList<DeploymentItem>? value))
         {
             var deploymentItemAttributes = _reflectionUtility.GetCustomAttributes(
                 type.GetTypeInfo(),
                 typeof(DeploymentItemAttribute));
-
-            _classLevelDeploymentItems[type] = GetDeploymentItems(deploymentItemAttributes, warnings);
+            value = GetDeploymentItems(deploymentItemAttributes, warnings);
+            _classLevelDeploymentItems[type] = value;
         }
 
-        return _classLevelDeploymentItems[type];
+        return value;
     }
 
     /// <summary>
