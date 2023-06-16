@@ -224,7 +224,7 @@ internal abstract class DeploymentUtilityBase
                         continue;
                     }
 
-                    if (!destToSource.ContainsKey(relativeDestination))
+                    if (!destToSource.TryGetValue(relativeDestination, out string? value))
                     {
                         destToSource.Add(relativeDestination, fileToDeploy);
 
@@ -246,17 +246,13 @@ internal abstract class DeploymentUtilityBase
                         // Deploy PDB for line number info in stack trace.
                         FileUtility.FindAndDeployPdb(destination, relativeDestination, fileToDeploy, destToSource);
                     }
-                    else if (
-                        !string.Equals(
-                            fileToDeploy,
-                            destToSource[relativeDestination],
-                            StringComparison.OrdinalIgnoreCase))
+                    else if (!string.Equals(fileToDeploy, value, StringComparison.OrdinalIgnoreCase))
                     {
                         EqtTrace.WarningIf(
                             EqtTrace.IsWarningEnabled,
                             "Conflict during copying file: '{0}' and '{1}' are from different origins although they might be the same.",
                             fileToDeploy,
-                            destToSource[relativeDestination]);
+                            value);
                     }
                 } // foreach fileToDeploy.
             } // foreach itemFile.

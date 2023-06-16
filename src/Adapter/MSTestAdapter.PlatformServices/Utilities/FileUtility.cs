@@ -167,7 +167,7 @@ internal class FileUtility
         }
 
         // If already processed, do nothing.
-        if (!destToSource.ContainsKey(relativePdbDestination))
+        if (!destToSource.TryGetValue(relativePdbDestination, out string? value))
         {
             if (DoesFileExist(pdbSource))
             {
@@ -179,13 +179,13 @@ internal class FileUtility
                 }
             }
         }
-        else if (!string.Equals(pdbSource, destToSource[relativePdbDestination], StringComparison.OrdinalIgnoreCase))
+        else if (!string.Equals(pdbSource, value, StringComparison.OrdinalIgnoreCase))
         {
             EqtTrace.WarningIf(
-                    EqtTrace.IsWarningEnabled,
-                    "Conflict during copying PDBs for line number info: '{0}' and '{1}' are from different origins although they might be the same.",
-                    pdbSource,
-                    destToSource[relativePdbDestination]);
+                EqtTrace.IsWarningEnabled,
+                "Conflict during copying PDBs for line number info: '{0}' and '{1}' are from different origins although they might be the same.",
+                pdbSource,
+                value);
         }
 
         return null;
