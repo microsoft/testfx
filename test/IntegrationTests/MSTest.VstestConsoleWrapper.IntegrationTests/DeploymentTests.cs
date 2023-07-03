@@ -37,8 +37,20 @@ public class DeploymentTests : CLITestBase
 
     public void ValidateTestSourceLocationDeployment(string targetFramework)
     {
-        InvokeVsTestForExecution(new string[] { TestAssetPreserveNewest }, RunSetting, targetFramework: targetFramework);
+        InvokeVsTestForExecution(new string[] { TestAssetPreserveNewest }, RunSetting, "DeploymentTestProject", targetFramework: targetFramework);
         ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.PassIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
         ValidateFailedTestsContain(true, "DeploymentTestProject.DeploymentTestProject.FailIfFilePresent");
+    }
+
+    public void ValidateDirectoryDeployment_net462()
+        => ValidateDirectoryDeployment("net462");
+
+    public void ValidateDirectoryDeployment_netcoreapp31()
+        => ValidateDirectoryDeployment("netcoreapp3.1");
+
+    public void ValidateDirectoryDeployment(string targetFramework)
+    {
+        InvokeVsTestForExecution(new string[] { TestAssetPreserveNewest }, testCaseFilter: "DirectoryDeploymentTests", targetFramework: targetFramework);
+        ValidatePassedTestsContain("DeploymentTestProject.PreserveNewest.DirectoryDeploymentTests.DirectoryWithForwardSlash", "DeploymentTestProject.PreserveNewest.DirectoryDeploymentTests.DirectoryWithBackSlash");
     }
 }
