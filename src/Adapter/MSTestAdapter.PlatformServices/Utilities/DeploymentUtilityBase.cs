@@ -187,7 +187,7 @@ internal abstract class DeploymentUtilityBase
 
                 foreach (var fileToDeploy in filesToDeploy)
                 {
-                    DebugEx.Assert(Path.IsPathRooted(fileToDeploy), "File " + fileToDeploy + " is not rooted");
+                    DebugEx.Assert(Path.IsPathRooted(fileToDeploy), $"File {fileToDeploy} is not rooted");
 
                     // Ignore the test platform files.
                     var tempFile = Path.GetFileName(fileToDeploy);
@@ -294,8 +294,7 @@ internal abstract class DeploymentUtilityBase
             }
 
             // If file/directory is not found, then try removing the prefix and see if it is present.
-            string fileOrDirNameOnly = Path.GetFileName(deploymentItem.SourcePath.TrimEnd(
-                        new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }));
+            string fileOrDirNameOnly = Path.GetFileName(deploymentItem.SourcePath);
             if (IsDeploymentItemSourceAFile(fileOrDirNameOnly, testSource, out fileName))
             {
                 return new[] { fileName };

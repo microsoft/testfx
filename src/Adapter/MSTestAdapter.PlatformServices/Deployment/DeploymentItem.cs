@@ -3,6 +3,7 @@
 
 using System;
 using System.Globalization;
+using System.IO;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -74,7 +75,7 @@ internal class DeploymentItem
         DebugEx.Assert(!StringEx.IsNullOrEmpty(sourcePath), "sourcePath");
         DebugEx.Assert(relativeOutputDirectory != null, "relativeOutputDirectory");
 
-        SourcePath = sourcePath;
+        SourcePath = sourcePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         RelativeOutputDirectory = relativeOutputDirectory;
         OriginType = originType;
     }

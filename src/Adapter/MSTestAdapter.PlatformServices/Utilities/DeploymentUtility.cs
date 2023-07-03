@@ -171,8 +171,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
             // If we cannot access satellite due to security, etc, we report warning.
             try
             {
-                string itemDir = Path.GetDirectoryName(path).TrimEnd(
-                    new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+                string itemDir = Path.GetDirectoryName(path);
                 List<string> itemSatellites = AssemblyUtility.GetSatelliteAssemblies(path!);
                 foreach (string satellite in itemSatellites)
                 {
@@ -181,8 +180,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
                         satellite.IndexOf(itemDir, StringComparison.OrdinalIgnoreCase) == 0,
                         "DeploymentManager.DoDeployment: Got satellite that does not start with original item path");
 
-                    string satelliteDir = Path.GetDirectoryName(satellite).TrimEnd(
-                        new char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+                    string satelliteDir = Path.GetDirectoryName(satellite);
 
                     string localeDir = itemDir.Length > satelliteDir.Length
                         ? string.Empty
