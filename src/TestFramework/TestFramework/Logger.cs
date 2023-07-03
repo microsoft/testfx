@@ -43,7 +43,14 @@ public class Logger
             throw new ArgumentNullException(nameof(format));
         }
 
-        string message = string.Format(CultureInfo.InvariantCulture, format, args);
+        if (args is null)
+        {
+            throw new ArgumentNullException(nameof(args));
+        }
+
+        string message = args.Length == 0
+            ? format
+            : string.Format(CultureInfo.InvariantCulture, format, args);
 
         // Making sure all event handlers are called in sync on same thread.
         foreach (var invoker in OnLogMessage.GetInvocationList())
