@@ -32,7 +32,8 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <summary>
     /// Writer on which the messages given by the user should be written.
     /// </summary>
-    private readonly ThreadSafeStringWriter _threadSafeStringWriter;
+    private readonly StringWriter _stringWriter;
+    private readonly ThreadSafeStringWriter? _threadSafeStringWriter;
 
     /// <summary>
     /// Test Method.
@@ -81,12 +82,11 @@ public class TestContextImplementation : TestContext, ITestContext
         DebugEx.Assert(stringWriter != null, "StringWriter is not null");
 #endif
 
-        DebugEx.Assert(stringWriter is ThreadSafeStringWriter, "Was expected stringWriter to be a ThreadSafeStringWriter");
-
         _testMethod = testMethod;
+        _stringWriter = stringWriter;
 
         // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
-        _threadSafeStringWriter = (ThreadSafeStringWriter)stringWriter;
+        _threadSafeStringWriter = stringWriter as ThreadSafeStringWriter;
         _properties = new Dictionary<string, object?>(properties)
         {
             [FullyQualifiedTestClassNameLabel] = _testMethod.FullClassName,
@@ -172,7 +172,7 @@ public class TestContextImplementation : TestContext, ITestContext
         try
         {
             var msg = message?.Replace("\0", "\\0");
-            _threadSafeStringWriter.Write(msg);
+            _stringWriter.Write(msg);
         }
         catch (ObjectDisposedException)
         {
@@ -196,7 +196,7 @@ public class TestContextImplementation : TestContext, ITestContext
         try
         {
             string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-            _threadSafeStringWriter.Write(message);
+            _stringWriter.Write(message);
         }
         catch (ObjectDisposedException)
         {
@@ -219,7 +219,7 @@ public class TestContextImplementation : TestContext, ITestContext
         try
         {
             var msg = message?.Replace("\0", "\\0");
-            _threadSafeStringWriter.WriteLine(msg);
+            _stringWriter.WriteLine(msg);
         }
         catch (ObjectDisposedException)
         {
@@ -243,7 +243,7 @@ public class TestContextImplementation : TestContext, ITestContext
         try
         {
             string message = string.Format(CultureInfo.CurrentCulture, format.Replace("\0", "\\0"), args);
-            _threadSafeStringWriter.WriteLine(message);
+            _stringWriter.WriteLine(message);
         }
         catch (ObjectDisposedException)
         {
@@ -334,7 +334,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <returns>The test context messages added so far.</returns>
     public string? GetDiagnosticMessages()
     {
-        return _threadSafeStringWriter.ToString();
+        return _stringWriter.ToString();
     }
 
     /// <summary>
@@ -342,7 +342,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// </summary>
     public void ClearDiagnosticMessages()
     {
-        _threadSafeStringWriter.ToStringAndClear();
+        _threadSafeStringWriter?.ToStringAndClear();
     }
 
     #endregion
