@@ -27,6 +27,13 @@ public class ThreadSafeStringWriter : StringWriter
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ThreadSafeStringWriter"/> class.
+    /// /!\/!\/!\ Be careful about where you use this for the first time. Because from that Task scope down we will start inheriting the
+    /// static AsyncLocal State above. This state is used to differentiate output from tests even when they run in parallel. This works because
+    /// we initiate this AsyncLocal in a place that is a separate Task for each test, and so any output that is written into a common stream
+    /// (e.g. via Console.WriteLine - which is static, and hence common), will them be multiplexed by the appropriate AsyncLocal, and in effect
+    /// we will get outputs splits for each test even if two tests run at the same time and write into console.
+    /// See https://github.com/microsoft/testfx/pull/1705 for a fix of a related bug, in that bug we intialized the state too early, and it then inherited
+    /// the same state to every Task (for every test) that we were running, and it all broke.
     /// </summary>
     /// <param name="formatProvider">
     /// The format provider.
