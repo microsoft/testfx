@@ -306,7 +306,7 @@ public class TestClassInfo
 
         var outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
 
-        // Do not use StackTraceHelper.GetExceptionMessage(realException) as it prefixes the message with the exception type name.
+        // Do not use StackTraceHelper.GetFormattedExceptionMessage(realException) as it prefixes the message with the exception type name.
         var exceptionMessage = realException.TryGetMessage();
         var errorMessage = string.Format(
             CultureInfo.CurrentCulture,
@@ -315,7 +315,7 @@ public class TestClassInfo
             failedClassInitializeMethodName,
             realException.GetType().ToString(),
             exceptionMessage);
-        var exceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
+        var exceptionStackTraceInfo = realException.GetStackTraceInformation();
 
         var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo, realException);
         ClassInitializationException = testFailedException;
@@ -373,17 +373,10 @@ public class TestClassInfo
                     var realException = exception.InnerException ?? exception;
                     ClassCleanupException = realException;
 
-                    string errorMessage;
-
                     // special case AssertFailedException to trim off part of the stack trace
-                    if (realException is AssertFailedException or AssertInconclusiveException)
-                    {
-                        errorMessage = realException.Message;
-                    }
-                    else
-                    {
-                        errorMessage = StackTraceHelper.GetExceptionMessage(realException);
-                    }
+                    string errorMessage = realException is AssertFailedException or AssertInconclusiveException
+                        ? realException.Message
+                        : realException.GetFormattedExceptionMessage();
 
                     var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
 
@@ -458,7 +451,7 @@ public class TestClassInfo
                 // special case AssertFailedException to trim off part of the stack trace
                 string errorMessage = realException is AssertFailedException or AssertInconclusiveException
                     ? realException.Message
-                    : StackTraceHelper.GetExceptionMessage(realException);
+                    : realException.GetFormattedExceptionMessage();
 
                 var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
 

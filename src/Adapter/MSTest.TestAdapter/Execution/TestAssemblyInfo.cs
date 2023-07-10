@@ -167,7 +167,7 @@ public class TestAssemblyInfo
 
         var outcome = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
 
-        // Do not use StackTraceHelper.GetExceptionMessage(realException) as it prefixes the message with the exception type name.
+        // Do not use StackTraceHelper.GetFormattedExceptionMessage(realException) as it prefixes the message with the exception type name.
         var exceptionMessage = realException.TryGetMessage();
         DebugEx.Assert(AssemblyInitializeMethod.DeclaringType?.FullName is not null, "AssemblyInitializeMethod.DeclaringType.FullName is null");
         var errorMessage = string.Format(
@@ -177,7 +177,7 @@ public class TestAssemblyInfo
             AssemblyInitializeMethod.Name,
             realException.GetType().ToString(),
             exceptionMessage);
-        var exceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
+        var exceptionStackTraceInfo = realException.GetStackTraceInformation();
 
         var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo, realException);
         AssemblyInitializationException = testFailedException;
@@ -220,7 +220,7 @@ public class TestAssemblyInfo
                 }
                 else
                 {
-                    errorMessage = StackTraceHelper.GetExceptionMessage(realException);
+                    errorMessage = realException.GetFormattedExceptionMessage();
                 }
 
                 DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
@@ -230,7 +230,7 @@ public class TestAssemblyInfo
                     AssemblyCleanupMethod.DeclaringType.Name,
                     AssemblyCleanupMethod.Name,
                     errorMessage,
-                    StackTraceHelper.GetStackTraceInformation(realException)?.ErrorStackTrace);
+                    realException.GetStackTraceInformation()?.ErrorStackTrace);
             }
         }
     }
@@ -268,10 +268,10 @@ public class TestAssemblyInfo
                 }
                 else
                 {
-                    errorMessage = StackTraceHelper.GetExceptionMessage(realException);
+                    errorMessage = realException.GetFormattedExceptionMessage();
                 }
 
-                var exceptionStackTraceInfo = StackTraceHelper.GetStackTraceInformation(realException);
+                var exceptionStackTraceInfo = realException.GetStackTraceInformation();
                 DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
 
                 throw new TestFailedException(

@@ -13,9 +13,9 @@
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
-        <source>TestCleanup method {0}.{1} threw exception. {2}: {3}.</source>
-        <target state="translated">TestCleanup 메서드 {0}.{1}에서 예외를 throw했습니다. {2}: {3}.</target>
-        <note></note>
+        <source>TestCleanup method {0}.{1} threw exception. {2}.</source>
+        <target state="new">TestCleanup method {0}.{1} threw exception. {2}.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_EndOfInnerExceptionTrace">
         <source>--- End of inner exception stack trace ---</source>

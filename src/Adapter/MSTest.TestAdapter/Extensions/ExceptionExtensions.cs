@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -19,17 +20,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 internal static class ExceptionExtensions
 {
     /// <summary>
-    /// Get the InnerException if available, else return the current Exception.
+    /// In .NET framework, the exception thrown by the test method invocation is wrapped in a TargetInvocationException, so we
+    /// need to unwrap it to get the real exception.
     /// </summary>
-    /// <param name="exception">The exception.</param>
-    /// <returns>
-    /// An <see cref="Exception"/> instance.
-    /// </returns>
-    [return: NotNullIfNotNull(nameof(exception))]
-    internal static Exception? GetInnerExceptionOrDefault(this Exception exception)
-    {
-        return exception?.InnerException ?? exception;
-    }
+    internal static Exception GetRealException(this Exception exception)
+        => exception.GetType() == typeof(TargetInvocationException)
+            && exception.Source is "mscorlib" or "System.Private.CoreLib"
+            && exception.InnerException is not null
+                ? exception.InnerException
+                : exception;
 
     /// <summary>
     /// Get the exception message if available, empty otherwise.
@@ -56,7 +55,7 @@ internal static class ExceptionExtensions
     {
         if (!StringEx.IsNullOrEmpty(exception?.StackTrace))
         {
-            return StackTraceHelper.CreateStackTraceInformation(exception, false, exception.StackTrace);
+            return ExceptionHelper.CreateStackTraceInformation(exception, false, exception.StackTrace);
         }
 
         return null;

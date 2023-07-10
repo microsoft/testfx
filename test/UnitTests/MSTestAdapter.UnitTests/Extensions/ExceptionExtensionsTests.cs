@@ -17,43 +17,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions
 /// </summary>
 public class ExceptionExtensionsTests : TestContainer
 {
-    #region GetInnerExceptionOrDefault scenarios
-
-    public void ExceptionGetInnerExceptionOrDefaultReturnsInnerExceptionIfAvailable()
-    {
-        var innerException = new NotImplementedException("notImplementedException");
-        var exceptionWithInnerException = new InvalidOperationException("invalidOperationException", innerException);
-
-        var exception = exceptionWithInnerException.GetInnerExceptionOrDefault();
-
-        Verify(ReferenceEquals(innerException, exception));
-    }
-
-    public void ExceptionGetInnerExceptionOrDefaultShouldNotThrowForNullException()
-    {
-        static void Action() => ((Exception)null).GetInnerExceptionOrDefault();
-
-        Action();
-    }
-
-    public void ExceptionGetInnerExceptionOrDefaultShouldReturnNullForNullException()
-    {
-        var exception = ((Exception)null).GetInnerExceptionOrDefault();
-
-        Verify(exception is null);
-    }
-
-    public void ExceptionGetInnerExceptionOrDefaultShouldReturnExceptionIfInnerExceptionIsNull()
-    {
-        var exceptionWithNoInnerException = new InvalidOperationException("invalidOperationException", innerException: null);
-
-        var exception = exceptionWithNoInnerException.GetInnerExceptionOrDefault();
-
-        Verify(ReferenceEquals(exceptionWithNoInnerException, exception));
-    }
-
-    #endregion
-
     #region TryGetExceptionMessage scenarios
 
     public void ExceptionTryGetMessageGetsTheExceptionMessage()

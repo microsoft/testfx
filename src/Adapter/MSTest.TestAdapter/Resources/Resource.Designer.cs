@@ -449,7 +449,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup method {0}.{1} threw exception. {2}: {3}..
+        ///   Looks up a localized string similar to TestCleanup method {0}.{1} threw exception. {2}..
         /// </summary>
         internal static string UTA_CleanupMethodThrows {
             get {

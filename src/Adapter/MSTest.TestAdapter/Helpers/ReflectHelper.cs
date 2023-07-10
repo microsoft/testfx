@@ -153,7 +153,7 @@ internal class ReflectHelper : MarshalByRefObject
                 Resource.UTA_ExpectedExceptionAttributeConstructionException,
                 testMethod.FullClassName,
                 testMethod.Name,
-                StackTraceHelper.GetExceptionMessage(ex));
+                ex.GetFormattedExceptionMessage());
             throw new TypeInspectionException(errorMessage);
         }
 

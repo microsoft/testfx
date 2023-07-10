@@ -430,7 +430,7 @@ public class TestMethodInfo : ITestMethod
             Resource.UTA_TestMethodThrows,
             className,
             methodName,
-            StackTraceHelper.GetExceptionMessage(realException));
+            realException.GetFormattedExceptionMessage());
 
         // Handle special case of UI objects in TestMethod to suggest UITestMethod
         if (realException.HResult == -2147417842)
@@ -446,7 +446,7 @@ public class TestMethodInfo : ITestMethod
         // which has no meaningful info for the user. Thus, we do not show call stack for ThreadAbortException.
         if (realException.GetType().Name != "ThreadAbortException")
         {
-            stackTrace = StackTraceHelper.GetStackTraceInformation(realException);
+            stackTrace = realException.GetStackTraceInformation();
         }
 
         return new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, stackTrace, realException);
@@ -508,27 +508,25 @@ public class TestMethodInfo : ITestMethod
                 }
             }
 
-            Exception realException = ex.GetInnerExceptionOrDefault();
+            Exception realException = ex.GetRealException();
+            string formattedExceptionMessage = realException.GetFormattedExceptionMessage();
 
             if (testCleanupMethod != null)
             {
-                // Do not use StackTraceHelper.GetExceptionMessage(realException) as it prefixes the message with the exception type name.
                 cleanupError.AppendFormat(
                     CultureInfo.CurrentCulture,
                     Resource.UTA_CleanupMethodThrows,
                     TestClassName,
                     testCleanupMethod.Name,
-                    realException.GetType().ToString(),
-                    realException.TryGetMessage());
+                    formattedExceptionMessage);
             }
             else
             {
-                // Use StackTraceHelper.GetExceptionMessage(realException) to get the message prefixed with the exception type name.
                 cleanupError.AppendFormat(
                     CultureInfo.CurrentCulture,
                     Resource.UTA_CleanupMethodThrowsGeneralError,
                     TestClassName,
-                    StackTraceHelper.GetExceptionMessage(realException));
+                    formattedExceptionMessage);
             }
 
             StackTraceInformation? cleanupStackTraceInfo = null;
@@ -583,19 +581,19 @@ public class TestMethodInfo : ITestMethod
         }
         catch (Exception ex)
         {
-            var realException = ex.GetInnerExceptionOrDefault();
+            var realException = ex.GetRealException();
 
             // Prefix the exception message with the exception type name as prefix when exception is not assert exception.
             var exceptionMessage = realException is UnitTestAssertException
                 ? realException.TryGetMessage()
-                : StackTraceHelper.GetExceptionMessage(realException);
+                : ExceptionHelper.GetFormattedExceptionMessage(realException);
             var errorMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_InitMethodThrows,
                 TestClassName,
                 testInitializeMethod?.Name,
                 exceptionMessage);
-            var stackTrace = StackTraceHelper.GetStackTraceInformation(realException);
+            var stackTrace = realException.GetStackTraceInformation();
 
             result.Outcome = realException is AssertInconclusiveException ? UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed;
             result.TestFailureException = new TestFailedException(
@@ -637,14 +635,15 @@ public class TestMethodInfo : ITestMethod
         }
         catch (Exception ex)
         {
-            var stackTraceInfo = StackTraceHelper.GetStackTraceInformation(ex.GetInnerExceptionOrDefault());
+            var realException = ex.GetRealException();
             var errorMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 Resource.UTA_TestContextSetError,
                 TestClassName,
-                StackTraceHelper.GetExceptionMessage(ex.GetInnerExceptionOrDefault()));
+                realException.GetFormattedExceptionMessage());
 
             result.Outcome = UTF.UnitTestOutcome.Failed;
+            var stackTraceInfo = realException.GetStackTraceInformation();
             result.TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, stackTraceInfo);
         }
 
@@ -689,8 +688,8 @@ public class TestMethodInfo : ITestMethod
             // in the InnerException; or user code throws an exception.
             // It also seems that in rare cases the ex can be null.
             var actualException = ex.InnerException ?? ex;
-            var exceptionMessage = StackTraceHelper.GetExceptionMessage(actualException);
-            var stackTraceInfo = StackTraceHelper.GetStackTraceInformation(actualException);
+            var exceptionMessage = actualException.GetFormattedExceptionMessage();
+            var stackTraceInfo = actualException.GetStackTraceInformation();
 
             var errorMessage = string.Format(
                 CultureInfo.CurrentCulture,
