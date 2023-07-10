@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -271,7 +272,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
-        using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "all");
+        // NOTE: From this place we don't have any path that would let the user write a message on the TestContext and we don't do
+        // anything with what would be printed anyway so we can simply use a simple StringWriter.
+        using var writer = new StringWriter();
         var testMethod = test.TestMethod;
         var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
         var testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
