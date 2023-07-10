@@ -53,4 +53,16 @@ public class DeploymentTests : CLITestBase
         InvokeVsTestForExecution(new string[] { TestAssetPreserveNewest }, testCaseFilter: "DirectoryDeploymentTests", targetFramework: targetFramework);
         ValidatePassedTestsContain("DeploymentTestProject.PreserveNewest.DirectoryDeploymentTests.DirectoryWithForwardSlash", "DeploymentTestProject.PreserveNewest.DirectoryDeploymentTests.DirectoryWithBackSlash");
     }
+
+    public void ValidateFileDeployment_net462()
+        => ValidateFileDeployment("net462");
+
+    public void ValidateFileDeployment_netcoreapp31()
+        => ValidateFileDeployment("netcoreapp3.1");
+
+    public void ValidateFileDeployment(string targetFramework)
+    {
+        InvokeVsTestForExecution(new string[] { TestAssetPreserveNewest }, testCaseFilter: "FileDeploymentTests", targetFramework: targetFramework);
+        ValidatePassedTestsContain("DeploymentTestProject.PreserveNewest.FileDeploymentTests.FileWithForwardSlash", "DeploymentTestProject.PreserveNewest.FileDeploymentTests.FileWithBackSlash");
+    }
 }
