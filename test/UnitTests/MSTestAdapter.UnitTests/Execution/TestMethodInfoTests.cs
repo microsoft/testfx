@@ -635,6 +635,12 @@ public class TestMethodInfoTests : TestContainer
 #else
             "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>";
 #endif
+
+        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith(expectedErrorStackTrace))
+        {
+            throw new Exception($"Expected\n\n\"{exception.StackTraceInformation.ErrorStackTrace}\"\n\nto start with\n\n\"{expectedErrorStackTrace}\"");
+        }
+
         Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith(expectedErrorStackTrace));
     }
 
