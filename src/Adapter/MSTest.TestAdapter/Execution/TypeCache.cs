@@ -656,9 +656,16 @@ internal class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingManagedNameHelper(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
-        MethodInfo? testMethodInfo = null;
-        var methodBase = ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
+        MethodBase? methodBase = null;
+        try
+        {
+            methodBase = ManagedNameHelper.GetMethod(testClassInfo.Parent.Assembly, testMethod.ManagedTypeName!, testMethod.ManagedMethodName!);
+        }
+        catch (InvalidManagedNameException)
+        {
+        }
 
+        MethodInfo? testMethodInfo = null;
         if (methodBase is MethodInfo mi)
         {
             testMethodInfo = mi;
@@ -669,9 +676,11 @@ internal class TypeCache : MarshalByRefObject
             testMethodInfo = methodBase.DeclaringType!.GetRuntimeMethod(methodBase.Name, parameters);
         }
 
-        testMethodInfo = testMethodInfo?.HasCorrectTestMethodSignature(true, discoverInternals) ?? false
-                       ? testMethodInfo
-                       : null;
+        if (testMethodInfo is null
+            || !testMethodInfo.HasCorrectTestMethodSignature(true, discoverInternals))
+        {
+            return null;
+        }
 
         return testMethodInfo;
     }
