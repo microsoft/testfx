@@ -516,21 +516,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(expectedErrorMessage == exception.Message);
 
 #if NETFRAMEWORK
-        var strackTrace1 = """
-            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
-            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
-            at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
-            at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>
-        """;
-
-        var strackTrace2 = """
-            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
-            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
-            at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>
-        """;
-
-        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith(strackTrace1)
-            || exception.StackTraceInformation.ErrorStackTrace.StartsWith(strackTrace2));
+        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()"));
 #else
         Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>"));
 #endif
@@ -632,23 +618,9 @@ public class TestMethodInfoTests : TestContainer
         Verify(errorMessage == exception.Message);
 
 #if NETFRAMEWORK
-        var strackTrace1 = """
-            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
-            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
-            at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
-            at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>
-        """;
-
-        var strackTrace2 = """
-            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
-            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
-            at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>
-        """;
-
-        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith(strackTrace1)
-            || exception.StackTraceInformation.ErrorStackTrace.StartsWith(strackTrace2));
+        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()"));
 #else
-        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>"));
+        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>"));
 #endif
     }
 
