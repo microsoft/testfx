@@ -299,9 +299,9 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool? conditi
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType(object? value, System.Type? expectedType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType(object? value, System.Type? expectedType, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType(object? value, System.Type? expectedType, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value, string? message) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value) -> T
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value, string? message) -> T
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value, string? message, params object?[]? parameters) -> T
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType(object? value, System.Type? wrongType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType(object? value, System.Type? wrongType, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType(object? value, System.Type? wrongType, string? message, params object?[]? parameters) -> void

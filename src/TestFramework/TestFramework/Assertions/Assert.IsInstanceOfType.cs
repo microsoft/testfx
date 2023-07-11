@@ -40,8 +40,12 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>([NotNull] object? value)
-        => IsInstanceOfType(value, typeof(T), string.Empty, null);
+    /// <returns>The <paramref name="value"/> object cast to the generic type.</returns>
+    public static T IsInstanceOfType<T>([NotNull] object? value)
+    {
+        IsInstanceOfType(value, typeof(T), string.Empty, null);
+        return (T)value;
+    }
 
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
@@ -73,8 +77,12 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>([NotNull] object? value, string? message)
-        => IsInstanceOfType(value, typeof(T), message, null);
+    /// <returns>The <paramref name="value"/> object cast to the generic type.</returns>
+    public static T IsInstanceOfType<T>([NotNull] object? value, string? message)
+    {
+        IsInstanceOfType(value, typeof(T), message, null);
+        return (T)value;
+    }
 
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
@@ -129,8 +137,12 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    public static void IsInstanceOfType<T>([NotNull] object? value, string? message, params object?[]? parameters)
-        => IsInstanceOfType(value, typeof(T), message, parameters);
+    /// <returns>The <paramref name="value"/> object cast to the generic type.</returns>
+    public static T IsInstanceOfType<T>([NotNull] object? value, string? message, params object?[]? parameters)
+    {
+        IsInstanceOfType(value, typeof(T), message, parameters);
+        return (T)value;
+    }
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong
