@@ -515,18 +515,25 @@ public class TestMethodInfoTests : TestContainer
             "System.Exception: Outer ---> System.InvalidOperationException: Inner");
         Verify(expectedErrorMessage == exception.Message);
 
-        var expectedErrorStackTrace =
 #if NETFRAMEWORK
-            """
-                at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
-               at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
-               at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
-               at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>
-            """;
+        var strackTrace1 = """
+            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+            at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+            at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>
+        """;
+
+        var strackTrace2 = """
+            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+            at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>
+        """;
+
+        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith(strackTrace1)
+            || exception.StackTraceInformation.ErrorStackTrace.StartsWith(strackTrace2));
 #else
-            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>";
+        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>"));
 #endif
-        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith(expectedErrorStackTrace));
     }
 
     public void TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult()
@@ -624,24 +631,25 @@ public class TestMethodInfoTests : TestContainer
             "System.Exception: Outer ---> System.InvalidOperationException: Inner");
         Verify(errorMessage == exception.Message);
 
-        var expectedErrorStackTrace =
 #if NETFRAMEWORK
-            """
-               at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
-               at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
-               at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
-               at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>
-            """;
+        var strackTrace1 = """
+            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+            at System.Runtime.CompilerServices.TaskAwaiter`1.GetResult()
+            at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>
+        """;
+
+        var strackTrace2 = """
+            at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+            at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+            at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>
+        """;
+
+        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith(strackTrace1)
+            || exception.StackTraceInformation.ErrorStackTrace.StartsWith(strackTrace2));
 #else
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>";
+        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>"));
 #endif
-
-        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith(expectedErrorStackTrace))
-        {
-            throw new Exception($"Expected\n\n\"{exception.StackTraceInformation.ErrorStackTrace}\"\n\nto start with\n\n\"{expectedErrorStackTrace}\"");
-        }
-
-        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith(expectedErrorStackTrace));
     }
 
     public void TestMethodInfoInvokeShouldCallTestCleanup()
@@ -1251,7 +1259,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(result.Outcome == UTF.UnitTestOutcome.Inconclusive);
     }
 
-#endregion
+    #endregion
 
     #region TestMethod invoke setup order
 
