@@ -618,9 +618,9 @@ public class TestMethodInfoTests : TestContainer
         Verify(errorMessage == exception.Message);
 
 #if NETFRAMEWORK
-        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()"))
+        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith("   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()"))
         {
-            throw new Exception($"Expected stack trace to start with '    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()' but\n{exception.StackTraceInformation.ErrorStackTrace}\n does not.");
+            throw new Exception($"Expected stack trace to start with '   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()' but\n{exception.StackTraceInformation.ErrorStackTrace}\n does not.");
         }
 #else
         if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith("   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>"))
