@@ -485,6 +485,43 @@ public class TestMethodInfoTests : TestContainer
             "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__"));
     }
 
+    public void TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException()
+    {
+        // Arrange.
+        DummyTestClass.TestInitializeMethodBodyAsync = async classInstance =>
+        {
+            await Task.FromException<Exception>(new Exception("Outer", new InvalidOperationException("Inner")));
+        };
+        _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethodAsync");
+        _testMethodOptions.ExpectedException = _expectedException;
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions);
+
+        // Act.
+        var result = testMethodInfo.Invoke(null);
+
+        // Assert.
+        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
+
+        var exception = result.TestFailureException as TestFailedException;
+        Verify(exception is not null);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.InnerException.GetType() == typeof(Exception));
+        Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
+
+        var expectedErrorMessage = string.Format(
+            Resource.UTA_InitMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testClassInfo.TestInitializeMethod.Name,
+            "System.Exception: Outer ---> System.InvalidOperationException: Inner");
+        Verify(expectedErrorMessage == exception.Message);
+
+#if NETFRAMEWORK
+        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()"));
+#else
+        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>"));
+#endif
+    }
+
     public void TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult()
     {
         // Arrange.
@@ -550,6 +587,48 @@ public class TestMethodInfoTests : TestContainer
     #endregion
 
     #region TestCleanup method setup
+
+    public void TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException()
+    {
+        // Arrange.
+        DummyTestClass.TestCleanupMethodBodyAsync = async classInstance =>
+        {
+            await Task.FromException<Exception>(new Exception("Outer", new InvalidOperationException("Inner")));
+        };
+        _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethodAsync");
+        var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions);
+
+        // Act.
+        var result = testMethodInfo.Invoke(null);
+
+        // Assert.
+        Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
+
+        var exception = result.TestFailureException as TestFailedException;
+        Verify(exception is not null);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(exception.InnerException.GetType() == typeof(Exception));
+        Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
+
+        var errorMessage = string.Format(
+            Resource.UTA_CleanupMethodThrows,
+            typeof(DummyTestClass).FullName,
+            _testClassInfo.TestCleanupMethod.Name,
+            "System.Exception: Outer ---> System.InvalidOperationException: Inner");
+        Verify(errorMessage == exception.Message);
+
+#if NETFRAMEWORK
+        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith("   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()"))
+        {
+            throw new Exception($"Expected stack trace to start with '   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()' but\n{exception.StackTraceInformation.ErrorStackTrace}\n does not.");
+        }
+#else
+        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith("   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>"))
+        {
+            throw new Exception($"Expected stack trace to start with '   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>' but\n{exception.StackTraceInformation.ErrorStackTrace}\n does not.");
+        }
+#endif
+    }
 
     public void TestMethodInfoInvokeShouldCallTestCleanup()
     {
@@ -650,8 +729,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_CleanupMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestCleanupMethod.Name,
-            typeof(ArgumentException).ToString(),
-            "Some exception message");
+            "System.ArgumentException: Some exception message ---> System.InvalidOperationException: Inner exception message");
 
         var result = _testMethodInfo.Invoke(null);
 
@@ -679,8 +757,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_CleanupMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestCleanupMethod.Name,
-            typeof(UTF.AssertInconclusiveException).ToString(),
-            "Assert.Inconclusive failed. Test inconclusive");
+            "Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException: Assert.Inconclusive failed. Test inconclusive");
 
         var result = _testMethodInfo.Invoke(null);
 
@@ -707,8 +784,7 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_CleanupMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestCleanupMethod.Name,
-            typeof(UTF.AssertFailedException).ToString(),
-            "Assert.Fail failed. Test failed");
+            "Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test failed");
 
         var result = _testMethodInfo.Invoke(null);
 
@@ -744,12 +820,11 @@ public class TestMethodInfoTests : TestContainer
             Resource.UTA_CleanupMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestCleanupMethod.Name,
-            typeof(NotImplementedException).ToString(),
-            "dummyErrorMessage");
+            "System.NotImplementedException: dummyErrorMessage");
 
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
         Verify(exception is not null);
-        Verify(string.Concat(errorMessage, Environment.NewLine, cleanupError) == exception?.Message);
+        Verify(string.Concat(errorMessage, Environment.NewLine, cleanupError) == exception.Message);
     }
 
     public void TestMethodInfoInvokeShouldAppendStackTraceInformationIfBothTestMethodAndTestCleanupThrows()
@@ -1434,11 +1509,15 @@ public class TestMethodInfoTests : TestContainer
 
         public static Action<object> TestContextSetterBody { get; set; }
 
+        public static Func<DummyTestClass, Task> TestInitializeMethodBodyAsync { get; set; }
+
         public static Action<DummyTestClass> TestInitializeMethodBody { get; set; }
 
         public static Action<DummyTestClass> TestMethodBody { get; set; }
 
         public static Action<DummyTestClass> TestCleanupMethodBody { get; set; }
+
+        public static Func<DummyTestClass, Task> TestCleanupMethodBodyAsync { get; set; }
 
         public static Func<Task> DummyAsyncTestMethodBody { get; set; }
 
@@ -1468,9 +1547,21 @@ public class TestMethodInfoTests : TestContainer
         }
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public async Task DummyTestInitializeMethodAsync()
+        {
+            await TestInitializeMethodBodyAsync(this);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void DummyTestCleanupMethod()
         {
             TestCleanupMethodBody(this);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public async Task DummyTestCleanupMethodAsync()
+        {
+            await TestCleanupMethodBodyAsync(this);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]

@@ -124,7 +124,7 @@
     <value>Running tests in any of the provided sources is not supported for the selected platform</value>
   </data>
   <data name="UTA_CleanupMethodThrows" xml:space="preserve">
-    <value>TestCleanup method {0}.{1} threw exception. {2}: {3}.</value>
+    <value>TestCleanup method {0}.{1} threw exception. {2}.</value>
   </data>
   <data name="UTA_EndOfInnerExceptionTrace" xml:space="preserve">
     <value>--- End of inner exception stack trace ---</value>

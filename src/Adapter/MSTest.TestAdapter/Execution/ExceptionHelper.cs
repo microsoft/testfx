@@ -15,7 +15,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// <summary>
 /// Provides helper methods to parse stack trace.
 /// </summary>
-internal static class StackTraceHelper
+internal static class ExceptionHelper
 {
     /// <summary>
     /// Gets the types whose methods should be ignored in the reported call stacks.
@@ -33,7 +33,7 @@ internal static class StackTraceHelper
     /// <returns>
     /// The <see cref="StackTraceInformation"/> for the provided exception.
     /// </returns>
-    internal static StackTraceInformation? GetStackTraceInformation(Exception ex)
+    internal static StackTraceInformation? GetStackTraceInformation(this Exception ex)
     {
         DebugEx.Assert(ex != null, "exception should not be null.");
 
@@ -138,7 +138,7 @@ internal static class StackTraceHelper
     /// The aggregated exception message that considers inner exceptions.
     /// </returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    internal static string GetExceptionMessage(Exception ex)
+    internal static string GetFormattedExceptionMessage(this Exception ex)
     {
         DebugEx.Assert(ex != null, "exception should not be null.");
 
