@@ -67,14 +67,14 @@ public partial class AssertTests
     [TestMethod]
     public void IsInstanceOfTypeUsingGenericType_OnSameInstance_DoesNotThrow()
     {
-        var result = Assert.IsInstanceOfType<int>(5);
+        int result = Assert.IsInstanceOfType<int>(5);
         Verify(result == 5);
     }
 
     [TestMethod]
     public void IsInstanceOfTypeUsingGenericType_OnHigherInstance_DoesNotThrow()
     {
-        var result = Assert.IsInstanceOfType<object>(5);
+        object result = Assert.IsInstanceOfType<object>(5);
         Verify(((int)result) == 5);
     }
 

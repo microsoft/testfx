@@ -40,7 +40,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    /// <returns>The <paramref name="value"/> object cast to the generic type.</returns>
+    /// <returns>The <paramref name="value"/> object cast to the generic type <typeparamref name="T"/>.</returns>
     public static T IsInstanceOfType<T>([NotNull] object? value)
     {
         IsInstanceOfType(value, typeof(T), string.Empty, null);
@@ -77,7 +77,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    /// <returns>The <paramref name="value"/> object cast to the generic type.</returns>
+    /// <returns>The <paramref name="value"/> object cast to the generic type <typeparamref name="T"/>.</returns>
     public static T IsInstanceOfType<T>([NotNull] object? value, string? message)
     {
         IsInstanceOfType(value, typeof(T), message, null);
@@ -137,7 +137,7 @@ public sealed partial class Assert
     /// inheritance hierarchy of the object.
     /// </summary>
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
-    /// <returns>The <paramref name="value"/> object cast to the generic type.</returns>
+    /// <returns>The <paramref name="value"/> object cast to the generic type <typeparamref name="T"/>.</returns>
     public static T IsInstanceOfType<T>([NotNull] object? value, string? message, params object?[]? parameters)
     {
         IsInstanceOfType(value, typeof(T), message, parameters);
