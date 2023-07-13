@@ -51,6 +51,12 @@ variables:
     value: False
   - name: _InternalBuildArgs
     value: ' '
+  - name: _ReleaseVersionKind
+    value: ''
+
+  - ${{ if eq(parameters.isRTM, True) }}:
+    - name: _ReleaseVersionKind
+      value: release
 
   # Produce real signed binaries for Internal builds
   - ${{ if eq(variables._RunAsInternal, True) }}:
@@ -64,14 +70,11 @@ variables:
     - name: _InternalBuildArgs
       value: /p:DotNetSignType=$(_SignType)
         /p:TeamName=$(_TeamName)
+        /p:DotNetFinalVersionKind=$(_ReleaseVersionKind)
         /p:DotNetPublishUsingPipelines=true
         /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
         /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-
-  - ${{ if eq(parameters.isRTM, True) }}:
-    - name: _InternalBuildArgs
-      value: $(_InternalBuildArgs) /p:DotNetFinalVersionKind=release
 
 stages:
 
