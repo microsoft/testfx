@@ -4,6 +4,69 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [3.1.1] - 2023-07-14
+
+### Fixed
+
+* Artifact `3.1.0` was corrupted during pipeline and for security reasons we cannot regenerate it.
+
+See full log [here](https://github.com/Microsoft/testfx/compare/v3.1.0...v3.1.1)
+
+### Artifacts
+
+* MSTest: [3.1.1](https://www.nuget.org/packages/MSTest/3.1.1)
+* MSTest.TestFramework: [3.1.1](https://www.nuget.org/packages/MSTest.TestFramework/3.1.1)
+* MSTest.TestAdapter: [3.1.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.1.1)
+
+## [3.1.0] - 2023-07-14
+
+See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.4...v3.1.0)
+
+### Added
+
+* Add AsyncLocal warning [#1710](https://github.com/Microsoft/testfx/pull/1710)
+* DeploymentItem: add test for file deployment using Windows/Linux path… [#1709](https://github.com/Microsoft/testfx/pull/1709)
+* Onboarding to GitOps.ResourceManagement [#1688](https://github.com/Microsoft/testfx/pull/1688)
+* Enable TestContext.AddResultFile API for WinUI [#1593](https://github.com/Microsoft/testfx/pull/1593)
+* Adding warning that AssemblyResolution works only with .NET Frameworks [#1669](https://github.com/Microsoft/testfx/pull/1669)
+* Document data source configuration [#1595](https://github.com/Microsoft/testfx/pull/1595)
+* Add documentation for [DeploymentItem] attribute [#1581](https://github.com/Microsoft/testfx/pull/1581)
+* Document LegacySettings- support as discontinued delta from MSTestV1 [#1571](https://github.com/Microsoft/testfx/pull/1571)
+* Add link to MSTest element settings in the Documentation page [#1552](https://github.com/Microsoft/testfx/pull/1552)
+
+### Changed
+
+* Bump TestPlatform to 17.6.0 [#1666](https://github.com/Microsoft/testfx/pull/1666)
+* Use embedded symbols [#1601](https://github.com/Microsoft/testfx/pull/1601)
+
+### Fixed
+
+* Prevent swallowing inner exception in async error [#1712](https://github.com/Microsoft/testfx/pull/1712)
+* Avoid crash when method is not found using FQN [#1714](https://github.com/Microsoft/testfx/pull/1714)
+* Fix parallel output isolation [#1705](https://github.com/Microsoft/testfx/pull/1705)
+* Fix DeploymentItem to support trailing directory separator [#1703](https://github.com/Microsoft/testfx/pull/1703)
+* Fix Logger.LogMessage to not call string.Format when no arguments are… [#1702](https://github.com/Microsoft/testfx/pull/1702)
+* TestContext: Unify SetOutcome behavior across all target frameworks [#1428](https://github.com/Microsoft/testfx/pull/1428)
+* Update AreEqual/AreNotEqual XML documentation [#1563](https://github.com/Microsoft/testfx/pull/1563)
+* Fix bug with iterating over loaded modules [#1501](https://github.com/Microsoft/testfx/pull/1501)
+* Fix collecting warning messages in DeploymentUtility [#1500](https://github.com/Microsoft/testfx/pull/1500)
+* Fix cleanup inheritance calls [#1475](https://github.com/Microsoft/testfx/pull/1475)
+* Fix some race condition issue [#1477](https://github.com/Microsoft/testfx/pull/1477)
+* Fix class/assembly cleanups log collect and attachment (#1470) [#1472](https://github.com/Microsoft/testfx/pull/1472)
+
+### New Contributors
+
+* @unsegnor made their first contribution in https://github.com/microsoft/testfx/pull/1104
+* @JasonMurrayCole made their first contribution in https://github.com/microsoft/testfx/pull/1119
+* @engyebrahim made their first contribution in https://github.com/microsoft/testfx/pull/1172
+* @johnthcall made their first contribution in https://github.com/microsoft/testfx/pull/1547
+
+### Artifacts
+
+* MSTest: [3.1.0](https://www.nuget.org/packages/MSTest/3.1.0)
+* MSTest.TestFramework: [3.1.0](https://www.nuget.org/packages/MSTest.TestFramework/3.1.0)
+* MSTest.TestAdapter: [3.1.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.1.0)
+
 ## [3.0.4] - 2023-06-01
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.0.3...v3.0.4)

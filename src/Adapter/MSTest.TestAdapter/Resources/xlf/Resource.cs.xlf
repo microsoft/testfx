@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
         <source>TestCleanup method {0}.{1} threw exception. {2}.</source>
-        <target state="new">TestCleanup method {0}.{1} threw exception. {2}.</target>
+        <target state="translated">Metoda TestCleanup {0}.{1} vyvolala výjimku. {2}.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_EndOfInnerExceptionTrace">
