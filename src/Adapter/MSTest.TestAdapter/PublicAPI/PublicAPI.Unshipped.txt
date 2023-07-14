@@ -1,2 +1,2 @@
 ﻿#nullable enable
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.TreatDiscoveryWarningsAsErrors.get -> bool
+
