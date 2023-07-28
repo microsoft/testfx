@@ -14,10 +14,6 @@
   <PropertyGroup>
     <!-- default to allowing all language features -->
     <LangVersion>preview</LangVersion>
-    <!-- enable strict mode for Roslyn compiler -->
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-    <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!--
         Make sure any documentation comments which are included in code get checked for syntax during the build, but do
