@@ -1,4 +1,4 @@
-# RFC 001 - Framework Extensibility for Trait Attributes
+#  RFC 001 - Framework Extensibility for Trait Attributes
 
 - [x] Approved in principle
 - [x] Under discussion
