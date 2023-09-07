@@ -253,7 +253,6 @@ internal class TestMethodRunner
 
                 if (dataRows == null)
                 {
-                    watch.Stop();
                     var inconclusiveResult = new TestResult
                     {
                         Outcome = UTF.UnitTestOutcome.Inconclusive,
@@ -282,7 +281,6 @@ internal class TestMethodRunner
             }
             catch (Exception ex)
             {
-                watch.Stop();
                 var failedResult = new TestResult
                 {
                     Outcome = UTF.UnitTestOutcome.Error,
