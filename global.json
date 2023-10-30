@@ -3,22 +3,13 @@
     "version": "8.0.100-rtm.23506.1"
   },
   "tools": {
-    "vs": {
-      "version": "17.8.0",
-      "components": [
-        "Microsoft.Net.Component.4.5.2.TargetingPack",
-        "Microsoft.VisualStudio.Windows.Build",
-        "Microsoft.VisualStudio.Component.VSSDK"
-      ]
-    },
     "dotnet": "8.0.100-rtm.23506.1",
     "runtimes": {
       "dotnet": [
         "6.0.23",
         "3.1.32"
       ]
-    },
-    "xcopy-msbuild": "17.7.4"
+    }
   },
   "msbuild-sdks": {
     "Microsoft.DotNet.Arcade.Sdk": "9.0.0-beta.23528.2",
