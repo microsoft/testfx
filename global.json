@@ -4,7 +4,7 @@
   },
   "tools": {
     "vs": {
-      "version": "17.7.0",
+      "version": "17.8.0",
       "components": [
         "Microsoft.Net.Component.4.5.2.TargetingPack",
         "Microsoft.VisualStudio.Windows.Build",
@@ -22,7 +22,6 @@
   },
   "msbuild-sdks": {
     "Microsoft.DotNet.Arcade.Sdk": "9.0.0-beta.23528.2",
-    "Microsoft.DotNet.Helix.Sdk": "9.0.0-beta.23528.2",
     "MSBuild.Sdk.Extras": "3.0.44"
   }
 }

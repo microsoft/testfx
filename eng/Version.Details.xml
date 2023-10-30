@@ -9,10 +9,6 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>165896e7efeecb70f01bd011257ead0f56d32c95</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Test.Sdk" Version="17.4.1-release-20221129-02">
-      <Uri>https://github.com/microsoft/vstest</Uri>
-      <Sha>31e8b9580bec7c5ee5c58439fbcb4c91483a2434</Sha>
-    </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
     <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.23528.2">
@@ -24,10 +20,6 @@
       <Sha>bb2b4326ddf03d86c92bd125dba87e9d8df63463</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.SignTool" Version="9.0.0-beta.23528.2">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>bb2b4326ddf03d86c92bd125dba87e9d8df63463</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="9.0.0-beta.23528.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>bb2b4326ddf03d86c92bd125dba87e9d8df63463</Sha>
     </Dependency>
@@ -46,10 +38,6 @@
     <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.21264.3">
       <Uri>https://github.com/dotnet/xharness</Uri>
       <Sha>2eef520188beb49e31460d0a7dbe040294428ff1</Sha>
-    </Dependency>
-    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.1.0-5.22128.4">
-      <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>5d10d428050c0d6afef30a072c4ae68776621877</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.5.21268.2">
       <Uri>https://github.com/mono/linker</Uri>
@@ -72,9 +60,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="XliffTasks" Version="1.0.0-beta.21265.1">
-      <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>f4bfde77fb60daf52d8fec738d96d1d54e37dd88</Sha>
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="9.0.0-beta.23528.1">
+      <Uri>https://github.com/dotnet/arcade</Uri>
+      <Sha>a4d49646dbac90883d3672f1c08134d84cca5707</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
