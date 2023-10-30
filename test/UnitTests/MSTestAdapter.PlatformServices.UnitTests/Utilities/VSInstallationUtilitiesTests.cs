@@ -10,6 +10,7 @@ using TestFramework.ForTestingMSTest;
 
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests;
+
 public class VSInstallationUtilitiesTests : TestContainer
 {
     public void CheckResolutionPathsDoNotContainPrivateAssembliesPathTest()

@@ -8,6 +8,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+
 internal static class DataSerializationHelper
 {
     private static readonly ConcurrentDictionary<string, DataContractJsonSerializer> SerializerCache = new();

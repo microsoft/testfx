@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
 public class MSTestAdapterSettings
 {
     private bool _isAssemblyResolutionSet;

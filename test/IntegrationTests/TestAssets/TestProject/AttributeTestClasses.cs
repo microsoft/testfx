@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SampleFrameworkExtensions;
 
 namespace TestProjectForDiscovery;
+
 [TestCategory("ba")]
 public class AttributeTestBaseClass
 {

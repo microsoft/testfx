@@ -5,6 +5,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+
 internal static class UnitTestOutcomeHelper
 {
     /// <summary>

@@ -20,6 +20,7 @@ using TestFramework.ForTestingMSTest;
 
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
+
 public class DesktopTestDeploymentTests : TestContainer
 {
     private const string DefaultDeploymentItemPath = @"c:\temp";

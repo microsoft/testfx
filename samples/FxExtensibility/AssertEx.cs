@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.Extensibility.Samples;
+
 public static class AssertEx
 {
     private static AssertIs s_assertIs;

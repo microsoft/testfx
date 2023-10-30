@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
 public class RunConfigurationSettings
 {
     /// <summary>

@@ -9,6 +9,7 @@ using AdapterTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapte
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
+
 public class UnitTestOutcomeExtensionsTests : TestContainer
 {
     public void ToUnitTestOutComeForPassedTestResultsConvertsToPassedUnitTestOutCome()

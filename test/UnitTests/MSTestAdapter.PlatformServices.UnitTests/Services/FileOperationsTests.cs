@@ -11,6 +11,7 @@ using TestFramework.ForTestingMSTest;
 
 #if !NET462
 namespace MSTestAdapter.PlatformServices.Tests.Services;
+
 public class FileOperationsTests : TestContainer
 {
     private readonly FileOperations _fileOperations;

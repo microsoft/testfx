@@ -13,6 +13,7 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
+
 public class PlatformServiceProviderTests : TestContainer
 {
     protected override void Dispose(bool disposing)

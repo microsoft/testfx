@@ -19,6 +19,7 @@ using TestFramework.ForTestingMSTest;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
+
 public class AssemblyEnumeratorWrapperTests : TestContainer
 {
     private readonly AssemblyEnumeratorWrapper _testableAssemblyEnumeratorWrapper;

@@ -4,6 +4,7 @@
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
+
 public class DataSourceTests : CLITestBase
 {
     private const string TestAssetName = "DataSourceTestProject";

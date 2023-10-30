@@ -4,6 +4,7 @@
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
+
 public class DynamicDataTests : CLITestBase
 {
     private const string TestAssetName = "DynamicDataTestProject";

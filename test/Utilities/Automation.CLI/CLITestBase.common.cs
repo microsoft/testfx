@@ -9,6 +9,7 @@ using FluentAssertions;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.MSTestV2.CLIAutomation;
+
 public partial class CLITestBase : TestContainer
 {
     private const string EngineeringFolder = "eng";

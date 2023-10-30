@@ -10,6 +10,7 @@ using TestFramework.ForTestingMSTest;
 
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
+
 public class DesktopThreadOperationsTests : TestContainer
 {
     private readonly ThreadOperations _asyncOperations;

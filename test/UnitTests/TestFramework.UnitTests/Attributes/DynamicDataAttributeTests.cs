@@ -12,6 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
+
 public class DynamicDataAttributeTests : TestContainer
 {
     private readonly DummyTestClass _dummyTestClass;

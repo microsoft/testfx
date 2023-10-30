@@ -4,6 +4,7 @@
 using System;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+
 internal class AdapterSettingsException : Exception
 {
     internal AdapterSettingsException(string? message)

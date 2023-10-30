@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
+
 public class DiscoverInternalsTests : CLITestBase
 {
     private const string TestAsset = "DiscoverInternalsProject";

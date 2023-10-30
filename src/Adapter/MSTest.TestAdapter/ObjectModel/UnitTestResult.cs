@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+
 [Serializable]
 [DebuggerDisplay("{DisplayName} ({Outcome})")]
 public class UnitTestResult

@@ -22,6 +22,7 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
+
 public class AssemblyEnumeratorTests : TestContainer
 {
     private readonly AssemblyEnumerator _assemblyEnumerator;
@@ -133,7 +134,7 @@ public class AssemblyEnumeratorTests : TestContainer
     public void GetTypesShouldLogWarningsWhenReflectionFailsWithLoaderExceptions()
     {
         Mock<TestableAssembly> mockAssembly = new();
-        var exceptions = new Exception[] { new Exception("DummyLoaderException") };
+        var exceptions = new Exception[] { new("DummyLoaderException") };
 
         // Setup mocks
         mockAssembly.Setup(a => a.DefinedTypes).Throws(new ReflectionTypeLoadException(null, exceptions));

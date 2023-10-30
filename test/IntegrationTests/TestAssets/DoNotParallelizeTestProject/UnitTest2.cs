@@ -6,6 +6,7 @@ using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DoNotParallelizeTestProject;
+
 [TestClass]
 public class UnitTest2
 {

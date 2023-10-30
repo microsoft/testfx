@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensi
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.Tests.Extensions;
+
 public class ExceptionExtensionsTests : TestContainer
 {
     public void GetExceptionMessageShouldReturnExceptionMessage()

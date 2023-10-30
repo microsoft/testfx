@@ -12,6 +12,7 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.Tests.Utilities;
+
 public class FileUtilityTests : TestContainer
 {
     private readonly Mock<FileUtility> _fileUtility;

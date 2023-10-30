@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.MSTestV2.CLIAutomation;
+
 public class DiscoveryEventsHandler : ITestDiscoveryEventsHandler
 {
     private readonly ImmutableArray<string>.Builder _testsBuilder = ImmutableArray.CreateBuilder<string>();

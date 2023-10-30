@@ -9,6 +9,7 @@ using FluentAssertions;
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
+
 public class TimeoutTests : CLITestBase
 {
     private const string TestAssetName = "TimeoutTestProject";

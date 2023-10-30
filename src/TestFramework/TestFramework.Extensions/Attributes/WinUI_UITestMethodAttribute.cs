@@ -84,7 +84,7 @@ public class UITestMethodAttribute : TestMethodAttribute
             }
             catch (Exception e)
             {
-                return new TestResult[] { new TestResult { TestFailureException = e } };
+                return new TestResult[] { new() { TestFailureException = e } };
             }
         }
         else

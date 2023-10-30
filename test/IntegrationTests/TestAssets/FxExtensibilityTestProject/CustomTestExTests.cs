@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FxExtensibilityTestProject;
+
 [IterativeTestClass(5)]
 public class CustomTestExTests
 {

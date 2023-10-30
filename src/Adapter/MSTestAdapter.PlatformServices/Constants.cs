@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
 internal class Constants
 {
 #if NETFRAMEWORK

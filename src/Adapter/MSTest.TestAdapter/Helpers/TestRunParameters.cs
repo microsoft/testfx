@@ -9,6 +9,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+
 internal static class TestRunParameters
 {
     internal static Dictionary<string, object> FromXml(XmlReader reader)

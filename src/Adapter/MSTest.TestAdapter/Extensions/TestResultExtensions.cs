@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+
 public static class TestResultExtensions
 {
     /// <summary>

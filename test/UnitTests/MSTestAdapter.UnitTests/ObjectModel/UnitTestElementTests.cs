@@ -14,6 +14,7 @@ using TestFramework.ForTestingMSTest;
 using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
+
 public class UnitTestElementTests : TestContainer
 {
     private readonly TestMethod _testMethod;
@@ -180,7 +181,7 @@ public class UnitTestElementTests : TestContainer
 
         Verify(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) is null);
 
-        _unitTestElement.DeploymentItems = new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("s", "d") };
+        _unitTestElement.DeploymentItems = new KeyValuePair<string, string>[] { new("s", "d") };
         testCase = _unitTestElement.ToTestCase();
 
         Verify(_unitTestElement.DeploymentItems.SequenceEqual(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as KeyValuePair<string, string>[]));

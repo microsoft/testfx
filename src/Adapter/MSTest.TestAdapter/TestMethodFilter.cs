@@ -12,6 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+
 internal class TestMethodFilter
 {
     /// <summary>

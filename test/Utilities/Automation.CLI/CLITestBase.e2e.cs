@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.MSTestV2.CLIAutomation;
+
 public partial class CLITestBase : TestContainer
 {
     private static VsTestConsoleWrapper s_vsTestConsoleWrapper;

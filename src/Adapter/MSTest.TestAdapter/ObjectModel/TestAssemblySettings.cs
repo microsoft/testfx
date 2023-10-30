@@ -6,6 +6,7 @@ using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+
 [Serializable]
 internal class TestAssemblySettings
 {

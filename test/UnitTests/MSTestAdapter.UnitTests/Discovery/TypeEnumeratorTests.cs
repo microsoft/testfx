@@ -20,6 +20,7 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
+
 public class TypeEnumeratorTests : TestContainer
 {
     private readonly Mock<ReflectHelper> _mockReflectHelper;
@@ -325,7 +326,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-        var testProperties = new List<Trait> { new Trait("foo", "bar"), new Trait("fooprime", "barprime") };
+        var testProperties = new List<Trait> { new("foo", "bar"), new("fooprime", "barprime") };
 
         // Setup mocks
         _mockReflectHelper.Setup(rh => rh.GetTestPropertiesAsTraits(methodInfo)).Returns(testProperties);
@@ -341,7 +342,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-        var testProperties = new List<Trait> { new Trait("foo", "bar"), new Trait("fooprime", "barprime") };
+        var testProperties = new List<Trait> { new("foo", "bar"), new("fooprime", "barprime") };
         var ownerTrait = new Trait("owner", "mike");
 
         // Setup mocks
@@ -360,7 +361,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-        var testProperties = new List<Trait> { new Trait("foo", "bar"), new Trait("fooprime", "barprime") };
+        var testProperties = new List<Trait> { new("foo", "bar"), new("fooprime", "barprime") };
         var priorityTrait = new Trait("Priority", "1");
 
         // Setup mocks
@@ -407,7 +408,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-        _mockReflectHelper.Setup(rh => rh.GetCustomAttributes<WorkItemAttribute>(methodInfo)).Returns(new WorkItemAttribute[] { new WorkItemAttribute(123), new WorkItemAttribute(345) });
+        _mockReflectHelper.Setup(rh => rh.GetCustomAttributes<WorkItemAttribute>(methodInfo)).Returns(new WorkItemAttribute[] { new(123), new(345) });
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 

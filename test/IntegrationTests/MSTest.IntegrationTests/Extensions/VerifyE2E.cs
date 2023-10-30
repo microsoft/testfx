@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace MSTest.IntegrationTests;
+
 public static class VerifyE2E
 {
     public static void ContainsTestsDiscovered(IEnumerable<TestCase> actualTests, IEnumerable<string> expectedTests)

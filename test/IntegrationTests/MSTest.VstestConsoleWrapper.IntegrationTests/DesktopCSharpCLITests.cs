@@ -4,6 +4,7 @@
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
+
 public class DesktopCSharpCLITests : CLITestBase
 {
     private const string X86DebugTestProject = "DesktopTestProjectx86Debug";

@@ -18,6 +18,7 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
+
 public class UnitTestDiscovererTests : TestContainer
 {
     private const string Source = "DummyAssembly.dll";

@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.Tests.Services;
+
 public class ReflectionOperationsTests : TestContainer
 {
     private readonly ReflectionOperations _reflectionOperations;

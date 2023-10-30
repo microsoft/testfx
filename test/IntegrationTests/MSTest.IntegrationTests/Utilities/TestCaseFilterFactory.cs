@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 
 namespace DiscoveryAndExecutionTests.Utilities;
+
 internal static class TestCaseFilterFactory
 {
     private static readonly MethodInfo CachedGetMultiValueMethod = typeof(TestCaseFilterFactory).GetMethod(nameof(GetMultiValue), BindingFlags.Static | BindingFlags.NonPublic);

@@ -18,6 +18,7 @@ using TestFramework.ForTestingMSTest;
 
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests;
+
 public class DesktopTestSourceHostTests : TestContainer
 {
     public void GetResolutionPathsShouldAddPublicAndPrivateAssemblyPath()

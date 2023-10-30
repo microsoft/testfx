@@ -10,6 +10,7 @@ using TestFramework.ForTestingMSTest;
 
 #if !NET462
 namespace MSTestAdapter.PlatformServices.Tests.Services;
+
 #pragma warning disable SA1649 // SA1649FileNameMustMatchTypeName
 public class DiaSessionOperationsTests : TestContainer
 {

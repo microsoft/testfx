@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
+
 public class DataSerializationHelperTests : TestContainer
 {
     public void DataSerializerShouldRoundTripDateTimeOffset()

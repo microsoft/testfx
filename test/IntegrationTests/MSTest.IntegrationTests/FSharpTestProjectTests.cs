@@ -4,6 +4,7 @@
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
+
 public class FSharpTestProjectTests : CLITestBase
 {
     private const string TestAssetName = "FSharpTestProject";

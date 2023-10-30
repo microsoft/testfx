@@ -16,6 +16,7 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.Tests.Utilities;
+
 #pragma warning disable SA1649 // File name must match first type name
 public class DeploymentItemUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
@@ -64,7 +65,7 @@ public class DeploymentItemUtilityTests : TestContainer
         var deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
         var expectedDeploymentItems = new DeploymentItem[]
         {
-            new DeploymentItem(
+            new(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
         };
@@ -91,10 +92,10 @@ public class DeploymentItemUtilityTests : TestContainer
 
         var expectedDeploymentItems = new DeploymentItem[]
                                           {
-                                              new DeploymentItem(
+                                              new(
                                                   deploymentItemAttributes[0].Key,
                                                   deploymentItemAttributes[0].Value),
-                                              new DeploymentItem(
+                                              new(
                                                   deploymentItemAttributes[1].Key,
                                                   deploymentItemAttributes[1].Value),
                                           };
@@ -147,7 +148,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
         var expectedDeploymentItems = new DeploymentItem[]
                                           {
-                                              new DeploymentItem(
+                                              new(
                                                   _defaultDeploymentItemPath,
                                                   _defaultDeploymentItemOutputDirectory),
                                           };
@@ -199,10 +200,10 @@ public class DeploymentItemUtilityTests : TestContainer
         // Arrange.
         var classLevelDeploymentItems = new DeploymentItem[]
         {
-            new DeploymentItem(
+            new(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
-            new DeploymentItem(
+            new(
                 _defaultDeploymentItemPath + "\\temp2",
                 _defaultDeploymentItemOutputDirectory),
         };
@@ -257,10 +258,10 @@ public class DeploymentItemUtilityTests : TestContainer
         // Assert.
         var expectedDeploymentItems = new KeyValuePair<string, string>[]
         {
-            new KeyValuePair<string, string>(
+            new(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
-            new KeyValuePair<string, string>(
+            new(
                 _defaultDeploymentItemPath + "\\temp2",
                 _defaultDeploymentItemOutputDirectory),
         };
@@ -287,10 +288,10 @@ public class DeploymentItemUtilityTests : TestContainer
 
         var classLevelDeploymentItems = new DeploymentItem[]
         {
-            new DeploymentItem(
+            new(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
-            new DeploymentItem(
+            new(
                 _defaultDeploymentItemPath + "\\temp1",
                 _defaultDeploymentItemOutputDirectory),
         };
@@ -304,13 +305,13 @@ public class DeploymentItemUtilityTests : TestContainer
         // Assert.
         var expectedDeploymentItems = new KeyValuePair<string, string>[]
         {
-            new KeyValuePair<string, string>(
+            new(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
-            new KeyValuePair<string, string>(
+            new(
                 _defaultDeploymentItemPath + "\\temp2",
                 _defaultDeploymentItemOutputDirectory),
-            new KeyValuePair<string, string>(
+            new(
                 _defaultDeploymentItemPath + "\\temp1",
                 _defaultDeploymentItemOutputDirectory),
         };

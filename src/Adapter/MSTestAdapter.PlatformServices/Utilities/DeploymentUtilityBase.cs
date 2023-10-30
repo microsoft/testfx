@@ -19,6 +19,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+
 internal abstract class DeploymentUtilityBase
 {
     protected const string TestAssemblyConfigFileExtension = ".config";

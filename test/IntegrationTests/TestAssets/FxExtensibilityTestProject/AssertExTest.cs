@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MSTest.Extensibility.Samples;
 
 namespace FxExtensibilityTestProject;
+
 [TestClass]
 public class AssertExTest
 {

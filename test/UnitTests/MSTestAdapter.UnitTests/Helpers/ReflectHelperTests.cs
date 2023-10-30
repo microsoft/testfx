@@ -16,6 +16,7 @@ using TestFramework.ForTestingMSTest;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
+
 public class ReflectHelperTests : TestContainer
 {
     private readonly TestableReflectHelper _reflectHelper;

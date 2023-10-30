@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+
 internal class FileUtility
 {
     private readonly AssemblyUtility _assemblyUtility;

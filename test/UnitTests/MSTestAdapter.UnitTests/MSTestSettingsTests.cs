@@ -17,6 +17,7 @@ using TestFramework.ForTestingMSTest;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
+
 public class MSTestSettingsTests : TestContainer
 {
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;

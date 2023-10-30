@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+
 internal class TestAssemblySettingsProvider : MarshalByRefObject
 {
     /// <summary>

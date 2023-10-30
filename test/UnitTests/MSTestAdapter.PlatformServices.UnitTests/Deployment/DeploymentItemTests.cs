@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deploym
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.Tests.Deployment;
+
 public class DeploymentItemTests : TestContainer
 {
     public void EqualsShouldReturnFalseIfOtherItemIsNull()

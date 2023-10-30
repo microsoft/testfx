@@ -6,6 +6,7 @@ using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SampleFrameworkExtensions;
+
 public sealed class DurationAttribute : TestPropertyAttribute
 {
     public DurationAttribute(string duration)

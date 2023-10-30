@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace MSTest.IntegrationTests;
+
 public class NoNamespaceTests : CLITestBase
 {
     private const string TestAssetName = "HierarchyProject";

@@ -16,6 +16,7 @@ using ITestMethod = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformSe
 using UnitTestOutcome = Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
+
 public class TestContextImplementationTests : TestContainer
 {
     private readonly Mock<ITestMethod> _testMethod;

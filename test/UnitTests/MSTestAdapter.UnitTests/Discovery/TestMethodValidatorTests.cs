@@ -18,6 +18,7 @@ using TestFramework.ForTestingMSTest;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
+
 public class TestMethodValidatorTests : TestContainer
 {
     private readonly TestMethodValidator _testMethodValidator;

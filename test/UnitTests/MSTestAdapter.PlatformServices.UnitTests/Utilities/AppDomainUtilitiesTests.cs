@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utiliti
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
+
 public class AppDomainUtilitiesTests : TestContainer
 {
     private readonly TestableXmlUtilities _testableXmlUtilities;

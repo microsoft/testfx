@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+
 internal static class TestContextExtensions
 {
     /// <summary>

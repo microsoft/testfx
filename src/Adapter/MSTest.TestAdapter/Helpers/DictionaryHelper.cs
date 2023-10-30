@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+
 internal static class DictionaryHelper
 {
     public static IDictionary<TKey, TValue> ConcatWithOverwrites<TKey, TValue>(

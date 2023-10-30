@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers;
+
 public class UnitTestOutcomeHelperTests : TestContainer
 {
     private readonly MSTestSettings _adapterSettings;

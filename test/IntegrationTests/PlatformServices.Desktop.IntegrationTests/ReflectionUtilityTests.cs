@@ -17,6 +17,7 @@ using SampleFrameworkExtensions;
 using TestFramework.ForTestingMSTest;
 
 namespace PlatformServices.Desktop.ComponentTests;
+
 public class ReflectionUtilityTests : TestContainer
 {
     private readonly Assembly _testAsset;
