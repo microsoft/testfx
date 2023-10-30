@@ -4,9 +4,7 @@
   <Import Project="$(RepositoryEngineeringDir)Analyzers.props" />
 
   <PropertyGroup>
-    <RepoRoot Condition=" '$(RepoRoot)' == '' ">$([MSBuild]::NormalizeDirectory('$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), 'LICENSE'))'))</RepoRoot>
-    <IsSourceFile>false</IsSourceFile>
-    <IsSourceFile Condition="$([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src/')) OR $([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src\'))">true</IsSourceFile>
+    <IsSourceProject Condition="$([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src/')) OR $([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src\'))">true</IsSourceProject>
   </PropertyGroup>
 
   <!-- Language configuration -->
@@ -70,11 +68,6 @@
   <!-- Sign config -->
   <PropertyGroup>
     <StrongNameKeyId>Microsoft</StrongNameKeyId>
-  </PropertyGroup>
-
-  <!-- Test config -->
-  <PropertyGroup>
-    <UseVSTestRunner>true</UseVSTestRunner>
   </PropertyGroup>
 
 </Project>

@@ -1,25 +1,21 @@
 <Project>
+
   <PropertyGroup>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>preview</AnalysisLevel>
-    <CodeAnalysisRuleSet>$(RepoRoot)eng\stylecop.test.ruleset</CodeAnalysisRuleSet>
-    <CodeAnalysisRuleSet Condition=" '$(IsSourceFile)' == 'true' ">$(RepoRoot)eng\stylecop.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>$(RepositoryEngineeringDir)stylecop.test.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(IsSourceProject)' == 'true'">$(RepositoryEngineeringDir)stylecop.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(IsSourceFile)' == 'true' ">
-    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(RoslynPublicApiAnalyzersVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
   <ItemGroup>
-    <AdditionalFiles Include="$(RepoRoot)eng\stylecop.json">
-      <Link>stylecop.json</Link>
-    </AdditionalFiles>
-    <PackageReference Include="StyleCop.Analyzers" Version="$(StyleCopAnalyzersVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"
+                      Version="$(RoslynPublicApiAnalyzersVersion)"
+                      PrivateAssets="all"
+                      Condition="'$(IsSourceProject)' == 'true'" />
+
+    <AdditionalFiles Include="$(RepositoryEngineeringDir)stylecop.json" Link="stylecop.json" />
+    <PackageReference Include="StyleCop.Analyzers"
+                      Version="$(StyleCopAnalyzersVersion)"
+                      PrivateAsset="all" />
   </ItemGroup>
 </Project>
