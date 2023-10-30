@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
+
 public class CollectionAssertTests : TestContainer
 {
     public void ThatShouldReturnAnInstanceOfCollectionAssert()

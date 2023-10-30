@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
+
 public partial class AssertTests
 {
     #region ThrowAssertFailed tests

@@ -30,6 +30,7 @@ using TestAdapterConstants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdap
 using TestResult = Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+
 public class TestExecutionManagerTests : TestContainer
 {
     private readonly TestableFrameworkHandle _frameworkHandle;

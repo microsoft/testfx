@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.Tests.Services;
+
 public class TestSourceTests : TestContainer
 {
     private readonly TestSource _testSource;

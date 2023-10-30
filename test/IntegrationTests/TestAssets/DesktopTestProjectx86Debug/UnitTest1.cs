@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SampleUnitTestProject;
+
 [TestClass]
 public class UnitTest1
 {

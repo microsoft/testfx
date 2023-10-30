@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Client;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.MSTestV2.CLIAutomation;
+
 public class RunEventsHandler : ITestRunEventsHandler
 {
     private readonly List<TestResult> _passedTests = new();

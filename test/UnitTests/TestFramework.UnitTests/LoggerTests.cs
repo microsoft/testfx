@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting.Logging;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
+
 public sealed class LoggerTests : TestContainer
 {
     public void LogMessageWhenFormatIsNullShouldThrow()

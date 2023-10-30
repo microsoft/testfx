@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FxExtensibilityTestProject;
+
 [TestClass]
 public class DynamicDataExMoreTests
 {

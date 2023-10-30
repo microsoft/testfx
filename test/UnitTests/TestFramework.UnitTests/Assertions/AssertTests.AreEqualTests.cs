@@ -12,6 +12,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests;
+
 public partial class AssertTests : TestContainer
 {
     public void AreNotEqualShouldFailWhenNotEqualType()

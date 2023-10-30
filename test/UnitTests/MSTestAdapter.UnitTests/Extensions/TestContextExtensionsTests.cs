@@ -9,6 +9,7 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
+
 public class TestContextExtensionsTests : TestContainer
 {
     public void GetAndClearDiagnosticMessagesShouldReturnTestContextMessages()

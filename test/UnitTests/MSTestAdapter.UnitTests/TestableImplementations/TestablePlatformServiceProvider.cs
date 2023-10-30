@@ -12,6 +12,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interfa
 using Moq;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
+
 public class TestablePlatformServiceProvider : IPlatformServiceProvider
 {
     // Using the actual reflection operations implementation since this does not need mocking for existing tests.

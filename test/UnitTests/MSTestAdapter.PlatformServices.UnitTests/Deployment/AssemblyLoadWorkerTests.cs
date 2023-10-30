@@ -15,6 +15,7 @@ using TestFramework.ForTestingMSTest;
 
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Deployment;
+
 public class AssemblyLoadWorkerTests : TestContainer
 {
     public void GetFullPathToDependentAssembliesShouldReturnV1FrameworkAssembly()

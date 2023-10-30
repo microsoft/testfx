@@ -17,6 +17,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+
 internal class DeploymentUtility : DeploymentUtilityBase
 {
     public DeploymentUtility()

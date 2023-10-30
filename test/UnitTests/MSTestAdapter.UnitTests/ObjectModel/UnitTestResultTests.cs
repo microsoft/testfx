@@ -16,6 +16,7 @@ using TestFramework.ForTestingMSTest;
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.ObjectModel;
+
 public class UnitTestResultTests : TestContainer
 {
     public void UnitTestResultConstructorWithOutcomeAndErrorMessageShouldSetRequiredFields()

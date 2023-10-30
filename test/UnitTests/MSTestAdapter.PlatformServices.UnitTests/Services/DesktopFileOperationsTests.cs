@@ -12,6 +12,7 @@ using TestFramework.ForTestingMSTest;
 
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
+
 public class DesktopFileOperationsTests : TestContainer
 {
     private readonly FileOperations _fileOperations;

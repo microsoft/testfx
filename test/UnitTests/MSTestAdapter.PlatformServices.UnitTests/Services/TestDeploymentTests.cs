@@ -23,6 +23,7 @@ using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.Tests.Services;
+
 public class TestDeploymentTests : TestContainer
 {
     private const string DefaultDeploymentItemPath = @"c:\temp";
@@ -83,10 +84,10 @@ public class TestDeploymentTests : TestContainer
         // Assert.
         var expectedDeploymentItems = new KeyValuePair<string, string>[]
         {
-            new KeyValuePair<string, string>(
+            new(
                 DefaultDeploymentItemPath,
                 DefaultDeploymentItemOutputDirectory),
-            new KeyValuePair<string, string>(
+            new(
                 DefaultDeploymentItemPath + "\\temp2",
                 DefaultDeploymentItemOutputDirectory),
         };

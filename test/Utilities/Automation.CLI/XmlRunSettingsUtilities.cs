@@ -4,6 +4,7 @@
 using System.Xml;
 
 namespace Microsoft.MSTestV2.CLIAutomation;
+
 public static class XmlRunSettingsUtilities
 {
     /// <summary>

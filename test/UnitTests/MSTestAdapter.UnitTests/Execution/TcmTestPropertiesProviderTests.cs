@@ -12,6 +12,7 @@ using TestFramework.ForTestingMSTest;
 using TestAdapterConstants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+
 public class TcmTestPropertiesProviderTests : TestContainer
 {
     private readonly TestProperty[] _tcmKnownProperties = new TestProperty[]

@@ -8,6 +8,7 @@ using FluentAssertions;
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.IntegrationTests;
+
 public partial class TestId : CLITestBase
 {
     private const string LegacyStrategyDll = "TestIdProject.LegacyStrategy";

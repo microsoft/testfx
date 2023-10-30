@@ -16,6 +16,7 @@ using ITestMethod = Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod;
 
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
+
 public class DesktopTestDataSourceTests : TestContainer
 {
     private readonly Mock<ITestMethod> _mockTestMethodInfo;

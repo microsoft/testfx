@@ -15,6 +15,7 @@ using TestFramework.ForTestingMSTest;
 using static MSTestAdapter.PlatformServices.UnitTests.Utilities.AppDomainUtilitiesTests;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
+
 public class XmlUtilitiesTests : TestContainer
 {
     private readonly TestableXmlUtilities _testableXmlUtilities;

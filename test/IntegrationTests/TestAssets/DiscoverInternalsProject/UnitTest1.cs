@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 [assembly: DiscoverInternals]
 
 namespace DiscoverInternalsProject;
+
 [TestClass]
 internal class TopLevelInternalClass
 {

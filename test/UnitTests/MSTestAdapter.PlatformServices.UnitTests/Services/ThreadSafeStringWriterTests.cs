@@ -13,6 +13,7 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+
 public class ThreadSafeStringWriterTests : TestContainer
 {
     private bool _task2flag;

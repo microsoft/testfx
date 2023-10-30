@@ -10,6 +10,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+
 public class TestCaseDiscoverySinkTests : TestContainer
 {
     private readonly TestCaseDiscoverySink _testCaseDiscoverySink;

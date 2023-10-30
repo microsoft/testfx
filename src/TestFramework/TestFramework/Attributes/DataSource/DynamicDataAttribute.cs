@@ -93,23 +93,15 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
         switch (_dynamicDataSourceType)
         {
             case DynamicDataSourceType.Property:
-                var property = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(_dynamicDataSourceName);
-                if (property == null)
-                {
-                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Property, _dynamicDataSourceName));
-                }
-
+                var property = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(_dynamicDataSourceName)
+                    ?? throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Property, _dynamicDataSourceName));
                 obj = property.GetValue(null, null);
 
                 break;
 
             case DynamicDataSourceType.Method:
-                var method = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(_dynamicDataSourceName);
-                if (method == null)
-                {
-                    throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, _dynamicDataSourceName));
-                }
-
+                var method = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(_dynamicDataSourceName)
+                    ?? throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, _dynamicDataSourceName));
                 obj = method.Invoke(null, null);
 
                 break;
@@ -152,12 +144,8 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
             var dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
             DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-            var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName);
-            if (method == null)
-            {
-                throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, DynamicDataDisplayName));
-            }
-
+            var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName)
+                ?? throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, DynamicDataDisplayName));
             var parameters = method.GetParameters();
             if (parameters.Length != 2 ||
                 parameters[0].ParameterType != typeof(MethodInfo) ||

@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions;
+
 public class StringAssertTests : TestContainer
 {
     public void ThatShouldReturnAnInstanceOfStringAssert()

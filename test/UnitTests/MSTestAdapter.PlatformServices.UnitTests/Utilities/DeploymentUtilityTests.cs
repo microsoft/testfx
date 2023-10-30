@@ -20,6 +20,7 @@ using MSTestAdapter.PlatformServices.Tests.Utilities;
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Utilities;
+
 public class DeploymentUtilityTests : TestContainer
 {
     private const string TestRunDirectory = "C:\\temp\\testRunDirectory";

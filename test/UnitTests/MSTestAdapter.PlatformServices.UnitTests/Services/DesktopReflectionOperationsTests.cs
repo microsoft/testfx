@@ -14,6 +14,7 @@ using MSTestAdapter.PlatformServices.UnitTests.Utilities;
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
+
 public class DesktopReflectionOperationsTests : TestContainer
 {
     private readonly ReflectionOperations _reflectionOperations;

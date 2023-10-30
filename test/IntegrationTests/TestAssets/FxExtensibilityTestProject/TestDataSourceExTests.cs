@@ -9,6 +9,7 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace FxExtensibilityTestProject;
+
 [TestClass]
 public class TestDataSourceExTests
 {

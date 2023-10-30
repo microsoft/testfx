@@ -6,6 +6,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DeploymentTestProject.PreserveNewest;
+
 [TestClass]
 public class DirectoryDeploymentTests
 {

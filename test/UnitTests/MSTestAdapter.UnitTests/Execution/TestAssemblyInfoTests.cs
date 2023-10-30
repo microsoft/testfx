@@ -17,6 +17,7 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 using UTFExtension = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
+
 public class TestAssemblyInfoTests : TestContainer
 {
     private readonly TestAssemblyInfo _testAssemblyInfo;

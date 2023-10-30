@@ -13,6 +13,7 @@ using TestFramework.ForTestingMSTest;
 
 #if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests;
+
 public class AssemblyResolverTests : TestContainer
 {
     public void AddSubDirectoriesShouldReturnSubDirectoriesInDfsOrder()

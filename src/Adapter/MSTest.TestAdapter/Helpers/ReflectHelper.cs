@@ -15,6 +15,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+
 internal class ReflectHelper : MarshalByRefObject
 {
     private static readonly Lazy<ReflectHelper> InstanceValue = new(() => new ReflectHelper());
@@ -614,10 +615,9 @@ internal class ReflectHelper : MarshalByRefObject
     {
         // If the information is cached, then use it otherwise populate the cache using
         // the reflection APIs.
-        Dictionary<string, object>? attributes;
         lock (_attributeCache)
         {
-            if (_attributeCache.TryGetValue(memberInfo, out attributes))
+            if (_attributeCache.TryGetValue(memberInfo, out Dictionary<string, object>? attributes))
             {
                 return attributes;
             }

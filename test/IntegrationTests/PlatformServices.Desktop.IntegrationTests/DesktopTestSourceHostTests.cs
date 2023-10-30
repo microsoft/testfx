@@ -17,6 +17,7 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 namespace PlatformServices.Desktop.ComponentTests;
+
 public class DesktopTestSourceHostTests : TestContainer
 {
     private TestSourceHost _testSourceHost;

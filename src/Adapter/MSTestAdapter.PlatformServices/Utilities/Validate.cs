@@ -6,6 +6,7 @@
 using System;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+
 internal class Validate
 {
     /// <summary>

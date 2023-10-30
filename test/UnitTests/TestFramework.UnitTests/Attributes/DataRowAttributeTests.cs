@@ -11,6 +11,7 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes;
+
 public class DataRowAttributeTests : TestContainer
 {
     public void DefaultConstructorSetsEmptyArrayPassed()

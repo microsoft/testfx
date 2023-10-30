@@ -11,6 +11,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 using TestFramework.ForTestingMSTest;
 
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
+
 #pragma warning disable SA1649 // File name must match first type name
 public class DesktopSettingsProviderTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name

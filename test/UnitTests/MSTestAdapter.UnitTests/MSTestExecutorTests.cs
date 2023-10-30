@@ -15,6 +15,7 @@ using Moq;
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
+
 public class MSTestExecutorTests : TestContainer
 {
     private readonly Mock<IRunContext> _mockRunContext;

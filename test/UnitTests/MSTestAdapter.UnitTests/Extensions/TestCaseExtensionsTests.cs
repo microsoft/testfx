@@ -12,6 +12,7 @@ using TestFramework.ForTestingMSTest;
 using Constants = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Constants;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions;
+
 public class TestCaseExtensionsTests : TestContainer
 {
     public void ToUnitTestElementShouldReturnUnitTestElementWithFieldsSet()

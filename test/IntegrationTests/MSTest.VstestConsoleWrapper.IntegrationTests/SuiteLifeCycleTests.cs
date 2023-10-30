@@ -9,6 +9,7 @@ using FluentAssertions;
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
+
 public class SuiteLifeCycleTests : CLITestBase
 {
     private const string TestAssetName = "SuiteLifeCycleTestProject";

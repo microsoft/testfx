@@ -12,6 +12,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
+
 internal class XmlUtilities
 {
     private const string XmlNamespace = "urn:schemas-microsoft-com:asm.v1";

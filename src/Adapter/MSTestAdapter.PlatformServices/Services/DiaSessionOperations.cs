@@ -5,6 +5,7 @@ using System;
 using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+
 internal static class DiaSessionOperations
 {
     private static MethodInfo? s_methodGetNavigationData;

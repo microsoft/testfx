@@ -4,6 +4,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SomeNamespace.WithMultipleLevels;
+
 [TestClass]
 public class ClassWithNamespace
 {
