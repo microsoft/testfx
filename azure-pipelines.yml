@@ -170,5 +170,3 @@ stages:
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml
-    parameters:
-      publishingInfraVersion: 3
