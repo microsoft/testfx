@@ -1,13 +1,11 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462</TargetFrameworks>
+    <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{A82770C0-1FF5-43C7-8790-471D5E4F8D6E}</ProjectGuid>
     <RootNamespace>MSTest.Extensibility.Samples</RootNamespace>
     <AssemblyName>MSTest.Extensibility.Samples</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
