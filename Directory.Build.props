@@ -70,4 +70,9 @@
     <StrongNameKeyId>Microsoft</StrongNameKeyId>
   </PropertyGroup>
 
+  <!-- Test config -->
+  <PropertyGroup>
+    <TestRunnerName>MSTestRunner</TestRunnerName>
+  </PropertyGroup>
+
 </Project>
