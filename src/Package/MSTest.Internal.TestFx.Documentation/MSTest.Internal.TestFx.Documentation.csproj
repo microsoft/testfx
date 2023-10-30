@@ -2,9 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <IsPackable>true</IsPackable>
     <IsShippingPackage>false</IsShippingPackage>
     <NuspecFile>MSTest.Internal.TestFx.Documentation.nuspec</NuspecFile>

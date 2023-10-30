@@ -2,9 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetFrameworkMinimum);$(NetCoreAppMinimum);$(NetCoreAppCurrent)</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <RootNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</RootNamespace>
     <AssemblyName>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
@@ -50,17 +47,9 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' != '$(UwpMinimum)' ">
-    <Compile Update="Resources\Resource.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resource.resx</DependentUpon>
-    </Compile>
-    <EmbeddedResource Update="Resources\Resource.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
-      <CustomToolNamespace>Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices</CustomToolNamespace>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
+    <Compile Update="Resources\Resource.Designer.resx"
+             GenerateSource="true"
+             Namespace="$(RootNamespace)" />
   </ItemGroup>
 
 </Project>

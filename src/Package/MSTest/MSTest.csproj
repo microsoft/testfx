@@ -2,9 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <IsPackable>true</IsPackable>
     <NuspecFile>MSTest.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
@@ -34,6 +31,5 @@
     <!-- Not a real dependency but it ensures correct build order -->
     <ProjectReference Include="..\..\Adapter\MSTest.TestAdapter\MSTest.TestAdapter.csproj" />
   </ItemGroup>
-
 
 </Project>

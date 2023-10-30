@@ -2,9 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <IsPackable>true</IsPackable>
     <NuspecFile>MSTest.TestFramework.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
