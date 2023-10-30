@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{B3419F35-A31F-4CAA-A606-034D5DB669A2}</ProjectGuid>
     <RootNamespace>TestProjectForDiscovery</RootNamespace>
     <AssemblyName>TestProjectForDiscovery</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>

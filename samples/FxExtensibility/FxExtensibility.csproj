@@ -6,7 +6,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ProjectGuid>{A82770C0-1FF5-43C7-8790-471D5E4F8D6E}</ProjectGuid>
     <RootNamespace>MSTest.Extensibility.Samples</RootNamespace>
     <AssemblyName>MSTest.Extensibility.Samples</AssemblyName>
     <DefineConstants>TRACE</DefineConstants>
