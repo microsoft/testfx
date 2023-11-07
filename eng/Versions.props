@@ -19,7 +19,8 @@
     <SystemDiagnosticsTextWriterTraceListenerVersion>4.3.0</SystemDiagnosticsTextWriterTraceListenerVersion>
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
     <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
-    <MoqVersion>4.20.69</MoqVersion>
+    <!-- Pinned to 4.18.4 for security -->
+    <MoqVersion>4.18.4</MoqVersion>
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
     <RoslynPublicApiAnalyzersVersion>3.3.4</RoslynPublicApiAnalyzersVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
