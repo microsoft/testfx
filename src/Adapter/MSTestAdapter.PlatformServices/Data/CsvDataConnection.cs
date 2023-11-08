@@ -65,7 +65,7 @@ internal sealed class CsvDataConnection : TestDataConnection
             DataTable table = ReadTable(tableName, null);
             if (table != null)
             {
-                List<string> columnNames = new();
+                List<string> columnNames = [];
                 foreach (DataColumn column in table.Columns)
                 {
                     columnNames.Add(column.ColumnName);

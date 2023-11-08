@@ -27,7 +27,7 @@ public class MSTestAdapterSettings
         DeleteDeploymentDirectoryAfterTestRunIsComplete = true;
         DeploymentEnabled = true;
         DeployTestSourceDependencies = true;
-        SearchDirectories = new List<RecursiveDirectoryPath>();
+        SearchDirectories = [];
     }
 
     /// <summary>
@@ -166,7 +166,7 @@ public class MSTestAdapterSettings
     /// <returns>RecursiveDirectoryPath information.</returns>
     public List<RecursiveDirectoryPath> GetDirectoryListWithRecursiveProperty(string baseDirectory)
     {
-        List<RecursiveDirectoryPath> directoriesList = new();
+        List<RecursiveDirectoryPath> directoriesList = [];
 
         foreach (RecursiveDirectoryPath recPath in SearchDirectories)
         {

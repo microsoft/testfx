@@ -35,7 +35,7 @@ public class TypeValidatorTests : TestContainer
     {
         _mockReflectHelper = new Mock<ReflectHelper>();
         _typeValidator = new TypeValidator(_mockReflectHelper.Object);
-        _warnings = new List<string>();
+        _warnings = [];
     }
 
     #endregion

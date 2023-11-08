@@ -26,7 +26,7 @@ internal class TestableReflectHelper : ReflectHelper
 
     public TestableReflectHelper()
     {
-        _customAttributes = new Dictionary<int, Attribute[]>();
+        _customAttributes = [];
     }
 
     public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)

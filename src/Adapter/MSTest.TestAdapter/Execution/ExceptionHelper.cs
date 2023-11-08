@@ -21,7 +21,7 @@ internal static class ExceptionHelper
     /// Gets the types whose methods should be ignored in the reported call stacks.
     /// This is used to remove our stack that the user will not care about.
     /// </summary>
-    private static readonly List<string> TypesToBeExcluded = new() { typeof(Assert).Namespace!, typeof(MSTestExecutor).Namespace! };
+    private static readonly List<string> TypesToBeExcluded = [typeof(Assert).Namespace!, typeof(MSTestExecutor).Namespace!];
 
     /// <summary>
     /// Gets the stack trace for an exception, including all stack traces for inner

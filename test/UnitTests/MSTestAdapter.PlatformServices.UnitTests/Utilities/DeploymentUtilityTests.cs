@@ -70,7 +70,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(Array.Empty<string>());
         _mockAssemblyUtility.Setup(
                 au => au.GetSatelliteAssemblies(It.IsAny<string>()))
-            .Returns(new List<string> { });
+            .Returns([]);
 #endif
 
         Verify(
@@ -95,7 +95,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(Array.Empty<string>());
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
-            .Returns(new List<string> { });
+            .Returns([]);
 
         // Act.
         Verify(
@@ -140,7 +140,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(new string[] { dependencyFile });
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
-            .Returns(new List<string> { });
+            .Returns([]);
 
         // Act.
         Verify(
@@ -177,7 +177,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(Array.Empty<string>());
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(assemblyFullPath))
-            .Returns(new List<string> { satelliteFullPath });
+            .Returns([satelliteFullPath]);
 
         // Act.
         Verify(
@@ -218,7 +218,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(Array.Empty<string>());
         _mockAssemblyUtility.Setup(
                 au => au.GetSatelliteAssemblies(It.IsAny<string>()))
-            .Returns(new List<string> { });
+            .Returns([]);
 #endif
 
         // Act.
@@ -270,7 +270,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(Array.Empty<string>());
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
-            .Returns(new List<string> { });
+            .Returns([]);
 #endif
         _mockFileUtility.Setup(
             fu => fu.AddFilesFromDirectory(DefaultDeploymentItemPath, It.IsAny<bool>())).Returns(directoryContentFiles);
@@ -311,7 +311,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(Array.Empty<string>());
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
-            .Returns(new List<string> { });
+            .Returns([]);
         string warning;
         _mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
             .Returns(
@@ -366,7 +366,7 @@ public class DeploymentUtilityTests : TestContainer
             .Returns(new string[] { dependencyFile });
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
-            .Returns(new List<string> { });
+            .Returns([]);
         string warning;
         _mockFileUtility.Setup(fu => fu.CopyFileOverwrite(It.IsAny<string>(), It.IsAny<string>(), out warning))
             .Returns(

@@ -118,9 +118,9 @@ public class TestExecutionManagerTests : TestContainer
         _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
         // FailingTest should be skipped because it does not match the filter criteria.
-        List<string> expectedTestCaseStartList = new() { "PassingTest" };
-        List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
-        List<string> expectedResultList = new() { "PassingTest  Passed" };
+        List<string> expectedTestCaseStartList = ["PassingTest"];
+        List<string> expectedTestCaseEndList = ["PassingTest:Passed"];
+        List<string> expectedResultList = ["PassingTest  Passed"];
 
         Verify(expectedTestCaseStartList.SequenceEqual(_frameworkHandle.TestCaseStartList));
         Verify(expectedTestCaseEndList.SequenceEqual(_frameworkHandle.TestCaseEndList));
@@ -147,9 +147,9 @@ public class TestExecutionManagerTests : TestContainer
 
         _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
-        List<string> expectedTestCaseStartList = new() { "PassingTest" };
-        List<string> expectedTestCaseEndList = new() { "PassingTest:Passed" };
-        List<string> expectedResultList = new() { "PassingTest  Passed" };
+        List<string> expectedTestCaseStartList = ["PassingTest"];
+        List<string> expectedTestCaseEndList = ["PassingTest:Passed"];
+        List<string> expectedResultList = ["PassingTest  Passed"];
 
         Verify(expectedTestCaseStartList.SequenceEqual(_frameworkHandle.TestCaseStartList));
         Verify(expectedTestCaseEndList.SequenceEqual(_frameworkHandle.TestCaseEndList));
@@ -164,9 +164,9 @@ public class TestExecutionManagerTests : TestContainer
 
         _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
-        List<string> expectedTestCaseStartList = new() { "PassingTest", "FailingTest" };
-        List<string> expectedTestCaseEndList = new() { "PassingTest:Passed", "FailingTest:Failed" };
-        List<string> expectedResultList = new() { "PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail failed." };
+        List<string> expectedTestCaseStartList = ["PassingTest", "FailingTest"];
+        List<string> expectedTestCaseEndList = ["PassingTest:Passed", "FailingTest:Failed"];
+        List<string> expectedResultList = ["PassingTest  Passed", "FailingTest  Failed\r\n  Message: Assert.Fail failed."];
 
         Verify(expectedTestCaseStartList.SequenceEqual(_frameworkHandle.TestCaseStartList));
         Verify(expectedTestCaseEndList.SequenceEqual(_frameworkHandle.TestCaseEndList));
@@ -822,7 +822,7 @@ public class TestExecutionManagerTests : TestContainer
 
     private void SetCaller(string caller)
     {
-        _callers ??= new List<string>();
+        _callers ??= [];
 
         _callers.Add(caller);
     }
@@ -922,7 +922,7 @@ public class TestExecutionManagerTests : TestContainer
     [DummyTestClass]
     private class DummyTestClassForParallelize
     {
-        public static HashSet<int> ThreadIds { get; } = new();
+        public static HashSet<int> ThreadIds { get; } = [];
 
         public static void Cleanup()
         {
@@ -945,7 +945,7 @@ public class TestExecutionManagerTests : TestContainer
     [DummyTestClass]
     private class DummyTestClassForParallelize2
     {
-        public static HashSet<int> ThreadIds { get; } = new();
+        public static HashSet<int> ThreadIds { get; } = [];
 
         public static void Cleanup()
         {
@@ -968,7 +968,7 @@ public class TestExecutionManagerTests : TestContainer
     [DummyTestClass]
     private class DummyTestClassForParallelize3
     {
-        public static HashSet<int> ThreadIds { get; } = new();
+        public static HashSet<int> ThreadIds { get; } = [];
 
         public static void Cleanup()
         {
@@ -987,11 +987,11 @@ public class TestExecutionManagerTests : TestContainer
     {
         private static bool s_isFirstUnParallelizedTestRunTimeSet = false;
 
-        public static HashSet<int> ParallelizableTestsThreadIds { get; private set; } = new();
+        public static HashSet<int> ParallelizableTestsThreadIds { get; private set; } = [];
 
-        public static HashSet<int> UnParallelizableTestsThreadIds { get; private set; } = new();
+        public static HashSet<int> UnParallelizableTestsThreadIds { get; private set; } = [];
 
-        public static HashSet<ApartmentState> ThreadApartmentStates { get; private set; } = new();
+        public static HashSet<ApartmentState> ThreadApartmentStates { get; private set; } = [];
 
         public static DateTime LastParallelizableTestRun { get; set; }
 
@@ -1069,11 +1069,11 @@ internal class TestableFrameworkHandle : IFrameworkHandle
 
     public TestableFrameworkHandle()
     {
-        _messageList = new List<string>();
-        _resultsList = new List<string>();
-        _testCaseStartList = new List<string>();
-        _testCaseEndList = new List<string>();
-        _testDisplayNameList = new List<string>();
+        _messageList = [];
+        _resultsList = [];
+        _testCaseStartList = [];
+        _testCaseEndList = [];
+        _testDisplayNameList = [];
     }
 
     public bool EnableShutdownAfterTestRun { get; set; }

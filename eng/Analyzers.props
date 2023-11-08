@@ -5,6 +5,7 @@
     <AnalysisLevel>preview</AnalysisLevel>
     <CodeAnalysisRuleSet>$(RepositoryEngineeringDir)stylecop.test.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRuleSet Condition="'$(IsSourceProject)' == 'true'">$(RepositoryEngineeringDir)stylecop.ruleset</CodeAnalysisRuleSet>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <ItemGroup>

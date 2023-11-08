@@ -748,7 +748,7 @@ public class PrivateObject
     private void BuildGenericMethodCacheForType(Type t)
     {
         DebugEx.Assert(t != null, "type should not be null.");
-        _methodCache = new Dictionary<string, LinkedList<MethodInfo>>();
+        _methodCache = [];
 
         MethodInfo[] members = t.GetMethods(BindToEveryThing);
 

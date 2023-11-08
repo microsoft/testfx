@@ -37,7 +37,7 @@ internal class DeploymentItemUtility
     internal DeploymentItemUtility(ReflectionUtility reflectionUtility)
     {
         _reflectionUtility = reflectionUtility;
-        _classLevelDeploymentItems = new Dictionary<Type, IList<DeploymentItem>>();
+        _classLevelDeploymentItems = [];
     }
 
     /// <summary>
@@ -126,7 +126,7 @@ internal class DeploymentItemUtility
 
     internal static IList<DeploymentItem> GetDeploymentItems(IEnumerable<TestCase> tests)
     {
-        List<DeploymentItem> allDeploymentItems = new();
+        List<DeploymentItem> allDeploymentItems = [];
         foreach (var test in tests)
         {
             KeyValuePair<string, string>[]? items = GetDeploymentItems(test);

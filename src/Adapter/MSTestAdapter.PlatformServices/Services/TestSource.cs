@@ -116,7 +116,7 @@ public class TestSource : ITestSource
 #if WINDOWS_UWP
         if (ContainsAppxSource(sources))
         {
-            List<string> newSources = new();
+            List<string> newSources = [];
 
             var fileSearchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFilesAsync().AsTask();
             fileSearchTask.Wait();
@@ -146,7 +146,7 @@ public class TestSource : ITestSource
         {
             var appxSourceDirectory = Path.GetDirectoryName(appxSource)!;
 
-            List<string> newSources = new();
+            List<string> newSources = [];
 
             var files = Directory.GetFiles(AppModel.GetCurrentPackagePath()!);
             foreach (var filePath in files)

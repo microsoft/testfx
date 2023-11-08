@@ -59,7 +59,7 @@ public partial class CLITestBase : TestContainer
 
     private class InternalSink : ITestCaseDiscoverySink
     {
-        private readonly List<TestCase> _testCases = new();
+        private readonly List<TestCase> _testCases = [];
 
         public ImmutableArray<TestCase> DiscoveredTests => _testCases.ToImmutableArray();
 
@@ -105,7 +105,7 @@ public partial class CLITestBase : TestContainer
 
     private class InternalFrameworkHandle : IFrameworkHandle
     {
-        private readonly List<string> _messageList = new();
+        private readonly List<string> _messageList = [];
         private readonly ConcurrentDictionary<TestCase, ConcurrentBag<TestResult>> _testResults = new();
 
         private TestCase _activeTest;
