@@ -162,7 +162,7 @@ public class DesktopTestDeploymentTests : TestContainer
             .Returns(System.Array.Empty<string>());
         mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
-            .Returns(new List<string> { });
+            .Returns([]);
         _mockFileUtility.Setup(fu => fu.GetNextIterationDirectoryName(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(testRunDirectories.RootDeploymentDirectory);
 

@@ -9,6 +9,7 @@
       <group targetFramework="netcoreapp3.1" />
       <group targetFramework="net6.0" />
     </dependencies>
+    <readme>PACKAGE.md</readme>
   </metadata>
   <files>
     $CommonFileElements$
@@ -58,5 +59,7 @@
 
     <!-- Source code -->
     <file src="$srcroot$\**\*.cs" target="src" />
+
+    <file src="$RepoRoot$src\Adapter\MSTEst.TestAdapter\PACKAGE.md" target="" />
   </files>
 </package>

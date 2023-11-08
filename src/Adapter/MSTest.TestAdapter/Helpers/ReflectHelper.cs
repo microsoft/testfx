@@ -23,7 +23,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Contains the memberInfo Vs the name/type of the attributes defined on that member. (FYI: - MemberInfo denotes properties, fields, methods, events).
     /// </summary>
-    private readonly Dictionary<MemberInfo, Dictionary<string, object>> _attributeCache = new();
+    private readonly Dictionary<MemberInfo, Dictionary<string, object>> _attributeCache = [];
 
     internal ReflectHelper()
     {
@@ -306,7 +306,7 @@ internal class ReflectHelper : MarshalByRefObject
     internal virtual string[] GetCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
         var categories = GetCustomAttributesRecursively(categoryAttributeProvider, owningType);
-        List<string> testCategories = new();
+        List<string> testCategories = [];
 
         if (categories != null)
         {
@@ -623,7 +623,7 @@ internal class ReflectHelper : MarshalByRefObject
             }
 
             // Populate the cache
-            attributes = new Dictionary<string, object>();
+            attributes = [];
 
             object[]? customAttributesArray = null;
             try

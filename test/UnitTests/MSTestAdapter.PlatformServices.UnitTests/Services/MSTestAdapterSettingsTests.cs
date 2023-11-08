@@ -159,11 +159,11 @@ public class MSTestAdapterSettingsTests : TestContainer
     {
         string baseDirectory = @"C:\unitTesting";
 
-        List<RecursiveDirectoryPath> expectedResult = new()
-        {
+        List<RecursiveDirectoryPath> expectedResult =
+        [
             new RecursiveDirectoryPath(@"C:\MsTest\Adapter", true),
             new RecursiveDirectoryPath(@"C:\foo\unitTesting\MsTest\Adapter", false),
-        };
+        ];
 
         var adapterSettings = new TestableMSTestAdapterSettings(expectedResult)
         {

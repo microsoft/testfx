@@ -39,7 +39,7 @@ internal sealed class XmlDataConnection : TestDataConnection
             return null;
         }
 
-        List<string> tableNames = new();
+        List<string> tableNames = [];
 
         int tableCount = dataSet.Tables.Count;
         for (int i = 0; i < tableCount; i++)
@@ -65,7 +65,7 @@ internal sealed class XmlDataConnection : TestDataConnection
             return null;
         }
 
-        List<string> columnNames = new();
+        List<string> columnNames = [];
         foreach (DataColumn column in table.Columns)
         {
             // Only show "normal" columns, we try to hide derived columns used as part

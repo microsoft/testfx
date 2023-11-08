@@ -328,11 +328,12 @@ public class TestSourceHost : ITestSourceHost
     /// </returns>
     internal virtual List<string> GetResolutionPaths(string sourceFileName, bool isPortableMode)
     {
-        List<string> resolutionPaths = new()
-        {
+        List<string> resolutionPaths =
+        [
+
             // Add path of test assembly in resolution path. Mostly will be used for resolving winmd.
             Path.GetDirectoryName(sourceFileName),
-        };
+        ];
 
         if (!isPortableMode)
         {

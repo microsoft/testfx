@@ -46,10 +46,8 @@
     <NetFrameworkMinimum>net462</NetFrameworkMinimum>
   </PropertyGroup>
 
-  <!-- Build & pack config -->
+  <!-- Build config -->
   <PropertyGroup>
-    <Copyright>$(CopyrightMicrosoft)</Copyright>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <!--
       It appears that AssemblyVersion should always be set to 14.0.0.0 for some backward compatibility cases,
       but we don't have any information about these cases.
@@ -61,8 +59,12 @@
     <!-- PDB -->
     <DebugSymbols>true</DebugSymbols>
     <DebugType>embedded</DebugType>
-    <!-- Default to all packages generating a corresponding symbol package -->
-    <IncludeSymbols>true</IncludeSymbols>
+  </PropertyGroup>
+
+  <!-- Pack config -->
+  <PropertyGroup>
+    <Copyright>$(CopyrightMicrosoft)</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <!-- Sign config -->

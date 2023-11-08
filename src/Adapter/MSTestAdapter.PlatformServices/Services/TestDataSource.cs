@@ -41,12 +41,12 @@ public class TestDataSource : ITestDataSource
 #if NETFRAMEWORK
         // Figure out where (as well as the current directory) we could look for data files
         // for unit tests this means looking at the location of the test itself
-        List<string> dataFolders = new()
-        {
+        List<string> dataFolders =
+        [
             Path.GetDirectoryName(new Uri(testMethodInfo.MethodInfo.Module.Assembly.CodeBase).LocalPath),
-        };
+        ];
 
-        List<UTF.TestResult> dataRowResults = new();
+        List<UTF.TestResult> dataRowResults = [];
 
         // Connect to data source.
         TestDataConnectionFactory factory = new();

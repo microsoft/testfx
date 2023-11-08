@@ -132,7 +132,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
 
     protected IEnumerable<DeploymentItem> GetSatellites(IEnumerable<DeploymentItem> deploymentItems, string testSource, IList<string> warnings)
     {
-        List<DeploymentItem> satellites = new();
+        List<DeploymentItem> satellites = [];
         foreach (DeploymentItem item in deploymentItems)
         {
             // We do not care about deployment items which are directories because in that case we deploy all files underneath anyway.

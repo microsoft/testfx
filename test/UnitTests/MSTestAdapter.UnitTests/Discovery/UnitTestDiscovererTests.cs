@@ -46,7 +46,7 @@ public class UnitTestDiscovererTests : TestContainer
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
 
         _test = new UnitTestElement(new TestMethod("M", "C", "A", false));
-        _testElements = new List<UnitTestElement> { _test };
+        _testElements = [_test];
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 

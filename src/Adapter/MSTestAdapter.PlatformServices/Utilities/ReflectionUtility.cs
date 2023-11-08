@@ -75,8 +75,8 @@ internal class ReflectionUtility
         }
         else
         {
-            List<object> nonUniqueAttributes = new();
-            Dictionary<string, object> uniqueAttributes = new();
+            List<object> nonUniqueAttributes = [];
+            Dictionary<string, object> uniqueAttributes = [];
 
             var inheritanceThreshold = 10;
             var inheritanceLevel = 0;
@@ -162,10 +162,9 @@ internal class ReflectionUtility
             return assembly.GetCustomAttributes(type).ToArray();
         }
 
-        List<CustomAttributeData> customAttributes = new();
-        customAttributes.AddRange(CustomAttributeData.GetCustomAttributes(assembly));
+        List<CustomAttributeData> customAttributes = [.. CustomAttributeData.GetCustomAttributes(assembly)];
 
-        List<object> attributesArray = new();
+        List<object> attributesArray = [];
 
         foreach (var attribute in customAttributes)
         {
@@ -200,8 +199,8 @@ internal class ReflectionUtility
             // instead of array. So convert it to array else constructor invoke will fail.
             Type attributeType = Type.GetType(attributeData.Constructor.DeclaringType.AssemblyQualifiedName);
 
-            List<Type> constructorParameters = new();
-            List<object> constructorArguments = new();
+            List<Type> constructorParameters = [];
+            List<object> constructorArguments = [];
             foreach (var parameter in attributeData.ConstructorArguments)
             {
                 Type parameterType = Type.GetType(parameter.ArgumentType.AssemblyQualifiedName);
@@ -213,7 +212,7 @@ internal class ReflectionUtility
                     continue;
                 }
 
-                ArrayList list = new();
+                ArrayList list = [];
                 foreach (var item in enumerable)
                 {
                     if (item is CustomAttributeTypedArgument argument)

@@ -59,10 +59,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFramework.UnitTests", "
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eng", "eng", "{FE0DF239-0D81-46CA-9277-3342009E83F9}"
 	ProjectSection(SolutionItems) = preProject
+		eng\AfterSolutionBuild.targets = eng\AfterSolutionBuild.targets
+		eng\Analyzers.props = eng\Analyzers.props
+		eng\Install-WindowsSDK.ps1 = eng\Install-WindowsSDK.ps1
 		eng\stylecop.json = eng\stylecop.json
 		eng\stylecop.ruleset = eng\stylecop.ruleset
 		eng\stylecop.test.ruleset = eng\stylecop.test.ruleset
+		eng\verify-nupkgs.ps1 = eng\verify-nupkgs.ps1
+		eng\Version.Details.xml = eng\Version.Details.xml
 		eng\Versions.props = eng\Versions.props
+		eng\write-release-notes.ps1 = eng\write-release-notes.ps1
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{92F8E9A2-903E-4025-99BC-7DC478D5466D}"
@@ -157,6 +163,11 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest", "src\Package\MSTest\MSTest.csproj", "{ED8534D1-3136-4915-8071-5547E8D84DC3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Internal.TestFx.Documentation", "src\Package\MSTest.Internal.TestFx.Documentation\MSTest.Internal.TestFx.Documentation.csproj", "{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MSTestRunner", "MSTestRunner", "{A9F9C49E-3CDA-4207-AA53-CC80AF1798FE}"
+	ProjectSection(SolutionItems) = preProject
+		eng\MSTestRunner\MSTestRunner.targets = eng\MSTestRunner\MSTestRunner.targets
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -392,6 +403,7 @@ Global
 		{17CE999F-F3D1-48B4-A18F-8BA050C3A4AD} = {33D3029D-E653-4929-BB31-C714178C4BEE}
 		{ED8534D1-3136-4915-8071-5547E8D84DC3} = {E374A3A6-C364-4890-B315-D60F5C682B6E}
 		{37F9538E-DD88-40DA-8A32-85D6C2A7FD46} = {E374A3A6-C364-4890-B315-D60F5C682B6E}
+		{A9F9C49E-3CDA-4207-AA53-CC80AF1798FE} = {FE0DF239-0D81-46CA-9277-3342009E83F9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}

@@ -225,7 +225,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <returns>An array of unquoted parts, or null if the name fails to conform.</returns>
     public string[]? SplitName(string name)
     {
-        List<string> parts = new();
+        List<string> parts = [];
 
         int here = 0;
         int end = name.Length;
@@ -496,7 +496,7 @@ internal class TestDataConnectionSql : TestDataConnection
     public override List<string> GetDataTablesAndViews()
     {
         WriteDiagnostics("GetDataTablesAndViews");
-        List<string> tableNames = new();
+        List<string> tableNames = [];
         try
         {
             string? defaultSchema = GetDefaultSchema();
@@ -624,7 +624,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
             if (columns != null)
             {
-                List<string> result = new();
+                List<string> result = [];
 
                 // Add all the columns
                 foreach (DataRow columnRow in columns.Rows)

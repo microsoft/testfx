@@ -43,7 +43,7 @@ internal class RunSettingsUtilities
         if (nodeValue == default(Dictionary<string, object>))
         {
             // Return default.
-            nodeValue = new Dictionary<string, object>();
+            nodeValue = [];
         }
 
         return nodeValue;

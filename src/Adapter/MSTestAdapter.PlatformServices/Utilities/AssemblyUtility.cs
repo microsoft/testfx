@@ -139,7 +139,7 @@ internal class AssemblyUtility
             Debug.Fail("AssemblyUtilities.GetSatelliteAssemblies: the file '" + assemblyPath + "' is not an assembly.");
 
             // If e.g. this is unmanaged dll, we don't care about the satellites.
-            return new List<string>();
+            return [];
         }
 
         assemblyPath = Path.GetFullPath(assemblyPath);
@@ -282,7 +282,7 @@ internal class AssemblyUtility
         // Use dictionary to ensure we get a list of unique paths, but keep a list as the
         // dictionary does not guarantee order.
         Dictionary<string, object?> resolutionPathsDictionary = new(StringComparer.OrdinalIgnoreCase);
-        List<string> resolutionPaths = new();
+        List<string> resolutionPaths = [];
 
         // Add the path of the currently executing assembly (use Uri(CodeBase).LocalPath as Location can be on shadow dir).
         string currentlyExecutingAssembly = Path.GetDirectoryName(Path.GetFullPath(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath));

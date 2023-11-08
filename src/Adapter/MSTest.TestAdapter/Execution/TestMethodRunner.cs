@@ -150,7 +150,7 @@ internal class TestMethodRunner
         DebugEx.Assert(_test != null, "Test should not be null.");
         DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
 
-        List<TestResult> results = new();
+        List<TestResult> results = [];
         var isDataDriven = false;
         var parentStopwatch = Stopwatch.StartNew();
 
@@ -469,7 +469,7 @@ internal class TestMethodRunner
         }
 
         // UpdatedResults contain parent result at first position and remaining results has parent info updated.
-        List<TestResult> updatedResults = new() { parentResult };
+        List<TestResult> updatedResults = [parentResult];
 
         foreach (var result in results)
         {

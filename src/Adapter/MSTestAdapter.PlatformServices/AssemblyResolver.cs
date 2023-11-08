@@ -67,12 +67,12 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <summary>
     /// Dictionary of Assemblies discovered to date.
     /// </summary>
-    private readonly Dictionary<string, Assembly?> _resolvedAssemblies = new();
+    private readonly Dictionary<string, Assembly?> _resolvedAssemblies = [];
 
     /// <summary>
     /// Dictionary of Reflection-Only Assemblies discovered to date.
     /// </summary>
-    private readonly Dictionary<string, Assembly?> _reflectionOnlyResolvedAssemblies = new();
+    private readonly Dictionary<string, Assembly?> _reflectionOnlyResolvedAssemblies = [];
 
     /// <summary>
     /// lock for the loaded assemblies cache.
@@ -459,7 +459,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
                     // instead of loading whole search directory in one time, we are adding directory on the basis of need
                     var currentNode = _directoryList.Dequeue();
 
-                    List<string> incrementalSearchDirectory = new();
+                    List<string> incrementalSearchDirectory = [];
 
                     if (DoesDirectoryExist(currentNode.DirectoryPath))
                     {

@@ -32,7 +32,7 @@ public class UnitTestRunnerTests : TestContainer
 
     public UnitTestRunnerTests()
     {
-        _testRunParameters = new Dictionary<string, object>();
+        _testRunParameters = [];
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
 
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;

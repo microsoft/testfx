@@ -32,7 +32,7 @@ public class TestMethodValidatorTests : TestContainer
     {
         _mockReflectHelper = new Mock<ReflectHelper>();
         _testMethodValidator = new TestMethodValidator(_mockReflectHelper.Object);
-        _warnings = new List<string>();
+        _warnings = [];
 
         _mockMethodInfo = new Mock<MethodInfo>();
         _type = typeof(TestMethodValidatorTests);

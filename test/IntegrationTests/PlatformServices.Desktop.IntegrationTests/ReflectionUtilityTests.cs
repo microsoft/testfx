@@ -26,7 +26,7 @@ public class ReflectionUtilityTests : TestContainer
     /// Dictionary of Assemblies discovered to date. Must be locked as it may
     /// be accessed in a multi-threaded context.
     /// </summary>
-    private readonly Dictionary<string, Assembly> _resolvedAssemblies = new();
+    private readonly Dictionary<string, Assembly> _resolvedAssemblies = [];
 
     public ReflectionUtilityTests()
     {

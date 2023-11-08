@@ -216,6 +216,10 @@ dotnet_diagnostic.SA1611.severity = none
 # SA1615: Element return value should be documented
 dotnet_diagnostic.SA1615.severity = none
 
+# SA1010: Opening square brackets should be spaced correctly
+# https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3687
+dotnet_diagnostic.SA1010.severity = none
+
 #### Naming styles ####
 
 ## Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)

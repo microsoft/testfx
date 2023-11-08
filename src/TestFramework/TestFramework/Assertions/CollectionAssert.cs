@@ -310,7 +310,7 @@ public sealed class CollectionAssert
         message = Assert.ReplaceNulls(message);
 
         bool foundNull = false;
-        Dictionary<object, bool> table = new();
+        Dictionary<object, bool> table = [];
         foreach (object? current in collection)
         {
             if (current == null)
@@ -1298,7 +1298,7 @@ public sealed class CollectionAssert
     {
         DebugEx.Assert(collection != null, "Collection is Null.");
 
-        Dictionary<object, int> elementCounts = new();
+        Dictionary<object, int> elementCounts = [];
         nullCount = 0;
 
         foreach (object? element in collection)
