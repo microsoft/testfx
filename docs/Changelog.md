@@ -56,10 +56,10 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.4...v3.1.0)
 
 ### New Contributors
 
-* @unsegnor made their first contribution in https://github.com/microsoft/testfx/pull/1104
-* @JasonMurrayCole made their first contribution in https://github.com/microsoft/testfx/pull/1119
-* @engyebrahim made their first contribution in https://github.com/microsoft/testfx/pull/1172
-* @johnthcall made their first contribution in https://github.com/microsoft/testfx/pull/1547
+* @unsegnor made their first contribution in <https://github.com/microsoft/testfx/pull/1104>
+* @JasonMurrayCole made their first contribution in <https://github.com/microsoft/testfx/pull/1119>
+* @engyebrahim made their first contribution in <https://github.com/microsoft/testfx/pull/1172>
+* @johnthcall made their first contribution in <https://github.com/microsoft/testfx/pull/1547>
 
 ### Artifacts
 
