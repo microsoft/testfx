@@ -1,0 +1,104 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
+
+namespace Microsoft.Testing.Platform.Messages;
+
+internal class ListTestsMessageBus : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
+{
+    private readonly ITestFramework _testFrameworkAdapter;
+    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
+    private readonly IOutputDevice _outputDisplay;
+    private readonly IEnvironment _environment;
+    private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
+    private readonly ILogger<ListTestsMessageBus> _logger;
+    private readonly IAsyncMonitor _asyncMonitor;
+    private bool _printTitle = true;
+
+    public ListTestsMessageBus(
+        ITestFramework testFrameworkAdapter,
+        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
+        ILoggerFactory loggerFactory,
+        IOutputDevice outputDisplay,
+        IAsyncMonitorFactory asyncMonitorFactory,
+        IEnvironment environment,
+        ITestApplicationProcessExitCode testApplicationProcessExitCode)
+    {
+        _testFrameworkAdapter = testFrameworkAdapter;
+        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
+        _outputDisplay = outputDisplay;
+        _environment = environment;
+        _testApplicationProcessExitCode = testApplicationProcessExitCode;
+        _logger = loggerFactory.CreateLogger<ListTestsMessageBus>();
+        _asyncMonitor = asyncMonitorFactory.Create();
+    }
+
+    public override IDataConsumer[] DataConsumerServices => Array.Empty<IDataConsumer>();
+
+    public string Uid => nameof(ListTestsMessageBus);
+
+    public string Version => AppVersion.DefaultSemVer;
+
+    public string DisplayName => string.Empty;
+
+    public string Description => string.Empty;
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+
+    public override Task DisableAsync() => Task.CompletedTask;
+
+    public override void Dispose()
+    {
+    }
+
+    public override Task DrainDataAsync() => Task.CompletedTask;
+
+    public override Task InitAsync() => Task.CompletedTask;
+
+    public override async Task PublishAsync(IDataProducer dataProducer, IData data)
+    {
+        if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
+        {
+            return;
+        }
+
+        if (_testFrameworkAdapter.Uid != dataProducer.Uid
+            || data is not TestNodeUpdateMessage testNodeUpdatedMessage
+            || testNodeUpdatedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not DiscoveredTestNodeStateProperty)
+        {
+            if (_logger.IsEnabled(LogLevel.Trace))
+            {
+                await _logger.LogTraceAsync($"Unexpected data received from producer {dataProducer.DisplayName}{_environment.NewLine}{data}");
+            }
+
+            return;
+        }
+
+        // Send the information to the ITestApplicationProcessExitCode to correctly handle the ZeroTest case.
+        await _testApplicationProcessExitCode.ConsumeAsync(dataProducer, data, _testApplicationCancellationTokenSource.CancellationToken);
+
+        using (await _asyncMonitor.LockAsync(_testApplicationCancellationTokenSource.CancellationToken))
+        {
+            if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
+            if (_printTitle)
+            {
+                await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData("The following Tests are available:"));
+                _printTitle = false;
+            }
+
+            await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(testNodeUpdatedMessage.TestNode.DisplayName));
+        }
+    }
+}

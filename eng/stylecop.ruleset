@@ -7,6 +7,9 @@
     <!-- Do not require XML comment analysis -->
     <Rule Id="SA1652" Action="None" />
     <Rule Id="SA1649" Action="None" />
+
+    <!-- We want static fields to be s_* -->
+    <Rule Id="SA1311" Action="None" />
   </Rules>
 </RuleSet>
 
