@@ -1,0 +1,135 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+#if NETCOREAPP
+using System.Buffers;
+#endif
+using System.Text;
+
+namespace Microsoft.Testing.Platform.IPC.Serializers;
+
+internal abstract class BaseSerializer
+{
+#if NETCOREAPP
+    protected static string ReadString(Stream stream)
+    {
+        Span<byte> len = stackalloc byte[4];
+        stream.Read(len);
+        int stringLen = BitConverter.ToInt32(len);
+        byte[] bytes = ArrayPool<byte>.Shared.Rent(stringLen);
+        try
+        {
+            stream.Read(bytes, 0, stringLen);
+            return Encoding.UTF8.GetString(bytes, 0, stringLen);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
+    }
+
+    protected static void WriteString(Stream stream, string str)
+    {
+        int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
+        byte[] bytes = ArrayPool<byte>.Shared.Rent(stringutf8TotalBytes);
+        try
+        {
+            Span<byte> len = stackalloc byte[4];
+            if (!BitConverter.TryWriteBytes(len, stringutf8TotalBytes))
+            {
+                throw new InvalidOperationException("Unexpected exception during the byte conversion");
+            }
+
+            stream.Write(len);
+
+            Encoding.UTF8.GetBytes(str, bytes);
+            stream.Write(bytes, 0, stringutf8TotalBytes);
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(bytes);
+        }
+    }
+
+    protected static void WriteInt(Stream stream, int value)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(int)];
+        if (!BitConverter.TryWriteBytes(bytes, value))
+        {
+            throw new InvalidOperationException("Unexpected exception during the byte conversion");
+        }
+
+        stream.Write(bytes);
+    }
+
+    protected static void WriteLong(Stream stream, long value)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(long)];
+        if (!BitConverter.TryWriteBytes(bytes, value))
+        {
+            throw new InvalidOperationException("Unexpected exception during the byte conversion");
+        }
+
+        stream.Write(bytes);
+    }
+
+    protected static int ReadInt(Stream stream)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(int)];
+        stream.Read(bytes);
+        return BitConverter.ToInt32(bytes);
+    }
+
+    protected static long ReadLong(Stream stream)
+    {
+        Span<byte> bytes = stackalloc byte[sizeof(long)];
+        stream.Read(bytes);
+        return BitConverter.ToInt64(bytes);
+    }
+
+#else
+    protected static string ReadString(Stream stream)
+    {
+        byte[] len = new byte[4];
+        stream.Read(len, 0, len.Length);
+        int length = BitConverter.ToInt32(len, 0);
+        byte[] bytes = new byte[length];
+        stream.Read(bytes, 0, bytes.Length);
+        return Encoding.UTF8.GetString(bytes);
+    }
+
+    protected static void WriteString(Stream stream, string str)
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(str);
+        byte[] len = BitConverter.GetBytes(bytes.Length);
+        stream.Write(len, 0, len.Length);
+        stream.Write(bytes, 0, bytes.Length);
+    }
+
+    protected static void WriteInt(Stream stream, int value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        stream.Write(bytes, 0, bytes.Length);
+    }
+
+    protected static int ReadInt(Stream stream)
+    {
+        byte[] bytes = new byte[4];
+        stream.Read(bytes, 0, bytes.Length);
+        return BitConverter.ToInt32(bytes, 0);
+    }
+
+    protected static void WriteLong(Stream stream, long value)
+    {
+        byte[] bytes = BitConverter.GetBytes(value);
+        stream.Write(bytes, 0, bytes.Length);
+    }
+
+    protected static long ReadLong(Stream stream)
+    {
+        byte[] bytes = new byte[sizeof(long)];
+        stream.Read(bytes, 0, bytes.Length);
+        return BitConverter.ToInt64(bytes, 0);
+    }
+#endif
+}

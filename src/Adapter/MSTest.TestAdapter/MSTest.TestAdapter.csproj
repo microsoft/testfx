@@ -49,7 +49,7 @@
   <ItemGroup>
     <!-- API that is common to all frameworks that we build for. -->
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
-    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />  
+    <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
     <Compile Update="Resources\Resource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

@@ -44,6 +44,8 @@
     <WinUiMinimum>net6.0-windows10.0.18362.0</WinUiMinimum>
 
     <NetFrameworkMinimum>net462</NetFrameworkMinimum>
+
+    <MicrosoftTestingTargetFrameworks>net6.0;net7.0;net8.0</MicrosoftTestingTargetFrameworks>
   </PropertyGroup>
 
   <!-- Build config -->

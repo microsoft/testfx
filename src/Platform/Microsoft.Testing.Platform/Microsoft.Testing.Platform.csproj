@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- NuGet properties -->
+  <PropertyGroup>
+    <PackageDescription>
+      Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+
+      This package provides the core platform and the .NET implementation of the protocol.
+    </PackageDescription>
+  </PropertyGroup>
+
+  <!-- Exclude .NET Json api not available in netstandard2.0 -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
+    <Compile Remove="Configurations/JsonConfigurationFileParser.cs" />
+    <Compile Remove="ServerMode/Json/Json.cs" />
+    <Compile Remove="ServerMode/Json/JsonCollectionDeserializer.cs" />
+    <Compile Remove="ServerMode/Json/JsonDeserializer.cs" />
+    <Compile Remove="ServerMode/Json/JsonElementDeserializer.cs" />
+    <Compile Remove="ServerMode/Json/JsonExtensions.cs" />
+    <Compile Remove="ServerMode/Json/JsonObjectSerializer.cs" />
+    <Compile Remove="ServerMode/Json/JsonObjectSerializer1.cs" />
+    <Compile Remove="ServerMode/Json/JsonPropertyBagDeserializer.cs" />
+    <Compile Remove="ServerMode/Json/JsonSerializer.cs" />
+    <Compile Remove="ServerMode/Json/JsonValueSerializer.cs" />
+    <Compile Remove="ServerMode/Json/JsonValueSerializer1.cs" />
+  </ItemGroup>
+  <!-- end netstandard2.0 polyfill -->
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Framework" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Framework.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.ServerMode.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.Enterprise" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.Telemetry" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.Experimental" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.HangDump" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.VSTestBridge.TestAdapter" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="BannedSymbols.txt" />
+    <!-- Framework specific API -->
+    <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <AdditionalFiles Include="PublicAPI/netstandard2.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'netstandard2.0' " />
+    <AdditionalFiles Include="PublicAPI/net/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
+    <AdditionalFiles Include="PublicAPI/net/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != 'netstandard2.0' " />
+    <!-- API that is common to all frameworks that we build for. -->
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+</Project>
