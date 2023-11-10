@@ -85,7 +85,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
                     out var testClassInstance))
                 {
                     // Only run test if test setup was successful.
-                    TryRunTest(testMethod, testClassInstance, testCase.DisplayName, testResult, frameworkHandle)
+                    TryRunTestAsync(testMethod, testClassInstance, testCase.DisplayName, testResult, frameworkHandle)
                         .GetAwaiter()
                         .GetResult();
                 }
@@ -258,7 +258,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
         }
     }
 
-    private static async Task<bool> TryRunTest(MethodInfo testMethod, object testClassInstance, string testDisplayName,
+    private static async Task<bool> TryRunTestAsync(MethodInfo testMethod, object testClassInstance, string testDisplayName,
         TestResult testResult, IMessageLogger? logger)
     {
         try

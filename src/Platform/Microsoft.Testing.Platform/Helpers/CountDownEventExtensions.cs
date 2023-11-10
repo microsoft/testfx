@@ -47,7 +47,7 @@ internal static class CountDownEventExtensions
             // signaled, stop future execution of the callback method
             // by unregistering the WaitHandle.
             registeredHandle?.Unregister(null);
-            tokenRegistration.Dispose();
+            await DisposeHelper.DisposeAsync(tokenRegistration);
         }
     }
 }

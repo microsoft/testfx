@@ -25,5 +25,6 @@
     <RoslynPublicApiAnalyzersVersion>3.3.4</RoslynPublicApiAnalyzersVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
+    <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
   </PropertyGroup>
 </Project>

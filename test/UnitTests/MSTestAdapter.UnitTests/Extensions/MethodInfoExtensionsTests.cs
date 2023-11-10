@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -439,6 +440,7 @@ public class MethodInfoExtensionsTests : TestContainer
             return Task.FromResult(true);
         }
 
+        [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Done on purpose")]
         public static async void PublicStaticAsyncVoidMethodWithTC(UTFExtension.TestContext tc)
         {
             await Task.FromResult(true).ConfigureAwait(false);
@@ -454,6 +456,7 @@ public class MethodInfoExtensionsTests : TestContainer
             await Task.FromResult(true).ConfigureAwait(false);
         }
 
+        [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Done on purpose")]
         public static async void PublicStaticAsyncVoidMethod()
         {
             await Task.FromResult(true).ConfigureAwait(false);
@@ -488,6 +491,7 @@ public class MethodInfoExtensionsTests : TestContainer
             await Task.FromResult(true).ConfigureAwait(false);
         }
 
+        [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Done on purpose")]
         public async void PublicAsyncVoidMethod()
         {
             await Task.FromResult(true).ConfigureAwait(false);

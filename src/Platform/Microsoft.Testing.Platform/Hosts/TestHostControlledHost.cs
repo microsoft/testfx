@@ -1,9 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETCOREAPP
 using Microsoft.Testing.Platform.Helpers;
-#endif
 using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 
@@ -40,7 +38,7 @@ internal class TestHostControlledHost : ITestHost, IDisposable
         }
         finally
         {
-            _namedPipeClient.Dispose();
+            await DisposeHelper.DisposeAsync(_namedPipeClient);
         }
 
         return exitCode;

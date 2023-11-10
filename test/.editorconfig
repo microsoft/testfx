@@ -1,0 +1,12 @@
+###############################
+# Core EditorConfig Options   #
+###############################
+
+root = false
+
+[*.{cs,vb}]
+
+#### .NET Coding Conventions ####
+
+# VSTHRD200: Use "Async" suffix for async methods
+dotnet_diagnostic.VSTHRD200.severity = none

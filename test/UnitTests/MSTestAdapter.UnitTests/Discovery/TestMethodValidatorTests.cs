@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -208,6 +209,7 @@ internal abstract class DummyTestClass
 
     public abstract void AbstractTestMethod();
 
+    [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Done on purpose")]
     public async void AsyncMethodWithVoidReturnType()
     {
         await Task.FromResult(true);

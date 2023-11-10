@@ -18,5 +18,7 @@
     <PackageReference Include="StyleCop.Analyzers"
                       Version="$(StyleCopAnalyzersVersion)"
                       PrivateAsset="all" />
+
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="$(MicrosoftVisualStudioThreadingAnalyzersVersion)" PrivateAssets="all" />
   </ItemGroup>
 </Project>

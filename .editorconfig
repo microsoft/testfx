@@ -220,6 +220,15 @@ dotnet_diagnostic.SA1615.severity = none
 # https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3687
 dotnet_diagnostic.SA1010.severity = none
 
+# VSTHRD002 Avoid problematic synchronous waits
+dotnet_diagnostic.VSTHRD002.severity = none
+
+# VSTHRD003: Avoid awaiting foreign Tasks
+dotnet_diagnostic.VSTHRD003.severity = none
+
+# VSTHRD105: Avoid method overloads that assume TaskScheduler.Current
+dotnet_diagnostic.VSTHRD105.severity = none
+
 #### Naming styles ####
 
 ## Naming rules (define naming rule using dotnet_naming_rule.<rule_name>.<option>)
