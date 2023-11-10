@@ -19,12 +19,12 @@ namespace Microsoft.Testing.Platform.Requests;
 
 internal class TestHostAdapterInvoker : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
 {
-    private readonly IServiceProvider _serviceProvider;
-
     public TestHostAdapterInvoker(IServiceProvider serviceProvider)
     {
-        _serviceProvider = serviceProvider;
+        ServiceProvider = serviceProvider;
     }
+
+    protected IServiceProvider ServiceProvider { get; }
 
     public string Uid => nameof(TestHostAdapterInvoker);
 
@@ -40,11 +40,11 @@ internal class TestHostAdapterInvoker : ITestFrameworkInvoker, IOutputDeviceData
 
     public async Task ExecuteAsync(ITestFramework testFrameworkAdapter, ClientInfo client, CancellationToken cancellationToken)
     {
-        ILogger<TestHostAdapterInvoker> logger = _serviceProvider.GetLoggerFactory().CreateLogger<TestHostAdapterInvoker>();
+        ILogger<TestHostAdapterInvoker> logger = ServiceProvider.GetLoggerFactory().CreateLogger<TestHostAdapterInvoker>();
 
         await logger.LogInformationAsync($"TestFrameworkAdapter Uid: '{testFrameworkAdapter.Uid}' Version: '{testFrameworkAdapter.Version}' DisplayName: '{testFrameworkAdapter.DisplayName}' Description: '{testFrameworkAdapter.Description}'");
 
-        foreach (ICapability capability in _serviceProvider.GetTestFrameworkCapabilities().Capabilities)
+        foreach (ICapability capability in ServiceProvider.GetTestFrameworkCapabilities().Capabilities)
         {
             if (capability is ITestNodesTreeFilterTestFrameworkCapability testNodesTreeFilterCapability)
             {
@@ -54,13 +54,13 @@ internal class TestHostAdapterInvoker : ITestFrameworkInvoker, IOutputDeviceData
 
         DateTimeOffset startTime = DateTimeOffset.UtcNow;
         var stopwatch = Stopwatch.StartNew();
-        SessionUid sessionId = _serviceProvider.GetTestSessionContext().SessionId;
+        SessionUid sessionId = ServiceProvider.GetTestSessionContext().SessionId;
         CreateTestSessionResult createTestSessionResult = await testFrameworkAdapter.CreateTestSessionAsync(new(sessionId, client, cancellationToken));
         await HandleTestSessionResultAsync(createTestSessionResult.IsSuccess, createTestSessionResult.WarningMessage, createTestSessionResult.ErrorMessage);
 
-        ITestExecutionRequestFactory testExecutionRequestFactory = _serviceProvider.GetTestExecutionRequestFactory();
+        ITestExecutionRequestFactory testExecutionRequestFactory = ServiceProvider.GetTestExecutionRequestFactory();
         TestExecutionRequest request = await testExecutionRequestFactory.CreateRequestAsync(new(sessionId, client));
-        IMessageBus messageBus = _serviceProvider.GetMessageBus();
+        IMessageBus messageBus = ServiceProvider.GetMessageBus();
 
         // Execute the test request
         await ExecuteRequestAsync(testFrameworkAdapter, request, messageBus, cancellationToken);
@@ -82,13 +82,13 @@ internal class TestHostAdapterInvoker : ITestFrameworkInvoker, IOutputDeviceData
     {
         if (warningMessage is not null)
         {
-            IOutputDevice outputDisplay = _serviceProvider.GetOutputDevice();
+            IOutputDevice outputDisplay = ServiceProvider.GetOutputDevice();
             await outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateYellowConsoleColorText(warningMessage));
         }
 
         if (!isSuccess)
         {
-            ITestApplicationProcessExitCode testApplicationProcessExitCode = _serviceProvider.GetTestApplicationProcessExitCode();
+            ITestApplicationProcessExitCode testApplicationProcessExitCode = ServiceProvider.GetTestApplicationProcessExitCode();
             await testApplicationProcessExitCode.SetTestAdapterTestSessionFailureAsync(errorMessage ?? "Test adapter test session failure.");
         }
     }
