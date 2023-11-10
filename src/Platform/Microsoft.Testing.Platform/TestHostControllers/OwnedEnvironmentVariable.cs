@@ -3,5 +3,8 @@
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
-public record OwnedEnvironmentVariable(IExtension Owner, string Variable, string? Value, bool IsSecret, bool IsLocked)
-    : EnvironmentVariable(Variable, Value, IsSecret, IsLocked);
+public sealed class OwnedEnvironmentVariable(IExtension owner, string variable, string? value, bool isSecret, bool isLocked)
+    : EnvironmentVariable(variable, value, isSecret, isLocked)
+{
+    public IExtension Owner { get; } = owner;
+}

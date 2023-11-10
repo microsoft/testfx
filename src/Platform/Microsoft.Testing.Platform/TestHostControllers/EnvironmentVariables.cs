@@ -55,7 +55,7 @@ internal sealed class EnvironmentVariables : IEnvironmentVariables
         }
 
         environmentVariable = envVar.IsSecret
-            ? envVar with { Value = StrippedSecretValue }
+            ? new OwnedEnvironmentVariable(envVar.Owner, envVar.Variable, StrippedSecretValue, envVar.IsSecret, envVar.IsLocked)
             : envVar;
         return true;
     }

@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-public record SystemConsoleColor : IColor
+public sealed class SystemConsoleColor : IColor
 {
     public ConsoleColor ConsoleColor { get; init; }
 }

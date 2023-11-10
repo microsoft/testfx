@@ -5,5 +5,8 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
-public abstract record class DataWithSessionUid(string DisplayName, string? Description, SessionUid SessionUid)
-    : PropertyBagData(DisplayName, Description);
+public abstract class DataWithSessionUid(string displayName, string? description, SessionUid sessionUid)
+    : PropertyBagData(displayName, description)
+{
+    public SessionUid SessionUid { get; } = sessionUid;
+}

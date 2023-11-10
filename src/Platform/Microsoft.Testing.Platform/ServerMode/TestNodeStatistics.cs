@@ -3,4 +3,15 @@
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal record struct TestNodeStatistics(long TotalDiscoveredTests, long TotalPassedTests, long TotalFailedTests, long TotalPassedRetries, long TotalFailedRetries);
+internal struct TestNodeStatistics(long totalDiscoveredTests, long totalPassedTests, long totalFailedTests, long totalPassedRetries, long totalFailedRetries)
+{
+    public long TotalDiscoveredTests { get; set; } = totalDiscoveredTests;
+
+    public long TotalPassedTests { get; set; } = totalPassedTests;
+
+    public long TotalFailedTests { get; set; } = totalFailedTests;
+
+    public long TotalPassedRetries { get; set; } = totalPassedRetries;
+
+    public long TotalFailedRetries { get; set; } = totalFailedRetries;
+}

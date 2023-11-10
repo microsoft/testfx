@@ -3,12 +3,12 @@
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
-public record TestNodeUid(string Value)
+public sealed class TestNodeUid(string value)
 {
 #pragma warning disable RS0030 // Do not use banned APIs
-    public string Value { get; init; } = !TAString.IsNullOrWhiteSpace(Value)
-        ? Value
-        : throw new ArgumentNullException(nameof(Value));
+    public string Value { get; init; } = !TAString.IsNullOrWhiteSpace(value)
+        ? value
+        : throw new ArgumentNullException(nameof(value));
 
 #pragma warning restore RS0030 // Do not use banned APIs
     public static implicit operator string(TestNodeUid testNode) => testNode.Value;

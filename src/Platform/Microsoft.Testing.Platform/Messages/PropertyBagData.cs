@@ -3,7 +3,11 @@
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
-public abstract record PropertyBagData(string DisplayName, string? Description) : IData
+public abstract class PropertyBagData(string displayName, string? description) : IData
 {
     public PropertyBag Properties { get; } = new();
+
+    public string DisplayName { get; } = displayName;
+
+    public string? Description { get; } = description;
 }

@@ -3,4 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Telemetry;
 
-internal record TelemetryInformation(bool IsEnabled, string Version) : ITelemetryInformation;
+internal sealed class TelemetryInformation(bool isEnabled, string version) : ITelemetryInformation
+{
+    public bool IsEnabled { get; } = isEnabled;
+
+    public string Version { get; } = version;
+}

@@ -3,4 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 
-internal record TestHostOrchestratorConfiguration(ITestHostOrchestrator[] TestHostOrchestrators);
+internal sealed class TestHostOrchestratorConfiguration(ITestHostOrchestrator[] testHostOrchestrators)
+{
+    public ITestHostOrchestrator[] TestHostOrchestrators { get; } = testHostOrchestrators;
+}

@@ -3,4 +3,9 @@
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal record OptionRecord(string Option, string[] Arguments);
+internal sealed class OptionRecord(string option, string[] arguments)
+{
+    public string Option { get; } = option;
+
+    public string[] Arguments { get; } = arguments;
+}

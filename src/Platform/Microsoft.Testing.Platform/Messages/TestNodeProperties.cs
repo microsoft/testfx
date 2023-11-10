@@ -7,43 +7,60 @@ public interface IProperty
 {
 }
 
-public record KeyValuePairStringProperty(string Key, string Value) : IProperty;
-
-internal sealed record SerializableKeyValuePairStringProperty(string Key, string Value) : KeyValuePairStringProperty(Key, Value);
-
-internal sealed record SerializableNamedKeyValuePairsStringProperty(string Name, KeyValuePair<string, string>[] Pairs) : IProperty;
-
-internal sealed record SerializableNamedArrayStringProperty(string Name, string[] Values) : IProperty;
-
-public abstract record TestNodeStateProperty(string? Explanation) : IProperty
+public class KeyValuePairStringProperty(string key, string value) : IProperty
 {
-    protected TestNodeStateProperty()
-        : this(default(string))
-    {
-    }
+    public string Key { get; } = key;
+
+    public string Value { get; } = value;
 }
 
-public sealed record DiscoveredTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+internal sealed class SerializableKeyValuePairStringProperty(string key, string value) : KeyValuePairStringProperty(key, value);
+
+internal sealed class SerializableNamedKeyValuePairsStringProperty(string name, KeyValuePair<string, string>[] pairs) : IProperty
+{
+    public string Name { get; } = name;
+
+    public KeyValuePair<string, string>[] Pairs { get; } = pairs;
+}
+
+internal sealed class SerializableNamedArrayStringProperty(string name, string[] values) : IProperty
+{
+    public string Name { get; } = name;
+
+    public string[] Values { get; } = values;
+}
+
+public abstract class TestNodeStateProperty(string? explanation) : IProperty
+{
+    protected TestNodeStateProperty()
+        : this(default)
+    {
+    }
+
+    public string? Explanation { get; } = explanation;
+}
+
+public sealed class DiscoveredTestNodeStateProperty(string? explanation = null) : TestNodeStateProperty(explanation)
 {
     public static DiscoveredTestNodeStateProperty CachedInstance { get; } = new DiscoveredTestNodeStateProperty();
 }
 
-public sealed record InProgressTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+public sealed class InProgressTestNodeStateProperty(string? explanation = null) : TestNodeStateProperty(explanation)
 {
     public static InProgressTestNodeStateProperty CachedInstance { get; } = new InProgressTestNodeStateProperty();
 }
 
-public sealed record PassedTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+public sealed class PassedTestNodeStateProperty(string? explanation = null) : TestNodeStateProperty(explanation)
 {
     public static PassedTestNodeStateProperty CachedInstance { get; } = new PassedTestNodeStateProperty();
 }
 
-public sealed record SkippedTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
+public sealed class SkippedTestNodeStateProperty(string? explanation = null) : TestNodeStateProperty(explanation)
 {
     public static SkippedTestNodeStateProperty CachedInstance { get; } = new SkippedTestNodeStateProperty();
 }
 
-public sealed record FailedTestNodeStateProperty : TestNodeStateProperty
+public sealed class FailedTestNodeStateProperty : TestNodeStateProperty
 {
     public FailedTestNodeStateProperty()
         : base()
@@ -64,7 +81,7 @@ public sealed record FailedTestNodeStateProperty : TestNodeStateProperty
     public Exception? Exception { get; }
 }
 
-public sealed record ErrorTestNodeStateProperty : TestNodeStateProperty
+public sealed class ErrorTestNodeStateProperty : TestNodeStateProperty
 {
     public ErrorTestNodeStateProperty()
         : base()
@@ -85,7 +102,7 @@ public sealed record ErrorTestNodeStateProperty : TestNodeStateProperty
     public Exception? Exception { get; }
 }
 
-public sealed record TimeoutTestNodeStateProperty : TestNodeStateProperty
+public sealed class TimeoutTestNodeStateProperty : TestNodeStateProperty
 {
     public TimeoutTestNodeStateProperty()
         : base()
@@ -108,7 +125,7 @@ public sealed record TimeoutTestNodeStateProperty : TestNodeStateProperty
     public TimeSpan? Timeout { get; init; }
 }
 
-public sealed record CancelledTestNodeStateProperty : TestNodeStateProperty
+public sealed class CancelledTestNodeStateProperty : TestNodeStateProperty
 {
     public CancelledTestNodeStateProperty()
         : base()
@@ -129,11 +146,25 @@ public sealed record CancelledTestNodeStateProperty : TestNodeStateProperty
     public Exception? Exception { get; }
 }
 
-public readonly record struct TimingInfo(DateTimeOffset StartTime, DateTimeOffset EndTime, TimeSpan Duration);
+public readonly struct TimingInfo(DateTimeOffset startTime, DateTimeOffset endTime, TimeSpan duration)
+{
+    public DateTimeOffset StartTime { get; } = startTime;
 
-public sealed record StepTimingInfo(string Id, string Description, TimingInfo Timing);
+    public DateTimeOffset EndTime { get; } = endTime;
 
-public sealed record TimingProperty : IProperty
+    public TimeSpan Duration { get; } = duration;
+}
+
+public sealed class StepTimingInfo(string id, string description, TimingInfo timing)
+{
+    public string Id { get; } = id;
+
+    public string Description { get; } = description;
+
+    public TimingInfo Timing { get; } = timing;
+}
+
+public sealed class TimingProperty : IProperty
 {
     public TimingProperty(TimingInfo globalTiming)
         : this(globalTiming, [])
@@ -151,14 +182,47 @@ public sealed record TimingProperty : IProperty
     public StepTimingInfo[] StepTimings { get; }
 }
 
-public record struct LinePosition(int Line, int Column);
+public readonly struct LinePosition(int line, int column)
+{
+    public int Line { get; } = line;
 
-public record struct LinePositionSpan(LinePosition Start, LinePosition End);
+    public int Column { get; } = column;
+}
 
-public abstract record FileLocationProperty(string FilePath, LinePositionSpan LineSpan) : IProperty;
+public readonly struct LinePositionSpan(LinePosition start, LinePosition end)
+{
+    public LinePosition Start { get; } = start;
 
-public sealed record TestFileLocationProperty(string FilePath, LinePositionSpan LineSpan) : FileLocationProperty(FilePath, LineSpan);
+    public LinePosition End { get; } = end;
+}
 
-public sealed record TestMethodIdentifierProperty(string AssemblyFullName, string Namespace, string TypeName, string MethodName, string[] ParameterTypeFullNames, string ReturnTypeFullName) : IProperty;
+public abstract class FileLocationProperty(string filePath, LinePositionSpan lineSpan) : IProperty
+{
+    public string FilePath { get; } = filePath;
 
-public sealed record TestMetadataProperty(string Key, string Value) : IProperty;
+    public LinePositionSpan LineSpan { get; } = lineSpan;
+}
+
+public sealed class TestFileLocationProperty(string filePath, LinePositionSpan lineSpan) : FileLocationProperty(filePath, lineSpan);
+
+public sealed class TestMethodIdentifierProperty(string assemblyFullName, string @namespace, string typeName, string methodName, string[] parameterTypeFullNames, string returnTypeFullName) : IProperty
+{
+    public string AssemblyFullName { get; } = assemblyFullName;
+
+    public string Namespace { get; } = @namespace;
+
+    public string TypeName { get; } = typeName;
+
+    public string MethodName { get; } = methodName;
+
+    public string[] ParameterTypeFullNames { get; } = parameterTypeFullNames;
+
+    public string ReturnTypeFullName { get; } = returnTypeFullName;
+}
+
+public sealed class TestMetadataProperty(string key, string value) : IProperty
+{
+    public string Key { get; } = key;
+
+    public string Value { get; } = value;
+}

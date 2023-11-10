@@ -11,7 +11,7 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 public sealed partial class PropertyBag
 {
     [DebuggerTypeProxy(typeof(PropertyDebugView))]
-    internal /* for testing */ record class Property(IProperty Current, Property? Next = null) : IEnumerable<IProperty>
+    internal /* for testing */ class Property(IProperty current, Property? next = null) : IEnumerable<IProperty>
     {
         public int Count
         {
@@ -29,6 +29,10 @@ public sealed partial class PropertyBag
                 return count;
             }
         }
+
+        public IProperty Current { get; } = current;
+
+        public Property? Next { get; } = next;
 
         public bool Contains(IProperty property)
         {

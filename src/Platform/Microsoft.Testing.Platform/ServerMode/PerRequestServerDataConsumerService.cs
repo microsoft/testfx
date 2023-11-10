@@ -281,7 +281,7 @@ internal sealed class PerRequestServerDataConsumer : IDataConsumer, ITestSession
     {
         if (!_testNodeUidToStateStatistics.TryGetValue(testNodeUid, out TestNodeStateStatistics existingStatistics))
         {
-            _testNodeUidToStateStatistics.TryAdd(testNodeUid, new TestNodeStateStatistics(hasPassed, 0, 0));
+            _testNodeUidToStateStatistics.TryAdd(testNodeUid, new TestNodeStateStatistics { HasPassed = hasPassed });
             return;
         }
 

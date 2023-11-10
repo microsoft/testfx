@@ -3,4 +3,13 @@
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
-public record EnvironmentVariable(string Variable, string? Value, bool IsSecret, bool IsLocked);
+public class EnvironmentVariable(string variable, string? value, bool isSecret, bool isLocked)
+{
+    public string Variable { get; } = variable;
+
+    public string? Value { get; } = value;
+
+    public bool IsSecret { get; } = isSecret;
+
+    public bool IsLocked { get; } = isLocked;
+}

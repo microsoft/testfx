@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal record RpcMessage()
+internal abstract class RpcMessage()
 {
 }
 
@@ -14,74 +14,187 @@ internal record RpcMessage()
 /// A request is a message for which the server should return a corresponding
 /// <see cref="ErrorMessage"/> or <see cref="ResponseMessage"/>.
 /// </summary>
-internal record RequestMessage(int Id, string Method, object? Params) : RpcMessage;
+internal sealed class RequestMessage(int id, string method, object? @params) : RpcMessage
+{
+    public int Id { get; } = id;
+
+    public string Method { get; } = method;
+
+    public object? Params { get; } = @params;
+}
 
 /// <summary>
 /// A notification message is a message that notifies the server of an event.
 /// There's no corresponding response that the server should send back and as such
 /// no Id is specified when sending a notification.
 /// </summary>
-internal record NotificationMessage(string Method, object? Params) : RpcMessage;
+internal sealed class NotificationMessage(string method, object? @params) : RpcMessage
+{
+    public string Method { get; } = method;
+
+    public object? Params { get; } = @params;
+}
 
 /// <summary>
 /// An error message is sent if some exception was thrown when processing the request.
 /// </summary>
-internal record ErrorMessage(int Id, int ErrorCode, string Message, object? Data) : RpcMessage;
+internal sealed class ErrorMessage(int id, int errorCode, string message, object? data) : RpcMessage
+{
+    public int Id { get; } = id;
+
+    public int ErrorCode { get; } = errorCode;
+
+    public string Message { get; } = message;
+
+    public object? Data { get; } = data;
+}
 
 /// <summary>
 /// An response message is sent if a request is handled successfully.
 /// </summary>
 /// <remarks>
-/// If the RPC handler returns a <see cref="Task"/> the <paramref name="Result"/>
+/// If the RPC handler returns a <see cref="Task"/> the <paramref name="result"/>
 /// will be returned as <c>null</c>.
 /// </remarks>
-internal record ResponseMessage(int Id, object? Result) : RpcMessage;
+internal sealed class ResponseMessage(int id, object? result) : RpcMessage
+{
+    public int Id { get; } = id;
 
-internal record InitializeRequestArgs(int ProcessId, ClientInfo ClientInfo, ClientCapabilities Capabilities);
+    public object? Result { get; } = result;
+}
 
-internal record InitializeResponseArgs(ServerInfo ServerInfo, ServerCapabilities Capabilities);
+internal sealed class InitializeRequestArgs(int processId, ClientInfo clientInfo, ClientCapabilities capabilities)
+{
+    public int ProcessId { get; } = processId;
 
-internal record RequestArgsBase(Guid RunId, ICollection<TestNode>? TestNodes, string? GraphFilter);
+    public ClientInfo ClientInfo { get; } = clientInfo;
 
-internal record DiscoverRequestArgs(Guid RunId, ICollection<TestNode>? TestNodes, string? GraphFilter) :
-    RequestArgsBase(RunId, TestNodes, GraphFilter);
+    public ClientCapabilities Capabilities { get; } = capabilities;
+}
 
-internal record ResponseArgsBase;
+internal sealed class InitializeResponseArgs(ServerInfo serverInfo, ServerCapabilities capabilities)
+{
+    public ServerInfo ServerInfo { get; } = serverInfo;
 
-internal record DiscoverResponseArgs() : ResponseArgsBase;
+    public ServerCapabilities Capabilities { get; } = capabilities;
+}
 
-internal record RunRequestArgs(Guid RunId, ICollection<TestNode>? TestNodes, string? GraphFilter) :
-    RequestArgsBase(RunId, TestNodes, GraphFilter);
+internal abstract class RequestArgsBase(Guid runId, ICollection<TestNode>? testNodes, string? graphFilter)
+{
+    public Guid RunId { get; } = runId;
 
-internal record RunResponseArgs(Artifact[] Artifacts) : ResponseArgsBase;
+    public ICollection<TestNode>? TestNodes { get; } = testNodes;
 
-internal record Artifact(string Uri, string Producer, string Type, string DisplayName, string? Description = null);
+    public string? GraphFilter { get; } = graphFilter;
+}
 
-internal record CancelRequestArgs(int CancelRequestId);
+internal sealed class DiscoverRequestArgs(Guid runId, ICollection<TestNode>? testNodes, string? graphFilter) :
+    RequestArgsBase(runId, testNodes, graphFilter);
 
-internal record ExitRequestArgs();
+internal abstract class ResponseArgsBase;
 
-internal record ClientInfo(string Name, string Version);
+internal sealed class DiscoverResponseArgs() : ResponseArgsBase;
 
-internal record ClientCapabilities(bool DebuggerProvider);
+internal sealed class RunRequestArgs(Guid runId, ICollection<TestNode>? testNodes, string? graphFilter) :
+    RequestArgsBase(runId, testNodes, graphFilter);
 
-internal record ClientTestingCapabilities(bool DebuggerProvider);
+internal sealed class RunResponseArgs(Artifact[] artifacts) : ResponseArgsBase
+{
+    public Artifact[] Artifacts { get; } = artifacts;
+}
 
-internal record ServerInfo(string Name, string Version);
+internal sealed class Artifact(string uri, string producer, string type, string displayName, string? description = null)
+{
+    public string Uri { get; } = uri;
 
-internal record ServerCapabilities(ServerTestingCapabilities TestingCapabilities);
+    public string Producer { get; } = producer;
 
-internal record ServerTestingCapabilities(
-    bool SupportsDiscovery,
-    bool MultiRequestSupport,
-    bool VSTestProviderSupport);
+    public string Type { get; } = type;
 
-internal record TestNodeStateChangedEventArgs(Guid RunId, TestNodeUpdateMessage[]? Changes);
+    public string DisplayName { get; } = displayName;
 
-internal record LogEventArgs(ServerLogMessage LogMessage);
+    public string? Description { get; } = description;
+}
 
-internal record TelemetryEventArgs(string EventName, IDictionary<string, object> Metrics);
+internal sealed class CancelRequestArgs(int cancelRequestId)
+{
+    public int CancelRequestId { get; } = cancelRequestId;
+}
 
-internal record ProcessInfoArgs(string Program, string? Args, string? WorkingDirectory, IDictionary<string, string?>? EnvironmentVariables);
+internal sealed class ExitRequestArgs();
 
-internal record AttachDebuggerInfoArgs(int ProcessId);
+internal sealed class ClientInfo(string name, string version)
+{
+    public string Name { get; } = name;
+
+    public string Version { get; } = version;
+}
+
+internal sealed class ClientCapabilities(bool debuggerProvider)
+{
+    public bool DebuggerProvider { get; } = debuggerProvider;
+}
+
+internal sealed class ClientTestingCapabilities(bool debuggerProvider)
+{
+    public bool DebuggerProvider { get; } = debuggerProvider;
+}
+
+internal sealed class ServerInfo(string name, string version)
+{
+    public string Name { get; } = name;
+
+    public string Version { get; } = version;
+}
+
+internal sealed class ServerCapabilities(ServerTestingCapabilities testingCapabilities)
+{
+    public ServerTestingCapabilities TestingCapabilities { get; } = testingCapabilities;
+}
+
+internal sealed class ServerTestingCapabilities(
+    bool supportsDiscovery,
+    bool multiRequestSupport,
+    bool vstestProviderSupport)
+{
+    public bool SupportsDiscovery { get; } = supportsDiscovery;
+
+    public bool MultiRequestSupport { get; } = multiRequestSupport;
+
+    public bool VSTestProviderSupport { get; } = vstestProviderSupport;
+}
+
+internal sealed class TestNodeStateChangedEventArgs(Guid runId, TestNodeUpdateMessage[]? changes)
+{
+    public Guid RunId { get; } = runId;
+
+    public TestNodeUpdateMessage[]? Changes { get; } = changes;
+}
+
+internal sealed class LogEventArgs(ServerLogMessage logMessage)
+{
+    public ServerLogMessage LogMessage { get; } = logMessage;
+}
+
+internal sealed class TelemetryEventArgs(string eventName, IDictionary<string, object> metrics)
+{
+    public string EventName { get; } = eventName;
+
+    public IDictionary<string, object> Metrics { get; } = metrics;
+}
+
+internal sealed class ProcessInfoArgs(string program, string? args, string? workingDirectory, IDictionary<string, string?>? environmentVariables)
+{
+    public string Program { get; } = program;
+
+    public string? Args { get; } = args;
+
+    public string? WorkingDirectory { get; } = workingDirectory;
+
+    public IDictionary<string, string?>? EnvironmentVariables { get; } = environmentVariables;
+}
+
+internal sealed class AttachDebuggerInfoArgs(int processId)
+{
+    public int ProcessId { get; } = processId;
+}

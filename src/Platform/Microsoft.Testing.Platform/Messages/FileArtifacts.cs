@@ -5,11 +5,20 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
-public record FileArtifact(FileInfo FileInfo, string DisplayName, string? Description = null)
-    : PropertyBagData(DisplayName, Description);
+public class FileArtifact(FileInfo fileInfo, string displayName, string? description = null)
+    : PropertyBagData(displayName, description)
+{
+    public FileInfo FileInfo { get; } = fileInfo;
+}
 
-public record SessionFileArtifact(SessionUid SessionUid, FileInfo FileInfo, string DisplayName, string? Description = null)
-    : DataWithSessionUid(DisplayName, Description, SessionUid);
+public class SessionFileArtifact(SessionUid sessionUid, FileInfo fileInfo, string displayName, string? description = null)
+    : DataWithSessionUid(displayName, description, sessionUid)
+{
+    public FileInfo FileInfo { get; } = fileInfo;
+}
 
-public record TestNodeFileArtifact(SessionUid SessionUid, TestNode Node, FileInfo FileInfo, string DisplayName, string? Description = null)
-    : SessionFileArtifact(SessionUid, FileInfo, DisplayName, Description);
+public class TestNodeFileArtifact(SessionUid sessionUid, TestNode node, FileInfo fileInfo, string displayName, string? description = null)
+    : SessionFileArtifact(sessionUid, fileInfo, displayName, description)
+{
+    public TestNode Node { get; } = node;
+}

@@ -3,4 +3,11 @@
 
 namespace Microsoft.Testing.Platform.Telemetry;
 
-internal record ExtensionInformation(string Id, string Version, bool Enabled);
+internal sealed class ExtensionInformation(string id, string version, bool enabled)
+{
+    public string Id { get; } = id;
+
+    public string Version { get; } = version;
+
+    public bool Enabled { get; } = enabled;
+}

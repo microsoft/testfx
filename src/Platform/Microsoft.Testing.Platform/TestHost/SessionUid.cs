@@ -3,4 +3,7 @@
 
 namespace Microsoft.Testing.Platform.TestHost;
 
-public record struct SessionUid(string Uid);
+public readonly struct SessionUid(string uid)
+{
+    public string Uid { get; } = uid;
+}

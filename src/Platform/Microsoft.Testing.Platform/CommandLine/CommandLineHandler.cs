@@ -225,33 +225,33 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         ArgumentGuard.IsNotNull(_parseResult);
 
         StringBuilder? stringBuilder = null;
-        foreach (IGrouping<string, OptionRecord> optionRecord in _parseResult.Options.GroupBy(x => x.Option))
+        foreach (IGrouping<string, OptionRecord> groupedOptions in _parseResult.Options.GroupBy(x => x.Option))
         {
             // getting the arguments count for an option.
             int arity = 0;
-            foreach (OptionRecord record in optionRecord)
+            foreach (OptionRecord optionEntry in groupedOptions)
             {
-                arity += record.Arguments.Length;
+                arity += optionEntry.Arguments.Length;
             }
 
-            string optionName = optionRecord.Key;
+            string optionName = groupedOptions.Key;
             ICommandLineOptionsProvider extension = GetAllCommandLineOptionsProviderByOptionName(optionName).Single();
-            CommandLineOption option = extension.GetCommandLineOptions().Single(x => x.Name == optionName);
+            CommandLineOption commandLineOption = extension.GetCommandLineOptions().Single(x => x.Name == optionName);
 
-            if (arity > option.Arity.Max && option.Arity.Max == 0)
+            if (arity > commandLineOption.Arity.Max && commandLineOption.Arity.Max == 0)
             {
                 stringBuilder ??= new();
                 stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Option '--{optionName}' expects 0 argument for extension '{extension.DisplayName}'.");
             }
-            else if (arity < option.Arity.Min)
+            else if (arity < commandLineOption.Arity.Min)
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Option '--{optionName}' expects at least {option.Arity.Min} argument(s) for extension '{extension.DisplayName}'.");
+                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Option '--{optionName}' expects at least {commandLineOption.Arity.Min} argument(s) for extension '{extension.DisplayName}'.");
             }
-            else if (arity > option.Arity.Max)
+            else if (arity > commandLineOption.Arity.Max)
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Option '--{optionName}' expects at most {option.Arity.Max} argument(s) for extension '{extension.DisplayName}'.");
+                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Option '--{optionName}' expects at most {commandLineOption.Arity.Max} argument(s) for extension '{extension.DisplayName}'.");
             }
         }
 
