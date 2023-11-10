@@ -98,7 +98,7 @@ internal sealed class JsonConfigurationFileParser
 
     private void VisitValue(JsonElement value)
     {
-        TADebug.Assert(_paths.Count > 0);
+        RoslynDebug.Assert(_paths.Count > 0);
 
         switch (value.ValueKind)
         {

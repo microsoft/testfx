@@ -559,7 +559,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         DateTimeOffset? requestExecuteStop = null;
         try
         {
-            TADebug.Assert(_client is not null, "Request should only have been called after initialization");
+            RoslynDebug.Assert(_client is not null, "Request should only have been called after initialization");
 
             // Execute the request
             await ExecuteRequestAsync(
@@ -604,7 +604,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         DateTimeOffset requestStop = _clock.UtcNow;
 
-        TADebug.Assert(requestExecuteStop != null);
+        RoslynDebug.Assert(requestExecuteStop != null);
 
         Dictionary<string, object> metadata = method == JsonRpcMethods.TestingRunTests
             ? GetRunMetrics(

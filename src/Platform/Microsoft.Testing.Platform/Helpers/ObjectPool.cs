@@ -284,7 +284,7 @@ internal sealed class ObjectPool<T>
     [Conditional("DEBUG")]
     private void Validate(object obj)
     {
-        TADebug.Assert(_firstItem != obj, "freeing twice?");
+        RoslynDebug.Assert(_firstItem != obj, "freeing twice?");
 
         ObjectPool<T>.Element[] items = _items;
         for (int i = 0; i < items.Length; i++)
@@ -295,7 +295,7 @@ internal sealed class ObjectPool<T>
                 return;
             }
 
-            TADebug.Assert(value != obj, "freeing twice?");
+            RoslynDebug.Assert(value != obj, "freeing twice?");
         }
     }
 }

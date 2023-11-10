@@ -9,7 +9,7 @@ namespace Microsoft.Testing.Platform;
 
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is the replacement type for Debug")]
 [ExcludeFromCodeCoverage]
-internal static class TADebug
+internal static class RoslynDebug
 {
     /// <inheritdoc cref="Debug.Assert(bool)"/>
     [Conditional("DEBUG")]

@@ -92,7 +92,7 @@ internal sealed class JsonConfigurationFileParser
 
     private void VisitValue(object? value)
     {
-        Debug.Assert(_paths.Count > 0, "We should have at least one path");
+        RoslynDebug.Assert(_paths.Count > 0, "We should have at least one path");
 
         switch (value)
         {

@@ -387,7 +387,7 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Execute a .NET Test Application."));
             await _platformOutputDevice.DisplayAsync(this, _textOutputDeviceData);
 
-            TADebug.Assert(
+            RoslynDebug.Assert(
                 !_systemCommandLineOptionsProviders.OfType<IToolCommandLineOptionsProvider>().Any(),
                 "System command line options should not have any tool option registered.");
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Options:"));
