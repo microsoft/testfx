@@ -4,6 +4,7 @@
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsPackable Condition=" '$(PackTestingPlatform)' == 'true' ">true</IsPackable>
   </PropertyGroup>
 
   <!-- NuGet properties -->
