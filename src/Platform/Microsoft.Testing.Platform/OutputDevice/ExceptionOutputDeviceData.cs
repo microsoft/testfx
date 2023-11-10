@@ -3,4 +3,7 @@
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-public record ExceptionOutputDeviceData(Exception Exception) : IOutputDeviceData;
+public sealed class ExceptionOutputDeviceData(Exception exception) : IOutputDeviceData
+{
+    public Exception Exception { get; } = exception;
+}

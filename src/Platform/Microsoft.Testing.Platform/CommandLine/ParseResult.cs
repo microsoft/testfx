@@ -114,10 +114,10 @@ internal sealed class CommandLineParseResult : IEquatable<CommandLineParseResult
     public override int GetHashCode()
     {
         HashCode hashCode = default;
-        foreach (OptionRecord record in Options)
+        foreach (OptionRecord option in Options)
         {
-            hashCode.Add(record.Option);
-            foreach (string value in record.Arguments)
+            hashCode.Add(option.Option);
+            foreach (string value in option.Arguments)
             {
                 hashCode.Add(value);
             }

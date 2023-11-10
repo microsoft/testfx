@@ -476,12 +476,12 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     {
                         INamedFeatureCapability? namedFeatureCapability = capabilities.GetCapability<INamedFeatureCapability>();
                         return new InitializeResponseArgs(
-                            ServerInfo: new ServerInfo("test-anywhere", Version: "1.0.0"),
-                            Capabilities: new ServerCapabilities(
+                            serverInfo: new ServerInfo("test-anywhere", version: "1.0.0"),
+                            capabilities: new ServerCapabilities(
                                 new ServerTestingCapabilities(
-                                    SupportsDiscovery: true,
-                                    MultiRequestSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.MultiRequestSupport) == true,
-                                    VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true)));
+                                    supportsDiscovery: true,
+                                    multiRequestSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.MultiRequestSupport) == true,
+                                    vstestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true)));
                     }
                     finally
                     {
@@ -728,7 +728,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     }
 
     internal Task SendTestUpdateCompleteAsync(Guid runId)
-        => SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null));
+        => SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, changes: null));
 
     internal async Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update)
         => await SendMessageAsync(

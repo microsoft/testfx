@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-public record FormattedTextOutputDeviceData(string Text) : TextOutputDeviceData(Text)
+public sealed class FormattedTextOutputDeviceData(string text) : TextOutputDeviceData(text)
 {
     public IColor? ForegroundColor { get; init; }
 

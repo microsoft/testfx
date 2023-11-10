@@ -3,7 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Tools;
 
-internal record ToolsInformation(ITool[] Tools)
+internal sealed class ToolsInformation(ITool[] tools)
 {
     public bool HasTools => Tools.Length > 0;
+
+    public ITool[] Tools { get; } = tools;
 }

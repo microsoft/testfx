@@ -562,9 +562,9 @@ internal static class SerializerUtilities
             bool vSTestProviderSupport = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.VSTestProviderSupport);
 
             return new ServerCapabilities(new ServerTestingCapabilities(
-                SupportsDiscovery: supportsDiscovery,
-                MultiRequestSupport: multiRequestSupport,
-                VSTestProviderSupport: vSTestProviderSupport));
+                supportsDiscovery: supportsDiscovery,
+                multiRequestSupport: multiRequestSupport,
+                vstestProviderSupport: vSTestProviderSupport));
         });
 
         Deserializers[typeof(DiscoverRequestArgs)] = new ObjectDeserializer<DiscoverRequestArgs>(properties =>
@@ -686,10 +686,10 @@ internal static class SerializerUtilities
                 : null;
 
             return new ErrorMessage(
-                Id: id,
-                ErrorCode: code,
-                Message: errorMessage ?? string.Empty,
-                Data: data);
+                id: id,
+                errorCode: code,
+                message: errorMessage ?? string.Empty,
+                data: data);
         });
     }
 

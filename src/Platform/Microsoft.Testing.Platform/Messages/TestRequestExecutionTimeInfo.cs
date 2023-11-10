@@ -3,9 +3,11 @@
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
-internal readonly record struct TestRequestExecutionTimeInfo(TimingInfo TimingInfo) : IData
+internal readonly struct TestRequestExecutionTimeInfo(TimingInfo timingInfo) : IData
 {
     public readonly string DisplayName => nameof(TestRequestExecutionTimeInfo);
 
     public readonly string? Description => "Information about the test execution times.";
+
+    public TimingInfo TimingInfo { get; } = timingInfo;
 }

@@ -3,4 +3,7 @@
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-public record TextOutputDeviceData(string Text) : IOutputDeviceData;
+public class TextOutputDeviceData(string text) : IOutputDeviceData
+{
+    public string Text { get; } = text;
+}

@@ -5,6 +5,12 @@ using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
 
-internal record TestHostControllerConfiguration(ITestHostEnvironmentVariableProvider[] EnvironmentVariableProviders,
-    ITestHostProcessLifetimeHandler[] LifetimeHandlers,
-    bool RequireProcessRestart);
+internal sealed class TestHostControllerConfiguration(ITestHostEnvironmentVariableProvider[] environmentVariableProviders,
+    ITestHostProcessLifetimeHandler[] lifetimeHandlers, bool requireProcessRestart)
+{
+    public ITestHostEnvironmentVariableProvider[] EnvironmentVariableProviders { get; } = environmentVariableProviders;
+
+    public ITestHostProcessLifetimeHandler[] LifetimeHandlers { get; } = lifetimeHandlers;
+
+    public bool RequireProcessRestart { get; } = requireProcessRestart;
+}

@@ -103,7 +103,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 #endif
             };
 
-            foreach (string argument in finalCommandLine.ArgumentList)
+            foreach (string argument in finalCommandLine.Arguments)
             {
 #if !NETCOREAPP
                 processStartInfo.Arguments += argument + " ";

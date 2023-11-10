@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
-public record TestNode
+public class TestNode
 {
     public required TestNodeUid Uid { get; init; }
 
