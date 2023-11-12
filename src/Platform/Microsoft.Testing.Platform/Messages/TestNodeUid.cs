@@ -3,15 +3,26 @@
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
-public sealed class TestNodeUid(string value)
+public sealed class TestNodeUid(string value) : IEquatable<TestNodeUid>
 {
-#pragma warning disable RS0030 // Do not use banned APIs
     public string Value { get; init; } = !TAString.IsNullOrWhiteSpace(value)
         ? value
+#pragma warning disable RS0030 // Do not use banned APIs
         : throw new ArgumentNullException(nameof(value));
-
 #pragma warning restore RS0030 // Do not use banned APIs
-    public static implicit operator string(TestNodeUid testNode) => testNode.Value;
 
-    public static implicit operator TestNodeUid(string value) => new(value);
+    public bool Equals(TestNodeUid? other)
+        => other?.Value == value;
+
+    public static implicit operator string(TestNodeUid testNode)
+        => testNode.Value;
+
+    public static implicit operator TestNodeUid(string value)
+        => new(value);
+
+    public override bool Equals(object? obj)
+        => Equals(obj as TestNodeUid);
+
+    public override int GetHashCode()
+        => Value.GetHashCode();
 }
