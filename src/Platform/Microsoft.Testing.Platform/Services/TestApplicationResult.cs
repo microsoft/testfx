@@ -48,15 +48,15 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     public string Description { get; } = string.Empty;
 
     /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    /// <inheritdoc />
     public Type[] DataTypesConsumed { get; }
         = new[] { typeof(TestNodeUpdateMessage) };
 
     public bool HasTestAdapterTestSessionFailure => TestAdapterTestSessionFailureErrorMessage is not null;
 
     public string? TestAdapterTestSessionFailureErrorMessage { get; private set; }
+
+    /// <inheritdoc />
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
@@ -137,14 +137,14 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     {
         private readonly ConcurrentBag<string> _errors = [];
 
-        public IReadOnlyCollection<string> Errors => _errors;
-
-        public string CategoryName { get; }
-
         public TestApplicationResultLogger(string categoryName)
         {
             CategoryName = categoryName;
         }
+
+        public IReadOnlyCollection<string> Errors => _errors;
+
+        public string CategoryName { get; }
 
         public bool IsEnabled(LogLevel logLevel)
             => logLevel is LogLevel.Error or LogLevel.Critical;

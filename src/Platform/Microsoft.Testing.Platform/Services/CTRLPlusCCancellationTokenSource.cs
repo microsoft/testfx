@@ -21,6 +21,9 @@ internal class CTRLPlusCCancellationTokenSource : ITestApplicationCancellationTo
         _logger = logger;
     }
 
+    public CancellationToken CancellationToken
+        => _cancellationTokenSource.Token;
+
     private void OnConsoleCancelKeyPressed(object? sender, ConsoleCancelEventArgs e)
     {
         e.Cancel = true;
@@ -33,9 +36,6 @@ internal class CTRLPlusCCancellationTokenSource : ITestApplicationCancellationTo
             _logger?.LogWarning($"Exception during CTRLPlusCCancellationTokenSource cancel:\n{ex}");
         }
     }
-
-    public CancellationToken CancellationToken
-        => _cancellationTokenSource.Token;
 
     public void Dispose()
         => _cancellationTokenSource.Dispose();

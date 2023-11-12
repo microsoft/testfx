@@ -20,18 +20,18 @@ internal sealed partial class ServerTestHost
         // Note: Currently there's no cascading node changes we need to deal with.
         private readonly List<TestNodeUpdateMessage> _stateChanges = [];
 
-        public Guid RunId { get; private set; }
-
         public TestNodeStateChangeAggregator(Guid runId)
         {
             RunId = runId;
         }
 
-        public void OnStateChange(TestNodeUpdateMessage stateChangedMessage)
-            => _stateChanges.Add(stateChangedMessage);
+        public Guid RunId { get; private set; }
 
         public bool HasChanges
             => _stateChanges.Count > 0;
+
+        public void OnStateChange(TestNodeUpdateMessage stateChangedMessage)
+            => _stateChanges.Add(stateChangedMessage);
 
         public TestNodeStateChangedEventArgs BuildAggregatedChange()
             => new(RunId, _stateChanges.ToArray());

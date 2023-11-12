@@ -19,14 +19,14 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
     internal const string AllNodesBelowRegexString = ".*.*";
     private readonly List<FilterExpression> _filters;
 
-    public string Filter { get; }
-
     internal TreeNodeFilter(string filter)
     {
         ArgumentGuard.IsNotNull(filter);
         Filter = filter;
         _filters = ParseFilter(filter);
     }
+
+    public string Filter { get; }
 
     /// <remarks>
     /// The current grammar for the filter looks as follows:

@@ -27,8 +27,6 @@ public sealed class TestApplication : IDisposable
     private static int s_numberOfBuilders;
     private static UnhandledExceptionHandler? s_unhandledExceptionHandler;
 
-    internal IServiceProvider ServiceProvider => ((CommonTestHost)_testHost).ServiceProvider;
-
     static TestApplication()
     {
         // Capture system console soon as possible to avoid any other code from changing it.
@@ -40,6 +38,8 @@ public sealed class TestApplication : IDisposable
     {
         _testHost = testHost;
     }
+
+    internal IServiceProvider ServiceProvider => ((CommonTestHost)_testHost).ServiceProvider;
 
     internal static int MaxNumberOfBuilders { get; set; } = int.MaxValue;
 

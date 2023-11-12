@@ -17,6 +17,13 @@ internal sealed partial class JsonConfigurationSource
         private Dictionary<string, string?>? _propertyToAllChildren;
         private Dictionary<string, string?>? _singleValueData;
 
+        public JsonConfigurationProvider(IRuntime runtime, IFileSystem fileSystem, ILogger? logger)
+        {
+            _currentModuleInfo = runtime.GetCurrentModuleInfo();
+            _fileSystem = fileSystem;
+            _logger = logger;
+        }
+
         public string? ConfigurationFile { get; private set; }
 
         private async Task LogInformationAsync(string message)
@@ -25,13 +32,6 @@ internal sealed partial class JsonConfigurationSource
             {
                 await _logger.LogInformationAsync(message);
             }
-        }
-
-        public JsonConfigurationProvider(IRuntime runtime, IFileSystem fileSystem, ILogger? logger)
-        {
-            _currentModuleInfo = runtime.GetCurrentModuleInfo();
-            _fileSystem = fileSystem;
-            _logger = logger;
         }
 
         public async Task LoadAsync()

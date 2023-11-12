@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,6 +11,16 @@ namespace DataRowTestProject;
 [TestClass]
 public class DataRowTests_DerivedClass : DataRowTests_BaseClass
 {
+    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1602:Enumeration items should be documented", Justification = "Test type")]
+    public enum TestEnum
+    {
+        Alfa,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
     [TestCategory("DataRowSimple")]
     [TestMethod]
     [DataRow("DerivedString1")]
@@ -102,14 +113,5 @@ public class DataRowTests_DerivedClass : DataRowTests_BaseClass
     public void DataRowNonSerializable(Type type)
     {
         Assert.IsTrue(true);
-    }
-
-    public enum TestEnum
-    {
-        Alfa,
-        Beta,
-        Gamma,
-        Delta,
-        Epsilon,
     }
 }

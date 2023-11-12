@@ -15,9 +15,6 @@ internal sealed class SystemProcess : IProcess
         _process.Exited += OnProcessExited;
     }
 
-    private void OnProcessExited(object? sender, EventArgs e)
-        => Exited?.Invoke(sender, e);
-
     public event EventHandler? Exited;
 
     public bool HasExited => _process.HasExited;
@@ -35,6 +32,9 @@ internal sealed class SystemProcess : IProcess
     public IMainModule MainModule
         => new SystemMainModule(_process.MainModule);
 #endif
+
+    private void OnProcessExited(object? sender, EventArgs e)
+        => Exited?.Invoke(sender, e);
 
     public void WaitForExit()
         => _process.WaitForExit();

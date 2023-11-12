@@ -16,12 +16,6 @@ internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
     private readonly string _logPrefixName;
     private readonly bool _customDirectory;
 
-    public LogLevel LogLevel { get; }
-
-    public FileLogger FileLogger { get; private set; }
-
-    public bool SyncFlush { get; }
-
     public FileLoggerProvider(string logFolder, IClock clock, LogLevel logLevel, string logPrefixName, bool customDirectory, bool syncFlush)
     {
         _clock = clock;
@@ -32,6 +26,12 @@ internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
         LogLevel = logLevel;
         SyncFlush = syncFlush;
     }
+
+    public LogLevel LogLevel { get; }
+
+    public FileLogger FileLogger { get; private set; }
+
+    public bool SyncFlush { get; }
 
     public async Task CheckLogFolderAndMoveToTheNewIfNeededAsync(string testResultDirectory)
     {

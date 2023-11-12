@@ -3,15 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal sealed class PropertyExpression : FilterExpression
+internal sealed class PropertyExpression(ValueExpression propertyName, ValueExpression value) : FilterExpression
 {
-    public ValueExpression PropertyName { get; }
+    public ValueExpression PropertyName { get; } = propertyName;
 
-    public ValueExpression Value { get; }
-
-    public PropertyExpression(ValueExpression propertyName, ValueExpression value)
-    {
-        PropertyName = propertyName;
-        Value = value;
-    }
+    public ValueExpression Value { get; } = value;
 }

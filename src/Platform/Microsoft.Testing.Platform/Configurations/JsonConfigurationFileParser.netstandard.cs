@@ -12,11 +12,8 @@ namespace Microsoft.Testing.Platform.Configurations;
 
 internal sealed class JsonConfigurationFileParser
 {
-    private JsonConfigurationFileParser()
-    {
-    }
-
     public static readonly string KeyDelimiter = ":";
+
     private readonly Dictionary<string, string?> _singleValueData = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string?> _propertyToAllChildren = new(StringComparer.OrdinalIgnoreCase);
     private readonly Stack<string> _paths = new();
@@ -24,6 +21,10 @@ internal sealed class JsonConfigurationFileParser
     {
         AllowTrailingCommas = true,
     };
+
+    private JsonConfigurationFileParser()
+    {
+    }
 
     public static (Dictionary<string, string?> SingleValueData, Dictionary<string, string?> PropertyToAllChildren) Parse(Stream input)
         => new JsonConfigurationFileParser().ParseStream(input);

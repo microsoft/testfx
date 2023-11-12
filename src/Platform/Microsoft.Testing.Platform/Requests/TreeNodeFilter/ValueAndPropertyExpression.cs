@@ -10,15 +10,9 @@ namespace Microsoft.Testing.Platform.Requests;
 /// for instance <c>MethodName[Trait=Foo]</c>.
 /// </summary>
 [DebuggerDisplay("{Value}[{Properties}]")]
-internal sealed class ValueAndPropertyExpression : FilterExpression
+internal sealed class ValueAndPropertyExpression(FilterExpression value, FilterExpression properties) : FilterExpression
 {
-    public FilterExpression Value { get; }
+    public FilterExpression Value { get; } = value;
 
-    public FilterExpression Properties { get; }
-
-    public ValueAndPropertyExpression(FilterExpression value, FilterExpression properties)
-    {
-        Value = value;
-        Properties = properties;
-    }
+    public FilterExpression Properties { get; } = properties;
 }

@@ -11,14 +11,14 @@ public sealed class TestNodeUid(string value) : IEquatable<TestNodeUid>
         : throw new ArgumentNullException(nameof(value));
 #pragma warning restore RS0030 // Do not use banned APIs
 
-    public bool Equals(TestNodeUid? other)
-        => other?.Value == value;
-
     public static implicit operator string(TestNodeUid testNode)
         => testNode.Value;
 
     public static implicit operator TestNodeUid(string value)
         => new(value);
+
+    public bool Equals(TestNodeUid? other)
+        => other?.Value == value;
 
     public override bool Equals(object? obj)
         => Equals(obj as TestNodeUid);

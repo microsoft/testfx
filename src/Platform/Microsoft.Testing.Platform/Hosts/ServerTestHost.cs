@@ -67,10 +67,6 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     private IMessageHandler? _messageHandler;
     private TestHost.ClientInfo? _client;
 
-    public bool IsInitialized => _messageHandler is not null;
-
-    protected override bool RunTestApplicationLifecycleCallbacks => true;
-
     public ServerTestHost(
         ServiceProvider serviceProvider,
         Func<ServiceProvider,
@@ -127,6 +123,10 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         ServiceProvider.AddService(this);
     }
 
+    public bool IsInitialized => _messageHandler is not null;
+
+    protected override bool RunTestApplicationLifecycleCallbacks => true;
+
     private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
         => _logger.LogError($"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}");
 
@@ -134,61 +134,6 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     {
         e.SetObserved();
         _logger.LogError($"[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException] Unhandled exception: {e.Exception}");
-    }
-
-    private sealed class RpcInvocationState : IDisposable
-    {
-        private readonly object _cancellationTokenSourceLock = new();
-        private readonly CancellationTokenSource _cancellationTokenSource = new();
-        private volatile bool _isDisposed;
-
-        /// <remarks>
-        /// For outbound requests, this is populated with the response from the client.
-        /// For inbound requests, this is set when the invoked request is completed
-        /// in <see cref="HandleRequestAsync(RequestMessage, CancellationToken)"/>.
-        /// </remarks>
-        public TaskCompletionSource<object> CompletionSource { get; } = new TaskCompletionSource<object>();
-
-        // We don't expose directly the source because we need to synchronize the complete/cancel
-        public CancellationToken CancellationToken => _cancellationTokenSource.Token;
-
-        public AggregateException? CancelRequest()
-        {
-            if (!_isDisposed)
-            {
-                lock (_cancellationTokenSourceLock)
-                {
-                    if (!_isDisposed)
-                    {
-                        try
-                        {
-                            _cancellationTokenSource.Cancel();
-                        }
-
-                        // We don't want to crash the server if cancellation fails due to improper usage of token.
-                        // We report it to the caller for logging purposes.
-                        catch (AggregateException ex)
-                        {
-                            return ex;
-                        }
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        public void Dispose()
-        {
-            lock (_cancellationTokenSourceLock)
-            {
-                if (!_isDisposed)
-                {
-                    _cancellationTokenSource.Dispose();
-                    _isDisposed = true;
-                }
-            }
-        }
     }
 
     [MemberNotNull(nameof(_messageHandler))]
@@ -787,6 +732,61 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     _testApplicationCancellationTokenSource.CancellationToken,
                     rethrowException: false);
                 break;
+        }
+    }
+
+    private sealed class RpcInvocationState : IDisposable
+    {
+        private readonly object _cancellationTokenSourceLock = new();
+        private readonly CancellationTokenSource _cancellationTokenSource = new();
+        private volatile bool _isDisposed;
+
+        /// <remarks>
+        /// For outbound requests, this is populated with the response from the client.
+        /// For inbound requests, this is set when the invoked request is completed
+        /// in <see cref="HandleRequestAsync(RequestMessage, CancellationToken)"/>.
+        /// </remarks>
+        public TaskCompletionSource<object> CompletionSource { get; } = new TaskCompletionSource<object>();
+
+        // We don't expose directly the source because we need to synchronize the complete/cancel
+        public CancellationToken CancellationToken => _cancellationTokenSource.Token;
+
+        public AggregateException? CancelRequest()
+        {
+            if (!_isDisposed)
+            {
+                lock (_cancellationTokenSourceLock)
+                {
+                    if (!_isDisposed)
+                    {
+                        try
+                        {
+                            _cancellationTokenSource.Cancel();
+                        }
+
+                        // We don't want to crash the server if cancellation fails due to improper usage of token.
+                        // We report it to the caller for logging purposes.
+                        catch (AggregateException ex)
+                        {
+                            return ex;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        public void Dispose()
+        {
+            lock (_cancellationTokenSourceLock)
+            {
+                if (!_isDisposed)
+                {
+                    _cancellationTokenSource.Dispose();
+                    _isDisposed = true;
+                }
+            }
         }
     }
 }

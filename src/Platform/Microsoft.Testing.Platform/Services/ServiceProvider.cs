@@ -20,6 +20,18 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
 
     public bool AllowTestAdapterFrameworkRegistration { get; set; }
 
+    private static Type[] InternalOnlyExtensions => new[]
+    {
+        // TestHost
+        typeof(ITestApplicationLifecycleCallbacks),
+        typeof(IDataConsumer),
+        typeof(ITestSessionLifetimeHandler),
+
+        // TestHostControllers
+        typeof(ITestHostEnvironmentVariableProvider),
+        typeof(ITestHostProcessLifetimeHandler),
+    };
+
     public void AddService(object service, bool throwIfSameInstanceExit = true)
     {
         ArgumentGuard.Ensure(
@@ -123,16 +135,4 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
     // IServiceProvider
     public object? GetService(Type serviceType)
         => GetServiceInternal(serviceType, skipInternalOnlyExtensions: true);
-
-    private static Type[] InternalOnlyExtensions => new[]
-    {
-        // TestHost
-        typeof(ITestApplicationLifecycleCallbacks),
-        typeof(IDataConsumer),
-        typeof(ITestSessionLifetimeHandler),
-
-        // TestHostControllers
-        typeof(ITestHostEnvironmentVariableProvider),
-        typeof(ITestHostProcessLifetimeHandler),
-    };
 }

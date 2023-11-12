@@ -5,6 +5,12 @@ namespace Microsoft.Testing.Platform.Services;
 
 internal interface ITestApplicationModuleInfo
 {
+    bool IsCurrentTestApplicationHostDotnetMuxer { get; }
+
+    bool IsCurrentTestApplicationModuleExecutable { get; }
+
+    bool IsAppHostOrSingleFileOrNativeAot { get; }
+
     string GetCommandLineArguments();
 
     string GetCurrentTestApplicationFullPath();
@@ -14,10 +20,4 @@ internal interface ITestApplicationModuleInfo
     string[] GetCommandLineArgs();
 
     ExecutableInfo GetCurrentExecutableInfo();
-
-    bool IsCurrentTestApplicationHostDotnetMuxer { get; }
-
-    bool IsCurrentTestApplicationModuleExecutable { get; }
-
-    bool IsAppHostOrSingleFileOrNativeAot { get; }
 }

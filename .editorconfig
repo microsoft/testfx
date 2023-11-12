@@ -182,13 +182,18 @@ dotnet_diagnostic.CA1854.severity = warning
 # CA1806: Do not ignore method results
 dotnet_diagnostic.CA1806.severity = warning
 
-dotnet_diagnostic.RS0037.severity = none
+# SA1010: Opening square brackets should be spaced correctly
+# https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3687
+dotnet_diagnostic.SA1010.severity = none
 
 # SA1101: Prefix local calls with this
 dotnet_diagnostic.SA1101.severity = none
 
 # SA1117: Parameters should be on same line or separate lines
 dotnet_diagnostic.SA1117.severity = none
+
+# SA1124: Do not use regions
+dotnet_diagnostic.SA1124.severity = none
 
 # SA1202: Elements should be ordered by access
 dotnet_diagnostic.SA1202.severity = none
@@ -201,6 +206,9 @@ dotnet_diagnostic.SA1308.severity = none
 
 # SA1309: Field names should not begin with underscore
 dotnet_diagnostic.SA1309.severity = none
+
+# SA1402: File may only contain a single type
+dotnet_diagnostic.SA1402.severity = none
 
 # SA1600: Elements should be documented
 # Globally disabled but enabled for src folder
@@ -216,9 +224,8 @@ dotnet_diagnostic.SA1611.severity = none
 # SA1615: Element return value should be documented
 dotnet_diagnostic.SA1615.severity = none
 
-# SA1010: Opening square brackets should be spaced correctly
-# https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3687
-dotnet_diagnostic.SA1010.severity = none
+# SA1649: File name should match first type name
+dotnet_diagnostic.SA1649.severity = none
 
 # VSTHRD002 Avoid problematic synchronous waits
 dotnet_diagnostic.VSTHRD002.severity = none

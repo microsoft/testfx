@@ -8,13 +8,13 @@ internal sealed class PipeNameDescription : IDisposable
     private readonly bool _isDirectory;
     private bool _disposed;
 
-    public string Name { get; }
-
     public PipeNameDescription(string name, bool isDirectory)
     {
         Name = name;
         _isDirectory = isDirectory;
     }
+
+    public string Name { get; }
 
     public void Dispose() => Dispose(true);
 

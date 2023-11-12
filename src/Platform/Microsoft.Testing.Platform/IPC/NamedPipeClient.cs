@@ -22,16 +22,16 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
     private bool _disposed;
 
-    public string PipeName { get; }
-
-    public bool IsConnected => _namedPipeClientStream.IsConnected;
-
     public NamedPipeClient(string name)
     {
         ArgumentGuard.Ensure(name != null, nameof(name), "Pipe name cannot be null");
         _namedPipeClientStream = new(".", name, PipeDirection.InOut);
         PipeName = name;
     }
+
+    public string PipeName { get; }
+
+    public bool IsConnected => _namedPipeClientStream.IsConnected;
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
         => await _namedPipeClientStream.ConnectAsync(cancellationToken);

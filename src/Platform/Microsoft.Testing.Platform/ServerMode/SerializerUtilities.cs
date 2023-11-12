@@ -16,31 +16,6 @@ internal static class SerializerUtilities
     private static readonly Dictionary<Type, IObjectSerializer> Serializers;
     private static readonly Dictionary<Type, IObjectDeserializer> Deserializers;
 
-    public static IEnumerable<Type> SerializerTypes => Serializers.Keys;
-
-    public static IEnumerable<Type> DeserializerTypes => Deserializers.Keys;
-
-    public static T Deserialize<T>(IDictionary<string, object?> properties)
-        => (T)Deserialize(typeof(T), properties);
-
-    public static object Deserialize(Type t, IDictionary<string, object?> properties)
-    {
-        IObjectDeserializer deserializer = Deserializers[t];
-        return deserializer.DeserializeObject(properties) ?? throw new InvalidOperationException();
-    }
-
-    public static IDictionary<string, object?> Serialize<T>(T obj)
-        => Serialize(typeof(T), obj!);
-
-    public static IDictionary<string, object?> SerializeObject(object obj)
-        => Serialize(obj.GetType(), obj!);
-
-    public static IDictionary<string, object?> Serialize(Type t, object obj)
-    {
-        IObjectSerializer serializer = Serializers[t];
-        return serializer.SerializeObject(obj);
-    }
-
     /// <summary>
     /// Initializes static members of the <see cref="SerializerUtilities"/> class.
     /// Is a known fact that this serializer jsonite based suffer of boxing/unboxing issue but it's only for netstandard2.0 and we don't optimize for it for now.
@@ -691,6 +666,31 @@ internal static class SerializerUtilities
                 Message: errorMessage ?? string.Empty,
                 Data: data);
         });
+    }
+
+    public static IEnumerable<Type> SerializerTypes => Serializers.Keys;
+
+    public static IEnumerable<Type> DeserializerTypes => Deserializers.Keys;
+
+    public static T Deserialize<T>(IDictionary<string, object?> properties)
+        => (T)Deserialize(typeof(T), properties);
+
+    public static object Deserialize(Type t, IDictionary<string, object?> properties)
+    {
+        IObjectDeserializer deserializer = Deserializers[t];
+        return deserializer.DeserializeObject(properties) ?? throw new InvalidOperationException();
+    }
+
+    public static IDictionary<string, object?> Serialize<T>(T obj)
+        => Serialize(typeof(T), obj!);
+
+    public static IDictionary<string, object?> SerializeObject(object obj)
+        => Serialize(obj.GetType(), obj!);
+
+    public static IDictionary<string, object?> Serialize(Type t, object obj)
+    {
+        IObjectSerializer serializer = Serializers[t];
+        return serializer.SerializeObject(obj);
     }
 
     private static void ValidateJsonRpcHeader(IDictionary<string, object?> properties)

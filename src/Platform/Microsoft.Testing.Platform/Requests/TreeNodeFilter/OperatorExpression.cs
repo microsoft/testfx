@@ -4,15 +4,9 @@
 namespace Microsoft.Testing.Platform.Requests;
 
 // Allows to express an expression A & B or A | B
-internal sealed class OperatorExpression : FilterExpression
+internal sealed class OperatorExpression(FilterOperator op, IReadOnlyCollection<FilterExpression> subExpressions) : FilterExpression
 {
-    public FilterOperator Op { get; }
+    public FilterOperator Op { get; } = op;
 
-    public IReadOnlyCollection<FilterExpression> SubExpressions { get; }
-
-    public OperatorExpression(FilterOperator op, IReadOnlyCollection<FilterExpression> subExpressions)
-    {
-        Op = op;
-        SubExpressions = subExpressions;
-    }
+    public IReadOnlyCollection<FilterExpression> SubExpressions { get; } = subExpressions;
 }

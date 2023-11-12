@@ -15,6 +15,14 @@ public class CompositeExtensionFactory<T> : ICompositeExtensionFactory, ICloneab
     private readonly Func<T>? _factory;
     private T? _instance;
 
+    internal const /* for testing */ string ValidateCompositionErrorMessage =
+"""
+You cannot compose extensions that belong to different areas.
+Valid composition are:
+TestHostControllers: ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariableProvider
+TestHost: IDataConsumer, ITestApplicationLifetime
+""";
+
     public CompositeExtensionFactory(Func<IServiceProvider, T> factory)
     {
         _factoryWithServiceProvider = factory;
@@ -66,14 +74,6 @@ public class CompositeExtensionFactory<T> : ICompositeExtensionFactory, ICloneab
             throw new InvalidOperationException(ValidateCompositionErrorMessage);
         }
     }
-
-    internal const /* for testing */ string ValidateCompositionErrorMessage =
-"""
-You cannot compose extensions that belong to different areas.
-Valid composition are:
-TestHostControllers: ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariableProvider
-TestHost: IDataConsumer, ITestApplicationLifetime
-""";
 
     private bool ContainsTestHostExtension() => _instance is IDataConsumer or ITestSessionLifetimeHandler;
 

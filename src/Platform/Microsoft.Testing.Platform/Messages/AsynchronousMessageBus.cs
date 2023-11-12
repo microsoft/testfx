@@ -28,9 +28,6 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private bool _disabled;
 
-    public override IDataConsumer[] DataConsumerServices
-        => _dataConsumers;
-
     public AsynchronousMessageBus(
         IDataConsumer[] dataConsumers,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
@@ -45,6 +42,9 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
         _logger = loggerFactory.CreateLogger<AsynchronousMessageBus>();
         _isTraceLoggingEnabled = _logger.IsEnabled(LogLevel.Trace);
     }
+
+    public override IDataConsumer[] DataConsumerServices
+        => _dataConsumers;
 
     public override async Task InitAsync() => await BuildConsumerProducersAsync();
 

@@ -47,6 +47,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
+		global.json = global.json
 		Nuget.config = Nuget.config
 	EndProjectSection
 EndProject
@@ -64,8 +65,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eng", "eng", "{FE0DF239-0D8
 		eng\Analyzers.props = eng\Analyzers.props
 		eng\Install-WindowsSDK.ps1 = eng\Install-WindowsSDK.ps1
 		eng\stylecop.json = eng\stylecop.json
-		eng\stylecop.ruleset = eng\stylecop.ruleset
-		eng\stylecop.test.ruleset = eng\stylecop.test.ruleset
 		eng\verify-nupkgs.ps1 = eng\verify-nupkgs.ps1
 		eng\Version.Details.xml = eng\Version.Details.xml
 		eng\Versions.props = eng\Versions.props

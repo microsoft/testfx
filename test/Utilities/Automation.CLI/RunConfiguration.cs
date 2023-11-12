@@ -10,6 +10,12 @@ namespace Microsoft.MSTestV2.CLIAutomation;
 /// </summary>
 public class RunConfiguration
 {
+    public RunConfiguration(params string[] testAdapterPaths)
+    {
+        SettingsName = Constants.RunConfigurationSettingsName;
+        TestAdaptersPaths = testAdapterPaths;
+    }
+
     /// <summary>
     /// Gets or sets name of RunConfiguration settings node in RunSettings.
     /// </summary>
@@ -19,12 +25,6 @@ public class RunConfiguration
     /// Gets the paths at which engine should look for test adapters.
     /// </summary>
     public string[] TestAdaptersPaths { get; }
-
-    public RunConfiguration(params string[] testAdapterPaths)
-    {
-        SettingsName = Constants.RunConfigurationSettingsName;
-        TestAdaptersPaths = testAdapterPaths;
-    }
 
     /// <summary>
     /// Converts the setting to be an XmlElement.

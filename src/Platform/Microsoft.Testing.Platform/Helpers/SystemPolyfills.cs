@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 
 using Microsoft.Testing.Platform;
 
+#pragma warning disable SA1201 // Elements should appear in the correct order
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
 #pragma warning disable SA1403 // File may only contain a single namespace
 #pragma warning disable SA1502 // Element should not be on a single line
@@ -453,6 +454,16 @@ namespace System.Runtime.CompilerServices
     internal sealed class CompilerFeatureRequiredAttribute : Attribute
     {
         /// <summary>
+        /// The <see cref="FeatureName"/> used for the ref structs C# feature.
+        /// </summary>
+        public const string RefStructs = nameof(RefStructs);
+
+        /// <summary>
+        /// The <see cref="FeatureName"/> used for the required members C# feature.
+        /// </summary>
+        public const string RequiredMembers = nameof(RequiredMembers);
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="CompilerFeatureRequiredAttribute"/> class.
         /// </summary>
         /// <param name="featureName">The name of the feature to indicate.</param>
@@ -470,16 +481,6 @@ namespace System.Runtime.CompilerServices
         /// Gets or sets a value indicating whether if true, the compiler can choose to allow access to the location where this attribute is applied if it does not understand <see cref="FeatureName"/>.
         /// </summary>
         public bool IsOptional { get; set; }
-
-        /// <summary>
-        /// The <see cref="FeatureName"/> used for the ref structs C# feature.
-        /// </summary>
-        public const string RefStructs = nameof(RefStructs);
-
-        /// <summary>
-        /// The <see cref="FeatureName"/> used for the required members C# feature.
-        /// </summary>
-        public const string RequiredMembers = nameof(RequiredMembers);
     }
 
     /// <summary>

@@ -28,6 +28,28 @@ internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleI
         _process = process;
     }
 
+    public bool IsCurrentTestApplicationHostDotnetMuxer
+    {
+        get
+        {
+            string? processPath = GetProcessPath(false, _environment, _process);
+            return processPath is not null
+                && Path.GetFileNameWithoutExtension(processPath) == "dotnet";
+        }
+    }
+
+    public bool IsCurrentTestApplicationModuleExecutable
+    {
+        get
+        {
+            string? processPath = GetProcessPath(true, _environment, _process);
+            return processPath != ".dll";
+        }
+    }
+
+    public bool IsAppHostOrSingleFileOrNativeAot
+        => IsCurrentTestApplicationModuleExecutable && !IsCurrentTestApplicationHostDotnetMuxer;
+
 #if NETCOREAPP
     [UnconditionalSuppressMessage("SingleFile", "IL3000:Avoid accessing Assembly file path when publishing as a single file", Justification = "We handle the singlefile/native aot use case")]
 #endif
@@ -69,28 +91,6 @@ internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleI
 
         return _environment.CommandLine[_environment.CommandLine.IndexOf(executableFileName, StringComparison.InvariantCultureIgnoreCase)..];
     }
-
-    public bool IsCurrentTestApplicationHostDotnetMuxer
-    {
-        get
-        {
-            string? processPath = GetProcessPath(false, _environment, _process);
-            return processPath is not null
-                && Path.GetFileNameWithoutExtension(processPath) == "dotnet";
-        }
-    }
-
-    public bool IsCurrentTestApplicationModuleExecutable
-    {
-        get
-        {
-            string? processPath = GetProcessPath(true, _environment, _process);
-            return processPath != ".dll";
-        }
-    }
-
-    public bool IsAppHostOrSingleFileOrNativeAot
-        => IsCurrentTestApplicationModuleExecutable && !IsCurrentTestApplicationHostDotnetMuxer;
 
     private static string? GetProcessPath(bool throwOnNull, IEnvironment environment, IProcessHandler process)
 #if NETCOREAPP
