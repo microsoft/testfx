@@ -559,12 +559,12 @@ internal static class SerializerUtilities
             IDictionary<string, object?> testingCapabilities = GetRequiredPropertyFromJson<IDictionary<string, object?>>(properties, JsonRpcStrings.Testing);
             bool supportsDiscovery = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.SupportsDiscovery);
             bool multiRequestSupport = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.MultiRequestSupport);
-            bool vSTestProviderSupport = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.VSTestProviderSupport);
+            bool vstestProviderSupport = GetRequiredPropertyFromJson<bool>(testingCapabilities, JsonRpcStrings.VSTestProviderSupport);
 
             return new ServerCapabilities(new ServerTestingCapabilities(
-                supportsDiscovery: supportsDiscovery,
-                multiRequestSupport: multiRequestSupport,
-                vstestProviderSupport: vSTestProviderSupport));
+                SupportsDiscovery: supportsDiscovery,
+                MultiRequestSupport: multiRequestSupport,
+                VSTestProviderSupport: vstestProviderSupport));
         });
 
         Deserializers[typeof(DiscoverRequestArgs)] = new ObjectDeserializer<DiscoverRequestArgs>(properties =>
@@ -686,10 +686,10 @@ internal static class SerializerUtilities
                 : null;
 
             return new ErrorMessage(
-                id: id,
-                errorCode: code,
-                message: errorMessage ?? string.Empty,
-                data: data);
+                Id: id,
+                ErrorCode: code,
+                Message: errorMessage ?? string.Empty,
+                Data: data);
         });
     }
 
