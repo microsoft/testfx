@@ -35,6 +35,23 @@ public sealed class TestApplicationBuilder
     private Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>? _testFrameworkAdapterFactory;
     private Func<IServiceProvider, ITestFrameworkCapabilities>? _testFrameworkCapabilitiesFactory;
 
+    internal TestApplicationBuilder(
+        string[] args,
+        ApplicationLoggingState loggingState,
+        DateTimeOffset createBuilderStart,
+        IRuntime runtime,
+        TestApplicationOptions testApplicationOptions,
+        IUnhandledExceptionsHandler unhandledExceptionsHandler)
+    {
+        _testHostBuilder = TestHostBuilderFactory();
+        _args = args;
+        _createBuilderStart = createBuilderStart;
+        _loggingState = loggingState;
+        _runtime = runtime;
+        _testApplicationOptions = testApplicationOptions;
+        _unhandledExceptionsHandler = unhandledExceptionsHandler;
+    }
+
     public ITestHostManager TestHost => _testHostBuilder.TestHost;
 
     public ITestHostControllersManager TestHostControllers => _testHostBuilder.TestHostControllers;
@@ -54,23 +71,6 @@ public sealed class TestApplicationBuilder
     internal ITelemetryManager TelemetryManager => _testHostBuilder.Telemetry;
 
     internal IToolsManager Tools => _testHostBuilder.Tools;
-
-    internal TestApplicationBuilder(
-        string[] args,
-        ApplicationLoggingState loggingState,
-        DateTimeOffset createBuilderStart,
-        IRuntime runtime,
-        TestApplicationOptions testApplicationOptions,
-        IUnhandledExceptionsHandler unhandledExceptionsHandler)
-    {
-        _testHostBuilder = TestHostBuilderFactory();
-        _args = args;
-        _createBuilderStart = createBuilderStart;
-        _loggingState = loggingState;
-        _runtime = runtime;
-        _testApplicationOptions = testApplicationOptions;
-        _unhandledExceptionsHandler = unhandledExceptionsHandler;
-    }
 
     // Callers from the outside can substitute the builder and the services that are used
     // to build a testhost. We use this to provide a different builder for VSTest tests.

@@ -105,6 +105,10 @@ public sealed partial class PropertyBag
         }
     }
 
+    public int Count => _property is null
+        ? _testNodeStateProperty is null ? 0 : 1
+        : _property.Count + (_testNodeStateProperty is not null ? 1 : 0);
+
     public void Add(IProperty property)
     {
         ArgumentGuard.IsNotNull(property, nameof(property));
@@ -136,10 +140,6 @@ public sealed partial class PropertyBag
             }
         }
     }
-
-    public int Count => _property is null
-    ? _testNodeStateProperty is null ? 0 : 1
-    : _property.Count + (_testNodeStateProperty is not null ? 1 : 0);
 
     public bool Any<TProperty>()
         where TProperty : IProperty

@@ -14,16 +14,16 @@ internal interface IProcess
     bool HasExited { get; }
 
 #if NETCOREAPP
-    Task WaitForExitAsync();
-
-#endif
-    void WaitForExit();
-
-#if NETCOREAPP
     IMainModule? MainModule { get; }
 #else
     IMainModule MainModule { get; }
 #endif
+
+#if NETCOREAPP
+    Task WaitForExitAsync();
+
+#endif
+    void WaitForExit();
 
     void Kill();
 }

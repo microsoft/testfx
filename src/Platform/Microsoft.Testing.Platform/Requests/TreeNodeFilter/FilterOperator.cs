@@ -5,8 +5,23 @@ namespace Microsoft.Testing.Platform.Requests;
 
 internal enum FilterOperator
 {
+    /// <summary>
+    /// Negate the following expression.
+    /// </summary>
     Not,
+
+    /// <summary>
+    /// Combine the following expressions with a logical AND.
+    /// </summary>
     And,
+
+    /// <summary>
+    /// Combine the following expressions with a logical OR.
+    /// </summary>
     Or,
+
+    /// <summary>
+    /// Filter the following expression by the given property.
+    /// </summary>
     Equals,
 }

@@ -44,18 +44,6 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     private int? _testHostExitCode;
     private int? _testHostPID;
 
-    public string Uid => nameof(TestHostControllersTestHost);
-
-    public string Version => AppVersion.DefaultSemVer;
-
-    public string DisplayName => string.Empty;
-
-    public string Description => string.Empty;
-
-    public Task<bool> IsEnabledAsync() => Task.FromResult(false);
-
-    protected override bool RunTestApplicationLifecycleCallbacks => false;
-
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, IEnvironment environment,
         ILoggerFactory loggerFactory, IClock clock)
         : base(serviceProvider)
@@ -66,6 +54,18 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         _loggerFactory = loggerFactory;
         _logger = _loggerFactory.CreateLogger<TestHostControllersTestHost>();
     }
+
+    public string Uid => nameof(TestHostControllersTestHost);
+
+    public string Version => AppVersion.DefaultSemVer;
+
+    public string DisplayName => string.Empty;
+
+    public string Description => string.Empty;
+
+    protected override bool RunTestApplicationLifecycleCallbacks => false;
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 
     protected override async Task<int> InternalRunAsync()
     {

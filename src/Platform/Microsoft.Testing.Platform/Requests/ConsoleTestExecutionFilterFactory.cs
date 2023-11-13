@@ -10,6 +10,11 @@ internal sealed class ConsoleTestExecutionFilterFactory : ITestExecutionFilterFa
 {
     private readonly ICommandLineOptions _commandLineService;
 
+    public ConsoleTestExecutionFilterFactory(ICommandLineOptions commandLineService)
+    {
+        _commandLineService = commandLineService;
+    }
+
     public string Uid => nameof(ConsoleTestExecutionFilterFactory);
 
     public string Version => AppVersion.DefaultSemVer;
@@ -19,11 +24,6 @@ internal sealed class ConsoleTestExecutionFilterFactory : ITestExecutionFilterFa
     public string Description => nameof(ConsoleTestExecutionFilterFactory);
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public ConsoleTestExecutionFilterFactory(ICommandLineOptions commandLineService)
-    {
-        _commandLineService = commandLineService;
-    }
 
     public Task<(bool Success, ITestExecutionFilter? TestExecutionFilter)> TryCreateAsync() =>
         _commandLineService.TryGetOptionArgumentList(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter, out string[]? filter)

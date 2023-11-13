@@ -10,9 +10,9 @@ internal interface IClient : IDisposable
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
-    Task ConnectAsync(CancellationToken cancellationToken);
-
     bool IsConnected { get; }
+
+    Task ConnectAsync(CancellationToken cancellationToken);
 
     Task<TResponse> RequestReplyAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
         where TRequest : IRequest

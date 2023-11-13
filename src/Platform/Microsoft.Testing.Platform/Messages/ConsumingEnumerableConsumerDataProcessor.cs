@@ -15,8 +15,6 @@ internal class AsyncConsumerDataProcessor : IDisposable
     // The default underlying collection is a ConcurrentQueue<T> object, which provides first in, first out (FIFO) behavior.
     private readonly BlockingCollection<(IDataProducer DataProducer, IData Data)> _payloads = [];
 
-    public IDataConsumer DataConsumer { get; }
-
     private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
 
@@ -35,6 +33,8 @@ internal class AsyncConsumerDataProcessor : IDisposable
         _cancellationToken = cancellationToken;
         _consumeTask = task.Run(ConsumeAsync, cancellationToken);
     }
+
+    public IDataConsumer DataConsumer { get; }
 
     public Task PublishAsync(IDataProducer dataProducer, IData data)
     {

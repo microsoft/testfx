@@ -47,30 +47,6 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
     private bool _bannerDisplayed;
     private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
 
-    public Type[] DataTypesConsumed { get; } = new[]
-    {
-        typeof(TestNodeUpdateMessage),
-        typeof(SessionFileArtifact),
-        typeof(TestNodeFileArtifact),
-        typeof(FileArtifact),
-        typeof(TestRequestExecutionTimeInfo),
-    };
-
-    /// <inheritdoc />
-    public string Uid { get; } = nameof(ConsoleOutputDevice);
-
-    /// <inheritdoc />
-    public string Version { get; } = AppVersion.DefaultSemVer;
-
-    /// <inheritdoc />
-    public string DisplayName { get; } = "Test Platform Console Service";
-
-    /// <inheritdoc />
-    public string Description { get; } = "Test Platform default console service";
-
-    /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
     public ConsoleOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console, IRuntime runtime,
         IAsyncMonitor asyncMonitor, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process,
         bool isVSTestMode,
@@ -112,6 +88,30 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
 
         _testApplicationCancellationTokenSource.CancellationToken.Register(() => _console.WriteLine("Cancelling the test session..."));
     }
+
+    public Type[] DataTypesConsumed { get; } = new[]
+    {
+        typeof(TestNodeUpdateMessage),
+        typeof(SessionFileArtifact),
+        typeof(TestNodeFileArtifact),
+        typeof(FileArtifact),
+        typeof(TestRequestExecutionTimeInfo),
+    };
+
+    /// <inheritdoc />
+    public string Uid { get; } = nameof(ConsoleOutputDevice);
+
+    /// <inheritdoc />
+    public string Version { get; } = AppVersion.DefaultSemVer;
+
+    /// <inheritdoc />
+    public string DisplayName { get; } = "Test Platform Console Service";
+
+    /// <inheritdoc />
+    public string Description { get; } = "Test Platform default console service";
+
+    /// <inheritdoc />
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     private async Task LogDebugAsync(string message)
     {

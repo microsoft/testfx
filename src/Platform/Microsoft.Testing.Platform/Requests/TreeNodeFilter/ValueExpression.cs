@@ -8,15 +8,9 @@ namespace Microsoft.Testing.Platform.Requests;
 
 // An expression representing a single value.
 [DebuggerDisplay("{Regex}")]
-internal sealed class ValueExpression : FilterExpression
+internal sealed class ValueExpression(string value) : FilterExpression
 {
-    public string Value { get; }
+    public string Value { get; } = value;
 
-    public Regex Regex { get; }
-
-    public ValueExpression(string value)
-    {
-        Value = value;
-        Regex = new Regex($"^{value}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    }
+    public Regex Regex { get; } = new Regex($"^{value}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 }

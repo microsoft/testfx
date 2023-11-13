@@ -65,10 +65,10 @@ internal sealed class PerRequestServerDataConsumer : IDataConsumer, ITestSession
     /// <inheritdoc />
     public string Description => string.Empty;
 
+    public List<Artifact> Artifacts { get; } = [];
+
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-
-    public List<Artifact> Artifacts { get; } = [];
 
     public TestNodeStatistics GetTestNodeStatistics()
     {

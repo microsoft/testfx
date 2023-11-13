@@ -6,13 +6,48 @@ namespace Microsoft.Testing.Platform.Requests;
 // Kinds are sorted in precedence order.
 internal enum OperatorKind
 {
+    /// <summary>
+    /// Not an operator.
+    /// </summary>
     None,
+
+    /// <summary>
+    /// A separator operator, used to separate multiple filters.
+    /// </summary>
     Separator,
+
+    /// <summary>
+    /// An opening brace operator.
+    /// </summary>
     LeftBrace,
+
+    /// <summary>
+    /// A closing brace operator.
+    /// </summary>
     RightBrace,
+
+    /// <summary>
+    /// Left hand side of a filter expression.
+    /// </summary>
     LeftParameter,
+
+    /// <summary>
+    /// Right hand side of a filter expression.
+    /// </summary>
     RightParameter,
+
+    /// <summary>
+    /// Filter equals operator.
+    /// </summary>
     FilterEquals,
+
+    /// <summary>
+    /// Operator used for combining multiple filters with a logical OR.
+    /// </summary>
     Or,
+
+    /// <summary>
+    /// Operator used for combining multiple filters with a logical AND.
+    /// </summary>
     And,
 }

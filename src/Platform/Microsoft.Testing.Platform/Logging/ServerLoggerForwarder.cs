@@ -36,6 +36,8 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
     private readonly BlockingCollection<ServerLogMessage>? _asyncLogs;
 #endif
 
+    private bool _isDisposed;
+
     public ServerLoggerForwarder(IServiceProvider services, LogLevel logLevel)
     {
         _services = services;
@@ -156,8 +158,6 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
         }
     }
 #endif
-
-    private bool _isDisposed;
 
     public void Dispose()
     {

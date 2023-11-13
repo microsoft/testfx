@@ -26,10 +26,6 @@ internal sealed class SingleConnectionNamedPipeServer : NamedPipeBase, IServer
     private Task? _loopTask;
     private bool _disposed;
 
-    public PipeNameDescription PipeName { get; private set; }
-
-    public bool WasConnected { get; private set; }
-
     public SingleConnectionNamedPipeServer(
         PipeNameDescription pipeNameDescription,
         Func<IRequest, Task<IResponse>> callback,
@@ -57,6 +53,10 @@ internal sealed class SingleConnectionNamedPipeServer : NamedPipeBase, IServer
         : this(GetPipeName(name), callback, environment, logger, task, cancellationToken)
     {
     }
+
+    public PipeNameDescription PipeName { get; private set; }
+
+    public bool WasConnected { get; private set; }
 
     public async Task WaitConnectionAsync(CancellationToken cancellationToken)
     {

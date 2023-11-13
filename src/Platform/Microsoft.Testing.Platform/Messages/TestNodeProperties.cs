@@ -3,6 +3,8 @@
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
+#pragma warning disable SA1201 // Elements should appear in the correct order
+
 public interface IProperty
 {
 }

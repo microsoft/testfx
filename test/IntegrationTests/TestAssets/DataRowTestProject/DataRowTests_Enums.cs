@@ -1,13 +1,88 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace DataRowTestProject;
 
 [TestClass]
+[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1602:Enumeration items should be documented", Justification = "Test type")]
 public class DataRowTests_Enums
 {
+    public enum SByteEnum : sbyte
+    {
+        Alfa = sbyte.MinValue,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum ByteEnum : byte
+    {
+        Alfa,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum ShortEnum : short
+    {
+        Alfa = byte.MaxValue + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum UShortEnum : ushort
+    {
+        Alfa = short.MaxValue + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum IntEnum
+    {
+        Alfa = ushort.MaxValue + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum UIntEnum : uint
+    {
+        Alfa = ((uint)int.MaxValue) + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum LongEnum : long
+    {
+        Alfa = ((long)uint.MaxValue) + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
+    public enum ULongEnum : ulong
+    {
+        Alfa = ((ulong)long.MaxValue) + 1,
+        Beta,
+        Gamma,
+        Delta,
+        Epsilon,
+    }
+
     #region Basic Tests
     [TestMethod]
     [DataRow(SByteEnum.Alfa)]
@@ -174,76 +249,4 @@ public class DataRowTests_Enums
         Assert.IsTrue(true);
     }
     #endregion
-
-    public enum SByteEnum : sbyte
-    {
-        Alfa = sbyte.MinValue,
-        Beta,
-        Gamma,
-        Delta,
-        Epsilon,
-    }
-
-    public enum ByteEnum : byte
-    {
-        Alfa,
-        Beta,
-        Gamma,
-        Delta,
-        Epsilon,
-    }
-
-    public enum ShortEnum : short
-    {
-        Alfa = byte.MaxValue + 1,
-        Beta,
-        Gamma,
-        Delta,
-        Epsilon,
-    }
-
-    public enum UShortEnum : ushort
-    {
-        Alfa = short.MaxValue + 1,
-        Beta,
-        Gamma,
-        Delta,
-        Epsilon,
-    }
-
-    public enum IntEnum
-    {
-        Alfa = ushort.MaxValue + 1,
-        Beta,
-        Gamma,
-        Delta,
-        Epsilon,
-    }
-
-    public enum UIntEnum : uint
-    {
-        Alfa = ((uint)int.MaxValue) + 1,
-        Beta,
-        Gamma,
-        Delta,
-        Epsilon,
-    }
-
-    public enum LongEnum : long
-    {
-        Alfa = ((long)uint.MaxValue) + 1,
-        Beta,
-        Gamma,
-        Delta,
-        Epsilon,
-    }
-
-    public enum ULongEnum : ulong
-    {
-        Alfa = ((ulong)long.MaxValue) + 1,
-        Beta,
-        Gamma,
-        Delta,
-        Epsilon,
-    }
 }

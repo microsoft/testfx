@@ -20,8 +20,6 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 {
     private readonly TextOutputDeviceData _textOutputDeviceData = new(string.Empty);
 
-    public string[] Arguments { get; }
-
     private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders;
     private readonly IRuntime _runtime;
     private readonly IRuntimeFeature _runtimeFeature;
@@ -38,16 +36,6 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
 
     private readonly CommandLineParseResult _parseResult;
 
-    public ICommandLineOptionsProvider[] ExtensionsCommandLineOptionsProviders { get; }
-
-    public string Uid => nameof(CommandLineHandler);
-
-    public string Version => AppVersion.DefaultSemVer;
-
-    public string DisplayName => string.Empty;
-
-    public string Description => string.Empty;
-
     public CommandLineHandler(string[] args, CommandLineParseResult parseResult, ICommandLineOptionsProvider[] extensionsCommandLineOptionsProviders,
         ICommandLineOptionsProvider[] systemCommandLineOptionsProviders, IRuntime runtime, IRuntimeFeature runtimeFeature,
         IPlatformOutputDevice platformOutputDevice, IEnvironment environment, IProcessHandler process)
@@ -62,6 +50,18 @@ internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOpti
         _environment = environment;
         _process = process;
     }
+
+    public string[] Arguments { get; }
+
+    public ICommandLineOptionsProvider[] ExtensionsCommandLineOptionsProviders { get; }
+
+    public string Uid => nameof(CommandLineHandler);
+
+    public string Version => AppVersion.DefaultSemVer;
+
+    public string DisplayName => string.Empty;
+
+    public string Description => string.Empty;
 
     public async Task<bool> ParseAndValidateAsync()
     {

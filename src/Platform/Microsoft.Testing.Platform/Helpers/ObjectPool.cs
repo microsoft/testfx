@@ -42,6 +42,8 @@ namespace Microsoft.Testing.Platform.Helpers;
 #pragma warning disable SA1214 // Readonly fields should appear before non-readonly fields
 [ExcludeFromCodeCoverage]
 #pragma warning disable SA1618 // Generic type parameters should be documented
+
+#pragma warning disable SA1201 // Elements should appear in the correct order
 internal sealed class ObjectPool<T>
 #pragma warning restore SA1618 // Generic type parameters should be documented
     where T : class

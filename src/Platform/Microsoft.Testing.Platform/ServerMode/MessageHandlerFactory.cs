@@ -18,14 +18,6 @@ internal sealed partial class ServerModeManager
         private readonly int _port;
         private readonly IOutputDevice _outputDevice;
 
-        public string Uid => nameof(MessageHandlerFactory);
-
-        public string Version => AppVersion.DefaultSemVer;
-
-        public string DisplayName => nameof(MessageHandlerFactory);
-
-        public string Description => nameof(MessageHandlerFactory);
-
         public MessageHandlerFactory(
             string host,
             int port,
@@ -45,6 +37,14 @@ internal sealed partial class ServerModeManager
             _port = port ?? 0;
             _outputDevice = outputDevice;
         }
+
+        public string Uid => nameof(MessageHandlerFactory);
+
+        public string Version => AppVersion.DefaultSemVer;
+
+        public string DisplayName => nameof(MessageHandlerFactory);
+
+        public string Description => nameof(MessageHandlerFactory);
 
         public Task<IMessageHandler> CreateMessageHandlerAsync(CancellationToken cancellationToken)
             => _host is not null

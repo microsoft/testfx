@@ -16,17 +16,17 @@ public readonly struct ArgumentArity(int min, int max) : IEquatable<ArgumentArit
 
     public int Max { get; } = max;
 
-    public bool Equals(ArgumentArity other)
-        => Min == other.Min && Max == other.Max;
-
-    public override bool Equals(object? obj)
-        => obj is ArgumentArity argumentArity && Equals(argumentArity);
-
     public static bool operator ==(ArgumentArity left, ArgumentArity right)
         => left.Equals(right);
 
     public static bool operator !=(ArgumentArity left, ArgumentArity right)
         => !(left == right);
+
+    public bool Equals(ArgumentArity other)
+        => Min == other.Min && Max == other.Max;
+
+    public override bool Equals(object? obj)
+        => obj is ArgumentArity argumentArity && Equals(argumentArity);
 
     public override int GetHashCode()
     {

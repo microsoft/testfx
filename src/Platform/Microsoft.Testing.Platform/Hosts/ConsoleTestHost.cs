@@ -40,8 +40,6 @@ internal sealed class ConsoleTestHost : CommonTestHost
     private readonly TestFrameworkManager _testFrameworkManager;
     private readonly TestHostManager _testHostManager;
 
-    protected override bool RunTestApplicationLifecycleCallbacks => true;
-
     public ConsoleTestHost(
         ServiceProvider serviceProvider,
         Func<ServiceProvider,
@@ -65,6 +63,8 @@ internal sealed class ConsoleTestHost : CommonTestHost
         _logger = serviceProvider.GetLoggerFactory().CreateLogger<ConsoleTestHost>();
         _clock = serviceProvider.GetClock();
     }
+
+    protected override bool RunTestApplicationLifecycleCallbacks => true;
 
     protected override async Task<int> InternalRunAsync()
     {

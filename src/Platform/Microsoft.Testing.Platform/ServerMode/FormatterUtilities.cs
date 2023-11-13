@@ -17,13 +17,13 @@ internal sealed class FormatterUtilities
 
     internal sealed class MessageFormatter : IMessageFormatter
     {
+        public string Id => "Jsonite";
+
         public T Deserialize<T>(string serializedUtf8Content)
             => SerializerUtilities.Deserialize<T>((Jsonite.JsonObject)Jsonite.Json.Deserialize(serializedUtf8Content));
 
         public Task<string> SerializeAsync(object obj)
             => Task.FromResult(Jsonite.Json.Serialize(SerializerUtilities.Serialize(obj.GetType(), obj)));
-
-        public string Id => "Jsonite";
     }
 #else
     internal static IMessageFormatter CreateFormatter() => new MessageFormatter();

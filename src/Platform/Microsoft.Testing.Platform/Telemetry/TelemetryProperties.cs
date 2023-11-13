@@ -11,6 +11,9 @@ internal static class TelemetryProperties
 
     public const string VersionValue = "18";
 
+    public const string True = "true";
+    public const string False = "false";
+
     public static class HostProperties
     {
         public const string ApplicationModePropertyName = "application mode";
@@ -106,7 +109,4 @@ internal static class TelemetryProperties
         public const string TestHostControllers = "TestHostControllers";
         public const string Tool = "Tool";
     }
-
-    public const string True = "true";
-    public const string False = "false";
 }

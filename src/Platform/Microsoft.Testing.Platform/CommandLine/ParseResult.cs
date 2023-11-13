@@ -9,8 +9,6 @@ internal sealed class CommandLineParseResult : IEquatable<CommandLineParseResult
 {
     public const char OptionPrefix = '-';
 
-    public static CommandLineParseResult Empty => new(null, [], [], []);
-
     public CommandLineParseResult(string? toolName, OptionRecord[] options, string[] errors, string[] originalArguments)
     {
         ToolName = toolName;
@@ -18,6 +16,8 @@ internal sealed class CommandLineParseResult : IEquatable<CommandLineParseResult
         Errors = errors;
         OriginalArguments = originalArguments;
     }
+
+    public static CommandLineParseResult Empty => new(null, [], [], []);
 
     public string? ToolName { get; set; }
 
