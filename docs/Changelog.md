@@ -25,34 +25,31 @@ See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.4...v3.1.0)
 ### Added
 
 * Add AsyncLocal warning [#1710](https://github.com/Microsoft/testfx/pull/1710)
-* DeploymentItem: add test for file deployment using Windows/Linux path… [#1709](https://github.com/Microsoft/testfx/pull/1709)
-* Onboarding to GitOps.ResourceManagement [#1688](https://github.com/Microsoft/testfx/pull/1688)
-* Enable TestContext.AddResultFile API for WinUI [#1593](https://github.com/Microsoft/testfx/pull/1593)
 * Adding warning that AssemblyResolution works only with .NET Frameworks [#1669](https://github.com/Microsoft/testfx/pull/1669)
+* Onboarding to GitOps.ResourceManagement [#1688](https://github.com/Microsoft/testfx/pull/1688)
 * Document data source configuration [#1595](https://github.com/Microsoft/testfx/pull/1595)
+* Enable TestContext.AddResultFile API for WinUI [#1593](https://github.com/Microsoft/testfx/pull/1593)
 * Add documentation for [DeploymentItem] attribute [#1581](https://github.com/Microsoft/testfx/pull/1581)
+* Docs: add links to MS learning docs [#1577](https://github.com/Microsoft/testfx/pull/1577)
 * Document LegacySettings- support as discontinued delta from MSTestV1 [#1571](https://github.com/Microsoft/testfx/pull/1571)
 * Add link to MSTest element settings in the Documentation page [#1552](https://github.com/Microsoft/testfx/pull/1552)
+* Add TreatDiscoveryWarningsAsErrors setting [#1547](https://github.com/Microsoft/testfx/pull/1547)
 
 ### Changed
 
+* Rename Helper.cs into Guard.cs
+* Update Changelog.md
 * Bump TestPlatform to 17.6.0 [#1666](https://github.com/Microsoft/testfx/pull/1666)
-* Use embedded symbols [#1601](https://github.com/Microsoft/testfx/pull/1601)
 
 ### Fixed
 
-* Prevent swallowing inner exception in async error [#1712](https://github.com/Microsoft/testfx/pull/1712)
 * Avoid crash when method is not found using FQN [#1714](https://github.com/Microsoft/testfx/pull/1714)
+* Prevent swallowing inner exception in async error [#1712](https://github.com/Microsoft/testfx/pull/1712)
+* DeploymentItem: add test for file deployment using Windows/Linux path [#1710](https://github.com/Microsoft/testfx/pull/1710)
 * Fix parallel output isolation [#1705](https://github.com/Microsoft/testfx/pull/1705)
 * Fix DeploymentItem to support trailing directory separator [#1703](https://github.com/Microsoft/testfx/pull/1703)
-* Fix Logger.LogMessage to not call string.Format when no arguments are… [#1702](https://github.com/Microsoft/testfx/pull/1702)
-* TestContext: Unify SetOutcome behavior across all target frameworks [#1428](https://github.com/Microsoft/testfx/pull/1428)
+* Fix Logger.LogMessage to not call string.Format when no arguments are provided [#1702](https://github.com/Microsoft/testfx/pull/1702)
 * Update AreEqual/AreNotEqual XML documentation [#1563](https://github.com/Microsoft/testfx/pull/1563)
-* Fix bug with iterating over loaded modules [#1501](https://github.com/Microsoft/testfx/pull/1501)
-* Fix collecting warning messages in DeploymentUtility [#1500](https://github.com/Microsoft/testfx/pull/1500)
-* Fix cleanup inheritance calls [#1475](https://github.com/Microsoft/testfx/pull/1475)
-* Fix some race condition issue [#1477](https://github.com/Microsoft/testfx/pull/1477)
-* Fix class/assembly cleanups log collect and attachment (#1470) [#1472](https://github.com/Microsoft/testfx/pull/1472)
 
 ### New Contributors
 
@@ -86,13 +83,16 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.3...v3.0.4)
 
 See full log [here](https://github.com/Microsoft/testfx/compare/v3.0.2...v3.0.3)
 
+### Changed
+
+* Use Test Platform 17.4.1 instead of 17.4.0
+
 ### Fixed
 
 * Revert change for timeout test execution [#1675](https://github.com/Microsoft/testfx/pull/1675)
 * Fix assembly resolution error [#1670](https://github.com/Microsoft/testfx/pull/1670)
 * Revert usage of System.Collections.Immutable for TypeCache
 * Remove DataRowAttribute argument count limitation [#1646](https://github.com/Microsoft/testfx/pull/1646)
-* Use Test Platform 17.4.1 instead of 17.4.0
 
 ### Artifacts
 
@@ -120,8 +120,8 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0...v3.0.1)
 
 ### Fixed
 
-* Fix cleanup inheritance calls [#1475](https://github.com/microsoft/testfx/pull/1475)
 * Fix some race condition issue [#1477](https://github.com/microsoft/testfx/pull/1477)
+* Fix cleanup inheritance calls [#1475](https://github.com/microsoft/testfx/pull/1475)
 * Fix class/assembly cleanups log collect and attachment [#1470](https://github.com/microsoft/testfx/pull/1470)
 * Allow most APIs to accept nullable values or arguments [#1467](https://github.com/microsoft/testfx/pull/1467)
 * Add console, trace and debug writeline calls to the lifecycle integration tests [#1464](https://github.com/microsoft/testfx/pull/1464)
