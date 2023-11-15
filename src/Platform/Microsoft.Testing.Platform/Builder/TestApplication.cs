@@ -16,7 +16,7 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.Builder;
 
-public sealed class TestApplication : IDisposable
+public sealed class TestApplication : ITestApplication
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable
@@ -43,7 +43,7 @@ public sealed class TestApplication : IDisposable
 
     internal static int MaxNumberOfBuilders { get; set; } = int.MaxValue;
 
-    public static Task<TestApplicationBuilder> CreateServerModeBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
+    public static Task<ITestApplicationBuilder> CreateServerModeBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
     {
         if (args.Contains($"--{PlatformCommandLineProvider.ServerOptionKey}") || args.Contains($"-{PlatformCommandLineProvider.ServerOptionKey}"))
         {
@@ -54,7 +54,7 @@ public sealed class TestApplication : IDisposable
         return CreateBuilderAsync(args.Append($"--{PlatformCommandLineProvider.ServerOptionKey}").ToArray(), testApplicationOptions);
     }
 
-    public static async Task<TestApplicationBuilder> CreateBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
+    public static async Task<ITestApplicationBuilder> CreateBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
     {
         // We get the time to save it in the logs for testcontrollers troubleshooting.
         SystemClock systemClock = new();
@@ -95,7 +95,7 @@ public sealed class TestApplication : IDisposable
         }
 
         // All checks are fine, create the TestApplication.
-        return new(args, loggingState, createBuilderStart, systemRuntime, testApplicationOptions, s_unhandledExceptionHandler);
+        return new TestApplicationBuilder(args, loggingState, createBuilderStart, systemRuntime, testApplicationOptions, s_unhandledExceptionHandler);
     }
 
     private static async Task LogInformationAsync(

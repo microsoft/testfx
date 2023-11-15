@@ -9,6 +9,6 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal static class TestApplicationBuilderExtensions
 {
-    public static void AddTreeNodeFilterService(this TestApplicationBuilder testApplicationBuilder, IExtension extension)
+    public static void AddTreeNodeFilterService(this ITestApplicationBuilder testApplicationBuilder, IExtension extension)
         => testApplicationBuilder.CommandLine.AddProvider(() => new TreeNodeFilterCommandLineOptionsProvider(extension));
 }
