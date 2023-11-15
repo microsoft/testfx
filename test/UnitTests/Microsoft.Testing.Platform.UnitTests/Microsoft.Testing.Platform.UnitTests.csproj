@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);net462</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <WarningsAsErrors>false</WarningsAsErrors>
+    <PlatformTarget>x64</PlatformTarget>
+    <UseVSTestRunner>false</UseVSTestRunner>
+    <ImplicitUsings>true</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- Testing configuration -->
+  <PropertyGroup>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
+    <EnableCodeCoverage>false</EnableCodeCoverage>
+    <DefineConstants Condition=" '$(EnableCodeCoverage)' == 'True' ">$(DefineConstants);ENABLE_CODECOVERAGE</DefineConstants>
+  </PropertyGroup>
+
+  <!-- start netstandard2.0 polyfill -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
+    <Compile Remove="ServerMode/JsonTests.cs" />
+  </ItemGroup>
+  <!-- end netstandard2.0 polyfill -->
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCore)" PrivateAssets="All" />
+    <PackageReference Include="Moq" Version="$(MoqVersion)" />
+    <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform.Extensions.CodeCoverage" Version="$(MicrosoftTestingPlatformExtensionsCodeCoverageVersion)" Condition=" '$(EnableCodeCoverage)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Platform.Extensions.HangDump" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform.Extensions.Telemetry" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="testsbaseline.netfx.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="testsbaseline.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Microsoft.Testing.Platform.UnitTests.launcher.config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
