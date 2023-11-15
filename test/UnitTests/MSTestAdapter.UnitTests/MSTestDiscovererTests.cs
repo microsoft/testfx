@@ -207,7 +207,7 @@ public class MSTestDiscovererTests : TestContainer
     public void AreValidSourcesShouldThrowIfPlatformsValidSourceExtensionsIsNull()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);
-        void A() => MSTestDiscoverer.AreValidSources(new List<string> { "dummy" });
+        void A() => MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy" });
         var ex = VerifyThrows(A);
         Verify(ex.GetType() == typeof(ArgumentNullException));
     }
@@ -215,18 +215,18 @@ public class MSTestDiscovererTests : TestContainer
     public void AreValidSourcesShouldReturnFalseIfValidSourceExtensionsIsEmpty()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { });
-        Verify(!MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
+        Verify(!MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }));
     }
 
     public void AreValidSourcesShouldReturnTrueForValidSourceExtensions()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".te" });
-        Verify(MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
+        Verify(MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }));
     }
 
     public void AreValidSourcesShouldReturnFalseForInvalidSourceExtensions()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".nte", ".tep" });
-        Verify(!MSTestDiscoverer.AreValidSources(new List<string> { "dummy.te" }));
+        Verify(!MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy.te" }));
     }
 }

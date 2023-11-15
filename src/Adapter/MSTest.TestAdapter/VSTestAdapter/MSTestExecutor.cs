@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 
@@ -40,30 +37,10 @@ public class MSTestExecutor : ITestExecutor
     public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
     {
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("MSTestExecutor.RunTests: Running tests from testcases.");
-
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
         ValidateArg.NotNullOrEmpty(tests, "tests");
 
-        if (!MSTestDiscoverer.AreValidSources(from test in tests select test.Source))
-        {
-            throw new NotSupportedException();
-        }
-
-        // Populate the runsettings.
-        try
-        {
-            // No need to call ValidateSettings after PopulateSettings here as we know this path follows discover path
-            // which would have printed the warning already.
-            MSTestSettings.PopulateSettings(runContext);
-        }
-        catch (AdapterSettingsException ex)
-        {
-            frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
-            return;
-        }
-
-        // Scenarios that include testsettings or forcing a run via the legacy adapter are currently not supported in MSTestAdapter.
-        if (MSTestSettings.IsLegacyScenario(frameworkHandle))
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(from test in tests select test.Source, runContext, frameworkHandle, false))
         {
             return;
         }
@@ -79,25 +56,7 @@ public class MSTestExecutor : ITestExecutor
         ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
         ValidateArg.NotNullOrEmpty(sources, "sources");
 
-        if (!MSTestDiscoverer.AreValidSources(sources))
-        {
-            throw new NotSupportedException();
-        }
-
-        // Populate the runsettings.
-        try
-        {
-            MSTestSettings.PopulateSettings(runContext);
-            MSTestSettings.ValidateSettings(frameworkHandle);
-        }
-        catch (AdapterSettingsException ex)
-        {
-            frameworkHandle.SendMessage(TestMessageLevel.Error, ex.Message);
-            return;
-        }
-
-        // Scenarios that include testsettings or forcing a run via the legacy adapter are currently not supported in MSTestAdapter.
-        if (MSTestSettings.IsLegacyScenario(frameworkHandle))
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(sources, runContext, frameworkHandle, true))
         {
             return;
         }
@@ -110,7 +69,5 @@ public class MSTestExecutor : ITestExecutor
     }
 
     public void Cancel()
-    {
-        _cancellationToken?.Cancel();
-    }
+        => _cancellationToken?.Cancel();
 }
