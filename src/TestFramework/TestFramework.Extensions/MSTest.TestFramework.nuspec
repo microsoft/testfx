@@ -43,7 +43,7 @@
     <file src="netcoreapp3.1\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.xml" target="lib\netcoreapp3.1\" />
 
     <!-- net6.0 -->
-    <file src="$RepoRoot$src\Adapter\Build\Net6\MSTest.TestFramework.targets" target="build\net6.0\" />
+    <file src="$RepoRoot$src\Adapter\Build\NetWithWinUI\MSTest.TestFramework.targets" target="build\net6.0\" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.dll" target="lib\net6.0\" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.TestFramework.xml" target="lib\net6.0\" />
     <file src="net6.0\**\Microsoft.VisualStudio.TestPlatform.TestFramework.resources.dll" target="lib\net6.0\" />

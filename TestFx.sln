@@ -30,7 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestUtilities", "TestUtilit
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{3B88BD67-C767-466D-8C9C-C14681544B84}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{3B88BD67-C767-466D-8C9C-C14681544B84}"
 	ProjectSection(SolutionItems) = preProject
 		src\Adapter\Build\Desktop\MSTest.TestAdapter.props = src\Adapter\Build\Desktop\MSTest.TestAdapter.props
 		src\Adapter\Build\Desktop\MSTest.TestAdapter.targets = src\Adapter\Build\Desktop\MSTest.TestAdapter.targets
@@ -38,7 +38,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{3B88
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Universal", "Universal", "{89314305-F815-4969-9B1B-8AEDE109DEC4}"
 	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\Universal\MSTest.TestAdapter.props = src\Adapter\Build\Universal\MSTest.TestAdapter.props
 		src\Adapter\Build\Universal\MSTest.TestAdapter.targets = src\Adapter\Build\Universal\MSTest.TestAdapter.targets
 	EndProjectSection
 EndProject
@@ -75,14 +74,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{92F8
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FxExtensibility", "samples\FxExtensibility\FxExtensibility.csproj", "{A82770C0-1FF5-43C7-8790-471D5E4F8D6E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetCore", "NetCore", "{D11C6664-1C4E-48F0-AA92-7F5BADC6F82C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetWithWinUI", "NetWithWinUI", "{35D010CC-CDF2-4115-BCFB-E2E3D21C1055}"
 	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\NetCore\MSTest.TestAdapter.props = src\Adapter\Build\NetCore\MSTest.TestAdapter.props
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Net6", "Net6", "{35D010CC-CDF2-4115-BCFB-E2E3D21C1055}"
-	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\Net6\MSTest.TestAdapter.props = src\Adapter\Build\Net6\MSTest.TestAdapter.props
 		src\Adapter\Build\Net6\MSTest.TestAdapter.targets = src\Adapter\Build\Net6\MSTest.TestAdapter.targets
 		src\Adapter\Build\Net6\MSTest.TestFramework.targets = src\Adapter\Build\Net6\MSTest.TestFramework.targets
 	EndProjectSection
@@ -372,7 +365,6 @@ Global
 		{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2} = {BB874DF1-44FE-415A-B634-A6B829107890}
 		{FE0DF239-0D81-46CA-9277-3342009E83F9} = {929A3EDE-893B-4801-82BA-01FD947291CB}
 		{A82770C0-1FF5-43C7-8790-471D5E4F8D6E} = {92F8E9A2-903E-4025-99BC-7DC478D5466D}
-		{D11C6664-1C4E-48F0-AA92-7F5BADC6F82C} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 		{35D010CC-CDF2-4115-BCFB-E2E3D21C1055} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 		{BB874DF1-44FE-415A-B634-A6B829107890} = {A9596292-7E67-4566-9096-143DDAA4E8D8}
 		{FF69998C-C661-4EF0-804B-845675B3602E} = {A9596292-7E67-4566-9096-143DDAA4E8D8}
