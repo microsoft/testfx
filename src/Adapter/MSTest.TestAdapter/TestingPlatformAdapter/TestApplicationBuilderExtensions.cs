@@ -8,19 +8,20 @@ using System.Reflection;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.MSTest;
+using Microsoft.Testing.Platform.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Platform.Extensions.VSTestBridge.Helpers;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public static class TestApplicationBuilderExtensions
 {
-    public static void AddMSTest(this TestApplicationBuilder testApplicationBuilder, Func<IEnumerable<Assembly>> getTestAssemblies)
+    public static void AddMSTest(this ITestApplicationBuilder testApplicationBuilder, Func<IEnumerable<Assembly>> getTestAssemblies)
     {
         MSTestExtension extension = new();
         testApplicationBuilder.AddRunSettingsService(extension);
         testApplicationBuilder.AddTestCaseFilterService(extension);
         testApplicationBuilder.RegisterTestFramework(
-            _ => new TestFrameworkCapabilities(), // TODO: Pass 'new VSTestBridgeExtensionBaseCapabilities()' when it's available.
+            _ => new TestFrameworkCapabilities(new VSTestBridgeExtensionBaseCapabilities()),
             (capabilities, serviceProvider) => new MSTestBridgedTestFramework(extension, getTestAssemblies, serviceProvider, capabilities));
     }
 }
