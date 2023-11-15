@@ -3,8 +3,6 @@
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   <Import Project="$(RepositoryEngineeringDir)Analyzers.props" />
 
-  <Import Condition="Exists('$(MSBuildThisFileDirectory)\..\MSTestSubmodule.props')" Project="$(MSBuildThisFileDirectory)\..\MSTestSubmodule.props" />
-
   <PropertyGroup>
     <IsSourceProject Condition="$([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src/')) OR $([MSBuild]::MakeRelative($(RepoRoot), $(MSBuildProjectFullPath)).StartsWith('src\'))">true</IsSourceProject>
   </PropertyGroup>
