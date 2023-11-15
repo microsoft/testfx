@@ -22,7 +22,7 @@ namespace Microsoft.Testing.Platform.Builder;
 /// <summary>
 /// A builder for test applications and services.
 /// </summary>
-public sealed class TestApplicationBuilder
+internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 {
     private readonly string[] _args;
     private readonly DateTimeOffset _createBuilderStart;
@@ -58,7 +58,7 @@ public sealed class TestApplicationBuilder
 
     public ICommandLineManager CommandLine => _testHostBuilder.CommandLine;
 
-    public IServerModeManager ServerMode => _testHostBuilder.ServerMode;
+    internal IServerModeManager ServerMode => _testHostBuilder.ServerMode;
 
     internal ITestHostOrchestratorManager TestHostControllersManager => _testHostBuilder.TestHostOrchestratorManager;
 
@@ -77,7 +77,7 @@ public sealed class TestApplicationBuilder
     internal static Func<ITestHostBuilder> TestHostBuilderFactory { get; set; }
         = () => new TestHostBuilder();
 
-    public TestApplicationBuilder RegisterTestFramework(
+    public ITestApplicationBuilder RegisterTestFramework(
         Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,
         Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> adapterFactory)
     {
@@ -104,7 +104,7 @@ public sealed class TestApplicationBuilder
         return this;
     }
 
-    public async Task<TestApplication> BuildAsync()
+    public async Task<ITestApplication> BuildAsync()
     {
         if (_testFrameworkAdapterFactory is null)
         {
@@ -124,6 +124,6 @@ public sealed class TestApplicationBuilder
             _unhandledExceptionsHandler,
             _createBuilderStart);
 
-        return new(_testHost);
+        return new TestApplication(_testHost);
     }
 }
