@@ -38,14 +38,7 @@ internal sealed class FileLogger : IDisposable
 #endif
     private bool _disposed;
 
-    public FileLogger(string logFolder, IClock clock, LogLevel logLevel, string logPrefixName, bool syncFlush, ITask task, IConsole console)
-
-        // We accept null only from internal code
-        : this(logFolder, fileName: null!, clock, logLevel, logPrefixName, syncFlush, task, console)
-    {
-    }
-
-    public FileLogger(string logFolder, string fileName, IClock clock, LogLevel logLevel, string logPrefixName, bool syncFlush, ITask task, IConsole console)
+    public FileLogger(string logFolder, string? fileName, LogLevel logLevel, string logPrefixName, bool syncFlush, IClock clock, ITask task, IConsole console)
     {
         _logFolder = logFolder;
         _clock = clock;
@@ -102,11 +95,13 @@ internal sealed class FileLogger : IDisposable
     private static FileStream OpenFileStreamForAppend(string fileName)
         => new(fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
 
-    private static FileStream CreateFileStream(string fileName)
-        => new(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
-
-    private FileStream CreateFileStream()
+    private FileStream CreateFileStream(string? fileName = null)
     {
+        if (fileName is not null)
+        {
+            return new(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
+        }
+
         DateTimeOffset firstTryTime = _clock.UtcNow;
         while (true)
         {
@@ -117,8 +112,8 @@ internal sealed class FileLogger : IDisposable
 
             try
             {
-                string fileName = $"{_logPrefixName}_{_clock.UtcNow.ToString("MMddHHssfff", CultureInfo.InvariantCulture)}.diag";
-                return new FileStream(Path.Combine(_logFolder, fileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
+                fileName = $"{_logPrefixName}_{_clock.UtcNow.ToString("MMddHHssfff", CultureInfo.InvariantCulture)}.diag";
+                return new(Path.Combine(_logFolder, fileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
             }
             catch (IOException)
             {
