@@ -38,12 +38,7 @@ internal sealed class FileLogger : IDisposable
 #endif
     private bool _disposed;
 
-    internal FileLogger(string logFolder, IClock clock, LogLevel logLevel, string logPrefixName, bool syncFlush, ITask task, IConsole console)
-        : this(logFolder, fileName: null!, clock, logLevel, logPrefixName, syncFlush, task, console)
-    {
-    }
-
-    public FileLogger(string logFolder, string fileName, IClock clock, LogLevel logLevel, string logPrefixName, bool syncFlush, ITask task, IConsole console)
+    public FileLogger(string logFolder, string? fileName, LogLevel logLevel, string logPrefixName, bool syncFlush, IClock clock, ITask task, IConsole console)
     {
         _logFolder = logFolder;
         _clock = clock;
@@ -83,7 +78,7 @@ internal sealed class FileLogger : IDisposable
         }
         else
         {
-            _fileStream = CreateFileStream(null);
+            _fileStream = CreateFileStream();
         }
 
         FileName = _fileStream.Name;
@@ -100,7 +95,7 @@ internal sealed class FileLogger : IDisposable
     private static FileStream OpenFileStreamForAppend(string fileName)
         => new(fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
 
-    private FileStream CreateFileStream(string? fileName)
+    private FileStream CreateFileStream(string? fileName = null)
     {
         if (fileName is not null)
         {
@@ -118,7 +113,7 @@ internal sealed class FileLogger : IDisposable
             try
             {
                 fileName = $"{_logPrefixName}_{_clock.UtcNow.ToString("MMddHHssfff", CultureInfo.InvariantCulture)}.diag";
-                return CreateFileStream(Path.Combine(_logFolder, fileName));
+                return new(Path.Combine(_logFolder, fileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
             }
             catch (IOException)
             {

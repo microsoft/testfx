@@ -21,7 +21,7 @@ internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
         _clock = clock;
         _logPrefixName = logPrefixName;
         _customDirectory = customDirectory;
-        FileLogger = new FileLogger(logFolder, clock, logLevel, logPrefixName, syncFlush, new SystemTask(), new SystemConsole());
+        FileLogger = new FileLogger(logFolder, clock, logPrefixName, syncFlush, new SystemTask(), logLevel, new SystemConsole());
 
         LogLevel = logLevel;
         SyncFlush = syncFlush;
@@ -56,7 +56,7 @@ internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
                 // Move the log file to the new directory
                 File.Move(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
 
-                FileLogger = new FileLogger(testResultDirectory, fileName, _clock, LogLevel, _logPrefixName, SyncFlush, new SystemTask(), new SystemConsole());
+                FileLogger = new FileLogger(testResultDirectory, fileName, LogLevel, _logPrefixName, SyncFlush, _clock, new SystemTask(), new SystemConsole());
             }
         }
 
