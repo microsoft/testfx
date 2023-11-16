@@ -5,6 +5,7 @@
     <IsPackable>false</IsPackable>
     <WarningsAsErrors>false</WarningsAsErrors>
     <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">win-x64</RuntimeIdentifier>
     <UseVSTestRunner>false</UseVSTestRunner>
     <ImplicitUsings>true</ImplicitUsings>
     <Nullable>enable</Nullable>
