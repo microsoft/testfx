@@ -21,7 +21,7 @@ internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
         _clock = clock;
         _logPrefixName = logPrefixName;
         _customDirectory = customDirectory;
-        FileLogger = new FileLogger(logFolder, clock, logPrefixName, syncFlush, new SystemTask(), logLevel, new SystemConsole());
+        FileLogger = new FileLogger(logFolder, fileName: null, logLevel, logPrefixName, syncFlush, new SystemClock(), new SystemTask(), new SystemConsole());
 
         LogLevel = logLevel;
         SyncFlush = syncFlush;
