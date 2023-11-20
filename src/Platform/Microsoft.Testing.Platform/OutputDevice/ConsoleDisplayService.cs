@@ -20,6 +20,7 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
 {
 #pragma warning disable SA1310 // Field names should not contain underscore
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
+    private const string BUILDTIME_ATTRIBUTE_NAME = "Microsoft.Testing.Platform.Application.BuildTimeUTC";
 #pragma warning restore SA1310 // Field names should not contain underscore
 
     private readonly List<SessionFileArtifact> _sessionFilesArtifact = [];
@@ -142,11 +143,12 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
                 if (_runtimeFeature.IsDynamicCodeSupported)
                 {
                     var version = (AssemblyInformationalVersionAttribute?)Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
-                    var buildTime = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyMetadataAttribute))
-                        .OfType<AssemblyMetadataAttribute>().FirstOrDefault(x => x.Key == "Microsoft.Testing.Platform.Application.BuildTimeUTC");
                     if (version is not null)
                     {
                         stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {version.InformationalVersion}");
+
+                        var buildTime = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyMetadataAttribute))
+                        .OfType<AssemblyMetadataAttribute>().FirstOrDefault(x => x.Key == BUILDTIME_ATTRIBUTE_NAME);
                         if (buildTime is not null)
                         {
                             DateTime buildDateTime = DateTime.FromOADate(double.Parse(buildTime.Value!, CultureInfo.InvariantCulture));
