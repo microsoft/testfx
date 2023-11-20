@@ -152,7 +152,7 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
                         if (buildTime is not null)
                         {
                             DateTime buildDateTime = DateTime.FromOADate(double.Parse(buildTime.Value!, CultureInfo.InvariantCulture));
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $" ({buildDateTime.ToString("MM/dd/yy", CultureInfo.InvariantCulture)})");
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDateTime.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)})");
                         }
 
                         stringBuilder.AppendLine();
