@@ -147,8 +147,10 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
                     {
                         stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {version.InformationalVersion}");
 
-                        var buildTime = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyMetadataAttribute))
-                        .OfType<AssemblyMetadataAttribute>().FirstOrDefault(x => x.Key == BUILDTIME_ATTRIBUTE_NAME);
+                        var buildTime = Assembly.GetExecutingAssembly()
+                            .GetCustomAttributes(typeof(AssemblyMetadataAttribute))
+                            .OfType<AssemblyMetadataAttribute>()
+                            .FirstOrDefault(x => x.Key == BUILDTIME_ATTRIBUTE_NAME);
                         if (buildTime is not null)
                         {
                             DateTime buildDateTime = DateTime.FromOADate(double.Parse(buildTime.Value!, CultureInfo.InvariantCulture));
