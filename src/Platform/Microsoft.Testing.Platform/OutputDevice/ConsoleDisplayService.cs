@@ -142,9 +142,18 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
                 if (_runtimeFeature.IsDynamicCodeSupported)
                 {
                     var version = (AssemblyInformationalVersionAttribute?)Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
+                    var buildTime = Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyMetadataAttribute))
+                        .OfType<AssemblyMetadataAttribute>().FirstOrDefault(x => x.Key == "Microsoft.Testing.Platform.Application.BuildTimeUTC");
                     if (version is not null)
                     {
-                        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Version: {version.InformationalVersion}");
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {version.InformationalVersion}");
+                        if (buildTime is not null)
+                        {
+                            DateTime buildDateTime = DateTime.FromOADate(double.Parse(buildTime.Value!, CultureInfo.InvariantCulture));
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $" ({buildDateTime.ToString("MM/dd/yy", CultureInfo.InvariantCulture)})");
+                        }
+
+                        stringBuilder.AppendLine();
                     }
 #if !NETCOREAPP
                     stringBuilder.AppendLine($"RuntimeInformation: {RuntimeInformation.FrameworkDescription} ({RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()})");
