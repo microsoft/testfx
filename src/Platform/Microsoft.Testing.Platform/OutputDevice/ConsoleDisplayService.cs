@@ -151,10 +151,14 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
                             .GetCustomAttributes(typeof(AssemblyMetadataAttribute))
                             .OfType<AssemblyMetadataAttribute>()
                             .FirstOrDefault(x => x.Key == BUILDTIME_ATTRIBUTE_NAME);
+
                         if (buildTime is not null)
                         {
-                            DateTime buildDateTime = DateTime.FromOADate(double.Parse(buildTime.Value!, CultureInfo.InvariantCulture));
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDateTime.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)})");
+                            if (double.TryParse(buildTime.Value, out double oaDate))
+                            {
+                                DateTime buildDateTime = DateTime.FromOADate(oaDate);
+                                stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDateTime.ToString("yyyy/MM/dd", CultureInfo.InvariantCulture)})");
+                            }
                         }
 
                         stringBuilder.AppendLine();
