@@ -62,6 +62,7 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.Format
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FormatterUtilitiesTests.SerializeDeserialize_Succeed(System.Type) (TestNode)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FormatterUtilitiesTests.SerializeDeserialize_Succeed(System.Type) (TestNodeStateChangedEventArgs)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FormatterUtilitiesTests.SerializeDeserialize_Succeed(System.Type) (TestNodeUpdateMessage)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.IPCTests.ConnectionNamedPipeServer_MultipleConnection_Succeded()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.IPCTests.SingleConnectionNamedPipeServer_MultipleConnection_Fails()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.IPCTests.SingleConnectionNamedPipeServer_RequestReplySerialization_Succeeded()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.JsoniteTests.Serialize_DateTimeOffset()
