@@ -97,11 +97,47 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The application has already been built.
+        /// </summary>
+        internal static string TestApplicationBuilderApplicationAlreadyRegistered {
+            get {
+                return ResourceManager.GetString("TestApplicationBuilderApplicationAlreadyRegistered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The test framework adapter factory has already been registered.
         /// </summary>
         internal static string TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage {
             get {
                 return ResourceManager.GetString("TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The test framework capabilities factory has already been registered.
+        /// </summary>
+        internal static string TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered {
+            get {
+                return ResourceManager.GetString("TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The test framework adapter has not been registered. Use &apos;RegisterTestFrameworkAdapter&apos; to register it.
+        /// </summary>
+        internal static string TestApplicationBuilderTestFrameworkNotRegistered {
+            get {
+                return ResourceManager.GetString("TestApplicationBuilderTestFrameworkNotRegistered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to VSTest mode only supports a single TestApplicationBuilder per process.
+        /// </summary>
+        internal static string TestApplicationVSTestModeTooManyBuilders {
+            get {
+                return ResourceManager.GetString("TestApplicationVSTestModeTooManyBuilders", resourceCulture);
             }
         }
     }
