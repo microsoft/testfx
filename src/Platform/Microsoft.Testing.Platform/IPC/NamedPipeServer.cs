@@ -38,24 +38,24 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
     }
 
     public NamedPipeServer(
-    PipeNameDescription pipeNameDescription,
-    Func<IRequest, Task<IResponse>> callback,
-    IEnvironment environment,
-    ILogger logger,
-    ITask task,
-    CancellationToken cancellationToken)
-    : this(pipeNameDescription, callback, environment, logger, task, maxNumberOfServerInstances: 1, cancellationToken)
+        PipeNameDescription pipeNameDescription,
+        Func<IRequest, Task<IResponse>> callback,
+        IEnvironment environment,
+        ILogger logger,
+        ITask task,
+        CancellationToken cancellationToken)
+        : this(pipeNameDescription, callback, environment, logger, task, maxNumberOfServerInstances: 1, cancellationToken)
     {
     }
 
     public NamedPipeServer(
-    PipeNameDescription pipeNameDescription,
-    Func<IRequest, Task<IResponse>> callback,
-    IEnvironment environment,
-    ILogger logger,
-    ITask task,
-    int maxNumberOfServerInstances,
-    CancellationToken cancellationToken)
+        PipeNameDescription pipeNameDescription,
+        Func<IRequest, Task<IResponse>> callback,
+        IEnvironment environment,
+        ILogger logger,
+        ITask task,
+        int maxNumberOfServerInstances,
+        CancellationToken cancellationToken)
     {
         ArgumentGuard.Ensure(pipeNameDescription != null, nameof(pipeNameDescription), "Pipe name cannot be null");
         _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances);
