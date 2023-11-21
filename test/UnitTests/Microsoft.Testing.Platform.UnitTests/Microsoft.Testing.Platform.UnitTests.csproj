@@ -13,6 +13,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <RepoRoot Condition="'$(MSTestRepoRoot)' != ''">$(MSTestRepoRoot)</RepoRoot>
+  </PropertyGroup>
+
   <!-- Testing configuration -->
   <PropertyGroup>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
@@ -38,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="..\..\..\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
 
   <ItemGroup>
