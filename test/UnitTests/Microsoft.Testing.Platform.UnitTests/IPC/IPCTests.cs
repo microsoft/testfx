@@ -25,9 +25,9 @@ public sealed class IPCTests : TestBase
 
     public async Task SingleConnectionNamedPipeServer_MultipleConnection_Fails()
     {
-        PipeNameDescription pipeNameDescription = SingleConnectionNamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
-        List<SingleConnectionNamedPipeServer> openedPipe = [];
+        List<NamedPipeServer> openedPipe = [];
         List<Exception> exceptions = [];
 
         ManualResetEventSlim waitException = new(false);
@@ -37,7 +37,7 @@ public sealed class IPCTests : TestBase
             {
                 while (true)
                 {
-                    SingleConnectionNamedPipeServer singleConnectionNamedPipeServer = new(
+                    NamedPipeServer singleConnectionNamedPipeServer = new(
                         pipeNameDescription,
                         async _ => await Task.FromResult(VoidResponse.CachedInstance),
                         new SystemEnvironment(),
@@ -89,7 +89,7 @@ public sealed class IPCTests : TestBase
     public async Task SingleConnectionNamedPipeServer_RequestReplySerialization_Succeeded()
     {
         Queue<BaseMessage> receivedMessages = new();
-        PipeNameDescription pipeNameDescription = SingleConnectionNamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
         NamedPipeClient namedPipeClient = new(pipeNameDescription.Name);
         namedPipeClient.RegisterSerializer<VoidResponse>(new VoidResponseSerializer());
         namedPipeClient.RegisterSerializer<TextMessage>(new TextMessageSerializer());
@@ -121,7 +121,7 @@ public sealed class IPCTests : TestBase
                 }
             }
         });
-        SingleConnectionNamedPipeServer singleConnectionNamedPipeServer = new(
+        NamedPipeServer singleConnectionNamedPipeServer = new(
             pipeNameDescription,
             (IRequest request) =>
             {
@@ -168,6 +168,72 @@ public sealed class IPCTests : TestBase
 #endif
 
         pipeNameDescription.Dispose();
+    }
+
+    public async Task ConnectionNamedPipeServer_MultipleConnection_Succeded()
+    {
+        PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
+
+        var pipes = new List<NamedPipeServer>();
+        for (int i = 0; i < 3; i++)
+        {
+            pipes.Add(new(
+                       pipeNameDescription,
+                       async _ => await Task.FromResult(VoidResponse.CachedInstance),
+                       new SystemEnvironment(),
+                       new Mock<ILogger>().Object,
+                       new SystemTask(),
+                       maxNumberOfServerInstances: 3,
+                       _testExecutionContext.CancellationToken));
+        }
+
+#pragma warning disable CA1806 // Do not ignore method results
+        IOException exception = Assert.Throws<IOException>(() =>
+             new NamedPipeServer(
+                pipeNameDescription,
+                async _ => await Task.FromResult(VoidResponse.CachedInstance),
+                new SystemEnvironment(),
+                new Mock<ILogger>().Object,
+                new SystemTask(),
+                maxNumberOfServerInstances: 3,
+                _testExecutionContext.CancellationToken));
+        Assert.Contains("All pipe instances are busy.", exception.Message);
+#pragma warning restore CA1806 // Do not ignore method results
+
+        var waitConnectionTask = new List<Task>();
+        int connectionCompleted = 0;
+        foreach (NamedPipeServer namedPipeServer in pipes)
+        {
+            waitConnectionTask.Add(Task.Run(async () =>
+            {
+                await namedPipeServer.WaitConnectionAsync(_testExecutionContext.CancellationToken);
+                Interlocked.Increment(ref connectionCompleted);
+            }));
+        }
+
+        var connectedClients = new List<NamedPipeClient>();
+        for (int i = 0; i < waitConnectionTask.Count; i++)
+        {
+            NamedPipeClient namedPipeClient = new(pipeNameDescription.Name);
+            connectedClients.Add(namedPipeClient);
+            await namedPipeClient.ConnectAsync(_testExecutionContext.CancellationToken);
+        }
+
+        await Task.WhenAll(waitConnectionTask.ToArray());
+
+        Assert.AreEqual(3, connectionCompleted);
+
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
+        foreach (NamedPipeClient namedPipeClient in connectedClients)
+        {
+            namedPipeClient.Dispose();
+        }
+
+        foreach (NamedPipeServer namedPipeServer in pipes)
+        {
+            namedPipeServer.Dispose();
+        }
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
     }
 
     private static string RandomString(int length, Random random)

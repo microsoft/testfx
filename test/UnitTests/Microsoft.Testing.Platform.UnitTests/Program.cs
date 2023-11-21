@@ -20,10 +20,11 @@ builder.AddTestFramework(new Microsoft.Testing.Platform.UnitTests.SourceGenerate
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverage();
 #endif
-builder.AddHangDumpGenerator();
-builder.AddCrashDumpGenerator(ignoreIfNotSupported: true);
-builder.AddTrxReportGenerator();
-builder.AddAppInsightsTelemetryProvider();
+
+// builder.AddHangDumpGenerator();
+// builder.AddCrashDumpGenerator(ignoreIfNotSupported: true);
+// builder.AddTrxReportGenerator();
+// builder.AddAppInsightsTelemetryProvider();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
