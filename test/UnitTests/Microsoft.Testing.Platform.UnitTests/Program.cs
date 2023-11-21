@@ -2,14 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Framework;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
-
+using Microsoft.Testing.Platform.Extensions.CommandLine;
 #if ENABLE_CODECOVERAGE
 using Microsoft.Testing.Platform.Extensions.CodeCoverage;
 #endif
 using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.TestInfrastructure;
 
@@ -23,7 +25,7 @@ builder.AddCodeCoverage();
 
 // builder.AddHangDumpGenerator();
 // builder.AddCrashDumpGenerator(ignoreIfNotSupported: true);
-// builder.AddTrxReportGenerator();
+builder.AddTrxReportGenerator();
 // builder.AddAppInsightsTelemetryProvider();
 
 // Custom suite tools

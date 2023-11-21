@@ -13,10 +13,6 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <RepoRoot Condition="'$(MSTestRepoRoot)' != ''">$(MSTestRepoRoot)</RepoRoot>
-  </PropertyGroup>
-
   <!-- Testing configuration -->
   <PropertyGroup>
     <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
@@ -42,6 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Do not change this to use RepoRoot, it will be defined to incorrect path when building from parent repository.  -->
     <ProjectReference Include="..\..\..\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
 
