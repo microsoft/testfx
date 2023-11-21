@@ -152,7 +152,7 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
                             .OfType<AssemblyMetadataAttribute>()
                             .FirstOrDefault(x => x.Key == BUILDTIME_ATTRIBUTE_NAME);
 
-                        if (buildTime is not null)
+                        if (buildTime is not null && !TAString.IsNullOrEmpty(buildTime.Value))
                         {
                             stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildTime.Value})");
                         }
