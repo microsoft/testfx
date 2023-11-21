@@ -20,6 +20,7 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
 {
 #pragma warning disable SA1310 // Field names should not contain underscore
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
+    private const string BUILDTIME_ATTRIBUTE_NAME = "Microsoft.Testing.Platform.Application.BuildTimeUTC";
 #pragma warning restore SA1310 // Field names should not contain underscore
 
     private readonly List<SessionFileArtifact> _sessionFilesArtifact = [];
@@ -144,7 +145,19 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
                     var version = (AssemblyInformationalVersionAttribute?)Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
                     if (version is not null)
                     {
-                        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Version: {version.InformationalVersion}");
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {version.InformationalVersion}");
+
+                        var buildTime = Assembly.GetExecutingAssembly()
+                            .GetCustomAttributes(typeof(AssemblyMetadataAttribute))
+                            .OfType<AssemblyMetadataAttribute>()
+                            .FirstOrDefault(x => x.Key == BUILDTIME_ATTRIBUTE_NAME);
+
+                        if (buildTime is not null && !TAString.IsNullOrEmpty(buildTime.Value))
+                        {
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildTime.Value})");
+                        }
+
+                        stringBuilder.AppendLine();
                     }
 #if !NETCOREAPP
                     stringBuilder.AppendLine($"RuntimeInformation: {RuntimeInformation.FrameworkDescription} ({RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()})");

@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.23564.3">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.23567.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>b1e52f70fee51ea06ca106d07aec876c68b7d113</Sha>
+      <Sha>b6801170e6ca8bf12bdff1f10d410c5e01660681</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="9.0.0-beta.23564.3">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="9.0.0-beta.23567.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>b1e52f70fee51ea06ca106d07aec876c68b7d113</Sha>
+      <Sha>b6801170e6ca8bf12bdff1f10d410c5e01660681</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="1.0.0-alpha.23565.14">
+    <Dependency Name="Microsoft.Testing.Platform" Version="1.0.0-alpha.23571.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>9ad268ab15698f794cb4e5fc5179cab2e42ebcdb</Sha>
+      <Sha>19b53275ac73e8f39e0a55ba32fe89037150cc0d</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
