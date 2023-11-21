@@ -29,7 +29,7 @@
 
     <PropertyGroup Condition="'$(_TestRuntime)' != 'Core'">
       <_TestRunner Condition="'$(_TestRunner)'==''">$(_TestAssembly)</_TestRunner>
-      <_TestRunnerArgs>--report-trx --report-trx-filename "$(_TestResultTrxFileName)" --results-directory "$(_TestResultDirectory)" $(_TestRunnerAdditionalArguments)</_TestRunnerArgs>
+      <_TestRunnerArgs>--results-directory "$(_TestResultDirectory)" $(_TestRunnerAdditionalArguments)</_TestRunnerArgs>
     </PropertyGroup>
 
     <PropertyGroup>
