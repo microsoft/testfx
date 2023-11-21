@@ -25,7 +25,6 @@ builder.AddCodeCoverage();
 
 var commandLine = new FakeTrxReportGeneratorCommandLine();
 builder.CommandLine.AddProvider(() => commandLine);
-// builder.AddAppInsightsTelemetryProvider();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
