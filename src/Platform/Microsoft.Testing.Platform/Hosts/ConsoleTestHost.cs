@@ -21,7 +21,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed class ConsoleTestHost : CommonTestHost
 {
-    private static readonly ClientInfo Client = new("testingplatform-console", "1.0.0");
+    private static readonly ClientInfo Client = new("testingplatform-console", AppVersion.DefaultSemVer);
 
     private readonly ILogger<ConsoleTestHost> _logger;
     private readonly IClock _clock;

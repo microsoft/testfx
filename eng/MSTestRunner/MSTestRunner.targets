@@ -1,3 +1,0 @@
-<Project>
-  <Import Project="$(NuGetPackageRoot)\microsoft.dotnet.arcade.sdk\$(ArcadeSdkVersion)\tools\VSTest.targets" />
-</Project>

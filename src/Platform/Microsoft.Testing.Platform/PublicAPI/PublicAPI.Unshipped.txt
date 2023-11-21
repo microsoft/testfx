@@ -6,16 +6,17 @@ Microsoft.Testing.Platform.Builder.ConfigurationSourcesOptions
 Microsoft.Testing.Platform.Builder.ConfigurationSourcesOptions.ConfigurationSourcesOptions() -> void
 Microsoft.Testing.Platform.Builder.ConfigurationSourcesOptions.RegisterEnvironmentVariablesConfigurationSource.get -> bool
 Microsoft.Testing.Platform.Builder.ConfigurationSourcesOptions.RegisterEnvironmentVariablesConfigurationSource.set -> void
+Microsoft.Testing.Platform.Builder.ITestApplication
+Microsoft.Testing.Platform.Builder.ITestApplication.RunAsync() -> System.Threading.Tasks.Task<int>!
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.BuildAsync() -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplication!>!
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.CommandLine.get -> Microsoft.Testing.Platform.CommandLine.ICommandLineManager!
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.RegisterTestFramework(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!>! capabilitiesFactory, System.Func<Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!, System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!>! adapterFactory) -> Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHost.get -> Microsoft.Testing.Platform.TestHost.ITestHostManager!
+Microsoft.Testing.Platform.Builder.ITestApplicationBuilder.TestHostControllers.get -> Microsoft.Testing.Platform.TestHostControllers.ITestHostControllersManager!
 Microsoft.Testing.Platform.Builder.TestApplication
 Microsoft.Testing.Platform.Builder.TestApplication.Dispose() -> void
 Microsoft.Testing.Platform.Builder.TestApplication.RunAsync() -> System.Threading.Tasks.Task<int>!
-Microsoft.Testing.Platform.Builder.TestApplicationBuilder
-Microsoft.Testing.Platform.Builder.TestApplicationBuilder.BuildAsync() -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.TestApplication!>!
-Microsoft.Testing.Platform.Builder.TestApplicationBuilder.CommandLine.get -> Microsoft.Testing.Platform.CommandLine.ICommandLineManager!
-Microsoft.Testing.Platform.Builder.TestApplicationBuilder.RegisterTestFramework(System.Func<System.IServiceProvider!, Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!>! capabilitiesFactory, System.Func<Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities!, System.IServiceProvider!, Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework!>! adapterFactory) -> Microsoft.Testing.Platform.Builder.TestApplicationBuilder!
-Microsoft.Testing.Platform.Builder.TestApplicationBuilder.ServerMode.get -> Microsoft.Testing.Platform.ServerMode.IServerModeManager!
-Microsoft.Testing.Platform.Builder.TestApplicationBuilder.TestHost.get -> Microsoft.Testing.Platform.TestHost.ITestHostManager!
-Microsoft.Testing.Platform.Builder.TestApplicationBuilder.TestHostControllers.get -> Microsoft.Testing.Platform.TestHostControllers.ITestHostControllersManager!
 Microsoft.Testing.Platform.Builder.TestApplicationOptions
 Microsoft.Testing.Platform.Builder.TestApplicationOptions.Configuration.get -> Microsoft.Testing.Platform.Builder.ConfigurationOptions!
 Microsoft.Testing.Platform.Builder.TestApplicationOptions.EnableTelemetry.get -> bool
@@ -345,7 +346,6 @@ Microsoft.Testing.Platform.Requests.TestNodeUidListFilter
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.TestNodeUidListFilter(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid![]! testNodeUids) -> void
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.TestNodeUids.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid![]!
 Microsoft.Testing.Platform.ServerMode.IServerModeManager
-Microsoft.Testing.Platform.ServerMode.ServerModeManagerExtensions
 Microsoft.Testing.Platform.Services.ServiceProviderExtensions
 Microsoft.Testing.Platform.TestHost.ClientInfo
 Microsoft.Testing.Platform.TestHost.ClientInfo.Id.get -> string!
@@ -376,8 +376,8 @@ override Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.Get
 override Microsoft.Testing.Platform.Extensions.Messages.TestNode.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.GetHashCode() -> int
-static Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.TestApplicationBuilder!>!
-static Microsoft.Testing.Platform.Builder.TestApplication.CreateServerModeBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.TestApplicationBuilder!>!
+static Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>!
+static Microsoft.Testing.Platform.Builder.TestApplication.CreateServerModeBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>!
 static Microsoft.Testing.Platform.Configurations.ConfigurationExtensions.GeCurrentWorkingDirectory(this Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> string!
 static Microsoft.Testing.Platform.Configurations.ConfigurationExtensions.GeTestHostWorkingDirectory(this Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> string!
 static Microsoft.Testing.Platform.Configurations.ConfigurationExtensions.GetTestResultDirectory(this Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> string!
@@ -406,8 +406,6 @@ static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogTrace(this Micros
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogTraceAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogWarning(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> void
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogWarningAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!
-static Microsoft.Testing.Platform.ServerMode.ServerModeManagerExtensions.ConnectToTcpClient(this Microsoft.Testing.Platform.ServerMode.IServerModeManager! serverModeManager, string! clientHostName, int clientPort) -> void
-static Microsoft.Testing.Platform.ServerMode.ServerModeManagerExtensions.StartTcpServer(this Microsoft.Testing.Platform.ServerMode.IServerModeManager! serverModeManager, int serverPort) -> void
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetCommandLineOptions(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.CommandLine.ICommandLineOptions!
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetConfiguration(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Configurations.IConfiguration!
 static Microsoft.Testing.Platform.Services.ServiceProviderExtensions.GetLoggerFactory(this System.IServiceProvider! serviceProvider) -> Microsoft.Testing.Platform.Logging.ILoggerFactory!

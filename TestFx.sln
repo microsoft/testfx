@@ -30,10 +30,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestUtilities", "TestUtilit
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Desktop", "Desktop", "{3B88BD67-C767-466D-8C9C-C14681544B84}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{3B88BD67-C767-466D-8C9C-C14681544B84}"
 	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\Desktop\MSTest.TestAdapter.props = src\Adapter\Build\Desktop\MSTest.TestAdapter.props
-		src\Adapter\Build\Desktop\MSTest.TestAdapter.targets = src\Adapter\Build\Desktop\MSTest.TestAdapter.targets
+		src\Adapter\Build\Common\MSTest.TestAdapter.props = src\Adapter\Build\Common\MSTest.TestAdapter.props
+		src\Adapter\Build\Common\MSTest.TestAdapter.targets = src\Adapter\Build\Common\MSTest.TestAdapter.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Universal", "Universal", "{89314305-F815-4969-9B1B-8AEDE109DEC4}"
@@ -45,6 +45,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{929A3EDE-893B-4801-82BA-01FD947291CB}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		Directory.Build.Local.props = Directory.Build.Local.props
+		Directory.Build.Local.targets = Directory.Build.Local.targets
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
 		global.json = global.json
@@ -75,16 +77,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{92F8
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FxExtensibility", "samples\FxExtensibility\FxExtensibility.csproj", "{A82770C0-1FF5-43C7-8790-471D5E4F8D6E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetCore", "NetCore", "{D11C6664-1C4E-48F0-AA92-7F5BADC6F82C}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetWithWinUI", "NetWithWinUI", "{35D010CC-CDF2-4115-BCFB-E2E3D21C1055}"
 	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\NetCore\MSTest.TestAdapter.props = src\Adapter\Build\NetCore\MSTest.TestAdapter.props
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Net6", "Net6", "{35D010CC-CDF2-4115-BCFB-E2E3D21C1055}"
-	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\Net6\MSTest.TestAdapter.props = src\Adapter\Build\Net6\MSTest.TestAdapter.props
-		src\Adapter\Build\Net6\MSTest.TestAdapter.targets = src\Adapter\Build\Net6\MSTest.TestAdapter.targets
-		src\Adapter\Build\Net6\MSTest.TestFramework.targets = src\Adapter\Build\Net6\MSTest.TestFramework.targets
+		src\Adapter\Build\NetWithWinUI\MSTest.TestAdapter.targets = src\Adapter\Build\NetWithWinUI\MSTest.TestAdapter.targets
+		src\Adapter\Build\NetWithWinUI\MSTest.TestFramework.targets = src\Adapter\Build\NetWithWinUI\MSTest.TestFramework.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTests", "UnitTests", "{BB874DF1-44FE-415A-B634-A6B829107890}"
@@ -164,14 +160,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest", "src\Package\MSTes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Internal.TestFx.Documentation", "src\Package\MSTest.Internal.TestFx.Documentation\MSTest.Internal.TestFx.Documentation.csproj", "{37F9538E-DD88-40DA-8A32-85D6C2A7FD46}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MSTestRunner", "MSTestRunner", "{A9F9C49E-3CDA-4207-AA53-CC80AF1798FE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RepoCustomRunner", "RepoCustomRunner", "{A9F9C49E-3CDA-4207-AA53-CC80AF1798FE}"
 	ProjectSection(SolutionItems) = preProject
-		eng\MSTestRunner\MSTestRunner.targets = eng\MSTestRunner\MSTestRunner.targets
+		eng\RepoCustomRunner\RepoCustomRunner.targets = eng\RepoCustomRunner\RepoCustomRunner.targets
+		eng\RepoCustomRunner\TestingPlatform.Runner.targets = eng\RepoCustomRunner\TestingPlatform.Runner.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 - Runner", "1 - Runner", "{6AEE1440-FDF0-4729-8196-B24D0E333550}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Testing.Platform", "src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj", "{48FAB979-8DA5-492E-8B3F-5DBBE82F659A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Testing.Platform.UnitTests", "test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj", "{0F1BB08E-BB6C-43E0-A7DF-1D6A03DA5DC7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -351,6 +350,10 @@ Global
 		{48FAB979-8DA5-492E-8B3F-5DBBE82F659A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48FAB979-8DA5-492E-8B3F-5DBBE82F659A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{48FAB979-8DA5-492E-8B3F-5DBBE82F659A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F1BB08E-BB6C-43E0-A7DF-1D6A03DA5DC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F1BB08E-BB6C-43E0-A7DF-1D6A03DA5DC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F1BB08E-BB6C-43E0-A7DF-1D6A03DA5DC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F1BB08E-BB6C-43E0-A7DF-1D6A03DA5DC7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -372,7 +375,6 @@ Global
 		{0A4A76DD-FEE1-4D04-926B-38E1A24A7ED2} = {BB874DF1-44FE-415A-B634-A6B829107890}
 		{FE0DF239-0D81-46CA-9277-3342009E83F9} = {929A3EDE-893B-4801-82BA-01FD947291CB}
 		{A82770C0-1FF5-43C7-8790-471D5E4F8D6E} = {92F8E9A2-903E-4025-99BC-7DC478D5466D}
-		{D11C6664-1C4E-48F0-AA92-7F5BADC6F82C} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 		{35D010CC-CDF2-4115-BCFB-E2E3D21C1055} = {CA01DAF5-8D9D-496E-9AD3-94BB7FBB2D34}
 		{BB874DF1-44FE-415A-B634-A6B829107890} = {A9596292-7E67-4566-9096-143DDAA4E8D8}
 		{FF69998C-C661-4EF0-804B-845675B3602E} = {A9596292-7E67-4566-9096-143DDAA4E8D8}
@@ -414,6 +416,7 @@ Global
 		{A9F9C49E-3CDA-4207-AA53-CC80AF1798FE} = {FE0DF239-0D81-46CA-9277-3342009E83F9}
 		{6AEE1440-FDF0-4729-8196-B24D0E333550} = {FF8B1B72-55A1-4FFE-809E-7B79323ED8D0}
 		{48FAB979-8DA5-492E-8B3F-5DBBE82F659A} = {6AEE1440-FDF0-4729-8196-B24D0E333550}
+		{0F1BB08E-BB6C-43E0-A7DF-1D6A03DA5DC7} = {BB874DF1-44FE-415A-B634-A6B829107890}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}

@@ -24,8 +24,10 @@
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
+    <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
-    <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
+    <MicrosoftTestingPlatformVersion>1.0.0-alpha.23571.3</MicrosoftTestingPlatformVersion>
+    <MicrosoftBuildUtilitiesCore>17.7.2</MicrosoftBuildUtilitiesCore>
   </PropertyGroup>
 </Project>

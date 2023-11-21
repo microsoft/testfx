@@ -5,7 +5,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-public static class ServerModeManagerExtensions
+internal static class ServerModeManagerExtensions
 {
     public static void StartTcpServer(this IServerModeManager serverModeManager, int serverPort)
     {

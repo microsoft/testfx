@@ -1,5 +1,6 @@
 <Project>
 
-  <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+  <Import Condition="Exists('$(MSBuildThisFileDirectory)\..\Directory.Build.targets')" Project="$(MSBuildThisFileDirectory)\..\Directory.Build.targets" />
+  <Import Condition="!Exists('$(MSBuildThisFileDirectory)\..\Directory.Build.targets')" Project="$(MSBuildThisFileDirectory)\Directory.Build.Local.targets" />
 
 </Project>

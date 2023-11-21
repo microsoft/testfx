@@ -421,7 +421,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     {
                         INamedFeatureCapability? namedFeatureCapability = capabilities.GetCapability<INamedFeatureCapability>();
                         return new InitializeResponseArgs(
-                            ServerInfo: new ServerInfo("test-anywhere", Version: "1.0.0"),
+                            ServerInfo: new ServerInfo("test-anywhere", Version: AppVersion.DefaultSemVer),
                             Capabilities: new ServerCapabilities(
                                 new ServerTestingCapabilities(
                                     SupportsDiscovery: true,
