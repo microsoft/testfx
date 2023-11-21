@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AssemblyMetadata Include="Microsoft.Testing.Platform.Application.BuildTimeUTC" Value="$([System.DateTime]::UtcNow.ToOADate())" />
+    <AssemblyMetadata Include="Microsoft.Testing.Platform.Application.BuildTimeUTC" Value="$([System.DateTime]::UtcNow.ToString('yyyy/MM/dd'))" />
   </ItemGroup>
 
   <!-- NuGet properties -->
