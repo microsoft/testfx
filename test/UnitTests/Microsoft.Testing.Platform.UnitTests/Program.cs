@@ -23,10 +23,6 @@ builder.AddTestFramework(new Microsoft.Testing.Platform.UnitTests.SourceGenerate
 builder.AddCodeCoverage();
 #endif
 
-// builder.AddHangDumpGenerator();
-// builder.AddCrashDumpGenerator(ignoreIfNotSupported: true);
-// builder.AddTrxReportGenerator();
-
 var commandLine = new FakeTrxReportGeneratorCommandLine();
 builder.CommandLine.AddProvider(() => commandLine);
 // builder.AddAppInsightsTelemetryProvider();
