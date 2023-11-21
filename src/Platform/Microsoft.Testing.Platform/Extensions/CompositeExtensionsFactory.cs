@@ -7,13 +7,13 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Extensions;
 
-public class CompositeExtensionFactory<T> : ICompositeExtensionFactory, ICloneable
-    where T : class, IExtension
+public class CompositeExtensionFactory<TExtension> : ICompositeExtensionFactory, ICloneable
+    where TExtension : class, IExtension
 {
     private readonly object _syncLock = new();
-    private readonly Func<IServiceProvider, T>? _factoryWithServiceProvider;
-    private readonly Func<T>? _factory;
-    private T? _instance;
+    private readonly Func<IServiceProvider, TExtension>? _factoryWithServiceProvider;
+    private readonly Func<TExtension>? _factory;
+    private TExtension? _instance;
 
     internal const /* for testing */ string ValidateCompositionErrorMessage =
 """
@@ -23,21 +23,22 @@ TestHostControllers: ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariab
 TestHost: IDataConsumer, ITestApplicationLifetime
 """;
 
-    public CompositeExtensionFactory(Func<IServiceProvider, T> factory)
+    public CompositeExtensionFactory(Func<IServiceProvider, TExtension> factory)
     {
+        ArgumentGuard.IsNotNull(factory, nameof(factory));
         _factoryWithServiceProvider = factory;
     }
 
-    public CompositeExtensionFactory(Func<T> factory)
+    public CompositeExtensionFactory(Func<TExtension> factory)
     {
+        ArgumentGuard.IsNotNull(factory, nameof(factory));
         _factory = factory;
     }
 
-    object ICloneable.Clone() => _factory is null && _factoryWithServiceProvider is null
-            ? throw new InvalidOperationException("At least one factory must be not null")
-            : (object)(_factory is not null
-            ? new CompositeExtensionFactory<T>(_factory)
-            : new CompositeExtensionFactory<T>(_factoryWithServiceProvider ?? throw new InvalidOperationException("Unexpected null _factoryWithServiceProvider")));
+    object ICloneable.Clone()
+        => _factory is not null
+            ? new CompositeExtensionFactory<TExtension>(_factory)
+            : new CompositeExtensionFactory<TExtension>(_factoryWithServiceProvider!);
 
     object ICompositeExtensionFactory.GetInstance(IServiceProvider? serviceProvider)
     {

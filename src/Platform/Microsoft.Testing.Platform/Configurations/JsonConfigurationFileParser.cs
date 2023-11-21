@@ -4,6 +4,8 @@
 using System.Globalization;
 using System.Text.Json;
 
+using Microsoft.Testing.Platform.Resources;
+
 namespace Microsoft.Testing.Platform.Configurations;
 
 /// <summary>
@@ -37,7 +39,7 @@ internal sealed class JsonConfigurationFileParser
         {
             if (doc.RootElement.ValueKind != JsonValueKind.Object)
             {
-                throw new FormatException(string.Format(CultureInfo.InvariantCulture, "Top-level JSON element must be an object. Instead, '{0}' was found.", doc.RootElement.ValueKind));
+                throw new FormatException(string.Format(CultureInfo.CurrentCulture, PlatformResources.JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage, doc.RootElement.ValueKind));
             }
 
             VisitObjectElement(doc.RootElement);
@@ -67,7 +69,7 @@ internal sealed class JsonConfigurationFileParser
         string key = _paths.Peek();
         if (_propertyToAllChildren.ContainsKey(key))
         {
-            throw new FormatException(string.Format(CultureInfo.InvariantCulture, "A duplicate key '{0}' was found.", key));
+            throw new FormatException(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonConfigurationFileParserDuplicateKeyErrorMessage, key));
         }
 
         _propertyToAllChildren[key] = property.Value.ToString();
@@ -118,21 +120,18 @@ internal sealed class JsonConfigurationFileParser
                 string key = _paths.Peek();
                 if (_singleValueData.ContainsKey(key))
                 {
-                    throw new FormatException(string.Format(CultureInfo.InvariantCulture, "A duplicate key '{0}' was found.", key));
+                    throw new FormatException(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonConfigurationFileParserDuplicateKeyErrorMessage, key));
                 }
 
                 _singleValueData[key] = value.ToString();
                 break;
 
             default:
-                throw new FormatException(string.Format(CultureInfo.InvariantCulture, "Unsupported JSON token '{0}' was found.", value.ValueKind));
+                throw new FormatException(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonConfigurationFileParserUnsupportedTokenErrorMessage, value.ValueKind));
         }
     }
 
-    private void EnterContext(string context) =>
-        _paths.Push(_paths.Count > 0 ?
-            _paths.Peek() + PlatformConfigurationConstants.KeyDelimiter + context :
-            context);
+    private void EnterContext(string context) => _paths.Push(_paths.Count > 0 ? _paths.Peek() + PlatformConfigurationConstants.KeyDelimiter + context : context);
 
     private void ExitContext() => _paths.Pop();
 }

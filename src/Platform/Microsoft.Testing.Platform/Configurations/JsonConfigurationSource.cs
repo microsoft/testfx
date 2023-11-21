@@ -26,10 +26,12 @@ internal sealed partial class JsonConfigurationSource : IConfigurationSource
     public string Version { get; } = AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = "Test Anywhere JSON Configuration Builder";
+    // Can be empty string because it's not used in the UI
+    public string DisplayName { get; } = string.Empty;
 
     /// <inheritdoc />
-    public string Description { get; } = "Built-in default Test Anywhere JSON Configuration Builder";
+    // Can be empty string because it's not used in the UI
+    public string Description { get; } = string.Empty;
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
