@@ -27,14 +27,10 @@
   <!-- end netstandard2.0 polyfill -->
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCore)" PrivateAssets="All" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform.Extensions.CodeCoverage" Version="$(MicrosoftTestingPlatformExtensionsCodeCoverageVersion)" Condition=" '$(EnableCodeCoverage)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Platform.Extensions.HangDump" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform.Extensions.Telemetry" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" />
+      <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" />
   </ItemGroup>
 
   <ItemGroup>

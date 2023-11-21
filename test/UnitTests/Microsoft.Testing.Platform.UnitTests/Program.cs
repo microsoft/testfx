@@ -25,7 +25,10 @@ builder.AddCodeCoverage();
 
 // builder.AddHangDumpGenerator();
 // builder.AddCrashDumpGenerator(ignoreIfNotSupported: true);
-builder.AddTrxReportGenerator();
+// builder.AddTrxReportGenerator();
+
+var commandLine = new FakeTrxReportGeneratorCommandLine();
+builder.CommandLine.AddProvider(() => commandLine);
 // builder.AddAppInsightsTelemetryProvider();
 
 // Custom suite tools
@@ -67,4 +70,42 @@ internal sealed class GlobalTasks : ITestApplicationLifecycleCallbacks
     }
 
     public Task BeforeRunAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}
+
+internal sealed class FakeTrxReportGeneratorCommandLine : ICommandLineOptionsProvider
+{
+    public const string IsTrxReportEnabled = "report-trx";
+    public const string TrxReportFileName = "report-trx-filename";
+
+    public string Uid => "fake trx";
+
+    public string Version => "1.0.0";
+
+    public string DisplayName => "Fake trx";
+
+    public string Description => "Fake trx";
+
+    public CommandLineOption[] GetCommandLineOptions()
+       => new CommandLineOption[]
+        {
+            new(IsTrxReportEnabled, $"Generate the TRX report.", ArgumentArity.ZeroOrOne, false),
+            new(TrxReportFileName, $"Name of the generated TRX report file.", ArgumentArity.ZeroOrOne, false),
+        };
+
+    public Task<bool> IsEnabledAsync()
+    {
+        return Task.FromResult(true);
+    }
+
+    public bool IsValidConfiguration(ICommandLineOptions commandLineOptions, out string? errorMessage)
+    {
+        errorMessage = null;
+        return true;
+    }
+
+    public bool OptionArgumentsAreValid(CommandLineOption commandOption, string[] arguments, out string? errorMessage)
+    {
+        errorMessage = null;
+        return true;
+    }
 }
