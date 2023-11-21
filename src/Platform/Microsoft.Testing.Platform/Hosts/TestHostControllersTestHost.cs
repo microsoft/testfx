@@ -171,11 +171,11 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             await _logger.LogDebugAsync($"{$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID}"} '{processCorrelationId}'");
 
             // Check if we need to launch a test host controller process
-            SingleConnectionNamedPipeServer? testHostControllerIpc = null;
+            NamedPipeServer? testHostControllerIpc = null;
             if (_testHostsInformation.LifetimeHandlers.Length > 0)
             {
-                testHostControllerIpc = new SingleConnectionNamedPipeServer($"MONITORTOHOST_{Guid.NewGuid():N}", HandleRequestAsync,
-                    _environment, _loggerFactory.CreateLogger<SingleConnectionNamedPipeServer>(),
+                testHostControllerIpc = new NamedPipeServer($"MONITORTOHOST_{Guid.NewGuid():N}", HandleRequestAsync,
+                    _environment, _loggerFactory.CreateLogger<NamedPipeServer>(),
                     ServiceProvider.GetTask(),
                     abortRun);
                 testHostControllerIpc.RegisterAllSerializers();

@@ -12,7 +12,7 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.IPC;
 
-internal sealed class SingleConnectionNamedPipeServer : NamedPipeBase, IServer
+internal sealed class NamedPipeServer : NamedPipeBase, IServer
 {
     private readonly Func<IRequest, Task<IResponse>> _callback;
     private readonly IEnvironment _environment;
@@ -26,24 +26,7 @@ internal sealed class SingleConnectionNamedPipeServer : NamedPipeBase, IServer
     private Task? _loopTask;
     private bool _disposed;
 
-    public SingleConnectionNamedPipeServer(
-        PipeNameDescription pipeNameDescription,
-        Func<IRequest, Task<IResponse>> callback,
-        IEnvironment environment,
-        ILogger logger,
-        ITask task,
-        CancellationToken cancellationToken)
-    {
-        ArgumentGuard.Ensure(pipeNameDescription != null, nameof(pipeNameDescription), "Pipe name cannot be null");
-        _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, 1);
-        _callback = callback;
-        _environment = environment;
-        _logger = logger;
-        _task = task;
-        _cancellationToken = cancellationToken;
-    }
-
-    public SingleConnectionNamedPipeServer(
+    public NamedPipeServer(
         string name,
         Func<IRequest, Task<IResponse>> callback,
         IEnvironment environment,
@@ -52,6 +35,35 @@ internal sealed class SingleConnectionNamedPipeServer : NamedPipeBase, IServer
         CancellationToken cancellationToken)
         : this(GetPipeName(name), callback, environment, logger, task, cancellationToken)
     {
+    }
+
+    public NamedPipeServer(
+    PipeNameDescription pipeNameDescription,
+    Func<IRequest, Task<IResponse>> callback,
+    IEnvironment environment,
+    ILogger logger,
+    ITask task,
+    CancellationToken cancellationToken)
+    : this(pipeNameDescription, callback, environment, logger, task, maxNumberOfServerInstances: 1, cancellationToken)
+    {
+    }
+
+    public NamedPipeServer(
+    PipeNameDescription pipeNameDescription,
+    Func<IRequest, Task<IResponse>> callback,
+    IEnvironment environment,
+    ILogger logger,
+    ITask task,
+    int maxNumberOfServerInstances,
+    CancellationToken cancellationToken)
+    {
+        ArgumentGuard.Ensure(pipeNameDescription != null, nameof(pipeNameDescription), "Pipe name cannot be null");
+        _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances);
+        _callback = callback;
+        _environment = environment;
+        _logger = logger;
+        _task = task;
+        _cancellationToken = cancellationToken;
     }
 
     public PipeNameDescription PipeName { get; private set; }
