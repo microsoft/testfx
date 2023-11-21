@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
@@ -6,6 +6,10 @@
     <Nullable>enable</Nullable>
     <IsPackable Condition=" '$(PackTestingPlatform)' == 'true' ">true</IsPackable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="Microsoft.Testing.Platform.Application.BuildTimeUTC" Value="$([System.DateTime]::UtcNow.ToString('yyyy/MM/dd'))" />
+  </ItemGroup>
 
   <!-- NuGet properties -->
   <PropertyGroup>
