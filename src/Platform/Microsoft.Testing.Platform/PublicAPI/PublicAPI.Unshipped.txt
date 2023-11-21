@@ -55,9 +55,9 @@ Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider
 Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.GetCommandLineOptions() -> Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption![]!
 Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.IsValidConfiguration(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, out string? errorMessage) -> bool
 Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.OptionArgumentsAreValid(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments, out string? errorMessage) -> bool
-Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T>
-Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T>.CompositeExtensionFactory(System.Func<System.IServiceProvider!, T!>! factory) -> void
-Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T>.CompositeExtensionFactory(System.Func<T!>! factory) -> void
+Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<TExtension>
+Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<TExtension>.CompositeExtensionFactory(System.Func<System.IServiceProvider!, TExtension!>! factory) -> void
+Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<TExtension>.CompositeExtensionFactory(System.Func<TExtension!>! factory) -> void
 Microsoft.Testing.Platform.Extensions.IAsyncCleanableExtension
 Microsoft.Testing.Platform.Extensions.IAsyncCleanableExtension.CleanupAsync() -> System.Threading.Tasks.Task!
 Microsoft.Testing.Platform.Extensions.IAsyncInitializableExtension
