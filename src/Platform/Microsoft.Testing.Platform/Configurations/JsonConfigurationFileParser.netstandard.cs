@@ -3,10 +3,11 @@
 
 #if !NETCOREAPP
 
-using System.Diagnostics;
 using System.Globalization;
 
 using Jsonite;
+
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
@@ -39,7 +40,7 @@ internal sealed class JsonConfigurationFileParser
             return (_singleValueData, _propertyToAllChildren);
         }
 
-        throw new FormatException("Top-level JSON element must be an object.");
+        throw new FormatException(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage, "null"));
     }
 
     private void VisitObjectElement(JsonObject obj)
@@ -62,7 +63,7 @@ internal sealed class JsonConfigurationFileParser
         string key = _paths.Peek();
         if (_propertyToAllChildren.ContainsKey(key))
         {
-            throw new FormatException(string.Format(CultureInfo.InvariantCulture, "A duplicate key '{0}' was found.", key));
+            throw new FormatException(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonConfigurationFileParserDuplicateKeyErrorMessage, key));
         }
 
         _propertyToAllChildren[key] = Jsonite.Json.Serialize(property, _settings);
@@ -109,7 +110,7 @@ internal sealed class JsonConfigurationFileParser
                 string key = _paths.Peek();
                 if (_singleValueData.ContainsKey(key))
                 {
-                    throw new FormatException(string.Format(CultureInfo.InvariantCulture, "A duplicate key '{0}' was found.", key));
+                    throw new FormatException(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonConfigurationFileParserDuplicateKeyErrorMessage, key));
                 }
 
                 // Adapt to the System.Text.Json serialization outcome

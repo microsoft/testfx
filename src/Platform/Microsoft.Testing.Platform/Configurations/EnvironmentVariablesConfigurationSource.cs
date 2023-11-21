@@ -18,9 +18,11 @@ internal class EnvironmentVariablesConfigurationSource : IConfigurationSource
 
     public string Version => AppVersion.DefaultSemVer;
 
-    public string DisplayName => nameof(EnvironmentVariablesConfigurationSource);
+    // Can be empty string because it's not used in the UI
+    public string DisplayName => string.Empty;
 
-    public string Description => "Environment variable based configuration source.";
+    // Can be empty string because it's not used in the UI
+    public string Description => string.Empty;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

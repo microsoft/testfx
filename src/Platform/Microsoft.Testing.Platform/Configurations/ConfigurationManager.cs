@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 using static Microsoft.Testing.Platform.Configurations.JsonConfigurationSource;
@@ -57,7 +58,7 @@ internal sealed class ConfigurationManager : IConfigurationManager
         }
 
         return defaultJsonConfiguration is null
-            ? throw new InvalidOperationException("Default json configuration should not be null.")
-            : (IConfiguration)new AggregatedConfiguration(configurationProviders.ToArray());
+            ? throw new InvalidOperationException(PlatformResources.ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage)
+            : new AggregatedConfiguration(configurationProviders.ToArray());
     }
 }
