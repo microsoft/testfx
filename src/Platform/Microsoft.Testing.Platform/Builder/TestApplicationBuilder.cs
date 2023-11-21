@@ -86,7 +86,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
         if (_testFrameworkAdapterFactory is not null)
         {
-            throw new InvalidOperationException("The test framework adapter factory has already been registered.");
+            throw new InvalidOperationException(Resources.Resources.TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage);
         }
 
         _testFrameworkAdapterFactory = adapterFactory;
