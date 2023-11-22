@@ -2,14 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Framework;
+using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
-
+using Microsoft.Testing.Platform.Extensions.CommandLine;
 #if ENABLE_CODECOVERAGE
 using Microsoft.Testing.Platform.Extensions.CodeCoverage;
 #endif
 using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.TestInfrastructure;
 
@@ -21,10 +23,8 @@ builder.AddTestFramework(new Microsoft.Testing.Platform.UnitTests.SourceGenerate
 builder.AddCodeCoverage();
 #endif
 
-// builder.AddHangDumpGenerator();
-// builder.AddCrashDumpGenerator(ignoreIfNotSupported: true);
-// builder.AddTrxReportGenerator();
-// builder.AddAppInsightsTelemetryProvider();
+var commandLine = new FakeTrxReportGeneratorCommandLine();
+builder.CommandLine.AddProvider(() => commandLine);
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
@@ -65,4 +65,42 @@ internal sealed class GlobalTasks : ITestApplicationLifecycleCallbacks
     }
 
     public Task BeforeRunAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+}
+
+internal sealed class FakeTrxReportGeneratorCommandLine : ICommandLineOptionsProvider
+{
+    public const string IsTrxReportEnabled = "report-trx";
+    public const string TrxReportFileName = "report-trx-filename";
+
+    public string Uid => "fake trx";
+
+    public string Version => "1.0.0";
+
+    public string DisplayName => "Fake trx";
+
+    public string Description => "Fake trx";
+
+    public CommandLineOption[] GetCommandLineOptions()
+       => new CommandLineOption[]
+        {
+            new(IsTrxReportEnabled, $"Generate the TRX report.", ArgumentArity.ZeroOrOne, false),
+            new(TrxReportFileName, $"Name of the generated TRX report file.", ArgumentArity.ZeroOrOne, false),
+        };
+
+    public Task<bool> IsEnabledAsync()
+    {
+        return Task.FromResult(true);
+    }
+
+    public bool IsValidConfiguration(ICommandLineOptions commandLineOptions, out string? errorMessage)
+    {
+        errorMessage = null;
+        return true;
+    }
+
+    public bool OptionArgumentsAreValid(CommandLineOption commandOption, string[] arguments, out string? errorMessage)
+    {
+        errorMessage = null;
+        return true;
+    }
 }

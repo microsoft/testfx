@@ -182,6 +182,9 @@ dotnet_diagnostic.CA1854.severity = warning
 # CA1806: Do not ignore method results
 dotnet_diagnostic.CA1806.severity = warning
 
+# RS0016: Only enable if API files are present
+dotnet_public_api_analyzer.require_api_files = true
+
 # SA1010: Opening square brackets should be spaced correctly
 # https://github.com/DotNetAnalyzers/StyleCopAnalyzers/issues/3687
 dotnet_diagnostic.SA1010.severity = none

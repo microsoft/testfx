@@ -27,18 +27,15 @@
   <!-- end netstandard2.0 polyfill -->
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCore)" PrivateAssets="All" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform.Extensions.CodeCoverage" Version="$(MicrosoftTestingPlatformExtensionsCodeCoverageVersion)" Condition=" '$(EnableCodeCoverage)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Platform.Extensions.HangDump" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform.Extensions.Telemetry" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <!-- Do not change this to use RepoRoot, it will be defined to incorrect path when building from parent repository.  -->
+    <ProjectReference Include="..\..\..\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
 
   <ItemGroup>
