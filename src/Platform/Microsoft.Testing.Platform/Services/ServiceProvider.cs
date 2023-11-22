@@ -5,10 +5,13 @@
 using System.Reflection;
 #endif
 
+using System.Globalization;
+
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Services;
 
@@ -37,13 +40,12 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
         ArgumentGuard.Ensure(
             service is not ITestFramework || AllowTestAdapterFrameworkRegistration,
             nameof(service),
-            "You cannot register a test adapter using Services.Add, use instead TestApplicationBuilder.RegisterTestFrameworkAdapter");
+            PlatformResources.ServiceProviderShouldNotRegisterTestFramework);
 
         // We don't want to add the same service twice, it's possible when with the CompositeExtensionFactory
-        if (_services.Contains(service) && throwIfSameInstanceExit)
-        {
-            throw new InvalidOperationException($"Instance of type '{service.GetType()}' already added");
-        }
+        StateGuard.Ensure(
+            !_services.Contains(service) || !throwIfSameInstanceExit,
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderServiceAlreadyRegistered, service.GetType()));
 
         _services.Add(service);
     }
@@ -61,7 +63,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
         ArgumentGuard.Ensure(
             service is not ITestFramework || AllowTestAdapterFrameworkRegistration,
             nameof(service),
-            "You cannot register a test adapter using Services.Add, use instead TestApplicationBuilder.RegisterTestFrameworkAdapter");
+            PlatformResources.ServiceProviderShouldNotRegisterTestFramework);
 
         // We don't want to add the same service twice, it's possible when with the CompositeExtensionFactory
         if (_services.Contains(service))
