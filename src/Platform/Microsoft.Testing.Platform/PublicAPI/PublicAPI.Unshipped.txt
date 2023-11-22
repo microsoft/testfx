@@ -389,6 +389,8 @@ static Microsoft.Testing.Platform.Extensions.Messages.PassedTestNodeStatePropert
 static Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty.CachedInstance.get -> Microsoft.Testing.Platform.Extensions.Messages.SkippedTestNodeStateProperty!
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.implicit operator Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid!(string! value) -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid!
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.implicit operator string!(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! testNode) -> string!
+static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.operator !=(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! left, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! right) -> bool
+static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.operator ==(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! left, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! right) -> bool
 static Microsoft.Testing.Platform.Logging.LoggerFactoryExtensions.CreateLogger<TCategoryName>(this Microsoft.Testing.Platform.Logging.ILoggerFactory! factory) -> Microsoft.Testing.Platform.Logging.ILogger<TCategoryName>!
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogCritical(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> void
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogCriticalAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!
