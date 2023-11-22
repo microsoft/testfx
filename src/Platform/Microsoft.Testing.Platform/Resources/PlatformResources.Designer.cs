@@ -97,6 +97,33 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find service of type &apos;{0}&apos;.
+        /// </summary>
+        internal static string ServiceProviderCannotFindServiceErrorMessage {
+            get {
+                return ResourceManager.GetString("ServiceProviderCannotFindServiceErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instance of type &apos;{0}&apos; is already registered.
+        /// </summary>
+        internal static string ServiceProviderServiceAlreadyRegistered {
+            get {
+                return ResourceManager.GetString("ServiceProviderServiceAlreadyRegistered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Instances of type &apos;ITestFramework&apos; should not be registered through the service provider but through &apos;ITestApplicationBuilder.RegisterTestFramework&apos;.
+        /// </summary>
+        internal static string ServiceProviderShouldNotRegisterTestFramework {
+            get {
+                return ResourceManager.GetString("ServiceProviderShouldNotRegisterTestFramework", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The application has already been built.
         /// </summary>
         internal static string TestApplicationBuilderApplicationAlreadyRegistered {
@@ -129,6 +156,24 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TestApplicationBuilderTestFrameworkNotRegistered {
             get {
                 return ResourceManager.GetString("TestApplicationBuilderTestFrameworkNotRegistered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Determine the result of the test application execution.
+        /// </summary>
+        internal static string TestApplicationResultDescription {
+            get {
+                return ResourceManager.GetString("TestApplicationResultDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test application result.
+        /// </summary>
+        internal static string TestApplicationResultDisplayName {
+            get {
+                return ResourceManager.GetString("TestApplicationResultDisplayName", resourceCulture);
             }
         }
         

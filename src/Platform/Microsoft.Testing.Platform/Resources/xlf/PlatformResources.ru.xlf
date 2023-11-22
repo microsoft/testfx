@@ -22,6 +22,21 @@
         <target state="new">Unsupported JSON token '{0}' was found</target>
         <note />
       </trans-unit>
+      <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
+        <source>Cannot find service of type '{0}'</source>
+        <target state="new">Cannot find service of type '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServiceProviderServiceAlreadyRegistered">
+        <source>Instance of type '{0}' is already registered</source>
+        <target state="new">Instance of type '{0}' is already registered</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
+        <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
+        <target state="new">Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
         <source>The application has already been built</source>
         <target state="new">The application has already been built</target>
@@ -40,6 +55,16 @@
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</source>
         <target state="new">The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationResultDescription">
+        <source>Determine the result of the test application execution</source>
+        <target state="new">Determine the result of the test application execution</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationResultDisplayName">
+        <source>Test application result</source>
+        <target state="new">Test application result</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">

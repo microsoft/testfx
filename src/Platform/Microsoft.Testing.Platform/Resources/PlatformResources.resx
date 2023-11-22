@@ -129,6 +129,15 @@
   <data name="JsonConfigurationFileParserUnsupportedTokenErrorMessage" xml:space="preserve">
     <value>Unsupported JSON token '{0}' was found</value>
   </data>
+  <data name="ServiceProviderCannotFindServiceErrorMessage" xml:space="preserve">
+    <value>Cannot find service of type '{0}'</value>
+  </data>
+  <data name="ServiceProviderServiceAlreadyRegistered" xml:space="preserve">
+    <value>Instance of type '{0}' is already registered</value>
+  </data>
+  <data name="ServiceProviderShouldNotRegisterTestFramework" xml:space="preserve">
+    <value>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</value>
+  </data>
   <data name="TestApplicationBuilderApplicationAlreadyRegistered" xml:space="preserve">
     <value>The application has already been built</value>
   </data>
@@ -140,6 +149,12 @@
   </data>
   <data name="TestApplicationBuilderTestFrameworkNotRegistered" xml:space="preserve">
     <value>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</value>
+  </data>
+  <data name="TestApplicationResultDescription" xml:space="preserve">
+    <value>Determine the result of the test application execution</value>
+  </data>
+  <data name="TestApplicationResultDisplayName" xml:space="preserve">
+    <value>Test application result</value>
   </data>
   <data name="TestApplicationVSTestModeTooManyBuilders" xml:space="preserve">
     <value>VSTest mode only supports a single TestApplicationBuilder per process</value>

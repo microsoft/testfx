@@ -7,15 +7,15 @@ using System.Globalization;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, ILoggerProvider, IOutputDeviceDataProducer, IDataConsumer
+internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, ILoggerProvider, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputService;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
@@ -42,10 +42,10 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     public string Version { get; } = AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = "Test Application Result";
+    public string DisplayName { get; } = PlatformResources.TestApplicationResultDisplayName;
 
     /// <inheritdoc />
-    public string Description { get; } = string.Empty;
+    public string Description { get; } = PlatformResources.TestApplicationResultDescription;
 
     /// <inheritdoc />
     public Type[] DataTypesConsumed { get; }
@@ -100,7 +100,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
         foreach ((string categoryName, string error) in _testApplicationResultLoggers.SelectMany(logger => logger.Errors.Select(error => (logger.CategoryName, error))))
         {
             anyError = true;
-            await _outputService.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText($"[{categoryName}]{error}"));
+            await _outputService.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText($"[{categoryName}] {error}"));
         }
 
         int exitCode = ExitCodes.Success;
