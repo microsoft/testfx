@@ -18,9 +18,10 @@ namespace TestFramework.ForTestingMSTest;
 
 [DefaultExecutorUri(Constants.ExecutorUri)]
 [ExtensionUri(Constants.ExecutorUri)]
-internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
+internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, IDisposable
 {
     private CancellationTokenSource? _testRunCancellationTokenSource;
+    private bool _isDisposed;
 
     /// <inheritdoc/>
     public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger,
@@ -308,6 +309,16 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor
             testResult.ErrorStackTrace = realException.StackTrace;
 
             return false;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (!_isDisposed)
+        {
+            _testRunCancellationTokenSource?.Dispose();
+            _testRunCancellationTokenSource = null;
+            _isDisposed = true;
         }
     }
 }
