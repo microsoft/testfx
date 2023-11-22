@@ -129,7 +129,19 @@
   <data name="JsonConfigurationFileParserUnsupportedTokenErrorMessage" xml:space="preserve">
     <value>Unsupported JSON token '{0}' was found</value>
   </data>
+  <data name="TestApplicationBuilderApplicationAlreadyRegistered" xml:space="preserve">
+    <value>The application has already been built</value>
+  </data>
   <data name="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage" xml:space="preserve">
     <value>The test framework adapter factory has already been registered</value>
+  </data>
+  <data name="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered" xml:space="preserve">
+    <value>The test framework capabilities factory has already been registered</value>
+  </data>
+  <data name="TestApplicationBuilderTestFrameworkNotRegistered" xml:space="preserve">
+    <value>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</value>
+  </data>
+  <data name="TestApplicationVSTestModeTooManyBuilders" xml:space="preserve">
+    <value>VSTest mode only supports a single TestApplicationBuilder per process</value>
   </data>
 </root>

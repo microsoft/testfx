@@ -22,9 +22,29 @@
         <target state="new">Unsupported JSON token '{0}' was found</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
+        <source>The application has already been built</source>
+        <target state="new">The application has already been built</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
         <source>The test framework adapter factory has already been registered</source>
         <target state="new">The test framework adapter factory has already been registered</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
+        <source>The test framework capabilities factory has already been registered</source>
+        <target state="new">The test framework capabilities factory has already been registered</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
+        <source>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</source>
+        <target state="new">The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
+        <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
+        <target state="new">VSTest mode only supports a single TestApplicationBuilder per process</target>
         <note />
       </trans-unit>
     </body>

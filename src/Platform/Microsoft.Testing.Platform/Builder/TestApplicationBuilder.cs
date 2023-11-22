@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
@@ -86,14 +87,14 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
         if (_testFrameworkAdapterFactory is not null)
         {
-            throw new InvalidOperationException(Resources.Resources.TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage);
+            throw new InvalidOperationException(PlatformResources.TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage);
         }
 
         _testFrameworkAdapterFactory = adapterFactory;
 
         if (_testFrameworkCapabilitiesFactory is not null)
         {
-            throw new InvalidOperationException("The test framework capabilities factory has already been registered.");
+            throw new InvalidOperationException(PlatformResources.TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered);
         }
 
         _testFrameworkCapabilitiesFactory = capabilitiesFactory;
@@ -108,12 +109,12 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     {
         if (_testFrameworkAdapterFactory is null)
         {
-            throw new InvalidOperationException("The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it.");
+            throw new InvalidOperationException(PlatformResources.TestApplicationBuilderTestFrameworkNotRegistered);
         }
 
         if (_testHost is not null)
         {
-            throw new InvalidOperationException("The application has already been built.");
+            throw new InvalidOperationException(PlatformResources.TestApplicationBuilderApplicationAlreadyRegistered);
         }
 
         _testHost = await _testHostBuilder.BuildAsync(

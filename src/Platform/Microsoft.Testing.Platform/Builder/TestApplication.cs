@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Builder;
 
@@ -91,7 +92,7 @@ public sealed class TestApplication : ITestApplication
             Interlocked.Increment(ref s_numberOfBuilders) > MaxNumberOfBuilders &&
             !loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.SkipBuildersNumberCheckOptionKey))
         {
-            throw new InvalidOperationException("More than one TestApplicationBuilder per process is not supported in VSTest mode");
+            throw new InvalidOperationException(PlatformResources.TestApplicationVSTestModeTooManyBuilders);
         }
 
         // All checks are fine, create the TestApplication.
