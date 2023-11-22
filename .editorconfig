@@ -167,6 +167,9 @@ dotnet_diagnostic.IDE0028.severity = warning
 # IDE0017: Simplify object initialization
 dotnet_diagnostic.IDE0017.severity = warning
 
+# CA1001: Types that own disposable fields should be disposable
+dotnet_diagnostic.CA1001.severity = warning
+
 # CA1829: Use Length/Count property instead of Count() when available
 dotnet_diagnostic.CA1829.severity = warning
 

@@ -16,7 +16,7 @@ using TestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestGroup]
-public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable
+public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, IDisposable
 {
     private readonly PerRequestServerDataConsumer _service;
     private readonly ServiceProvider _serviceProvider = new();
@@ -198,5 +198,10 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable
         public Type[] DataTypesProduced => new[] { typeof(SessionFileArtifact) };
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    }
+
+    public void Dispose()
+    {
+        _service.Dispose();
     }
 }
