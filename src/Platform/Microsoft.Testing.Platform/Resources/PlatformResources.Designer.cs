@@ -61,11 +61,38 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to create a test execution filter.
+        /// </summary>
+        internal static string CannotCreateTestExecutionFilterErrorMessage {
+            get {
+                return ResourceManager.GetString("CannotCreateTestExecutionFilterErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find the default json configuration.
         /// </summary>
         internal static string ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage {
             get {
                 return ResourceManager.GetString("ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creates the right test execution filter for console mode.
+        /// </summary>
+        internal static string ConsoleTestExecutionFilterFactoryDescription {
+            get {
+                return ResourceManager.GetString("ConsoleTestExecutionFilterFactoryDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Console test execution filter factory.
+        /// </summary>
+        internal static string ConsoleTestExecutionFilterFactoryDisplayName {
+            get {
+                return ResourceManager.GetString("ConsoleTestExecutionFilterFactoryDisplayName", resourceCulture);
             }
         }
         
@@ -93,6 +120,24 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string JsonConfigurationFileParserUnsupportedTokenErrorMessage {
             get {
                 return ResourceManager.GetString("JsonConfigurationFileParserUnsupportedTokenErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creates the right test execution filter for server mode.
+        /// </summary>
+        internal static string ServerTestExecutionFilterFactoryDescription {
+            get {
+                return ResourceManager.GetString("ServerTestExecutionFilterFactoryDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server test execution filter factory.
+        /// </summary>
+        internal static string ServerTestExecutionFilterFactoryDisplayName {
+            get {
+                return ResourceManager.GetString("ServerTestExecutionFilterFactoryDisplayName", resourceCulture);
             }
         }
         
@@ -183,6 +228,78 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TestApplicationVSTestModeTooManyBuilders {
             get {
                 return ResourceManager.GetString("TestApplicationVSTestModeTooManyBuilders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test adapter test session failure.
+        /// </summary>
+        internal static string TestHostAdapterInvokerFailedTestSessionErrorMessage {
+            get {
+                return ResourceManager.GetString("TestHostAdapterInvokerFailedTestSessionErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A filter &apos;{0}&apos; should not contain a &apos;/&apos; character.
+        /// </summary>
+        internal static string TreeNodeFilterCannotContainSlashCharacterErrorMessage {
+            get {
+                return ResourceManager.GetString("TreeNodeFilterCannotContainSlashCharacterErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An escape character should not terminate the filter string &apos;{0}&apos;.
+        /// </summary>
+        internal static string TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage {
+            get {
+                return ResourceManager.GetString("TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only the final filter path can contain &apos;**&apos; wildcard.
+        /// </summary>
+        internal static string TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage {
+            get {
+                return ResourceManager.GetString("TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected operator &apos;&amp;&apos; or &apos;|&apos; within filter expression &apos;{0}&apos;.
+        /// </summary>
+        internal static string TreeNodeFilterOperatorNotAllowedErrorMessage {
+            get {
+                return ResourceManager.GetString("TreeNodeFilterOperatorNotAllowedErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid node path, expected root as first character &apos;{0}&apos;.
+        /// </summary>
+        internal static string TreeNodeFilterPathShouldStartWithSlashErrorMessage {
+            get {
+                return ResourceManager.GetString("TreeNodeFilterPathShouldStartWithSlashErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter expression &apos;{0}&apos; contains an unbalanced number of &apos;{1}&apos; &apos;{2}&apos; operators.
+        /// </summary>
+        internal static string TreeNodeFilterUnbalancedFilterErrorMessage {
+            get {
+                return ResourceManager.GetString("TreeNodeFilterUnbalancedFilterErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Filter contains an unexpected &apos;/&apos; operator inside a parenthesized expression.
+        /// </summary>
+        internal static string TreeNodeFilterUnexpectedSlashOperatorErrorMessage {
+            get {
+                return ResourceManager.GetString("TreeNodeFilterUnexpectedSlashOperatorErrorMessage", resourceCulture);
             }
         }
     }

@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
@@ -89,7 +90,8 @@ internal class TestHostAdapterInvoker : ITestFrameworkInvoker, IOutputDeviceData
         if (!isSuccess)
         {
             ITestApplicationProcessExitCode testApplicationProcessExitCode = ServiceProvider.GetTestApplicationProcessExitCode();
-            await testApplicationProcessExitCode.SetTestAdapterTestSessionFailureAsync(errorMessage ?? "Test adapter test session failure.");
+            await testApplicationProcessExitCode.SetTestAdapterTestSessionFailureAsync(errorMessage
+                ?? PlatformResources.TestHostAdapterInvokerFailedTestSessionErrorMessage);
         }
     }
 }
