@@ -18,8 +18,7 @@ internal class FileLoggerProvider : ILoggerProvider, IDisposable
     private readonly string _logPrefixName;
     private readonly bool _customDirectory;
 
-    /* for testing */
-    internal FileLoggerProvider()
+    internal /* for testing */ FileLoggerProvider()
     {
         _clock = new SystemClock();
         _logPrefixName = string.Empty;
