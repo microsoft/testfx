@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Requests;
 
@@ -19,9 +20,9 @@ internal sealed class ConsoleTestExecutionFilterFactory : ITestExecutionFilterFa
 
     public string Version => AppVersion.DefaultSemVer;
 
-    public string DisplayName => nameof(ConsoleTestExecutionFilterFactory);
+    public string DisplayName => PlatformResources.ConsoleTestExecutionFilterFactoryDisplayName;
 
-    public string Description => nameof(ConsoleTestExecutionFilterFactory);
+    public string Description => PlatformResources.ConsoleTestExecutionFilterFactoryDescription;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

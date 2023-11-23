@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Requests;
 
@@ -11,9 +12,9 @@ internal sealed class ServerTestExecutionFilterFactory : ITestExecutionFilterFac
 
     public string Version => AppVersion.DefaultSemVer;
 
-    public string DisplayName => nameof(ServerTestExecutionFilterFactory);
+    public string DisplayName => PlatformResources.ServerTestExecutionFilterFactoryDisplayName;
 
-    public string Description => nameof(ServerTestExecutionFilterFactory);
+    public string Description => PlatformResources.ServerTestExecutionFilterFactoryDescription;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

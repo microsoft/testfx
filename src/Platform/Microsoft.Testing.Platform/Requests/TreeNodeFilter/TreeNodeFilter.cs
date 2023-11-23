@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Requests;
 
@@ -81,14 +83,14 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                 case "|":
                     if (!isOperatorAllowed)
                     {
-                        throw new InvalidOperationException();
+                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterOperatorNotAllowedErrorMessage, filter));
                     }
 
                     OperatorKind currentOp = token switch
                     {
                         "&" => OperatorKind.And,
                         "|" => OperatorKind.Or,
-                        _ => throw new UnreachableException(),
+                        _ => throw ExceptionUtils.Unreachable(),
                     };
 
                     ProcessHigherPrecedenceOperators(expressionStack, operatorStack, currentOp);
@@ -132,7 +134,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                         {
                             // Reaching this implies that the input string is unbalanced.
                             // For instance ")".
-                            throw new InvalidOperationException("Invalid input filter string.");
+                            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterUnbalancedFilterErrorMessage, filter, '(', ')'));
                         }
 
                         topStackOperator = operatorStack.Pop();
@@ -164,7 +166,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                         {
                             // Reaching this implies that the input string is unbalanced.
                             // For instance "]".
-                            throw new InvalidOperationException("Invalid input filter string.");
+                            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterUnbalancedFilterErrorMessage, filter, '[', ']'));
                         }
 
                         topStackOperator = operatorStack.Pop();
@@ -268,7 +270,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
             case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprsNot } when subexprsNot.Count != 1:
             case OperatorExpression { Op: FilterOperator.And, SubExpressions: var subexprsAnd } when subexprsAnd.Count < 2:
             case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subexprsOr } when subexprsOr.Count < 2:
-                throw new UnreachableException();
+                throw ExceptionUtils.Unreachable();
 
             case OperatorExpression opExpr:
                 foreach (FilterExpression childExpr in opExpr.SubExpressions)
@@ -279,10 +281,10 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                 break;
 
             case ValueExpression vExpr when vExpr.Value.Contains(PathSeparator):
-                throw new InvalidOperationException($"""A filter "{vExpr.Value}" should not contain a / character.""");
+                throw new ArgumentException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterCannotContainSlashCharacterErrorMessage, vExpr.Value));
 
             case ValueExpression vExpr when vExpr.Value.Equals(AllNodesBelowRegexString, StringComparison.Ordinal) && !isMatchAllAllowed:
-                throw new InvalidOperationException("Only the final filter path can contain ** wildcard.");
+                throw new ArgumentException(PlatformResources.TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage);
         }
     }
 
@@ -313,7 +315,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                     OperatorKind.And => FilterOperator.And,
                     OperatorKind.Or => FilterOperator.Or,
                     OperatorKind.FilterEquals => FilterOperator.Equals,
-                    _ => throw new UnreachableException(),
+                    _ => throw ExceptionUtils.Unreachable(),
                 };
 
                 expr.Push(new OperatorExpression(filter, subexprs));
@@ -336,7 +338,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                 // Note: Handling of other operations in valid scenarios should be handled by the caller.
                 //       Reaching this code for instance means that we're trying to process / operator
                 //       in the middle of a ( expression ).
-                throw new InvalidOperationException("Invalid input filter string.");
+                throw new InvalidOperationException(PlatformResources.TreeNodeFilterUnexpectedSlashOperatorErrorMessage);
         }
     }
 
@@ -364,7 +366,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                     else
                     {
                         // Note: An escape character should not terminate a filter string.
-                        throw new InvalidOperationException("An escape character should not terminate the filter string");
+                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage, filter));
                     }
 
                     break;
@@ -431,7 +433,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
     {
         ArgumentGuard.IsNotNullOrEmpty(testNodeFullPath);
         ArgumentGuard.Ensure(testNodeFullPath[0] == PathSeparator, nameof(testNodeFullPath),
-            $"Invalid node path, expected root as first character '{PathSeparator}'");
+            string.Format(CultureInfo.InvariantCulture, PlatformResources.TreeNodeFilterPathShouldStartWithSlashErrorMessage, PathSeparator));
 
         int currentCharIndex = 1;
         int currentFragmentIndex = 0;
@@ -496,7 +498,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                 => MatchFilterPattern(valueExpr, testNodeFragment, properties)
                     && MatchProperties(propExpr, properties),
             NopExpression => true,
-            _ => throw new NotSupportedException(),
+            _ => throw ExceptionUtils.Unreachable(),
         };
 
     private static bool MatchProperties(
@@ -512,6 +514,6 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                 => subExprs.All(expr => MatchProperties(expr, properties)),
             OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subExprs }
                 => !MatchProperties(subExprs.Single(), properties),
-            _ => throw new NotSupportedException(),
+            _ => throw ExceptionUtils.Unreachable(),
         };
 }

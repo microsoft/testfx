@@ -117,12 +117,19 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CannotCreateTestExecutionFilterErrorMessage" xml:space="preserve">
+    <value>Failed to create a test execution filter</value>
   <data name="CompositeServiceFactoryInstanceAlreadyRegistered" xml:space="preserve">
     <value>The same instance of 'CompositeExtensonFactory' is already registered</value>
   </data>
   <data name="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage" xml:space="preserve">
     <value>Could not find the default json configuration</value>
   </data>
+  <data name="ConsoleTestExecutionFilterFactoryDescription" xml:space="preserve">
+    <value>Creates the right test execution filter for console mode</value>
+  </data>
+  <data name="ConsoleTestExecutionFilterFactoryDisplayName" xml:space="preserve">
+    <value>Console test execution filter factory</value>
   <data name="ExtensionDoesNotImplementGivenInterfaceErrorMessage" xml:space="preserve">
     <value>Extension of type '{0}' is not implementing the required '{1}' interface</value>
   </data>
@@ -137,6 +144,12 @@
   </data>
   <data name="JsonConfigurationFileParserUnsupportedTokenErrorMessage" xml:space="preserve">
     <value>Unsupported JSON token '{0}' was found</value>
+  </data>
+  <data name="ServerTestExecutionFilterFactoryDescription" xml:space="preserve">
+    <value>Creates the right test execution filter for server mode</value>
+  </data>
+  <data name="ServerTestExecutionFilterFactoryDisplayName" xml:space="preserve">
+    <value>Server test execution filter factory</value>
   </data>
   <data name="ServiceProviderCannotFindServiceErrorMessage" xml:space="preserve">
     <value>Cannot find service of type '{0}'</value>
@@ -171,6 +184,30 @@
   <data name="TestApplicationVSTestModeTooManyBuilders" xml:space="preserve">
     <value>VSTest mode only supports a single TestApplicationBuilder per process</value>
   </data>
+  <data name="TestHostAdapterInvokerFailedTestSessionErrorMessage" xml:space="preserve">
+    <value>Test adapter test session failure</value>
+  </data>
+  <data name="TreeNodeFilterCannotContainSlashCharacterErrorMessage" xml:space="preserve">
+    <value>A filter '{0}' should not contain a '/' character</value>
+  </data>
+  <data name="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage" xml:space="preserve">
+    <value>An escape character should not terminate the filter string '{0}'</value>
+  </data>
+  <data name="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage" xml:space="preserve">
+    <value>Only the final filter path can contain '**' wildcard</value>
+  </data>
+  <data name="TreeNodeFilterOperatorNotAllowedErrorMessage" xml:space="preserve">
+    <value>Unexpected operator '&amp;' or '|' within filter expression '{0}'</value>
+  </data>
+  <data name="TreeNodeFilterPathShouldStartWithSlashErrorMessage" xml:space="preserve">
+    <value>Invalid node path, expected root as first character '{0}'</value>
+  </data>
+  <data name="TreeNodeFilterUnbalancedFilterErrorMessage" xml:space="preserve">
+    <value>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</value>
+    <comment>{1} and {2} are () or []</comment>
+  </data>
+  <data name="TreeNodeFilterUnexpectedSlashOperatorErrorMessage" xml:space="preserve">
+    <value>Filter contains an unexpected '/' operator inside a parenthesized expression</value>
   <data name="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage" xml:space="preserve">
     <value>An 'ITestExecutionFilterFactory' factory is already set</value>
   </data>
