@@ -26,7 +26,7 @@ internal static class AppDomainUtilities
     private static readonly Version DefaultVersion = new();
     private static readonly Version Version45 = new("4.5");
 
-    private static XmlUtilities? s_xmlUtilities = null;
+    private static XmlUtilities? s_xmlUtilities;
 
     /// <summary>
     /// Gets or sets the Xml Utilities instance.
@@ -171,7 +171,7 @@ internal static class AppDomainUtilities
         {
             // Add redirection of the built 11.0 Object Model assembly to the current version if that is not 11.0
             var currentVersionOfObjectModel = typeof(TestCase).Assembly.GetName().Version.ToString();
-            if (!string.Equals(currentVersionOfObjectModel, ObjectModelVersionBuiltAgainst))
+            if (!string.Equals(currentVersionOfObjectModel, ObjectModelVersionBuiltAgainst, StringComparison.Ordinal))
             {
                 var assemblyName = typeof(TestCase).Assembly.GetName();
                 var configurationBytes =
@@ -251,7 +251,7 @@ internal static class AppDomainUtilities
         catch (FormatException ex)
         {
             // if the version is ".NETPortable,Version=v4.5,Profile=Profile259", then above code will throw exception.
-            EqtTrace.Warning(string.Format("AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{0}' due to error '{1}':", version, ex.Message));
+            EqtTrace.Warning($"AppDomainUtilities.GetTargetFrameworkVersionFromVersionString: Could not create version object from version string '{version}' due to error '{ex.Message}':");
         }
 
         return DefaultVersion;

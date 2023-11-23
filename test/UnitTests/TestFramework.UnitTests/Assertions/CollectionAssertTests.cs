@@ -249,6 +249,7 @@ public class CollectionAssertTests : TestContainer
         comparer.ToString(); // no warning
     }
 
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
     private ICollection? GetCollection() => new[] { "item" };
 
     private object? GetMatchingElement() => "item";
@@ -262,6 +263,7 @@ public class CollectionAssertTests : TestContainer
     private Type? GetStringType() => typeof(string);
 
     private IComparer? GetComparer() => new ObjectComparer();
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
 
     private class ObjectComparer : IComparer
     {

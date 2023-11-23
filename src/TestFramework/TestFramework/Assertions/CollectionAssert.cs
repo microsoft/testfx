@@ -334,6 +334,7 @@ public sealed class CollectionAssert
             }
             else
             {
+#pragma warning disable CA1864 // Prefer the 'IDictionary.TryAdd(TKey, TValue)' method
                 if (table.ContainsKey(current))
                 {
                     string userMessage = Assert.BuildUserMessage(message, parameters);
@@ -349,6 +350,7 @@ public sealed class CollectionAssert
                 {
                     table.Add(current, true);
                 }
+#pragma warning restore CA1864 // Prefer the 'IDictionary.TryAdd(TKey, TValue)' method
             }
         }
     }

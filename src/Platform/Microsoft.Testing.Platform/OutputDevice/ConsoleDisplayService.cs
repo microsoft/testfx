@@ -90,14 +90,14 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
         _testApplicationCancellationTokenSource.CancellationToken.Register(() => _console.WriteLine("Cancelling the test session..."));
     }
 
-    public Type[] DataTypesConsumed { get; } = new[]
-    {
+    public Type[] DataTypesConsumed { get; } =
+    [
         typeof(TestNodeUpdateMessage),
         typeof(SessionFileArtifact),
         typeof(TestNodeFileArtifact),
         typeof(FileArtifact),
         typeof(TestRequestExecutionTimeInfo),
-    };
+    ];
 
     /// <inheritdoc />
     public string Uid { get; } = nameof(ConsoleOutputDevice);

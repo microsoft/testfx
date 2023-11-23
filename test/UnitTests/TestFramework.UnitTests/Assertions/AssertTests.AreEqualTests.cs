@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -43,6 +44,7 @@ public partial class AssertTests : TestContainer
         Verify(ex!.Message.Contains("A Message"));
     }
 
+    [SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "Testing the API without the culture")]
     public void AreNotEqualShouldFailWhenNotEqualStringAndCaseIgnored()
     {
         static void Action() => Assert.AreNotEqual("A", "a", true);
@@ -212,6 +214,7 @@ public partial class AssertTests : TestContainer
         Verify(ex!.Message.Contains("A Message"));
     }
 
+    [SuppressMessage("Globalization", "CA1304:Specify CultureInfo", Justification = "Testing the API without the culture")]
     public void AreEqualShouldFailWhenNotEqualStringAndCaseIgnored()
     {
         static void Action() => Assert.AreEqual("A", "a", false);
@@ -395,15 +398,25 @@ public partial class AssertTests : TestContainer
         }
     }
 
-    private class EquatableType : IEquatable<EquatableType>
+    private sealed class EquatableType : IEquatable<EquatableType>
     {
         public bool Equals(EquatableType? other)
         {
             return true;
         }
+
+        public override bool Equals(object? obj)
+        {
+            return Equals(obj as EquatableType);
+        }
+
+        public override int GetHashCode()
+        {
+            return 0;
+        }
     }
 
-    private class TypeOverridesEqualsEqualityComparer : EqualityComparer<TypeOverridesEquals>
+    private sealed class TypeOverridesEqualsEqualityComparer : EqualityComparer<TypeOverridesEquals>
     {
         public override bool Equals(TypeOverridesEquals? x, TypeOverridesEquals? y)
         {

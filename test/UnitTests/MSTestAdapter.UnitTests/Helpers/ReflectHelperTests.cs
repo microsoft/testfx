@@ -50,7 +50,7 @@ public class ReflectHelperTests : TestContainer
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel") }, MemberTypes.TypeInfo);
 
-        string[] expected = new[] { "ClassLevel" };
+        string[] expected = ["ClassLevel"];
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
 
         Verify(expected.SequenceEqual(actual));
@@ -67,7 +67,7 @@ public class ReflectHelperTests : TestContainer
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel") }, MemberTypes.Method);
 
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
-        string[] expected = new[] { "MethodLevel", "ClassLevel", "AsmLevel1", "AsmLevel2", "AsmLevel3" };
+        string[] expected = ["MethodLevel", "ClassLevel", "AsmLevel1", "AsmLevel2", "AsmLevel3"];
 
         Verify(expected.SequenceEqual(actual));
     }
@@ -85,7 +85,7 @@ public class ReflectHelperTests : TestContainer
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel2") }, MemberTypes.Method);
 
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
-        string[] expected = new[] { "MethodLevel1", "MethodLevel2", "ClassLevel1", "ClassLevel2", "AsmLevel1", "AsmLevel2" };
+        string[] expected = ["MethodLevel1", "MethodLevel2", "ClassLevel1", "ClassLevel2", "AsmLevel1", "AsmLevel2"];
 
         Verify(expected.SequenceEqual(actual));
     }
@@ -97,7 +97,7 @@ public class ReflectHelperTests : TestContainer
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel") }, MemberTypes.All);
 
-        string[] expected = new[] { "AsmLevel" };
+        string[] expected = ["AsmLevel"];
 
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
 
@@ -111,7 +111,7 @@ public class ReflectHelperTests : TestContainer
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel"), new UTF.TestCategoryAttribute("ClassLevel1") }, MemberTypes.TypeInfo);
 
-        string[] expected = new[] { "ClassLevel", "ClassLevel1" };
+        string[] expected = ["ClassLevel", "ClassLevel1"];
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
 
         Verify(expected.SequenceEqual(actual));
@@ -124,7 +124,7 @@ public class ReflectHelperTests : TestContainer
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel"), new UTF.TestCategoryAttribute("AsmLevel1") }, MemberTypes.All);
 
-        string[] expected = new[] { "AsmLevel", "AsmLevel1" };
+        string[] expected = ["AsmLevel", "AsmLevel1"];
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
         Verify(expected.SequenceEqual(actual));
     }
@@ -136,7 +136,7 @@ public class ReflectHelperTests : TestContainer
     {
         _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel") }, MemberTypes.Method);
 
-        string[] expected = new[] { "MethodLevel" };
+        string[] expected = ["MethodLevel"];
         var actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
 
         Verify(expected.SequenceEqual(actual));

@@ -18,7 +18,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting.AppContainer;
 /// </summary>
 public class UITestMethodAttribute : TestMethodAttribute
 {
-    private static bool s_isApplicationInitialized = false;
+    private static bool s_isApplicationInitialized;
     private static DispatcherQueue? s_applicationDispatcherQueue;
 
     /// <summary>
@@ -84,7 +84,7 @@ public class UITestMethodAttribute : TestMethodAttribute
             }
             catch (Exception e)
             {
-                return new TestResult[] { new() { TestFailureException = e } };
+                return [new() { TestFailureException = e }];
             }
         }
         else
@@ -111,7 +111,7 @@ public class UITestMethodAttribute : TestMethodAttribute
             taskCompletionSource.Task.GetAwaiter().GetResult();
         }
 
-        return new TestResult[] { result! };
+        return [result!];
     }
 
     private static Type? GetApplicationType(Assembly assembly)

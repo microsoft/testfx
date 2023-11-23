@@ -64,7 +64,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
             SchemaColumn = "TABLE_SCHEM",
             NameColumn = "TABLE_NAME",
             TableTypeColumn = "TABLE_TYPE",
-            ValidTableTypes = new string[] { "TABLE", "SYSTEM TABLE" },
+            ValidTableTypes = ["TABLE", "SYSTEM TABLE"],
             InvalidSchemas = null,
         };
         SchemaMetaData data2 = new()
@@ -73,10 +73,10 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
             SchemaColumn = "TABLE_SCHEM",
             NameColumn = "TABLE_NAME",
             TableTypeColumn = "TABLE_TYPE",
-            ValidTableTypes = new string[] { "VIEW" },
-            InvalidSchemas = new string[] { "sys", "INFORMATION_SCHEMA" },
+            ValidTableTypes = ["VIEW"],
+            InvalidSchemas = ["sys", "INFORMATION_SCHEMA"],
         };
-        return new SchemaMetaData[] { data1, data2 };
+        return [data1, data2];
     }
 
     protected override string QuoteIdentifier(string identifier)
@@ -97,7 +97,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
         OdbcConnectionStringBuilder builder = new(connectionString);
 
         // only fix this for excel
-        if (!string.Equals(builder.Dsn, "Excel Files"))
+        if (!string.Equals(builder.Dsn, "Excel Files", System.StringComparison.Ordinal))
         {
             return connectionString;
         }

@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <AnalysisLevel>preview</AnalysisLevel>
+    <!-- Use recommended ruleset of the preview SDK installed -->
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
 

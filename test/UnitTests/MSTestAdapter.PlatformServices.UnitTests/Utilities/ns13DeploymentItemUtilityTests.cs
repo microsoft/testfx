@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
@@ -350,6 +351,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
         StringAssert.Contains(
             string.Format(
+                CultureInfo.InvariantCulture,
                 Resource.DeploymentItemContainsInvalidCharacters,
                 "C:<>",
                 _defaultDeploymentItemOutputDirectory),
@@ -362,6 +364,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
         StringAssert.Contains(
             string.Format(
+                CultureInfo.InvariantCulture,
                 Resource.DeploymentItemContainsInvalidCharacters,
                 _defaultDeploymentItemPath,
                 "<>"),
@@ -374,6 +377,7 @@ public class DeploymentItemUtilityTests : TestContainer
 
         StringAssert.Contains(
            string.Format(
+               CultureInfo.InvariantCulture,
                Resource.DeploymentItemOutputDirectoryMustBeRelative,
                "C:\\temp"),
            warning);
@@ -383,7 +387,7 @@ public class DeploymentItemUtilityTests : TestContainer
     {
         Verify(DeploymentItemUtility.IsValidDeploymentItem(_defaultDeploymentItemPath, _defaultDeploymentItemOutputDirectory, out var warning));
 
-        Verify(string.Empty.Equals(warning));
+        Verify(string.Empty.Equals(warning, System.StringComparison.Ordinal));
     }
     #endregion
 

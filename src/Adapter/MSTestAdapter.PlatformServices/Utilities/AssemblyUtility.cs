@@ -27,7 +27,7 @@ internal class AssemblyUtility
 #if NETFRAMEWORK
     private static Dictionary<string, object?>? s_cultures;
 #endif
-    private readonly string[] _assemblyExtensions = new string[] { ".dll", ".exe" };
+    private readonly string[] _assemblyExtensions = [".dll", ".exe"];
 
 #if NETFRAMEWORK
     /// <summary>
@@ -193,7 +193,7 @@ internal class AssemblyUtility
     /// <param name="assemblyPath"> Path to assembly to get dependencies for. </param>
     /// <param name="configFile"> Config file to use while trying to resolve dependencies. </param>
     /// <param name="warnings"> The warnings. </param>
-    /// <returns> The <see cref="T:string[]"/>. </returns>
+    /// <returns> The <see cref="string"/>[]. </returns>
     internal virtual string[] GetFullPathToDependentAssemblies(string assemblyPath, string? configFile, out IList<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyPath), "assemblyPath");
@@ -254,7 +254,9 @@ internal class AssemblyUtility
             var dllDirectoryUppercase = dllDirectory.ToUpperInvariant();
             foreach (var dependency in allDependencies)
             {
+#pragma warning disable CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
                 if (dependency.ToUpperInvariant().Contains(dllDirectoryUppercase))
+#pragma warning restore CA1862 // Use the 'StringComparison' method overloads to perform case-insensitive string comparisons
                 {
                     dependenciesFromDllDirectory.Add(dependency);
                 }

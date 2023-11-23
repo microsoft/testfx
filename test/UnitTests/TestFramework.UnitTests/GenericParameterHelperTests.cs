@@ -14,7 +14,7 @@ namespace UnitTestFramework.Tests;
 /// </summary>
 public class GenericParameterHelperTests : TestContainer
 {
-    private GenericParameterHelper _sut = null;
+    private GenericParameterHelper _sut;
 
     public GenericParameterHelperTests()
     {

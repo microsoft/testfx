@@ -95,7 +95,7 @@ internal static class DiaSessionOperations
 
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
-            s_methodGetNavigationData = s_typeDiaSession.GetRuntimeMethod("GetNavigationData", new[] { typeof(string), typeof(string) });
+            s_methodGetNavigationData = s_typeDiaSession.GetRuntimeMethod("GetNavigationData", [typeof(string), typeof(string)]);
             s_propertyFileName = s_typeDiaNavigationData.GetRuntimeProperty("FileName");
             s_propertyMinLineNumber = s_typeDiaNavigationData.GetRuntimeProperty("MinLineNumber");
         }

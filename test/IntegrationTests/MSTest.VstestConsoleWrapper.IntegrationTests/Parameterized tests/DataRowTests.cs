@@ -11,7 +11,7 @@ public class DataRowTests : CLITestBase
 
     public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerivedClassHasDataRows_SimpleDataRows()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TestCategory~DataRowSimple");
+        InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~DataRowSimple");
 
         ValidatePassedTestsContain(
             "DataRowTestMethod (BaseString1)",
@@ -28,7 +28,7 @@ public class DataRowTests : CLITestBase
 
     public void GetDisplayName_AfterOverriding_GetsTheNewDisplayName()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TestCategory~OverriddenGetDisplayName");
+        InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~OverriddenGetDisplayName");
 
         ValidatePassedTestsContain(
             "Overridden DisplayName");
@@ -38,7 +38,7 @@ public class DataRowTests : CLITestBase
 
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
+        InvokeVsTestForExecution([TestAssetName], testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
 
         ValidatePassedTestsContain(
             "DataRowTestMethod (DerivedString1)",
@@ -50,7 +50,7 @@ public class DataRowTests : CLITestBase
 
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TestCategory~DataRowSomeOptional");
+        InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~DataRowSomeOptional");
 
         ValidatePassedTestsContain(
             "DataRowTestMethodWithSomeOptionalParameters (123)",
@@ -63,7 +63,7 @@ public class DataRowTests : CLITestBase
 
     public void DataRowsExecuteWithAllOptionalParameters()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TestCategory~DataRowAllOptional");
+        InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~DataRowAllOptional");
 
         ValidatePassedTestsContain(
             "DataRowTestMethodWithAllOptionalParameters ()",
@@ -77,7 +77,7 @@ public class DataRowTests : CLITestBase
 
     public void DataRowsExecuteWithParamsArrayParameter()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TestCategory~DataRowParamsArgument");
+        InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~DataRowParamsArgument");
 
         ValidatePassedTestsContain(
             "DataRowTestMethodWithParamsParameters (2)",
@@ -91,7 +91,7 @@ public class DataRowTests : CLITestBase
 
     public void DataRowsFailWhenInvalidArgumentsProvided()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "FullyQualifiedName~DataRowTests_Regular&TestCategory~DataRowOptionalInvalidArguments");
+        InvokeVsTestForExecution([TestAssetName], testCaseFilter: "FullyQualifiedName~DataRowTests_Regular&TestCategory~DataRowOptionalInvalidArguments");
 
         ValidatePassedTestsContain(
             "DataRowTestMethodFailsWithInvalidArguments ()",
@@ -106,7 +106,7 @@ public class DataRowTests : CLITestBase
     {
         // Arrange & Act
         InvokeVsTestForExecution(
-            new string[] { TestAssetName },
+            [TestAssetName],
             testCaseFilter: "FullyQualifiedName~DataRowTests_Enums");
 
         // Assert
@@ -178,7 +178,7 @@ public class DataRowTests : CLITestBase
     {
         // Arrange & Act
         InvokeVsTestForExecution(
-            new string[] { TestAssetName },
+            [TestAssetName],
             testCaseFilter: "FullyQualifiedName~DataRowTests_NonSerializablePaths");
 
         // Assert
@@ -194,7 +194,7 @@ public class DataRowTests : CLITestBase
     {
         // Arrange & Act
         InvokeVsTestForExecution(
-            new string[] { TestAssetName },
+            [TestAssetName],
             testCaseFilter: "FullyQualifiedName~DataRowTests_Regular");
 
         // Assert

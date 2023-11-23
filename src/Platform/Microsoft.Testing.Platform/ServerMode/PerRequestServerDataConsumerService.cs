@@ -45,13 +45,13 @@ internal sealed class PerRequestServerDataConsumer : IDataConsumer, ITestSession
     }
 
     public Type[] DataTypesConsumed { get; }
-        = new[]
-        {
+        =
+        [
             typeof(TestNodeUpdateMessage),
             typeof(FileArtifact),
             typeof(SessionFileArtifact),
             typeof(TestNodeFileArtifact),
-        };
+        ];
 
     /// <inheritdoc />
     public string Uid => nameof(PerRequestServerDataConsumer);

@@ -21,22 +21,23 @@ public partial class CLITestBase : TestContainer
         "Release";
 #endif
 
-    // This value is automatically updated by "build.ps1" script.
     private const string TestPlatformCLIPackageName = "Microsoft.TestPlatform";
     private const string DefaultTargetFramework = "net462";
 
-    protected XmlDocument ReadVersionProps()
+    protected static XmlDocument ReadVersionProps()
     {
         var versionPropsFilePath = Path.Combine(GetArtifactsBinFolderPath(), "..", "..", EngineeringFolder, "Versions.props");
         using var fileStream = File.OpenRead(versionPropsFilePath);
+#pragma warning disable CA3075 // Insecure DTD processing in XML
         using var xmlTextReader = new XmlTextReader(fileStream) { Namespaces = false };
+#pragma warning restore CA3075 // Insecure DTD processing in XML
         var versionPropsXml = new XmlDocument();
         versionPropsXml.Load(xmlTextReader);
 
         return versionPropsXml;
     }
 
-    protected string GetTestPlatformVersion()
+    protected static string GetTestPlatformVersion()
     {
         var versionPropsXml = ReadVersionProps();
         var testSdkVersion = versionPropsXml.DocumentElement.SelectSingleNode($"PropertyGroup/MicrosoftNETTestSdkVersion");
@@ -44,7 +45,7 @@ public partial class CLITestBase : TestContainer
         return testSdkVersion.InnerText;
     }
 
-    protected string GetArtifactsBinFolderPath()
+    protected static string GetArtifactsBinFolderPath()
     {
         var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
@@ -54,7 +55,7 @@ public partial class CLITestBase : TestContainer
         return artifactsBinFolder;
     }
 
-    protected string GetAssetFullPath(string assetName, string configuration = null, string targetFramework = null)
+    protected static string GetAssetFullPath(string assetName, string configuration = null, string targetFramework = null)
     {
         configuration ??= Configuration;
         targetFramework ??= DefaultTargetFramework;
@@ -71,7 +72,7 @@ public partial class CLITestBase : TestContainer
     /// </summary>
     /// <param name="settingsXml">RunSettings provided for discovery/execution.</param>
     /// <returns>RunSettingXml as string.</returns>
-    protected string GetRunSettingXml(string settingsXml)
+    protected static string GetRunSettingXml(string settingsXml)
     {
         if (string.IsNullOrEmpty(settingsXml))
         {

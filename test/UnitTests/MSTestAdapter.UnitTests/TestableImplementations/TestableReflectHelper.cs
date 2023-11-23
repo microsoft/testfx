@@ -13,7 +13,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
 /// <summary>
 /// A testable implementation of reflect helper.
 /// </summary>
-internal class TestableReflectHelper : ReflectHelper
+internal sealed class TestableReflectHelper : ReflectHelper
 {
     /// <summary>
     /// A dictionary to hold mock custom attributes. The int represents a hash code of

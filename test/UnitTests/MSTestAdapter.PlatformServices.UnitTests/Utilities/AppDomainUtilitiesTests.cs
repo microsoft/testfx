@@ -100,7 +100,9 @@ public class AppDomainUtilitiesTests : TestContainer
                 var doc = new XmlDocument();
                 try
                 {
+#pragma warning disable CA3075 // Insecure DTD processing in XML
                     doc.LoadXml(ConfigXml);
+#pragma warning restore CA3075 // Insecure DTD processing in XML
                 }
                 catch (XmlException)
                 {

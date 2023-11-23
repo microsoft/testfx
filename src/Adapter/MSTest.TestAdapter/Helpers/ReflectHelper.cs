@@ -53,7 +53,7 @@ internal class ReflectHelper : MarshalByRefObject
         {
             // If we could not obtain all attributes from cache, just get the one we need.
             var specificAttributes = GetCustomAttributes<TAttribute>(memberInfo, inherit);
-            return specificAttributes.Any(a => string.Equals(a.GetType().AssemblyQualifiedName, requiredAttributeQualifiedName));
+            return specificAttributes.Any(a => string.Equals(a.GetType().AssemblyQualifiedName, requiredAttributeQualifiedName, StringComparison.Ordinal));
         }
 
         return attributes.ContainsKey(requiredAttributeQualifiedName);
@@ -336,8 +336,8 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="owningType">The type that owns <paramref name="testMethod"/>.</param>
     /// <returns>True if test method should not run in parallel.</returns>
     internal bool IsDoNotParallelizeSet(MemberInfo testMethod, Type owningType)
-        => GetCustomAttributes<DoNotParallelizeAttribute>(testMethod).Any()
-        || GetCustomAttributes<DoNotParallelizeAttribute>(owningType.GetTypeInfo()).Any();
+        => GetCustomAttributes<DoNotParallelizeAttribute>(testMethod).Length != 0
+        || GetCustomAttributes<DoNotParallelizeAttribute>(owningType.GetTypeInfo()).Length != 0;
 
     /// <summary>
     /// Get the parallelization behavior for a test assembly.
@@ -346,7 +346,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>True if test assembly should not run in parallel.</returns>
     internal static bool IsDoNotParallelizeSet(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute))
-            !.Any(); // TODO: Investigate if we rely on NRE
+            !.Length != 0; // TODO: Investigate if we rely on NRE
 
     /// <summary>
     /// Gets the class cleanup lifecycle set on an assembly.

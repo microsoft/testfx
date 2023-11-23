@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
@@ -115,7 +116,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
-        Verify(exception.Message.StartsWith("Unable to get type C. Error: System.Exception: Load failure"));
+        Verify(exception.Message.StartsWith("Unable to get type C. Error: System.Exception: Load failure", StringComparison.Ordinal));
     }
 
     public void GetTestMethodInfoShouldThrowIfTypeDoesNotHaveADefaultConstructor()
@@ -133,7 +134,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
-        Verify(exception.Message.StartsWith("Unable to get default constructor for class " + className));
+        Verify(exception.Message.StartsWith("Unable to get default constructor for class " + className, StringComparison.Ordinal));
     }
 
     public void GetTestMethodInfoShouldThrowIfTestContextHasATypeMismatch()
@@ -151,7 +152,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
-        Verify(exception.Message.StartsWith(string.Format("The {0}.TestContext has incorrect type.", className)));
+        Verify(exception.Message.StartsWith($"The {className}.TestContext has incorrect type.", StringComparison.Ordinal));
     }
 
     public void GetTestMethodInfoShouldThrowIfTestContextHasMultipleAmbiguousTestContextProperties()
@@ -169,7 +170,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(exception is not null);
         Verify(exception is TypeInspectionException);
-        Verify(exception.Message.StartsWith(string.Format("Unable to find property {0}.TestContext. Error:{1}.", className, "Ambiguous match found.")));
+        Verify(exception.Message.StartsWith(string.Format(CultureInfo.InvariantCulture, "Unable to find property {0}.TestContext. Error:{1}.", className, "Ambiguous match found."), StringComparison.Ordinal));
     }
 
     public void GetTestMethodInfoShouldSetTestContextIfPresent()
@@ -334,6 +335,7 @@ public class TypeCacheTests : TestContainer
         var methodInfo = type.GetMethod("AssemblyInit");
         var expectedMessage =
             string.Format(
+                CultureInfo.InvariantCulture,
                 "Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be Task.",
                 methodInfo.DeclaringType.FullName,
                 methodInfo.Name);
@@ -365,6 +367,7 @@ public class TypeCacheTests : TestContainer
         var methodInfo = type.GetMethod("AssemblyCleanup");
         var expectedMessage =
             string.Format(
+                CultureInfo.InvariantCulture,
                 "Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.",
                 methodInfo.DeclaringType.FullName,
                 methodInfo.Name);
@@ -668,6 +671,7 @@ public class TypeCacheTests : TestContainer
         var methodInfo = type.GetMethod("AssemblyInit");
         var expectedMessage =
             string.Format(
+                CultureInfo.InvariantCulture,
                 "Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be Task.",
                 methodInfo.DeclaringType.FullName,
                 methodInfo.Name);
@@ -699,6 +703,7 @@ public class TypeCacheTests : TestContainer
         var methodInfo = type.GetMethod("AssemblyCleanup");
         var expectedMessage =
             string.Format(
+                CultureInfo.InvariantCulture,
                 "Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.",
                 methodInfo.DeclaringType.FullName,
                 methodInfo.Name);
@@ -771,6 +776,7 @@ public class TypeCacheTests : TestContainer
         var methodInfo = type.GetMethod("TestInit");
         var expectedMessage =
             string.Format(
+                CultureInfo.InvariantCulture,
                 "Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.",
                 methodInfo.DeclaringType.FullName,
                 methodInfo.Name);
@@ -865,6 +871,7 @@ public class TypeCacheTests : TestContainer
         Verify(exception is TypeInspectionException);
 
         var expectedMessage = string.Format(
+            CultureInfo.InvariantCulture,
             "Method {0}.{1} does not exist.",
             testMethod.FullClassName,
             testMethod.Name);
@@ -930,6 +937,7 @@ public class TypeCacheTests : TestContainer
 
         var expectedMessage =
             string.Format(
+                CultureInfo.InvariantCulture,
                 "UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0.",
                 testMethod.FullClassName,
                 testMethod.Name);
@@ -1038,7 +1046,7 @@ public class TypeCacheTests : TestContainer
             new Dictionary<string, object>());
 
         _typeCache.GetTestMethodInfo(testMethod, testContext, false);
-        var customProperty = ((IDictionary<string, object>)testContext.Properties).FirstOrDefault(p => p.Key.Equals("WhoAmI"));
+        var customProperty = ((IDictionary<string, object>)testContext.Properties).FirstOrDefault(p => p.Key.Equals("WhoAmI", StringComparison.Ordinal));
 
         Verify((object)customProperty is not null);
         Verify(customProperty.Value as string == "Me");
@@ -1058,6 +1066,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(testMethodInfo is not null);
         var expectedMessage = string.Format(
+            CultureInfo.InvariantCulture,
             "UTA023: {0}: Cannot define predefined property {2} on method {1}.",
             methodInfo.DeclaringType.FullName,
             methodInfo.Name,
@@ -1079,6 +1088,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(testMethodInfo is not null);
         var expectedMessage = string.Format(
+            CultureInfo.InvariantCulture,
             "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
             methodInfo.DeclaringType.FullName,
             methodInfo.Name);
@@ -1099,6 +1109,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(testMethodInfo is not null);
         var expectedMessage = string.Format(
+            CultureInfo.InvariantCulture,
             "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
             methodInfo.DeclaringType.FullName,
             methodInfo.Name);

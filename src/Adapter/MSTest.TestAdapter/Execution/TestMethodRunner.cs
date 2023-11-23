@@ -110,13 +110,13 @@ internal class TestMethodRunner
         }
         catch (TestFailedException ex)
         {
-            result = new[] { new UnitTestResult(ex) };
+            result = [new UnitTestResult(ex)];
         }
         catch (Exception ex)
         {
             if (result == null || result.Length == 0)
             {
-                result = new[] { new UnitTestResult() };
+                result = [new UnitTestResult()];
             }
 
             var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
@@ -390,13 +390,16 @@ internal class TestMethodRunner
         }
         catch (Exception ex)
         {
-            return new[]
-            {
+            return
+            [
                 new TestResult()
                 {
+                    // TODO: We need to change the exception type to more specific one.
+#pragma warning disable CA2201 // Do not raise reserved exception types
                     TestFailureException = new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ExecuteThrewException, ex?.Message, ex?.StackTrace), ex),
+#pragma warning restore CA2201 // Do not raise reserved exception types
                 },
-            };
+            ];
         }
     }
 

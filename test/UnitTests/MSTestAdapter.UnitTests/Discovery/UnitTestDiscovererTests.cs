@@ -381,7 +381,7 @@ public class UnitTestDiscovererTests : TestContainer
     private void VerifyNavigationDataIsPresent()
     {
         _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.LineNumber == 1)), Times.Once);
-        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.CodeFilePath.Equals("DummyFileName.cs"))), Times.Once);
+        _mockTestCaseDiscoverySink.Verify(ds => ds.SendTestCase(It.Is<TestCase>(tc => tc.CodeFilePath.Equals("DummyFileName.cs", StringComparison.Ordinal))), Times.Once);
     }
 }
 
@@ -435,12 +435,12 @@ internal class TestableDiscoveryContextWithGetTestCaseFilter : IDiscoveryContext
     }
 }
 
-internal class TestableDiscoveryContextWithoutGetTestCaseFilter : IDiscoveryContext
+internal sealed class TestableDiscoveryContextWithoutGetTestCaseFilter : IDiscoveryContext
 {
     public IRunSettings RunSettings { get; }
 }
 
-internal class TestableTestCaseFilterExpression : ITestCaseFilterExpression
+internal sealed class TestableTestCaseFilterExpression : ITestCaseFilterExpression
 {
     private readonly Func<TestCase, bool> _matchTest;
 

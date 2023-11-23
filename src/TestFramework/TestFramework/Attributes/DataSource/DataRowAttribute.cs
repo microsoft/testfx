@@ -40,7 +40,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     {
         if (data == null)
         {
-            Data = new object?[] { null };
+            Data = [null];
         }
         else
         {

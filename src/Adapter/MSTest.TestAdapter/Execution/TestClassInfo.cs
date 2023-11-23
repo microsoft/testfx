@@ -161,7 +161,7 @@ public class TestClassInfo
             }
 
             // Otherwise, if any base cleanups were pushed to the stack we need to run them
-            if (BaseClassCleanupMethodsStack.Any())
+            if (BaseClassCleanupMethodsStack.Count != 0)
             {
                 return true;
             }
@@ -239,7 +239,10 @@ public class TestClassInfo
 
         if (testContext == null)
         {
+            // TODO: Change this exception type to ArgumentNullException
+#pragma warning disable CA2201 // Do not raise reserved exception types
             throw new NullReferenceException(Resource.TestContextIsNull);
+#pragma warning restore CA2201 // Do not raise reserved exception types
         }
 
         MethodInfo? initializeMethod = null;

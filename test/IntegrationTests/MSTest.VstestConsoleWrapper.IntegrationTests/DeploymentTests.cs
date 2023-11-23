@@ -24,7 +24,7 @@ public class DeploymentTests : CLITestBase
 
     private void ValidateTestSourceDependencyDeployment(string targetFramework)
     {
-        InvokeVsTestForExecution(new string[] { TestAssetNever }, targetFramework: targetFramework);
+        InvokeVsTestForExecution([TestAssetNever], targetFramework: targetFramework);
         ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.FailIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
         ValidateFailedTestsContain(true, "DeploymentTestProject.DeploymentTestProject.PassIfFilePresent");
     }
@@ -38,7 +38,7 @@ public class DeploymentTests : CLITestBase
 
     public void ValidateTestSourceLocationDeployment(string targetFramework)
     {
-        InvokeVsTestForExecution(new string[] { TestAssetPreserveNewest }, RunSetting, "DeploymentTestProject", targetFramework: targetFramework);
+        InvokeVsTestForExecution([TestAssetPreserveNewest], RunSetting, "DeploymentTestProject", targetFramework: targetFramework);
         ValidatePassedTestsContain("DeploymentTestProject.DeploymentTestProject.PassIfFilePresent", "DeploymentTestProject.DeploymentTestProject.PassIfDeclaredFilesPresent");
         ValidateFailedTestsContain(true, "DeploymentTestProject.DeploymentTestProject.FailIfFilePresent");
     }
@@ -51,7 +51,7 @@ public class DeploymentTests : CLITestBase
 
     public void ValidateDirectoryDeployment(string targetFramework)
     {
-        InvokeVsTestForExecution(new string[] { TestAssetPreserveNewest }, testCaseFilter: "DirectoryDeploymentTests", targetFramework: targetFramework);
+        InvokeVsTestForExecution([TestAssetPreserveNewest], testCaseFilter: "DirectoryDeploymentTests", targetFramework: targetFramework);
         ValidatePassedTestsContain("DeploymentTestProject.PreserveNewest.DirectoryDeploymentTests.DirectoryWithForwardSlash", "DeploymentTestProject.PreserveNewest.DirectoryDeploymentTests.DirectoryWithBackSlash");
     }
 
@@ -63,7 +63,7 @@ public class DeploymentTests : CLITestBase
 
     public void ValidateFileDeployment(string targetFramework)
     {
-        InvokeVsTestForExecution(new string[] { TestAssetPreserveNewest }, testCaseFilter: "FileDeploymentTests", targetFramework: targetFramework);
+        InvokeVsTestForExecution([TestAssetPreserveNewest], testCaseFilter: "FileDeploymentTests", targetFramework: targetFramework);
         ValidatePassedTestsContain("DeploymentTestProject.PreserveNewest.FileDeploymentTests.FileWithForwardSlash", "DeploymentTestProject.PreserveNewest.FileDeploymentTests.FileWithBackSlash");
     }
 }

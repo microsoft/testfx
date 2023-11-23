@@ -407,7 +407,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="className">The class name.</param>
     /// <param name="methodName">The method name.</param>
     /// <returns>Test framework exception with details.</returns>
-    private static Exception HandleMethodException(Exception ex, string className, string methodName)
+    private static TestFailedException HandleMethodException(Exception ex, string className, string methodName)
     {
         DebugEx.Assert(ex != null, "exception should not be null.");
 

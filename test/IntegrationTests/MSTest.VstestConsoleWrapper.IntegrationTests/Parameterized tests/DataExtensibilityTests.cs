@@ -11,13 +11,13 @@ public class DataExtensibilityTests : CLITestBase
 
     public void ExecuteTestDataSourceExtensibilityTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName });
+        InvokeVsTestForExecution([TestAssetName]);
         ValidatePassedTestsContain("CustomTestDataSourceTestMethod1 (1,2,3)", "CustomTestDataSourceTestMethod1 (4,5,6)");
     }
 
     public void ExecuteDynamicDataExtensibilityTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName });
+        InvokeVsTestForExecution([TestAssetName]);
         ValidatePassedTestsContain(
             "DynamicDataTestMethod1 (string,2,True)",
             "DynamicDataTestMethod2 (string,4,True)",
@@ -33,7 +33,7 @@ public class DataExtensibilityTests : CLITestBase
 
     public void ExecuteCustomTestExtensibilityTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName });
+        InvokeVsTestForExecution([TestAssetName]);
 
         ValidatePassedTestsContain(
             "CustomTestMethod1 - Execution number 1",
@@ -52,7 +52,7 @@ public class DataExtensibilityTests : CLITestBase
 
     public void ExecuteCustomTestExtensibilityWithTestDataTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "FullyQualifiedName~CustomTestExTests.CustomTestMethod2");
+        InvokeVsTestForExecution([TestAssetName], testCaseFilter: "FullyQualifiedName~CustomTestExTests.CustomTestMethod2");
 
         ValidatePassedTests(
             "CustomTestMethod2 (B)",

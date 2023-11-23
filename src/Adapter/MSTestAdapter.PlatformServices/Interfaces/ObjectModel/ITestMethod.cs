@@ -5,7 +5,9 @@ using System.Collections.Generic;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+#pragma warning disable CA1716 // Do not use reserved keywords
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel;
+#pragma warning restore CA1716 // Do not use reserved keywords
 
 /// <summary>
 /// TestMethod structure that is shared between adapter and platform services only.

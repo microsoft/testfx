@@ -120,7 +120,7 @@ internal class TestMethodFilter
         try
         {
             // GetTestCaseFilter is present in DiscoveryContext but not in IDiscoveryContext interface.
-            MethodInfo? methodGetTestCaseFilter = context.GetType().GetRuntimeMethod("GetTestCaseFilter", new[] { typeof(IEnumerable<string>), typeof(Func<string, TestProperty>) });
+            MethodInfo? methodGetTestCaseFilter = context.GetType().GetRuntimeMethod("GetTestCaseFilter", [typeof(IEnumerable<string>), typeof(Func<string, TestProperty>)]);
             return (ITestCaseFilterExpression?)methodGetTestCaseFilter?.Invoke(context, new object[] { _supportedProperties.Keys, (Func<string, TestProperty>)PropertyProvider });
         }
         catch (Exception ex)

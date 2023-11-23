@@ -347,7 +347,7 @@ public class TestContextImplementationTests : TestContainer
         dataTable.Columns.Add("Id", typeof(int));
         dataTable.Columns.Add("Name", typeof(string));
 
-        dataTable.LoadDataRow(new object[] { 2, "Hello" }, true);
+        dataTable.LoadDataRow([2, "Hello"], true);
 
         _testContextImplementation.SetDataRow(dataTable.Select()[0]);
 

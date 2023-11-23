@@ -11,7 +11,7 @@ public class TestProjectFSharpTests : CLITestBase
 
     public void ExecuteCustomTestExtensibilityTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName }, targetFramework: "net472");
+        InvokeVsTestForExecution([TestAssetName], targetFramework: "net472");
         ValidatePassedTestsContain("Test method passing with a . in it");
         ValidateFailedTestsCount(0);
         ValidatePassedTestsCount(1);

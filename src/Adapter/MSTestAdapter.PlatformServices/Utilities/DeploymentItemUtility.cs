@@ -182,7 +182,7 @@ internal class DeploymentItemUtility
         return false;
     }
 
-    private static IList<DeploymentItem> GetDeploymentItems(object[] deploymentItemAttributes, ICollection<string> warnings)
+    private static List<DeploymentItem> GetDeploymentItems(object[] deploymentItemAttributes, ICollection<string> warnings)
     {
         var deploymentItems = new List<DeploymentItem>();
 
@@ -249,7 +249,7 @@ internal class DeploymentItemUtility
             return null;
         }
 
-        IList<KeyValuePair<string, string>> result = new List<KeyValuePair<string, string>>();
+        List<KeyValuePair<string, string>> result = [];
 
         foreach (var deploymentItem in deploymentItemList)
         {

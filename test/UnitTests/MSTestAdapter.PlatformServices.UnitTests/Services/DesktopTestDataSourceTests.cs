@@ -39,7 +39,7 @@ public class DesktopTestDataSourceTests : TestContainer
             "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", DataAccessMethod.Sequential);
 
         _mockTestMethodInfo.Setup(ds => ds.GetAttributes<DataSourceAttribute>(false))
-            .Returns(new DataSourceAttribute[] { dataSourceAttribute });
+            .Returns([dataSourceAttribute]);
         _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
         TestDataSource testDataSource = new();
@@ -58,7 +58,7 @@ public class DesktopTestDataSourceTests : TestContainer
             "Microsoft.VisualStudio.TestTools.DataSource.XML", "DataTestSourceFile.xml", "settings", DataAccessMethod.Sequential);
 
         _mockTestMethodInfo.Setup(ds => ds.GetAttributes<DataSourceAttribute>(false))
-            .Returns(new DataSourceAttribute[] { dataSourceAttribute });
+            .Returns([dataSourceAttribute]);
         _mockTestMethodInfo.Setup(ds => ds.MethodInfo).Returns(methodInfo);
 
         TestDataSource testDataSource = new();

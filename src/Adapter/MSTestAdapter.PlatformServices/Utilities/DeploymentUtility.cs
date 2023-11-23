@@ -178,7 +178,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
                 {
                     DebugEx.Assert(!StringEx.IsNullOrEmpty(satellite), "DeploymentManager.DoDeployment: got empty satellite!");
                     DebugEx.Assert(
-                        satellite.IndexOf(itemDir, StringComparison.OrdinalIgnoreCase) == 0,
+                        satellite.StartsWith(itemDir, StringComparison.OrdinalIgnoreCase),
                         "DeploymentManager.DoDeployment: Got satellite that does not start with original item path");
 
                     string satelliteDir = Path.GetDirectoryName(satellite);

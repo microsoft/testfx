@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -57,7 +58,7 @@ internal static class TestCaseExtensions
         var fullyQualifiedName = testCase.FullyQualifiedName;
 
         // Not using Replace because there can be multiple instances of that string.
-        var name = fullyQualifiedName.StartsWith($"{testClassName}.")
+        var name = fullyQualifiedName.StartsWith($"{testClassName}.", StringComparison.Ordinal)
             ? fullyQualifiedName.Remove(0, $"{testClassName}.".Length)
             : fullyQualifiedName;
 

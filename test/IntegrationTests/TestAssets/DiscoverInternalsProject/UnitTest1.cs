@@ -54,7 +54,7 @@ internal class FancyStringsAreCaseInsensitive : CaseInsensitivityTests<FancyStri
 }
 
 [DataContract]
-internal class SerializableInternalType
+internal sealed class SerializableInternalType
 {
 }
 

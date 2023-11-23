@@ -191,7 +191,7 @@ public class TestMethodFilterTests : TestContainer
         }
     }
 
-    private class TestableRunContext : IRunContext
+    private sealed class TestableRunContext : IRunContext
     {
         private readonly Func<ITestCaseFilterExpression> _getFilter;
 
@@ -246,7 +246,7 @@ public class TestMethodFilterTests : TestContainer
         public IRunSettings RunSettings { get; }
     }
 
-    private class TestableTestCaseFilterExpression : ITestCaseFilterExpression
+    private sealed class TestableTestCaseFilterExpression : ITestCaseFilterExpression
     {
         public string TestCaseFilterValue { get; }
 

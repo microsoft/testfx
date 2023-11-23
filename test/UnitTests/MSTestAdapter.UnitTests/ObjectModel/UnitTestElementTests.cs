@@ -143,7 +143,9 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.Traits = null;
         var testCase = _unitTestElement.ToTestCase();
 
+#pragma warning disable CA1827 // Do not use Count() or LongCount() when Any() can be used
         Verify(testCase.Traits.Count() == 0);
+#pragma warning restore CA1827 // Do not use Count() or LongCount() when Any() can be used
 
         var trait = new TestPlatform.ObjectModel.Trait("trait", "value");
         _unitTestElement.Traits = new TestPlatform.ObjectModel.Trait[] { trait };

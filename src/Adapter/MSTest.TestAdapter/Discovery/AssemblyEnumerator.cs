@@ -210,7 +210,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
     }
 
-    private IEnumerable<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string? runSettingsXml, Type type,
+    private List<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string? runSettingsXml, Type type,
         List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
         TestIdGenerationStrategy testIdGenerationStrategy)
     {
@@ -392,7 +392,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                     && testDisplayNameFirstSeen.TryGetValue(discoveredTest.DisplayName!, out var firstIndexSeen))
                 {
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_DuplicateDisplayName, firstIndexSeen, index, discoveredTest.DisplayName);
-                    warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
+                    warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
 
                     // Duplicated display name so bail out. Caller will handle adding the original test.
@@ -410,7 +410,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                     var warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute_CannotSerialize, index, discoveredTest.DisplayName);
                     warning += Environment.NewLine;
                     warning += ex.ToString();
-                    warning = string.Format(CultureInfo.CurrentUICulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
+                    warning = string.Format(CultureInfo.CurrentCulture, Resource.CannotExpandIDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, warning);
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"DynamicDataEnumerator: {warning}");
 
                     // Serialization failed for the type, bail out. Caller will handle adding the original test.

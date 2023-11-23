@@ -32,7 +32,7 @@ internal class TypeCache : MarshalByRefObject
     /// <summary>
     /// Predefined test Attribute names.
     /// </summary>
-    private static readonly string[] PredefinedNames = new string[] { "Priority", "TestCategory", "Owner" };
+    private static readonly string[] PredefinedNames = ["Priority", "TestCategory", "Owner"];
 
     /// <summary>
     /// Helper for reflection API's.
@@ -697,8 +697,8 @@ internal class TypeCache : MarshalByRefObject
             testMethodInfo =
                 Array.Find(
                     methodsInClass,
-                    method => method.Name.Equals(testMethod.Name)
-                        && method.DeclaringType!.FullName!.Equals(testMethod.DeclaringClassFullName)
+                    method => method.Name.Equals(testMethod.Name, StringComparison.Ordinal)
+                        && method.DeclaringType!.FullName!.Equals(testMethod.DeclaringClassFullName, StringComparison.Ordinal)
                         && method.HasCorrectTestMethodSignature(true, discoverInternals));
         }
         else
@@ -708,8 +708,8 @@ internal class TypeCache : MarshalByRefObject
             // Prioritize the former while maintaining previous behavior for the latter.
             var className = testClassInfo.ClassType.FullName;
             testMethodInfo =
-                methodsInClass.Where(method => method.Name.Equals(testMethod.Name) && method.HasCorrectTestMethodSignature(true, discoverInternals))
-                    .OrderByDescending(method => method.DeclaringType!.FullName!.Equals(className)).FirstOrDefault();
+                methodsInClass.Where(method => method.Name.Equals(testMethod.Name, StringComparison.Ordinal) && method.HasCorrectTestMethodSignature(true, discoverInternals))
+                    .OrderByDescending(method => method.DeclaringType!.FullName!.Equals(className, StringComparison.Ordinal)).FirstOrDefault();
         }
 
         return testMethodInfo;

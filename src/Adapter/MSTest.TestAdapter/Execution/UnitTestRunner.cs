@@ -156,7 +156,7 @@ internal class UnitTestRunner : MarshalByRefObject
         catch (TypeInspectionException ex)
         {
             // Catch any exception thrown while inspecting the test method and return failure.
-            return new UnitTestResult[] { new(ObjectModel.UnitTestOutcome.Failed, ex.Message) };
+            return [new(ObjectModel.UnitTestOutcome.Failed, ex.Message)];
         }
     }
 
@@ -234,12 +234,12 @@ internal class UnitTestRunner : MarshalByRefObject
         if (testMethodInfo == null)
         {
             {
-                notRunnableResult = new UnitTestResult[]
-                {
+                notRunnableResult =
+                [
                     new(
                         ObjectModel.UnitTestOutcome.NotFound,
                         string.Format(CultureInfo.CurrentCulture, Resource.TestNotFound, testMethod.Name)),
-                };
+                ];
                 return false;
             }
         }
@@ -248,10 +248,10 @@ internal class UnitTestRunner : MarshalByRefObject
         if (!testMethodInfo.IsRunnable)
         {
             {
-                notRunnableResult = new UnitTestResult[]
-                {
+                notRunnableResult =
+                [
                     new(ObjectModel.UnitTestOutcome.NotRunnable, testMethodInfo.NotRunnableReason),
-                };
+                ];
                 return false;
             }
         }
@@ -275,7 +275,7 @@ internal class UnitTestRunner : MarshalByRefObject
         if (isIgnoreAttributeOnClass || isIgnoreAttributeOnMethod)
         {
             {
-                notRunnableResult = new[] { new UnitTestResult(ObjectModel.UnitTestOutcome.Ignored, ignoreMessage) };
+                notRunnableResult = [new UnitTestResult(ObjectModel.UnitTestOutcome.Ignored, ignoreMessage)];
                 return false;
             }
         }

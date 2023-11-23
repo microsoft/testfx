@@ -57,7 +57,7 @@ public partial class CLITestBase : TestContainer
         string runSettingXml = GetRunSettingXml(runSettings);
 
         s_vsTestConsoleWrapper.RunTests(sources, runSettingXml, new TestPlatformOptions { TestCaseFilter = testCaseFilter }, RunEventsHandler);
-        if (RunEventsHandler.Errors.Any())
+        if (RunEventsHandler.Errors.Count != 0)
         {
             throw new Exception($"Run failed with {RunEventsHandler.Errors.Count} errors:{Environment.NewLine}{string.Join(Environment.NewLine, RunEventsHandler.Errors)}");
         }
@@ -213,21 +213,21 @@ public partial class CLITestBase : TestContainer
         foreach (var test in passedTests)
         {
             var isFailed = failedTestResults.Any(
-                p => test.Equals(p.TestCase?.FullyQualifiedName)
-                     || test.Equals(p.DisplayName)
-                     || test.Equals(p.TestCase.DisplayName));
+                p => test.Equals(p.TestCase?.FullyQualifiedName, StringComparison.Ordinal)
+                     || test.Equals(p.DisplayName, StringComparison.Ordinal)
+                     || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal));
 
             var isSkipped = skippedTestsResults.Any(
-                p => test.Equals(p.TestCase?.FullyQualifiedName)
-                     || test.Equals(p.DisplayName)
-                     || test.Equals(p.TestCase.DisplayName));
+                p => test.Equals(p.TestCase?.FullyQualifiedName, StringComparison.Ordinal)
+                     || test.Equals(p.DisplayName, StringComparison.Ordinal)
+                     || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal));
 
             var failedOrSkippedMessage = isFailed ? " (Test failed)" : isSkipped ? " (Test skipped)" : string.Empty;
 
             passedTestResults.Should().Contain(
-                p => test.Equals(p.TestCase.FullyQualifiedName)
-                     || test.Equals(p.DisplayName)
-                     || test.Equals(p.TestCase.DisplayName),
+                p => test.Equals(p.TestCase.FullyQualifiedName, StringComparison.Ordinal)
+                     || test.Equals(p.DisplayName, StringComparison.Ordinal)
+                     || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal),
                 $"Test '{test}' does not appear in passed tests list." + failedOrSkippedMessage);
         }
     }
@@ -246,8 +246,8 @@ public partial class CLITestBase : TestContainer
     {
         foreach (var test in failedTests)
         {
-            var testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName) ||
-                       test.Equals(f.DisplayName));
+            var testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName, StringComparison.Ordinal) ||
+                       test.Equals(f.DisplayName, StringComparison.Ordinal));
             testFound.Should().NotBeNull("Test '{0}' does not appear in failed tests list.", test);
 
             if (!validateStackTraceInfo)
@@ -276,7 +276,7 @@ public partial class CLITestBase : TestContainer
         foreach (var test in skippedTests)
         {
             RunEventsHandler.SkippedTests.Should().Contain(
-                s => test.Equals(s.TestCase.FullyQualifiedName) || test.Equals(s.DisplayName),
+                s => test.Equals(s.TestCase.FullyQualifiedName, StringComparison.Ordinal) || test.Equals(s.DisplayName, StringComparison.Ordinal),
                 "Test '{0}' does not appear in skipped tests list.", test);
         }
     }

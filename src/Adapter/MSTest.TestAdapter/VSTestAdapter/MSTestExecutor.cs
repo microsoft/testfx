@@ -19,7 +19,7 @@ public class MSTestExecutor : ITestExecutor
     /// <summary>
     /// Token for canceling the test run.
     /// </summary>
-    private TestRunCancellationToken? _cancellationToken = null;
+    private TestRunCancellationToken? _cancellationToken;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="MSTestExecutor"/> class.

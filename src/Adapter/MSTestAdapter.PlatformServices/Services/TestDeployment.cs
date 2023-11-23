@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -123,6 +124,7 @@ public class TestDeployment : ITestDeployment
     /// <param name="runContext"> The run context. </param>
     /// <param name="frameworkHandle"> The framework handle. </param>
     /// <returns> Return true if deployment is done. </returns>
+    [SuppressMessage("Naming", "CA1725:Parameter names should match base declaration", Justification = "Part of the public API")]
     public bool Deploy(IEnumerable<TestCase> tests, IRunContext? runContext, IFrameworkHandle frameworkHandle)
     {
 #if WINDOWS_UWP

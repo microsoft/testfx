@@ -95,7 +95,11 @@ public class TestDataSource : ITestDataSource
         catch (Exception ex)
         {
             string message = ExceptionExtensions.GetExceptionMessage(ex);
+
+            // TODO: Change exception type to more specific one.
+#pragma warning disable CA2201 // Do not raise reserved exception types
             throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorDataConnectionFailed, ex.Message), ex);
+#pragma warning restore CA2201 // Do not raise reserved exception types
         }
 #else
         return null;
@@ -148,7 +152,10 @@ public class TestDataSource : ITestDataSource
         UTF.DataSourceElement element = TestConfiguration.ConfigurationSection.DataSources[dataSourceAttribute.DataSourceSettingName];
         if (element == null)
         {
+            // TODO: Change exception type to more specific one.
+#pragma warning disable CA2201 // Do not raise reserved exception types
             throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_DataSourceConfigurationSectionMissing, dataSourceAttribute.DataSourceSettingName));
+#pragma warning restore CA2201 // Do not raise reserved exception types
         }
 
         providerNameInvariant = ConfigurationManager.ConnectionStrings[element.ConnectionString].ProviderName;
