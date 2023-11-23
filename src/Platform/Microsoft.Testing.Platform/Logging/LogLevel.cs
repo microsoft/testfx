@@ -3,7 +3,11 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
+#if INTERNALIZE_LOGGING
+internal enum LogLevel
+#else
 public enum LogLevel
+#endif
 {
     /// <summary>
     /// Logs that contain the most detailed messages.
