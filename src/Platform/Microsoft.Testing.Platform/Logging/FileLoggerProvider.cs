@@ -13,15 +13,20 @@ internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
 #endif
 {
     private readonly IClock _clock;
+    private readonly ITask _task;
+    private readonly IConsole _console;
     private readonly string _logPrefixName;
     private readonly bool _customDirectory;
 
-    public FileLoggerProvider(string logFolder, IClock clock, LogLevel logLevel, string logPrefixName, bool customDirectory, bool syncFlush)
+    public FileLoggerProvider(string logFolder, LogLevel logLevel, string logPrefixName, bool customDirectory, bool syncFlush,
+        IClock clock, ITask task, IConsole console)
     {
         _clock = clock;
+        _task = task;
+        _console = console;
         _logPrefixName = logPrefixName;
         _customDirectory = customDirectory;
-        FileLogger = new FileLogger(logFolder, fileName: null, logLevel, logPrefixName, syncFlush, new SystemClock(), new SystemTask(), new SystemConsole());
+        FileLogger = new FileLogger(logFolder, fileName: null, logLevel, logPrefixName, syncFlush, clock, task, console);
 
         LogLevel = logLevel;
         SyncFlush = syncFlush;
@@ -37,32 +42,20 @@ internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
     {
         // If custom directory is provided for the log file, we don't WANT to move the log file
         // We won't betray the users expectations.
-        if (_customDirectory)
+        if (_customDirectory
+            || testResultDirectory == Path.GetDirectoryName(FileLogger.FileName)
+            || FileLogger is null)
         {
             return;
         }
 
-        if (testResultDirectory != Path.GetDirectoryName(FileLogger.FileName))
-        {
-            if (FileLogger is not null)
-            {
-                string fileName = Path.GetFileName(FileLogger.FileName);
-#if NETCOREAPP
-                await FileLogger.DisposeAsync();
-#else
-                FileLogger.Dispose();
-#endif
+        string fileName = Path.GetFileName(FileLogger.FileName);
+        await DisposeHelper.DisposeAsync(FileLogger);
 
-                // Move the log file to the new directory
-                File.Move(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
+        // Move the log file to the new directory
+        File.Move(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
 
-                FileLogger = new FileLogger(testResultDirectory, fileName, LogLevel, _logPrefixName, SyncFlush, _clock, new SystemTask(), new SystemConsole());
-            }
-        }
-
-#if !NETCOREAPP
-        await Task.CompletedTask;
-#endif
+        FileLogger = new FileLogger(testResultDirectory, fileName, LogLevel, _logPrefixName, SyncFlush, _clock, _task, _console);
     }
 
     public ILogger CreateLogger(string categoryName)

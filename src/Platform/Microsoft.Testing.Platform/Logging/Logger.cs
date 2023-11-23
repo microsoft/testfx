@@ -3,16 +3,10 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class Logger : ILogger
+internal sealed class Logger(ILogger[] loggers, LogLevel logLevel) : ILogger
 {
-    private readonly ILogger[] _loggers;
-    private readonly LogLevel _logLevel;
-
-    public Logger(ILogger[] loggers, LogLevel logLevel)
-    {
-        _loggers = loggers;
-        _logLevel = logLevel;
-    }
+    private readonly ILogger[] _loggers = loggers;
+    private readonly LogLevel _logLevel = logLevel;
 
     public bool IsEnabled(LogLevel logLevel)
         => logLevel >= _logLevel;

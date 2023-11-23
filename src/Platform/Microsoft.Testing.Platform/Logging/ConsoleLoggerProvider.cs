@@ -5,18 +5,11 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class ConsoleLoggerProvider : ILoggerProvider
+internal sealed class ConsoleLoggerProvider(LogLevel logLevel, IConsole console, IClock clock) : ILoggerProvider
 {
-    private readonly LogLevel _logLevel;
-    private readonly IConsole _console;
-    private readonly IClock _clock;
-
-    public ConsoleLoggerProvider(LogLevel logLevel, IConsole console, IClock clock)
-    {
-        _logLevel = logLevel;
-        _console = console;
-        _clock = clock;
-    }
+    private readonly LogLevel _logLevel = logLevel;
+    private readonly IConsole _console = console;
+    private readonly IClock _clock = clock;
 
     public ILogger CreateLogger(string categoryName)
         => new ConsoleLogger(_logLevel, _console, _clock, categoryName);

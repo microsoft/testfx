@@ -10,10 +10,12 @@ using System.Runtime.InteropServices;
 using System.Text;
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Resources;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Builder;
 
@@ -78,7 +80,7 @@ public sealed class TestApplication : ITestApplication
         ArgumentGuard.IsNotNull(s_unhandledExceptionHandler);
 
         // First task is to setup the logger if enabled and we take the info from the command line or env vars.
-        ApplicationLoggingState loggingState = LoggingManager.CreateFileLoggerIfDiagnosticIsEnabled(parseResult, systemRuntime, systemClock, systemEnvironment);
+        ApplicationLoggingState loggingState = CreateFileLoggerIfDiagnosticIsEnabled(parseResult, systemRuntime, systemClock, systemEnvironment, new SystemTask(), new SystemConsole());
 
         if (loggingState.FileLoggerProvider is not null)
         {
@@ -237,5 +239,107 @@ public sealed class TestApplication : ITestApplication
         {
             System.Diagnostics.Debugger.Launch();
         }
+    }
+
+    /*
+     The expected order for the final logs directory is (most to least important):
+     1 Environment variable
+     2 Command line
+     3 TA settings(json)
+     4 Default(TestResults in the current working folder)
+    */
+    private static ApplicationLoggingState CreateFileLoggerIfDiagnosticIsEnabled(CommandLineParseResult result, SystemRuntime runtime, SystemClock clock, SystemEnvironment environment, SystemTask task, SystemConsole console)
+    {
+        LogLevel logLevel = LogLevel.Information;
+
+        if (result.HasError)
+        {
+            return new(logLevel, result);
+        }
+
+        string? environmentVariable = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC);
+        if (!result.IsOptionSet(PlatformCommandLineProvider.DiagnosticOptionKey))
+        {
+            // Environment variable is set, but the command line option is not set
+            if (environmentVariable != "1")
+            {
+                return new(logLevel, result);
+            }
+        }
+
+        // Environment variable is set to 0 and takes precedence over the command line option
+        if (environmentVariable == "0")
+        {
+            return new(logLevel, result);
+        }
+
+        if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, out string[]? verbosity))
+        {
+            logLevel = (LogLevel)Enum.Parse(typeof(LogLevel), verbosity[0], true);
+        }
+
+        // Override the log level if the environment variable is set
+        string? environmentLogLevel = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY);
+        if (!TAString.IsNullOrEmpty(environmentLogLevel))
+        {
+            if (!Enum.TryParse(environmentLogLevel, out LogLevel parsedLogLevel))
+            {
+                throw new ArgumentException("Invalid environment value 'TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY', Expected Trace, Debug, Information, Warning, Error, Critical.");
+            }
+
+            logLevel = parsedLogLevel;
+        }
+
+        // Set the directory to the default test result directory
+        ITestApplicationModuleInfo currentModuleInfo = runtime.GetCurrentModuleInfo();
+        string directory = Path.Combine(Path.GetDirectoryName(currentModuleInfo.GetCurrentTestApplicationFullPath())!, AggregatedConfiguration.DefaultTestResultFolderName);
+        bool customDirectory = false;
+
+        if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.ResultDirectoryOptionKey, out string[]? resultDirectoryArg))
+        {
+            directory = resultDirectoryArg[0];
+            customDirectory = true;
+        }
+
+        if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticOutputDirectoryOptionKey, out string[]? directoryArg))
+        {
+            directory = directoryArg[0];
+            customDirectory = true;
+        }
+
+        // Override the output directory
+        string? environmentOutputDirectory = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY);
+        if (!TAString.IsNullOrEmpty(environmentOutputDirectory))
+        {
+            directory = environmentOutputDirectory;
+            customDirectory = true;
+        }
+
+        // Finally create the directory
+        Directory.CreateDirectory(directory);
+
+        string prefixName = "log";
+        if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticOutputFilePrefixOptionKey, out string[]? prefixNameArg))
+        {
+            prefixName = prefixNameArg[0];
+        }
+
+        // Override the prefix name
+        string? environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
+        if (!TAString.IsNullOrEmpty(environmentFilePrefix))
+        {
+            prefixName = environmentFilePrefix;
+        }
+
+        bool synchronousWrite = result.IsOptionSet(PlatformCommandLineProvider.DiagnosticFileLoggerSynchronousWriteOptionKey);
+
+        // Override the synchronous write
+        string? environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
+        if (!TAString.IsNullOrEmpty(environmentSynchronousWrite))
+        {
+            synchronousWrite = environmentSynchronousWrite == "1";
+        }
+
+        return new(logLevel, result, new(directory, logLevel, prefixName, customDirectory, synchronousWrite, clock, task, console), synchronousWrite);
     }
 }

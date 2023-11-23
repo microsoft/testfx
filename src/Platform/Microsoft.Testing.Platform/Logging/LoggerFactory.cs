@@ -5,7 +5,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class LoggerFactory : ILoggerFactory, IDisposable
+internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel logLevel, IMonitor monitor) : ILoggerFactory, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable
@@ -13,17 +13,10 @@ internal sealed class LoggerFactory : ILoggerFactory, IDisposable
 #endif
 {
     private readonly object _sync = new();
-    private readonly ILoggerProvider[] _loggerProviders;
-    private readonly LogLevel _logLevel;
-    private readonly IMonitor _monitor;
+    private readonly ILoggerProvider[] _loggerProviders = loggerProviders;
+    private readonly LogLevel _logLevel = logLevel;
+    private readonly IMonitor _monitor = monitor;
     private readonly Dictionary<string, Logger> _loggers = new(StringComparer.Ordinal);
-
-    public LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel logLevel, IMonitor monitor)
-    {
-        _loggerProviders = loggerProviders;
-        _logLevel = logLevel;
-        _monitor = monitor;
-    }
 
     public ILogger CreateLogger(string categoryName)
     {
