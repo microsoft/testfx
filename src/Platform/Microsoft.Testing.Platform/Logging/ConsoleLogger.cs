@@ -7,20 +7,12 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class ConsoleLogger : ILogger
+internal sealed class ConsoleLogger(LogLevel logLevel, IConsole console, IClock clock, string category) : ILogger
 {
-    private readonly LogLevel _logLevel;
-    private readonly IConsole _console;
-    private readonly IClock _clock;
-    private readonly string _category;
-
-    public ConsoleLogger(LogLevel logLevel, IConsole console, IClock clock, string category)
-    {
-        _logLevel = logLevel;
-        _console = console;
-        _clock = clock;
-        _category = category;
-    }
+    private readonly LogLevel _logLevel = logLevel;
+    private readonly IConsole _console = console;
+    private readonly IClock _clock = clock;
+    private readonly string _category = category;
 
     public bool IsEnabled(LogLevel logLevel) => logLevel >= _logLevel;
 

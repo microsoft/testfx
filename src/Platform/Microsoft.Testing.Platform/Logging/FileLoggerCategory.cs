@@ -3,16 +3,10 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class FileLoggerCategory : ILogger
+internal sealed class FileLoggerCategory(FileLogger fileLogger, string category) : ILogger
 {
-    private readonly FileLogger _fileLogger;
-    private readonly string _category;
-
-    public FileLoggerCategory(FileLogger fileLogger, string category)
-    {
-        _fileLogger = fileLogger;
-        _category = category;
-    }
+    private readonly FileLogger _fileLogger = fileLogger;
+    private readonly string _category = category;
 
     public bool IsEnabled(LogLevel logLevel) => _fileLogger.IsEnabled(logLevel);
 

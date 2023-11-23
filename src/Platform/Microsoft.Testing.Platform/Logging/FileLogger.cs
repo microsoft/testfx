@@ -297,21 +297,19 @@ internal sealed class FileLogger : IDisposable
         if (!_syncFlush)
         {
             EnsureAsyncLogObjectsAreNotNull();
+
 #if NETCOREAPP
             // Wait for all logs to be written
             _channel.Writer.TryComplete();
-            if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
-            {
-                throw new InvalidOperationException($"Log loop flush WriteLogToFileAsync() didn't exit after {TimeoutHelper.DefaultHangTimeoutSeconds} seconds");
-            }
 #else
             // Wait for all logs to be written
             _asyncLogs.CompleteAdding();
+#endif
+
             if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
                 throw new InvalidOperationException($"Log loop flush WriteLogToFileAsync() didn't exit after {TimeoutHelper.DefaultHangTimeoutSeconds} seconds");
             }
-#endif
         }
 
         _semaphore.Dispose();
