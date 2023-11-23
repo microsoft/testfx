@@ -94,7 +94,7 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
         <source>The test framework adapter factory has already been registered</source>
-        <target state="new">The test framework adapter factory has already been registered</target>
+        <target state="translated">테스트 프레임워크 어댑터 팩터리가 이미 등록됨</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
