@@ -30,7 +30,7 @@ public class TreeNodeFilterTests : TestBase
 
     public void MatchAllFilter_Invalid() => Assert.Throws<InvalidOperationException>(() => _ = new TreeNodeFilter("/A(&B)"));
 
-    public void MatchAllFilter_DoNotAllowInMiddleOfFilter() => Assert.Throws<InvalidOperationException>(() => _ = new TreeNodeFilter("/**/Path"));
+    public void MatchAllFilter_DoNotAllowInMiddleOfFilter() => Assert.Throws<ArgumentException>(() => _ = new TreeNodeFilter("/**/Path"));
 
     public void MatchWildcard_MatchesSubstrings()
     {
