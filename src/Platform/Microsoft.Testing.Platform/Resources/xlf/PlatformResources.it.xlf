@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
         <source>Could not find the default json configuration</source>
-        <target state="new">Could not find the default json configuration</target>
+        <target state="translated">Non è stato possibile trovare la configurazione JSON predefinita</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
@@ -39,17 +39,17 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
-        <target state="new">A duplicate key '{0}' was found</target>
+        <target state="translated">È stata trovata una chiave '{0}' duplicata.</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
-        <target state="new">Top-level JSON element must be an object. Instead, '{0}' was found</target>
+        <target state="translated">L'elemento JSON di primo livello deve essere un oggetto. È stato invece trovato '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
-        <target state="new">Unsupported JSON token '{0}' was found</target>
+        <target state="translated">Trovato token JSON '{0}' non supportato</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">
@@ -94,7 +94,7 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
         <source>The test framework adapter factory has already been registered</source>
-        <target state="new">The test framework adapter factory has already been registered</target>
+        <target state="translated">La factory dell'adapter del framework di test è già stata registrata</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
