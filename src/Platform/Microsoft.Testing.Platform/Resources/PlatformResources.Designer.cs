@@ -70,6 +70,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Another extension with same the same UID &apos;{0}&apos; has already been registered. Registered extension is of type &apos;{1}&apos;.
+        /// </summary>
+        internal static string ExtensionWithSameUidAlreadyRegisteredErrorMessage {
+            get {
+                return ResourceManager.GetString("ExtensionWithSameUidAlreadyRegisteredErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A duplicate key &apos;{0}&apos; was found.
         /// </summary>
         internal static string JsonConfigurationFileParserDuplicateKeyErrorMessage {

@@ -1,7 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
@@ -33,7 +36,7 @@ internal class TestHostOrchestratorManager : ITestHostOrchestratorManager
             if (orchestrators.Any(x => x.Uid == orchestrator.Uid))
             {
                 ITestHostOrchestrator currentRegisteredExtension = orchestrators.Single(x => x.Uid == orchestrator.Uid);
-                throw new InvalidOperationException($"Another extension with the same Uid '{orchestrator.Uid}' is already registered. Extension type: '{currentRegisteredExtension.GetType()}'");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, orchestrator.Uid, currentRegisteredExtension.GetType()));
             }
 
             // We initialize only if enabled

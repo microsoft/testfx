@@ -120,6 +120,9 @@
   <data name="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage" xml:space="preserve">
     <value>Could not find the default json configuration</value>
   </data>
+  <data name="ExtensionWithSameUidAlreadyRegisteredErrorMessage" xml:space="preserve">
+    <value>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</value>
+  </data>
   <data name="JsonConfigurationFileParserDuplicateKeyErrorMessage" xml:space="preserve">
     <value>A duplicate key '{0}' was found</value>
   </data>
