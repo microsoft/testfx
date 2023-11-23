@@ -18,16 +18,16 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal class TestHostAdapterInvoker : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
+internal class TestHostTestFrameworkInvoker : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
 {
-    public TestHostAdapterInvoker(IServiceProvider serviceProvider)
+    public TestHostTestFrameworkInvoker(IServiceProvider serviceProvider)
     {
         ServiceProvider = serviceProvider;
     }
 
     protected IServiceProvider ServiceProvider { get; }
 
-    public string Uid => nameof(TestHostAdapterInvoker);
+    public string Uid => nameof(TestHostTestFrameworkInvoker);
 
     public string Version => AppVersion.DefaultSemVer;
 
@@ -41,7 +41,7 @@ internal class TestHostAdapterInvoker : ITestFrameworkInvoker, IOutputDeviceData
 
     public async Task ExecuteAsync(ITestFramework testFrameworkAdapter, ClientInfo client, CancellationToken cancellationToken)
     {
-        ILogger<TestHostAdapterInvoker> logger = ServiceProvider.GetLoggerFactory().CreateLogger<TestHostAdapterInvoker>();
+        ILogger<TestHostTestFrameworkInvoker> logger = ServiceProvider.GetLoggerFactory().CreateLogger<TestHostTestFrameworkInvoker>();
 
         await logger.LogInformationAsync($"TestFrameworkAdapter Uid: '{testFrameworkAdapter.Uid}' Version: '{testFrameworkAdapter.Version}' DisplayName: '{testFrameworkAdapter.DisplayName}' Description: '{testFrameworkAdapter.Description}'");
 

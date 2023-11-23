@@ -80,7 +80,7 @@ internal sealed class ConsoleTestHost : CommonTestHost
 
         // Use user provided filter factory or create console default one.
         ITestFrameworkInvoker testAdapterInvoker = ServiceProvider.GetService<ITestFrameworkInvoker>()
-            ?? new TestHostAdapterInvoker(ServiceProvider);
+            ?? new TestHostTestFrameworkInvoker(ServiceProvider);
 
         ServiceProvider.TryAddService(new Services.TestSessionContext(abortRun));
         ITestFramework testFrameworkAdapter = await _buildTestFrameworkAsync(
