@@ -61,11 +61,29 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The same instance of &apos;CompositeExtensonFactory&apos; is already registered.
+        /// </summary>
+        internal static string CompositeServiceFactoryInstanceAlreadyRegistered {
+            get {
+                return ResourceManager.GetString("CompositeServiceFactoryInstanceAlreadyRegistered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not find the default json configuration.
         /// </summary>
         internal static string ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage {
             get {
                 return ResourceManager.GetString("ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extension of type &apos;{0}&apos; is not implementing the required &apos;{1}&apos; interface.
+        /// </summary>
+        internal static string ExtensionDoesNotImplementGivenInterfaceErrorMessage {
+            get {
+                return ResourceManager.GetString("ExtensionDoesNotImplementGivenInterfaceErrorMessage", resourceCulture);
             }
         }
         
@@ -133,6 +151,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An &apos;ITestFrameworkInvoker&apos; factory is already set.
+        /// </summary>
+        internal static string TestAdapterInvokerFactoryAlreadySetErrorMessage {
+            get {
+                return ResourceManager.GetString("TestAdapterInvokerFactoryAlreadySetErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The application has already been built.
         /// </summary>
         internal static string TestApplicationBuilderApplicationAlreadyRegistered {
@@ -192,6 +219,15 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TestApplicationVSTestModeTooManyBuilders {
             get {
                 return ResourceManager.GetString("TestApplicationVSTestModeTooManyBuilders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An &apos;ITestExecutionFilterFactory&apos; factory is already set.
+        /// </summary>
+        internal static string TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage {
+            get {
+                return ResourceManager.GetString("TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage", resourceCulture);
             }
         }
     }
