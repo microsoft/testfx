@@ -119,6 +119,7 @@
   </resheader>
   <data name="CannotCreateTestExecutionFilterErrorMessage" xml:space="preserve">
     <value>Failed to create a test execution filter</value>
+  </data>
   <data name="CompositeServiceFactoryInstanceAlreadyRegistered" xml:space="preserve">
     <value>The same instance of 'CompositeExtensonFactory' is already registered</value>
   </data>
@@ -130,6 +131,7 @@
   </data>
   <data name="ConsoleTestExecutionFilterFactoryDisplayName" xml:space="preserve">
     <value>Console test execution filter factory</value>
+  </data>
   <data name="ExtensionDoesNotImplementGivenInterfaceErrorMessage" xml:space="preserve">
     <value>Extension of type '{0}' is not implementing the required '{1}' interface</value>
   </data>
@@ -208,6 +210,7 @@
   </data>
   <data name="TreeNodeFilterUnexpectedSlashOperatorErrorMessage" xml:space="preserve">
     <value>Filter contains an unexpected '/' operator inside a parenthesized expression</value>
+  </data>
   <data name="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage" xml:space="preserve">
     <value>An 'ITestExecutionFilterFactory' factory is already set</value>
   </data>

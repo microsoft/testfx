@@ -66,6 +66,10 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string CannotCreateTestExecutionFilterErrorMessage {
             get {
                 return ResourceManager.GetString("CannotCreateTestExecutionFilterErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The same instance of &apos;CompositeExtensonFactory&apos; is already registered.
         /// </summary>
         internal static string CompositeServiceFactoryInstanceAlreadyRegistered {
@@ -89,11 +93,6 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string ConsoleTestExecutionFilterFactoryDescription {
             get {
                 return ResourceManager.GetString("ConsoleTestExecutionFilterFactoryDescription", resourceCulture);
-        ///   Looks up a localized string similar to Extension of type &apos;{0}&apos; is not implementing the required &apos;{1}&apos; interface.
-        /// </summary>
-        internal static string ExtensionDoesNotImplementGivenInterfaceErrorMessage {
-            get {
-                return ResourceManager.GetString("ExtensionDoesNotImplementGivenInterfaceErrorMessage", resourceCulture);
             }
         }
         
@@ -103,6 +102,19 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string ConsoleTestExecutionFilterFactoryDisplayName {
             get {
                 return ResourceManager.GetString("ConsoleTestExecutionFilterFactoryDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extension of type &apos;{0}&apos; is not implementing the required &apos;{1}&apos; interface.
+        /// </summary>
+        internal static string ExtensionDoesNotImplementGivenInterfaceErrorMessage {
+            get {
+                return ResourceManager.GetString("ExtensionDoesNotImplementGivenInterfaceErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Another extension with same the same UID &apos;{0}&apos; has already been registered. Registered extension is of type &apos;{1}&apos;.
         /// </summary>
         internal static string ExtensionWithSameUidAlreadyRegisteredErrorMessage {
@@ -256,6 +268,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to An &apos;ITestExecutionFilterFactory&apos; factory is already set.
+        /// </summary>
+        internal static string TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage {
+            get {
+                return ResourceManager.GetString("TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test adapter test session failure.
         /// </summary>
         internal static string TestHostAdapterInvokerFailedTestSessionErrorMessage {
@@ -324,11 +345,6 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TreeNodeFilterUnexpectedSlashOperatorErrorMessage {
             get {
                 return ResourceManager.GetString("TreeNodeFilterUnexpectedSlashOperatorErrorMessage", resourceCulture);
-        ///   Looks up a localized string similar to An &apos;ITestExecutionFilterFactory&apos; factory is already set.
-        /// </summary>
-        internal static string TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage {
-            get {
-                return ResourceManager.GetString("TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage", resourceCulture);
             }
         }
     }

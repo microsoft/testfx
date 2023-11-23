@@ -5,6 +5,8 @@
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="new">Failed to create a test execution filter</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
         <target state="new">The same instance of 'CompositeExtensonFactory' is already registered</target>
@@ -23,6 +25,8 @@
       <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
         <source>Console test execution filter factory</source>
         <target state="new">Console test execution filter factory</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
         <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
         <target state="new">Extension of type '{0}' is not implementing the required '{1}' interface</target>

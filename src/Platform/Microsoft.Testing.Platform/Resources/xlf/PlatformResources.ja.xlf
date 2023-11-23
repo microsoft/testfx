@@ -5,6 +5,8 @@
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="new">Failed to create a test execution filter</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
         <target state="new">The same instance of 'CompositeExtensonFactory' is already registered</target>
@@ -12,7 +14,7 @@
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
         <source>Could not find the default json configuration</source>
-        <target state="translated">既定の JSON 構成が見つかりませんでした</target>
+        <target state="new">Could not find the default json configuration</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
@@ -23,6 +25,8 @@
       <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
         <source>Console test execution filter factory</source>
         <target state="new">Console test execution filter factory</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
         <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
         <target state="new">Extension of type '{0}' is not implementing the required '{1}' interface</target>
@@ -35,17 +39,17 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
-        <target state="translated">重複したキー '{0}' が見つかりました</target>
+        <target state="new">A duplicate key '{0}' was found</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
-        <target state="translated">最上位の JSON 要素はオブジェクトである必要があります。代わりに、'{0}' が見つかりました</target>
+        <target state="new">Top-level JSON element must be an object. Instead, '{0}' was found</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
-        <target state="translated">サポートされていない JSON トークン '{0}' が見つかりました</target>
+        <target state="new">Unsupported JSON token '{0}' was found</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">
@@ -90,7 +94,7 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
         <source>The test framework adapter factory has already been registered</source>
-        <target state="translated">テスト フレームワーク アダプター ファクトリは既に登録されています</target>
+        <target state="new">The test framework adapter factory has already been registered</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
