@@ -4,22 +4,22 @@
     <body>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
         <source>Could not find the default json configuration</source>
-        <target state="new">Could not find the default json configuration</target>
+        <target state="translated">Не удалось найти конфигурацию JSON по умолчанию</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
-        <target state="new">A duplicate key '{0}' was found</target>
+        <target state="translated">Найден повторяющийся ключ "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
-        <target state="new">Top-level JSON element must be an object. Instead, '{0}' was found</target>
+        <target state="translated">Элемент JSON верхнего уровня должен быть объектом. Вместо этого обнаружено "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
-        <target state="new">Unsupported JSON token '{0}' was found</target>
+        <target state="translated">Найден неподдерживаемый маркер JSON "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">

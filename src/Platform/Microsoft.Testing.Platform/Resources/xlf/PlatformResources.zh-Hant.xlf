@@ -4,22 +4,22 @@
     <body>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
         <source>Could not find the default json configuration</source>
-        <target state="new">Could not find the default json configuration</target>
+        <target state="translated">找不到預設 JSON 設定</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
-        <target state="new">A duplicate key '{0}' was found</target>
+        <target state="translated">找到重複的金鑰 '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
-        <target state="new">Top-level JSON element must be an object. Instead, '{0}' was found</target>
+        <target state="translated">頂層 JSON 元素必須是物件。反而找到 '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
-        <target state="new">Unsupported JSON token '{0}' was found</target>
+        <target state="translated">找到不支援的 JSON 權杖 '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
