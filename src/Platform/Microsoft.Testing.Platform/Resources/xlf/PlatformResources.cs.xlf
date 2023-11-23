@@ -7,9 +7,14 @@
         <target state="new">Failed to create a test execution filter</target>
         <note />
       </trans-unit>
+      <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
+        <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
+        <target state="new">The same instance of 'CompositeExtensonFactory' is already registered</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
         <source>Could not find the default json configuration</source>
-        <target state="translated">Nepovedlo se najít výchozí konfiguraci json.</target>
+        <target state="new">Could not find the default json configuration</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
@@ -22,19 +27,29 @@
         <target state="new">Console test execution filter factory</target>
         <note />
       </trans-unit>
+      <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
+        <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
+        <target state="new">Extension of type '{0}' is not implementing the required '{1}' interface</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
+        <source>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</source>
+        <target state="new">Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
-        <target state="translated">Našel se duplicitní klíč {0}.</target>
+        <target state="new">A duplicate key '{0}' was found</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
-        <target state="translated">Element JSON nejvyšší úrovně musí být objekt. Místo toho bylo nalezeno: {0}.</target>
+        <target state="new">Top-level JSON element must be an object. Instead, '{0}' was found</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
-        <target state="translated">Našel se nepodporovaný token JSON {0}.</target>
+        <target state="new">Unsupported JSON token '{0}' was found</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">
@@ -62,6 +77,16 @@
         <target state="new">Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</target>
         <note />
       </trans-unit>
+      <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
+        <source>An 'ITestExecutionFilterFactory' factory is already set</source>
+        <target state="new">An 'ITestExecutionFilterFactory' factory is already set</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
+        <source>An 'ITestFrameworkInvoker' factory is already set</source>
+        <target state="new">An 'ITestFrameworkInvoker' factory is already set</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
         <source>The application has already been built</source>
         <target state="new">The application has already been built</target>
@@ -69,7 +94,7 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
         <source>The test framework adapter factory has already been registered</source>
-        <target state="translated">Objekt pro vytváření adaptérů testovací architektury už je zaregistrovaný.</target>
+        <target state="new">The test framework adapter factory has already been registered</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
