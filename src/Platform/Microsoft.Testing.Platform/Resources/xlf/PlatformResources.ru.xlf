@@ -44,7 +44,7 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
         <source>The test framework adapter factory has already been registered</source>
-        <target state="new">The test framework adapter factory has already been registered</target>
+        <target state="translated">Фабрика адаптера платформы тестирования уже зарегистрирована</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
