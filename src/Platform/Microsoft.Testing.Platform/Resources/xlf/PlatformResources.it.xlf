@@ -2,39 +2,9 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="it" original="../PlatformResources.resx">
     <body>
-      <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
-        <source>Failed to create a test execution filter</source>
-        <target state="new">Failed to create a test execution filter</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
-        <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
-        <target state="new">The same instance of 'CompositeExtensonFactory' is already registered</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
         <source>Could not find the default json configuration</source>
         <target state="translated">Non è stato possibile trovare la configurazione JSON predefinita</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for console mode</source>
-        <target state="new">Creates the right test execution filter for console mode</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
-        <source>Console test execution filter factory</source>
-        <target state="new">Console test execution filter factory</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
-        <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
-        <target state="new">Extension of type '{0}' is not implementing the required '{1}' interface</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
-        <source>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</source>
-        <target state="new">Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -52,16 +22,6 @@
         <target state="translated">Trovato token JSON '{0}' non supportato</target>
         <note />
       </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDescription">
-        <source>Creates the right test execution filter for server mode</source>
-        <target state="new">Creates the right test execution filter for server mode</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
-        <source>Server test execution filter factory</source>
-        <target state="new">Server test execution filter factory</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
         <target state="new">Cannot find service of type '{0}'</target>
@@ -75,16 +35,6 @@
       <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="new">Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
-        <source>An 'ITestExecutionFilterFactory' factory is already set</source>
-        <target state="new">An 'ITestExecutionFilterFactory' factory is already set</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
-        <source>An 'ITestFrameworkInvoker' factory is already set</source>
-        <target state="new">An 'ITestFrameworkInvoker' factory is already set</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
@@ -120,46 +70,6 @@
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
         <target state="new">VSTest mode only supports a single TestApplicationBuilder per process</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
-        <source>Test adapter test session failure</source>
-        <target state="new">Test adapter test session failure</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
-        <source>A filter '{0}' should not contain a '/' character</source>
-        <target state="new">A filter '{0}' should not contain a '/' character</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
-        <source>An escape character should not terminate the filter string '{0}'</source>
-        <target state="new">An escape character should not terminate the filter string '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
-        <source>Only the final filter path can contain '**' wildcard</source>
-        <target state="new">Only the final filter path can contain '**' wildcard</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
-        <source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</source>
-        <target state="new">Unexpected operator '&amp;' or '|' within filter expression '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
-        <source>Invalid node path, expected root as first character '{0}'</source>
-        <target state="new">Invalid node path, expected root as first character '{0}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
-        <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
-        <target state="new">Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</target>
-        <note>{1} and {2} are () or []</note>
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
-        <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
-        <target state="new">Filter contains an unexpected '/' operator inside a parenthesized expression</target>
         <note />
       </trans-unit>
     </body>
