@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text.Json;
 
@@ -13,6 +14,7 @@ namespace Microsoft.Testing.Platform.Configurations;
 /// We added also the _propertyToAllChildren dictionary to keep the whole json structure because we don't support by default the serialization/deserialization
 /// and we need to keep the whole json structure per json property to be able to easily serialize it to some other format.
 /// </summary>
+[ExcludeFromCodeCoverage]
 internal sealed class JsonConfigurationFileParser
 {
     private readonly Dictionary<string, string?> _singleValueData = new(StringComparer.OrdinalIgnoreCase);

@@ -14,14 +14,14 @@ public static class ConfigurationExtensions
         return resultDirectory;
     }
 
-    public static string GeCurrentWorkingDirectory(this IConfiguration configuration)
+    public static string GetCurrentWorkingDirectory(this IConfiguration configuration)
     {
         string? workingDirectory = configuration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
         ArgumentGuard.IsNotNull(workingDirectory);
         return workingDirectory;
     }
 
-    public static string GeTestHostWorkingDirectory(this IConfiguration configuration)
+    public static string GetTestHostWorkingDirectory(this IConfiguration configuration)
     {
         string? workingDirectory = configuration[PlatformConfigurationConstants.PlatformTestHostWorkingDirectory];
         ArgumentGuard.IsNotNull(workingDirectory);

@@ -2,12 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
 // Taken and adapted from https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Configuration.EnvironmentVariables/src/EnvironmentVariablesConfigurationProvider.cs
+[ExcludeFromCodeCoverage]
 internal sealed class EnvironmentVariablesConfigurationProvider : IConfigurationProvider
 {
     public static readonly string KeyDelimiter = ":";

@@ -12,7 +12,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class ServiceProvider : IServiceProvider, ICloneable
+internal class ServiceProvider : IServiceProvider, ICloneable
 {
     private readonly List<object> _services = [];
 
@@ -73,7 +73,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
         return true;
     }
 
-    public IEnumerable<object> GetServicesInternal(
+    public /* for testing purposes */ virtual IEnumerable<object> GetServicesInternal(
         Type serviceType,
         bool stopAtFirst = false,
         bool skipInternalOnlyExtensions = false)

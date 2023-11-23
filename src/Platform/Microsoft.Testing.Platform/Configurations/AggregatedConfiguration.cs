@@ -52,7 +52,13 @@ internal sealed class AggregatedConfiguration : IConfiguration
         }
     }
 
-    public /* for testing */ void SetCurrentWorkingDirectory(string workingDirectory)
+    internal /* for testing */ void SetResultDirectory(string resultDirectory)
+    {
+        ArgumentGuard.IsNotNull(resultDirectory);
+        _resultDirectory = resultDirectory;
+    }
+
+    internal /* for testing */ void SetCurrentWorkingDirectory(string workingDirectory)
     {
         ArgumentGuard.IsNotNull(workingDirectory);
         _currentWorkingDirectory = workingDirectory;
@@ -64,7 +70,11 @@ internal sealed class AggregatedConfiguration : IConfiguration
         _testHostWorkingDirectory = workingDirectory;
     }
 
-    public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(ICommandLineOptions commandLineOptions, IRuntime runtime, ServiceProvider serviceProvider)
+    public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(
+        ICommandLineOptions commandLineOptions,
+        IRuntime runtime,
+        IFileSystem fileSystem,
+        ServiceProvider serviceProvider)
     {
         // Load Configuration
         ITestApplicationModuleInfo currentModuleInfo = runtime.GetCurrentModuleInfo();
@@ -85,7 +95,7 @@ internal sealed class AggregatedConfiguration : IConfiguration
 
         _resultDirectory ??= Path.Combine(_currentWorkingDirectory, DefaultTestResultFolderName);
 
-        _resultDirectory = Directory.CreateDirectory(_resultDirectory).FullName;
+        _resultDirectory = fileSystem.CreateDirectory(_resultDirectory);
 
         FileLoggerProvider? fileLoggerProvider = serviceProvider.GetServiceInternal<FileLoggerProvider>();
 

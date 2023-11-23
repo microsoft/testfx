@@ -5,7 +5,9 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
+#pragma warning disable CA1852
+internal class FileLoggerProvider : ILoggerProvider, IDisposable
+#pragma warning restore CA1852
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable
@@ -15,6 +17,14 @@ internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
     private readonly IClock _clock;
     private readonly string _logPrefixName;
     private readonly bool _customDirectory;
+
+    /* for testing */
+    internal FileLoggerProvider()
+    {
+        _clock = new SystemClock();
+        _logPrefixName = string.Empty;
+        _customDirectory = false;
+    }
 
     public FileLoggerProvider(string logFolder, IClock clock, LogLevel logLevel, string logPrefixName, bool customDirectory, bool syncFlush)
     {
@@ -29,11 +39,11 @@ internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
 
     public LogLevel LogLevel { get; }
 
-    public FileLogger FileLogger { get; private set; }
+    public FileLogger? FileLogger { get; private set; }
 
     public bool SyncFlush { get; }
 
-    public async Task CheckLogFolderAndMoveToTheNewIfNeededAsync(string testResultDirectory)
+    public /* for testing */ virtual async Task CheckLogFolderAndMoveToTheNewIfNeededAsync(string testResultDirectory)
     {
         // If custom directory is provided for the log file, we don't WANT to move the log file
         // We won't betray the users expectations.
@@ -42,7 +52,7 @@ internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
             return;
         }
 
-        if (testResultDirectory != Path.GetDirectoryName(FileLogger.FileName))
+        if (testResultDirectory != Path.GetDirectoryName(FileLogger!.FileName))
         {
             if (FileLogger is not null)
             {
@@ -66,7 +76,7 @@ internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
     }
 
     public ILogger CreateLogger(string categoryName)
-        => new FileLoggerCategory(FileLogger, categoryName);
+        => new FileLoggerCategory(FileLogger!, categoryName);
 
     public void Dispose()
         => FileLogger?.Dispose();

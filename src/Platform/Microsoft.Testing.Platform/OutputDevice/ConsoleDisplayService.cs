@@ -176,7 +176,7 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
                 try
                 {
                     _console.SetForegroundColor(ConsoleColor.Yellow);
-                    _console.WriteLine($"Diagnostic file (level '{_fileLoggerProvider.LogLevel}' with {(_fileLoggerProvider.SyncFlush ? "sync flush" : "async flush")}): {_fileLoggerProvider.FileLogger.FileName}");
+                    _console.WriteLine($"Diagnostic file (level '{_fileLoggerProvider.LogLevel}' with {(_fileLoggerProvider.SyncFlush ? "sync flush" : "async flush")}): {_fileLoggerProvider.FileLogger!.FileName}");
                 }
                 finally
                 {

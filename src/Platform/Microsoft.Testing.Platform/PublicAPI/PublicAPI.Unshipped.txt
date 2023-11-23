@@ -378,8 +378,8 @@ override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.Equals(objec
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.GetHashCode() -> int
 static Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>!
 static Microsoft.Testing.Platform.Builder.TestApplication.CreateServerModeBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>!
-static Microsoft.Testing.Platform.Configurations.ConfigurationExtensions.GeCurrentWorkingDirectory(this Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> string!
-static Microsoft.Testing.Platform.Configurations.ConfigurationExtensions.GeTestHostWorkingDirectory(this Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> string!
+static Microsoft.Testing.Platform.Configurations.ConfigurationExtensions.GetCurrentWorkingDirectory(this Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> string!
+static Microsoft.Testing.Platform.Configurations.ConfigurationExtensions.GetTestHostWorkingDirectory(this Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> string!
 static Microsoft.Testing.Platform.Configurations.ConfigurationExtensions.GetTestResultDirectory(this Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> string!
 static Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.operator !=(Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity left, Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity right) -> bool
 static Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.operator ==(Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity left, Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity right) -> bool

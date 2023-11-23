@@ -16,7 +16,7 @@ internal sealed class ConfigurationManager : IConfigurationManager
 
     public void AddConfigurationSource(Func<IConfigurationSource> source) => _configurationSources.Add(source);
 
-    internal async Task<IConfiguration> BuildAsync(IServiceProvider serviceProvider, FileLoggerProvider? syncFileLoggerProvider)
+    internal async Task<IConfiguration> BuildAsync(IServiceProvider serviceProvider, ILoggerProvider? syncFileLoggerProvider)
     {
         List<IConfigurationProvider> configurationProviders = [];
         JsonConfigurationProvider? defaultJsonConfiguration = null;
