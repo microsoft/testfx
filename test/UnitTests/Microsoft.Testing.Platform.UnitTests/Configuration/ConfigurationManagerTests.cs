@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.IO;
+using System.Runtime.Serialization;
 using System.Text;
 
 using Microsoft.Testing.Framework;
@@ -84,6 +85,12 @@ public class ConfigurationManagerTests : TestBase
         Mock<ServiceProvider> serviceProviderMock = new();
         serviceProviderMock.Setup(x => x.GetServicesInternal(typeof(IFileSystem), It.IsAny<bool>(), It.IsAny<bool>())).Returns(new List<IFileSystem>() { fileSystem.Object });
 
+        Mock<ILogger> loggerMock = new();
+        loggerMock.Setup(x => x.IsEnabled(LogLevel.Trace)).Returns(true);
+
+        Mock<ILoggerProvider> loggerProviderMock = new();
+        loggerProviderMock.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(loggerMock.Object);
+
         ConfigurationManager configurationManager = new();
         configurationManager.AddConfigurationSource(() =>
             new JsonConfigurationSource(
@@ -92,10 +99,10 @@ public class ConfigurationManagerTests : TestBase
 
         IConfiguration configuration = await configurationManager.BuildAsync(
             serviceProviderMock.Object,
-            new FileLoggerProvider(string.Empty, new SystemClock(), LogLevel.Trace, "testLog_", customDirectory: false, syncFlush: true));
+            loggerProviderMock.Object);
         Assert.AreEqual(result, configuration[key], $"Expected '{result}' found '{configuration[key]}'");
 
-        // TODO: Assert log was written.
+        loggerMock.Verify(x => x.LogAsync(LogLevel.Trace, It.IsAny<string>(), null, LoggingExtensions.Formatter), Times.Once);
     }
 
     public async ValueTask BuildAsync_EmptyConfigurationSources_ThrowsException()
