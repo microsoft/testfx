@@ -6,14 +6,9 @@ using System.Diagnostics;
 namespace Microsoft.Testing.Platform.Helpers;
 
 #if NETCOREAPP
-internal sealed class SystemMainModule : IMainModule
+internal sealed class SystemMainModule(ProcessModule? processModule) : IMainModule
 {
-    private readonly ProcessModule? _processModule;
-
-    public SystemMainModule(ProcessModule? processModule)
-    {
-        _processModule = processModule;
-    }
+    private readonly ProcessModule? _processModule = processModule;
 
     public string? FileName => _processModule?.FileName;
 }

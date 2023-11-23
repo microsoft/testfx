@@ -8,16 +8,10 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal sealed class ConsoleTestExecutionRequestFactory : ITestExecutionRequestFactory
+internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions commandLineService, ITestExecutionFilterFactory testExecutionFilterFactory) : ITestExecutionRequestFactory
 {
-    private readonly ICommandLineOptions _commandLineService;
-    private readonly ITestExecutionFilterFactory _testExecutionFilterFactory;
-
-    public ConsoleTestExecutionRequestFactory(ICommandLineOptions commandLineService, ITestExecutionFilterFactory testExecutionFilterFactory)
-    {
-        _commandLineService = commandLineService;
-        _testExecutionFilterFactory = testExecutionFilterFactory;
-    }
+    private readonly ICommandLineOptions _commandLineService = commandLineService;
+    private readonly ITestExecutionFilterFactory _testExecutionFilterFactory = testExecutionFilterFactory;
 
     public async Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session)
     {

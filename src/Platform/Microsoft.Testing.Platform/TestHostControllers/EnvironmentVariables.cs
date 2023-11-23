@@ -8,16 +8,11 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
 
-internal sealed class EnvironmentVariables : IEnvironmentVariables
+internal sealed class EnvironmentVariables(ILoggerFactory loggerFactory) : IEnvironmentVariables
 {
     private const string StrippedSecretValue = "*****";
     private readonly Dictionary<string, OwnedEnvironmentVariable> _environmentVariables = [];
-    private readonly ILogger<EnvironmentVariables> _logger;
-
-    public EnvironmentVariables(ILoggerFactory loggerFactory)
-    {
-        _logger = loggerFactory.CreateLogger<EnvironmentVariables>();
-    }
+    private readonly ILogger<EnvironmentVariables> _logger = loggerFactory.CreateLogger<EnvironmentVariables>();
 
     public ITestHostEnvironmentVariableProvider? CurrentProvider { get; set; }
 

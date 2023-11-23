@@ -18,31 +18,21 @@ namespace Microsoft.Testing.Platform.ServerMode;
 /// <summary>
 /// This class converts the events send to the message bus and sends these back to the client.
 /// </summary>
-internal sealed class PerRequestServerDataConsumer : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
+internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvider, Guid runId, ITask task) : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
 {
     private const int TestNodeUpdateDelayInMs = 200;
 
     private readonly ConcurrentDictionary<TestNodeUid, TestNodeStateStatistics> _testNodeUidToStateStatistics = new();
     private readonly ConcurrentDictionary<TestNodeUid, byte> _discoveredTestNodeUids = new();
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ITask _task;
-    private readonly SemaphoreSlim _nodeAggregatorSemaphore;
-    private readonly SemaphoreSlim _nodeUpdateSemaphore;
-    private readonly ITestSessionContext _testSessionContext;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly ITask _task = task;
+    private readonly SemaphoreSlim _nodeAggregatorSemaphore = new(1);
+    private readonly SemaphoreSlim _nodeUpdateSemaphore = new(1);
+    private readonly ITestSessionContext _testSessionContext = serviceProvider.GetTestSessionContext();
     private readonly TaskCompletionSource<bool> _testSessionEnd = new();
     private Task? _idleUpdateTask;
-    private TestNodeStateChangeAggregator _nodeUpdatesAggregator;
+    private TestNodeStateChangeAggregator _nodeUpdatesAggregator = new(runId);
     private bool _isDisposed;
-
-    public PerRequestServerDataConsumer(IServiceProvider serviceProvider, Guid runId, ITask task)
-    {
-        _serviceProvider = serviceProvider;
-        _task = task;
-        _nodeUpdatesAggregator = new(runId);
-        _nodeAggregatorSemaphore = new(1);
-        _nodeUpdateSemaphore = new(1);
-        _testSessionContext = serviceProvider.GetTestSessionContext();
-    }
 
     public Type[] DataTypesConsumed { get; }
         =

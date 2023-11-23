@@ -5,27 +5,19 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class CommandLineParseResult : IEquatable<CommandLineParseResult>
+internal sealed class CommandLineParseResult(string? toolName, OptionRecord[] options, string[] errors, string[] originalArguments) : IEquatable<CommandLineParseResult>
 {
     public const char OptionPrefix = '-';
 
-    public CommandLineParseResult(string? toolName, OptionRecord[] options, string[] errors, string[] originalArguments)
-    {
-        ToolName = toolName;
-        Options = options;
-        Errors = errors;
-        OriginalArguments = originalArguments;
-    }
-
     public static CommandLineParseResult Empty => new(null, [], [], []);
 
-    public string? ToolName { get; set; }
+    public string? ToolName { get; set; } = toolName;
 
-    public OptionRecord[] Options { get; }
+    public OptionRecord[] Options { get; } = options;
 
-    public string[] Errors { get; }
+    public string[] Errors { get; } = errors;
 
-    public string[] OriginalArguments { get; }
+    public string[] OriginalArguments { get; } = originalArguments;
 
     public bool HasError => Errors.Length > 0;
 

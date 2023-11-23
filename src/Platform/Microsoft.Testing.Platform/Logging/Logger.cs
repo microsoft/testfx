@@ -34,14 +34,9 @@ internal sealed class Logger(ILogger[] loggers, LogLevel logLevel) : ILogger
     }
 }
 
-internal sealed class Logger<TCategoryName> : ILogger<TCategoryName>
+internal sealed class Logger<TCategoryName>(ILoggerFactory loggerFactory) : ILogger<TCategoryName>
 {
-    private readonly ILogger _logger;
-
-    public Logger(ILoggerFactory loggerFactory)
-    {
-        _logger = loggerFactory.CreateLogger(GetCategoryName());
-    }
+    private readonly ILogger _logger = loggerFactory.CreateLogger(GetCategoryName());
 
     public bool IsEnabled(LogLevel logLevel)
         => _logger.IsEnabled(logLevel);

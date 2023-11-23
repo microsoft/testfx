@@ -15,25 +15,18 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, ILoggerProvider, IOutputDeviceDataProducer
+internal sealed class TestApplicationResult(
+    IOutputDevice outputService,
+    ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
+    ICommandLineOptions commandLineOptions) : ITestApplicationProcessExitCode, ILoggerProvider, IOutputDeviceDataProducer
 {
-    private readonly IOutputDevice _outputService;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
-    private readonly ICommandLineOptions _commandLineOptions;
+    private readonly IOutputDevice _outputService = outputService;
+    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
+    private readonly ICommandLineOptions _commandLineOptions = commandLineOptions;
     private readonly List<TestApplicationResultLogger> _testApplicationResultLoggers = [];
     private readonly List<TestNode> _failedTests = [];
     private int _totalRanTests;
     private bool _testAdapterTestSessionFailure;
-
-    public TestApplicationResult(
-        IOutputDevice outputService,
-        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
-        ICommandLineOptions commandLineOptions)
-    {
-        _outputService = outputService;
-        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-        _commandLineOptions = commandLineOptions;
-    }
 
     /// <inheritdoc />
     public string Uid { get; } = nameof(TestApplicationResult);
@@ -133,18 +126,13 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
     public Statistics GetStatistics()
         => new() { TotalRanTests = _totalRanTests, TotalFailedTests = _failedTests.Count };
 
-    private sealed class TestApplicationResultLogger : ILogger
+    private sealed class TestApplicationResultLogger(string categoryName) : ILogger
     {
         private readonly ConcurrentBag<string> _errors = [];
 
-        public TestApplicationResultLogger(string categoryName)
-        {
-            CategoryName = categoryName;
-        }
-
         public IReadOnlyCollection<string> Errors => _errors;
 
-        public string CategoryName { get; }
+        public string CategoryName { get; } = categoryName;
 
         public bool IsEnabled(LogLevel logLevel)
             => logLevel is LogLevel.Error or LogLevel.Critical;

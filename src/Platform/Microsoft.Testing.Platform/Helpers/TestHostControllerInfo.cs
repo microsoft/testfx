@@ -7,14 +7,9 @@ using Microsoft.Testing.Platform.CommandLine;
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-internal sealed class TestHostControllerInfo : ITestHostControllerInfo
+internal sealed class TestHostControllerInfo(CommandLineParseResult parseResult) : ITestHostControllerInfo
 {
-    private readonly CommandLineParseResult _parseResult;
-
-    public TestHostControllerInfo(CommandLineParseResult parseResult)
-    {
-        _parseResult = parseResult;
-    }
+    private readonly CommandLineParseResult _parseResult = parseResult;
 
     public bool HasTestHostController => _parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey);
 

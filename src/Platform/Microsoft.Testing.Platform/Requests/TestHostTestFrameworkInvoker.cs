@@ -18,14 +18,9 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal class TestHostTestFrameworkInvoker : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
+internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
 {
-    public TestHostTestFrameworkInvoker(IServiceProvider serviceProvider)
-    {
-        ServiceProvider = serviceProvider;
-    }
-
-    protected IServiceProvider ServiceProvider { get; }
+    protected IServiceProvider ServiceProvider { get; } = serviceProvider;
 
     public string Uid => nameof(TestHostTestFrameworkInvoker);
 

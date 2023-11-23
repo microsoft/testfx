@@ -5,38 +5,25 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class FileLoggerProvider : ILoggerProvider, IDisposable
+internal sealed class FileLoggerProvider(string logFolder, LogLevel logLevel, string logPrefixName, bool customDirectory, bool syncFlush,
+    IClock clock, ITask task, IConsole console) : ILoggerProvider, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
-    private readonly IClock _clock;
-    private readonly ITask _task;
-    private readonly IConsole _console;
-    private readonly string _logPrefixName;
-    private readonly bool _customDirectory;
+    private readonly IClock _clock = clock;
+    private readonly ITask _task = task;
+    private readonly IConsole _console = console;
+    private readonly string _logPrefixName = logPrefixName;
+    private readonly bool _customDirectory = customDirectory;
 
-    public FileLoggerProvider(string logFolder, LogLevel logLevel, string logPrefixName, bool customDirectory, bool syncFlush,
-        IClock clock, ITask task, IConsole console)
-    {
-        _clock = clock;
-        _task = task;
-        _console = console;
-        _logPrefixName = logPrefixName;
-        _customDirectory = customDirectory;
-        FileLogger = new FileLogger(logFolder, fileName: null, logLevel, logPrefixName, syncFlush, clock, task, console);
+    public LogLevel LogLevel { get; } = logLevel;
 
-        LogLevel = logLevel;
-        SyncFlush = syncFlush;
-    }
+    public FileLogger FileLogger { get; private set; } = new FileLogger(logFolder, fileName: null, logLevel, logPrefixName, syncFlush, clock, task, console);
 
-    public LogLevel LogLevel { get; }
-
-    public FileLogger FileLogger { get; private set; }
-
-    public bool SyncFlush { get; }
+    public bool SyncFlush { get; } = syncFlush;
 
     public async Task CheckLogFolderAndMoveToTheNewIfNeededAsync(string testResultDirectory)
     {

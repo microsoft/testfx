@@ -15,30 +15,20 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal sealed class ToolsTestHost : ITestHost, IOutputDeviceDataProducer
+internal sealed class ToolsTestHost(
+    ToolsInformation toolsInformation,
+    ServiceProvider serviceProvider,
+    CommandLineParseResult parseResult,
+    ICommandLineOptionsProvider[] extensionsCommandLineOptionsProviders,
+    ICommandLineHandler commandLineHandler,
+    IPlatformOutputDevice platformOutputDevice) : ITestHost, IOutputDeviceDataProducer
 {
-    private readonly ToolsInformation _toolsInformation;
-    private readonly ServiceProvider _serviceProvider;
-    private readonly CommandLineParseResult _parseResult;
-    private readonly ICommandLineOptionsProvider[] _extensionsCommandLineOptionsProviders;
-    private readonly ICommandLineHandler _commandLineHandler;
-    private readonly IPlatformOutputDevice _platformOutputDevice;
-
-    public ToolsTestHost(
-        ToolsInformation toolsInformation,
-        ServiceProvider serviceProvider,
-        CommandLineParseResult parseResult,
-        ICommandLineOptionsProvider[] extensionsCommandLineOptionsProviders,
-        ICommandLineHandler commandLineHandler,
-        IPlatformOutputDevice platformOutputDevice)
-    {
-        _toolsInformation = toolsInformation;
-        _serviceProvider = serviceProvider;
-        _parseResult = parseResult;
-        _extensionsCommandLineOptionsProviders = extensionsCommandLineOptionsProviders;
-        _commandLineHandler = commandLineHandler;
-        _platformOutputDevice = platformOutputDevice;
-    }
+    private readonly ToolsInformation _toolsInformation = toolsInformation;
+    private readonly ServiceProvider _serviceProvider = serviceProvider;
+    private readonly CommandLineParseResult _parseResult = parseResult;
+    private readonly ICommandLineOptionsProvider[] _extensionsCommandLineOptionsProviders = extensionsCommandLineOptionsProviders;
+    private readonly ICommandLineHandler _commandLineHandler = commandLineHandler;
+    private readonly IPlatformOutputDevice _platformOutputDevice = platformOutputDevice;
 
     /// <inheritdoc />
     public string Uid => nameof(ToolsTestHost);

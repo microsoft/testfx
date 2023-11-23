@@ -12,34 +12,23 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Messages;
 
-internal class ListTestsMessageBus : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
+internal class ListTestsMessageBus(
+    ITestFramework testFrameworkAdapter,
+    ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
+    ILoggerFactory loggerFactory,
+    IOutputDevice outputDisplay,
+    IAsyncMonitorFactory asyncMonitorFactory,
+    IEnvironment environment,
+    ITestApplicationProcessExitCode testApplicationProcessExitCode) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
 {
-    private readonly ITestFramework _testFrameworkAdapter;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
-    private readonly IOutputDevice _outputDisplay;
-    private readonly IEnvironment _environment;
-    private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode;
-    private readonly ILogger<ListTestsMessageBus> _logger;
-    private readonly IAsyncMonitor _asyncMonitor;
+    private readonly ITestFramework _testFrameworkAdapter = testFrameworkAdapter;
+    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
+    private readonly IOutputDevice _outputDisplay = outputDisplay;
+    private readonly IEnvironment _environment = environment;
+    private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode = testApplicationProcessExitCode;
+    private readonly ILogger<ListTestsMessageBus> _logger = loggerFactory.CreateLogger<ListTestsMessageBus>();
+    private readonly IAsyncMonitor _asyncMonitor = asyncMonitorFactory.Create();
     private bool _printTitle = true;
-
-    public ListTestsMessageBus(
-        ITestFramework testFrameworkAdapter,
-        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
-        ILoggerFactory loggerFactory,
-        IOutputDevice outputDisplay,
-        IAsyncMonitorFactory asyncMonitorFactory,
-        IEnvironment environment,
-        ITestApplicationProcessExitCode testApplicationProcessExitCode)
-    {
-        _testFrameworkAdapter = testFrameworkAdapter;
-        _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-        _outputDisplay = outputDisplay;
-        _environment = environment;
-        _testApplicationProcessExitCode = testApplicationProcessExitCode;
-        _logger = loggerFactory.CreateLogger<ListTestsMessageBus>();
-        _asyncMonitor = asyncMonitorFactory.Create();
-    }
 
     public override IDataConsumer[] DataConsumerServices => Array.Empty<IDataConsumer>();
 

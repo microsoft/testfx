@@ -3,12 +3,7 @@
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
-internal class TestHostProcessPIDRequest : IRequest
+internal class TestHostProcessPIDRequest(int pid) : IRequest
 {
-    public TestHostProcessPIDRequest(int pid)
-    {
-        PID = pid;
-    }
-
-    public int PID { get; }
+    public int PID { get; } = pid;
 }

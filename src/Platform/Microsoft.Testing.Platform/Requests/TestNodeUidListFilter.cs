@@ -5,12 +5,7 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-public sealed class TestNodeUidListFilter : ITestExecutionFilter
+public sealed class TestNodeUidListFilter(TestNodeUid[] testNodeUids) : ITestExecutionFilter
 {
-    public TestNodeUidListFilter(TestNodeUid[] testNodeUids)
-    {
-        TestNodeUids = testNodeUids;
-    }
-
-    public TestNodeUid[] TestNodeUids { get; }
+    public TestNodeUid[] TestNodeUids { get; } = testNodeUids;
 }

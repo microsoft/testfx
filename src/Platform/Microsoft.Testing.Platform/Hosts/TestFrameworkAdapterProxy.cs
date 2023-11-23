@@ -6,14 +6,9 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 namespace Microsoft.Testing.Platform.Hosts;
 
 // This is needed to avoid that methods will be called by extensions, they can only query the information.
-internal sealed class TestFrameworkAdapterProxy : ITestFramework
+internal sealed class TestFrameworkAdapterProxy(ITestFramework testFrameworkAdapter) : ITestFramework
 {
-    private readonly ITestFramework _testFrameworkAdapter;
-
-    public TestFrameworkAdapterProxy(ITestFramework testFrameworkAdapter)
-    {
-        _testFrameworkAdapter = testFrameworkAdapter;
-    }
+    private readonly ITestFramework _testFrameworkAdapter = testFrameworkAdapter;
 
     /// <inheritdoc />
     public string Uid => _testFrameworkAdapter.Uid;

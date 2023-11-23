@@ -16,44 +16,31 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class CommandLineHandler : ICommandLineHandler, ICommandLineOptions, IOutputDeviceDataProducer
+internal sealed class CommandLineHandler(string[] args, CommandLineParseResult parseResult, ICommandLineOptionsProvider[] extensionsCommandLineOptionsProviders,
+    ICommandLineOptionsProvider[] systemCommandLineOptionsProviders, IRuntime runtime, IRuntimeFeature runtimeFeature,
+    IPlatformOutputDevice platformOutputDevice, IEnvironment environment, IProcessHandler process) : ICommandLineHandler, ICommandLineOptions, IOutputDeviceDataProducer
 {
     private readonly TextOutputDeviceData _textOutputDeviceData = new(string.Empty);
 
-    private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders;
-    private readonly IRuntime _runtime;
-    private readonly IRuntimeFeature _runtimeFeature;
-    private readonly IPlatformOutputDevice _platformOutputDevice;
+    private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders = systemCommandLineOptionsProviders;
+    private readonly IRuntime _runtime = runtime;
+    private readonly IRuntimeFeature _runtimeFeature = runtimeFeature;
+    private readonly IPlatformOutputDevice _platformOutputDevice = platformOutputDevice;
 #if !NETCOREAPP
     [SuppressMessage("CodeQuality", "IDE0052:RemoveVariable unread private members", Justification = "Used in netcoreapp")]
 #endif
-    private readonly IEnvironment _environment;
+    private readonly IEnvironment _environment = environment;
 
 #if NETCOREAPP
     [SuppressMessage("CodeQuality", "IDE0052:RemoveVariable unread private members", Justification = "Used in netstandard")]
 #endif
-    private readonly IProcessHandler _process;
+    private readonly IProcessHandler _process = process;
 
-    private readonly CommandLineParseResult _parseResult;
+    private readonly CommandLineParseResult _parseResult = parseResult;
 
-    public CommandLineHandler(string[] args, CommandLineParseResult parseResult, ICommandLineOptionsProvider[] extensionsCommandLineOptionsProviders,
-        ICommandLineOptionsProvider[] systemCommandLineOptionsProviders, IRuntime runtime, IRuntimeFeature runtimeFeature,
-        IPlatformOutputDevice platformOutputDevice, IEnvironment environment, IProcessHandler process)
-    {
-        Arguments = args;
-        _parseResult = parseResult;
-        _systemCommandLineOptionsProviders = systemCommandLineOptionsProviders;
-        ExtensionsCommandLineOptionsProviders = extensionsCommandLineOptionsProviders;
-        _runtime = runtime;
-        _runtimeFeature = runtimeFeature;
-        _platformOutputDevice = platformOutputDevice;
-        _environment = environment;
-        _process = process;
-    }
+    public string[] Arguments { get; } = args;
 
-    public string[] Arguments { get; }
-
-    public ICommandLineOptionsProvider[] ExtensionsCommandLineOptionsProviders { get; }
+    public ICommandLineOptionsProvider[] ExtensionsCommandLineOptionsProviders { get; } = extensionsCommandLineOptionsProviders;
 
     public string Uid => nameof(CommandLineHandler);
 

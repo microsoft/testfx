@@ -5,19 +5,12 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-internal sealed class UnhandledExceptionHandler : IUnhandledExceptionsHandler
+internal sealed class UnhandledExceptionHandler(IEnvironment environment, IConsole console, bool isTestHost = false) : IUnhandledExceptionsHandler
 {
-    private readonly IEnvironment _environment;
-    private readonly IConsole _console;
-    private readonly bool _isTestController;
+    private readonly IEnvironment _environment = environment;
+    private readonly IConsole _console = console;
+    private readonly bool _isTestController = !isTestHost;
     private ILogger? _logger;
-
-    public UnhandledExceptionHandler(IEnvironment environment, IConsole console, bool isTestHost = false)
-    {
-        _isTestController = !isTestHost;
-        _environment = environment;
-        _console = console;
-    }
 
     public void Subscribe()
     {

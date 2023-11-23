@@ -14,19 +14,12 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleInfo
+internal sealed class CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process) : ITestApplicationModuleInfo
 {
-    private readonly IRuntimeFeature _runtimeFeature;
-    private readonly IEnvironment _environment;
-    private readonly IProcessHandler _process;
+    private readonly IRuntimeFeature _runtimeFeature = runtimeFeature;
+    private readonly IEnvironment _environment = environment;
+    private readonly IProcessHandler _process = process;
     private static readonly string[] MuxerExec = ["exec"];
-
-    public CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process)
-    {
-        _runtimeFeature = runtimeFeature;
-        _environment = environment;
-        _process = process;
-    }
 
     public bool IsCurrentTestApplicationHostDotnetMuxer
     {

@@ -5,17 +5,11 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal sealed class JsonRpcTcpServerToSingleClient : ICommunicationProtocol
+internal sealed class JsonRpcTcpServerToSingleClient(string clientHostName, int clientPort) : ICommunicationProtocol
 {
-    public JsonRpcTcpServerToSingleClient(string clientHostName, int clientPort)
-    {
-        ClientHostName = clientHostName;
-        ClientPort = clientPort;
-    }
+    public string ClientHostName { get; } = clientHostName;
 
-    public string ClientHostName { get; }
-
-    public int ClientPort { get; }
+    public int ClientPort { get; } = clientPort;
 
     public string Name => nameof(JsonRpcTcpServerToSingleClient);
 

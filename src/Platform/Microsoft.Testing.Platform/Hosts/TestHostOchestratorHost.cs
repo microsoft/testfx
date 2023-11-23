@@ -8,16 +8,10 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal class TestHostOrchestratorHost : ITestHost
+internal class TestHostOrchestratorHost(TestHostOrchestratorConfiguration testHostOrchestratorConfiguration, ServiceProvider serviceProvider) : ITestHost
 {
-    private readonly TestHostOrchestratorConfiguration _testHostOrchestratorConfiguration;
-    private readonly ServiceProvider _serviceProvider;
-
-    public TestHostOrchestratorHost(TestHostOrchestratorConfiguration testHostOrchestratorConfiguration, ServiceProvider serviceProvider)
-    {
-        _testHostOrchestratorConfiguration = testHostOrchestratorConfiguration;
-        _serviceProvider = serviceProvider;
-    }
+    private readonly TestHostOrchestratorConfiguration _testHostOrchestratorConfiguration = testHostOrchestratorConfiguration;
+    private readonly ServiceProvider _serviceProvider = serviceProvider;
 
     public async Task<int> RunAsync()
     {

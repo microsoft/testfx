@@ -24,14 +24,9 @@ internal interface IObjectDeserializer
     object? DeserializeObject(IDictionary<string, object?> properties);
 }
 
-internal sealed class ObjectDeserializer<T> : IObjectDeserializer
+internal sealed class ObjectDeserializer<T>(Func<IDictionary<string, object?>, T> fn) : IObjectDeserializer
 {
-    private readonly Func<IDictionary<string, object?>, T> _fn;
-
-    public ObjectDeserializer(Func<IDictionary<string, object?>, T> fn)
-    {
-        _fn = fn;
-    }
+    private readonly Func<IDictionary<string, object?>, T> _fn = fn;
 
     public object? DeserializeObject(IDictionary<string, object?> properties)
         => _fn(properties);

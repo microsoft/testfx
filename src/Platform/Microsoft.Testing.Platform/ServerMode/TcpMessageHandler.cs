@@ -5,19 +5,13 @@ using System.Net.Sockets;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal sealed class TcpMessageHandler : StreamMessageHandler
+internal sealed class TcpMessageHandler(
+    TcpClient client,
+    Stream clientToServerStream,
+    Stream serverToClientStream,
+    IMessageFormatter formatter) : StreamMessageHandler(clientToServerStream, serverToClientStream, formatter)
 {
-    private readonly TcpClient _client;
-
-    public TcpMessageHandler(
-        TcpClient client,
-        Stream clientToServerStream,
-        Stream serverToClientStream,
-        IMessageFormatter formatter)
-        : base(clientToServerStream, serverToClientStream, formatter)
-    {
-        _client = client;
-    }
+    private readonly TcpClient _client = client;
 
     public override async Task<RpcMessage?> ReadAsync(CancellationToken cancellationToken)
     {

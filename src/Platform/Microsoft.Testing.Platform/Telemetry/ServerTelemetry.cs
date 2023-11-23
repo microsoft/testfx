@@ -6,14 +6,9 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Telemetry;
 
-internal sealed class ServerTelemetry : ITelemetryCollector
+internal sealed class ServerTelemetry(IServiceProvider services) : ITelemetryCollector
 {
-    private readonly IServiceProvider _services;
-
-    public ServerTelemetry(IServiceProvider services)
-    {
-        _services = services;
-    }
+    private readonly IServiceProvider _services = services;
 
     public async Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap)
     {

@@ -6,14 +6,9 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal class PerRequestTestSessionContext : ITestSessionContext, IDisposable
+internal class PerRequestTestSessionContext(CancellationToken rpcCancellationToken, CancellationToken testApplicationcancellationToken) : ITestSessionContext, IDisposable
 {
-    private readonly CancellationTokenSource _cancellationTokenSource = new();
-
-    public PerRequestTestSessionContext(CancellationToken rpcCancellationToken, CancellationToken testApplicationcancellationToken)
-    {
-        _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(rpcCancellationToken, testApplicationcancellationToken);
-    }
+    private readonly CancellationTokenSource _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(rpcCancellationToken, testApplicationcancellationToken);
 
     public SessionUid SessionId { get; } = new(Guid.NewGuid().ToString());
 
