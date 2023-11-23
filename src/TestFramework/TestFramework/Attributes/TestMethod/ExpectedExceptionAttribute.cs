@@ -115,7 +115,11 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
                     thrownExceptionType.FullName,
                     ExceptionType.FullName,
                     UtfHelper.GetExceptionMsg(exception));
+
+                // TODO: Change this type to a more specific type
+#pragma warning disable CA2201 // Do not raise reserved exception types
                 throw new Exception(message);
+#pragma warning restore CA2201 // Do not raise reserved exception types
             }
         }
         else
@@ -132,7 +136,11 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
                     thrownExceptionType.FullName,
                     ExceptionType.FullName,
                     UtfHelper.GetExceptionMsg(exception));
+
+                // TODO: Change this type to a more specific type
+#pragma warning disable CA2201 // Do not raise reserved exception types
                 throw new Exception(message);
+#pragma warning restore CA2201 // Do not raise reserved exception types
             }
         }
     }

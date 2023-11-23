@@ -1,10 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.Extensibility.Samples;
 
+[SuppressMessage("Naming", "CA1711:Identifiers should not have incorrect suffix", Justification = "This is only some sample type")]
 public static class AssertEx
 {
     private static AssertIs s_assertIs;
@@ -26,9 +30,10 @@ public static class AssertEx
 
         throw new AssertFailedException(
             string.Format(
-            "Expected object of type {0} but found object of type {1}",
-            typeof(T),
-            obj ?? obj.GetType()));
+                CultureInfo.InvariantCulture,
+                "Expected object of type {0} but found object of type {1}",
+                typeof(T),
+                obj ?? obj.GetType()));
     }
 
     /// <summary>

@@ -23,7 +23,7 @@ public class TestSourceHost : ITestSourceHost
 {
 #if !WINDOWS_UWP
     private readonly string _sourceFileName;
-    private string? _currentDirectory = null;
+    private string? _currentDirectory;
 #endif
 
 #if NETFRAMEWORK
@@ -122,7 +122,7 @@ public class TestSourceHost : ITestSourceHost
 
             EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating app-domain for source {0} with application base path {1}.", _sourceFileName, appDomainSetup.ApplicationBase);
 
-            string domainName = string.Format("TestSourceHost: Enumerating source ({0})", _sourceFileName);
+            string domainName = $"TestSourceHost: Enumerating source ({_sourceFileName})";
             AppDomain = _appDomain.CreateDomain(domainName, null!, appDomainSetup);
 
             // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recursive assembly resolution
@@ -220,10 +220,11 @@ public class TestSourceHost : ITestSourceHost
 
         ResetContext();
 
-        GC.SuppressFinalize(this);
 #elif !WINDOWS_UWP
         ResetContext();
 #endif
+
+        GC.SuppressFinalize(this);
     }
 
 #if !WINDOWS_UWP

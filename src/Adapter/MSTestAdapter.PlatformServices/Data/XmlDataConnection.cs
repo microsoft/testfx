@@ -92,6 +92,8 @@ internal sealed class XmlDataConnection : TestDataConnection
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     [SuppressMessage("Microsoft.Reliability", "CA2000:Dispose objects before losing scope", Justification = "Un-tested. Preserving behavior.")]
+    [SuppressMessage("Security", "CA3075:Insecure DTD processing in XML", Justification = "Not enough tests to understand if we would break")]
+    [SuppressMessage("Security", "CA5366:Use XmlReader for 'DataSet.ReadXml()'", Justification = "Not enough tests to understand if we would break")]
     private DataSet? LoadDataSet(bool schemaOnly)
     {
         try

@@ -49,7 +49,7 @@ internal sealed class TestApplicationResult : ITestApplicationProcessExitCode, I
 
     /// <inheritdoc />
     public Type[] DataTypesConsumed { get; }
-        = new[] { typeof(TestNodeUpdateMessage) };
+        = [typeof(TestNodeUpdateMessage)];
 
     public bool HasTestAdapterTestSessionFailure => TestAdapterTestSessionFailureErrorMessage is not null;
 

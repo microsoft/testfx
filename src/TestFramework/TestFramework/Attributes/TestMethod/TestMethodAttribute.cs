@@ -43,6 +43,6 @@ public class TestMethodAttribute : Attribute
     /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
     public virtual TestResult[] Execute(ITestMethod testMethod)
     {
-        return new TestResult[] { testMethod.Invoke(null) };
+        return [testMethod.Invoke(null)];
     }
 }

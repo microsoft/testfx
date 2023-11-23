@@ -15,7 +15,7 @@ public class ParallelExecutionTests : CLITestBase
 
     public void AllMethodsShouldRunInParallel()
     {
-        InvokeVsTestForExecution(new string[] { MethodParallelTestAssetName });
+        InvokeVsTestForExecution([MethodParallelTestAssetName]);
 
         // Parallel level of 2
         // There are a total of 6 methods each with a sleep of TestMethodWaitTimeInMS.
@@ -35,7 +35,7 @@ public class ParallelExecutionTests : CLITestBase
 
     public void AllClassesShouldRunInParallel()
     {
-        InvokeVsTestForExecution(new string[] { ClassParallelTestAssetName });
+        InvokeVsTestForExecution([ClassParallelTestAssetName]);
 
         // Parallel level of 2
         // There are a total of 3 classes - C1 (2 tests), C2(3 tests), C3(2 tests) with a sleep of TestMethodWaitTimeInMS.
@@ -66,7 +66,7 @@ public class ParallelExecutionTests : CLITestBase
   	            </MSTest>  
             </RunSettings>";
 
-        InvokeVsTestForExecution(new string[] { DoNotParallelizeTestAssetName }, RunSetting);
+        InvokeVsTestForExecution([DoNotParallelizeTestAssetName], RunSetting);
 
         // DoNotParallelize set for TestAssetName
         // There are a total of 2 classes - C1 (3 tests), C2 (3 tests) with a sleep of TestMethodWaitTimeInMS.

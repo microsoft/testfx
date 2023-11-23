@@ -57,7 +57,7 @@ public partial class CLITestBase : TestContainer
         }
     }
 
-    private class InternalSink : ITestCaseDiscoverySink
+    private sealed class InternalSink : ITestCaseDiscoverySink
     {
         private readonly List<TestCase> _testCases = [];
 
@@ -103,7 +103,7 @@ public partial class CLITestBase : TestContainer
         }
     }
 
-    private class InternalFrameworkHandle : IFrameworkHandle
+    private sealed class InternalFrameworkHandle : IFrameworkHandle
     {
         private readonly List<string> _messageList = [];
         private readonly ConcurrentDictionary<TestCase, ConcurrentBag<TestResult>> _testResults = new();
@@ -144,7 +144,7 @@ public partial class CLITestBase : TestContainer
 
         public void SendMessage(TestMessageLevel testMessageLevel, string message)
         {
-            _messageList.Add(string.Format("{0}:{1}", testMessageLevel, message));
+            _messageList.Add($"{testMessageLevel}:{message}");
         }
 
         public int LaunchProcessWithDebuggerAttached(string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables)

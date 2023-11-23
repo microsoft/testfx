@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -144,6 +145,7 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
         return MockTraceListener.Object;
     }
 
+    [SuppressMessage("Naming", "CA1725:Parameter names should match base declaration", Justification = "Part of the public API")]
     public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter)
     {
         return MockTraceListenerManager.Object;

@@ -274,7 +274,7 @@ public class DummyTestClass
     {
         get
         {
-            return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
+            return new[] { new object[] { 1, 2, 3 }, [4, 5, 6] };
         }
     }
 
@@ -302,7 +302,7 @@ public class DummyTestClass
 
     /// <summary>
     /// Gets the wrong test data property i.e. Property returning something other than
-    /// expected data type of <see cref="T:IEnumerable{object[]}"/>.
+    /// expected data type of <see cref="IEnumerable{T}"/>.
     /// </summary>
     public static string WrongDataTypeProperty
     {
@@ -320,7 +320,7 @@ public class DummyTestClass
     /// </returns>
     public static IEnumerable<object[]> ReusableTestDataMethod()
     {
-        return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
+        return new[] { new object[] { 1, 2, 3 }, [4, 5, 6] };
     }
 
     /// <summary>
@@ -336,9 +336,7 @@ public class DummyTestClass
     /// The <see cref="string"/>.
     /// </returns>
     public static string GetCustomDynamicDataDisplayName(MethodInfo methodInfo, object[] data)
-    {
-        return string.Format("DynamicDataTestWithDisplayName {0} with {1} parameters", methodInfo.Name, data.Length);
-    }
+        => $"DynamicDataTestWithDisplayName {methodInfo.Name} with {data.Length} parameters";
 
     /// <summary>
     /// Custom display name method with missing parameters.
@@ -493,7 +491,7 @@ public class DummyTestClass2
     {
         get
         {
-            return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
+            return new[] { new object[] { 1, 2, 3 }, [4, 5, 6] };
         }
     }
 
@@ -505,7 +503,7 @@ public class DummyTestClass2
     /// </returns>
     public static IEnumerable<object[]> ReusableTestDataMethod2()
     {
-        return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
+        return new[] { new object[] { 1, 2, 3 }, [4, 5, 6] };
     }
 
     /// <summary>
@@ -521,7 +519,5 @@ public class DummyTestClass2
     /// The <see cref="string"/>.
     /// </returns>
     public static string GetCustomDynamicDataDisplayName2(MethodInfo methodInfo, object[] data)
-    {
-        return string.Format("DynamicDataTestWithDisplayName {0} with {1} parameters", methodInfo.Name, data.Length);
-    }
+        => $"DynamicDataTestWithDisplayName {methodInfo.Name} with {data.Length} parameters";
 }

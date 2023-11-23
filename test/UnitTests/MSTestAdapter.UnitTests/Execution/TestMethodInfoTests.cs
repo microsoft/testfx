@@ -56,7 +56,7 @@ public class TestMethodInfoTests : TestContainer
     public TestMethodInfoTests()
     {
         _constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
-        _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod"));
+        _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
         _classAttribute = new UTF.TestClassAttribute();
         _testMethodAttribute = new UTF.TestMethodAttribute();
         _testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
@@ -94,7 +94,7 @@ public class TestMethodInfoTests : TestContainer
 
     public void SetArgumentsShouldSetArgumentsNeededForCurrentTestRun()
     {
-        object[] arguments = new object[] { 10, 20, 30 };
+        object[] arguments = [10, 20, 30];
         _testMethodInfo.SetArguments(arguments);
 
         Verify(_testMethodInfo.Arguments.Length == 3);
@@ -248,6 +248,7 @@ public class TestMethodInfoTests : TestContainer
         var result = _testMethodInfo.Invoke(null);
 
         var errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
             Resource.UTA_InstanceCreationError,
             typeof(DummyTestClass).FullName,
             "System.NotImplementedException: dummyExceptionMessage");
@@ -262,6 +263,7 @@ public class TestMethodInfoTests : TestContainer
 
         var result = method.Invoke(null);
         var errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
             Resource.UTA_InstanceCreationError,
             typeof(DummyTestClassWithParameterizedCtor).FullName,
             "System.Reflection.TargetParameterCountException: Parameter count mismatch.");
@@ -279,7 +281,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception is not null);
         Verify(
             (bool)exception?.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows>b__"));
+            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrows>b__", StringComparison.Ordinal));
     }
 
     public void TestMethodInfoInvokeShouldSetStackTraceInformationIfTestClassConstructorThrowsWithoutInnerException()
@@ -293,7 +295,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception is not null);
         Verify(
             (bool)exception?.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "    at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)"));
+            "    at System.Reflection.RuntimeConstructorInfo.Invoke(BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)", StringComparison.Ordinal));
     }
 
     public void TestMethodInfoInvokeShouldSetResultFilesIfTestContextHasAttachments()
@@ -366,6 +368,7 @@ public class TestMethodInfoTests : TestContainer
         var exception = _testMethodInfo.Invoke(null).TestFailureException as TestFailedException;
 
         var errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
             Resource.UTA_TestContextSetError,
             typeof(DummyTestClass).FullName,
             "System.NotImplementedException: dummyExceptionMessage");
@@ -382,7 +385,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception is not null);
         Verify(
             (bool)exception?.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows>b__"));
+            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeShouldSetStackTraceInformationIfSetTestContextThrows>b__", StringComparison.Ordinal));
     }
 
     #endregion
@@ -459,6 +462,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestInitializeMethodBody = classInstance => { throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message")); };
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
         var errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
             Resource.UTA_InitMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestInitializeMethod.Name,
@@ -482,7 +486,7 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__"));
+            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
     }
 
     public void TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException()
@@ -509,6 +513,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
 
         var expectedErrorMessage = string.Format(
+            CultureInfo.InvariantCulture,
             Resource.UTA_InitMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestInitializeMethod.Name,
@@ -516,9 +521,9 @@ public class TestMethodInfoTests : TestContainer
         Verify(expectedErrorMessage == exception.Message);
 
 #if NETFRAMEWORK
-        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()"));
+        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()", StringComparison.Ordinal));
 #else
-        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>"));
+        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>", StringComparison.Ordinal));
 #endif
     }
 
@@ -528,6 +533,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestInitializeMethodBody = classInstance => { UTF.Assert.Fail("dummyFailMessage"); };
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
         var errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
             Resource.UTA_InitMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestInitializeMethod.Name,
@@ -550,7 +556,7 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult>b__"));
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult>b__", StringComparison.Ordinal));
     }
 
     public void TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult()
@@ -559,6 +565,7 @@ public class TestMethodInfoTests : TestContainer
         DummyTestClass.TestInitializeMethodBody = classInstance => { UTF.Assert.Inconclusive("dummyFailMessage"); };
         _testClassInfo.TestInitializeMethod = typeof(DummyTestClass).GetMethod("DummyTestInitializeMethod");
         var errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
             Resource.UTA_InitMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestInitializeMethod.Name,
@@ -581,7 +588,7 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult>b__"));
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal));
     }
 
     #endregion
@@ -611,6 +618,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
 
         var errorMessage = string.Format(
+            CultureInfo.InvariantCulture,
             Resource.UTA_CleanupMethodThrows,
             typeof(DummyTestClass).FullName,
             _testClassInfo.TestCleanupMethod.Name,
@@ -618,12 +626,12 @@ public class TestMethodInfoTests : TestContainer
         Verify(errorMessage == exception.Message);
 
 #if NETFRAMEWORK
-        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith("   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()"))
+        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith("   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()", StringComparison.Ordinal))
         {
             throw new Exception($"Expected stack trace to start with '   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()' but\n{exception.StackTraceInformation.ErrorStackTrace}\n does not.");
         }
 #else
-        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith("   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>"))
+        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith("   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>", StringComparison.Ordinal))
         {
             throw new Exception($"Expected stack trace to start with '   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>' but\n{exception.StackTraceInformation.ErrorStackTrace}\n does not.");
         }
@@ -744,7 +752,7 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsReturnsExpectedResult>b__"));
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsReturnsExpectedResult>b__", StringComparison.Ordinal));
     }
 
     public void TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult()
@@ -771,7 +779,7 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult>b__"));
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertInconclusiveReturnsExpectedResult>b__", StringComparison.Ordinal));
     }
 
     public void TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult()
@@ -798,7 +806,7 @@ public class TestMethodInfoTests : TestContainer
 
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
-            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult>b__"));
+            "   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<TestMethodInfoInvokeWhenTestCleanupThrowsAssertFailedReturnsExpectedResult>b__", StringComparison.Ordinal));
     }
 
     public void TestMethodInfoInvokeShouldAppendErrorMessagesIfBothTestMethodAndTestCleanupThrows()
@@ -1335,7 +1343,7 @@ public class TestMethodInfoTests : TestContainer
              {
                  try
                  {
-                     Task.WaitAny(new[] { Task.Delay(100000) }, cancelToken);
+                     Task.WaitAny([Task.Delay(100000, cancelToken)], cancelToken);
                  }
                  catch (OperationCanceledException)
                  {
@@ -1364,8 +1372,8 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo,
             _testMethodOptions);
 
-        object[] arguments = new object[] { "RequiredStr1" };
-        object[] expectedArguments = new object[] { "RequiredStr1" };
+        object[] arguments = ["RequiredStr1"];
+        object[] expectedArguments = ["RequiredStr1"];
         var resolvedArguments = method.ResolveArguments(arguments);
 
         Verify(resolvedArguments.Length == 1);
@@ -1381,8 +1389,8 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo,
             _testMethodOptions);
 
-        object[] arguments = new object[] { "RequiredStr1", "RequiredStr2", "ExtraStr3" };
-        object[] expectedArguments = new object[] { "RequiredStr1", "RequiredStr2", "ExtraStr3" };
+        object[] arguments = ["RequiredStr1", "RequiredStr2", "ExtraStr3"];
+        object[] expectedArguments = ["RequiredStr1", "RequiredStr2", "ExtraStr3"];
         var resolvedArguments = method.ResolveArguments(arguments);
 
         Verify(resolvedArguments.Length == 3);
@@ -1398,8 +1406,8 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo,
             _testMethodOptions);
 
-        object[] arguments = new object[] { "RequiredStr1" };
-        object[] expectedArguments = new object[] { "RequiredStr1", null, null };
+        object[] arguments = ["RequiredStr1"];
+        object[] expectedArguments = ["RequiredStr1", null, null];
         var resolvedArguments = method.ResolveArguments(arguments);
 
         Verify(resolvedArguments.Length == 3);
@@ -1415,8 +1423,8 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo,
             _testMethodOptions);
 
-        object[] arguments = new object[] { "RequiredStr1", "OptionalStr1" };
-        object[] expectedArguments = new object[] { "RequiredStr1", "OptionalStr1", null };
+        object[] arguments = ["RequiredStr1", "OptionalStr1"];
+        object[] expectedArguments = ["RequiredStr1", "OptionalStr1", null];
         var resolvedArguments = method.ResolveArguments(arguments);
 
         Verify(resolvedArguments.Length == 3);
@@ -1432,8 +1440,8 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo,
             _testMethodOptions);
 
-        object[] arguments = new object[] { 1 };
-        object[] expectedArguments = new object[] { 1, Array.Empty<string>() };
+        object[] arguments = [1];
+        object[] expectedArguments = [1, Array.Empty<string>()];
         var resolvedArguments = method.ResolveArguments(arguments);
 
         Verify(resolvedArguments.Length == 2);
@@ -1451,8 +1459,8 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo,
             _testMethodOptions);
 
-        object[] arguments = new object[] { 1, "str1", "str2", "str3" };
-        object[] expectedArguments = new object[] { 1, new string[] { "str1", "str2", "str3" } };
+        object[] arguments = [1, "str1", "str2", "str3"];
+        object[] expectedArguments = [1, new string[] { "str1", "str2", "str3" }];
         var resolvedArguments = method.ResolveArguments(arguments);
 
         Verify(resolvedArguments.Length == 2);

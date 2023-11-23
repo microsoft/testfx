@@ -312,7 +312,7 @@ public class MethodInfoExtensionsTests : TestContainer
     public void GetAsyncTypeNameShouldReturnStateMachineTypeNameForAsyncMethods()
     {
         var methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncVoidMethod");
-        Verify(methodInfo.GetAsyncTypeName().StartsWith("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass+<PublicAsyncVoidMethod>"));
+        Verify(methodInfo.GetAsyncTypeName().StartsWith("Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass+<PublicAsyncVoidMethod>", StringComparison.Ordinal));
     }
 
     #endregion

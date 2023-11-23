@@ -113,7 +113,7 @@ internal class TestDataConnectionSql : TestDataConnection
             ValidTableTypes = null,
             InvalidSchemas = null,
         };
-        return new SchemaMetaData[] { data };
+        return [data];
     }
 
     #region Quotes
@@ -396,7 +396,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <returns>Location of the separator.</returns>
     private int FindSeparators(string text, int from)
     {
-        return text.IndexOfAny(new char[] { SchemaSeparatorChar, CatalogSeparatorChar }, from);
+        return text.IndexOfAny([SchemaSeparatorChar, CatalogSeparatorChar], from);
     }
 
     /// <summary>
@@ -604,13 +604,13 @@ internal class TestDataConnectionSql : TestDataConnection
             // This lets us specifically query for columns from the appropriate table name
             // but assumes all databases have the same restrictions on all the column
             // schema tables
-            string?[] restrictions = new string?[4]
-            {
+            string?[] restrictions =
+            [
                 null,               // Catalog (don't care)
                 targetSchema,       // Table schema
                 targetName,         // Table name
                 null,
-            };             // Column name (don't care)
+            ];             // Column name (don't care)
 
             DataTable? columns = null;
             try
@@ -684,8 +684,8 @@ internal class TestDataConnectionSql : TestDataConnection
         DebugEx.Assert(!StringEx.IsNullOrEmpty(tableName), "FormatDataTableNameForDisplay should be called only when table name is not empty.");
 
         return StringEx.IsNullOrEmpty(tableSchema)
-            ? JoinAndQuoteName(new string[] { tableName }, false)
-            : JoinAndQuoteName(new string[] { tableSchema, tableName }, false);
+            ? JoinAndQuoteName([tableName], false)
+            : JoinAndQuoteName([tableSchema, tableName], false);
     }
 
     /// <summary>

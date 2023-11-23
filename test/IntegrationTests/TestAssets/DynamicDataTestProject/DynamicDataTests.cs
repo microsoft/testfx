@@ -190,9 +190,7 @@ public class DynamicDataTests
     }
 
     public static string GetCustomDynamicDataDisplayName(MethodInfo methodInfo, object[] data)
-    {
-        return string.Format("Custom DynamicDataTestMethod {0} with {1} parameters", methodInfo.Name, data.Length);
-    }
+        => $"Custom DynamicDataTestMethod {methodInfo.Name} with {data.Length} parameters";
 
     private static IEnumerable<object[]> GetExampleTestCases()
     {

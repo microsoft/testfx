@@ -27,7 +27,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <summary>
     /// List of result files associated with the test.
     /// </summary>
-    private readonly IList<string> _testResultFiles;
+    private readonly List<string> _testResultFiles;
 
     /// <summary>
     /// Writer on which the messages given by the user should be written.
@@ -43,12 +43,12 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <summary>
     /// Specifies whether the writer is disposed or not.
     /// </summary>
-    private bool _stringWriterDisposed = false;
+    private bool _stringWriterDisposed;
 
     /// <summary>
     /// Properties.
     /// </summary>
-    private IDictionary<string, object?> _properties;
+    private Dictionary<string, object?> _properties;
 
     /// <summary>
     /// Unit test outcome.
@@ -94,7 +94,7 @@ public class TestContextImplementation : TestContext, ITestContext
             [ManagedMethodLabel] = _testMethod.ManagedMethodName,
             [TestNameLabel] = _testMethod.Name,
         };
-        _testResultFiles = new List<string>();
+        _testResultFiles = [];
     }
 
     #region TestContext impl
@@ -315,7 +315,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <returns>Results files generated in run.</returns>
     public IList<string>? GetResultFiles()
     {
-        if (!_testResultFiles.Any())
+        if (_testResultFiles.Count == 0)
         {
             return null;
         }

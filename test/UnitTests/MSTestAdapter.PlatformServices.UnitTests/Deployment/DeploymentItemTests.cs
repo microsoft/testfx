@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
@@ -78,7 +80,7 @@ public class DeploymentItemTests : TestContainer
         var sourcePath = "e:\\temp\\temp1.dll";
         DeploymentItem item = new(sourcePath);
 
-        Verify(string.Format(Resource.DeploymentItem, sourcePath) == item.ToString());
+        Verify(string.Format(CultureInfo.InvariantCulture, Resource.DeploymentItem, sourcePath) == item.ToString());
     }
 
     public void ToStringShouldReturnDeploymentItemAndRelativeOutputDirectory()
@@ -87,6 +89,6 @@ public class DeploymentItemTests : TestContainer
         var relativeOutputDirectory = "foo1";
         DeploymentItem item = new(sourcePath, relativeOutputDirectory);
 
-        Verify(string.Format(Resource.DeploymentItemWithOutputDirectory, sourcePath, relativeOutputDirectory) == item.ToString());
+        Verify(string.Format(CultureInfo.InvariantCulture, Resource.DeploymentItemWithOutputDirectory, sourcePath, relativeOutputDirectory) == item.ToString());
     }
 }

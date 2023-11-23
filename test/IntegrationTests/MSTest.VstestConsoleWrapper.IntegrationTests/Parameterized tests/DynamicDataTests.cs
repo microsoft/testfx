@@ -13,7 +13,7 @@ public class DynamicDataTests : CLITestBase
     {
         // Arrange & Act
         InvokeVsTestForExecution(
-            new string[] { TestAssetName },
+            [TestAssetName],
             testCaseFilter: "DynamicDataTest");
 
         // Assert

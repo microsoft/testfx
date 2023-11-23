@@ -97,7 +97,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
         var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
-        Verify(testResult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs")));
+        Verify(testResult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs", StringComparison.Ordinal)));
     }
 
     public void ToTestResultForUniTestResultWithStandardErrorShouldReturnTestResultWithStdErrorMessage()
@@ -117,7 +117,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
         var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
-        Verify(testResult.Messages.All(m => m.Text.Contains("DummyError") && m.Category.Equals("StdErrMsgs")));
+        Verify(testResult.Messages.All(m => m.Text.Contains("DummyError") && m.Category.Equals("StdErrMsgs", StringComparison.Ordinal)));
     }
 
     public void ToTestResultForUniTestResultWithDebugTraceShouldReturnTestResultWithDebugTraceStdOutMessage()
@@ -137,7 +137,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
         var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
-        Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nDebug Trace:\r\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs")));
+        Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nDebug Trace:\r\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs", StringComparison.Ordinal)));
     }
 
     public void ToTestResultForUniTestResultWithTestContextMessagesShouldReturnTestResultWithTestContextStdOutMessage()
@@ -157,7 +157,7 @@ public class UnitTestResultTests : TestContainer
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
         var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
-        Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nTestContext Messages:\r\nKeepMovingForward") && m.Category.Equals("StdOutMsgs")));
+        Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nTestContext Messages:\r\nKeepMovingForward") && m.Category.Equals("StdOutMsgs", StringComparison.Ordinal)));
     }
 
     public void ToTestResultForUniTestResultWithResultFilesShouldReturnTestResultWithResultFilesAttachment()

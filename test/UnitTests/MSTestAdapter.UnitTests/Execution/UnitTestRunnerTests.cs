@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using System.Xml;
 
@@ -124,6 +125,7 @@ public class UnitTestRunnerTests : TestContainer
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         var expectedMessage = string.Format(
+            CultureInfo.InvariantCulture,
             "UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.",
             methodInfo.DeclaringType.FullName,
             methodInfo.Name);
@@ -247,6 +249,7 @@ public class UnitTestRunnerTests : TestContainer
         var results = _unitTestRunner.RunSingleTest(testMethod, _testRunParameters);
 
         var expectedMessage = string.Format(
+            CultureInfo.InvariantCulture,
             "Method {0}.{1} does not exist.",
             testMethod.FullClassName,
             testMethod.Name);

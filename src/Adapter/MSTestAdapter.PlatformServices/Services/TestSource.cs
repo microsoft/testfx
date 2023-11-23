@@ -180,7 +180,7 @@ public class TestSource : ITestSource
     {
         foreach (string source in sources)
         {
-            if (string.Compare(Path.GetExtension(source), Constants.AppxPackageExtension, StringComparison.OrdinalIgnoreCase) == 0)
+            if (string.Equals(Path.GetExtension(source), Constants.AppxPackageExtension, StringComparison.OrdinalIgnoreCase))
             {
                 return true;
             }
@@ -200,7 +200,7 @@ public class TestSource : ITestSource
     {
         foreach (string source in sources)
         {
-            if (string.Compare(Path.GetExtension(source), Constants.AppxPackageExtension, StringComparison.OrdinalIgnoreCase) == 0)
+            if (string.Equals(Path.GetExtension(source), Constants.AppxPackageExtension, StringComparison.OrdinalIgnoreCase))
             {
                 return source;
             }

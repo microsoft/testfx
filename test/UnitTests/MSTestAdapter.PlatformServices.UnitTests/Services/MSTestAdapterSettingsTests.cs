@@ -45,7 +45,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(string.Compare(result, expectedResult, true) == 0);
+        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWithAnEnvironmentVariable()
@@ -63,7 +63,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(string.Compare(result, expectedResult, true) == 0);
+        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePathWithoutDot()
@@ -80,7 +80,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(string.Compare(result, expectedResult, true) == 0);
+        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePathWithDot()
@@ -97,7 +97,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(string.Compare(result, expectedResult, true) == 0);
+        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedRelativePath()
@@ -120,7 +120,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(string.Compare(result, expectedResult, true) == 0);
+        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
     public void ResolveEnvironmentVariableShouldResolvePathWhenPassedNetworkPath()
@@ -138,7 +138,7 @@ public class MSTestAdapterSettingsTests : TestContainer
         string result = adapterSettings.ResolveEnvironmentVariableAndReturnFullPathIfExist(path, baseDirectory);
 
         Verify(result is not null);
-        Verify(string.Compare(result, expectedResult, true) == 0);
+        Verify(string.Equals(result, expectedResult, StringComparison.OrdinalIgnoreCase));
     }
 
     public void ResolveEnvironmentVariableShouldReturnFalseForInvalidPath()
@@ -177,7 +177,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
         for (int i = 0; i < 2; i++)
         {
-            Verify(string.Compare(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase) == 0);
+            Verify(string.Equals(result[i].DirectoryPath, expectedResult[i].DirectoryPath, StringComparison.OrdinalIgnoreCase));
             Verify(result[i].IncludeSubDirectories == expectedResult[i].IncludeSubDirectories);
         }
     }

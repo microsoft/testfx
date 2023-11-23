@@ -3,6 +3,8 @@
 
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+
 #if NET6_0_OR_GREATER
 using System.Threading.Tasks;
 #endif
@@ -11,6 +13,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace SuiteLifeCycleTestProject;
 
+[SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "For test purposes")]
 [TestClass]
 public class LifeCycleClassInitializeAndCleanupNone
 #if NET6_0_OR_GREATER

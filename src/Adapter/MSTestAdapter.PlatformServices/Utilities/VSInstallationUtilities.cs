@@ -29,9 +29,9 @@ public static class VSInstallationUtilities
     /// </summary>
     private const string PortableVsTestManifestFilename = "Portable.VsTest.Manifest";
 
-    private static string? s_vsInstallPath = null;
+    private static string? s_vsInstallPath;
 
-    private static bool s_vsInstallPathEvaluated = false;
+    private static bool s_vsInstallPathEvaluated;
 
     /// <summary>
     /// Gets the visual studio installation path on the local machine.
@@ -199,10 +199,12 @@ public static class VSInstallationUtilities
         /// <param name="celt">The number of product instances to retrieve.</param>
         /// <param name="rgelt">A pointer to an array of <see cref="ISetupInstance"/>.</param>
         /// <param name="pceltFetched">A pointer to the number of product instances retrieved. If celt is 1 this parameter may be NULL.</param>
+#pragma warning disable CA1716 // Identifiers should not match keywords
         void Next(
             [In] int celt,
             [Out, MarshalAs(UnmanagedType.Interface)] out ISetupInstance rgelt,
             [Out] out int pceltFetched);
+#pragma warning restore CA1716 // Identifiers should not match keywords
 
         /// <summary>
         /// Skips the next set of product instances in the enumeration sequence.

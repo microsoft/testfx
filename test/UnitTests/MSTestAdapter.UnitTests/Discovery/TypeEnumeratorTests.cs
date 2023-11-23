@@ -313,7 +313,7 @@ public class TypeEnumeratorTests : TestContainer
         var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
 
         // Setup mocks
-        _mockReflectHelper.Setup(rh => rh.GetCustomAttributes<DoNotParallelizeAttribute>(It.IsAny<MemberInfo>())).Returns(new[] { new DoNotParallelizeAttribute() });
+        _mockReflectHelper.Setup(rh => rh.GetCustomAttributes<DoNotParallelizeAttribute>(It.IsAny<MemberInfo>())).Returns([new DoNotParallelizeAttribute()]);
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
@@ -408,7 +408,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         var methodInfo = typeof(DummyTestClass).GetMethod("MethodWithVoidReturnType");
-        _mockReflectHelper.Setup(rh => rh.GetCustomAttributes<WorkItemAttribute>(methodInfo)).Returns(new WorkItemAttribute[] { new(123), new(345) });
+        _mockReflectHelper.Setup(rh => rh.GetCustomAttributes<WorkItemAttribute>(methodInfo)).Returns([new(123), new(345)]);
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 

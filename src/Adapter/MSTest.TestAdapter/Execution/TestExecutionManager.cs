@@ -413,7 +413,7 @@ public class TestExecutionManager
     /// <param name="tcmProperties">Tcm properties.</param>
     /// <param name="sourceLevelParameters">Source level parameters.</param>
     /// <returns>Test context properties.</returns>
-    private static IDictionary<string, object?> GetTestContextProperties(
+    private static Dictionary<string, object?> GetTestContextProperties(
         IDictionary<TestProperty, object?> tcmProperties,
         IDictionary<string, object> sourceLevelParameters)
     {
