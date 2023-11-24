@@ -37,6 +37,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+
 using Microsoft.Testing.Platform.Helpers;
 
 // [assembly: InternalsVisibleTo("Jsonite.Benchmarks")]
