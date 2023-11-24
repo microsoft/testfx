@@ -559,7 +559,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AllowTestAdapterFrameworkRegistration = true;
         try
         {
-            await RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkAdapterProxy(testFrameworkAdapter), serviceProvider, dataConsumersBuilder);
+            await RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkProxy(testFrameworkAdapter), serviceProvider, dataConsumersBuilder);
         }
         finally
         {
