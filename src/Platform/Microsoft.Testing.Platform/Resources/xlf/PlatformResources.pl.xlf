@@ -7,6 +7,26 @@
         <target state="new">Failed to create a test execution filter</target>
         <note />
       </trans-unit>
+      <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
+        <source>Cannot remove environment variables at this stage</source>
+        <target state="new">Cannot remove environment variables at this stage</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
+        <source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</source>
+        <target state="new">Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
+        <source>Cannot set environment variables at this stage</source>
+        <target state="new">Cannot set environment variables at this stage</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
+        <source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</source>
+        <target state="new">Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotStartProcessErrorMessage">
         <source>Cannot start process '{0}'</source>
         <target state="new">Cannot start process '{0}'</target>
@@ -65,6 +85,11 @@
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
         <target state="translated">Znaleziono nieobsługiwany token JSON „{0}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ProcessHasNotYetExitedErrorMessage">
+        <source>Process should have exited before we can determine this value</source>
+        <target state="new">Process should have exited before we can determine this value</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">

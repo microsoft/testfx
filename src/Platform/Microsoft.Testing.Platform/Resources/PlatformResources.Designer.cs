@@ -70,6 +70,42 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot remove environment variables at this stage.
+        /// </summary>
+        internal static string CannotRemoveEnvironmentVariableAtThisStageErrorMessage {
+            get {
+                return ResourceManager.GetString("CannotRemoveEnvironmentVariableAtThisStageErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extension &apos;{0}&apos; tried to remove environment variable &apos;{1}&apos; but it was locked by extension &apos;{2}&apos;.
+        /// </summary>
+        internal static string CannotRemoveEnvironmentVariableItIsLockedErrorMessage {
+            get {
+                return ResourceManager.GetString("CannotRemoveEnvironmentVariableItIsLockedErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot set environment variables at this stage.
+        /// </summary>
+        internal static string CannotSetEnvironmentVariableAtThisStageErrorMessage {
+            get {
+                return ResourceManager.GetString("CannotSetEnvironmentVariableAtThisStageErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extension &apos;{0}&apos; tried to set environment variable &apos;{1}&apos; but it was locked by extension &apos;{2}&apos;.
+        /// </summary>
+        internal static string CannotSetEnvironmentVariableItIsLockedErrorMessage {
+            get {
+                return ResourceManager.GetString("CannotSetEnvironmentVariableItIsLockedErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot start process &apos;{0}&apos;.
         /// </summary>
         internal static string CannotStartProcessErrorMessage {
@@ -174,6 +210,15 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string JsonConfigurationFileParserUnsupportedTokenErrorMessage {
             get {
                 return ResourceManager.GetString("JsonConfigurationFileParserUnsupportedTokenErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Process should have exited before we can determine this value.
+        /// </summary>
+        internal static string ProcessHasNotYetExitedErrorMessage {
+            get {
+                return ResourceManager.GetString("ProcessHasNotYetExitedErrorMessage", resourceCulture);
             }
         }
         

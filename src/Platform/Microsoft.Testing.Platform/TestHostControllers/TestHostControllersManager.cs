@@ -1,10 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
@@ -29,7 +32,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         ArgumentGuard.IsNotNull(compositeServiceFactory);
         if (_environmentVariableProviderCompositeFactories.Contains(compositeServiceFactory))
         {
-            throw new InvalidOperationException("Same instance already added");
+            throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
         }
 
         _environmentVariableProviderCompositeFactories.Add(compositeServiceFactory);
@@ -47,7 +50,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         ArgumentGuard.IsNotNull(compositeServiceFactory);
         if (_lifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
         {
-            throw new InvalidOperationException("Same instance already added");
+            throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
         }
 
         _lifetimeHandlerCompositeFactories.Add(compositeServiceFactory);
@@ -56,7 +59,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     internal async Task<TestHostControllerConfiguration> BuildAsync(ServiceProvider serviceProvider)
     {
         // For now the test host working directory and the current working directory are the same.
-        // In future we could move the test host in a different directory for intance in case of
+        // In future we could move the test host in a different directory for instance in case of
         // the need to rewrite binary files. If we don't move files are locked by ourself.
         var aggregatedConfiguration = (AggregatedConfiguration)serviceProvider.GetConfiguration();
         string? currentWorkingDirectory = aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
@@ -72,7 +75,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             if (environmentVariableProviders.Any(x => x.Uid == envVarProvider.Uid))
             {
                 ITestHostEnvironmentVariableProvider currentRegisteredExtension = environmentVariableProviders.Single(x => x.Uid == envVarProvider.Uid);
-                throw new InvalidOperationException($"Another extension with the same Uid '{envVarProvider.Uid}' is already registered. Extension type: '{currentRegisteredExtension.GetType()}'");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, envVarProvider.Uid, currentRegisteredExtension.GetType()));
             }
 
             // We initialize only if enabled
@@ -101,7 +104,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 if (environmentVariableProviders.Any(x => x.Uid == instance.Uid))
                 {
                     ITestHostEnvironmentVariableProvider currentRegisteredExtension = environmentVariableProviders.Single(x => x.Uid == instance.Uid);
-                    throw new InvalidOperationException($"Another extension with the same Uid '{instance.Uid}' is already registered. Extension type: '{currentRegisteredExtension.GetType()}'");
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.GetType()));
                 }
 
                 // We initialize only if enabled
@@ -131,7 +134,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 }
                 else
                 {
-                    throw new InvalidOperationException($"Type '{extension.GetType()}' doesn't implement the '{typeof(ITestHostEnvironmentVariableProvider)}' interface");
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionDoesNotImplementGivenInterfaceErrorMessage, extension.GetType(), typeof(ITestHostEnvironmentVariableProvider)));
                 }
             }
         }
@@ -145,7 +148,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             if (lifetimeHandlers.Any(x => x.Uid == lifetimeHandler.Uid))
             {
                 ITestHostProcessLifetimeHandler currentRegisteredExtension = lifetimeHandlers.Single(x => x.Uid == lifetimeHandler.Uid);
-                throw new InvalidOperationException($"Another extension with the same Uid '{lifetimeHandler.Uid}' is already registered. Extension type: '{currentRegisteredExtension.GetType()}'");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, lifetimeHandler.Uid, currentRegisteredExtension.GetType()));
             }
 
             // We initialize only if enabled
@@ -173,7 +176,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 if (lifetimeHandlers.Any(x => x.Uid == instance.Uid))
                 {
                     ITestHostProcessLifetimeHandler currentRegisteredExtension = lifetimeHandlers.Single(x => x.Uid == instance.Uid);
-                    throw new InvalidOperationException($"Another extension with the same Uid '{instance.Uid}' is already registered. Extension type: '{currentRegisteredExtension.GetType()}'");
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.GetType()));
                 }
 
                 // We initialize only if enabled
@@ -203,7 +206,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 }
                 else
                 {
-                    throw new InvalidOperationException($"Type '{extension.GetType()}' doesn't implement the '{typeof(ITestHostProcessLifetimeHandler)}' interface");
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionDoesNotImplementGivenInterfaceErrorMessage, extension.GetType(), typeof(ITestHostProcessLifetimeHandler)));
                 }
             }
         }

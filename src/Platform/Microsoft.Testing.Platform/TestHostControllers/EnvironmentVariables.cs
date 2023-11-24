@@ -2,9 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
 
@@ -20,14 +22,14 @@ internal sealed class EnvironmentVariables(ILoggerFactory loggerFactory) : IEnvi
     {
         if (CurrentProvider is null)
         {
-            throw new InvalidOperationException("Cannot set environment variables at this stage.");
+            throw new InvalidOperationException(PlatformResources.CannotSetEnvironmentVariableAtThisStageErrorMessage);
         }
 
         if (_environmentVariables.TryGetValue(environmentVariable.Variable, out OwnedEnvironmentVariable? existingVariable))
         {
             if (existingVariable.IsLocked)
             {
-                throw new InvalidOperationException($"{CurrentProvider.Uid} tried to set environment variable '{environmentVariable.Variable}' but it was locked by '{existingVariable.Owner.Uid}' and cannot be updated.");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotSetEnvironmentVariableItIsLockedErrorMessage, CurrentProvider.DisplayName, environmentVariable.Variable, existingVariable.Owner.DisplayName));
             }
 
             // Check if log level is enabled before logging to avoid waiting for task completion
@@ -59,7 +61,7 @@ internal sealed class EnvironmentVariables(ILoggerFactory loggerFactory) : IEnvi
     {
         if (CurrentProvider is null)
         {
-            throw new InvalidOperationException("Cannot remove environment variables at this stage.");
+            throw new InvalidOperationException(PlatformResources.CannotRemoveEnvironmentVariableAtThisStageErrorMessage);
         }
 
         if (!_environmentVariables.TryGetValue(variable, out OwnedEnvironmentVariable? existingVariable))
@@ -69,7 +71,7 @@ internal sealed class EnvironmentVariables(ILoggerFactory loggerFactory) : IEnvi
 
         if (existingVariable.IsLocked)
         {
-            throw new InvalidOperationException($"{CurrentProvider.Uid} tried to remove environment variable '{variable}' but it was locked by '{existingVariable.Owner.Uid}' and cannot be removed.");
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotSetEnvironmentVariableItIsLockedErrorMessage, CurrentProvider.DisplayName, variable, existingVariable.Owner.DisplayName));
         }
 
         // Check if log level is enabled before logging to avoid waiting for task completion
