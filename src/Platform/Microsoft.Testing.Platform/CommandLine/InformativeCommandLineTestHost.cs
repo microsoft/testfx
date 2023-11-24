@@ -5,14 +5,9 @@ using Microsoft.Testing.Platform.Hosts;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class InformativeCommandLineTestHost : ITestHost
+internal sealed class InformativeCommandLineTestHost(int returnValue) : ITestHost
 {
-    private readonly int _returnValue;
-
-    public InformativeCommandLineTestHost(int returnValue)
-    {
-        _returnValue = returnValue;
-    }
+    private readonly int _returnValue = returnValue;
 
     public Task<int> RunAsync() => Task.FromResult(_returnValue);
 }

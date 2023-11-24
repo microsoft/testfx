@@ -60,7 +60,5 @@ public class DataProvider
     }
 
     public static string GetUserDynamicDataDisplayName(MethodInfo methodInfo, object[] data)
-    {
-        return string.Format("UserDynamicDataTestMethod {0} with {1} parameters", methodInfo.Name, data.Length);
-    }
+        => $"UserDynamicDataTestMethod {methodInfo.Name} with {data.Length} parameters";
 }

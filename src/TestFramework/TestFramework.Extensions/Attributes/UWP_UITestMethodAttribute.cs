@@ -39,7 +39,7 @@ public class UITestMethodAttribute : TestMethodAttribute
                 result = testMethod.Invoke(null);
             }).AsTask().GetAwaiter().GetResult();
 
-        return new TestResult[] { result! };
+        return [result!];
     }
 }
 #endif

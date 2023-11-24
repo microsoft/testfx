@@ -13,6 +13,7 @@ namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 public class SuiteLifeCycleTests : CLITestBase
 {
     private const string TestAssetName = "SuiteLifeCycleTestProject";
+    private static readonly string[] WindowsLineReturn = ["\r\n"];
 
     public void ValidateTestRunLifecycle_net6()
     {
@@ -27,13 +28,13 @@ public class SuiteLifeCycleTests : CLITestBase
     public void ValidateInheritanceBehavior()
     {
         InvokeVsTestForExecution(
-            new[] { TestAssetName },
+            [TestAssetName],
             testCaseFilter: "FullyQualifiedName~LifecycleInheritance",
             targetFramework: "net462");
 
         RunEventsHandler.PassedTests.Should().HaveCount(10);
 
-        var testMethod1 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClass.TestMethod"));
+        var testMethod1 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClass.TestMethod", StringComparison.Ordinal));
         testMethod1.Messages[0].Text.Should().Be(
             """
             Console: AssemblyInit was called
@@ -43,7 +44,7 @@ public class SuiteLifeCycleTests : CLITestBase
             
             """);
 
-        var testMethod2 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssembly.TestMethod"));
+        var testMethod2 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssembly.TestMethod", StringComparison.Ordinal));
         testMethod2.Messages[0].Text.Should().Be(
             """
             TestClassBaseEndOfAssembly: ClassInitialize
@@ -51,7 +52,7 @@ public class SuiteLifeCycleTests : CLITestBase
             
             """);
 
-        var testMethod3 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfClass.TestMethod"));
+        var testMethod3 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfClass.TestMethod", StringComparison.Ordinal));
         testMethod3.Messages[0].Text.Should().Be(
             """
             TestClassBaseEndOfClass: ClassInitialize
@@ -63,7 +64,7 @@ public class SuiteLifeCycleTests : CLITestBase
             
             """);
 
-        var testMethod4 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfClass.TestMethod"));
+        var testMethod4 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfClass.TestMethod", StringComparison.Ordinal));
         testMethod4.Messages[0].Text.Should().Be(
             """
             TestClassBaseEndOfClass: ClassInitialize
@@ -74,7 +75,7 @@ public class SuiteLifeCycleTests : CLITestBase
             
             """);
 
-        var testMethod5 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfAssembly.TestMethod"));
+        var testMethod5 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfClassEndOfAssembly.TestMethod", StringComparison.Ordinal));
         testMethod5.Messages[0].Text.Should().Be(
             """
             TestClassBaseEndOfAssembly: ClassInitialize
@@ -86,7 +87,7 @@ public class SuiteLifeCycleTests : CLITestBase
             
             """);
 
-        var testMethod6 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfAssembly.TestMethod"));
+        var testMethod6 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfClassEndOfAssembly.TestMethod", StringComparison.Ordinal));
         testMethod6.Messages[0].Text.Should().Be(
             """
             TestClassBaseEndOfAssembly: ClassInitialize
@@ -97,7 +98,7 @@ public class SuiteLifeCycleTests : CLITestBase
             
             """);
 
-        var testMethod7 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass.TestMethod"));
+        var testMethod7 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfClass.TestMethod", StringComparison.Ordinal));
         testMethod7.Messages[0].Text.Should().Be(
             """
             TestClassBaseEndOfClass: ClassInitialize
@@ -109,7 +110,7 @@ public class SuiteLifeCycleTests : CLITestBase
             
             """);
 
-        var testMethod8 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfClass.TestMethod"));
+        var testMethod8 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfClass.TestMethod", StringComparison.Ordinal));
         testMethod8.Messages[0].Text.Should().Be(
             """
             TestClassBaseEndOfClass: ClassInitialize
@@ -120,7 +121,7 @@ public class SuiteLifeCycleTests : CLITestBase
             
             """);
 
-        var testMethod9 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly.TestMethod"));
+        var testMethod9 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerivedEndOfClass_EndOfAssemblyEndOfAssembly.TestMethod", StringComparison.Ordinal));
         testMethod9.Messages[0].Text.Should().Be(
             """
             TestClassBaseEndOfAssembly: ClassInitialize
@@ -132,7 +133,7 @@ public class SuiteLifeCycleTests : CLITestBase
             
             """);
 
-        var testMethod10 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfAssembly.TestMethod"));
+        var testMethod10 = RunEventsHandler.PassedTests.Single(x => x.TestCase.FullyQualifiedName.EndsWith("TestClassDerived_EndOfAssemblyEndOfAssembly.TestMethod", StringComparison.Ordinal));
         testMethod10.Messages[0].Text.Should().Be(
             """
             TestClassBaseEndOfAssembly: ClassInitialize
@@ -149,7 +150,7 @@ public class SuiteLifeCycleTests : CLITestBase
     private void ValidateTestRunLifecycle(string targetFramework)
     {
         InvokeVsTestForExecution(
-            new[] { TestAssetName },
+            [TestAssetName],
             testCaseFilter: "FullyQualifiedName~SuiteLifeCycleTestProject",
             targetFramework: targetFramework);
         RunEventsHandler.PassedTests.Should().HaveCount(27);  // The inherit class tests are called twice.
@@ -1588,11 +1589,11 @@ public class SuiteLifeCycleTests : CLITestBase
             Console: AssemblyCleanup was called
             
             """
-            .Split(new[] { "\r\n" }, StringSplitOptions.None);
+            .Split(WindowsLineReturn, StringSplitOptions.None);
         caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
             .Messages[0].Text
             .Substring(expectedStart.Length)
-            .Split(new[] { "\r\n" }, StringSplitOptions.None)
+            .Split(WindowsLineReturn, StringSplitOptions.None)
             .Should().BeEquivalentTo(expectedRemainingMessages);
 
         expectedStart =

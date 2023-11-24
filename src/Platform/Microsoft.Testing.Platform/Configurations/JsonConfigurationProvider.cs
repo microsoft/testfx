@@ -9,20 +9,13 @@ namespace Microsoft.Testing.Platform.Configurations;
 
 internal sealed partial class JsonConfigurationSource
 {
-    internal sealed class JsonConfigurationProvider : IConfigurationProvider
+    internal sealed class JsonConfigurationProvider(IRuntime runtime, IFileSystem fileSystem, ILogger? logger) : IConfigurationProvider
     {
-        private readonly ITestApplicationModuleInfo _currentModuleInfo;
-        private readonly IFileSystem _fileSystem;
-        private readonly ILogger? _logger;
+        private readonly ITestApplicationModuleInfo _currentModuleInfo = runtime.GetCurrentModuleInfo();
+        private readonly IFileSystem _fileSystem = fileSystem;
+        private readonly ILogger? _logger = logger;
         private Dictionary<string, string?>? _propertyToAllChildren;
         private Dictionary<string, string?>? _singleValueData;
-
-        public JsonConfigurationProvider(IRuntime runtime, IFileSystem fileSystem, ILogger? logger)
-        {
-            _currentModuleInfo = runtime.GetCurrentModuleInfo();
-            _fileSystem = fileSystem;
-            _logger = logger;
-        }
 
         public string? ConfigurationFile { get; private set; }
 

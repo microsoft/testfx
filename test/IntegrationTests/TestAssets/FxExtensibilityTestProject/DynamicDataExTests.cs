@@ -18,7 +18,9 @@ public class DynamicDataExTests
         }
     }
 
+#pragma warning disable CA1859 // Use concrete types when possible for improved performance
     private static IEnumerable<object[]> ReusableTestDataMethod()
+#pragma warning restore CA1859 // Use concrete types when possible for improved performance
     {
         return new[] { new object[] { "string", 4, true } };
     }

@@ -291,14 +291,14 @@ internal abstract class DeploymentUtilityBase
 
             if (IsDeploymentItemSourceAFile(deploymentItem.SourcePath, testSource, out string fileName))
             {
-                return new[] { fileName };
+                return [fileName];
             }
 
             // If file/directory is not found, then try removing the prefix and see if it is present.
             string fileOrDirNameOnly = Path.GetFileName(deploymentItem.SourcePath);
             if (IsDeploymentItemSourceAFile(fileOrDirNameOnly, testSource, out fileName))
             {
-                return new[] { fileName };
+                return [fileName];
             }
 
             string message = string.Format(CultureInfo.CurrentCulture, Resource.CannotFindFile, fileName);

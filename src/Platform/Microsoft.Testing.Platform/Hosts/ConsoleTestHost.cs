@@ -19,30 +19,9 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal sealed class ConsoleTestHost : CommonTestHost
-{
-    private static readonly ClientInfo Client = new("testingplatform-console", AppVersion.DefaultSemVer);
-
-    private readonly ILogger<ConsoleTestHost> _logger;
-    private readonly IClock _clock;
-    private readonly Func<ServiceProvider,
-                      ITestExecutionRequestFactory,
-                      ITestFrameworkInvoker,
-                      ITestExecutionFilterFactory,
-                      IPlatformOutputDevice,
-                      IEnumerable<IDataConsumer>,
-                      TestFrameworkManager,
-                      TestHostManager,
-                      MessageBusProxy,
-                      bool,
-                      Task<ITestFramework>> _buildTestFrameworkAsync;
-
-    private readonly TestFrameworkManager _testFrameworkManager;
-    private readonly TestHostManager _testHostManager;
-
-    public ConsoleTestHost(
-        ServiceProvider serviceProvider,
-        Func<ServiceProvider,
+internal sealed class ConsoleTestHost(
+    ServiceProvider serviceProvider,
+    Func<ServiceProvider,
                       ITestExecutionRequestFactory,
                       ITestFrameworkInvoker,
                       ITestExecutionFilterFactory,
@@ -53,16 +32,27 @@ internal sealed class ConsoleTestHost : CommonTestHost
                       MessageBusProxy,
                       bool,
                       Task<ITestFramework>> buildTestFrameworkAsync,
-        TestFrameworkManager testFrameworkManager,
-        TestHostManager testHostManager)
-        : base(serviceProvider)
-    {
-        _buildTestFrameworkAsync = buildTestFrameworkAsync;
-        _testFrameworkManager = testFrameworkManager;
-        _testHostManager = testHostManager;
-        _logger = serviceProvider.GetLoggerFactory().CreateLogger<ConsoleTestHost>();
-        _clock = serviceProvider.GetClock();
-    }
+    TestFrameworkManager testFrameworkManager,
+    TestHostManager testHostManager) : CommonTestHost(serviceProvider)
+{
+    private static readonly ClientInfo Client = new("testingplatform-console", AppVersion.DefaultSemVer);
+
+    private readonly ILogger<ConsoleTestHost> _logger = serviceProvider.GetLoggerFactory().CreateLogger<ConsoleTestHost>();
+    private readonly IClock _clock = serviceProvider.GetClock();
+    private readonly Func<ServiceProvider,
+                      ITestExecutionRequestFactory,
+                      ITestFrameworkInvoker,
+                      ITestExecutionFilterFactory,
+                      IPlatformOutputDevice,
+                      IEnumerable<IDataConsumer>,
+                      TestFrameworkManager,
+                      TestHostManager,
+                      MessageBusProxy,
+                      bool,
+                      Task<ITestFramework>> _buildTestFrameworkAsync = buildTestFrameworkAsync;
+
+    private readonly TestFrameworkManager _testFrameworkManager = testFrameworkManager;
+    private readonly TestHostManager _testHostManager = testHostManager;
 
     protected override bool RunTestApplicationLifecycleCallbacks => true;
 
@@ -80,7 +70,7 @@ internal sealed class ConsoleTestHost : CommonTestHost
 
         // Use user provided filter factory or create console default one.
         ITestFrameworkInvoker testAdapterInvoker = ServiceProvider.GetService<ITestFrameworkInvoker>()
-            ?? new TestHostAdapterInvoker(ServiceProvider);
+            ?? new TestHostTestFrameworkInvoker(ServiceProvider);
 
         ServiceProvider.TryAddService(new Services.TestSessionContext(abortRun));
         ITestFramework testFrameworkAdapter = await _buildTestFrameworkAsync(

@@ -402,7 +402,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             rpcInvocationState.CancellationToken,
             _testApplicationCancellationTokenSource.CancellationToken));
 
-        perRequestServiceProvider.AddService(new TestHostAdapterInvoker(perRequestServiceProvider));
+        perRequestServiceProvider.AddService(new TestHostTestFrameworkInvoker(perRequestServiceProvider));
 
         AssertInitialized();
 
@@ -479,7 +479,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         // Build the per request objects
         var filterFactory = new ServerTestExecutionFilterFactory();
-        var invoker = new TestHostAdapterInvoker(perRequestServiceProvider);
+        var invoker = new TestHostTestFrameworkInvoker(perRequestServiceProvider);
         var testNodeUpdateProcessor = new PerRequestServerDataConsumer(perRequestServiceProvider, args.RunId, perRequestServiceProvider.GetTask());
 
         DateTimeOffset adapterLoadStart = _clock.UtcNow;

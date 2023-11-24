@@ -14,7 +14,7 @@ public class DataSourceTests : CLITestBase
     {
         // Arrange & Act
         InvokeVsTestForExecution(
-            new string[] { TestAssetName },
+            [TestAssetName],
             testCaseFilter: "CsvTestMethod");
 
         // Assert

@@ -169,20 +169,22 @@ public class FileUtilityTests : TestContainer
     {
         _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns((string dp) =>
         {
+#pragma warning disable CA1865 // Use char overload
             return
-                files.Where(f => f.Contains(dp) && f.LastIndexOf("\\") == (f.IndexOf(dp) + dp.Length) && !f.EndsWith("\\"))
+                files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') == (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length) && !f.EndsWith("\\", StringComparison.Ordinal))
                     .ToArray();
+#pragma warning restore CA1865 // Use char overload
         });
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) =>
         {
             return
-                files.Where(f => f.Contains(dp) && f.LastIndexOf("\\") > (f.IndexOf(dp) + dp.Length))
+                files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') > (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length))
                     .Select(f =>
                     {
                         var val = f.Substring(
-                            f.IndexOf(dp) + dp.Length + 1,
-                            f.Length - (f.IndexOf(dp) + dp.Length + 1));
-                        return f.Substring(0, dp.Length + 1 + val.IndexOf("\\"));
+                            f.IndexOf(dp, StringComparison.Ordinal) + dp.Length + 1,
+                            f.Length - (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length + 1));
+                        return f.Substring(0, dp.Length + 1 + val.IndexOf('\\'));
                     })
                     .Distinct()
                     .ToArray();

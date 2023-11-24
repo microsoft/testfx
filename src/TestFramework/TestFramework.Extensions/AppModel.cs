@@ -3,6 +3,7 @@
 
 #if WIN_UI
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -93,6 +94,7 @@ internal static class AppModel
         return null;
     }
 
+    [SuppressMessage("Performance", "CA1838:Avoid 'StringBuilder' parameters for P/Invokes", Justification = "Copied from WinUI source base")]
     private static class Interop
     {
 #pragma warning disable SA1310 // Field names must not contain underscore
@@ -101,6 +103,7 @@ internal static class AppModel
         public const int ERROR_INVALID_PARAMETER = 0x00000057;
         public const int ERROR_SUCCESS = 0x00000000;
 
+        [SuppressMessage("Naming", "CA1712:Do not prefix enum values with type name", Justification = "Copied from WinUI source base")]
         public enum PackagePathType
         {
             PackagePathType_Install = 0,

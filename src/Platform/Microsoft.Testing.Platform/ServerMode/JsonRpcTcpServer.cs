@@ -5,14 +5,9 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal sealed class JsonRpcTcpServer : ICommunicationProtocol
+internal sealed class JsonRpcTcpServer(int port) : ICommunicationProtocol
 {
-    public JsonRpcTcpServer(int port)
-    {
-        Port = port;
-    }
-
-    public int Port { get; }
+    public int Port { get; } = port;
 
     public string Name => nameof(JsonRpcTcpServer);
 

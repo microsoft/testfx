@@ -50,16 +50,16 @@ public class OutputTests : CLITestBase
         var someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
         someStartedBeforeFirstEnded.Should().BeTrue("Tests must run in parallel, but there were no other tests that started, before the first one ended.");
 
-        ValidateOutputsAreNotMixed(testResults, "TestMethod1", new[] { "TestMethod2", "TestMethod3" });
-        ValidateOutputsAreNotMixed(testResults, "TestMethod2", new[] { "TestMethod1", "TestMethod3" });
-        ValidateOutputsAreNotMixed(testResults, "TestMethod3", new[] { "TestMethod1", "TestMethod2" });
+        ValidateOutputsAreNotMixed(testResults, "TestMethod1", ["TestMethod2", "TestMethod3"]);
+        ValidateOutputsAreNotMixed(testResults, "TestMethod2", ["TestMethod1", "TestMethod3"]);
+        ValidateOutputsAreNotMixed(testResults, "TestMethod3", ["TestMethod1", "TestMethod2"]);
 
         ValidateInitializationsAndCleanups(testResults);
     }
 
     private static readonly string DebugTraceString = string.Format(CultureInfo.InvariantCulture, "{0}{0}Debug Trace:{0}", Environment.NewLine);
-    private static readonly Func<TestResultMessage, bool> IsDebugMessage = m => m.Category == "StdOutMsgs" && m.Text.StartsWith(DebugTraceString);
-    private static readonly Func<TestResultMessage, bool> IsStandardOutputMessage = m => m.Category == "StdOutMsgs" && !m.Text.StartsWith(DebugTraceString);
+    private static readonly Func<TestResultMessage, bool> IsDebugMessage = m => m.Category == "StdOutMsgs" && m.Text.StartsWith(DebugTraceString, StringComparison.Ordinal);
+    private static readonly Func<TestResultMessage, bool> IsStandardOutputMessage = m => m.Category == "StdOutMsgs" && !m.Text.StartsWith(DebugTraceString, StringComparison.Ordinal);
     private static readonly Func<TestResultMessage, bool> IsStandardErrorMessage = m => m.Category == "StdErrMsgs";
 
     private static void ValidateOutputsAreNotMixed(IEnumerable<TestResult> testResults, string methodName, string[] shouldNotContain)

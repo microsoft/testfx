@@ -51,7 +51,7 @@ public class TestMethodRunnerTests : TestContainer
     public TestMethodRunnerTests()
     {
         var constructorInfo = typeof(DummyTestClass).GetConstructors().Single();
-        _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod"));
+        _methodInfo = typeof(DummyTestClass).GetMethods().Single(m => m.Name.Equals("DummyTestMethod", StringComparison.Ordinal));
         var classAttribute = new UTF.TestClassAttribute();
         _testMethodAttribute = new UTF.TestMethodAttribute();
         var testContextProperty = typeof(DummyTestClass).GetProperty("TestContext");
@@ -242,11 +242,11 @@ public class TestMethodRunnerTests : TestContainer
     public void RunTestMethodForMultipleResultsReturnMultipleResults()
     {
         var testMethodAttributeMock = new Mock<UTF.TestMethodAttribute>();
-        testMethodAttributeMock.Setup(_ => _.Execute(It.IsAny<UTF.ITestMethod>())).Returns(new[]
-        {
+        testMethodAttributeMock.Setup(_ => _.Execute(It.IsAny<UTF.ITestMethod>())).Returns(
+        [
             new UTF.TestResult { Outcome = UTF.UnitTestOutcome.Passed },
             new UTF.TestResult { Outcome = UTF.UnitTestOutcome.Failed },
-        });
+        ]);
 
         var localTestMethodOptions = new TestMethodOptions
         {
@@ -477,7 +477,10 @@ public class TestMethodRunnerTests : TestContainer
 
     private static void InitMethodThrowingException(UTFExtension.TestContext tc)
     {
+        // TODO: Fix exception type
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
         throw new ArgumentException();
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
     }
 
     public class TestableTestmethodInfo : TestMethodInfo

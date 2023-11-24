@@ -6,18 +6,11 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal sealed partial class JsonConfigurationSource : IConfigurationSource
+internal sealed partial class JsonConfigurationSource(IRuntime runtime, IFileSystem fileSystem, FileLoggerProvider? fileLoggerProvider) : IConfigurationSource
 {
-    private readonly IRuntime _runtime;
-    private readonly IFileSystem _fileSystem;
-    private readonly FileLoggerProvider? _fileLoggerProvider;
-
-    public JsonConfigurationSource(IRuntime runtime, IFileSystem fileSystem, FileLoggerProvider? fileLoggerProvider)
-    {
-        _runtime = runtime;
-        _fileSystem = fileSystem;
-        _fileLoggerProvider = fileLoggerProvider;
-    }
+    private readonly IRuntime _runtime = runtime;
+    private readonly IFileSystem _fileSystem = fileSystem;
+    private readonly FileLoggerProvider? _fileLoggerProvider = fileLoggerProvider;
 
     /// <inheritdoc />
     public string Uid { get; } = nameof(JsonConfigurationSource);

@@ -5,15 +5,10 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-public class DiscoverTestExecutionRequest : TestExecutionRequest
+public class DiscoverTestExecutionRequest(TestSessionContext session, ITestExecutionFilter executionFilter) : TestExecutionRequest(session, executionFilter)
 {
     public DiscoverTestExecutionRequest(TestSessionContext session)
         : this(session, new NopFilter())
-    {
-    }
-
-    public DiscoverTestExecutionRequest(TestSessionContext session, ITestExecutionFilter executionFilter)
-        : base(session, executionFilter)
     {
     }
 }

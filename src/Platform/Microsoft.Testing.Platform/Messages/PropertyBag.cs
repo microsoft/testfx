@@ -205,7 +205,7 @@ public sealed partial class PropertyBag
     {
         if (_testNodeStateProperty is TProperty testNodeStateProperty)
         {
-            return new[] { testNodeStateProperty };
+            return [testNodeStateProperty];
         }
 
         // We don't want to allocate an array if we know that we're looking for a TestNodeStateProperty

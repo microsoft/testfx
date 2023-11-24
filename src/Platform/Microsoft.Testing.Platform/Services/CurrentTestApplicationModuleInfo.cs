@@ -14,25 +14,18 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleInfo
+internal sealed class CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process) : ITestApplicationModuleInfo
 {
-    private readonly IRuntimeFeature _runtimeFeature;
-    private readonly IEnvironment _environment;
-    private readonly IProcessHandler _process;
+    private readonly IRuntimeFeature _runtimeFeature = runtimeFeature;
+    private readonly IEnvironment _environment = environment;
+    private readonly IProcessHandler _process = process;
     private static readonly string[] MuxerExec = ["exec"];
-
-    public CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process)
-    {
-        _runtimeFeature = runtimeFeature;
-        _environment = environment;
-        _process = process;
-    }
 
     public bool IsCurrentTestApplicationHostDotnetMuxer
     {
         get
         {
-            string? processPath = GetProcessPath(false, _environment, _process);
+            string? processPath = GetProcessPath(_environment, _process, false);
             return processPath is not null
                 && Path.GetFileNameWithoutExtension(processPath) == "dotnet";
         }
@@ -42,7 +35,7 @@ internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleI
     {
         get
         {
-            string? processPath = GetProcessPath(true, _environment, _process);
+            string? processPath = GetProcessPath(_environment, _process, true);
             return processPath != ".dll";
         }
     }
@@ -65,15 +58,15 @@ internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleI
         }
 
         moduleName = TAString.IsNullOrEmpty(moduleName)
-            ? GetProcessPath(false, _environment, _process)
+            ? GetProcessPath(_environment, _process)
             : moduleName;
 
-        return moduleName
-            ?? throw new InvalidOperationException("[Fatal error] CurrentTestApplicationFullPath cannot be null");
+        StateGuard.Ensure(moduleName is not null);
+        return moduleName;
     }
 
     public string GetProcessPath()
-        => GetProcessPath(true, _environment, _process)!;
+        => GetProcessPath(_environment, _process, throwOnNull: true)!;
 
     public string[] GetCommandLineArgs()
         => _environment.GetCommandLineArgs();
@@ -92,13 +85,13 @@ internal sealed class CurrentTestApplicationModuleInfo : ITestApplicationModuleI
         return _environment.CommandLine[_environment.CommandLine.IndexOf(executableFileName, StringComparison.InvariantCultureIgnoreCase)..];
     }
 
-    private static string? GetProcessPath(bool throwOnNull, IEnvironment environment, IProcessHandler process)
+    private static string? GetProcessPath(IEnvironment environment, IProcessHandler process, bool throwOnNull = false)
 #if NETCOREAPP
     {
         string? processPath = environment.ProcessPath;
-        return processPath is null && throwOnNull
-            ? throw new InvalidOperationException("[Fatal error] Environment.ProcessPath cannot be null")
-            : processPath;
+        StateGuard.Ensure(processPath is not null || !throwOnNull);
+
+        return processPath;
     }
 #else
         => process.GetCurrentProcess().MainModule.FileName;

@@ -5,14 +5,9 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal class EnvironmentVariablesConfigurationSource : IConfigurationSource
+internal class EnvironmentVariablesConfigurationSource(IEnvironment environmentVariables) : IConfigurationSource
 {
-    private readonly IEnvironment _environmentVariables;
-
-    public EnvironmentVariablesConfigurationSource(IEnvironment environmentVariables)
-    {
-        _environmentVariables = environmentVariables;
-    }
+    private readonly IEnvironment _environmentVariables = environmentVariables;
 
     public string Uid => nameof(EnvironmentVariablesConfigurationSource);
 

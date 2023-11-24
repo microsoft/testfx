@@ -212,7 +212,7 @@ public class MSTestAdapterSettings
             }
             else
             {
-                warningMessage = string.Format("The Directory: {0}, has following problem: {1}", path, "This is not an absolute path. A base directory should be provided for this to be used as a relative path.");
+                warningMessage = $"The Directory: {path}, has following problem: {"This is not an absolute path. A base directory should be provided for this to be used as a relative path."}";
 
                 if (EqtTrace.IsWarningEnabled)
                 {
@@ -237,7 +237,7 @@ public class MSTestAdapterSettings
 
         if (!StringEx.IsNullOrEmpty(warningMessage))
         {
-            warningMessage = string.Format("The Directory: {0}, has following problem: {1}", path, warningMessage);
+            warningMessage = $"The Directory: {path}, has following problem: {warningMessage}";
 
             if (EqtTrace.IsWarningEnabled)
             {
@@ -253,7 +253,7 @@ public class MSTestAdapterSettings
         }
 
         // generate warning that path does not exist.
-        EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, string.Format("The Directory: {0}, does not exist.", path));
+        EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, $"The Directory: {path}, does not exist.");
 
         return null;
     }

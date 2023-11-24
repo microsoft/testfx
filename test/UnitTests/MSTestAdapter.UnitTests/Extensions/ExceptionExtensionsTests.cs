@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -35,7 +36,7 @@ public class ExceptionExtensionsTests : TestContainer
 
     public void ExceptionTryGetMessageReturnsErrorMessageIfExceptionIsNull()
     {
-        var errorMessage = string.Format(Resource.UTF_FailedToGetExceptionMessage, "null");
+        var errorMessage = string.Format(CultureInfo.InvariantCulture, Resource.UTF_FailedToGetExceptionMessage, "null");
 
         var exception = (Exception)null;
 
@@ -44,7 +45,7 @@ public class ExceptionExtensionsTests : TestContainer
 
     public void ExceptionTryGetMessageShouldThrowIfExceptionMessageThrows()
     {
-        var errorMessage = string.Format(Resource.UTF_FailedToGetExceptionMessage, "System.NotImplementedException");
+        var errorMessage = string.Format(CultureInfo.InvariantCulture, Resource.UTF_FailedToGetExceptionMessage, "System.NotImplementedException");
         var exception = new DummyException(() => { throw new NotImplementedException(); });
 
         var ex = VerifyThrows(() => exception.TryGetMessage());
@@ -75,7 +76,7 @@ public class ExceptionExtensionsTests : TestContainer
 
         var stackTraceInformation = exception.TryGetStackTraceInformation();
 
-        Verify(stackTraceInformation.ErrorStackTrace.StartsWith("    at A()"));
+        Verify(stackTraceInformation.ErrorStackTrace.StartsWith("    at A()", StringComparison.Ordinal));
         Verify(stackTraceInformation.ErrorFilePath is null);
         Verify(stackTraceInformation.ErrorLineNumber == 0);
     }
@@ -88,7 +89,9 @@ public class ExceptionExtensionsTests : TestContainer
         Verify(ex is NotImplementedException);
     }
 
+#pragma warning disable CA1710 // Identifiers should have correct suffix
     public class DummyExceptionForStackTrace : Exception
+#pragma warning restore CA1710 // Identifiers should have correct suffix
     {
         private readonly Func<string> _getStackTrace;
 

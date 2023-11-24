@@ -3,7 +3,11 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
+#if INTERNALIZE_LOGGING
+internal static class LoggingExtensions
+#else
 public static class LoggingExtensions
+#endif
 {
     internal static readonly Func<string, Exception?, string> Formatter =
         (state, exception) =>

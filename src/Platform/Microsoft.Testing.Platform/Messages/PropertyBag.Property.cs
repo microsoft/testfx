@@ -102,16 +102,11 @@ public sealed partial class PropertyBag
 
         IEnumerator IEnumerable.GetEnumerator() => new PropertyEnumerator(this);
 
-        internal struct PropertyEnumerator : IEnumerator<IProperty>
+        internal struct PropertyEnumerator(Property properties) : IEnumerator<IProperty>
         {
-            private readonly Property _properties;
+            private readonly Property _properties = properties;
 
             private Property? _current;
-
-            public PropertyEnumerator(Property properties)
-            {
-                _properties = properties;
-            }
 
             // https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerator-1.current?view=netframework-4.8#remarks
             public readonly IProperty Current => _current is null ? throw new InvalidOperationException("Invalid Current state, possible wrong usage.") : _current.Current;

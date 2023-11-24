@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
@@ -76,7 +77,7 @@ public class TypeValidatorTests : TestContainer
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(InternalTestClass), _warnings);
         Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(InternalTestClass).FullName)));
+        Verify(_warnings.Contains(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorNonPublicTestClass, typeof(InternalTestClass).FullName)));
     }
 
     public void IsValidTestClassShouldReturnFalseForNestedNonPublicTestClasses()
@@ -90,7 +91,7 @@ public class TypeValidatorTests : TestContainer
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(OuterClass.NestedInternalClass), _warnings);
         Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(OuterClass.NestedInternalClass).FullName)));
+        Verify(_warnings.Contains(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorNonPublicTestClass, typeof(OuterClass.NestedInternalClass).FullName)));
     }
 
     public void IsValidTestClassShouldReturnTrueForPublicTestClasses()
@@ -178,7 +179,7 @@ public class TypeValidatorTests : TestContainer
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(GenericClass<>), _warnings);
         Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(Resource.UTA_ErrorNonPublicTestClass, typeof(GenericClass<>).FullName)));
+        Verify(_warnings.Contains(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorNonPublicTestClass, typeof(GenericClass<>).FullName)));
     }
 
     #endregion
@@ -196,7 +197,7 @@ public class TypeValidatorTests : TestContainer
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(ClassWithTestContextGetterOnly), _warnings);
         Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(Resource.UTA_ErrorInValidTestContextSignature, typeof(ClassWithTestContextGetterOnly).FullName)));
+        Verify(_warnings.Contains(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorInValidTestContextSignature, typeof(ClassWithTestContextGetterOnly).FullName)));
     }
 
     public void IsValidTestClassShouldReturnTrueForTestClassesWithValidTestContextSignature()
@@ -480,7 +481,9 @@ public class ClassWithTestContext
 
 public class GenericClassWithProperty<T>
 {
+#pragma warning disable CA1000 // Do not declare static members on generic types
     public static T ReturnAStableSomething { get; }
+#pragma warning restore CA1000 // Do not declare static members on generic types
 
     public T ReturnSomething { get; set; }
 
@@ -489,7 +492,9 @@ public class GenericClassWithProperty<T>
 
 public class GenericClassWithTestContext<T>
 {
+#pragma warning disable CA1000 // Do not declare static members on generic types
     public static T ReturnAStableSomething { get; }
+#pragma warning restore CA1000 // Do not declare static members on generic types
 
     public T ReturnSomething { get; set; }
 
@@ -546,7 +551,7 @@ public class PublicClass2
     {
     }
 
-    private class PrivateClassNestedInPublicClass
+    private sealed class PrivateClassNestedInPublicClass
     {
     }
 }
@@ -575,9 +580,9 @@ public class PublicClass3
         }
     }
 
-    private class PrivateClassNestedInPublicClass
+    private sealed class PrivateClassNestedInPublicClass
     {
-        public class PublicClassNestedInPrivateClassNestedInPublicClass
+        public sealed class PublicClassNestedInPrivateClassNestedInPublicClass
         {
         }
     }
@@ -609,7 +614,7 @@ internal class InternalClass
     {
     }
 
-    private class PrivateClassNestedInInternalClass
+    private sealed class PrivateClassNestedInInternalClass
     {
     }
 }
@@ -627,9 +632,9 @@ internal class InternalClass2
         }
     }
 
-    private class PrivateClassNestedInInternalClass
+    private sealed class PrivateClassNestedInInternalClass
     {
-        public class PublicClassNestedInPrivateClassNestedInInternalClass
+        public sealed class PublicClassNestedInPrivateClassNestedInInternalClass
         {
         }
     }

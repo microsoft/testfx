@@ -29,8 +29,8 @@ public sealed class TestMethod : ITestMethod
     public const int TotalHierarchyLevels = HierarchyConstants.Levels.TotalLevelCount;
 
     private readonly ReadOnlyCollection<string?> _hierarchy;
-    private string? _declaringClassFullName = null;
-    private string? _declaringAssemblyName = null;
+    private string? _declaringClassFullName;
+    private string? _declaringAssemblyName;
 
     public TestMethod(string name, string fullClassName, string assemblyName, bool isAsync)
     {

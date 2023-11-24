@@ -13,14 +13,9 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal abstract class CommonTestHost : ITestHost
+internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestHost
 {
-    public CommonTestHost(ServiceProvider serviceProvider)
-    {
-        ServiceProvider = serviceProvider;
-    }
-
-    public ServiceProvider ServiceProvider { get; }
+    public ServiceProvider ServiceProvider { get; } = serviceProvider;
 
     protected abstract bool RunTestApplicationLifecycleCallbacks { get; }
 

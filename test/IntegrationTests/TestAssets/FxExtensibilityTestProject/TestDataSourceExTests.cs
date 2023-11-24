@@ -28,7 +28,7 @@ public class CustomTestDataSourceAttribute : Attribute, ITestDataSource
 {
     public IEnumerable<object[]> GetData(MethodInfo methodInfo)
     {
-        return new[] { new object[] { 1, 2, 3 }, new object[] { 4, 5, 6 } };
+        return new[] { new object[] { 1, 2, 3 }, [4, 5, 6] };
     }
 
     public string GetDisplayName(MethodInfo methodInfo, object[] data)

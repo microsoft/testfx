@@ -15,8 +15,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TcmTestPropertiesProviderTests : TestContainer
 {
-    private readonly TestProperty[] _tcmKnownProperties = new TestProperty[]
-    {
+    private readonly TestProperty[] _tcmKnownProperties =
+    [
         TestAdapterConstants.TestRunIdProperty,
         TestAdapterConstants.TestPlanIdProperty,
         TestAdapterConstants.BuildConfigurationIdProperty,
@@ -32,7 +32,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
         TestAdapterConstants.TestConfigurationIdProperty,
         TestAdapterConstants.TestConfigurationNameProperty,
         TestAdapterConstants.TestPointIdProperty,
-    };
+    ];
 
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIsNull()
     {

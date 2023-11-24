@@ -3,27 +3,22 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal sealed class ConsoleTestExecutionRequestFactory : ITestExecutionRequestFactory
+internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions commandLineService, ITestExecutionFilterFactory testExecutionFilterFactory) : ITestExecutionRequestFactory
 {
-    private readonly ICommandLineOptions _commandLineService;
-    private readonly ITestExecutionFilterFactory _testExecutionFilterFactory;
-
-    public ConsoleTestExecutionRequestFactory(ICommandLineOptions commandLineService, ITestExecutionFilterFactory testExecutionFilterFactory)
-    {
-        _commandLineService = commandLineService;
-        _testExecutionFilterFactory = testExecutionFilterFactory;
-    }
+    private readonly ICommandLineOptions _commandLineService = commandLineService;
+    private readonly ITestExecutionFilterFactory _testExecutionFilterFactory = testExecutionFilterFactory;
 
     public async Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session)
     {
         (bool created, ITestExecutionFilter? testExecutionFilter) = await _testExecutionFilterFactory.TryCreateAsync();
         if (!created)
         {
-            throw new InvalidOperationException("Unable to create test execution filter");
+            throw new InvalidOperationException(PlatformResources.CannotCreateTestExecutionFilterErrorMessage);
         }
 
         ArgumentGuard.IsNotNull(testExecutionFilter);

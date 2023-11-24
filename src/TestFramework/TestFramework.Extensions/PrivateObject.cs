@@ -47,7 +47,7 @@ public class PrivateObject
         temp ??= new PrivateObject(obj);
 
         // Split The access string
-        string[] arr = memberToAccess.Split(new char[] { '.' });
+        string[] arr = memberToAccess.Split(['.']);
 
         for (int i = 0; i < arr.Length; i++)
         {
@@ -78,7 +78,7 @@ public class PrivateObject
     /// </summary>
     /// <param name="assemblyName">Name of the assembly.</param>
     /// <param name="typeName">fully qualified name.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get.</param>
     /// <param name="args">Arguments to pass to the constructor.</param>
     public PrivateObject(string assemblyName, string typeName, Type[]? parameterTypes, object?[]? args)
         : this(Type.GetType(string.Format(CultureInfo.InvariantCulture, "{0}, {1}", typeName, assemblyName), false), parameterTypes, args)
@@ -104,7 +104,7 @@ public class PrivateObject
     /// specified type.
     /// </summary>
     /// <param name="type">type of the object to create.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the constructor to get.</param>
     /// <param name="args">Arguments to pass to the constructor.</param>
     public PrivateObject(Type type, Type[]? parameterTypes, object?[]? args)
     {
@@ -138,7 +138,10 @@ public class PrivateObject
             o = Activator.CreateInstance(type, ConstructorFlags, null, args, null);
         }
 
+        // Kept for compat reasons
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
         _ = o ?? throw new ArgumentNullException(nameof(o));
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
         _target = o;
         _originalType = o.GetType();
     }
@@ -259,7 +262,7 @@ public class PrivateObject
     /// Invokes the specified method.
     /// </summary>
     /// <param name="name">Name of the method.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call.</returns>
     public object? Invoke(string name, Type[] parameterTypes, object?[]? args)
@@ -271,7 +274,7 @@ public class PrivateObject
     /// Invokes the specified method.
     /// </summary>
     /// <param name="name">Name of the method.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
     /// <returns>Result of method call.</returns>
@@ -296,7 +299,7 @@ public class PrivateObject
     /// Invokes the specified method.
     /// </summary>
     /// <param name="name">Name of the method.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of method call.</returns>
@@ -309,7 +312,7 @@ public class PrivateObject
     /// Invokes the specified method.
     /// </summary>
     /// <param name="name">Name of the method.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call.</returns>
     public object? Invoke(string name, BindingFlags bindingFlags, params object?[]? args)
@@ -321,8 +324,8 @@ public class PrivateObject
     /// Invokes the specified method.
     /// </summary>
     /// <param name="name">Name of the method.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call.</returns>
     public object? Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object?[]? args)
@@ -334,7 +337,7 @@ public class PrivateObject
     /// Invokes the specified method.
     /// </summary>
     /// <param name="name">Name of the method.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of method call.</returns>
@@ -347,8 +350,8 @@ public class PrivateObject
     /// Invokes the specified method.
     /// </summary>
     /// <param name="name">Name of the method.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of method call.</returns>
@@ -361,8 +364,8 @@ public class PrivateObject
     /// Invokes the specified method.
     /// </summary>
     /// <param name="name">Name of the method.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
@@ -450,7 +453,7 @@ public class PrivateObject
     /// Gets the array element using array of subscripts for each dimension.
     /// </summary>
     /// <param name="name">Name of the member.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="indices">the indices of array.</param>
     /// <returns>An array of elements.</returns>
     public object GetArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
@@ -465,7 +468,7 @@ public class PrivateObject
     /// Sets the array element using array of subscripts for each dimension.
     /// </summary>
     /// <param name="name">Name of the member.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="value">Value to set.</param>
     /// <param name="indices">the indices of array.</param>
     public void SetArrayElement(string name, BindingFlags bindingFlags, object value, params int[] indices)
@@ -502,7 +505,7 @@ public class PrivateObject
     /// Gets the field.
     /// </summary>
     /// <param name="name">Name of the field.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <returns>The field.</returns>
     public object? GetField(string name, BindingFlags bindingFlags)
     {
@@ -514,12 +517,12 @@ public class PrivateObject
     /// Sets the field.
     /// </summary>
     /// <param name="name">Name of the field.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="value">value to set.</param>
     public void SetField(string name, BindingFlags bindingFlags, object? value)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        InvokeHelper(name, BindingFlags.SetField | bindingFlags, new object?[] { value }, CultureInfo.InvariantCulture);
+        InvokeHelper(name, BindingFlags.SetField | bindingFlags, [value], CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -548,7 +551,7 @@ public class PrivateObject
     /// Gets the field or property.
     /// </summary>
     /// <param name="name">Name of the field or property.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <returns>The field or property.</returns>
     public object? GetFieldOrProperty(string name, BindingFlags bindingFlags)
     {
@@ -560,12 +563,12 @@ public class PrivateObject
     /// Sets the field or property.
     /// </summary>
     /// <param name="name">Name of the field or property.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="value">value to set.</param>
     public void SetFieldOrProperty(string name, BindingFlags bindingFlags, object? value)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        InvokeHelper(name, BindingFlags.SetField | BindingFlags.SetProperty | bindingFlags, new object?[] { value }, CultureInfo.InvariantCulture);
+        InvokeHelper(name, BindingFlags.SetField | BindingFlags.SetProperty | bindingFlags, [value], CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -583,7 +586,7 @@ public class PrivateObject
     /// Gets the property.
     /// </summary>
     /// <param name="name">Name of the property.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
     public object? GetProperty(string name, Type[]? parameterTypes, object?[]? args)
@@ -606,7 +609,7 @@ public class PrivateObject
     /// Set the property.
     /// </summary>
     /// <param name="name">Name of the property.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="value">value to set.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetProperty(string name, Type[]? parameterTypes, object? value, object?[]? args)
@@ -618,7 +621,7 @@ public class PrivateObject
     /// Gets the property.
     /// </summary>
     /// <param name="name">Name of the property.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
     public object? GetProperty(string name, BindingFlags bindingFlags, params object?[]? args)
@@ -630,8 +633,8 @@ public class PrivateObject
     /// Gets the property.
     /// </summary>
     /// <param name="name">Name of the property.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
     public object? GetProperty(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args)
@@ -656,7 +659,7 @@ public class PrivateObject
     /// Sets the property.
     /// </summary>
     /// <param name="name">Name of the property.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="value">value to set.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetProperty(string name, BindingFlags bindingFlags, object value, params object?[]? args)
@@ -668,9 +671,9 @@ public class PrivateObject
     /// Sets the property.
     /// </summary>
     /// <param name="name">Name of the property.</param>
-    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="T:System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
+    /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="value">value to set.</param>
-    /// <param name="parameterTypes">An array of <see cref="T:System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
+    /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     public void SetProperty(string name, BindingFlags bindingFlags, object? value, Type[]? parameterTypes, object?[]? args)
     {
@@ -708,7 +711,7 @@ public class PrivateObject
         string[] arr = access.Split('.');
         foreach (string str in arr)
         {
-            if ((str.Length == 0) || (str.IndexOfAny(new char[] { ' ', '\t', '\n' }) != -1))
+            if ((str.Length == 0) || (str.IndexOfAny([' ', '\t', '\n']) != -1))
             {
                 throw new ArgumentException(FrameworkMessages.AccessStringInvalidSyntax);
             }

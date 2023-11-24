@@ -12,21 +12,17 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal class TestHostAdapterInvoker : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
+internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
 {
-    public TestHostAdapterInvoker(IServiceProvider serviceProvider)
-    {
-        ServiceProvider = serviceProvider;
-    }
+    protected IServiceProvider ServiceProvider { get; } = serviceProvider;
 
-    protected IServiceProvider ServiceProvider { get; }
-
-    public string Uid => nameof(TestHostAdapterInvoker);
+    public string Uid => nameof(TestHostTestFrameworkInvoker);
 
     public string Version => AppVersion.DefaultSemVer;
 
@@ -40,7 +36,7 @@ internal class TestHostAdapterInvoker : ITestFrameworkInvoker, IOutputDeviceData
 
     public async Task ExecuteAsync(ITestFramework testFrameworkAdapter, ClientInfo client, CancellationToken cancellationToken)
     {
-        ILogger<TestHostAdapterInvoker> logger = ServiceProvider.GetLoggerFactory().CreateLogger<TestHostAdapterInvoker>();
+        ILogger<TestHostTestFrameworkInvoker> logger = ServiceProvider.GetLoggerFactory().CreateLogger<TestHostTestFrameworkInvoker>();
 
         await logger.LogInformationAsync($"TestFrameworkAdapter Uid: '{testFrameworkAdapter.Uid}' Version: '{testFrameworkAdapter.Version}' DisplayName: '{testFrameworkAdapter.DisplayName}' Description: '{testFrameworkAdapter.Description}'");
 
@@ -89,7 +85,8 @@ internal class TestHostAdapterInvoker : ITestFrameworkInvoker, IOutputDeviceData
         if (!isSuccess)
         {
             ITestApplicationProcessExitCode testApplicationProcessExitCode = ServiceProvider.GetTestApplicationProcessExitCode();
-            await testApplicationProcessExitCode.SetTestAdapterTestSessionFailureAsync(errorMessage ?? "Test adapter test session failure.");
+            await testApplicationProcessExitCode.SetTestAdapterTestSessionFailureAsync(errorMessage
+                ?? PlatformResources.TestHostAdapterInvokerFailedTestSessionErrorMessage);
         }
     }
 }

@@ -20,49 +20,49 @@ public class DesktopCSharpCLITests : CLITestBase
 
     public void DiscoverTestsx86Debug()
     {
-        string[] sources = { X86DebugTestProject };
+        string[] sources = [X86DebugTestProject];
         DoDiscoveryAndValidateDiscoveredTests(sources);
     }
 
     public void DiscoverTestsx64Debug()
     {
-        string[] sources = { X64DebugTestProject };
+        string[] sources = [X64DebugTestProject];
         DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
     }
 
     public void DiscoverTestsx86Release()
     {
-        string[] sources = { X86ReleaseTestProject };
+        string[] sources = [X86ReleaseTestProject];
         DoDiscoveryAndValidateDiscoveredTests(sources);
     }
 
     public void DiscoverTestsx64Release()
     {
-        string[] sources = { X64ReleaseTestProject };
+        string[] sources = [X64ReleaseTestProject];
         DoDiscoveryAndValidateDiscoveredTests(sources, RunSetting);
     }
 
     public void RunAllTestsx86Debug()
     {
-        string[] sources = { X86DebugTestProject };
+        string[] sources = [X86DebugTestProject];
         RunAllTestsAndValidateResults(sources);
     }
 
     public void RunAllTestsx64Debug()
     {
-        string[] sources = { X64DebugTestProject };
+        string[] sources = [X64DebugTestProject];
         RunAllTestsAndValidateResults(sources, RunSetting);
     }
 
     public void RunAllTestsx86Release()
     {
-        string[] sources = { X86ReleaseTestProject };
+        string[] sources = [X86ReleaseTestProject];
         RunAllTestsAndValidateResults(sources);
     }
 
     public void RunAllTestsx64Release()
     {
-        string[] sources = { X64ReleaseTestProject };
+        string[] sources = [X64ReleaseTestProject];
         RunAllTestsAndValidateResults(sources, RunSetting);
     }
 

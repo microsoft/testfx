@@ -94,14 +94,14 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
         {
             case DynamicDataSourceType.Property:
                 var property = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(_dynamicDataSourceName)
-                    ?? throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Property, _dynamicDataSourceName));
+                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
                 obj = property.GetValue(null, null);
 
                 break;
 
             case DynamicDataSourceType.Method:
                 var method = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(_dynamicDataSourceName)
-                    ?? throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, _dynamicDataSourceName));
+                    ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {_dynamicDataSourceName}");
                 obj = method.Invoke(null, null);
 
                 break;
@@ -111,6 +111,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
         {
             throw new ArgumentNullException(
                 string.Format(
+                    CultureInfo.InvariantCulture,
                     FrameworkMessages.DynamicDataValueNull,
                     _dynamicDataSourceName,
                     _dynamicDataDeclaringType.FullName));
@@ -120,6 +121,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
         {
             throw new ArgumentNullException(
                 string.Format(
+                    CultureInfo.InvariantCulture,
                     FrameworkMessages.DynamicDataIEnumerableNull,
                     _dynamicDataSourceName,
                     _dynamicDataDeclaringType.FullName));
@@ -128,6 +130,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
         {
             throw new ArgumentException(
                 string.Format(
+                    CultureInfo.InvariantCulture,
                     FrameworkMessages.DynamicDataIEnumerableEmpty,
                     _dynamicDataSourceName,
                     _dynamicDataDeclaringType.FullName));
@@ -145,7 +148,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
             DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
 
             var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName)
-                ?? throw new ArgumentNullException(string.Format("{0} {1}", DynamicDataSourceType.Method, DynamicDataDisplayName));
+                ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
             var parameters = method.GetParameters();
             if (parameters.Length != 2 ||
                 parameters[0].ParameterType != typeof(MethodInfo) ||
@@ -156,13 +159,14 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
             {
                 throw new ArgumentNullException(
                     string.Format(
+                        CultureInfo.InvariantCulture,
                         FrameworkMessages.DynamicDataDisplayName,
                         DynamicDataDisplayName,
                         typeof(string).Name,
                         string.Join(", ", typeof(MethodInfo).Name, typeof(object[]).Name)));
             }
 
-            return method.Invoke(null, new object?[] { methodInfo, data }) as string;
+            return method.Invoke(null, [methodInfo, data]) as string;
         }
 
         if (data != null)

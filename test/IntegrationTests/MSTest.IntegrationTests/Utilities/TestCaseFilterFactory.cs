@@ -254,7 +254,7 @@ internal static class TestCaseFilterFactory
         }
         else if (value != null)
         {
-            return new[] { value.ToString() };
+            return [value.ToString()];
         }
 
         return null;

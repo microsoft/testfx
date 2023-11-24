@@ -112,7 +112,7 @@ public class AssemblyLoadWorkerTests : TestContainer
         public TestableAssembly(string assemblyName)
         {
             // YAGNI *.exe.
-            if (!assemblyName.EndsWith(".dll"))
+            if (!assemblyName.EndsWith(".dll", StringComparison.Ordinal))
             {
                 Name = string.Concat(assemblyName, ".dll");
             }

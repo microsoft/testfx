@@ -151,7 +151,9 @@ public sealed partial class Assert
     }
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo? culture)
+#pragma warning disable CA1309 // Use ordinal string comparison
         => string.Compare(expected, actual, ignoreCase, culture);
+#pragma warning restore CA1309 // Use ordinal string comparison
 
     #region EqualsAssertion
 

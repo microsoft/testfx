@@ -8,18 +8,13 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal sealed class AggregatedConfiguration : IConfiguration
+internal sealed class AggregatedConfiguration(IConfigurationProvider[] configurationProviders) : IConfiguration
 {
     public const string DefaultTestResultFolderName = "TestResults";
-    private readonly IConfigurationProvider[] _configurationProviders;
+    private readonly IConfigurationProvider[] _configurationProviders = configurationProviders;
     private string? _resultDirectory;
     private string? _currentWorkingDirectory;
     private string? _testHostWorkingDirectory;
-
-    public AggregatedConfiguration(IConfigurationProvider[] configurationProviders)
-    {
-        _configurationProviders = configurationProviders;
-    }
 
     public string? this[string key]
     {

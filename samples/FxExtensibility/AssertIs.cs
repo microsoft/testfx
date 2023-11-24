@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace MSTest.Extensibility.Samples;
@@ -17,14 +19,16 @@ public class AssertIs
     /// <param name="divisor">Its proclaimed divisor.</param>
     /// <returns>True if it is a divisor.</returns>
     /// <exception cref="AssertFailedException">If it is not a divisor.</exception>
+#pragma warning disable CA1822 // Mark members as static
     public bool Divisor(int number, int divisor)
+#pragma warning restore CA1822 // Mark members as static
     {
         if (number % divisor == 0)
         {
             return true;
         }
 
-        throw new AssertFailedException(string.Format("{0} is not a divisor of {1}", divisor, number));
+        throw new AssertFailedException(string.Format(CultureInfo.InvariantCulture, "{0} is not a divisor of {1}", divisor, number));
     }
 
     /// <summary>
@@ -33,13 +37,15 @@ public class AssertIs
     /// <param name="number">The number.</param>
     /// <returns>True if it is positive.</returns>
     /// <exception cref="AssertFailedException">If the number is not positive.</exception>
+#pragma warning disable CA1822 // Mark members as static
     public bool Positive(int number)
+#pragma warning restore CA1822 // Mark members as static
     {
         if (number > 0)
         {
             return true;
         }
 
-        throw new AssertFailedException(string.Format("{0} is not positive", number));
+        throw new AssertFailedException(string.Format(CultureInfo.InvariantCulture, "{0} is not positive", number));
     }
 }

@@ -163,7 +163,7 @@ public class AssemblyEnumeratorTests : TestContainer
     public void GetLoadExceptionDetailsShouldReturnLoaderExceptionMessage()
     {
         var loaderException = new AccessViolationException("DummyLoaderExceptionMessage2");
-        var exceptions = new ReflectionTypeLoadException(null, new Exception[] { loaderException });
+        var exceptions = new ReflectionTypeLoadException(null, [loaderException]);
 
         Verify(
             string.Concat(
@@ -182,7 +182,7 @@ public class AssemblyEnumeratorTests : TestContainer
         var loaderException2 = new AccessViolationException("DummyLoaderExceptionMessage2");
         var exceptions = new ReflectionTypeLoadException(
             null,
-            new Exception[] { loaderException1, loaderException2 });
+            [loaderException1, loaderException2]);
         StringBuilder errorDetails = new();
 
         errorDetails.AppendFormat(
@@ -202,7 +202,7 @@ public class AssemblyEnumeratorTests : TestContainer
     public void GetLoadExceptionDetailsShouldLogUniqueExceptionsOnly()
     {
         var loaderException = new AccessViolationException("DummyLoaderExceptionMessage2");
-        var exceptions = new ReflectionTypeLoadException(null, new Exception[] { loaderException, loaderException });
+        var exceptions = new ReflectionTypeLoadException(null, [loaderException, loaderException]);
 
         Verify(
             string.Concat(
@@ -406,7 +406,7 @@ public class TestableAssembly : Assembly
 {
 }
 
-internal class TestableAssemblyEnumerator : AssemblyEnumerator
+internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
 {
     internal TestableAssemblyEnumerator()
     {

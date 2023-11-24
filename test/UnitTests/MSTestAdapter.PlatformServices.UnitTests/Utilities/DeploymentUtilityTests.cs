@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 
@@ -137,7 +138,7 @@ public class DeploymentUtilityTests : TestContainer
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
         _mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
-            .Returns(new string[] { dependencyFile });
+            .Returns([dependencyFile]);
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns([]);
@@ -247,6 +248,7 @@ public class DeploymentUtilityTests : TestContainer
             ter.SendMessage(
                 TestMessageLevel.Warning,
                 string.Format(
+                    CultureInfo.InvariantCulture,
                     Resource.DeploymentErrorBadDeploymentItem,
                     deploymentItemPath,
                     deploymentItemOutputDirectory)),
@@ -363,7 +365,7 @@ public class DeploymentUtilityTests : TestContainer
         _mockFileUtility.Setup(fu => fu.DoesFileExist(It.IsAny<string>())).Returns(true);
         _mockAssemblyUtility.Setup(
             au => au.GetFullPathToDependentAssemblies(It.IsAny<string>(), It.IsAny<string>(), out _warnings))
-            .Returns(new string[] { dependencyFile });
+            .Returns([dependencyFile]);
         _mockAssemblyUtility.Setup(
             au => au.GetSatelliteAssemblies(It.IsAny<string>()))
             .Returns([]);

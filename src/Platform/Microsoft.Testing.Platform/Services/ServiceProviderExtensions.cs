@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -10,6 +12,7 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Telemetry;
 
 namespace Microsoft.Testing.Platform.Services;
@@ -25,9 +28,9 @@ public static class ServiceProviderExtensions
         ArgumentGuard.IsNotNull(provider);
 
         object? service = ((ServiceProvider)provider).GetService(typeof(TService));
-        return service is null
-            ? throw new InvalidOperationException($"Can't find service {typeof(TService)}")
-            : (TService)service;
+        StateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
+
+        return (TService)service;
     }
 
     public static TService? GetService<TService>(this IServiceProvider provider)
@@ -60,9 +63,9 @@ public static class ServiceProviderExtensions
         ArgumentGuard.IsNotNull(provider);
 
         object? service = ((ServiceProvider)provider).GetServiceInternal(typeof(TService));
-        return service is null
-            ? throw new InvalidOperationException($"Can't find service {typeof(TService)}")
-            : (TService)service;
+        StateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
+
+        return (TService)service;
     }
 
     internal static TService? GetServiceInternal<TService>(this IServiceProvider provider)

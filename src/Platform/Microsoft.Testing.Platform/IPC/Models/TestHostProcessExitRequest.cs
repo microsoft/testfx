@@ -3,12 +3,7 @@
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
-internal class TestHostProcessExitRequest : IRequest
+internal class TestHostProcessExitRequest(int returnCode) : IRequest
 {
-    public TestHostProcessExitRequest(int returnCode)
-    {
-        ExitCode = returnCode;
-    }
-
-    public int ExitCode { get; }
+    public int ExitCode { get; } = returnCode;
 }

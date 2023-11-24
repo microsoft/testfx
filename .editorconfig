@@ -170,6 +170,12 @@ dotnet_diagnostic.IDE0017.severity = warning
 # CA1001: Types that own disposable fields should be disposable
 dotnet_diagnostic.CA1001.severity = warning
 
+# CA1510: Use ArgumentNullException throw helper
+dotnet_diagnostic.CA1510.severity = none
+
+# CA1806: Do not ignore method results
+dotnet_diagnostic.CA1806.severity = warning
+
 # CA1829: Use Length/Count property instead of Count() when available
 dotnet_diagnostic.CA1829.severity = warning
 
@@ -182,8 +188,9 @@ dotnet_diagnostic.CA1825.severity = warning
 # CA1854: Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method
 dotnet_diagnostic.CA1854.severity = warning
 
-# CA1806: Do not ignore method results
-dotnet_diagnostic.CA1806.severity = warning
+# CA1863: Use 'CompositeFormat'
+# Disabled as it's making the code complex to deal with when multi targeting
+dotnet_diagnostic.CA1863.severity = none
 
 # RS0016: Only enable if API files are present
 dotnet_public_api_analyzer.require_api_files = true

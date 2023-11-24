@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -138,7 +139,7 @@ internal class TypeEnumerator
 
         var testMethod = new TestMethod(method, method.Name, _type.FullName!, _assemblyFilePath, isAsync, _testIdGenerationStrategy);
 
-        if (!string.Equals(method.DeclaringType!.FullName, _type.FullName))
+        if (!string.Equals(method.DeclaringType!.FullName, _type.FullName, StringComparison.Ordinal))
         {
             testMethod.DeclaringClassFullName = method.DeclaringType.FullName;
         }
@@ -193,9 +194,9 @@ internal class TypeEnumerator
         }
 
         var workItemAttributes = _reflectHelper.GetCustomAttributes<WorkItemAttribute>(method);
-        if (workItemAttributes.Any())
+        if (workItemAttributes.Length != 0)
         {
-            testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString()).ToArray();
+            testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture)).ToArray();
         }
 
         // get DisplayName from TestMethodAttribute

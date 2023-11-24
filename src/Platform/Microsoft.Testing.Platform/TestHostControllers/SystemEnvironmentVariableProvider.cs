@@ -8,15 +8,10 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
 
-internal sealed class SystemEnvironmentVariableProvider : ITestHostEnvironmentVariableProvider
+internal sealed class SystemEnvironmentVariableProvider(IEnvironment environment) : ITestHostEnvironmentVariableProvider
 {
     private readonly SystemExtension _systemExtension = new();
-    private readonly IEnvironment _environment;
-
-    public SystemEnvironmentVariableProvider(IEnvironment environment)
-    {
-        _environment = environment;
-    }
+    private readonly IEnvironment _environment = environment;
 
     public string Uid => _systemExtension.Uid;
 

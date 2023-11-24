@@ -38,10 +38,10 @@ internal sealed class SqlDataConnection : TestDataConnectionSql
             SchemaColumn = "TABLE_SCHEMA",
             NameColumn = "TABLE_NAME",
             TableTypeColumn = "TABLE_TYPE",
-            ValidTableTypes = new string[] { "VIEW", "BASE TABLE" },
+            ValidTableTypes = ["VIEW", "BASE TABLE"],
             InvalidSchemas = null,
         };
-        return new SchemaMetaData[] { data };
+        return [data];
     }
 
     private static string FixConnectionString(string connectionString, List<string> dataFolders)

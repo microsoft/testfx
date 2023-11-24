@@ -3,25 +3,21 @@
 
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal sealed class ConsoleTestExecutionFilterFactory : ITestExecutionFilterFactory
+internal sealed class ConsoleTestExecutionFilterFactory(ICommandLineOptions commandLineService) : ITestExecutionFilterFactory
 {
-    private readonly ICommandLineOptions _commandLineService;
-
-    public ConsoleTestExecutionFilterFactory(ICommandLineOptions commandLineService)
-    {
-        _commandLineService = commandLineService;
-    }
+    private readonly ICommandLineOptions _commandLineService = commandLineService;
 
     public string Uid => nameof(ConsoleTestExecutionFilterFactory);
 
     public string Version => AppVersion.DefaultSemVer;
 
-    public string DisplayName => nameof(ConsoleTestExecutionFilterFactory);
+    public string DisplayName => PlatformResources.ConsoleTestExecutionFilterFactoryDisplayName;
 
-    public string Description => nameof(ConsoleTestExecutionFilterFactory);
+    public string Description => PlatformResources.ConsoleTestExecutionFilterFactoryDescription;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

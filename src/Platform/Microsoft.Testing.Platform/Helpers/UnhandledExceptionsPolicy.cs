@@ -3,12 +3,7 @@
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-internal sealed class UnhandledExceptionsPolicy : IUnhandledExceptionsPolicy
+internal sealed class UnhandledExceptionsPolicy(bool fastFailOnFailure) : IUnhandledExceptionsPolicy
 {
-    public UnhandledExceptionsPolicy(bool fastFailOnFailure)
-    {
-        FastFailOnFailure = fastFailOnFailure;
-    }
-
-    public bool FastFailOnFailure { get; }
+    public bool FastFailOnFailure { get; } = fastFailOnFailure;
 }

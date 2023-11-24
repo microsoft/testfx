@@ -66,10 +66,10 @@ internal sealed class OleDataConnection : TestDataConnectionSql
             SchemaColumn = "TABLE_SCHEMA",
             NameColumn = "TABLE_NAME",
             TableTypeColumn = "TABLE_TYPE",
-            ValidTableTypes = new string[] { "VIEW", "TABLE" },
+            ValidTableTypes = ["VIEW", "TABLE"],
             InvalidSchemas = null,
         };
-        return new SchemaMetaData[] { data };
+        return [data];
     }
 
     protected override string QuoteIdentifier(string identifier)

@@ -120,7 +120,7 @@ internal class ReflectionUtility
                     if (baseDefinition != null
                         && string.Equals(
                             string.Concat(tempMethodInfo.DeclaringType.FullName, tempMethodInfo.Name),
-                            string.Concat(baseDefinition.DeclaringType.FullName, baseDefinition.Name)))
+                            string.Concat(baseDefinition.DeclaringType.FullName, baseDefinition.Name), StringComparison.Ordinal))
                     {
                         break;
                     }
@@ -170,7 +170,7 @@ internal class ReflectionUtility
         {
             if (!IsTypeInheriting(attribute.Constructor.DeclaringType, type)
                     && !attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
-                        type.AssemblyQualifiedName))
+                        type.AssemblyQualifiedName, StringComparison.Ordinal))
             {
                 continue;
             }
@@ -263,7 +263,7 @@ internal class ReflectionUtility
             if (!shouldGetAllAttributes
                 && !IsTypeInheriting(attribute.Constructor.DeclaringType, type)
                     && !attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
-                        type.AssemblyQualifiedName))
+                        type.AssemblyQualifiedName, StringComparison.Ordinal))
             {
                 continue;
             }
@@ -310,7 +310,7 @@ internal class ReflectionUtility
     {
         while (type1 != null)
         {
-            if (type1.AssemblyQualifiedName.Equals(type2.AssemblyQualifiedName))
+            if (type1.AssemblyQualifiedName.Equals(type2.AssemblyQualifiedName, StringComparison.Ordinal))
             {
                 return true;
             }

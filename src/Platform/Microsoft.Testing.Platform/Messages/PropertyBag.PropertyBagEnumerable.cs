@@ -7,34 +7,22 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 
 public sealed partial class PropertyBag
 {
-    private readonly struct PropertyBagEnumerable : IEnumerable<IProperty>
+    private readonly struct PropertyBagEnumerable(Property? properties, TestNodeStateProperty? testNodeStateProperty) : IEnumerable<IProperty>
     {
-        private readonly Property? _properties;
-        private readonly TestNodeStateProperty? _testNodeStateProperty;
-
-        public PropertyBagEnumerable(Property? properties, TestNodeStateProperty? testNodeStateProperty)
-        {
-            _properties = properties;
-            _testNodeStateProperty = testNodeStateProperty;
-        }
+        private readonly Property? _properties = properties;
+        private readonly TestNodeStateProperty? _testNodeStateProperty = testNodeStateProperty;
 
         public IEnumerator<IProperty> GetEnumerator() => new PropertyBagEnumerator(_properties, _testNodeStateProperty);
 
         IEnumerator IEnumerable.GetEnumerator() => new PropertyBagEnumerator(_properties, _testNodeStateProperty);
     }
 
-    private struct PropertyBagEnumerator : IEnumerator<IProperty>
+    private struct PropertyBagEnumerator(Property? properties, TestNodeStateProperty? testNodeStateProperty) : IEnumerator<IProperty>
     {
-        private readonly Property? _properties;
-        private readonly TestNodeStateProperty? _testNodeStateProperty;
+        private readonly Property? _properties = properties;
+        private readonly TestNodeStateProperty? _testNodeStateProperty = testNodeStateProperty;
         private Property? _currentPropertyObj;
         private IProperty? _current;
-
-        public PropertyBagEnumerator(Property? properties, TestNodeStateProperty? testNodeStateProperty)
-        {
-            _properties = properties;
-            _testNodeStateProperty = testNodeStateProperty;
-        }
 
         // https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerator-1.current?view=netframework-4.8#remarks
         public readonly IProperty Current => _current is null ? throw new InvalidOperationException("Invalid Current state, possible wrong usage.") : _current;

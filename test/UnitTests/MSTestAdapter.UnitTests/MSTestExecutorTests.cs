@@ -45,7 +45,7 @@ public class MSTestExecutorTests : TestContainer
     public void RunTestsShouldNotExecuteTestsIfTestSettingsIsGiven()
     {
         var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
-        TestCase[] tests = new[] { testCase };
+        TestCase[] tests = [testCase];
         string runSettingxml =
         @"<RunSettings>   
                     <MSTest>   
@@ -65,7 +65,7 @@ public class MSTestExecutorTests : TestContainer
     public void RunTestsShouldReportErrorAndBailOutOnSettingsException()
     {
         var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
-        TestCase[] tests = new[] { testCase };
+        TestCase[] tests = [testCase];
         string runSettingxml =
         @"<RunSettings>   
                     <MSTest>   

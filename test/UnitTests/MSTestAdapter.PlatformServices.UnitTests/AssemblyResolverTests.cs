@@ -35,17 +35,17 @@ public class AssemblyResolverTests : TestContainer
             DoesDirectoryExistSetter = (str) => true,
             GetDirectoriesSetter = (str) =>
             {
-                if (string.Compare(path, str, StringComparison.OrdinalIgnoreCase) == 0)
+                if (string.Equals(path, str, StringComparison.OrdinalIgnoreCase))
                 {
-                    return new string[] { @"C:\unitTesting\a", @"C:\unitTesting\b" };
+                    return [@"C:\unitTesting\a", @"C:\unitTesting\b"];
                 }
-                else if (string.Compare(@"C:\unitTesting\a", str, StringComparison.OrdinalIgnoreCase) == 0)
+                else if (string.Equals(@"C:\unitTesting\a", str, StringComparison.OrdinalIgnoreCase))
                 {
-                    return new string[] { @"C:\unitTesting\a\c" };
+                    return [@"C:\unitTesting\a\c"];
                 }
-                else if (string.Compare(@"C:\unitTesting\a\c", str, StringComparison.OrdinalIgnoreCase) == 0)
+                else if (string.Equals(@"C:\unitTesting\a\c", str, StringComparison.OrdinalIgnoreCase))
                 {
-                    return new string[] { @"C:\unitTesting\a\c\d" };
+                    return [@"C:\unitTesting\a\c\d"];
                 }
 
                 return new List<string>().ToArray();
@@ -85,13 +85,13 @@ public class AssemblyResolverTests : TestContainer
         // mocking the Directory.GetDirectories, to get sub directories
         assemblyResolver.GetDirectoriesSetter = (str) =>
         {
-            if (string.Compare(@"C:\unitTesting", str, true) == 0)
+            if (string.Equals(@"C:\unitTesting", str, StringComparison.OrdinalIgnoreCase))
             {
-                return new string[] { @"C:\unitTesting\a", @"C:\unitTesting\b" };
+                return [@"C:\unitTesting\a", @"C:\unitTesting\b"];
             }
-            else if (string.Compare(@"C:\FunctionalTesting", str, true) == 0)
+            else if (string.Equals(@"C:\FunctionalTesting", str, StringComparison.OrdinalIgnoreCase))
             {
-                return new string[] { @"C:\FunctionalTesting\c" };
+                return [@"C:\FunctionalTesting\c"];
             }
 
             return new List<string>().ToArray();
@@ -105,7 +105,7 @@ public class AssemblyResolverTests : TestContainer
                     // First time SearchAssemblyInTheFollowingLocation should get call with one directory which is in
                     // m_searchDirectories variable
                     Verify(listPath.Count == 1);
-                    Verify(string.Compare(listPath[0], dummyDirectories[0], true) == 0);
+                    Verify(string.Equals(listPath[0], dummyDirectories[0], StringComparison.OrdinalIgnoreCase));
                     count++;
                 }
                 else if (count == 1)
@@ -113,9 +113,9 @@ public class AssemblyResolverTests : TestContainer
                     // Second time SearchAssemblyInTheFollowingLocation should get call with directory C:\unitTesting
                     // and with all its sub directory, as its isRecursive property is true
                     Verify(listPath.Count == 3);
-                    Verify(string.Compare(listPath[0], @"C:\unitTesting", true) == 0);
-                    Verify(string.Compare(listPath[1], @"C:\unitTesting\a", true) == 0);
-                    Verify(string.Compare(listPath[2], @"C:\unitTesting\b", true) == 0);
+                    Verify(string.Equals(listPath[0], @"C:\unitTesting", StringComparison.OrdinalIgnoreCase));
+                    Verify(string.Equals(listPath[1], @"C:\unitTesting\a", StringComparison.OrdinalIgnoreCase));
+                    Verify(string.Equals(listPath[2], @"C:\unitTesting\b", StringComparison.OrdinalIgnoreCase));
                     count++;
                 }
                 else if (count == 2)
@@ -123,18 +123,18 @@ public class AssemblyResolverTests : TestContainer
                     // Third time SearchAssemblyInTheFollowingLocation should get call with directory C:\FunctionalTesting
                     // as its isRecursive property is false
                     Verify(listPath.Count == 1);
-                    Verify(string.Compare(listPath[0], @"C:\FunctionalTesting", true) == 0);
+                    Verify(string.Equals(listPath[0], @"C:\FunctionalTesting", StringComparison.OrdinalIgnoreCase));
                     count++;
                 }
                 else if (count == 3)
                 {
                     // call will come here when we will call onResolve second time.
                     Verify(listPath.Count == 5);
-                    Verify(string.Compare(listPath[0], dummyDirectories[0], true) == 0);
-                    Verify(string.Compare(listPath[1], @"C:\unitTesting", true) == 0);
-                    Verify(string.Compare(listPath[2], @"C:\unitTesting\a", true) == 0);
-                    Verify(string.Compare(listPath[3], @"C:\unitTesting\b", true) == 0);
-                    Verify(string.Compare(listPath[4], @"C:\FunctionalTesting", true) == 0);
+                    Verify(string.Equals(listPath[0], dummyDirectories[0], StringComparison.OrdinalIgnoreCase));
+                    Verify(string.Equals(listPath[1], @"C:\unitTesting", StringComparison.OrdinalIgnoreCase));
+                    Verify(string.Equals(listPath[2], @"C:\unitTesting\a", StringComparison.OrdinalIgnoreCase));
+                    Verify(string.Equals(listPath[3], @"C:\unitTesting\b", StringComparison.OrdinalIgnoreCase));
+                    Verify(string.Equals(listPath[4], @"C:\FunctionalTesting", StringComparison.OrdinalIgnoreCase));
                     count++;
                 }
 

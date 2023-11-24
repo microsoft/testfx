@@ -17,6 +17,12 @@ public sealed class TestNodeUid(string value) : IEquatable<TestNodeUid>
     public static implicit operator TestNodeUid(string value)
         => new(value);
 
+    public static bool operator ==(TestNodeUid left, TestNodeUid right)
+        => left.Equals(right);
+
+    public static bool operator !=(TestNodeUid left, TestNodeUid right)
+        => !left.Equals(right);
+
     public bool Equals(TestNodeUid? other)
         => other?.Value == value;
 

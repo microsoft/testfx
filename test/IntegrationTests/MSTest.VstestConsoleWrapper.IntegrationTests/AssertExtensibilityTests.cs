@@ -11,7 +11,7 @@ public class AssertExtensibilityTests : CLITestBase
 
     public void ExecuteAssertExtensibilityTests()
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName });
+        InvokeVsTestForExecution([TestAssetName]);
         ValidatePassedTestsContain(
             "FxExtensibilityTestProject.AssertExTest.BasicAssertExtensionTest",
             "FxExtensibilityTestProject.AssertExTest.ChainedAssertExtensionTest");

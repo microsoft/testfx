@@ -26,7 +26,7 @@ public class TimeoutTests : CLITestBase
 
     private void ValidateTimeoutTests(string targetFramework)
     {
-        InvokeVsTestForExecution(new string[] { TestAssetName }, testCaseFilter: "TimeoutTest|RegularTest", targetFramework: targetFramework);
+        InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TimeoutTest|RegularTest", targetFramework: targetFramework);
 
         ValidateFailedTestsCount(targetFramework == "net462" ? 5 : 4);
 

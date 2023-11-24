@@ -14,7 +14,7 @@ namespace UnitTestFramework.Tests;
 /// </summary>
 public class ExpectedExceptionBaseAttributeTests : TestContainer
 {
-    private TestableExpectedExceptionBaseAttributeClass _sut = null;
+    private TestableExpectedExceptionBaseAttributeClass _sut;
 
     public ExpectedExceptionBaseAttributeTests()
     {

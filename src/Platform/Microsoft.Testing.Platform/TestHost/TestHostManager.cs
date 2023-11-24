@@ -1,10 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Requests;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.TestHost;
@@ -20,27 +23,27 @@ internal sealed class TestHostManager : ITestHostManager
 
     // Non-exposed extension points
     private Func<IServiceProvider, ITestExecutionFilterFactory>? _testExecutionFilterFactory;
-    private Func<IServiceProvider, ITestFrameworkInvoker>? _testAdapterInvoker;
+    private Func<IServiceProvider, ITestFrameworkInvoker>? _testFrameworkInvokerFactory;
 
-    public void AddTestAdapterInvoker(Func<IServiceProvider, ITestFrameworkInvoker> testAdapterInvoker)
+    public void AddTestFrameworkInvoker(Func<IServiceProvider, ITestFrameworkInvoker> testFrameworkInvokerFactory)
     {
-        ArgumentGuard.IsNotNull(testAdapterInvoker);
-        if (_testAdapterInvoker is not null)
+        ArgumentGuard.IsNotNull(testFrameworkInvokerFactory);
+        if (_testFrameworkInvokerFactory is not null)
         {
-            throw new InvalidOperationException($"Custom ITestAdapterInvoker already set, '{_testAdapterInvoker.GetType()}'");
+            throw new InvalidOperationException(PlatformResources.TestAdapterInvokerFactoryAlreadySetErrorMessage);
         }
 
-        _testAdapterInvoker = testAdapterInvoker;
+        _testFrameworkInvokerFactory = testFrameworkInvokerFactory;
     }
 
     internal async Task<ActionResult<ITestFrameworkInvoker>> TryBuildTestAdapterInvokerAsync(ServiceProvider serviceProvider)
     {
-        if (_testAdapterInvoker is null)
+        if (_testFrameworkInvokerFactory is null)
         {
             return ActionResult.Fail<ITestFrameworkInvoker>();
         }
 
-        ITestFrameworkInvoker testAdapterInvoke = _testAdapterInvoker(serviceProvider);
+        ITestFrameworkInvoker testAdapterInvoke = _testFrameworkInvokerFactory(serviceProvider);
 
         // We initialize only if enabled
         if (await testAdapterInvoke.IsEnabledAsync())
@@ -61,7 +64,7 @@ internal sealed class TestHostManager : ITestHostManager
         ArgumentGuard.IsNotNull(testExecutionFilterFactory);
         if (_testExecutionFilterFactory is not null)
         {
-            throw new InvalidOperationException($"Custom ITestExecutionFilterFactory already set, '{_testExecutionFilterFactory.GetType()}'");
+            throw new InvalidOperationException(PlatformResources.TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage);
         }
 
         _testExecutionFilterFactory = testExecutionFilterFactory;
@@ -107,7 +110,7 @@ internal sealed class TestHostManager : ITestHostManager
             if (testApplicationLifecycleCallbacks.Any(x => x.Uid == service.Uid))
             {
                 ITestApplicationLifecycleCallbacks currentRegisteredExtension = testApplicationLifecycleCallbacks.Single(x => x.Uid == service.Uid);
-                throw new InvalidOperationException($"Another extension with the same Uid '{service.Uid}' is already registered. Extension type: '{currentRegisteredExtension.GetType()}'");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, currentRegisteredExtension.GetType()));
             }
 
             // We initialize only if enabled
@@ -133,12 +136,12 @@ internal sealed class TestHostManager : ITestHostManager
     }
 
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)
-      where T : class, IDataConsumer
+        where T : class, IDataConsumer
     {
         ArgumentGuard.IsNotNull(compositeServiceFactory);
         if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))
         {
-            throw new InvalidOperationException("Same instance already added");
+            throw new InvalidOperationException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
         }
 
         _dataConsumersCompositeServiceFactories.Add(compositeServiceFactory);
@@ -155,7 +158,7 @@ internal sealed class TestHostManager : ITestHostManager
             if (dataConsumers.Any(x => x.Uid == service.Uid))
             {
                 IDataConsumer currentRegisteredExtension = dataConsumers.Single(x => x.Uid == service.Uid);
-                throw new InvalidOperationException($"Another extension with the same Uid '{service.Uid}' is already registered. Extension type: '{currentRegisteredExtension.GetType()}'");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, currentRegisteredExtension.GetType()));
             }
 
             // We initialize only if enabled
@@ -188,7 +191,7 @@ internal sealed class TestHostManager : ITestHostManager
                 if (dataConsumers.Any(x => x.Uid == instance.Uid))
                 {
                     IDataConsumer currentRegisteredExtension = dataConsumers.Single(x => x.Uid == instance.Uid);
-                    throw new InvalidOperationException($"Another extension with the same Uid '{instance.Uid}' is already registered. Extension type: '{currentRegisteredExtension.GetType()}'");
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.GetType()));
                 }
 
                 // We initialize only if enabled
@@ -214,11 +217,10 @@ internal sealed class TestHostManager : ITestHostManager
                 {
                     // Register the extension for usage
                     dataConsumers.Add(consumer);
+                    continue;
                 }
-                else
-                {
-                    throw new InvalidOperationException($"Type '{extension.GetType()}' doesn't implement the '{typeof(IDataConsumer)}' interface");
-                }
+
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionDoesNotImplementGivenInterfaceErrorMessage, extension.GetType(), typeof(IDataConsumer)));
             }
         }
 
@@ -237,7 +239,7 @@ internal sealed class TestHostManager : ITestHostManager
         ArgumentGuard.IsNotNull(compositeServiceFactory);
         if (_testSessionLifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
         {
-            throw new InvalidOperationException("Same instance already added");
+            throw new InvalidOperationException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
         }
 
         _testSessionLifetimeHandlerCompositeFactories.Add(compositeServiceFactory);
@@ -254,7 +256,7 @@ internal sealed class TestHostManager : ITestHostManager
             if (testSessionLifetimeHandlers.Any(x => x.Uid == service.Uid))
             {
                 ITestSessionLifetimeHandler currentRegisteredExtension = testSessionLifetimeHandlers.Single(x => x.Uid == service.Uid);
-                throw new InvalidOperationException($"Another extension with the same Uid '{service.Uid}' is already registered. Extension type: '{currentRegisteredExtension.GetType()}'");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, currentRegisteredExtension.GetType()));
             }
 
             // We initialize only if enabled
@@ -287,7 +289,7 @@ internal sealed class TestHostManager : ITestHostManager
                 if (testSessionLifetimeHandlers.Any(x => x.Uid == instance.Uid))
                 {
                     ITestSessionLifetimeHandler currentRegisteredExtension = testSessionLifetimeHandlers.Single(x => x.Uid == instance.Uid);
-                    throw new InvalidOperationException($"Another extension with the same Uid '{instance.Uid}' is already registered. Extension type: '{currentRegisteredExtension.GetType()}'");
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.GetType()));
                 }
 
                 // We initialize only if enabled
@@ -316,7 +318,7 @@ internal sealed class TestHostManager : ITestHostManager
                 }
                 else
                 {
-                    throw new InvalidOperationException($"Type '{extension.GetType()}' doesn't implement the '{typeof(ITestSessionLifetimeHandler)}' interface");
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionDoesNotImplementGivenInterfaceErrorMessage, extension.GetType(), typeof(ITestSessionLifetimeHandler)));
                 }
             }
         }
