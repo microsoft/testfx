@@ -137,7 +137,7 @@ public sealed class TestApplicationResultTests : TestBase
     {
         TestApplicationResult testApplicationResult
             = new(new Mock<IOutputDevice>().Object, new Mock<ITestApplicationCancellationTokenSource>().Object,
-            new CommandLineOption(PlatformCommandLineProvider.DiscoverTestsOptionKey, Array.Empty<string>()));
+            new CommandLineOption(PlatformCommandLineProvider.DiscoverTestsOptionKey, []));
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,
@@ -154,7 +154,7 @@ public sealed class TestApplicationResultTests : TestBase
     {
         TestApplicationResult testApplicationResult
             = new(new Mock<IOutputDevice>().Object, new Mock<ITestApplicationCancellationTokenSource>().Object,
-            new CommandLineOption(PlatformCommandLineProvider.DiscoverTestsOptionKey, Array.Empty<string>()));
+            new CommandLineOption(PlatformCommandLineProvider.DiscoverTestsOptionKey, []));
 
         await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
             default,

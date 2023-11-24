@@ -99,8 +99,11 @@ public static class ServiceProviderExtensions
     internal static IEnvironment GetEnvironment(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IEnvironment>();
 
-    internal static IRuntime GetRuntime(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<IRuntime>();
+    internal static ITestApplicationModuleInfo GetTestApplicationModuleInfo(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredServiceInternal<ITestApplicationModuleInfo>();
+
+    internal static ITestHostControllerInfo GetTestHostControllerInfo(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredServiceInternal<ITestHostControllerInfo>();
 
     internal static IProcessHandler GetProcessHandler(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IProcessHandler>();

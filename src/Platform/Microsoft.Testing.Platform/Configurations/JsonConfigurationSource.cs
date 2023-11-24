@@ -3,12 +3,13 @@
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal sealed partial class JsonConfigurationSource(IRuntime runtime, IFileSystem fileSystem, FileLoggerProvider? fileLoggerProvider) : IConfigurationSource
+internal sealed partial class JsonConfigurationSource(ITestApplicationModuleInfo testApplicationModuleInfo, IFileSystem fileSystem, FileLoggerProvider? fileLoggerProvider) : IConfigurationSource
 {
-    private readonly IRuntime _runtime = runtime;
+    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly FileLoggerProvider? _fileLoggerProvider = fileLoggerProvider;
 
@@ -30,5 +31,5 @@ internal sealed partial class JsonConfigurationSource(IRuntime runtime, IFileSys
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public IConfigurationProvider Build()
-        => new JsonConfigurationProvider(_runtime, _fileSystem, _fileLoggerProvider?.CreateLogger(typeof(JsonConfigurationProvider).ToString()));
+        => new JsonConfigurationProvider(_testApplicationModuleInfo, _fileSystem, _fileLoggerProvider?.CreateLogger(typeof(JsonConfigurationProvider).ToString()));
 }

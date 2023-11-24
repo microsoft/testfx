@@ -17,13 +17,13 @@ using Microsoft.Testing.Platform.Tools;
 namespace Microsoft.Testing.Platform.CommandLine;
 
 internal sealed class CommandLineHandler(string[] args, CommandLineParseResult parseResult, ICommandLineOptionsProvider[] extensionsCommandLineOptionsProviders,
-    ICommandLineOptionsProvider[] systemCommandLineOptionsProviders, IRuntime runtime, IRuntimeFeature runtimeFeature,
+    ICommandLineOptionsProvider[] systemCommandLineOptionsProviders, ITestApplicationModuleInfo testApplicationModuleInfo, IRuntimeFeature runtimeFeature,
     IPlatformOutputDevice platformOutputDevice, IEnvironment environment, IProcessHandler process) : ICommandLineHandler, ICommandLineOptions, IOutputDeviceDataProducer
 {
     private readonly TextOutputDeviceData _textOutputDeviceData = new(string.Empty);
 
     private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders = systemCommandLineOptionsProviders;
-    private readonly IRuntime _runtime = runtime;
+    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
     private readonly IRuntimeFeature _runtimeFeature = runtimeFeature;
     private readonly IPlatformOutputDevice _platformOutputDevice = platformOutputDevice;
 #if !NETCOREAPP
@@ -335,7 +335,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
     public async Task PrintHelpAsync(ITool[]? availableTools = null)
 #pragma warning restore IDE0060 // Remove unused parameter
     {
-        string applicationName = GetApplicationName(_runtime);
+        string applicationName = GetApplicationName(_testApplicationModuleInfo);
         await PrintApplicationUsageAsync(applicationName);
 
         // Temporary disabled, we don't remove the code because could be useful in future.
@@ -470,7 +470,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime location: {runtimeLocation}"));
 #endif
 
-            string? moduleName = _runtime.GetCurrentModuleInfo().GetCurrentTestApplicationFullPath();
+            string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
             moduleName = TAString.IsNullOrEmpty(moduleName)
 #if NETCOREAPP
                 ? _environment.ProcessPath
@@ -576,13 +576,12 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         }
     }
 
-    private static string GetApplicationName(IRuntime runtime)
+    private static string GetApplicationName(ITestApplicationModuleInfo testApplicationModuleInfo)
     {
-        ITestApplicationModuleInfo currentModuleInfo = runtime.GetCurrentModuleInfo();
-        return currentModuleInfo.IsAppHostOrSingleFileOrNativeAot
-            ? Path.GetFileName(currentModuleInfo.GetProcessPath())
-            : currentModuleInfo.IsCurrentTestApplicationHostDotnetMuxer
-                ? $"dotnet exec {Path.GetFileName(currentModuleInfo.GetCurrentTestApplicationFullPath())}"
+        return testApplicationModuleInfo.IsAppHostOrSingleFileOrNativeAot
+            ? Path.GetFileName(testApplicationModuleInfo.GetProcessPath())
+            : testApplicationModuleInfo.IsCurrentTestApplicationHostDotnetMuxer
+                ? $"dotnet exec {Path.GetFileName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}"
                 : "[Test application runner]";
     }
 

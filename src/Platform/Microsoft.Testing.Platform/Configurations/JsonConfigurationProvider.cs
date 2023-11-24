@@ -9,9 +9,9 @@ namespace Microsoft.Testing.Platform.Configurations;
 
 internal sealed partial class JsonConfigurationSource
 {
-    internal sealed class JsonConfigurationProvider(IRuntime runtime, IFileSystem fileSystem, ILogger? logger) : IConfigurationProvider
+    internal sealed class JsonConfigurationProvider(ITestApplicationModuleInfo testApplicationModuleInfo, IFileSystem fileSystem, ILogger? logger) : IConfigurationProvider
     {
-        private readonly ITestApplicationModuleInfo _currentModuleInfo = runtime.GetCurrentModuleInfo();
+        private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
         private readonly IFileSystem _fileSystem = fileSystem;
         private readonly ILogger? _logger = logger;
         private Dictionary<string, string?>? _propertyToAllChildren;
@@ -30,8 +30,8 @@ internal sealed partial class JsonConfigurationSource
         public async Task LoadAsync()
         {
             string configFileName = $"{Path.Combine(
-                Path.GetDirectoryName(_currentModuleInfo.GetCurrentTestApplicationFullPath())!,
-                Path.GetFileNameWithoutExtension(_currentModuleInfo.GetCurrentTestApplicationFullPath()))}{PlatformConfigurationConstants.PlatformConfigSuffixFileName}";
+                Path.GetDirectoryName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!,
+                Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()))}{PlatformConfigurationConstants.PlatformConfigSuffixFileName}";
             if (!_fileSystem.Exists(configFileName))
             {
                 await LogInformationAsync($"Config file '{configFileName}' not found.");
