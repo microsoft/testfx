@@ -185,7 +185,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Add output display proxy, needed by command line manager.
         // We don't add to the service right now because we need special treatment between console/server mode.
-        IPlatformOutputDevice platformOutputDevice = ((PlatformOutputDeviceManager)OutputDisplay).Build(serviceProvider, loggingState);
+        IPlatformOutputDevice platformOutputDevice = await ((PlatformOutputDeviceManager)OutputDisplay).BuildAsync(serviceProvider, loggingState);
         bool isNoBannerSet = loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
         string? noBannerEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
         string? dotnetNoLogoEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);

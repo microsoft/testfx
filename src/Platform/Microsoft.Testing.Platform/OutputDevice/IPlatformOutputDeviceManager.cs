@@ -5,4 +5,5 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 
 internal interface IPlatformOutputDeviceManager
 {
+    void SetPlatformOutputDevice(Func<IServiceProvider, IPlatformOutputDevice> provider);
 }
