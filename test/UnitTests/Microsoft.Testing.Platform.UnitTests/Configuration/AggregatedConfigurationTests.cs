@@ -89,7 +89,7 @@ public class AggregatedConfigurationTests(ITestExecutionContext testExecutionCon
         mockFileSystem.Verify(x => x.CreateDirectory(ExpectedPath), Times.Once);
         mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(ExpectedPath), Times.Once);
         Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
-        Assert.AreEqual(@"a\b", aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
+        Assert.AreEqual("a" + Path.DirectorySeparatorChar + "b", aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
     }
 
     public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDirectoryFromStore()
@@ -110,7 +110,7 @@ public class AggregatedConfigurationTests(ITestExecutionContext testExecutionCon
         mockFileSystem.Verify(x => x.CreateDirectory(ExpectedPath), Times.Once);
         mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(ExpectedPath), Times.Once);
         Assert.AreEqual(ExpectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
-        Assert.AreEqual(@"a\b", aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
+        Assert.AreEqual("a" + Path.DirectorySeparatorChar + "b", aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
     }
 
     public async ValueTask CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDefaultDirectory()
@@ -128,10 +128,11 @@ public class AggregatedConfigurationTests(ITestExecutionContext testExecutionCon
         await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(
             new FakeCommandLineOptions(ExpectedPath, bypass: true), mockFileLogger.Object);
 
-        mockFileSystem.Verify(x => x.CreateDirectory(@"a\b\TestResults"), Times.Once);
-        mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(@"a\b\TestResults"), Times.Once);
-        Assert.AreEqual(@"a\b\TestResults", aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
-        Assert.AreEqual(@"a\b", aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
+        string expectedPath = "a" + Path.DirectorySeparatorChar + "b" + Path.DirectorySeparatorChar + "TestResults";
+        mockFileSystem.Verify(x => x.CreateDirectory(expectedPath), Times.Once);
+        mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(expectedPath), Times.Once);
+        Assert.AreEqual(expectedPath, aggregatedConfiguration[PlatformConfigurationConstants.PlatformResultDirectory]);
+        Assert.AreEqual("a" + Path.DirectorySeparatorChar + "b", aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory]);
     }
 }
 
