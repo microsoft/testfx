@@ -64,17 +64,17 @@
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
-        <target state="new">Cannot find service of type '{0}'</target>
+        <target state="translated">Impossibile trovare il servizio di tipo '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderServiceAlreadyRegistered">
         <source>Instance of type '{0}' is already registered</source>
-        <target state="new">Instance of type '{0}' is already registered</target>
+        <target state="translated">L'istanza di tipo '{0}' è già registrata</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
-        <target state="new">Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</target>
+        <target state="translated">Le istanze di tipo 'ITestFramework' non devono essere registrate tramite il provider di servizi, ma tramite 'ITestApplicationBuilder.RegisterTestFramework'</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
         <source>The application has already been built</source>
-        <target state="new">The application has already been built</target>
+        <target state="translated">L'applicazione è già stata compilata</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
@@ -99,27 +99,27 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
         <source>The test framework capabilities factory has already been registered</source>
-        <target state="new">The test framework capabilities factory has already been registered</target>
+        <target state="translated">La factory delle funzionalità del framework di test è già stata registrata</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</source>
-        <target state="new">The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</target>
+        <target state="translated">L'adapter del framework di test non è stato registrato. Usa 'RegisterTestFrameworkAdapter' per registrarlo</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
         <source>Determine the result of the test application execution</source>
-        <target state="new">Determine the result of the test application execution</target>
+        <target state="translated">Determinare il risultato dell'esecuzione dell'applicazione di test</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDisplayName">
         <source>Test application result</source>
-        <target state="new">Test application result</target>
+        <target state="translated">Risultato del test dell'applicazione</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
-        <target state="new">VSTest mode only supports a single TestApplicationBuilder per process</target>
+        <target state="translated">La modalità VSTest supporta solo un singolo TestApplicationBuilder per processo</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">

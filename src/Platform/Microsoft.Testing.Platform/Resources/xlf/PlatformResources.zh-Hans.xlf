@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
         <source>Could not find the default json configuration</source>
-        <target state="new">Could not find the default json configuration</target>
+        <target state="translated">找不到默认 json 配置</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
@@ -39,17 +39,17 @@
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
-        <target state="new">A duplicate key '{0}' was found</target>
+        <target state="translated">发现重复的键“{0}”</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage">
         <source>Top-level JSON element must be an object. Instead, '{0}' was found</source>
-        <target state="new">Top-level JSON element must be an object. Instead, '{0}' was found</target>
+        <target state="translated">顶级 JSON 元素必须是对象。但是找到了“{0}”</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
-        <target state="new">Unsupported JSON token '{0}' was found</target>
+        <target state="translated">找到不受支持的 JSON 令牌“{0}”</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">
