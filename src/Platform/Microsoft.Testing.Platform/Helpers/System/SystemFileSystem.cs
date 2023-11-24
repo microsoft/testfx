@@ -7,6 +7,8 @@ internal sealed class SystemFileSystem : IFileSystem
 {
     public bool Exists(string path) => File.Exists(path);
 
+    public string CreateDirectory(string path) => Directory.CreateDirectory(path).FullName;
+
     public Stream NewFileStream(string path, FileMode mode) => new FileStream(path, mode);
 
     public Stream NewFileStream(string path, FileMode mode, FileAccess access) => new FileStream(path, mode, access);

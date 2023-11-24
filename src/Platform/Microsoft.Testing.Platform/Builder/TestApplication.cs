@@ -71,22 +71,22 @@ public sealed class TestApplication : ITestApplication
         // First step is to parse the command line from where we get the second input layer.
         // The first one should be the env vars handled autonomously by extensions and part of the test platform.
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, systemEnvironment);
-
+        TestHostControllerInfo testHostControllerInfo = new(parseResult);
         SystemProcessHandler systemProcess = new();
-        var systemRuntime = new SystemRuntime(new SystemRuntimeFeature(), systemEnvironment, systemProcess, parseResult);
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), systemEnvironment, systemProcess);
 
         // Create the UnhandledExceptionHandler that will be set inside the TestHostBuilder.
         LazyInitializer.EnsureInitialized(ref s_unhandledExceptionHandler, () => new UnhandledExceptionHandler(systemEnvironment, new SystemConsole(), parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)));
         ArgumentGuard.IsNotNull(s_unhandledExceptionHandler);
 
         // First task is to setup the logger if enabled and we take the info from the command line or env vars.
-        ApplicationLoggingState loggingState = CreateFileLoggerIfDiagnosticIsEnabled(parseResult, systemRuntime, systemClock, systemEnvironment, new SystemTask(), new SystemConsole());
+        ApplicationLoggingState loggingState = CreateFileLoggerIfDiagnosticIsEnabled(parseResult, testApplicationModuleInfo, systemClock, systemEnvironment, new SystemTask(), new SystemConsole());
 
         if (loggingState.FileLoggerProvider is not null)
         {
             ILogger logger = loggingState.FileLoggerProvider.CreateLogger(typeof(TestApplication).ToString());
             s_unhandledExceptionHandler.SetLogger(logger);
-            await LogInformationAsync(logger, systemRuntime, systemProcess, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args);
+            await LogInformationAsync(logger, testApplicationModuleInfo, testHostControllerInfo, systemProcess, systemEnvironment, createBuilderEntryTime, loggingState.IsSynchronousWrite, loggingState.LogLevel, args);
         }
 
         // In VSTest mode bridge we need to ensure that we're using 1 test app per process, we cannot guarantee the correct working otherwise.
@@ -98,12 +98,13 @@ public sealed class TestApplication : ITestApplication
         }
 
         // All checks are fine, create the TestApplication.
-        return new TestApplicationBuilder(args, loggingState, createBuilderStart, systemRuntime, testApplicationOptions, s_unhandledExceptionHandler);
+        return new TestApplicationBuilder(args, loggingState, createBuilderStart, testApplicationOptions, s_unhandledExceptionHandler);
     }
 
     private static async Task LogInformationAsync(
         ILogger logger,
-        SystemRuntime runtime,
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo,
+        TestHostControllerInfo testHostControllerInfo,
         SystemProcessHandler processHandler,
         SystemEnvironment environment,
         string createBuilderEntryTime,
@@ -169,7 +170,7 @@ public sealed class TestApplication : ITestApplication
 #endif
         await logger.LogInformationAsync($"IsDynamicCodeSupported: {isDynamicCodeSupported}");
 
-        string? moduleName = runtime.GetCurrentModuleInfo().GetCurrentTestApplicationFullPath();
+        string? moduleName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         moduleName = TAString.IsNullOrEmpty(moduleName)
 #if !NETCOREAPP
             ? systemProcessHandler.GetCurrentProcess().MainModule.FileName
@@ -192,7 +193,6 @@ public sealed class TestApplication : ITestApplication
         await logger.LogDebugAsync($"Machine info:\n{machineInfo}");
 #endif
 
-        ITestHostControllerInfo testHostControllerInfo = runtime.GetTestHostControllerInfo();
         if (testHostControllerInfo.HasTestHostController)
         {
             string? processCorrelationId;
@@ -248,7 +248,7 @@ public sealed class TestApplication : ITestApplication
      3 TA settings(json)
      4 Default(TestResults in the current working folder)
     */
-    private static ApplicationLoggingState CreateFileLoggerIfDiagnosticIsEnabled(CommandLineParseResult result, SystemRuntime runtime, SystemClock clock, SystemEnvironment environment, SystemTask task, SystemConsole console)
+    private static ApplicationLoggingState CreateFileLoggerIfDiagnosticIsEnabled(CommandLineParseResult result, CurrentTestApplicationModuleInfo testApplicationModuleInfo, SystemClock clock, SystemEnvironment environment, SystemTask task, SystemConsole console)
     {
         LogLevel logLevel = LogLevel.Information;
 
@@ -291,8 +291,7 @@ public sealed class TestApplication : ITestApplication
         }
 
         // Set the directory to the default test result directory
-        ITestApplicationModuleInfo currentModuleInfo = runtime.GetCurrentModuleInfo();
-        string directory = Path.Combine(Path.GetDirectoryName(currentModuleInfo.GetCurrentTestApplicationFullPath())!, AggregatedConfiguration.DefaultTestResultFolderName);
+        string directory = Path.Combine(Path.GetDirectoryName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!, AggregatedConfiguration.DefaultTestResultFolderName);
         bool customDirectory = false;
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.ResultDirectoryOptionKey, out string[]? resultDirectoryArg))

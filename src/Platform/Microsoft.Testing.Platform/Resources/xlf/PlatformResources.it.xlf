@@ -7,6 +7,11 @@
         <target state="new">Failed to create a test execution filter</target>
         <note />
       </trans-unit>
+      <trans-unit id="CannotStartProcessErrorMessage">
+        <source>Cannot start process '{0}'</source>
+        <target state="new">Cannot start process '{0}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
         <target state="new">The same instance of 'CompositeExtensonFactory' is already registered</target>
@@ -27,6 +32,11 @@
         <target state="new">Console test execution filter factory</target>
         <note />
       </trans-unit>
+      <trans-unit id="EnvironmentVariableProviderFailedWithError">
+        <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
+        <target state="new">Provider '{0}' (UID: {1}) failed with error: {2}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
         <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
         <target state="new">Extension of type '{0}' is not implementing the required '{1}' interface</target>
@@ -35,6 +45,11 @@
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
         <source>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</source>
         <target state="new">Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
+        <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
+        <target state="new">The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -172,9 +187,19 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <target state="translated">La modalità VSTest supporta solo un singolo TestApplicationBuilder per processo</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
+        <source>Method '{0}' should not have been called on this proxy object</source>
+        <target state="new">Method '{0}' should not have been called on this proxy object</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
         <source>Test adapter test session failure</source>
         <target state="new">Test adapter test session failure</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
+        <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
+        <target state="new">Test application process didn't exit gracefully, exit code is '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">

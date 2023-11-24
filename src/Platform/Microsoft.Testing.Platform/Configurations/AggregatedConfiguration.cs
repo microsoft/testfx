@@ -8,10 +8,12 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal sealed class AggregatedConfiguration(IConfigurationProvider[] configurationProviders) : IConfiguration
+internal sealed class AggregatedConfiguration(IConfigurationProvider[] configurationProviders, ITestApplicationModuleInfo testApplicationModuleInfo, IFileSystem fileSystem) : IConfiguration
 {
     public const string DefaultTestResultFolderName = "TestResults";
     private readonly IConfigurationProvider[] _configurationProviders = configurationProviders;
+    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
+    private readonly IFileSystem _fileSystem = fileSystem;
     private string? _resultDirectory;
     private string? _currentWorkingDirectory;
     private string? _testHostWorkingDirectory;
@@ -47,6 +49,12 @@ internal sealed class AggregatedConfiguration(IConfigurationProvider[] configura
         }
     }
 
+    public /* for testing */ void SetResultDirectory(string resultDirectory)
+    {
+        ArgumentGuard.IsNotNull(resultDirectory);
+        _resultDirectory = resultDirectory;
+    }
+
     public /* for testing */ void SetCurrentWorkingDirectory(string workingDirectory)
     {
         ArgumentGuard.IsNotNull(workingDirectory);
@@ -59,11 +67,10 @@ internal sealed class AggregatedConfiguration(IConfigurationProvider[] configura
         _testHostWorkingDirectory = workingDirectory;
     }
 
-    public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(ICommandLineOptions commandLineOptions, IRuntime runtime, ServiceProvider serviceProvider)
+    public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(ICommandLineOptions commandLineOptions, IFileLoggerProvider? fileLoggerProvider)
     {
         // Load Configuration
-        ITestApplicationModuleInfo currentModuleInfo = runtime.GetCurrentModuleInfo();
-        _currentWorkingDirectory = Path.GetDirectoryName(currentModuleInfo.GetCurrentTestApplicationFullPath())!;
+        _currentWorkingDirectory = Path.GetDirectoryName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!;
 
         string? resultDirectory = this[PlatformConfigurationConstants.PlatformResultDirectory];
         if (resultDirectory is null)
@@ -80,9 +87,7 @@ internal sealed class AggregatedConfiguration(IConfigurationProvider[] configura
 
         _resultDirectory ??= Path.Combine(_currentWorkingDirectory, DefaultTestResultFolderName);
 
-        _resultDirectory = Directory.CreateDirectory(_resultDirectory).FullName;
-
-        FileLoggerProvider? fileLoggerProvider = serviceProvider.GetServiceInternal<FileLoggerProvider>();
+        _resultDirectory = _fileSystem.CreateDirectory(_resultDirectory);
 
         // In case of the result directory is overridden by the config file we move logs to it.
         // This can happen in case of VSTest mode where the result directory is set to a different location.

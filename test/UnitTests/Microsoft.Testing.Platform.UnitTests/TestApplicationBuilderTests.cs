@@ -24,7 +24,8 @@ public sealed class TestApplicationBuilderTests : TestBase
     public TestApplicationBuilderTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        var configuration = new AggregatedConfiguration(Array.Empty<IConfigurationProvider>());
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler());
+        var configuration = new AggregatedConfiguration(Array.Empty<IConfigurationProvider>(), testApplicationModuleInfo, new SystemFileSystem());
         configuration.SetCurrentWorkingDirectory(string.Empty);
         configuration.SetCurrentWorkingDirectory(string.Empty);
         _serviceProvider.AddService(configuration);

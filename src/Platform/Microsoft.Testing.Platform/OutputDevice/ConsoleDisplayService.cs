@@ -27,7 +27,7 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
     private readonly List<FileArtifact> _filesArtifact = [];
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource;
     private readonly IConsole _console;
-    private readonly IRuntime _runtime;
+    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo;
     private readonly IAsyncMonitor _asyncMonitor;
     private readonly IRuntimeFeature _runtimeFeature;
     private readonly IEnvironment _environment;
@@ -48,8 +48,7 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
     private bool _bannerDisplayed;
     private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
 
-    public ConsoleOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console, IRuntime runtime,
-        IAsyncMonitor asyncMonitor, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process,
+    public ConsoleOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console, ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process,
         bool isVSTestMode,
         bool isListTests,
         bool isServerMode,
@@ -58,7 +57,7 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
-        _runtime = runtime;
+        _testApplicationModuleInfo = testApplicationModuleInfo;
         _asyncMonitor = asyncMonitor;
         _runtimeFeature = runtimeFeature;
         _environment = environment;
@@ -73,7 +72,6 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
             _logger = _fileLoggerProvider.CreateLogger(GetType().ToString());
         }
 
-        ITestHostControllerInfo testHostControllerInfo = runtime.GetTestHostControllerInfo();
         if (testHostControllerInfo.HasTestHostController)
         {
             if (environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerInfo.GetTestHostControllerPID(true)}") is not null)
@@ -213,7 +211,7 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
 #endif
             }
 
-            string? moduleName = _runtime.GetCurrentModuleInfo().GetCurrentTestApplicationFullPath();
+            string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 #if !NETCOREAPP
             moduleName = TAString.IsNullOrEmpty(moduleName)
                 ? _process.GetCurrentProcess().MainModule.FileName

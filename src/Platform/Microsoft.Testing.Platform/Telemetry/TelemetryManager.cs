@@ -74,23 +74,22 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
         if (!isTelemetryOptedOut && !dontShowLogo)
         {
-            IRuntime runtime = serviceProvider.GetRuntime();
-            IFileSystem fileSystem = serviceProvider.GetFileSystem();
-            IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
-
-            string fileName = Path.ChangeExtension(Path.GetFileName(runtime.GetCurrentModuleInfo().GetCurrentTestApplicationFullPath()), "testingPlatformFirstTimeUseSentinel");
+            ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
+            string fileName = Path.ChangeExtension(Path.GetFileName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), "testingPlatformFirstTimeUseSentinel");
             string? directory = environment.GetEnvironmentVariable("LOCALAPPDATA") ?? environment.GetEnvironmentVariable("HOME");
             if (directory is not null)
             {
                 directory = Path.Combine(directory, "Microsoft", "TestingPlatform");
             }
 
+            IFileSystem fileSystem = serviceProvider.GetFileSystem();
             bool sentinelIsNotPresent =
                 TAString.IsNullOrWhiteSpace(directory)
                 || !fileSystem.Exists(Path.Combine(directory, fileName));
 
             if (!dontShowLogo && sentinelIsNotPresent)
             {
+                IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.TelemetryManagerTelemetryCollectionNotice));
 
                 string? path = null;

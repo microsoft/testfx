@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
 
 using Moq;
 
@@ -16,7 +17,7 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public class ArgumentArityTests : TestBase
 {
     private readonly Mock<IPlatformOutputDevice> _outputDisplayMock = new();
-    private readonly Mock<IRuntime> _runtimeMock = new();
+    private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<IRuntimeFeature> _runtimeFeatureMock = new();
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<IProcessHandler> _processHandlerMock = new();
@@ -46,7 +47,7 @@ public class ArgumentArityTests : TestBase
             Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Option '--zeroArgumentsOption' expects 0 argument for extension 'Microsoft Testing Platform command line provider'.")));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();
@@ -67,7 +68,7 @@ public class ArgumentArityTests : TestBase
             Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Option '--exactlyOneArgumentsOption' expects at most 1 argument(s) for extension 'Microsoft Testing Platform command line provider'.")));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();
@@ -88,7 +89,7 @@ public class ArgumentArityTests : TestBase
             Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Option '--exactlyOneArgumentsOption' expects at least 1 argument(s) for extension 'Microsoft Testing Platform command line provider'.")));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();
@@ -109,7 +110,7 @@ public class ArgumentArityTests : TestBase
         Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Option '--zeroOrOneArgumentsOption' expects at most 1 argument(s) for extension 'Microsoft Testing Platform command line provider'")));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();
@@ -130,7 +131,7 @@ public class ArgumentArityTests : TestBase
             Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Option '--oneOrMoreArgumentsOption' expects at least 1 argument(s) for extension 'Microsoft Testing Platform command line provider'.")));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();
@@ -146,7 +147,7 @@ public class ArgumentArityTests : TestBase
         string[] args = ["--zeroArgumentsOption", "--zeroOrOneArgumentsOption", "--zeroOrMoreArgumentsOption arg2", "--exactlyOneArgumentsOption arg1", "oneOrMoreArgumentsOption arg1"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();

@@ -7,6 +7,8 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Services;
+
 using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;
@@ -15,7 +17,7 @@ namespace Microsoft.Testing.Platform.UnitTests;
 public class CommandLineHandlerTests : TestBase
 {
     private readonly Mock<IPlatformOutputDevice> _outputDisplayMock = new();
-    private readonly Mock<IRuntime> _runtimeMock = new();
+    private readonly Mock<ITestApplicationModuleInfo> _testApplicationModuleInfoMock = new();
     private readonly Mock<IRuntimeFeature> _runtimeFeatureMock = new();
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<IProcessHandler> _processHandlerMock = new();
@@ -24,7 +26,7 @@ public class CommandLineHandlerTests : TestBase
         new PlatformCommandLineProvider(),
     };
 
-    private readonly ICommandLineOptionsProvider[] _extensionCommandLineOptionsProviders = Array.Empty<ICommandLineOptionsProvider>();
+    private readonly ICommandLineOptionsProvider[] _extensionCommandLineOptionsProviders = [];
 
     public CommandLineHandlerTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
@@ -37,7 +39,7 @@ public class CommandLineHandlerTests : TestBase
         string[] args = ["option1", "'a'"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
             .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
@@ -57,10 +59,10 @@ public class CommandLineHandlerTests : TestBase
     public async Task ParseAndValidateAsync_EmptyCommandLineArguments_ReturnsTrue()
     {
         // Arrange
-        string[] args = Array.Empty<string>();
+        string[] args = [];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();
@@ -77,7 +79,7 @@ public class CommandLineHandlerTests : TestBase
         string[] args = ["--help"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = commandLineHandler.IsHelpInvoked();
@@ -94,7 +96,7 @@ public class CommandLineHandlerTests : TestBase
         string[] args = ["--info"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = commandLineHandler.IsInfoInvoked();
@@ -111,7 +113,7 @@ public class CommandLineHandlerTests : TestBase
         string[] args = ["--version"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = commandLineHandler.IsOptionSet("version");
@@ -126,8 +128,8 @@ public class CommandLineHandlerTests : TestBase
     {
         // Arrange
         var optionRecord = new OptionRecord("name", ["value1", "value2"]);
-        var commandLineHandler = new CommandLineHandler(Array.Empty<string>(), new CommandLineParseResult(string.Empty, [optionRecord], Array.Empty<string>(), Array.Empty<string>()),
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+        var commandLineHandler = new CommandLineHandler([], new CommandLineParseResult(string.Empty, [optionRecord], [], []),
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = commandLineHandler.TryGetOptionArgumentList("name", out string[]? optionValue);
@@ -143,7 +145,7 @@ public class CommandLineHandlerTests : TestBase
     public void GetOptionValue_OptionDoesNotExist_ReturnsNull()
     {
         // Arrange
-        string[] args = Array.Empty<string>();
+        string[] args = [];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
@@ -154,7 +156,7 @@ public class CommandLineHandlerTests : TestBase
             });
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = commandLineHandler.TryGetOptionArgumentList("name", out string[]? optionValue);
@@ -167,7 +169,7 @@ public class CommandLineHandlerTests : TestBase
     public async Task ParseAndValidateAsync_DuplicateOption_ReturnsFalse()
     {
         // Arrange
-        string[] args = Array.Empty<string>();
+        string[] args = [];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
             .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) => Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("is used by more than one extension")));
@@ -178,7 +180,7 @@ public class CommandLineHandlerTests : TestBase
             new ExtensionCommandLineProviderMockInvalidConfiguration("userOption"),
         };
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-           extensionCommandLineOptionsProviders, Array.Empty<ICommandLineOptionsProvider>(), _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+           extensionCommandLineOptionsProviders, [], _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();
@@ -197,7 +199,7 @@ public class CommandLineHandlerTests : TestBase
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) => Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Invalid arguments for option '--diagnostic-verbosity': Invalid arguments for --diagnostic-verbosity option. Expected Trace, Debug, Information, Warning, Error, Critical.")));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();
@@ -216,7 +218,7 @@ public class CommandLineHandlerTests : TestBase
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) => Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Option '--help' expects 0 argument for extension 'Microsoft Testing Platform command line provider'.")));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();
@@ -229,7 +231,7 @@ public class CommandLineHandlerTests : TestBase
     public async Task ParseAndValidateAsync_ReservedOptions_ReturnsFalse()
     {
         // Arrange
-        string[] args = Array.Empty<string>();
+        string[] args = [];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) => Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("The option '--help' is reserved and cannot be used by extensions: Microsoft Testing Platform command line provider")));
@@ -239,7 +241,7 @@ public class CommandLineHandlerTests : TestBase
             new ExtensionCommandLineProviderMockReservedOptions(),
         };
         var commandLineHandler = new CommandLineHandler(args, parseResult, extensionCommandLineProvider,
-            _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();
@@ -252,7 +254,7 @@ public class CommandLineHandlerTests : TestBase
     public async Task ParseAndValidateAsync_ReservedOptionsPrefix_ReturnsFalse()
     {
         // Arrange
-        string[] args = Array.Empty<string>();
+        string[] args = [];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) => Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Option --internal-customextension of Microsoft Testing Platform command line provider is using reserved prefix --interna")));
@@ -262,7 +264,7 @@ public class CommandLineHandlerTests : TestBase
             new ExtensionCommandLineProviderMockInvalidConfiguration("--internal-customextension"),
         };
         var commandLineHandler = new CommandLineHandler(args, parseResult, extensionCommandLineProvider,
-            _systemCommandLineOptionsProviders, _runtimeMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
+            _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
         bool result = await commandLineHandler.ParseAndValidateAsync();
@@ -286,7 +288,7 @@ public class CommandLineHandlerTests : TestBase
             new ExtensionCommandLineProviderMockUnknownOption(),
         };
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            extensionCommandLineProvider, _systemCommandLineOptionsProviders, new SystemRuntime(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler()),
+            extensionCommandLineProvider, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object,
             _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -315,7 +317,7 @@ public class CommandLineHandlerTests : TestBase
             new ExtensionCommandLineProviderMockInvalidConfiguration(),
         };
         var commandLineHandler = new CommandLineHandler(args, parseResult,
-            extensionCommandLineProvider, _systemCommandLineOptionsProviders, new SystemRuntime(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler()),
+            extensionCommandLineProvider, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object,
             _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
