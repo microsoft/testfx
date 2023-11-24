@@ -255,7 +255,7 @@ internal class TestHostBuilder : ITestHostBuilder
         // here we ensure to override the result directory if user passed the argument --results-directory in command line.
         // After this check users can get the result directory using IConfiguration["testingPlatform:resultDirectory"] or the
         // extension method helper serviceProvider.GetConfiguration()
-        await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(commandLineOptions, systemRuntime, serviceProvider);
+        await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(commandLineOptions, systemRuntime, systemFileSystem, serviceProvider);
 
         // ======= TOOLS MODE ======== //
         // Add the platform output device to the service provider.

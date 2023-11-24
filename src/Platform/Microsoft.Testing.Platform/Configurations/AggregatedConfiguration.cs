@@ -47,6 +47,12 @@ internal sealed class AggregatedConfiguration(IConfigurationProvider[] configura
         }
     }
 
+    public /* for testing */ void SetResultDirectory(string resultDirectory)
+    {
+        ArgumentGuard.IsNotNull(resultDirectory);
+        _resultDirectory = resultDirectory;
+    }
+
     public /* for testing */ void SetCurrentWorkingDirectory(string workingDirectory)
     {
         ArgumentGuard.IsNotNull(workingDirectory);
@@ -59,7 +65,22 @@ internal sealed class AggregatedConfiguration(IConfigurationProvider[] configura
         _testHostWorkingDirectory = workingDirectory;
     }
 
-    public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(ICommandLineOptions commandLineOptions, IRuntime runtime, ServiceProvider serviceProvider)
+    public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(
+        ICommandLineOptions commandLineOptions,
+        IRuntime runtime,
+        IFileSystem fileSystem,
+        ServiceProvider serviceProvider)
+        => await CheckTestResultsDirectoryOverrideAndCreateItAsync(
+            commandLineOptions,
+            runtime,
+            fileSystem,
+            serviceProvider.GetServiceInternal<FileLoggerProvider>());
+
+    public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(
+        ICommandLineOptions commandLineOptions,
+        IRuntime runtime,
+        IFileSystem fileSystem,
+        IFileLoggerProvider? fileLoggerProvider)
     {
         // Load Configuration
         ITestApplicationModuleInfo currentModuleInfo = runtime.GetCurrentModuleInfo();
@@ -80,9 +101,7 @@ internal sealed class AggregatedConfiguration(IConfigurationProvider[] configura
 
         _resultDirectory ??= Path.Combine(_currentWorkingDirectory, DefaultTestResultFolderName);
 
-        _resultDirectory = Directory.CreateDirectory(_resultDirectory).FullName;
-
-        FileLoggerProvider? fileLoggerProvider = serviceProvider.GetServiceInternal<FileLoggerProvider>();
+        _resultDirectory = fileSystem.CreateDirectory(_resultDirectory);
 
         // In case of the result directory is overridden by the config file we move logs to it.
         // This can happen in case of VSTest mode where the result directory is set to a different location.

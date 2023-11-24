@@ -15,7 +15,7 @@ using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class ServiceProvider : IServiceProvider, ICloneable
+internal class ServiceProvider : IServiceProvider, ICloneable
 {
     private readonly List<object> _services = [];
 

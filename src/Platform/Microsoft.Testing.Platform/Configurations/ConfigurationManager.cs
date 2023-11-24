@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
@@ -16,7 +17,10 @@ internal sealed class ConfigurationManager : IConfigurationManager
 
     public void AddConfigurationSource(Func<IConfigurationSource> source) => _configurationSources.Add(source);
 
-    internal async Task<IConfiguration> BuildAsync(IServiceProvider serviceProvider, FileLoggerProvider? syncFileLoggerProvider)
+    internal async Task<IConfiguration> BuildAsync(IServiceProvider serviceProvider, IFileLoggerProvider? syncFileLoggerProvider)
+        => await BuildAsync(serviceProvider.GetFileSystem(), syncFileLoggerProvider);
+
+    internal async Task<IConfiguration> BuildAsync(IFileSystem fileSystem, IFileLoggerProvider? syncFileLoggerProvider)
     {
         List<IConfigurationProvider> configurationProviders = [];
         JsonConfigurationProvider? defaultJsonConfiguration = null;
@@ -50,7 +54,7 @@ internal sealed class ConfigurationManager : IConfigurationManager
             {
                 if (defaultJsonConfiguration is not null && defaultJsonConfiguration.ConfigurationFile is not null)
                 {
-                    using Stream configFileStream = serviceProvider.GetFileSystem().NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open);
+                    using Stream configFileStream = fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open);
                     StreamReader streamReader = new(configFileStream);
                     await logger.LogTraceAsync($"Configuration file ('{defaultJsonConfiguration.ConfigurationFile}') content:\n{await streamReader.ReadToEndAsync()}");
                 }

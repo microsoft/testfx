@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Logging;
 
 internal sealed class FileLoggerProvider(string logFolder, LogLevel logLevel, string logPrefixName, bool customDirectory, bool syncFlush,
-    IClock clock, ITask task, IConsole console) : ILoggerProvider, IDisposable
+    IClock clock, ITask task, IConsole console) : IFileLoggerProvider, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable

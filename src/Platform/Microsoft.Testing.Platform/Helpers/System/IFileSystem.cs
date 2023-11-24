@@ -7,6 +7,8 @@ internal interface IFileSystem
 {
     bool Exists(string path);
 
+    string CreateDirectory(string path);
+
     Stream NewFileStream(string path, FileMode mode);
 
     Stream NewFileStream(string path, FileMode mode, FileAccess access);
