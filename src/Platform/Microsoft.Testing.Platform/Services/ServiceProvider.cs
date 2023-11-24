@@ -75,7 +75,7 @@ internal class ServiceProvider : IServiceProvider, ICloneable
         return true;
     }
 
-    public /* for testing purposes */ virtual IEnumerable<object> GetServicesInternal(
+    public IEnumerable<object> GetServicesInternal(
         Type serviceType,
         bool stopAtFirst = false,
         bool skipInternalOnlyExtensions = false)

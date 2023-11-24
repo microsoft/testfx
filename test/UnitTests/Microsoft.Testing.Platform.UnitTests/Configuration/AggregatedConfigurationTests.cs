@@ -85,16 +85,12 @@ public class AggregatedConfigurationTests : TestBase
         Mock<IFileSystem> mockFileSystem = new();
         mockFileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns((string path) => path);
 
-        Mock<FileLoggerProvider> mockFileLogger = new();
+        Mock<IFileLoggerProvider> mockFileLogger = new();
         mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
-
-        Mock<ServiceProvider> serviceProviderMock = new();
-        serviceProviderMock.Setup(x => x.GetServicesInternal(typeof(FileLoggerProvider), It.IsAny<bool>(), It.IsAny<bool>()))
-            .Returns(new List<FileLoggerProvider>() { mockFileLogger.Object });
 
         AggregatedConfiguration aggregatedConfiguration = new(Array.Empty<IConfigurationProvider>());
         await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(
-            new FakeCommandLineOptions(ExpectedPath), mockRuntime.Object, mockFileSystem.Object, serviceProviderMock.Object);
+            new FakeCommandLineOptions(ExpectedPath), mockRuntime.Object, mockFileSystem.Object, mockFileLogger.Object);
 
         mockFileSystem.Verify(x => x.CreateDirectory(ExpectedPath), Times.Once);
         mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(ExpectedPath), Times.Once);
@@ -113,17 +109,13 @@ public class AggregatedConfigurationTests : TestBase
         Mock<IFileSystem> mockFileSystem = new();
         mockFileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns((string path) => path);
 
-        Mock<FileLoggerProvider> mockFileLogger = new();
+        Mock<IFileLoggerProvider> mockFileLogger = new();
         mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
-
-        Mock<ServiceProvider> serviceProviderMock = new();
-        serviceProviderMock.Setup(x => x.GetServicesInternal(typeof(FileLoggerProvider), It.IsAny<bool>(), It.IsAny<bool>()))
-            .Returns(new List<FileLoggerProvider>() { mockFileLogger.Object });
 
         AggregatedConfiguration aggregatedConfiguration = new(Array.Empty<IConfigurationProvider>());
         aggregatedConfiguration.SetResultDirectory(ExpectedPath);
         await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(
-            new FakeCommandLineOptions(ExpectedPath), mockRuntime.Object, mockFileSystem.Object, serviceProviderMock.Object);
+            new FakeCommandLineOptions(ExpectedPath), mockRuntime.Object, mockFileSystem.Object, mockFileLogger.Object);
 
         mockFileSystem.Verify(x => x.CreateDirectory(ExpectedPath), Times.Once);
         mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(ExpectedPath), Times.Once);
@@ -142,16 +134,12 @@ public class AggregatedConfigurationTests : TestBase
         Mock<IFileSystem> mockFileSystem = new();
         mockFileSystem.Setup(x => x.CreateDirectory(It.IsAny<string>())).Returns((string path) => path);
 
-        Mock<FileLoggerProvider> mockFileLogger = new();
+        Mock<IFileLoggerProvider> mockFileLogger = new();
         mockFileLogger.Setup(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(It.IsAny<string>())).Callback(() => { });
-
-        Mock<ServiceProvider> serviceProviderMock = new();
-        serviceProviderMock.Setup(x => x.GetServicesInternal(typeof(FileLoggerProvider), It.IsAny<bool>(), It.IsAny<bool>()))
-            .Returns(new List<FileLoggerProvider>() { mockFileLogger.Object });
 
         AggregatedConfiguration aggregatedConfiguration = new(Array.Empty<IConfigurationProvider>());
         await aggregatedConfiguration.CheckTestResultsDirectoryOverrideAndCreateItAsync(
-            new FakeCommandLineOptions(ExpectedPath, bypass: true), mockRuntime.Object, mockFileSystem.Object, serviceProviderMock.Object);
+            new FakeCommandLineOptions(ExpectedPath, bypass: true), mockRuntime.Object, mockFileSystem.Object, mockFileLogger.Object);
 
         mockFileSystem.Verify(x => x.CreateDirectory(@"a\b\TestResults"), Times.Once);
         mockFileLogger.Verify(x => x.CheckLogFolderAndMoveToTheNewIfNeededAsync(@"a\b\TestResults"), Times.Once);

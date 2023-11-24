@@ -19,9 +19,13 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestGroup]
 public class ConfigurationManagerTests : TestBase
 {
+    private readonly ServiceProvider _serviceProvider;
+
     public ConfigurationManagerTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
+        _serviceProvider = new();
+        _serviceProvider.AddService(new SystemFileSystem());
     }
 
     [ArgumentsProvider(nameof(GetConfigurationValueFromJsonData))]
@@ -36,7 +40,7 @@ public class ConfigurationManagerTests : TestBase
             new JsonConfigurationSource(
                 new SystemRuntime(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler()),
                 fileSystem.Object, null));
-        IConfiguration configuration = await configurationManager.BuildAsync(new ServiceProvider(), null);
+        IConfiguration configuration = await configurationManager.BuildAsync(fileSystem.Object, null);
         Assert.AreEqual(result, configuration[key], $"Expected '{result}' found '{configuration[key]}'");
     }
 
@@ -67,7 +71,7 @@ public class ConfigurationManagerTests : TestBase
             new JsonConfigurationSource(
                 new SystemRuntime(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler()),
                 fileSystem.Object, null));
-        await Assert.ThrowsAsync<Exception>(() => configurationManager.BuildAsync(new ServiceProvider(), null));
+        await Assert.ThrowsAsync<Exception>(() => configurationManager.BuildAsync(fileSystem.Object, null));
     }
 
     [ArgumentsProvider(nameof(GetConfigurationValueFromJsonData))]
@@ -82,13 +86,10 @@ public class ConfigurationManagerTests : TestBase
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
             .Returns(new MemoryStream(bytes));
 
-        Mock<ServiceProvider> serviceProviderMock = new();
-        serviceProviderMock.Setup(x => x.GetServicesInternal(typeof(IFileSystem), It.IsAny<bool>(), It.IsAny<bool>())).Returns(new List<IFileSystem>() { fileSystem.Object });
-
         Mock<ILogger> loggerMock = new();
         loggerMock.Setup(x => x.IsEnabled(LogLevel.Trace)).Returns(true);
 
-        Mock<ILoggerProvider> loggerProviderMock = new();
+        Mock<IFileLoggerProvider> loggerProviderMock = new();
         loggerProviderMock.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(loggerMock.Object);
 
         ConfigurationManager configurationManager = new();
@@ -98,7 +99,7 @@ public class ConfigurationManagerTests : TestBase
                 fileSystem.Object, null));
 
         IConfiguration configuration = await configurationManager.BuildAsync(
-            serviceProviderMock.Object,
+            fileSystem.Object,
             loggerProviderMock.Object);
         Assert.AreEqual(result, configuration[key], $"Expected '{result}' found '{configuration[key]}'");
 
@@ -107,12 +108,10 @@ public class ConfigurationManagerTests : TestBase
 
     public async ValueTask BuildAsync_EmptyConfigurationSources_ThrowsException()
     {
-        Mock<ServiceProvider> mockServiceProvider = new();
-
         ConfigurationManager configurationManager = new();
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => configurationManager.BuildAsync(
-                mockServiceProvider.Object,
+                _serviceProvider,
                 null));
     }
 
@@ -121,14 +120,12 @@ public class ConfigurationManagerTests : TestBase
         Mock<IConfigurationSource> mockConfigurationSource = new();
         mockConfigurationSource.Setup(x => x.IsEnabledAsync()).ReturnsAsync(false);
 
-        Mock<ServiceProvider> mockServiceProvider = new();
-
         ConfigurationManager configurationManager = new();
         configurationManager.AddConfigurationSource(() => mockConfigurationSource.Object);
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => configurationManager.BuildAsync(
-                mockServiceProvider.Object,
+                _serviceProvider,
                 null));
 
         mockConfigurationSource.Verify(x => x.IsEnabledAsync(), Times.Once);
@@ -138,8 +135,6 @@ public class ConfigurationManagerTests : TestBase
     {
         Mock<IConfigurationProvider> mockConfigurationProvider = new();
         mockConfigurationProvider.Setup(x => x.LoadAsync()).Callback(() => { });
-
-        Mock<ServiceProvider> mockServiceProvider = new();
 
         Mock<FakeConfigurationSource> fakeConfigurationSource = new();
         fakeConfigurationSource.Setup(x => x.IsEnabledAsync()).ReturnsAsync(true);
@@ -151,7 +146,7 @@ public class ConfigurationManagerTests : TestBase
 
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => configurationManager.BuildAsync(
-                mockServiceProvider.Object,
+                _serviceProvider,
                 null));
 
         fakeConfigurationSource.Verify(x => x.IsEnabledAsync(), Times.Once);
@@ -159,9 +154,7 @@ public class ConfigurationManagerTests : TestBase
     }
 }
 
-#pragma warning disable CA1852
 internal class FakeConfigurationSource : IConfigurationSource, IAsyncInitializableExtension
-#pragma warning restore CA1852
 {
     public string Uid => nameof(FakeConfigurationSource);
 
