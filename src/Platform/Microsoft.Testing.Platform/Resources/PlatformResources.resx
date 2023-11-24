@@ -229,7 +229,6 @@
   <data name="ProcessHasNotYetExitedErrorMessage" xml:space="preserve">
     <value>Process should have exited before we can determine this value</value>
   </data>
-</root>
   <data name="CannotStartProcessErrorMessage" xml:space="preserve">
     <value>Cannot start process '{0}'</value>
   </data>
