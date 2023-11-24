@@ -196,6 +196,92 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} environment variable: &apos;{1}&apos;.
+        /// </summary>
+        internal static string TelemetryManagerEnvironmentVariableValue {
+            get {
+                return ResourceManager.GetString("TelemetryManagerEnvironmentVariableValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not write sentinel file for telemetry to path: &apos;{0}&apos;..
+        /// </summary>
+        internal static string TelemetryManagerFailedToWriteSentinelFile {
+            get {
+                return ResourceManager.GetString("TelemetryManagerFailedToWriteSentinelFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;unknown&gt;.
+        /// </summary>
+        internal static string TelemetryManagerSentinelFileUnknownPath {
+            get {
+                return ResourceManager.GetString("TelemetryManagerSentinelFileUnknownPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Telemetry
+        ///---------
+        ///Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
+        ///You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to &apos;1&apos; or &apos;true&apos; using your favorite shell.
+        ///
+        ///Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry.
+        /// </summary>
+        internal static string TelemetryManagerTelemetryCollectionNotice {
+            get {
+                return ResourceManager.GetString("TelemetryManagerTelemetryCollectionNotice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Telemetry collector provider: &apos;{0}&apos;.
+        /// </summary>
+        internal static string TelemetryManagerTelemetryCollectorProvider {
+            get {
+                return ResourceManager.GetString("TelemetryManagerTelemetryCollectorProvider", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Telemetry is &apos;{0}&apos;.
+        /// </summary>
+        internal static string TelemetryManagerTelemetryStatus {
+            get {
+                return ResourceManager.GetString("TelemetryManagerTelemetryStatus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DISABLED.
+        /// </summary>
+        internal static string TelemetryManagerTelemetryStatusDisabled {
+            get {
+                return ResourceManager.GetString("TelemetryManagerTelemetryStatusDisabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ENABLED.
+        /// </summary>
+        internal static string TelemetryManagerTelemetryStatusEnabled {
+            get {
+                return ResourceManager.GetString("TelemetryManagerTelemetryStatusEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TestApplicationOptions.EnableTelemetry: {0}.
+        /// </summary>
+        internal static string TelemetryManagerTestApplicationOptionsTelemetryEnabled {
+            get {
+                return ResourceManager.GetString("TelemetryManagerTestApplicationOptionsTelemetryEnabled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An &apos;ITestFrameworkInvoker&apos; factory is already set.
         /// </summary>
         internal static string TestAdapterInvokerFactoryAlreadySetErrorMessage {

@@ -214,4 +214,34 @@
   <data name="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage" xml:space="preserve">
     <value>An 'ITestExecutionFilterFactory' factory is already set</value>
   </data>
+  <data name="TelemetryManagerEnvironmentVariableValue" xml:space="preserve">
+    <value>{0} environment variable: '{1}'</value>
+  </data>
+  <data name="TelemetryManagerFailedToWriteSentinelFile" xml:space="preserve">
+    <value>Could not write sentinel file for telemetry to path: '{0}'.</value>
+  </data>
+  <data name="TelemetryManagerTelemetryCollectionNotice" xml:space="preserve">
+    <value>Telemetry
+---------
+Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
+You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
+
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</value>
+    <comment>Please respect the text formatting and do not translate the names of the environment variables (TESTINGPLATFORM_TELEMETRY_OPTOUT, DOTNET_CLI_TELEMETRY_OPTOUT) or the 'true' value.</comment>
+  </data>
+  <data name="TelemetryManagerTelemetryCollectorProvider" xml:space="preserve">
+    <value>Telemetry collector provider: '{0}'</value>
+  </data>
+  <data name="TelemetryManagerTelemetryStatus" xml:space="preserve">
+    <value>Telemetry is '{0}'</value>
+  </data>
+  <data name="TelemetryManagerTelemetryStatusDisabled" xml:space="preserve">
+    <value>DISABLED</value>
+  </data>
+  <data name="TelemetryManagerTelemetryStatusEnabled" xml:space="preserve">
+    <value>ENABLED</value>
+  </data>
+  <data name="TelemetryManagerTestApplicationOptionsTelemetryEnabled" xml:space="preserve">
+    <value>TestApplicationOptions.EnableTelemetry: {0}</value>
+  </data>
 </root>

@@ -1,12 +1,15 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Telemetry;
@@ -38,16 +41,16 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         bool isTelemetryOptedOut = !testApplicationOptions.EnableTelemetry;
 
         ILogger<TelemetryManager> logger = loggerFactory.CreateLogger<TelemetryManager>();
-        await logger.LogInformationAsync($"TestApplicationOptions.EnableTelemetry: {testApplicationOptions.EnableTelemetry}");
+        await logger.LogInformationAsync(string.Format(CultureInfo.InvariantCulture, PlatformResources.TelemetryManagerTestApplicationOptionsTelemetryEnabled, testApplicationOptions.EnableTelemetry));
 
         // If the environment variable is not set or is set to 0, telemetry is opted in.
         IEnvironment environment = serviceProvider.GetEnvironment();
         string? telemetryOptOut = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT);
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT} environment variable: '{telemetryOptOut}'");
+        await logger.LogInformationAsync(string.Format(CultureInfo.InvariantCulture, PlatformResources.TelemetryManagerEnvironmentVariableValue, EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, telemetryOptOut));
         isTelemetryOptedOut = (telemetryOptOut is not null and ("1" or "true")) || isTelemetryOptedOut;
 
         string? cli_telemetryOptOut = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT);
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT} environment variable: '{cli_telemetryOptOut}'");
+        await logger.LogInformationAsync(string.Format(CultureInfo.InvariantCulture, PlatformResources.TelemetryManagerEnvironmentVariableValue, EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, cli_telemetryOptOut));
         isTelemetryOptedOut = (cli_telemetryOptOut is not null and ("1" or "true")) || isTelemetryOptedOut;
 
         // NO_LOGO
@@ -57,14 +60,17 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         bool dontShowLogo = commandLineOptions.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
 
         string? noBanner = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER} environment variable: '{noBanner}'");
+        await logger.LogInformationAsync(string.Format(CultureInfo.InvariantCulture, PlatformResources.TelemetryManagerEnvironmentVariableValue, EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER, noBanner));
         dontShowLogo = (noBanner is not null and ("1" or "true")) || dontShowLogo;
 
         string? dotnet_noLogo = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.DOTNET_NOLOGO} environment variable: '{dotnet_noLogo}'");
+        await logger.LogInformationAsync(string.Format(CultureInfo.InvariantCulture, PlatformResources.TelemetryManagerEnvironmentVariableValue, EnvironmentVariableConstants.DOTNET_NOLOGO, dotnet_noLogo));
         dontShowLogo = (dotnet_noLogo is not null and ("1" or "true")) || dontShowLogo;
 
-        await logger.LogInformationAsync($"Telemetry is '{(!isTelemetryOptedOut ? "ENABLED" : "DISABLED")}'");
+        await logger.LogInformationAsync(string.Format(
+            CultureInfo.InvariantCulture,
+            PlatformResources.TelemetryManagerTelemetryStatus,
+            !isTelemetryOptedOut ? PlatformResources.TelemetryManagerTelemetryStatusEnabled : PlatformResources.TelemetryManagerTelemetryStatusDisabled));
 
         if (!isTelemetryOptedOut && !dontShowLogo)
         {
@@ -85,17 +91,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
             if (!dontShowLogo && sentinelIsNotPresent)
             {
-                string telemetryNotice =
-                    """
-                    Telemetry
-                    ---------
-                    Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
-                    You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
-
-                    Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry
-                    """;
-
-                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(telemetryNotice));
+                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.TelemetryManagerTelemetryCollectionNotice));
 
                 string? path = null;
                 try
@@ -114,7 +110,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
                 }
                 catch (Exception exception) when (exception is IOException or SystemException)
                 {
-                    await logger.LogErrorAsync($"Could not write sentinel file for telemetry to path,'{path ?? "<unknown>"}'.", exception);
+                    await logger.LogErrorAsync(string.Format(CultureInfo.InvariantCulture, PlatformResources.TelemetryManagerFailedToWriteSentinelFile, path ?? PlatformResources.TelemetryManagerSentinelFileUnknownPath), exception);
                 }
             }
         }
@@ -134,7 +130,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
         if (!isTelemetryOptedOut)
         {
-            await logger.LogInformationAsync($"Telemetry collector provider: '{telemetryCollector.GetType()}'");
+            await logger.LogInformationAsync(string.Format(CultureInfo.InvariantCulture, PlatformResources.TelemetryManagerTelemetryCollectorProvider, telemetryCollector.GetType()));
         }
 
         return telemetryCollector;
