@@ -64,17 +64,17 @@
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
-        <target state="new">Cannot find service of type '{0}'</target>
+        <target state="translated">'{0}' 型のサービスが見つかりません</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderServiceAlreadyRegistered">
         <source>Instance of type '{0}' is already registered</source>
-        <target state="new">Instance of type '{0}' is already registered</target>
+        <target state="translated">'{0}' 型のインスタンスは既に登録されています</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
-        <target state="new">Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</target>
+        <target state="translated">'ITestFramework' 型のインスタンスは、サービス プロバイダーを介して登録することはできません。'ITestApplicationBuilder.RegisterTestFramework' を介して登録する必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
         <source>The application has already been built</source>
-        <target state="new">The application has already been built</target>
+        <target state="translated">アプリケーションは既にビルドされています</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
@@ -99,27 +99,27 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
         <source>The test framework capabilities factory has already been registered</source>
-        <target state="new">The test framework capabilities factory has already been registered</target>
+        <target state="translated">テスト フレームワーク機能ファクトリは既に登録されています</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</source>
-        <target state="new">The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</target>
+        <target state="translated">テスト フレームワーク アダプターが登録されていません。'RegisterTestFrameworkAdapter' を使用して登録する</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
         <source>Determine the result of the test application execution</source>
-        <target state="new">Determine the result of the test application execution</target>
+        <target state="translated">テスト アプリケーションの実行結果を判断します</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDisplayName">
         <source>Test application result</source>
-        <target state="new">Test application result</target>
+        <target state="translated">テスト アプリケーションの結果</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
-        <target state="new">VSTest mode only supports a single TestApplicationBuilder per process</target>
+        <target state="translated">VSTest モードは、プロセスごとに 1 つの TestApplicationBuilder のみをサポートします</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
