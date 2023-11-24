@@ -70,6 +70,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot start process &apos;{0}&apos;.
+        /// </summary>
+        internal static string CannotStartProcessErrorMessage {
+            get {
+                return ResourceManager.GetString("CannotStartProcessErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The same instance of &apos;CompositeExtensonFactory&apos; is already registered.
         /// </summary>
         internal static string CompositeServiceFactoryInstanceAlreadyRegistered {
@@ -106,6 +115,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Provider &apos;{0}&apos; (UID: {1}) failed with error: {2}.
+        /// </summary>
+        internal static string EnvironmentVariableProviderFailedWithError {
+            get {
+                return ResourceManager.GetString("EnvironmentVariableProviderFailedWithError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Extension of type &apos;{0}&apos; is not implementing the required &apos;{1}&apos; interface.
         /// </summary>
         internal static string ExtensionDoesNotImplementGivenInterfaceErrorMessage {
@@ -120,6 +138,15 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string ExtensionWithSameUidAlreadyRegisteredErrorMessage {
             get {
                 return ResourceManager.GetString("ExtensionWithSameUidAlreadyRegisteredErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The following &apos;ITestHostEnvironmentVariableProvider&apos; providers rejected the final environment variables setup:.
+        /// </summary>
+        internal static string GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage {
+            get {
+                return ResourceManager.GetString("GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage", resourceCulture);
             }
         }
         
@@ -277,11 +304,29 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Method &apos;{0}&apos; should not have been called on this proxy object.
+        /// </summary>
+        internal static string TestFrameworkProxyApiShouldNotBeCalled {
+            get {
+                return ResourceManager.GetString("TestFrameworkProxyApiShouldNotBeCalled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test adapter test session failure.
         /// </summary>
         internal static string TestHostAdapterInvokerFailedTestSessionErrorMessage {
             get {
                 return ResourceManager.GetString("TestHostAdapterInvokerFailedTestSessionErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test application process didn&apos;t exit gracefully, exit code is &apos;{0}&apos;.
+        /// </summary>
+        internal static string TestProcessDidNotExitGracefullyErrorMessage {
+            get {
+                return ResourceManager.GetString("TestProcessDidNotExitGracefullyErrorMessage", resourceCulture);
             }
         }
         

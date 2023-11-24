@@ -18,6 +18,7 @@ using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHostControllers;
@@ -130,22 +131,18 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             if (failedValidations.Count > 0)
             {
-                StringBuilder errorMessageBuilder = new();
-                errorMessageBuilder.AppendLine("TestHost environment variable providers refused resulting setup.");
+                StringBuilder displayErrorMessageBuilder = new();
+                StringBuilder logErrorMessageBuilder = new();
+                displayErrorMessageBuilder.AppendLine(PlatformResources.GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage);
+                logErrorMessageBuilder.AppendLine("The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:");
                 foreach ((IExtension extension, string errorMessage) in failedValidations)
                 {
-#pragma warning disable SA1114 // Parameter list should follow declaration
-                    errorMessageBuilder.AppendLine(
-#if NETCOREAPP
-                        CultureInfo.InvariantCulture,
-#endif
-                        $"Extension '[{extension.Uid}] {extension.DisplayName}' failed with error: {errorMessage}");
-#pragma warning restore SA1114 // Parameter list should follow declaration
+                    displayErrorMessageBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.EnvironmentVariableProviderFailedWithError, extension.DisplayName, extension.Uid, errorMessage));
+                    displayErrorMessageBuilder.AppendLine(CultureInfo.InvariantCulture, $"Provider '{extension.DisplayName}' (UID: {extension.Uid}) failed with error: {errorMessage}");
                 }
 
-                string finalErrorString = errorMessageBuilder.ToString();
-                await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(finalErrorString));
-                await _logger.LogErrorAsync(finalErrorString);
+                await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(displayErrorMessageBuilder.ToString()));
+                await _logger.LogErrorAsync(logErrorMessageBuilder.ToString());
                 return ExitCodes.InvalidPlatformSetup;
             }
 
@@ -185,7 +182,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             // Launch the test host process
             await _logger.LogDebugAsync($"Starting test host process");
             IProcess testHostProcess = process.Start(processStartInfo)
-                ?? throw new InvalidOperationException($"Failed to start process '{processStartInfo}'");
+                ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotStartProcessErrorMessage, processStartInfo.FileName));
 
             testHostProcess.Exited += (sender, e) =>
             {
@@ -227,7 +224,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
                 if (_testHostPID is null)
                 {
-                    throw new InvalidOperationException("Unexpected test host pid unknown, test host didn't correctly start.");
+                    throw ExceptionUtils.Unreachable();
                 }
 
                 var testHostProcessInformation = new TestHostProcessInformation(_testHostPID.Value);
@@ -251,7 +248,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
                 if (_testHostPID is null)
                 {
-                    throw new InvalidOperationException("Unexpected test host pid unknown, test host didn't correctly start.");
+                    throw ExceptionUtils.Unreachable();
                 }
 
                 var testHostProcessInformation = new TestHostProcessInformation(_testHostPID.Value, testHostProcess.ExitCode, _testHostGracefullyClosed);
@@ -284,15 +281,11 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             if (!_testHostGracefullyClosed && !abortRun.IsCancellationRequested)
             {
-                await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText($"Test host process didn't exit gracefully, exit code: {exitCode}"));
+                await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(string.Format(CultureInfo.InvariantCulture, PlatformResources.TestProcessDidNotExitGracefullyErrorMessage, exitCode)));
             }
 
             await _logger.LogInformationAsync($"TestHostControllersTestHost ended with exit code '{exitCode}' (real test host exit code '{testHostProcess?.ExitCode}')' in '{consoleRunStarted.Elapsed}'");
-#if NETCOREAPP
             await DisposeHelper.DisposeAsync(testHostControllerIpc);
-#else
-            testHostControllerIpc?.Dispose();
-#endif
         }
         finally
         {
@@ -303,7 +296,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         {
             if (extensionInformation is null)
             {
-                throw new InvalidOperationException("Unexpected null extensionsInformation");
+                throw ExceptionUtils.Unreachable();
             }
 
             DateTimeOffset consoleRunStop = _clock.UtcNow;

@@ -214,4 +214,19 @@
   <data name="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage" xml:space="preserve">
     <value>An 'ITestExecutionFilterFactory' factory is already set</value>
   </data>
+  <data name="CannotStartProcessErrorMessage" xml:space="preserve">
+    <value>Cannot start process '{0}'</value>
+  </data>
+  <data name="EnvironmentVariableProviderFailedWithError" xml:space="preserve">
+    <value>Provider '{0}' (UID: {1}) failed with error: {2}</value>
+  </data>
+  <data name="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage" xml:space="preserve">
+    <value>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</value>
+  </data>
+  <data name="TestFrameworkProxyApiShouldNotBeCalled" xml:space="preserve">
+    <value>Method '{0}' should not have been called on this proxy object</value>
+  </data>
+  <data name="TestProcessDidNotExitGracefullyErrorMessage" xml:space="preserve">
+    <value>Test application process didn't exit gracefully, exit code is '{0}'</value>
+  </data>
 </root>
