@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.TestHostControllers;
 
@@ -26,10 +27,11 @@ internal class TestHostProcessInformation : ITestHostProcessInformation
 
     public int ExitCode
         => _exitCode is null
-            ? throw new InvalidOperationException("Process must exit before requested information can be determined.")
+            ? throw new InvalidOperationException(PlatformResources.ProcessHasNotYetExitedErrorMessage)
             : _exitCode.Value;
 
-    public bool HasExitedGracefully => _hasExitedGracefully is null
-        ? throw new InvalidOperationException("Process must exit before requested information can be determined.")
-        : _hasExitedGracefully.Value;
+    public bool HasExitedGracefully
+        => _hasExitedGracefully is null
+            ? throw new InvalidOperationException(PlatformResources.ProcessHasNotYetExitedErrorMessage)
+            : _hasExitedGracefully.Value;
 }

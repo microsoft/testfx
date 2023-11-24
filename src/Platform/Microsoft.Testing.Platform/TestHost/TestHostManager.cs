@@ -141,7 +141,7 @@ internal sealed class TestHostManager : ITestHostManager
         ArgumentGuard.IsNotNull(compositeServiceFactory);
         if (_dataConsumersCompositeServiceFactories.Contains(compositeServiceFactory))
         {
-            throw new InvalidOperationException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
+            throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
         }
 
         _dataConsumersCompositeServiceFactories.Add(compositeServiceFactory);
@@ -239,7 +239,7 @@ internal sealed class TestHostManager : ITestHostManager
         ArgumentGuard.IsNotNull(compositeServiceFactory);
         if (_testSessionLifetimeHandlerCompositeFactories.Contains(compositeServiceFactory))
         {
-            throw new InvalidOperationException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
+            throw new ArgumentException(PlatformResources.CompositeServiceFactoryInstanceAlreadyRegistered);
         }
 
         _testSessionLifetimeHandlerCompositeFactories.Add(compositeServiceFactory);
