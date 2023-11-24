@@ -11,16 +11,15 @@ using static Microsoft.Testing.Platform.Configurations.JsonConfigurationSource;
 
 namespace Microsoft.Testing.Platform.Configurations;
 
-internal sealed class ConfigurationManager : IConfigurationManager
+internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo) : IConfigurationManager
 {
     private readonly List<Func<IConfigurationSource>> _configurationSources = [];
+    private readonly IFileSystem _fileSystem = fileSystem;
+    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
 
     public void AddConfigurationSource(Func<IConfigurationSource> source) => _configurationSources.Add(source);
 
-    internal async Task<IConfiguration> BuildAsync(IServiceProvider serviceProvider, IFileLoggerProvider? syncFileLoggerProvider)
-        => await BuildAsync(serviceProvider.GetFileSystem(), syncFileLoggerProvider);
-
-    internal async Task<IConfiguration> BuildAsync(IFileSystem fileSystem, IFileLoggerProvider? syncFileLoggerProvider)
+    internal async Task<IConfiguration> BuildAsync(IFileLoggerProvider? syncFileLoggerProvider)
     {
         List<IConfigurationProvider> configurationProviders = [];
         JsonConfigurationProvider? defaultJsonConfiguration = null;
@@ -54,7 +53,7 @@ internal sealed class ConfigurationManager : IConfigurationManager
             {
                 if (defaultJsonConfiguration is not null && defaultJsonConfiguration.ConfigurationFile is not null)
                 {
-                    using Stream configFileStream = fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open);
+                    using Stream configFileStream = _fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open);
                     StreamReader streamReader = new(configFileStream);
                     await logger.LogTraceAsync($"Configuration file ('{defaultJsonConfiguration.ConfigurationFile}') content:\n{await streamReader.ReadToEndAsync()}");
                 }
@@ -63,6 +62,6 @@ internal sealed class ConfigurationManager : IConfigurationManager
 
         return defaultJsonConfiguration is null
             ? throw new InvalidOperationException(PlatformResources.ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage)
-            : new AggregatedConfiguration(configurationProviders.ToArray());
+            : new AggregatedConfiguration(configurationProviders.ToArray(), _testApplicationModuleInfo, _fileSystem);
     }
 }

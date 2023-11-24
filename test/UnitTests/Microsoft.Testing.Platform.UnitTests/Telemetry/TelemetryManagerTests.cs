@@ -43,17 +43,15 @@ public sealed class TelemetryManagerTests : TestBase
         var outputDevice = new Mock<IOutputDevice>();
         var commandLineOptions = new Mock<ICommandLineOptions>();
 
-        var runtimeMock = new Mock<IRuntime>();
         var testApplicationModuleInfoMock = new Mock<ITestApplicationModuleInfo>();
         testApplicationModuleInfoMock.Setup(a => a.GetCurrentTestApplicationFullPath()).Returns("directory/myExe.exe");
-        runtimeMock.Setup(r => r.GetCurrentModuleInfo()).Returns(testApplicationModuleInfoMock.Object);
 
         var serviceProvider = new ServiceProvider();
         serviceProvider.AddService(commandLineOptions.Object);
         serviceProvider.AddService(fileSystemMock.Object);
         serviceProvider.AddService(environmentMock.Object);
         serviceProvider.AddService(outputDevice.Object);
-        serviceProvider.AddService(runtimeMock.Object);
+        serviceProvider.AddService(testApplicationModuleInfoMock.Object);
 
         var loggerFactoryMock = new Mock<ILoggerFactory>();
         loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
@@ -97,17 +95,15 @@ public sealed class TelemetryManagerTests : TestBase
         var outputDevice = new Mock<IOutputDevice>();
         var commandLineOptions = new Mock<ICommandLineOptions>();
 
-        var runtimeMock = new Mock<IRuntime>();
         var testApplicationModuleInfoMock = new Mock<ITestApplicationModuleInfo>();
         testApplicationModuleInfoMock.Setup(a => a.GetCurrentTestApplicationFullPath()).Returns("directory/myExe.exe");
-        runtimeMock.Setup(r => r.GetCurrentModuleInfo()).Returns(testApplicationModuleInfoMock.Object);
 
         var serviceProvider = new ServiceProvider();
         serviceProvider.AddService(commandLineOptions.Object);
         serviceProvider.AddService(fileSystemMock.Object);
         serviceProvider.AddService(environmentMock.Object);
         serviceProvider.AddService(outputDevice.Object);
-        serviceProvider.AddService(runtimeMock.Object);
+        serviceProvider.AddService(testApplicationModuleInfoMock.Object);
 
         var loggerFactoryMock = new Mock<ILoggerFactory>();
         loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
@@ -149,17 +145,15 @@ public sealed class TelemetryManagerTests : TestBase
         environmentMock.Setup(s => s.GetEnvironmentVariable(variable)).Returns("sentinelDir");
         var outputDevice = new Mock<IOutputDevice>();
 
-        var runtimeMock = new Mock<IRuntime>();
         var testApplicationModuleInfoMock = new Mock<ITestApplicationModuleInfo>();
         testApplicationModuleInfoMock.Setup(a => a.GetCurrentTestApplicationFullPath()).Returns("directory/myExe.exe");
-        runtimeMock.Setup(r => r.GetCurrentModuleInfo()).Returns(testApplicationModuleInfoMock.Object);
 
         var serviceProvider = new ServiceProvider();
         serviceProvider.AddService(commandLineOptions.Object);
         serviceProvider.AddService(fileSystemMock.Object);
         serviceProvider.AddService(environmentMock.Object);
         serviceProvider.AddService(outputDevice.Object);
-        serviceProvider.AddService(runtimeMock.Object);
+        serviceProvider.AddService(testApplicationModuleInfoMock.Object);
 
         var loggerFactoryMock = new Mock<ILoggerFactory>();
         loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
@@ -213,17 +207,15 @@ public sealed class TelemetryManagerTests : TestBase
         environmentMock.Setup(s => s.GetEnvironmentVariable(variable)).Returns("sentinelDir");
         var outputDevice = new Mock<IOutputDevice>();
 
-        var runtimeMock = new Mock<IRuntime>();
         var testApplicationModuleInfoMock = new Mock<ITestApplicationModuleInfo>();
         testApplicationModuleInfoMock.Setup(a => a.GetCurrentTestApplicationFullPath()).Returns("directory/myExe.exe");
-        runtimeMock.Setup(r => r.GetCurrentModuleInfo()).Returns(testApplicationModuleInfoMock.Object);
 
         var serviceProvider = new ServiceProvider();
         serviceProvider.AddService(commandLineOptions.Object);
         serviceProvider.AddService(fileSystemMock.Object);
         serviceProvider.AddService(environmentMock.Object);
         serviceProvider.AddService(outputDevice.Object);
-        serviceProvider.AddService(runtimeMock.Object);
+        serviceProvider.AddService(testApplicationModuleInfoMock.Object);
 
         var loggerFactoryMock = new Mock<ILoggerFactory>();
         loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
@@ -281,17 +273,15 @@ public sealed class TelemetryManagerTests : TestBase
         var commandLineOptions = new Mock<ICommandLineOptions>();
         commandLineOptions.Setup(c => c.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey)).Returns(true);
 
-        var runtimeMock = new Mock<IRuntime>();
         var testApplicationModuleInfoMock = new Mock<ITestApplicationModuleInfo>();
         testApplicationModuleInfoMock.Setup(a => a.GetCurrentTestApplicationFullPath()).Returns("directory/myExe.exe");
-        runtimeMock.Setup(r => r.GetCurrentModuleInfo()).Returns(testApplicationModuleInfoMock.Object);
 
         var serviceProvider = new ServiceProvider();
         serviceProvider.AddService(commandLineOptions.Object);
         serviceProvider.AddService(fileSystemMock.Object);
         serviceProvider.AddService(environmentMock.Object);
         serviceProvider.AddService(outputDevice.Object);
-        serviceProvider.AddService(runtimeMock.Object);
+        serviceProvider.AddService(testApplicationModuleInfoMock.Object);
 
         var loggerFactoryMock = new Mock<ILoggerFactory>();
         loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);

@@ -32,47 +32,35 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal class TestHostBuilder : ITestHostBuilder
+internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
-    public TestHostBuilder()
-    {
-        Configuration = new ConfigurationManager();
-        Logging = new LoggingManager();
-        OutputDisplay = new PlatformOutputDeviceManager();
-        CommandLine = new CommandLineManager();
-        TestHostControllers = new TestHostControllersManager();
-        Telemetry = new TelemetryManager();
-        Tools = new ToolsManager();
-        ServerMode = new ServerModeManager();
-        TestHost = new TestHostManager();
-        TestHostOrchestratorManager = new TestHostOrchestratorManager();
-    }
+    private readonly IFileSystem _fileSystem = fileSystem;
+    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
 
     public ITestFrameworkManager? TestFramework { get; set; }
 
-    public ITestHostManager TestHost { get; }
+    public ITestHostManager TestHost { get; } = new TestHostManager();
 
-    public IConfigurationManager Configuration { get; }
+    public IConfigurationManager Configuration { get; } = new ConfigurationManager(fileSystem, testApplicationModuleInfo);
 
-    public ILoggingManager Logging { get; }
+    public ILoggingManager Logging { get; } = new LoggingManager();
 
-    public IPlatformOutputDeviceManager OutputDisplay { get; }
+    public IPlatformOutputDeviceManager OutputDisplay { get; } = new PlatformOutputDeviceManager();
 
-    public ICommandLineManager CommandLine { get; }
+    public ICommandLineManager CommandLine { get; } = new CommandLineManager(runtimeFeature, environment, processHandler, testApplicationModuleInfo);
 
-    public ITelemetryManager Telemetry { get; }
+    public ITelemetryManager Telemetry { get; } = new TelemetryManager();
 
-    public IServerModeManager ServerMode { get; }
+    public IServerModeManager ServerMode { get; } = new ServerModeManager();
 
-    public ITestHostControllersManager TestHostControllers { get; }
+    public ITestHostControllersManager TestHostControllers { get; } = new TestHostControllersManager();
 
-    public IToolsManager Tools { get; }
+    public IToolsManager Tools { get; } = new ToolsManager();
 
-    public ITestHostOrchestratorManager TestHostOrchestratorManager { get; }
+    public ITestHostOrchestratorManager TestHostOrchestratorManager { get; } = new TestHostOrchestratorManager();
 
     public async Task<ITestHost> BuildAsync(
         string[] args,
-        IRuntime systemRuntime,
         ApplicationLoggingState loggingState,
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler,
@@ -109,15 +97,13 @@ internal class TestHostBuilder : ITestHostBuilder
         serviceProvider.TryAddService(systemConsole);
         var systemTask = new SystemTask();
         serviceProvider.TryAddService(systemTask);
-        var systemRuntimeFeature = new SystemRuntimeFeature();
-        serviceProvider.TryAddService(systemRuntimeFeature);
-        var systemProcess = new SystemProcessHandler();
-        serviceProvider.TryAddService(systemProcess);
-        serviceProvider.TryAddService(systemRuntime);
-        var systemFileSystem = new SystemFileSystem();
-        serviceProvider.TryAddService(systemFileSystem);
+        serviceProvider.TryAddService(runtimeFeature);
+        serviceProvider.TryAddService(processHandler);
+        serviceProvider.TryAddService(_fileSystem);
+        serviceProvider.TryAddService(_testApplicationModuleInfo);
+        TestHostControllerInfo testHostControllerInfo = new(loggingState.CommandLineParseResult);
+        serviceProvider.TryAddService(testHostControllerInfo);
 
-        // Clock is initialized above because we need it for telemetry.
         serviceProvider.TryAddService(systemClock);
         var systemMonitor = new SystemMonitor();
         serviceProvider.TryAddService(systemMonitor);
@@ -142,10 +128,10 @@ internal class TestHostBuilder : ITestHostBuilder
         }
 
         // Add the default json configuration source, this will read the standard test platform json configuration file.
-        Configuration.AddConfigurationSource(() => new JsonConfigurationSource(systemRuntime, systemFileSystem, loggingState.FileLoggerProvider));
+        Configuration.AddConfigurationSource(() => new JsonConfigurationSource(_testApplicationModuleInfo, _fileSystem, loggingState.FileLoggerProvider));
 
         // Build the IConfiguration - we need special treatment because the configuration is needed by extensions.
-        var configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(serviceProvider, loggingState.FileLoggerProvider);
+        var configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider);
         serviceProvider.TryAddService(configuration);
 
         // Current test platform is picky on unhandled exception, we will tear down the process in that case.
@@ -213,8 +199,7 @@ internal class TestHostBuilder : ITestHostBuilder
 
         // Build the command line service - we need special treatment because is possible that an extension query it during the creation.
         // Add Retry default argument commandlines
-        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(args, systemRuntime, systemRuntimeFeature, platformOutputDevice,
-            systemEnvironment, systemProcess, loggingState.CommandLineParseResult);
+        CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(args, platformOutputDevice, loggingState.CommandLineParseResult);
 
         // If command line is not valid we return immediately.
         if (!loggingState.CommandLineParseResult.HasTool && !await commandLineHandler.ParseAndValidateAsync())
@@ -255,7 +240,7 @@ internal class TestHostBuilder : ITestHostBuilder
         // here we ensure to override the result directory if user passed the argument --results-directory in command line.
         // After this check users can get the result directory using IConfiguration["testingPlatform:resultDirectory"] or the
         // extension method helper serviceProvider.GetConfiguration()
-        await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(commandLineOptions, systemRuntime, systemFileSystem, serviceProvider);
+        await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(commandLineOptions, loggingState.FileLoggerProvider);
 
         // ======= TOOLS MODE ======== //
         // Add the platform output device to the service provider.
@@ -299,15 +284,14 @@ internal class TestHostBuilder : ITestHostBuilder
         }
 
         // ======= TEST HOST ORCHESTRATOR ======== //
-        TestHostOrchestratorConfiguration testhostOrchestratorConfiguration = await TestHostOrchestratorManager.BuildAsync(serviceProvider);
-        if (testhostOrchestratorConfiguration.TestHostOrchestrators.Length > 0)
+        TestHostOrchestratorConfiguration testHostOrchestratorConfiguration = await TestHostOrchestratorManager.BuildAsync(serviceProvider);
+        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 0)
         {
-            return new TestHostOrchestratorHost(testhostOrchestratorConfiguration, serviceProvider);
+            return new TestHostOrchestratorHost(testHostOrchestratorConfiguration, serviceProvider);
         }
 
         // ======= TEST HOST CONTROLLER MODE ======== //
         // Check if we're in the test host or we should check test controllers extensions
-        ITestHostControllerInfo testHostControllerInfo = systemRuntime.GetTestHostControllerInfo();
         if (!testHostControllerInfo.HasTestHostController ||
 
             // This should not be needed but in case we will rollback to use only env var we will need it.
@@ -347,11 +331,11 @@ internal class TestHostBuilder : ITestHostBuilder
         // If we're under test controllers and currently we're inside the started test host we connect to the out of process
         // test controller manager.
         NamedPipeClient? testControllerConnection = await ConnectToTestHostProcessMonitorIfAvailableAsync(
-            systemProcess,
+            processHandler,
             testApplicationCancellationTokenSource,
             loggerFactory.CreateLogger(nameof(ConnectToTestHostProcessMonitorIfAvailableAsync)),
+            testHostControllerInfo,
             configuration,
-            systemRuntime,
             systemEnvironment);
 
         // Build and register the test application lifecycle callbacks.
@@ -436,14 +420,13 @@ internal class TestHostBuilder : ITestHostBuilder
     }
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(
-        SystemProcessHandler processHandler,
+        IProcessHandler processHandler,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
         ILogger logger,
+        TestHostControllerInfo testHostControllerInfo,
         IConfiguration configuration,
-        IRuntime runtime,
         SystemEnvironment environment)
     {
-        ITestHostControllerInfo testHostControllerInfo = runtime.GetTestHostControllerInfo();
         if (!testHostControllerInfo.HasTestHostController)
         {
             return null;
@@ -489,8 +472,7 @@ internal class TestHostBuilder : ITestHostBuilder
             var version = (AssemblyInformationalVersionAttribute?)Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
             builderMetadata[TelemetryProperties.HostProperties.TestingPlatformVersionPropertyName] = version?.InformationalVersion ?? "unknown";
 
-            ITestApplicationModuleInfo moduleInfo = serviceProvider.GetRuntime().GetCurrentModuleInfo();
-            string moduleName = Path.GetFileName(moduleInfo.GetCurrentTestApplicationFullPath());
+            string moduleName = Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
             builderMetadata[TelemetryProperties.HostProperties.TestHostPropertyName] = Sha256Hasher.HashWithNormalizedCasing(moduleName);
             builderMetadata[TelemetryProperties.HostProperties.FrameworkDescriptionPropertyName] = RuntimeInformation.FrameworkDescription;
             builderMetadata[TelemetryProperties.HostProperties.ProcessArchitecturePropertyName] = RuntimeInformation.ProcessArchitecture;

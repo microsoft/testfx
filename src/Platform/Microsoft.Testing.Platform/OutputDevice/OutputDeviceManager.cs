@@ -16,7 +16,8 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
         var defaultConsoleOutputDevice = new ConsoleOutputDevice(
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetConsole(),
-            serviceProvider.GetRuntime(),
+            serviceProvider.GetTestApplicationModuleInfo(),
+            serviceProvider.GetTestHostControllerInfo(),
             serviceProvider.GetAsyncMonitorFactory().Create(),
             serviceProvider.GetRuntimeFeature(),
             serviceProvider.GetEnvironment(),

@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
@@ -28,7 +29,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     private readonly string[] _args;
     private readonly DateTimeOffset _createBuilderStart;
     private readonly ApplicationLoggingState _loggingState;
-    private readonly IRuntime _runtime;
     private readonly TestApplicationOptions _testApplicationOptions;
     private readonly IUnhandledExceptionsHandler _unhandledExceptionsHandler;
     private readonly ITestHostBuilder _testHostBuilder;
@@ -40,7 +40,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         string[] args,
         ApplicationLoggingState loggingState,
         DateTimeOffset createBuilderStart,
-        IRuntime runtime,
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler)
     {
@@ -48,7 +47,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         _args = args;
         _createBuilderStart = createBuilderStart;
         _loggingState = loggingState;
-        _runtime = runtime;
         _testApplicationOptions = testApplicationOptions;
         _unhandledExceptionsHandler = unhandledExceptionsHandler;
     }
@@ -76,7 +74,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     // Callers from the outside can substitute the builder and the services that are used
     // to build a testhost. We use this to provide a different builder for VSTest tests.
     internal static Func<ITestHostBuilder> TestHostBuilderFactory { get; set; }
-        = () => new TestHostBuilder();
+        = () => new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler()));
 
     public ITestApplicationBuilder RegisterTestFramework(
         Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,
@@ -119,7 +117,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
 
         _testHost = await _testHostBuilder.BuildAsync(
             _args,
-            _runtime,
             _loggingState,
             _testApplicationOptions,
             _unhandledExceptionsHandler,

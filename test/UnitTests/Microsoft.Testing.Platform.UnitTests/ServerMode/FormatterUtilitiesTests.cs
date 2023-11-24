@@ -269,7 +269,7 @@ public class FormatterUtilitiesTests : TestBase
 
         if (type == typeof(RunResponseArgs))
         {
-            return new RunResponseArgs(Array.Empty<Artifact>());
+            return new RunResponseArgs([]);
         }
 
         if (type == typeof(DiscoverResponseArgs))

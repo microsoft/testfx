@@ -5,13 +5,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
-/* Unmerged change from project 'Microsoft.Testing.Platform (netstandard2.0)'
-Before:
-using Microsoft.Testing.Platform.CommandLine;
-After:
-using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.CommandLine;
-*/
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
@@ -73,14 +66,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         CancellationToken abortRun = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
         DateTimeOffset consoleRunStart = _clock.UtcNow;
         var consoleRunStarted = Stopwatch.StartNew();
-        IRuntime runtimeService = ServiceProvider.GetRuntime();
-        ITestHostControllerInfo testHostControllerInfo = runtimeService.GetTestHostControllerInfo();
         IEnvironment environment = ServiceProvider.GetEnvironment();
         IProcessHandler process = ServiceProvider.GetProcessHandler();
         int currentPID = process.GetCurrentProcess().Id;
-        ITestApplicationModuleInfo currentTestApplicationModuleInfo = runtimeService.GetCurrentModuleInfo();
-        var executableInfo = currentTestApplicationModuleInfo.GetCurrentExecutableInfo();
-        string testApplicationFullPath = currentTestApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+        ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
+        var executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
+        string testApplicationFullPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
         string? extensionInformation = null;
