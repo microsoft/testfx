@@ -23,24 +23,23 @@ internal sealed class UnhandledExceptionHandler(IEnvironment environment, IConso
 
     private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        string error = $"{e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}";
+        string error = $"[UnhandledExceptionHandler.OnCurrentDomainUnhandledException{(_isTestController ? "(testhost controller workflow)" : "(testhost workflow)")}] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}";
         LogErrorAndExit(error, !e.IsTerminating);
     }
 
     private void OnTaskSchedulerUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        string error = $"Unhandled exception: {e.Exception}";
+        string error = $"[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException{(_isTestController ? "(testhost controller workflow)" : "(testhost workflow)")}] Unhandled exception: {e.Exception}";
         LogErrorAndExit(error, true);
     }
 
     private void LogErrorAndExit(string error, bool forceClose)
     {
-        string errorPrefix = $"[UnhandledExceptionHandler.OnCurrentDomainUnhandledException{(_isTestController ? "(testhost controllers)" : "(testhost)")}] ";
-        _console.WriteLine(errorPrefix + error);
-        _logger?.LogCritical(errorPrefix + error);
+        _console.WriteLine(error);
+        _logger?.LogCritical(error);
         if (forceClose)
         {
-            _environment.FailFast(errorPrefix + error);
+            _environment.FailFast(error);
         }
     }
 }
