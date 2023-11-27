@@ -244,4 +244,37 @@
   <data name="TestProcessDidNotExitGracefullyErrorMessage" xml:space="preserve">
     <value>Test application process didn't exit gracefully, exit code is '{0}'</value>
   </data>
+  <data name="CannotCreateUniqueLogFileErrorMessage" xml:space="preserve">
+    <value>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</value>
+  </data>
+  <data name="FailedToWriteLogToChannelErrorMessage" xml:space="preserve">
+    <value>Failed to write the log to the channel. Missed log content:
+{0}</value>
+  </data>
+  <data name="ServerLogMessageDescription" xml:space="preserve">
+    <value>This data represents a server log message</value>
+  </data>
+  <data name="ServerLogMessageDisplayName" xml:space="preserve">
+    <value>Server log message</value>
+  </data>
+  <data name="TimeoutAcquiringSemaphoreErrorMessage" xml:space="preserve">
+    <value>Failed to acquire semaphore before timeout of '{0}' seconds</value>
+  </data>
+  <data name="TimeoutFlushingLogsErrorMessage" xml:space="preserve">
+    <value>Failed to flush logs before the timeout of '{0}' seconds</value>
+  </data>
+  <data name="UnexpectedExceptionInFileLoggerErrorMessage" xml:space="preserve">
+    <value>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+{0}</value>
+    <comment>{0} exception ToString</comment>
+  </data>
+  <data name="UnexpectedStateErrorMessage" xml:space="preserve">
+    <value>Unexpected state in file '{0}' at line '{1}'</value>
+  </data>
+  <data name="UnreachableLocationErrorMessage" xml:space="preserve">
+    <value>This program location is thought to be unreachable. File='{0}' Line={1}</value>
+  </data>
+  <data name="RetryFailedAfterTriesErrorMessage" xml:space="preserve">
+    <value>Retry failed after {0} times</value>
+  </data>
 </root>

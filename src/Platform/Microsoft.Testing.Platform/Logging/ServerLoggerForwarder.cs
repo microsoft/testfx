@@ -4,14 +4,15 @@
 #if NETCOREAPP
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Channels;
-
 #else
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-
 #endif
+using System.Globalization;
+
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Logging;
@@ -54,22 +55,17 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
             // We want to unlink the caller from the consumer
             AllowSynchronousContinuations = false,
         });
-
-        _logLoop = services.GetTask().Run(WriteLogMessageAsync, CancellationToken.None);
 #else
         _asyncLogs = [];
-        _logLoop = services.GetTask().Run(WriteLogMessageAsync, CancellationToken.None);
 #endif
+        _logLoop = services.GetTask().Run(WriteLogMessageAsync, CancellationToken.None);
     }
 
     private async Task WriteLogMessageAsync()
     {
 #if NETCOREAPP
         // We do this check out of the try because we want to crash the process if the _channel is null.
-        if (_channel is null)
-        {
-            throw new InvalidOperationException($"Unexpected {nameof(_channel)} null");
-        }
+        ApplicationStateGuard.Ensure(_channel is not null);
 
         // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
         while (await _channel.Reader.WaitToReadAsync())
@@ -77,10 +73,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
             await PushServerLogMessageToTheMessageBusAsync(await _channel.Reader.ReadAsync());
         }
 #else
-        if (_asyncLogs is null)
-        {
-            throw new InvalidOperationException($"Unexpected {nameof(_asyncLogs)} null");
-        }
+        ApplicationStateGuard.Ensure(_asyncLogs is not null);
 
         // We don't need cancellation token because the task will be stopped when the BlockingCollection is completed thanks to the call to CompleteAdding()
         // inside the Dispose method.
@@ -133,29 +126,15 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
     [MemberNotNull(nameof(_channel), nameof(_logLoop))]
     private void EnsureAsyncLogObjectsAreNotNull()
     {
-        if (_channel is null)
-        {
-            throw new InvalidOperationException($"Unexpected {_channel} null");
-        }
-
-        if (_logLoop is null)
-        {
-            throw new InvalidOperationException($"Unexpected {_logLoop} null");
-        }
+        ApplicationStateGuard.Ensure(_channel is not null);
+        ApplicationStateGuard.Ensure(_logLoop is not null);
     }
 #else
     [MemberNotNull(nameof(_asyncLogs), nameof(_logLoop))]
     private void EnsureAsyncLogObjectsAreNotNull()
     {
-        if (_asyncLogs is null)
-        {
-            throw new InvalidOperationException($"Unexpected {nameof(_asyncLogs)} null");
-        }
-
-        if (_logLoop is null)
-        {
-            throw new InvalidOperationException($"Unexpected {nameof(_logLoop)} null");
-        }
+        ApplicationStateGuard.Ensure(_asyncLogs is not null);
+        ApplicationStateGuard.Ensure(_logLoop is not null);
     }
 #endif
 
@@ -169,14 +148,14 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
             _channel.Writer.TryComplete();
             if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
-                throw new InvalidOperationException($"Log loop flush WriteLogMessageAsync() didn't exit after {TimeoutHelper.DefaultHangTimeoutSeconds} seconds");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
             }
 #else
             // Wait for all logs to be written
             _asyncLogs.CompleteAdding();
             if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
-                throw new InvalidOperationException($"Log loop flush WriteLogMessageAsync() didn't exit after {TimeoutHelper.DefaultHangTimeoutSeconds} seconds");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
             }
 #endif
             _isDisposed = true;

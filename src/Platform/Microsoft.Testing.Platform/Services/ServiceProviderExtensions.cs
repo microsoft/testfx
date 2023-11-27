@@ -14,6 +14,7 @@ using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Telemetry;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.Services;
 
@@ -28,7 +29,7 @@ public static class ServiceProviderExtensions
         ArgumentGuard.IsNotNull(provider);
 
         object? service = ((ServiceProvider)provider).GetService(typeof(TService));
-        StateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
+        ApplicationStateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
 
         return (TService)service;
     }
@@ -63,7 +64,7 @@ public static class ServiceProviderExtensions
         ArgumentGuard.IsNotNull(provider);
 
         object? service = ((ServiceProvider)provider).GetServiceInternal(typeof(TService));
-        StateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
+        ApplicationStateGuard.Ensure(service is not null, string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderCannotFindServiceErrorMessage, typeof(TService)));
 
         return (TService)service;
     }

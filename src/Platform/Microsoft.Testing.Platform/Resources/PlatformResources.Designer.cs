@@ -70,6 +70,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to create a unique log file after 3 seconds. Lastly tried file name is &apos;{0}&apos;..
+        /// </summary>
+        internal static string CannotCreateUniqueLogFileErrorMessage {
+            get {
+                return ResourceManager.GetString("CannotCreateUniqueLogFileErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot remove environment variables at this stage.
         /// </summary>
         internal static string CannotRemoveEnvironmentVariableAtThisStageErrorMessage {
@@ -178,6 +187,16 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to write the log to the channel. Missed log content:
+        ///{0}.
+        /// </summary>
+        internal static string FailedToWriteLogToChannelErrorMessage {
+            get {
+                return ResourceManager.GetString("FailedToWriteLogToChannelErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The following &apos;ITestHostEnvironmentVariableProvider&apos; providers rejected the final environment variables setup:.
         /// </summary>
         internal static string GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage {
@@ -219,6 +238,33 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string ProcessHasNotYetExitedErrorMessage {
             get {
                 return ResourceManager.GetString("ProcessHasNotYetExitedErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retry failed after {0} times.
+        /// </summary>
+        internal static string RetryFailedAfterTriesErrorMessage {
+            get {
+                return ResourceManager.GetString("RetryFailedAfterTriesErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This data represents a server log message.
+        /// </summary>
+        internal static string ServerLogMessageDescription {
+            get {
+                return ResourceManager.GetString("ServerLogMessageDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server log message.
+        /// </summary>
+        internal static string ServerLogMessageDisplayName {
+            get {
+                return ResourceManager.GetString("ServerLogMessageDisplayName", resourceCulture);
             }
         }
         
@@ -376,6 +422,24 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to acquire semaphore before timeout of &apos;{0}&apos; seconds.
+        /// </summary>
+        internal static string TimeoutAcquiringSemaphoreErrorMessage {
+            get {
+                return ResourceManager.GetString("TimeoutAcquiringSemaphoreErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to flush logs before the timeout of &apos;{0}&apos; seconds.
+        /// </summary>
+        internal static string TimeoutFlushingLogsErrorMessage {
+            get {
+                return ResourceManager.GetString("TimeoutFlushingLogsErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A filter &apos;{0}&apos; should not contain a &apos;/&apos; character.
         /// </summary>
         internal static string TreeNodeFilterCannotContainSlashCharacterErrorMessage {
@@ -435,6 +499,34 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TreeNodeFilterUnexpectedSlashOperatorErrorMessage {
             get {
                 return ResourceManager.GetString("TreeNodeFilterUnexpectedSlashOperatorErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unexpected exception occured in &apos;FileLogger.WriteLogToFileAsync&apos;.
+        ///{0}.
+        /// </summary>
+        internal static string UnexpectedExceptionInFileLoggerErrorMessage {
+            get {
+                return ResourceManager.GetString("UnexpectedExceptionInFileLoggerErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected state in file &apos;{0}&apos; at line &apos;{1}&apos;.
+        /// </summary>
+        internal static string UnexpectedStateErrorMessage {
+            get {
+                return ResourceManager.GetString("UnexpectedStateErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This program location is thought to be unreachable. File=&apos;{0}&apos; Line={1}.
+        /// </summary>
+        internal static string UnreachableLocationErrorMessage {
+            get {
+                return ResourceManager.GetString("UnreachableLocationErrorMessage", resourceCulture);
             }
         }
     }

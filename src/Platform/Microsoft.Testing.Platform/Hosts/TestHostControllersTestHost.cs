@@ -224,7 +224,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
                 if (_testHostPID is null)
                 {
-                    throw ExceptionUtils.Unreachable();
+                    throw ApplicationStateGuard.Unreachable();
                 }
 
                 var testHostProcessInformation = new TestHostProcessInformation(_testHostPID.Value);
@@ -246,11 +246,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 await _logger.LogDebugAsync($"Fire OnTestHostProcessExitedAsync testHostGracefullyClosed: {_testHostGracefullyClosed}");
                 var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
 
-                if (_testHostPID is null)
-                {
-                    throw ExceptionUtils.Unreachable();
-                }
-
+                ApplicationStateGuard.Ensure(_testHostPID is not null);
                 var testHostProcessInformation = new TestHostProcessInformation(_testHostPID.Value, testHostProcess.ExitCode, _testHostGracefullyClosed);
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
@@ -276,8 +272,8 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             // If we have a process in the middle between the test host controller and the test host process we need to keep it into account.
             exitCode = _testHostExitCode ??
                 (abortRun.IsCancellationRequested
-                ? ExitCodes.TestSessionAborted
-                : (!_testHostGracefullyClosed ? ExitCodes.TestHostProcessExitedNonGracefully : throw ExceptionUtils.Unreachable()));
+                    ? ExitCodes.TestSessionAborted
+                    : (!_testHostGracefullyClosed ? ExitCodes.TestHostProcessExitedNonGracefully : throw ApplicationStateGuard.Unreachable()));
 
             if (!_testHostGracefullyClosed && !abortRun.IsCancellationRequested)
             {
@@ -294,11 +290,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
         if (telemetryInformation.IsEnabled)
         {
-            if (extensionInformation is null)
-            {
-                throw ExceptionUtils.Unreachable();
-            }
-
+            ApplicationStateGuard.Ensure(extensionInformation is not null);
             DateTimeOffset consoleRunStop = _clock.UtcNow;
             await telemetry.LogEventAsync(TelemetryEvents.TestHostControllersTestHostExitEventName, new Dictionary<string, object>
             {

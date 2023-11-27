@@ -7,6 +7,11 @@
         <target state="new">Failed to create a test execution filter</target>
         <note />
       </trans-unit>
+      <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
+        <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
+        <target state="new">Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot remove environment variables at this stage</source>
         <target state="new">Cannot remove environment variables at this stage</target>
@@ -67,6 +72,13 @@
         <target state="new">Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="FailedToWriteLogToChannelErrorMessage">
+        <source>Failed to write the log to the channel. Missed log content:
+{0}</source>
+        <target state="new">Failed to write the log to the channel. Missed log content:
+{0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
         <target state="new">The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</target>
@@ -90,6 +102,21 @@
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
         <target state="new">Process should have exited before we can determine this value</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="RetryFailedAfterTriesErrorMessage">
+        <source>Retry failed after {0} times</source>
+        <target state="new">Retry failed after {0} times</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerLogMessageDescription">
+        <source>This data represents a server log message</source>
+        <target state="new">This data represents a server log message</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ServerLogMessageDisplayName">
+        <source>Server log message</source>
+        <target state="new">Server log message</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">
@@ -177,6 +204,16 @@
         <target state="new">Test application process didn't exit gracefully, exit code is '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
+        <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
+        <target state="new">Failed to acquire semaphore before timeout of '{0}' seconds</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TimeoutFlushingLogsErrorMessage">
+        <source>Failed to flush logs before the timeout of '{0}' seconds</source>
+        <target state="new">Failed to flush logs before the timeout of '{0}' seconds</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
         <target state="new">A filter '{0}' should not contain a '/' character</target>
@@ -210,6 +247,23 @@
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
         <target state="new">Filter contains an unexpected '/' operator inside a parenthesized expression</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
+        <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+{0}</source>
+        <target state="new">An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+{0}</target>
+        <note>{0} exception ToString</note>
+      </trans-unit>
+      <trans-unit id="UnexpectedStateErrorMessage">
+        <source>Unexpected state in file '{0}' at line '{1}'</source>
+        <target state="new">Unexpected state in file '{0}' at line '{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnreachableLocationErrorMessage">
+        <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
+        <target state="new">This program location is thought to be unreachable. File='{0}' Line={1}</target>
         <note />
       </trans-unit>
     </body>

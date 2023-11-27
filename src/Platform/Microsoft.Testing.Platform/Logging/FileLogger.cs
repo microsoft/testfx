@@ -11,6 +11,7 @@ using System.Globalization;
 using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Logging;
 
@@ -107,7 +108,7 @@ internal sealed class FileLogger : IDisposable
         {
             if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(3))
             {
-                throw new InvalidOperationException("FileLogger.CreateFileStream failed to create a unique file log trying for 3 seconds.");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotCreateUniqueLogFileErrorMessage, fileName));
             }
 
             try
@@ -145,7 +146,7 @@ internal sealed class FileLogger : IDisposable
 
         if (!_semaphore.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
-            throw new InvalidOperationException($"Timeout of {TimeoutHelper.DefaultHangTimeoutSeconds} seconds while waiting for the semaphore");
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutAcquiringSemaphoreErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
         }
 
         try
@@ -179,7 +180,7 @@ internal sealed class FileLogger : IDisposable
 
         if (!await _semaphore.WaitAsync(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
-            throw new InvalidOperationException($"Timeout of {TimeoutHelper.DefaultHangTimeoutSeconds} seconds while waiting for the semaphore");
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutAcquiringSemaphoreErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
         }
 
         try
@@ -205,7 +206,7 @@ internal sealed class FileLogger : IDisposable
 #if NETCOREAPP
         if (!_channel.Writer.TryWrite(log))
         {
-            throw new InvalidOperationException($"Failed to write the log to the channel.\nMissed log content:\n{log}");
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.FailedToWriteLogToChannelErrorMessage, log));
         }
 #else
         _asyncLogs.Add(log);
@@ -216,10 +217,7 @@ internal sealed class FileLogger : IDisposable
     {
 #if NETCOREAPP
         // We do this check out of the try because we want to crash the process if the _channel is null.
-        if (_channel is null)
-        {
-            throw new InvalidOperationException($"Unexpected {nameof(_channel)} null");
-        }
+        ApplicationStateGuard.Ensure(_channel is not null);
 
         try
         {
@@ -231,14 +229,11 @@ internal sealed class FileLogger : IDisposable
         }
         catch (Exception ex)
         {
-            _console.WriteLine($"Unexpected exception during the FileLogger.WriteLogToFileAsync\n{ex}");
+            _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, ex));
         }
 #else
         // We do this check out of the try because we want to crash the process if the _asyncLogs is null.
-        if (_asyncLogs is null)
-        {
-            throw new InvalidOperationException($"Unexpected {nameof(_asyncLogs)} null");
-        }
+        ApplicationStateGuard.Ensure(_asyncLogs is not null);
 
         try
         {
@@ -251,7 +246,7 @@ internal sealed class FileLogger : IDisposable
         }
         catch (Exception ex)
         {
-            _console.WriteLine($"Unexpected exception during the FileLogger.WriteLogToFileAsync\n{ex}");
+            _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, ex));
         }
 #endif
     }
@@ -260,33 +255,18 @@ internal sealed class FileLogger : IDisposable
     [MemberNotNull(nameof(_channel), nameof(_logLoop))]
     private void EnsureAsyncLogObjectsAreNotNull()
     {
-        if (_channel is null)
-        {
-            throw new InvalidOperationException($"Unexpected {_channel} null");
-        }
-
-        if (_logLoop is null)
-        {
-            throw new InvalidOperationException($"Unexpected {_logLoop} null");
-        }
+        ApplicationStateGuard.Ensure(_channel is not null);
+        ApplicationStateGuard.Ensure(_logLoop is not null);
     }
-
 #else
     [MemberNotNull(nameof(_asyncLogs), nameof(_logLoop))]
     private void EnsureAsyncLogObjectsAreNotNull()
     {
-        if (_asyncLogs is null)
-        {
-            throw new InvalidOperationException($"Unexpected {nameof(_asyncLogs)} null");
-        }
-
-        if (_logLoop is null)
-        {
-            throw new InvalidOperationException($"Unexpected {nameof(_logLoop)} null");
-        }
+        ApplicationStateGuard.Ensure(_asyncLogs is not null);
+        ApplicationStateGuard.Ensure(_logLoop is not null);
     }
-
 #endif
+
     public void Dispose()
     {
         if (_disposed)
@@ -308,7 +288,7 @@ internal sealed class FileLogger : IDisposable
 
             if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
-                throw new InvalidOperationException($"Log loop flush WriteLogToFileAsync() didn't exit after {TimeoutHelper.DefaultHangTimeoutSeconds} seconds");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
             }
         }
 

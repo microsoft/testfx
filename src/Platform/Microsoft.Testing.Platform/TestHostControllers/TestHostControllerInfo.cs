@@ -5,7 +5,7 @@ using System.Globalization;
 
 using Microsoft.Testing.Platform.CommandLine;
 
-namespace Microsoft.Testing.Platform.Helpers;
+namespace Microsoft.Testing.Platform.TestHostControllers;
 
 internal sealed class TestHostControllerInfo(CommandLineParseResult parseResult) : ITestHostControllerInfo
 {

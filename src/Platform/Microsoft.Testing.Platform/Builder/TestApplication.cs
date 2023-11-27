@@ -16,6 +16,7 @@ using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.Builder;
 
