@@ -90,7 +90,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                     {
                         "&" => OperatorKind.And,
                         "|" => OperatorKind.Or,
-                        _ => throw ExceptionUtils.Unreachable(),
+                        _ => throw ApplicationStateGuard.Unreachable(),
                     };
 
                     ProcessHigherPrecedenceOperators(expressionStack, operatorStack, currentOp);
@@ -270,7 +270,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
             case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprsNot } when subexprsNot.Count != 1:
             case OperatorExpression { Op: FilterOperator.And, SubExpressions: var subexprsAnd } when subexprsAnd.Count < 2:
             case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subexprsOr } when subexprsOr.Count < 2:
-                throw ExceptionUtils.Unreachable();
+                throw ApplicationStateGuard.Unreachable();
 
             case OperatorExpression opExpr:
                 foreach (FilterExpression childExpr in opExpr.SubExpressions)
@@ -315,7 +315,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                     OperatorKind.And => FilterOperator.And,
                     OperatorKind.Or => FilterOperator.Or,
                     OperatorKind.FilterEquals => FilterOperator.Equals,
-                    _ => throw ExceptionUtils.Unreachable(),
+                    _ => throw ApplicationStateGuard.Unreachable(),
                 };
 
                 expr.Push(new OperatorExpression(filter, subexprs));
@@ -498,7 +498,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                 => MatchFilterPattern(valueExpr, testNodeFragment, properties)
                     && MatchProperties(propExpr, properties),
             NopExpression => true,
-            _ => throw ExceptionUtils.Unreachable(),
+            _ => throw ApplicationStateGuard.Unreachable(),
         };
 
     private static bool MatchProperties(
@@ -514,6 +514,6 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
                 => subExprs.All(expr => MatchProperties(expr, properties)),
             OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subExprs }
                 => !MatchProperties(subExprs.Single(), properties),
-            _ => throw ExceptionUtils.Unreachable(),
+            _ => throw ApplicationStateGuard.Unreachable(),
         };
 }

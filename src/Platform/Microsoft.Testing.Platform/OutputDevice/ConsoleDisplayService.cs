@@ -13,6 +13,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 

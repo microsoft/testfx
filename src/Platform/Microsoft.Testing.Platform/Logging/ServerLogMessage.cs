@@ -2,14 +2,15 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Logging;
 
 internal sealed class ServerLogMessage(LogLevel level, string message) : IData
 {
-    public string DisplayName { get; } = nameof(ServerLogMessage);
+    public string DisplayName { get; } = PlatformResources.ServerLogMessageDisplayName;
 
-    public string Description { get; } = "This data transports internal logs to the server.";
+    public string Description { get; } = PlatformResources.ServerLogMessageDescription;
 
     public LogLevel Level { get; } = level;
 

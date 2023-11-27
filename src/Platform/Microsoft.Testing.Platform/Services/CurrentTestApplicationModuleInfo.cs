@@ -61,7 +61,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFe
             ? GetProcessPath(_environment, _process)
             : moduleName;
 
-        StateGuard.Ensure(moduleName is not null);
+        ApplicationStateGuard.Ensure(moduleName is not null);
         return moduleName;
     }
 
@@ -89,7 +89,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFe
 #if NETCOREAPP
     {
         string? processPath = environment.ProcessPath;
-        StateGuard.Ensure(processPath is not null || !throwOnNull);
+        ApplicationStateGuard.Ensure(processPath is not null || !throwOnNull);
 
         return processPath;
     }

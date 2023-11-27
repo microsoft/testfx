@@ -43,7 +43,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
             PlatformResources.ServiceProviderShouldNotRegisterTestFramework);
 
         // We don't want to add the same service twice, it's possible when with the CompositeExtensionFactory
-        StateGuard.Ensure(
+        ApplicationStateGuard.Ensure(
             !_services.Contains(service) || !throwIfSameInstanceExit,
             string.Format(CultureInfo.InvariantCulture, PlatformResources.ServiceProviderServiceAlreadyRegistered, service.GetType()));
 
