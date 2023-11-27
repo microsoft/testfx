@@ -5,6 +5,7 @@ using System.Globalization;
 
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
@@ -38,10 +39,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public string Version { get; } = AppVersion.DefaultSemVer;
 
     /// <inheritdoc />
-    public string DisplayName { get; } = "Microsoft Testing Platform command line provider";
+    public string DisplayName { get; } = PlatformResources.PlatformCommandLineProviderDisplayName;
 
     /// <inheritdoc />
-    public string Description { get; } = "Built-in command line provider";
+    public string Description { get; } = PlatformResources.PlatformCommandLineProviderDescription;
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
@@ -50,76 +51,66 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         => new CommandLineOption[]
         {
             // Visible options
-            new(HelpOptionKey, "Show command line help.", ArgumentArity.Zero, false, isBuiltIn: true),
-            new(InfoOptionKey, "Display .NET test application information.", ArgumentArity.Zero, false, isBuiltIn: true),
-            new(ResultDirectoryOptionKey, "The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.", ArgumentArity.ExactlyOne, false, isBuiltIn: true),
-            new(DiagnosticOptionKey, "Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag", ArgumentArity.Zero, false, isBuiltIn: true),
-            new(DiagnosticOutputFilePrefixOptionKey, "Prefix for the log file name that will replace [log]_.", ArgumentArity.ExactlyOne, false, isBuiltIn: true),
-            new(DiagnosticOutputDirectoryOptionKey, "Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.", ArgumentArity.ExactlyOne, false, isBuiltIn: true),
-            new(DiagnosticVerbosityOptionKey, "Define the level of the verbosity for the --diagnostic. The available values are Trace, Debug, Information, Warning, Error, Critical", ArgumentArity.ExactlyOne, false, isBuiltIn: true),
-            new(DiagnosticFileLoggerSynchronousWriteOptionKey, "Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). The effect is to slow down the test execution.", ArgumentArity.Zero, false, isBuiltIn: true),
+            new(HelpOptionKey, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+            new(InfoOptionKey, PlatformResources.PlatformCommandLineInfoOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+            new(ResultDirectoryOptionKey, PlatformResources.PlatformCommandLineResultDirectoryOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+            new(DiagnosticOptionKey, PlatformResources.PlatformCommandLineDiagnosticOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+            new(DiagnosticOutputFilePrefixOptionKey, PlatformResources.PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+            new(DiagnosticOutputDirectoryOptionKey, PlatformResources.PlatformCommandLineDiagnosticOutputDirectoryOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+            new(DiagnosticVerbosityOptionKey, PlatformResources.PlatformCommandLineDiagnosticVerbosityOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+            new(DiagnosticFileLoggerSynchronousWriteOptionKey, PlatformResources.PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
             MinimumExpectedTests,
-            new(DiscoverTestsOptionKey, "List available tests.", ArgumentArity.Zero, false, isBuiltIn: true),
+            new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
 
             // Hidden options
-            new(ServerOptionKey, "Enable server mode.", ArgumentArity.Zero, true, isBuiltIn: true),
-            new(PortOptionKey, "Specify the port of the server.", ArgumentArity.ExactlyOne, true, isBuiltIn: true),
-            new(ClientPortOptionKey, "Specify the port of the client.", ArgumentArity.ExactlyOne, true, isBuiltIn: true),
-            new(ClientHostOptionKey, "Specify the hostname of the client.", ArgumentArity.ExactlyOne, true, isBuiltIn: true),
-            new(SkipBuildersNumberCheckOptionKey, "Used to for testing purpose.", ArgumentArity.Zero, true, isBuiltIn: true),
-            new(VSTestAdapterModeOptionKey, "Used to bridge tpv2 to test anywhere.", ArgumentArity.Zero, true, isBuiltIn: true),
-            new(NoBannerOptionKey, "Doesn't display the startup banner, the copyright message or the telemetry banner.", ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
-            new(TestHostControllerPIDOptionKey, "Eventual parent eventual test host controller PID.", ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
+            new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
+            new(PortOptionKey, PlatformResources.PlatformCommandLinePortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+            new(ClientPortOptionKey, PlatformResources.PlatformCommandLineClientPortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+            new(ClientHostOptionKey, PlatformResources.PlatformCommandLineClientHostOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+            new(SkipBuildersNumberCheckOptionKey, PlatformResources.PlatformCommandLineSkipBuildersNumberCheckOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
+            new(VSTestAdapterModeOptionKey, PlatformResources.PlatformCommandLineVSTestAdapterModeOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
+            new(NoBannerOptionKey, PlatformResources.PlatformCommandLineNoBannerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
+            new(TestHostControllerPIDOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
         };
 
     public bool OptionArgumentsAreValid(CommandLineOption option, string[] arguments, out string error)
     {
         if (option.Name == HelpOptionKey && arguments.Length > 0)
         {
-            error = $"Invalid arguments for --{HelpOptionKey} option. This option does not accept any argument.";
+            error = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineOptionExpectsNoArgumentErrorMessage, HelpOptionKey);
             return false;
         }
 
         if (option.Name == InfoOptionKey && arguments.Length > 0)
         {
-            error = $"Invalid arguments for --{InfoOptionKey} option. This option does not accept any argument.";
+            error = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineOptionExpectsNoArgumentErrorMessage, InfoOptionKey);
             return false;
         }
 
-        if (option.Name == DiagnosticVerbosityOptionKey && arguments.Length == 0)
+        if (option.Name == DiagnosticVerbosityOptionKey)
         {
-            error = $"Invalid arguments for --{DiagnosticVerbosityOptionKey} option. Missing level.";
-            return false;
-        }
-
-        if (option.Name == DiagnosticVerbosityOptionKey && arguments.Length > 1)
-        {
-            error = $"Invalid arguments for --{DiagnosticVerbosityOptionKey} option. Expected only one level.";
-            return false;
+            if (arguments.Length != 1
+                || (!arguments[0].Equals("Trace", StringComparison.OrdinalIgnoreCase)
+                    && !arguments[0].Equals("Debug", StringComparison.OrdinalIgnoreCase)
+                    && !arguments[0].Equals("Information", StringComparison.OrdinalIgnoreCase)
+                    && !arguments[0].Equals("Warning", StringComparison.OrdinalIgnoreCase)
+                    && !arguments[0].Equals("Error", StringComparison.OrdinalIgnoreCase)
+                    && !arguments[0].Equals("Critical", StringComparison.OrdinalIgnoreCase)))
+            {
+                error = PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage;
+                return false;
+            }
         }
 
         if (option.Name == DiagnosticOutputDirectoryOptionKey && arguments.Length != 1)
         {
-            error = $"Invalid arguments for --{DiagnosticOutputDirectoryOptionKey} option. Expected one directory name.";
+            error = PlatformResources.PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument;
             return false;
         }
 
         if (option.Name == DiagnosticOutputFilePrefixOptionKey && arguments.Length != 1)
         {
-            error = $"Invalid arguments for --{DiagnosticOutputFilePrefixOptionKey} option. Expected one prefix file name.";
-            return false;
-        }
-
-        if (option.Name == DiagnosticVerbosityOptionKey &&
-            !(
-                arguments[0].Equals("Trace", StringComparison.OrdinalIgnoreCase) ||
-                arguments[0].Equals("Debug", StringComparison.OrdinalIgnoreCase) ||
-                arguments[0].Equals("Information", StringComparison.OrdinalIgnoreCase) ||
-                arguments[0].Equals("Warning", StringComparison.OrdinalIgnoreCase) ||
-                arguments[0].Equals("Error", StringComparison.OrdinalIgnoreCase) ||
-                arguments[0].Equals("Critical", StringComparison.OrdinalIgnoreCase)))
-        {
-            error = $"Invalid arguments for --{DiagnosticVerbosityOptionKey} option. Expected Trace, Debug, Information, Warning, Error, Critical.";
+            error = PlatformResources.PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument;
             return false;
         }
 
@@ -129,33 +120,21 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return false;
         }
 
-        if (option.Name == PortOptionKey && arguments.Length > 1)
+        if (option.Name == PortOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
         {
-            error = $"Invalid arguments for --{PortOptionKey} option. Expected only one port.";
+            error = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, PortOptionKey);
             return false;
         }
 
-        if (option.Name == PortOptionKey && !int.TryParse(arguments[0], out int _))
+        if (option.Name == ClientPortOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
         {
-            error = $"Invalid arguments for --{PortOptionKey} option. Expected a valid port number.";
-            return false;
-        }
-
-        if (option.Name == ClientPortOptionKey && arguments.Length != 1)
-        {
-            error = $"Invalid arguments for --{ClientPortOptionKey} option. Expected one port.";
-            return false;
-        }
-
-        if (option.Name == ClientPortOptionKey && !int.TryParse(arguments[0], out int _))
-        {
-            error = $"Invalid arguments for --{ClientPortOptionKey} option. Expected a valid port number.";
+            error = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, ClientPortOptionKey);
             return false;
         }
 
         if (option.Name == ClientHostOptionKey && arguments.Length != 1)
         {
-            error = $"Invalid arguments for --{ClientHostOptionKey} option. Expected one host.";
+            error = PlatformResources.PlatformCommandLineClientHostOptionSingleArgument;
             return false;
         }
 
@@ -165,73 +144,51 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public static int GetMinimumExpectedTests(CommandLineParseResult parseResult)
     {
         OptionRecord? minimumExpectedTests = parseResult.Options.SingleOrDefault(o => o.Option == MinimumExpectedTestsOptionKey);
-        if (minimumExpectedTests is not null)
+        if (minimumExpectedTests is null || !IsMinimumExpectedTestsOptionValid(MinimumExpectedTests, minimumExpectedTests.Arguments, out string _))
         {
-            if (IsMinimumExpectedTestsOptionValid(MinimumExpectedTests, minimumExpectedTests.Arguments, out string _))
-            {
-                return !parseResult.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? arguments)
-                    ? throw new InvalidOperationException("Unexpected missing MinimumExpectedTests option")
-                    : int.Parse(arguments[0], CultureInfo.InvariantCulture);
-            }
+            return 0;
         }
 
-        return 0;
+        ApplicationStateGuard.Ensure(parseResult.TryGetOptionArgumentList(MinimumExpectedTestsOptionKey, out string[]? arguments));
+        return int.Parse(arguments[0], CultureInfo.InvariantCulture);
     }
 
     private static bool IsMinimumExpectedTestsOptionValid(CommandLineOption option, string[] arguments, out string error)
     {
+        if (option.Name == MinimumExpectedTestsOptionKey
+            && (arguments.Length != 1 || !int.TryParse(arguments[0], out int value) || value == 0))
+        {
+            error = PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument;
+            return false;
+        }
+
         error = string.Empty;
-
-        if (option.Name == MinimumExpectedTestsOptionKey && arguments.Length != 1)
-        {
-            error = $"Invalid arguments for --{MinimumExpectedTestsOptionKey}, expected usage: --{MinimumExpectedTestsOptionKey} 10";
-            return false;
-        }
-
-        if (option.Name == MinimumExpectedTestsOptionKey && !int.TryParse(arguments[0], out int _))
-        {
-            error = $"Invalid arguments for --{MinimumExpectedTestsOptionKey}, expected argument should be an integer, actual value '{arguments[0]}'";
-            return false;
-        }
-
-        if (option.Name == MinimumExpectedTestsOptionKey && int.Parse(arguments[0], CultureInfo.InvariantCulture) == 0)
-        {
-            error = $"Invalid arguments for --{MinimumExpectedTestsOptionKey}, value 0 not allowed.";
-            return false;
-        }
-
         return true;
     }
 
     public bool IsValidConfiguration(ICommandLineOptions commandLineOptions, out string? errorMessage)
     {
         errorMessage = string.Empty;
-        if (commandLineOptions.IsOptionSet(DiagnosticOutputFilePrefixOptionKey)
-            && commandLineOptions.IsOptionSet(DiagnosticOutputDirectoryOptionKey)
-            && !commandLineOptions.IsOptionSet(DiagnosticOptionKey))
-        {
-            errorMessage = $"Option '{DiagnosticOptionKey}' must be present when using '{DiagnosticOutputFilePrefixOptionKey}' and '{DiagnosticOutputDirectoryOptionKey}'.";
-            return false;
-        }
 
-        if (commandLineOptions.IsOptionSet(DiagnosticOutputFilePrefixOptionKey)
-            && !commandLineOptions.IsOptionSet(DiagnosticOptionKey))
+        if (!commandLineOptions.IsOptionSet(DiagnosticOptionKey))
         {
-            errorMessage = $"Option '{DiagnosticOptionKey}' must be present when using '{DiagnosticOutputFilePrefixOptionKey}'.";
-            return false;
-        }
+            if (commandLineOptions.IsOptionSet(DiagnosticOutputDirectoryOptionKey))
+            {
+                errorMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDiagnosticOptionIsMissing, DiagnosticOutputDirectoryOptionKey);
+                return false;
+            }
 
-        if (commandLineOptions.IsOptionSet(DiagnosticOutputDirectoryOptionKey)
-            && !commandLineOptions.IsOptionSet(DiagnosticOptionKey))
-        {
-            errorMessage = $"Option '{DiagnosticOptionKey}' must be present when using '{DiagnosticOutputDirectoryOptionKey}'.";
-            return false;
+            if (commandLineOptions.IsOptionSet(DiagnosticOutputFilePrefixOptionKey))
+            {
+                errorMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDiagnosticOptionIsMissing, DiagnosticOutputFilePrefixOptionKey);
+                return false;
+            }
         }
 
         if (commandLineOptions.IsOptionSet(DiscoverTestsOptionKey)
             && commandLineOptions.IsOptionSet(MinimumExpectedTestsOptionKey))
         {
-            errorMessage = $"Option '{DiscoverTestsOptionKey}' is incompatible with option '{MinimumExpectedTestsOptionKey}'.";
+            errorMessage = PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests;
             return false;
         }
 

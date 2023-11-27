@@ -277,4 +277,169 @@
   <data name="RetryFailedAfterTriesErrorMessage" xml:space="preserve">
     <value>Retry failed after {0} times</value>
   </data>
+  <data name="CommandLineInvalidArgumentsForOption" xml:space="preserve">
+    <value>Option '--{0}' has invalid arguments: {1}</value>
+  </data>
+  <data name="CommandLineInvalidConfiguration" xml:space="preserve">
+    <value>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</value>
+  </data>
+  <data name="CommandLineOptionExpectsAtLeastArguments" xml:space="preserve">
+    <value>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</value>
+  </data>
+  <data name="CommandLineOptionExpectsAtMostArguments" xml:space="preserve">
+    <value>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</value>
+  </data>
+  <data name="CommandLineOptionExpectsNoArguments" xml:space="preserve">
+    <value>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</value>
+  </data>
+  <data name="CommandLineOptionIsUsingReservedPrefix" xml:space="preserve">
+    <value>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</value>
+  </data>
+  <data name="CommandLineUnknownOption" xml:space="preserve">
+    <value>Unknown option '--{0}'</value>
+  </data>
+  <data name="InvalidCommandLineArguments" xml:space="preserve">
+    <value>Invalid command line arguments:</value>
+  </data>
+  <data name="CommandLineInvalidArityErrorMessage" xml:space="preserve">
+    <value>Invalid arity, maximum must be greater than minimum</value>
+  </data>
+  <data name="CommandLineInvalidOptionName" xml:space="preserve">
+    <value>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</value>
+  </data>
+  <data name="CommandLineOptionIsDeclaredByMultipleProviders" xml:space="preserve">
+    <value>Option '--{0}' is declared by multiple extensions: '{0}'</value>
+  </data>
+  <data name="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround" xml:space="preserve">
+    <value>You can fix the previous option clash by overriding the option name using the configuration file</value>
+  </data>
+  <data name="CommandLineOptionIsReserved" xml:space="preserve">
+    <value>Option '--{0}' is reserved and cannot be used by providers: '{0}'</value>
+  </data>
+  <data name="CommandLineParserUnexpectedArgument" xml:space="preserve">
+    <value>Unexpected argument {0}</value>
+  </data>
+  <data name="CommandLineParserUnexpectedNullArgument" xml:space="preserve">
+    <value>Unexpected null argument at index {0}</value>
+  </data>
+  <data name="CommandLineParserUnexpectedSingleQuoteInArgument" xml:space="preserve">
+    <value>Unexpected single quote in argument: {0}</value>
+  </data>
+  <data name="CommandLineParserUnexpectedSingleQuoteInArgumentForOption" xml:space="preserve">
+    <value>Unexpected single quote in argument: {0} for option '--{1}'</value>
+  </data>
+  <data name="HelpApplicationUsage" xml:space="preserve">
+    <value>Usage {0} [option providers] [extension option providers]</value>
+  </data>
+  <data name="HelpExecuteTestApplication" xml:space="preserve">
+    <value>Execute a .NET Test Application.</value>
+  </data>
+  <data name="HelpExtensionOptions" xml:space="preserve">
+    <value>Extension options:</value>
+  </data>
+  <data name="HelpNoExtensionRegistered" xml:space="preserve">
+    <value>    No extension registered.</value>
+  </data>
+  <data name="HelpOptions" xml:space="preserve">
+    <value>Options:</value>
+  </data>
+  <data name="HelpTestApplicationRunner" xml:space="preserve">
+    <value>&lt;test application runner&gt;</value>
+  </data>
+  <data name="NotAvailable" xml:space="preserve">
+    <value>Not available</value>
+  </data>
+  <data name="NotFound" xml:space="preserve">
+    <value>Not found</value>
+  </data>
+  <data name="PlatformCommandLineClientHostOptionDescription" xml:space="preserve">
+    <value>Specify the hostname of the client.</value>
+  </data>
+  <data name="PlatformCommandLineClientHostOptionSingleArgument" xml:space="preserve">
+    <value>'--client-host' expects a single host name as argument</value>
+  </data>
+  <data name="PlatformCommandLineClientPortOptionDescription" xml:space="preserve">
+    <value>Specify the port of the client.</value>
+  </data>
+  <data name="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription" xml:space="preserve">
+    <value>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</value>
+  </data>
+  <data name="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument" xml:space="preserve">
+    <value>'--diagnostic-output-fileprefix' expects a single file name prefix argument</value>
+  </data>
+  <data name="PlatformCommandLineDiagnosticOptionDescription" xml:space="preserve">
+    <value>Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</value>
+  </data>
+  <data name="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage" xml:space="preserve">
+    <value>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</value>
+  </data>
+  <data name="PlatformCommandLineDiagnosticOptionIsMissing" xml:space="preserve">
+    <value>'--{0}' requires '--diagnostic' to be provided</value>
+  </data>
+  <data name="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription" xml:space="preserve">
+    <value>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</value>
+  </data>
+  <data name="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument" xml:space="preserve">
+    <value>'--diagnostic-output-directory' expects a single directory name argument</value>
+  </data>
+  <data name="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription" xml:space="preserve">
+    <value>Prefix for the log file name that will replace '[log]_.'</value>
+  </data>
+  <data name="PlatformCommandLineDiagnosticVerbosityOptionDescription" xml:space="preserve">
+    <value>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</value>
+  </data>
+  <data name="PlatformCommandLineDiscoverTestsOptionDescription" xml:space="preserve">
+    <value>List available tests.</value>
+  </data>
+  <data name="PlatformCommandLineHelpOptionDescription" xml:space="preserve">
+    <value>Show the command line help.</value>
+  </data>
+  <data name="PlatformCommandLineInfoOptionDescription" xml:space="preserve">
+    <value>Display .NET test application information.</value>
+  </data>
+  <data name="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests" xml:space="preserve">
+    <value>'--list-tests' and '--minimum-expected-tests' are incompatible options</value>
+  </data>
+  <data name="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument" xml:space="preserve">
+    <value>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</value>
+  </data>
+  <data name="PlatformCommandLineNoBannerOptionDescription" xml:space="preserve">
+    <value>Do not display the startup banner, the copyright message or the telemetry banner.</value>
+  </data>
+  <data name="PlatformCommandLineOptionExpectsNoArgumentErrorMessage" xml:space="preserve">
+    <value>'--{0}' expects no argument</value>
+  </data>
+  <data name="PlatformCommandLinePortOptionDescription" xml:space="preserve">
+    <value>Specify the port of the server.</value>
+  </data>
+  <data name="PlatformCommandLinePortOptionSingleArgument" xml:space="preserve">
+    <value>'--{0}' expects a single valid port as argument</value>
+  </data>
+  <data name="PlatformCommandLineProviderDescription" xml:space="preserve">
+    <value>Microsoft Testing Platform command line provider</value>
+  </data>
+  <data name="PlatformCommandLineProviderDisplayName" xml:space="preserve">
+    <value>Platform command line provider</value>
+  </data>
+  <data name="PlatformCommandLineResultDirectoryOptionDescription" xml:space="preserve">
+    <value>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</value>
+  </data>
+  <data name="PlatformCommandLineServerOptionDescription" xml:space="preserve">
+    <value>Enable the server mode.</value>
+  </data>
+  <data name="PlatformCommandLineSkipBuildersNumberCheckOptionDescription" xml:space="preserve">
+    <value>For testing purposes</value>
+  </data>
+  <data name="PlatformCommandLineTestHostControllerPIDOptionDescription" xml:space="preserve">
+    <value>Eventual parent test host controller PID.</value>
+  </data>
+  <data name="PlatformCommandLineVSTestAdapterModeOptionDescription" xml:space="preserve">
+    <value>Bridge to VSTest APIs</value>
+  </data>
+  <data name="TreeNodeFilterDescription" xml:space="preserve">
+    <value>Use a tree filter to filter down the tests to execute</value>
+  </data>
+  <data name="TreeNodeFilterInvalidArgumentCount" xml:space="preserve">
+    <value>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</value>
+  </data>
 </root>

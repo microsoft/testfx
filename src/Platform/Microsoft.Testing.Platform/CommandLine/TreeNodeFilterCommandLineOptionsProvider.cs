@@ -4,6 +4,7 @@
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
@@ -29,7 +30,7 @@ internal sealed class TreeNodeFilterCommandLineOptionsProvider(IExtension extens
     public CommandLineOption[] GetCommandLineOptions()
         => new CommandLineOption[]
         {
-            new(TreenodeFilter, "Filter the tests treenodes to be executed.", ArgumentArity.ZeroOrOne, false),
+            new(TreenodeFilter, PlatformResources.TreeNodeFilterDescription, ArgumentArity.ZeroOrOne, false),
         };
 
     public bool OptionArgumentsAreValid(CommandLineOption option, string[] arguments, out string error)
@@ -38,7 +39,7 @@ internal sealed class TreeNodeFilterCommandLineOptionsProvider(IExtension extens
 
         if (option.Name == TreenodeFilter && arguments.Length != 1)
         {
-            error = $"Invalid arguments for --{TreenodeFilter}, expression expected e.g. /MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]";
+            error = PlatformResources.TreeNodeFilterInvalidArgumentCount;
             return false;
         }
 

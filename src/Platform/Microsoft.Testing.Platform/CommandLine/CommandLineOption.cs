@@ -2,8 +2,10 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
+using System.Globalization;
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Extensions.CommandLine;
 
@@ -14,12 +16,11 @@ public sealed class CommandLineOption : IEquatable<CommandLineOption>
     {
         ArgumentGuard.IsNotNullOrWhiteSpace(name);
         ArgumentGuard.IsNotNullOrWhiteSpace(description);
-        ArgumentGuard.Ensure(arity.Max >= arity.Min, nameof(arity), "Invalid arity, max must be greater than min");
+        ArgumentGuard.Ensure(arity.Max >= arity.Min, nameof(arity), PlatformResources.CommandLineInvalidArityErrorMessage);
 
         for (int i = 0; i < name.Length; i++)
         {
-            ArgumentGuard.Ensure(char.IsLetter(name[i]) || name[i] == '-', nameof(name),
-                $"Invalid option definition name '{name}', only letters and '-' are allowed, e.g. --my-option");
+            ArgumentGuard.Ensure(char.IsLetter(name[i]) || name[i] == '-', nameof(name), string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidOptionName, name));
         }
 
         Name = name;

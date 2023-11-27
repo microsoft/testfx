@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Tools;
 
@@ -20,7 +21,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
     ICommandLineOptionsProvider[] systemCommandLineOptionsProviders, ITestApplicationModuleInfo testApplicationModuleInfo, IRuntimeFeature runtimeFeature,
     IPlatformOutputDevice platformOutputDevice, IEnvironment environment, IProcessHandler process) : ICommandLineHandler, ICommandLineOptions, IOutputDeviceDataProducer
 {
-    private readonly TextOutputDeviceData _textOutputDeviceData = new(string.Empty);
+    private static readonly TextOutputDeviceData EmptyText = new(string.Empty);
 
     private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders = systemCommandLineOptionsProviders;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
@@ -55,10 +56,10 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         if (_parseResult.HasError)
         {
             StringBuilder stringBuilder = new();
-            stringBuilder.AppendLine("Invalid command line arguments:");
+            stringBuilder.AppendLine(PlatformResources.InvalidCommandLineArguments);
             foreach (string error in _parseResult.Errors)
             {
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t* {error}");
+                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t- {error}");
             }
 
             await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(stringBuilder.ToString()));
@@ -86,7 +87,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         if (UnknownOptions(out string? unknownOptionsError))
         {
             await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(unknownOptionsError));
-            await _platformOutputDevice.DisplayAsync(this, _textOutputDeviceData);
+            await _platformOutputDevice.DisplayAsync(this, EmptyText);
             await PrintHelpAsync();
             return false;
         }
@@ -125,10 +126,11 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
                 }
 
                 string trimmedOption = option.Name.Trim(CommandLineParseResult.OptionPrefix);
-                if (trimmedOption.StartsWith("internal", StringComparison.OrdinalIgnoreCase) || option.Name.StartsWith("-internal", StringComparison.OrdinalIgnoreCase))
+                if (trimmedOption.StartsWith("internal", StringComparison.OrdinalIgnoreCase)
+                    || option.Name.StartsWith("-internal", StringComparison.OrdinalIgnoreCase))
                 {
                     stringBuilder ??= new();
-                    stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Option --{trimmedOption} of {commandLineOptionsProvider.DisplayName} is using reserved prefix --internal");
+                    stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsUsingReservedPrefix, trimmedOption, commandLineOptionsProvider.DisplayName, commandLineOptionsProvider.Uid));
                 }
             }
         }
@@ -145,7 +147,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
             if (!commandLineOptionsProvider.IsValidConfiguration(this, out string? providerError))
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid configuration for '{commandLineOptionsProvider.DisplayName}' provider:\n{providerError}");
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidConfiguration, commandLineOptionsProvider.DisplayName, commandLineOptionsProvider.Uid, providerError));
                 stringBuilder.AppendLine();
             }
         }
@@ -167,7 +169,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
             if (!extension.OptionArgumentsAreValid(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments, out string? argumentsError))
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid arguments for option '--{optionRecord.Option}': {argumentsError}");
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecord.Option, argumentsError));
             }
         }
 
@@ -192,7 +194,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
             if (!GetAllCommandLineOptionsProviderByOptionName(optionRecord.Option).Any())
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Unknown option '{optionRecord.Option}'");
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineUnknownOption, optionRecord.Option));
             }
         }
 
@@ -228,17 +230,17 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
             if (arity > commandLineOption.Arity.Max && commandLineOption.Arity.Max == 0)
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Option '--{optionName}' expects 0 argument for extension '{extension.DisplayName}'.");
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsNoArguments, optionName, extension.DisplayName, extension.Uid));
             }
             else if (arity < commandLineOption.Arity.Min)
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Option '--{optionName}' expects at least {commandLineOption.Arity.Min} argument(s) for extension '{extension.DisplayName}'.");
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsNoArguments, optionName, extension.DisplayName, extension.Uid, commandLineOption.Arity.Min));
             }
             else if (arity > commandLineOption.Arity.Max)
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Option '--{optionName}' expects at most {commandLineOption.Arity.Max} argument(s) for extension '{extension.DisplayName}'.");
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsNoArguments, optionName, extension.DisplayName, extension.Uid, commandLineOption.Arity.Max));
             }
         }
 
@@ -265,12 +267,12 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         {
             IEnumerable<ICommandLineOptionsProvider> commandLineOptionProviders = GetExtensionCommandLineOptionsProviderByOptionName(duplicatedOption);
             stringBuilder ??= new();
-            stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Option '--{duplicatedOption}' is used by more than one extension: {commandLineOptionProviders.Select(x => x.DisplayName).Aggregate((a, b) => $"{a}, {b}")}");
+            stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsDeclaredByMultipleProviders, duplicatedOption, string.Join("', '", commandLineOptionProviders.Select(x => x.DisplayName))));
         }
 
         if (stringBuilder?.Length > 0)
         {
-            stringBuilder.AppendLine("To fix the above optionProviders clash you can override the option name using the configuration file");
+            stringBuilder.AppendLine(PlatformResources.CommandLineOptionIsDeclaredByMultipleProvidersWorkaround);
             error = stringBuilder.ToString();
             return true;
         }
@@ -293,9 +295,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
             foreach (string reservedOption in invalidReservedOptions)
             {
                 IEnumerable<ICommandLineOptionsProvider> commandLineOptionProviders = GetExtensionCommandLineOptionsProviderByOptionName(reservedOption);
-                stringBuilder.AppendLine(
-                    CultureInfo.InvariantCulture,
-                    $"The option '--{reservedOption}' is reserved and cannot be used by extensions: {commandLineOptionProviders.Select(x => x.DisplayName).Aggregate((a, b) => $"{a}, {b}")}");
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionIsReserved, reservedOption, string.Join("', '", commandLineOptionProviders.Select(x => x.DisplayName))));
             }
 
             error = stringBuilder.ToString();
@@ -342,6 +342,14 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         // PrintApplicationToolUsage(availableTools, applicationName);
         await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Empty));
 
+        // Local functions
+        static string GetApplicationName(ITestApplicationModuleInfo testApplicationModuleInfo)
+            => testApplicationModuleInfo.IsAppHostOrSingleFileOrNativeAot
+                ? Path.GetFileName(testApplicationModuleInfo.GetProcessPath())
+                : testApplicationModuleInfo.IsCurrentTestApplicationHostDotnetMuxer
+                    ? $"dotnet exec {Path.GetFileName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}"
+                    : PlatformResources.HelpTestApplicationRunner;
+
         async Task<bool> PrintOptionsAsync(IEnumerable<ICommandLineOptionsProvider> optionProviders, int leftPaddingDepth, bool builtInOnly = false)
         {
             IEnumerable<CommandLineOption> options =
@@ -369,25 +377,25 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
         async Task PrintApplicationUsageAsync(string applicationName)
         {
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"Usage {applicationName} [optionProviders] [extension-optionProviders]"));
-            await _platformOutputDevice.DisplayAsync(this, _textOutputDeviceData);
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Execute a .NET Test Application."));
-            await _platformOutputDevice.DisplayAsync(this, _textOutputDeviceData);
+            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.HelpApplicationUsage, applicationName)));
+            await _platformOutputDevice.DisplayAsync(this, EmptyText);
+            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpExecuteTestApplication));
+            await _platformOutputDevice.DisplayAsync(this, EmptyText);
 
             RoslynDebug.Assert(
                 !_systemCommandLineOptionsProviders.OfType<IToolCommandLineOptionsProvider>().Any(),
                 "System command line options should not have any tool option registered.");
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Options:"));
+            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpOptions));
             await PrintOptionsAsync(_systemCommandLineOptionsProviders.Union(ExtensionsCommandLineOptionsProviders), 1, builtInOnly: true);
-            await _platformOutputDevice.DisplayAsync(this, _textOutputDeviceData);
+            await _platformOutputDevice.DisplayAsync(this, EmptyText);
 
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Extension Options:"));
+            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpExtensionOptions));
             if (!await PrintOptionsAsync(ExtensionsCommandLineOptionsProviders.Where(provider => provider is not IToolCommandLineOptionsProvider), 1))
             {
-                await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("  No extension registered."));
+                await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpNoExtensionRegistered));
             }
 
-            await _platformOutputDevice.DisplayAsync(this, _textOutputDeviceData);
+            await _platformOutputDevice.DisplayAsync(this, EmptyText);
         }
 
         // Temporary disabled, we don't remove the code because could be useful in future.
@@ -418,10 +426,11 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
     public async Task PrintInfoAsync(ITool[]? availableTools = null)
     {
+        // /!\ Info should not be localized as it serves debugging purposes.
         await DisplayPlatformInfoAsync();
-        await _platformOutputDevice.DisplayAsync(this, _textOutputDeviceData);
+        await _platformOutputDevice.DisplayAsync(this, EmptyText);
         await DisplayBuiltInExtensionsInfoAsync();
-        await _platformOutputDevice.DisplayAsync(this, _textOutputDeviceData);
+        await _platformOutputDevice.DisplayAsync(this, EmptyText);
 
         List<IToolCommandLineOptionsProvider> toolExtensions = [];
         List<ICommandLineOptionsProvider> nonToolExtensions = [];
@@ -438,14 +447,15 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         }
 
         await DisplayRegisteredExtensionsInfoAsync(nonToolExtensions);
-        await _platformOutputDevice.DisplayAsync(this, _textOutputDeviceData);
+        await _platformOutputDevice.DisplayAsync(this, EmptyText);
         await DisplayRegisteredToolsInfoAsync(availableTools, toolExtensions);
-        await _platformOutputDevice.DisplayAsync(this, _textOutputDeviceData);
+        await _platformOutputDevice.DisplayAsync(this, EmptyText);
 
         return;
 
         async Task DisplayPlatformInfoAsync()
         {
+            // Product title, do not translate.
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Microsoft Testing Platform:"));
 
             // TODO: Replace Assembly with IAssembly
@@ -574,15 +584,6 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
                 }
             }
         }
-    }
-
-    private static string GetApplicationName(ITestApplicationModuleInfo testApplicationModuleInfo)
-    {
-        return testApplicationModuleInfo.IsAppHostOrSingleFileOrNativeAot
-            ? Path.GetFileName(testApplicationModuleInfo.GetProcessPath())
-            : testApplicationModuleInfo.IsCurrentTestApplicationHostDotnetMuxer
-                ? $"dotnet exec {Path.GetFileName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())}"
-                : "[Test application runner]";
     }
 
     public bool IsOptionSet(string optionName)

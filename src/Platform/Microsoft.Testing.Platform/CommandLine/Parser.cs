@@ -1,7 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
@@ -47,7 +50,7 @@ internal static class CommandLineParser
             {
                 if (currentArg is null)
                 {
-                    errors.Add($"Unexpected null argument at index {i}");
+                    errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedNullArgument, i));
                     break;
                 }
 
@@ -79,7 +82,7 @@ internal static class CommandLineParser
                     }
                     else if (currentOption is null)
                     {
-                        errors.Add($"Unexpected argument {args[i]}");
+                        errors.Add(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedArgument, args[i]));
                     }
                     else
                     {
@@ -148,7 +151,9 @@ internal static class CommandLineParser
             {
                 if (input.IndexOf('\'', 1, input.Length - 2) != -1)
                 {
-                    error = $"Unexpected single quote in argument: {input}{(option is not null ? $" for option {option}" : string.Empty)}";
+                    error = option is null
+                        ? string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedSingleQuoteInArgument, input)
+                        : string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineParserUnexpectedSingleQuoteInArgumentForOption, input, option);
                     return false;
                 }
 
