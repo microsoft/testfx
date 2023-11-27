@@ -1,11 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.ComponentModel.Design;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
@@ -17,7 +19,10 @@ using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer, IOutputDeviceDataProducer, ITestSessionLifetimeHandler
+internal class ConsoleOutputDevice : IPlatformOutputDevice,
+    IDataConsumer,
+    IOutputDeviceDataProducer,
+    ITestSessionLifetimeHandler
 {
 #pragma warning disable SA1310 // Field names should not contain underscore
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
@@ -121,7 +126,7 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
         }
     }
 
-    public async Task DisplayBannerAsync()
+    public virtual async Task DisplayBannerAsync()
     {
         if (_isVSTestMode)
         {
@@ -469,7 +474,7 @@ internal sealed class ConsoleOutputDevice : IPlatformOutputDevice, IDataConsumer
         }
     }
 
-    private async Task HandleFailuresAsync(string testDisplayName, bool isCancelled, string? duration, string? errorMessage,
+    protected virtual async Task HandleFailuresAsync(string testDisplayName, bool isCancelled, string? duration, string? errorMessage,
         string? errorStackTrace, string? expected, string? actual)
     {
         await ConsoleWriteAsync("failed", ConsoleColor.DarkRed);

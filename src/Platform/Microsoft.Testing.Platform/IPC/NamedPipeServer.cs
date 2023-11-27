@@ -93,7 +93,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             catch (Exception ex)
             {
                 await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex);
-                _environment.FailFast($"[SingleConnectionNamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
+                _environment.FailFast($"[NamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
             }
         }, cancellationToken);
     }

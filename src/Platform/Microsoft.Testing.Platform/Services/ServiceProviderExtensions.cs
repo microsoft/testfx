@@ -158,5 +158,5 @@ public static class ServiceProviderExtensions
         => serviceProvider.GetRequiredServiceInternal<ITestFrameworkCapabilities>();
 
     internal static CommandLineParseResult GetCommandLineParseResult(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<CommandLineParseResult>();
+        => serviceProvider.GetRequiredServiceInternal<ApplicationLoggingState>().CommandLineParseResult;
 }
