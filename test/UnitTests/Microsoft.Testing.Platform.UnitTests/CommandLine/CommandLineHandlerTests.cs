@@ -198,7 +198,7 @@ public class CommandLineHandlerTests : TestBase
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
             .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
-                Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals("Option '--diagnostic-verbosity' has invalid arguments: '--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')\r\n", StringComparison.Ordinal)));
+                Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option '--diagnostic-verbosity' has invalid arguments: '--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical'){Environment.NewLine}", StringComparison.Ordinal)));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
@@ -218,7 +218,7 @@ public class CommandLineHandlerTests : TestBase
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
             .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
-                Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals("Option '--help' from provider 'Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments\r\n", StringComparison.Ordinal)));
+                Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option '--help' from provider 'Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments{Environment.NewLine}", StringComparison.Ordinal)));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
@@ -238,7 +238,7 @@ public class CommandLineHandlerTests : TestBase
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
             .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
-                Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals("Option '--help' is reserved and cannot be used by providers: 'help'\r\n", StringComparison.Ordinal)));
+                Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option '--help' is reserved and cannot be used by providers: 'help'{Environment.NewLine}", StringComparison.Ordinal)));
 
         ICommandLineOptionsProvider[] extensionCommandLineProvider = new[]
         {
@@ -262,7 +262,7 @@ public class CommandLineHandlerTests : TestBase
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
-            Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals("Option `--internal-customextension` from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) is using the reserved prefix '--internal'\r\n", StringComparison.Ordinal)));
+            Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option `--internal-customextension` from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) is using the reserved prefix '--internal'{Environment.NewLine}", StringComparison.Ordinal)));
 
         ICommandLineOptionsProvider[] extensionCommandLineProvider = new[]
         {
@@ -302,7 +302,7 @@ public class CommandLineHandlerTests : TestBase
         // Assert
         Assert.IsFalse(result);
         Assert.IsTrue(messages.Count is 22);
-        Assert.IsTrue(messages[0].Equals("Unknown option '--x'\r\n", StringComparison.Ordinal));
+        Assert.IsTrue(messages[0].Equals($"Unknown option '--x'{Environment.NewLine}", StringComparison.Ordinal));
     }
 
     public async Task ParseAndValidateAsync_InvalidValidConfiguration_ReturnsFalse()
@@ -312,7 +312,7 @@ public class CommandLineHandlerTests : TestBase
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
-            Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals("Invalid configuration for provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider). Error: Invalid configuration errorMessage\r\n\r\n", StringComparison.Ordinal)));
+            Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Invalid configuration for provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider). Error: Invalid configuration errorMessage{Environment.NewLine}{Environment.NewLine}", StringComparison.Ordinal)));
 
         ICommandLineOptionsProvider[] extensionCommandLineProvider = new[]
         {
