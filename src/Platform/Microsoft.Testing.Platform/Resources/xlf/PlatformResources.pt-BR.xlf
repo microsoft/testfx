@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
-        <target state="new">Failed to create a test execution filter</target>
+        <target state="translated">Falha ao criar um filtro de execução de teste</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
@@ -14,32 +14,32 @@
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot remove environment variables at this stage</source>
-        <target state="new">Cannot remove environment variables at this stage</target>
+        <target state="translated">Não é possível remover variáveis de ambiente neste estágio</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
         <source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</source>
-        <target state="new">Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</target>
+        <target state="translated">A extensão ''{0}'' tentou remover a variável de ambiente ''{1}'', mas foi bloqueada pela extensão '{2}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot set environment variables at this stage</source>
-        <target state="new">Cannot set environment variables at this stage</target>
+        <target state="translated">Não é possível definir variáveis de ambiente neste estágio</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
         <source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</source>
-        <target state="new">Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</target>
+        <target state="translated">A extensão ''{0}'' tentou definir a variável de ambiente ''{1}'', mas foi bloqueada pela extensão ''{2}''</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotStartProcessErrorMessage">
         <source>Cannot start process '{0}'</source>
-        <target state="new">Cannot start process '{0}'</target>
+        <target state="translated">Não é possível iniciar o processo ''{0}''</target>
         <note />
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
-        <target state="new">The same instance of 'CompositeExtensonFactory' is already registered</target>
+        <target state="translated">A mesma instância de “CompositeExtensonFactory” já está registrada</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
@@ -49,27 +49,27 @@
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
         <source>Creates the right test execution filter for console mode</source>
-        <target state="new">Creates the right test execution filter for console mode</target>
+        <target state="translated">Cria o filtro de execução de teste correto para o modo console</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
         <source>Console test execution filter factory</source>
-        <target state="new">Console test execution filter factory</target>
+        <target state="translated">Fábrica de filtros de execução de teste de console</target>
         <note />
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
-        <target state="new">Provider '{0}' (UID: {1}) failed with error: {2}</target>
+        <target state="translated">O provedor ''{0}'' (UID: {1}) falhou com o erro: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
         <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
-        <target state="new">Extension of type '{0}' is not implementing the required '{1}' interface</target>
+        <target state="translated">A extensão do tipo “{0}” não está implementando a interface “{1}” necessária</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
         <source>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</source>
-        <target state="new">Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</target>
+        <target state="translated">Outra extensão com o mesmo UID “{0}” já foi registrada. A extensão registrada é do tipo “{1}”</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
@@ -81,7 +81,7 @@
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
-        <target state="new">The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</target>
+        <target state="translated">Os seguintes provedores ''ITestHostEnvironmentVariableProvider'' rejeitaram a configuração de variáveis de ambiente finais:</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -101,7 +101,7 @@
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
-        <target state="new">Process should have exited before we can determine this value</target>
+        <target state="translated">O processo deve ter sido encerrado antes que possamos determinar esse valor</target>
         <note />
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
@@ -121,42 +121,42 @@
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">
         <source>Creates the right test execution filter for server mode</source>
-        <target state="new">Creates the right test execution filter for server mode</target>
+        <target state="translated">Cria o filtro de execução de teste correto para o modo servidor</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
         <source>Server test execution filter factory</source>
-        <target state="new">Server test execution filter factory</target>
+        <target state="translated">Fábrica de filtros de execução de teste de servidor</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
-        <target state="new">Cannot find service of type '{0}'</target>
+        <target state="translated">Não é possível localizar o serviço do tipo "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderServiceAlreadyRegistered">
         <source>Instance of type '{0}' is already registered</source>
-        <target state="new">Instance of type '{0}' is already registered</target>
+        <target state="translated">A instância do tipo "{0} já está registrada</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
-        <target state="new">Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</target>
+        <target state="translated">Instâncias do tipo "ITestFramework" não devem ser registradas por meio do provedor de serviços, mas por meio de "ITestApplicationBuilder.RegisterTestFramework"</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
-        <target state="new">An 'ITestExecutionFilterFactory' factory is already set</target>
+        <target state="translated">Uma fábrica “ITestExecutionFilterFactory” já está definida</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
-        <target state="new">An 'ITestFrameworkInvoker' factory is already set</target>
+        <target state="translated">Uma fábrica “ITestFrameworkInvoker” já está definida</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
         <source>The application has already been built</source>
-        <target state="new">The application has already been built</target>
+        <target state="translated">O aplicativo já foi criado</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
@@ -166,42 +166,42 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
         <source>The test framework capabilities factory has already been registered</source>
-        <target state="new">The test framework capabilities factory has already been registered</target>
+        <target state="translated">A fábrica de recursos da estrutura de teste já foi registrada</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</source>
-        <target state="new">The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</target>
+        <target state="translated">O adaptador de estrutura de teste não foi registrado. Use "RegisterTestFrameworkAdapter" para registrá-lo</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
         <source>Determine the result of the test application execution</source>
-        <target state="new">Determine the result of the test application execution</target>
+        <target state="translated">Determinar o resultado da execução do aplicativo de teste</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDisplayName">
         <source>Test application result</source>
-        <target state="new">Test application result</target>
+        <target state="translated">Resultado do aplicativo de teste</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
-        <target state="new">VSTest mode only supports a single TestApplicationBuilder per process</target>
+        <target state="translated">O modo VSTest dá suporte apenas a um único TestApplicationBuilder por processo</target>
         <note />
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
-        <target state="new">Method '{0}' should not have been called on this proxy object</target>
+        <target state="translated">O método ''{0}'' não deve ter sido chamado neste objeto proxy</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
         <source>Test adapter test session failure</source>
-        <target state="new">Test adapter test session failure</target>
+        <target state="translated">Falha na sessão de teste do adaptador de teste</target>
         <note />
       </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
-        <target state="new">Test application process didn't exit gracefully, exit code is '{0}'</target>
+        <target state="translated">O processo de teste do aplicativo não foi encerrado normalmente, o código de saída é ''{0}''</target>
         <note />
       </trans-unit>
       <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
@@ -216,37 +216,37 @@
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
-        <target state="new">A filter '{0}' should not contain a '/' character</target>
+        <target state="translated">Um filtro “{0}” não deve conter um caractere '/'</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
-        <target state="new">An escape character should not terminate the filter string '{0}'</target>
+        <target state="translated">Um caractere de escape não deve encerrar a cadeia de caracteres de filtro “{0}”</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
         <source>Only the final filter path can contain '**' wildcard</source>
-        <target state="new">Only the final filter path can contain '**' wildcard</target>
+        <target state="translated">Somente o caminho do filtro final pode conter curinga “**”</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
         <source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</source>
-        <target state="new">Unexpected operator '&amp;' or '|' within filter expression '{0}'</target>
+        <target state="translated">Operador inesperado “&amp;” ou “|” dentro da expressão de filtro “{0}”</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
         <source>Invalid node path, expected root as first character '{0}'</source>
-        <target state="new">Invalid node path, expected root as first character '{0}'</target>
+        <target state="translated">Caminho do nó inválido, raiz esperada como primeiro caractere “{0}”</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
         <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
-        <target state="new">Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</target>
+        <target state="translated">A expressão de filtro “{0}” contém um número não balanceado de operadores “{1}” “{2}”</target>
         <note>{1} and {2} are () or []</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
-        <target state="new">Filter contains an unexpected '/' operator inside a parenthesized expression</target>
+        <target state="translated">O filtro contém um operador “/” inesperado dentro de uma expressão entre parênteses</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
