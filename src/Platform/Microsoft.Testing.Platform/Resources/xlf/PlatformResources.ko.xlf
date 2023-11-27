@@ -4,37 +4,37 @@
     <body>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
-        <target state="new">Failed to create a test execution filter</target>
+        <target state="translated">테스트 실행 필터를 만들지 못함</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot remove environment variables at this stage</source>
-        <target state="new">Cannot remove environment variables at this stage</target>
+        <target state="translated">이 단계에서 환경 변수를 제거할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
         <source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</source>
-        <target state="new">Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</target>
+        <target state="translated">확장 '{0}'(이)가 환경 변수 '{1}'을(를) 제거하려고 했지만 확장 '{2}'에 의해 잠겼습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot set environment variables at this stage</source>
-        <target state="new">Cannot set environment variables at this stage</target>
+        <target state="translated">이 단계에서 환경 변수를 설정할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
         <source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</source>
-        <target state="new">Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</target>
+        <target state="translated">확장 '{0}'(이)가 환경 변수 '{1}'을(를) 설정하려고 했지만 확장 '{2}'에 의해 잠겼습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotStartProcessErrorMessage">
         <source>Cannot start process '{0}'</source>
-        <target state="new">Cannot start process '{0}'</target>
+        <target state="translated">프로세스 '{0}'을(를) 시작할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
-        <target state="new">The same instance of 'CompositeExtensonFactory' is already registered</target>
+        <target state="translated">동일한 'CompositeExtensonFactory' 인스턴스가 이미 등록됨</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
@@ -44,32 +44,32 @@
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
         <source>Creates the right test execution filter for console mode</source>
-        <target state="new">Creates the right test execution filter for console mode</target>
+        <target state="translated">콘솔 모드에 적합한 테스트 실행 필터를 만듬</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
         <source>Console test execution filter factory</source>
-        <target state="new">Console test execution filter factory</target>
+        <target state="translated">콘솔 테스트 실행 필터 팩터리</target>
         <note />
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
-        <target state="new">Provider '{0}' (UID: {1}) failed with error: {2}</target>
+        <target state="translated">공급자 '{0}'(UID: {1})이 오류 {2}(으)로 실패했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
         <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
-        <target state="new">Extension of type '{0}' is not implementing the required '{1}' interface</target>
+        <target state="translated">‘{0}’ 형식의 확장이 필요한 '{1}' 인터페이스를 구현하지 않음</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
         <source>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</source>
-        <target state="new">Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</target>
+        <target state="translated">UID '{0}'과(와) 동일한 다른 확장이 이미 등록되었습니다. 등록된 확장은 '{1}' 형식임</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
-        <target state="new">The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</target>
+        <target state="translated">다음 'ITestHostEnvironmentVariableProvider' 공급자가 최종 환경 변수 설정을 거부했습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -89,47 +89,47 @@
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
-        <target state="new">Process should have exited before we can determine this value</target>
+        <target state="translated">이 값을 결정하려면 프로세스가 종료되어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">
         <source>Creates the right test execution filter for server mode</source>
-        <target state="new">Creates the right test execution filter for server mode</target>
+        <target state="translated">서버 모드에 적합한 테스트 실행 필터를 만듬</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
         <source>Server test execution filter factory</source>
-        <target state="new">Server test execution filter factory</target>
+        <target state="translated">서버 테스트 실행 필터 팩터리</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
-        <target state="new">Cannot find service of type '{0}'</target>
+        <target state="translated">'{0}' 형식의 서비스를 찾을 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderServiceAlreadyRegistered">
         <source>Instance of type '{0}' is already registered</source>
-        <target state="new">Instance of type '{0}' is already registered</target>
+        <target state="translated">'{0}' 형식의 인스턴스가 이미 등록되어 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
-        <target state="new">Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</target>
+        <target state="translated">'ITestFramework' 형식의 인스턴스는 서비스 공급자를 통해 등록하지 않아야 하지만 'ITestApplicationBuilder.RegisterTestFramework'를 통해 등록해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
-        <target state="new">An 'ITestExecutionFilterFactory' factory is already set</target>
+        <target state="translated">'ITestExecutionFilterFactory' 팩터리가 이미 설정되어 있음</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
-        <target state="new">An 'ITestFrameworkInvoker' factory is already set</target>
+        <target state="translated">'ITestFrameworkInvoker' 팩터리가 이미 설정됨</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
         <source>The application has already been built</source>
-        <target state="new">The application has already been built</target>
+        <target state="translated">애플리케이션이 이미 빌드되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
@@ -139,77 +139,77 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
         <source>The test framework capabilities factory has already been registered</source>
-        <target state="new">The test framework capabilities factory has already been registered</target>
+        <target state="translated">테스트 프레임워크 기능 팩터리가 이미 등록되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</source>
-        <target state="new">The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</target>
+        <target state="translated">테스트 프레임워크 어댑터가 등록되지 않았습니다. 'RegisterTestFrameworkAdapter'를 사용하여 등록</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
         <source>Determine the result of the test application execution</source>
-        <target state="new">Determine the result of the test application execution</target>
+        <target state="translated">테스트 애플리케이션 실행 결과 확인</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDisplayName">
         <source>Test application result</source>
-        <target state="new">Test application result</target>
+        <target state="translated">테스트 애플리케이션 결과</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
-        <target state="new">VSTest mode only supports a single TestApplicationBuilder per process</target>
+        <target state="translated">VSTest 모드는 프로세스당 단일 TestApplicationBuilder만 지원합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
-        <target state="new">Method '{0}' should not have been called on this proxy object</target>
+        <target state="translated">이 프록시 개체에서 '{0}' 메서드를 호출하지 않아야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
         <source>Test adapter test session failure</source>
-        <target state="new">Test adapter test session failure</target>
+        <target state="translated">테스트 어댑터 테스트 세션 실패</target>
         <note />
       </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
-        <target state="new">Test application process didn't exit gracefully, exit code is '{0}'</target>
+        <target state="translated">테스트 애플리케이션 프로세스가 정상적으로 종료되지 않았습니다. 종료 코드는 '{0}'입니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
-        <target state="new">A filter '{0}' should not contain a '/' character</target>
+        <target state="translated">'{0}' 필터는 '/' 문자를 포함하면 안 됨</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
-        <target state="new">An escape character should not terminate the filter string '{0}'</target>
+        <target state="translated">이스케이프 문자가 필터 문자열 '{0}'을(를) 종료하면 안 됨</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
         <source>Only the final filter path can contain '**' wildcard</source>
-        <target state="new">Only the final filter path can contain '**' wildcard</target>
+        <target state="translated">최종 필터 경로만 '**' 와일드카드를 포함할 수 있음</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
         <source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</source>
-        <target state="new">Unexpected operator '&amp;' or '|' within filter expression '{0}'</target>
+        <target state="translated">필터 식 '{0}' 내에 예기치 않은 연산자 '&amp;' 또는 '|'이(가) 있음</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
         <source>Invalid node path, expected root as first character '{0}'</source>
-        <target state="new">Invalid node path, expected root as first character '{0}'</target>
+        <target state="translated">노드 경로가 잘못되었습니다. 첫 번째 문자 '{0}'(으)로 루트 필요</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
         <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
-        <target state="new">Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</target>
+        <target state="translated">필터 식 '{0}'이(가) '{1}' '{2}' 연산자의 균형이 맞지 않는 개수를 포함함</target>
         <note>{1} and {2} are () or []</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
-        <target state="new">Filter contains an unexpected '/' operator inside a parenthesized expression</target>
+        <target state="translated">필터는 괄호가 있는 식 내에 예기치 않은 '/' 연산자를 포함함</target>
         <note />
       </trans-unit>
     </body>

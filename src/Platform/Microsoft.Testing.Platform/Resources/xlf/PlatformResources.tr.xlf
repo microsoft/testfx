@@ -4,37 +4,37 @@
     <body>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
-        <target state="new">Failed to create a test execution filter</target>
+        <target state="translated">Test yürütme filtresi oluşturulamadı</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot remove environment variables at this stage</source>
-        <target state="new">Cannot remove environment variables at this stage</target>
+        <target state="translated">Bu aşamada ortam değişkenleri kaldırılamıyor</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableItIsLockedErrorMessage">
         <source>Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</source>
-        <target state="new">Extension '{0}' tried to remove environment variable '{1}' but it was locked by extension '{2}'</target>
+        <target state="translated">'{0}' uzantısı '{1}' ortam değişkenini kaldırmaya çalıştı ancak '{2}' uzantısı tarafından kilitlendi</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotSetEnvironmentVariableAtThisStageErrorMessage">
         <source>Cannot set environment variables at this stage</source>
-        <target state="new">Cannot set environment variables at this stage</target>
+        <target state="translated">Bu aşamada ortam değişkenleri ayarlanamıyor</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotSetEnvironmentVariableItIsLockedErrorMessage">
         <source>Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</source>
-        <target state="new">Extension '{0}' tried to set environment variable '{1}' but it was locked by extension '{2}'</target>
+        <target state="translated">'{0}' uzantısı '{1}' ortam değişkenini ayarlamaya çalıştı ancak '{2}' uzantısı tarafından kilitlendi</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotStartProcessErrorMessage">
         <source>Cannot start process '{0}'</source>
-        <target state="new">Cannot start process '{0}'</target>
+        <target state="translated">'{0}' işlemi başlatılamıyor</target>
         <note />
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
-        <target state="new">The same instance of 'CompositeExtensonFactory' is already registered</target>
+        <target state="translated">Aynı 'CompositeExtensonFactory' örneği zaten kayıtlı</target>
         <note />
       </trans-unit>
       <trans-unit id="ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage">
@@ -44,32 +44,32 @@
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
         <source>Creates the right test execution filter for console mode</source>
-        <target state="new">Creates the right test execution filter for console mode</target>
+        <target state="translated">Konsol modu için doğru test yürütme filtresini oluşturur</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDisplayName">
         <source>Console test execution filter factory</source>
-        <target state="new">Console test execution filter factory</target>
+        <target state="translated">Konsol test yürütme filtresi fabrikası</target>
         <note />
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
-        <target state="new">Provider '{0}' (UID: {1}) failed with error: {2}</target>
+        <target state="translated">'{0}' sağlayıcısı '' (UID: {1}) şu hatayla başarısız oldu: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
         <source>Extension of type '{0}' is not implementing the required '{1}' interface</source>
-        <target state="new">Extension of type '{0}' is not implementing the required '{1}' interface</target>
+        <target state="translated">'{0}' uzantı türü, gerekli '{1}' arabirimini uygulamıyor</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionWithSameUidAlreadyRegisteredErrorMessage">
         <source>Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</source>
-        <target state="new">Another extension with same the same UID '{0}' has already been registered. Registered extension is of type '{1}'</target>
+        <target state="translated">Aynı UID '{0}' olan başka bir uzantı zaten kayıtlı. Kayıtlı uzantı '{1}' türünde</target>
         <note />
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
-        <target state="new">The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</target>
+        <target state="translated">Aşağıdaki 'ITestHostEnvironmentVariableProvider' sağlayıcıları son ortam değişkenleri kurulumunu reddetti:</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -89,47 +89,47 @@
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
         <source>Process should have exited before we can determine this value</source>
-        <target state="new">Process should have exited before we can determine this value</target>
+        <target state="translated">Bu değeri belirleyebilmemiz için süreçten çıkılmış olması gerekir</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">
         <source>Creates the right test execution filter for server mode</source>
-        <target state="new">Creates the right test execution filter for server mode</target>
+        <target state="translated">Sunucu modu için doğru test yürütme filtresini oluşturur</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDisplayName">
         <source>Server test execution filter factory</source>
-        <target state="new">Server test execution filter factory</target>
+        <target state="translated">Sunucu test yürütme filtresi fabrikası</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderCannotFindServiceErrorMessage">
         <source>Cannot find service of type '{0}'</source>
-        <target state="new">Cannot find service of type '{0}'</target>
+        <target state="translated">'{0}' türündeki hizmet bulunamıyor</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderServiceAlreadyRegistered">
         <source>Instance of type '{0}' is already registered</source>
-        <target state="new">Instance of type '{0}' is already registered</target>
+        <target state="translated">'{0}' türündeki örnek zaten kayıtlı</target>
         <note />
       </trans-unit>
       <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
-        <target state="new">Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</target>
+        <target state="translated">'ITestFramework' türündeki örnekler hizmet sağlayıcısı aracılığıyla değil, 'ITestApplicationBuilder.RegisterTestFramework' aracılığıyla kaydedilmelidir</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
-        <target state="new">An 'ITestExecutionFilterFactory' factory is already set</target>
+        <target state="translated">Bir 'ITestExecutionFilterFactory' fabrikası zaten ayarlanmış</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
         <source>An 'ITestFrameworkInvoker' factory is already set</source>
-        <target state="new">An 'ITestFrameworkInvoker' factory is already set</target>
+        <target state="translated">Bir 'ITestFrameworkInvoker' fabrikası zaten ayarlanmış</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderApplicationAlreadyRegistered">
         <source>The application has already been built</source>
-        <target state="new">The application has already been built</target>
+        <target state="translated">Uygulama zaten derlendi</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage">
@@ -139,77 +139,77 @@
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkCapabilitiesAlreadyRegistered">
         <source>The test framework capabilities factory has already been registered</source>
-        <target state="new">The test framework capabilities factory has already been registered</target>
+        <target state="translated">Test çerçevesi özellikleri fabrikası zaten kaydedildi</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</source>
-        <target state="new">The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</target>
+        <target state="translated">Test çerçevesi bağdaştırıcısı kaydedilmedi. Kaydetmek için 'RegisterTestFrameworkAdapter' kullanın</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
         <source>Determine the result of the test application execution</source>
-        <target state="new">Determine the result of the test application execution</target>
+        <target state="translated">Test uygulaması yürütmenin sonucunu belirleyin</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDisplayName">
         <source>Test application result</source>
-        <target state="new">Test application result</target>
+        <target state="translated">Test uygulaması sonucu</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationVSTestModeTooManyBuilders">
         <source>VSTest mode only supports a single TestApplicationBuilder per process</source>
-        <target state="new">VSTest mode only supports a single TestApplicationBuilder per process</target>
+        <target state="translated">VSTest modu, işlem başına yalnızca tek bir TestApplicationBuilder destekler</target>
         <note />
       </trans-unit>
       <trans-unit id="TestFrameworkProxyApiShouldNotBeCalled">
         <source>Method '{0}' should not have been called on this proxy object</source>
-        <target state="new">Method '{0}' should not have been called on this proxy object</target>
+        <target state="translated">'{0}' yöntemi bu ara sunucu nesnesinde çağrılmamalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="TestHostAdapterInvokerFailedTestSessionErrorMessage">
         <source>Test adapter test session failure</source>
-        <target state="new">Test adapter test session failure</target>
+        <target state="translated">Test bağdaştırıcısı test oturumu hatası</target>
         <note />
       </trans-unit>
       <trans-unit id="TestProcessDidNotExitGracefullyErrorMessage">
         <source>Test application process didn't exit gracefully, exit code is '{0}'</source>
-        <target state="new">Test application process didn't exit gracefully, exit code is '{0}'</target>
+        <target state="translated">Test başvuru sürecinden düzgün bir şekilde çıkılmadı, çıkış kodu '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
-        <target state="new">A filter '{0}' should not contain a '/' character</target>
+        <target state="translated">'{0}' filtresi, '/' karakteri içermemelidir</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
-        <target state="new">An escape character should not terminate the filter string '{0}'</target>
+        <target state="translated">Kaçış karakteri, '{0}' filtre dizesini sonlandırmamalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
         <source>Only the final filter path can contain '**' wildcard</source>
-        <target state="new">Only the final filter path can contain '**' wildcard</target>
+        <target state="translated">Yalnızca son filtre yolu, '**' joker karakterlerini içerebilir</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOperatorNotAllowedErrorMessage">
         <source>Unexpected operator '&amp;' or '|' within filter expression '{0}'</source>
-        <target state="new">Unexpected operator '&amp;' or '|' within filter expression '{0}'</target>
+        <target state="translated">'{0}' filtre ifadesinde beklenmeyen '&amp;' veya '|' işleci</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterPathShouldStartWithSlashErrorMessage">
         <source>Invalid node path, expected root as first character '{0}'</source>
-        <target state="new">Invalid node path, expected root as first character '{0}'</target>
+        <target state="translated">Geçersiz düğüm yolu, ilk karakter '{0}' olarak kök bekleniyordu</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnbalancedFilterErrorMessage">
         <source>Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</source>
-        <target state="new">Filter expression '{0}' contains an unbalanced number of '{1}' '{2}' operators</target>
+        <target state="translated">'{0}' filtre ifadesi, dengesiz sayıda '{1}' '{2}' işleci içeriyor</target>
         <note>{1} and {2} are () or []</note>
       </trans-unit>
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
-        <target state="new">Filter contains an unexpected '/' operator inside a parenthesized expression</target>
+        <target state="translated">Filtre, parantez içine alınmış bir ifadenin içinde beklenmeyen bir '/' işleci içeriyor</target>
         <note />
       </trans-unit>
     </body>
