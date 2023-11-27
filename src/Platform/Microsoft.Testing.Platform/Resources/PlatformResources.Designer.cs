@@ -124,6 +124,150 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Option &apos;--{0}&apos; has invalid arguments: {1}.
+        /// </summary>
+        internal static string CommandLineInvalidArgumentsForOption {
+            get {
+                return ResourceManager.GetString("CommandLineInvalidArgumentsForOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid arity, maximum must be greater than minimum.
+        /// </summary>
+        internal static string CommandLineInvalidArityErrorMessage {
+            get {
+                return ResourceManager.GetString("CommandLineInvalidArityErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid configuration for provider &apos;{0}&apos; (UID: {1}). Error: {2}.
+        /// </summary>
+        internal static string CommandLineInvalidConfiguration {
+            get {
+                return ResourceManager.GetString("CommandLineInvalidConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid option name &apos;{0}&apos;, it must contain only letter and &apos;-&apos; (e.g. my-option).
+        /// </summary>
+        internal static string CommandLineInvalidOptionName {
+            get {
+                return ResourceManager.GetString("CommandLineInvalidOptionName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Option &apos;--{0}&apos; from provider &apos;{1}&apos; (UID: {2}) expects at least {3} arguments.
+        /// </summary>
+        internal static string CommandLineOptionExpectsAtLeastArguments {
+            get {
+                return ResourceManager.GetString("CommandLineOptionExpectsAtLeastArguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Option &apos;--{0}&apos; from provider &apos;{1}&apos; (UID: {2}) expects at most {3} arguments.
+        /// </summary>
+        internal static string CommandLineOptionExpectsAtMostArguments {
+            get {
+                return ResourceManager.GetString("CommandLineOptionExpectsAtMostArguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Option &apos;--{0}&apos; from provider &apos;{1}&apos; (UID: {2}) expects no arguments.
+        /// </summary>
+        internal static string CommandLineOptionExpectsNoArguments {
+            get {
+                return ResourceManager.GetString("CommandLineOptionExpectsNoArguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Option &apos;--{0}&apos; is declared by multiple extensions: &apos;{0}&apos;.
+        /// </summary>
+        internal static string CommandLineOptionIsDeclaredByMultipleProviders {
+            get {
+                return ResourceManager.GetString("CommandLineOptionIsDeclaredByMultipleProviders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You can fix the previous option clash by overriding the option name using the configuration file.
+        /// </summary>
+        internal static string CommandLineOptionIsDeclaredByMultipleProvidersWorkaround {
+            get {
+                return ResourceManager.GetString("CommandLineOptionIsDeclaredByMultipleProvidersWorkaround", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Option &apos;--{0}&apos; is reserved and cannot be used by providers: &apos;{0}&apos;.
+        /// </summary>
+        internal static string CommandLineOptionIsReserved {
+            get {
+                return ResourceManager.GetString("CommandLineOptionIsReserved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Option `--{0}` from provider &apos;{1}&apos; (UID: {2}) is using the reserved prefix &apos;--internal&apos;.
+        /// </summary>
+        internal static string CommandLineOptionIsUsingReservedPrefix {
+            get {
+                return ResourceManager.GetString("CommandLineOptionIsUsingReservedPrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected argument {0}.
+        /// </summary>
+        internal static string CommandLineParserUnexpectedArgument {
+            get {
+                return ResourceManager.GetString("CommandLineParserUnexpectedArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected null argument at index {0}.
+        /// </summary>
+        internal static string CommandLineParserUnexpectedNullArgument {
+            get {
+                return ResourceManager.GetString("CommandLineParserUnexpectedNullArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected single quote in argument: {0}.
+        /// </summary>
+        internal static string CommandLineParserUnexpectedSingleQuoteInArgument {
+            get {
+                return ResourceManager.GetString("CommandLineParserUnexpectedSingleQuoteInArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected single quote in argument: {0} for option &apos;--{1}&apos;.
+        /// </summary>
+        internal static string CommandLineParserUnexpectedSingleQuoteInArgumentForOption {
+            get {
+                return ResourceManager.GetString("CommandLineParserUnexpectedSingleQuoteInArgumentForOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown option &apos;--{0}&apos;.
+        /// </summary>
+        internal static string CommandLineUnknownOption {
+            get {
+                return ResourceManager.GetString("CommandLineUnknownOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The same instance of &apos;CompositeExtensonFactory&apos; is already registered.
         /// </summary>
         internal static string CompositeServiceFactoryInstanceAlreadyRegistered {
@@ -206,6 +350,69 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Usage {0} [option providers] [extension option providers].
+        /// </summary>
+        internal static string HelpApplicationUsage {
+            get {
+                return ResourceManager.GetString("HelpApplicationUsage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Execute a .NET Test Application..
+        /// </summary>
+        internal static string HelpExecuteTestApplication {
+            get {
+                return ResourceManager.GetString("HelpExecuteTestApplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Extension options:.
+        /// </summary>
+        internal static string HelpExtensionOptions {
+            get {
+                return ResourceManager.GetString("HelpExtensionOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to     No extension registered..
+        /// </summary>
+        internal static string HelpNoExtensionRegistered {
+            get {
+                return ResourceManager.GetString("HelpNoExtensionRegistered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Options:.
+        /// </summary>
+        internal static string HelpOptions {
+            get {
+                return ResourceManager.GetString("HelpOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;test application runner&gt;.
+        /// </summary>
+        internal static string HelpTestApplicationRunner {
+            get {
+                return ResourceManager.GetString("HelpTestApplicationRunner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid command line arguments:.
+        /// </summary>
+        internal static string InvalidCommandLineArguments {
+            get {
+                return ResourceManager.GetString("InvalidCommandLineArguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A duplicate key &apos;{0}&apos; was found.
         /// </summary>
         internal static string JsonConfigurationFileParserDuplicateKeyErrorMessage {
@@ -229,6 +436,276 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string JsonConfigurationFileParserUnsupportedTokenErrorMessage {
             get {
                 return ResourceManager.GetString("JsonConfigurationFileParserUnsupportedTokenErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not available.
+        /// </summary>
+        internal static string NotAvailable {
+            get {
+                return ResourceManager.GetString("NotAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not found.
+        /// </summary>
+        internal static string NotFound {
+            get {
+                return ResourceManager.GetString("NotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify the hostname of the client..
+        /// </summary>
+        internal static string PlatformCommandLineClientHostOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineClientHostOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;--client-host&apos; expects a single host name as argument.
+        /// </summary>
+        internal static string PlatformCommandLineClientHostOptionSingleArgument {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineClientHostOptionSingleArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify the port of the client..
+        /// </summary>
+        internal static string PlatformCommandLineClientPortOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineClientPortOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Force the built-in file logger to write the log synchronously. Useful for scenario where you don&apos;t want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution..
+        /// </summary>
+        internal static string PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;--diagnostic-output-fileprefix&apos; expects a single file name prefix argument.
+        /// </summary>
+        internal static string PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable the diagnostic logging. The default log level is &apos;Information&apos;. The file will be written in the output directory with the name log_[MMddHHssfff].diag.
+        /// </summary>
+        internal static string PlatformCommandLineDiagnosticOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineDiagnosticOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;--diagnostic-verbosity&apos; expects a single level argument (&apos;Trace&apos;, &apos;Debug&apos;, &apos;Information&apos;, &apos;Warning&apos;, &apos;Error&apos;, or &apos;Critical&apos;).
+        /// </summary>
+        internal static string PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;--{0}&apos; requires &apos;--diagnostic&apos; to be provided.
+        /// </summary>
+        internal static string PlatformCommandLineDiagnosticOptionIsMissing {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineDiagnosticOptionIsMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Output directory of the diagnostic logging, if not specified the file will be generated inside the default &apos;TestResults&apos; directory..
+        /// </summary>
+        internal static string PlatformCommandLineDiagnosticOutputDirectoryOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineDiagnosticOutputDirectoryOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;--diagnostic-output-directory&apos; expects a single directory name argument.
+        /// </summary>
+        internal static string PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefix for the log file name that will replace &apos;[log]_.&apos;.
+        /// </summary>
+        internal static string PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Define the level of the verbosity for the --diagnostic. The available values are &apos;Trace&apos;, &apos;Debug&apos;, &apos;Information&apos;, &apos;Warning&apos;, &apos;Error&apos;, and &apos;Critical&apos;.
+        /// </summary>
+        internal static string PlatformCommandLineDiagnosticVerbosityOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineDiagnosticVerbosityOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List available tests..
+        /// </summary>
+        internal static string PlatformCommandLineDiscoverTestsOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineDiscoverTestsOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show the command line help..
+        /// </summary>
+        internal static string PlatformCommandLineHelpOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineHelpOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Display .NET test application information..
+        /// </summary>
+        internal static string PlatformCommandLineInfoOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineInfoOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;--list-tests&apos; and &apos;--minimum-expected-tests&apos; are incompatible options.
+        /// </summary>
+        internal static string PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;--minimum-expected-tests&apos; expects a single non-zero positive integer value (e.g. &apos;--minimum-expected-tests 10&apos;).
+        /// </summary>
+        internal static string PlatformCommandLineMinimumExpectedTestsOptionSingleArgument {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineMinimumExpectedTestsOptionSingleArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not display the startup banner, the copyright message or the telemetry banner..
+        /// </summary>
+        internal static string PlatformCommandLineNoBannerOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineNoBannerOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;--{0}&apos; expects no argument.
+        /// </summary>
+        internal static string PlatformCommandLineOptionExpectsNoArgumentErrorMessage {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineOptionExpectsNoArgumentErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specify the port of the server..
+        /// </summary>
+        internal static string PlatformCommandLinePortOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLinePortOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;--{0}&apos; expects a single valid port as argument.
+        /// </summary>
+        internal static string PlatformCommandLinePortOptionSingleArgument {
+            get {
+                return ResourceManager.GetString("PlatformCommandLinePortOptionSingleArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Microsoft Testing Platform command line provider.
+        /// </summary>
+        internal static string PlatformCommandLineProviderDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineProviderDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Platform command line provider.
+        /// </summary>
+        internal static string PlatformCommandLineProviderDisplayName {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineProviderDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The directory where the test results are going to be placed. If the specified directory doesn&apos;t exist, it&apos;s created. The default is TestResults in the directory that contains the test application..
+        /// </summary>
+        internal static string PlatformCommandLineResultDirectoryOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineResultDirectoryOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enable the server mode..
+        /// </summary>
+        internal static string PlatformCommandLineServerOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineServerOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For testing purposes.
+        /// </summary>
+        internal static string PlatformCommandLineSkipBuildersNumberCheckOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineSkipBuildersNumberCheckOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Eventual parent test host controller PID..
+        /// </summary>
+        internal static string PlatformCommandLineTestHostControllerPIDOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineTestHostControllerPIDOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bridge to VSTest APIs.
+        /// </summary>
+        internal static string PlatformCommandLineVSTestAdapterModeOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineVSTestAdapterModeOptionDescription", resourceCulture);
             }
         }
         
@@ -449,11 +926,29 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use a tree filter to filter down the tests to execute.
+        /// </summary>
+        internal static string TreeNodeFilterDescription {
+            get {
+                return ResourceManager.GetString("TreeNodeFilterDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An escape character should not terminate the filter string &apos;{0}&apos;.
         /// </summary>
         internal static string TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage {
             get {
                 return ResourceManager.GetString("TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A single argument is expected (e.g. &apos;/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]&apos;).
+        /// </summary>
+        internal static string TreeNodeFilterInvalidArgumentCount {
+            get {
+                return ResourceManager.GetString("TreeNodeFilterInvalidArgumentCount", resourceCulture);
             }
         }
         

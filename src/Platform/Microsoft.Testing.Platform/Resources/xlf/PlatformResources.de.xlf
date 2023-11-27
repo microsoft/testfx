@@ -37,6 +37,86 @@
         <target state="new">Cannot start process '{0}'</target>
         <note />
       </trans-unit>
+      <trans-unit id="CommandLineInvalidArgumentsForOption">
+        <source>Option '--{0}' has invalid arguments: {1}</source>
+        <target state="new">Option '--{0}' has invalid arguments: {1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineInvalidArityErrorMessage">
+        <source>Invalid arity, maximum must be greater than minimum</source>
+        <target state="new">Invalid arity, maximum must be greater than minimum</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineInvalidConfiguration">
+        <source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</source>
+        <target state="new">Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineInvalidOptionName">
+        <source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</source>
+        <target state="new">Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
+        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionExpectsAtMostArguments">
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
+        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionExpectsNoArguments">
+        <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
+        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
+        <source>Option '--{0}' is declared by multiple extensions: '{0}'</source>
+        <target state="new">Option '--{0}' is declared by multiple extensions: '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
+        <source>You can fix the previous option clash by overriding the option name using the configuration file</source>
+        <target state="new">You can fix the previous option clash by overriding the option name using the configuration file</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsReserved">
+        <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
+        <target state="new">Option '--{0}' is reserved and cannot be used by providers: '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
+        <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
+        <target state="new">Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnexpectedArgument">
+        <source>Unexpected argument {0}</source>
+        <target state="new">Unexpected argument {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnexpectedNullArgument">
+        <source>Unexpected null argument at index {0}</source>
+        <target state="new">Unexpected null argument at index {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
+        <source>Unexpected single quote in argument: {0}</source>
+        <target state="new">Unexpected single quote in argument: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
+        <source>Unexpected single quote in argument: {0} for option '--{1}'</source>
+        <target state="new">Unexpected single quote in argument: {0} for option '--{1}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CommandLineUnknownOption">
+        <source>Unknown option '--{0}'</source>
+        <target state="new">Unknown option '--{0}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
         <source>The same instance of 'CompositeExtensonFactory' is already registered</source>
         <target state="new">The same instance of 'CompositeExtensonFactory' is already registered</target>
@@ -84,6 +164,41 @@
         <target state="new">The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</target>
         <note />
       </trans-unit>
+      <trans-unit id="HelpApplicationUsage">
+        <source>Usage {0} [option providers] [extension option providers]</source>
+        <target state="new">Usage {0} [option providers] [extension option providers]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpExecuteTestApplication">
+        <source>Execute a .NET Test Application.</source>
+        <target state="new">Execute a .NET Test Application.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpExtensionOptions">
+        <source>Extension options:</source>
+        <target state="new">Extension options:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpNoExtensionRegistered">
+        <source>    No extension registered.</source>
+        <target state="new">    No extension registered.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpOptions">
+        <source>Options:</source>
+        <target state="new">Options:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="HelpTestApplicationRunner">
+        <source>&lt;test application runner&gt;</source>
+        <target state="new">&lt;test application runner&gt;</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InvalidCommandLineArguments">
+        <source>Invalid command line arguments:</source>
+        <target state="new">Invalid command line arguments:</target>
+        <note />
+      </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
         <source>A duplicate key '{0}' was found</source>
         <target state="translated">Es wurde ein doppelter Schlüssel "{0}" gefunden.</target>
@@ -97,6 +212,156 @@
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
         <target state="translated">Es wurde ein nicht unterstütztes JSON-Token "{0}" gefunden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotAvailable">
+        <source>Not available</source>
+        <target state="new">Not available</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NotFound">
+        <source>Not found</source>
+        <target state="new">Not found</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineClientHostOptionDescription">
+        <source>Specify the hostname of the client.</source>
+        <target state="new">Specify the hostname of the client.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineClientHostOptionSingleArgument">
+        <source>'--client-host' expects a single host name as argument</source>
+        <target state="new">'--client-host' expects a single host name as argument</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineClientPortOptionDescription">
+        <source>Specify the port of the client.</source>
+        <target state="new">Specify the port of the client.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
+        <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
+        <target state="new">Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument">
+        <source>'--diagnostic-output-fileprefix' expects a single file name prefix argument</source>
+        <target state="new">'--diagnostic-output-fileprefix' expects a single file name prefix argument</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
+        <source>Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="new">Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
+        <source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</source>
+        <target state="new">'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
+        <source>'--{0}' requires '--diagnostic' to be provided</source>
+        <target state="new">'--{0}' requires '--diagnostic' to be provided</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
+        <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
+        <target state="new">Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument">
+        <source>'--diagnostic-output-directory' expects a single directory name argument</source>
+        <target state="new">'--diagnostic-output-directory' expects a single directory name argument</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
+        <source>Prefix for the log file name that will replace '[log]_.'</source>
+        <target state="new">Prefix for the log file name that will replace '[log]_.'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
+        <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
+        <target state="new">Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
+        <source>List available tests.</source>
+        <target state="new">List available tests.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineHelpOptionDescription">
+        <source>Show the command line help.</source>
+        <target state="new">Show the command line help.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineInfoOptionDescription">
+        <source>Display .NET test application information.</source>
+        <target state="new">Display .NET test application information.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
+        <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
+        <target state="new">'--list-tests' and '--minimum-expected-tests' are incompatible options</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
+        <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
+        <target state="new">'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
+        <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
+        <target state="new">Do not display the startup banner, the copyright message or the telemetry banner.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineOptionExpectsNoArgumentErrorMessage">
+        <source>'--{0}' expects no argument</source>
+        <target state="new">'--{0}' expects no argument</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePortOptionDescription">
+        <source>Specify the port of the server.</source>
+        <target state="new">Specify the port of the server.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLinePortOptionSingleArgument">
+        <source>'--{0}' expects a single valid port as argument</source>
+        <target state="new">'--{0}' expects a single valid port as argument</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineProviderDescription">
+        <source>Microsoft Testing Platform command line provider</source>
+        <target state="new">Microsoft Testing Platform command line provider</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineProviderDisplayName">
+        <source>Platform command line provider</source>
+        <target state="new">Platform command line provider</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
+        <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
+        <target state="new">The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineServerOptionDescription">
+        <source>Enable the server mode.</source>
+        <target state="new">Enable the server mode.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
+        <source>For testing purposes</source>
+        <target state="new">For testing purposes</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
+        <source>Eventual parent test host controller PID.</source>
+        <target state="new">Eventual parent test host controller PID.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
+        <source>Bridge to VSTest APIs</source>
+        <target state="new">Bridge to VSTest APIs</target>
         <note />
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
@@ -219,9 +484,19 @@
         <target state="new">A filter '{0}' should not contain a '/' character</target>
         <note />
       </trans-unit>
+      <trans-unit id="TreeNodeFilterDescription">
+        <source>Use a tree filter to filter down the tests to execute</source>
+        <target state="new">Use a tree filter to filter down the tests to execute</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
         <target state="new">An escape character should not terminate the filter string '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TreeNodeFilterInvalidArgumentCount">
+        <source>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</source>
+        <target state="new">A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
