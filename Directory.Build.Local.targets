@@ -2,4 +2,12 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
+  <!-- Linux properties -->
+  <PropertyGroup Condition=" '$(NonWindowsBuild)' == 'true' ">
+    <!-- Force setting TargetFrameworks only if it was set -->
+    <TargetFrameworks Condition=" '$(TargetFrameworks)' != '' ">$(MicrosoftTestingTargetFrameworks)</TargetFrameworks>
+    <!-- Force setting TargetFramework only if it was set -->
+    <TargetFramework Condition=" '$(TargetFramework)' != '' ">$(NetCoreAppLatestStableVersion)</TargetFramework>
+  </PropertyGroup>
+
 </Project>
