@@ -7,7 +7,9 @@ using System.Buffers;
 using System.Text;
 
 using Microsoft.Testing.Platform.Helpers;
+#if NET
 using Microsoft.Testing.Platform.Resources;
+#endif
 
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 

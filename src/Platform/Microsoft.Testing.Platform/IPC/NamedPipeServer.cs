@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETCOREAPP
+#if NET
 using System.Buffers;
 #endif
 using System.Globalization;
@@ -10,7 +10,9 @@ using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+#if NET
 using Microsoft.Testing.Platform.Resources;
+#endif
 
 namespace Microsoft.Testing.Platform.IPC;
 
@@ -112,7 +114,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         {
             int missingBytesToReadOfCurrentChunk = 0;
             int currentReadIndex = 0;
-#if NETCOREAPP
+#if NET
             int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken);
 #else
             int currentReadBytes = await _namedPipeServerStream.ReadAsync(_readBuffer, currentReadIndex, _readBuffer.Length, cancellationToken);
@@ -139,7 +141,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             if (missingBytesToReadOfCurrentChunk > 0)
             {
                 // We need to read the rest of the message
-#if NETCOREAPP
+#if NET
                 await _messageBuffer.WriteAsync(_readBuffer.AsMemory(currentReadIndex, missingBytesToReadOfCurrentChunk), cancellationToken);
 #else
                 await _messageBuffer.WriteAsync(_readBuffer, currentReadIndex, missingBytesToReadOfCurrentChunk, cancellationToken);
@@ -183,7 +185,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 sizeOfTheWholeMessage += sizeof(int);
 
                 // Write the message size
-#if NETCOREAPP
+#if NET
                 byte[] bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
                 try
                 {
@@ -200,7 +202,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 #endif
 
                 // Write the serializer id
-#if NETCOREAPP
+#if NET
                 bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
                 try
                 {
@@ -217,7 +219,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 #endif
 
                 // Write the message
-#if NETCOREAPP
+#if NET
                 await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer().AsMemory(0, (int)_serializationBuffer.Position), cancellationToken);
 #else
                 await _messageBuffer.WriteAsync(_serializationBuffer.GetBuffer(), 0, (int)_serializationBuffer.Position, cancellationToken);
@@ -226,7 +228,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 // Send the message
                 try
                 {
-#if NETCOREAPP
+#if NET
                     await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer().AsMemory(0, (int)_messageBuffer.Position), cancellationToken);
 #else
                     await _namedPipeServerStream.WriteAsync(_messageBuffer.GetBuffer(), 0, (int)_messageBuffer.Position, cancellationToken);
@@ -262,7 +264,12 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         Directory.CreateDirectory(directoryId);
         return new PipeNameDescription(
             !Directory.Exists(directoryId)
-                ? throw new DirectoryNotFoundException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CouldNotFindDirectoryErrorMessage, directoryId))
+                ? throw new DirectoryNotFoundException(
+#if PLATFORM_MSBUILD
+                    $"Directory: {directoryId} doesn't exist.")
+#else
+                    string.Format(CultureInfo.InvariantCulture, PlatformResources.CouldNotFindDirectoryErrorMessage, directoryId))
+#endif
                 : Path.Combine(directoryId, ".pipe"), true);
     }
 
@@ -282,7 +289,12 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             // To close gracefully we need to ensure that the client closed the stream line 103.
             if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage, nameof(InternalLoopAsync)));
+                throw new InvalidOperationException(
+#if PLATFORM_MSBUILD
+                    "InternalLoopAsync() didn't exit as expected");
+#else
+                    string.Format(CultureInfo.InvariantCulture, PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage, nameof(InternalLoopAsync)));
+#endif
             }
         }
 
@@ -292,7 +304,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         _disposed = true;
     }
 
-#if NETCOREAPP
+#if NET
     public async ValueTask DisposeAsync()
     {
         if (_disposed)

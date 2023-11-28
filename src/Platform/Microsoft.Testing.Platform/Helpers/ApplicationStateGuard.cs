@@ -5,7 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
+#if !PLATFORM_MSBUILD
 using Microsoft.Testing.Platform.Resources;
+#endif
 
 namespace Microsoft.Testing.Platform.Helpers;
 
@@ -23,10 +25,24 @@ internal static class ApplicationStateGuard
     {
         if (!condition)
         {
-            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedStateErrorMessage, path, line));
+            throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture,
+#if PLATFORM_MSBUILD
+                "Unexpected state in file '{0}' at line '{1}'",
+#else
+                PlatformResources.UnexpectedStateErrorMessage,
+#endif
+                path, line));
         }
     }
 
     public static InvalidOperationException Unreachable([CallerFilePath] string? path = null, [CallerLineNumber] int line = 0)
-        => new(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnreachableLocationErrorMessage, path, line));
+        => new(string.Format(
+            CultureInfo.InvariantCulture,
+#if PLATFORM_MSBUILD
+            "This program location is thought to be unreachable. File='{0}' Line={1}",
+#else
+            PlatformResources.UnreachableLocationErrorMessage,
+#endif
+            path, line));
 }
