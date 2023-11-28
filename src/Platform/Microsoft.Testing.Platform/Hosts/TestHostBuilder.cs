@@ -91,7 +91,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         }
 
         // Add required non-skippable system "services"
-        serviceProvider.TryAddService(loggingState.CommandLineParseResult);
+        serviceProvider.TryAddService(loggingState);
         serviceProvider.TryAddService(systemEnvironment);
         var systemConsole = new SystemConsole();
         serviceProvider.TryAddService(systemConsole);
@@ -185,14 +185,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Add output display proxy, needed by command line manager.
         // We don't add to the service right now because we need special treatment between console/server mode.
-        IPlatformOutputDevice platformOutputDevice = ((PlatformOutputDeviceManager)OutputDisplay).Build(serviceProvider, loggingState);
-        bool isNoBannerSet = loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
-        string? noBannerEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
-        string? dotnetNoLogoEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
-        if (!isNoBannerSet && !(noBannerEnvironmentVar is "1" or "true") && !(dotnetNoLogoEnvironmentVar is "1" or "true"))
-        {
-            await platformOutputDevice.DisplayBannerAsync();
-        }
+        IPlatformOutputDevice platformOutputDevice = await ((PlatformOutputDeviceManager)OutputDisplay).BuildAsync(serviceProvider, loggingState);
 
         // Add the platform output device to the service provider for both modes.
         serviceProvider.TryAddService(platformOutputDevice);
@@ -232,15 +225,25 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.TryAddService(telemetryService);
         AddApplicationMetadata(serviceProvider, builderMetrics);
 
-        // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
-
-        // ============= SELECT AND RUN THE ACTUAL MODE ===============//
-
         // At this point we start to build extensions so we need to have all the information complete for the usage,
         // here we ensure to override the result directory if user passed the argument --results-directory in command line.
         // After this check users can get the result directory using IConfiguration["testingPlatform:resultDirectory"] or the
         // extension method helper serviceProvider.GetConfiguration()
         await configuration.CheckTestResultsDirectoryOverrideAndCreateItAsync(commandLineOptions, loggingState.FileLoggerProvider);
+
+        // Display banner now because we need capture the output in case of MSBuild integration and we want to forward
+        // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
+        bool isNoBannerSet = loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
+        string? noBannerEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
+        string? dotnetNoLogoEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
+        if (!isNoBannerSet && !(noBannerEnvironmentVar is "1" or "true") && !(dotnetNoLogoEnvironmentVar is "1" or "true"))
+        {
+            await platformOutputDevice.DisplayBannerAsync();
+        }
+
+        // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
+
+        // ============= SELECT AND RUN THE ACTUAL MODE ===============//
 
         // ======= TOOLS MODE ======== //
         // Add the platform output device to the service provider.
