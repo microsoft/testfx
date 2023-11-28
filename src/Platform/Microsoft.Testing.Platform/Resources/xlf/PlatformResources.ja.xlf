@@ -127,11 +127,6 @@
         <target state="translated">既定の JSON 構成が見つかりませんでした</target>
         <note />
       </trans-unit>
-      <trans-unit id="ConnectingToClientHost">
-        <source>Connecting to client host '{0}' port '{1}'</source>
-        <target state="new">Connecting to client host '{0}' port '{1}'</target>
-        <note />
-      </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
         <source>Creates the right test execution filter for console mode</source>
         <target state="translated">コンソール モードに適したテスト実行フィルターを作成します</target>
@@ -227,16 +222,6 @@
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
         <target state="translated">サポートされていない JSON トークン '{0}' が見つかりました</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="JsonRpcTcpServerDescription">
-        <source>JsonRpc server implementation based on the test platform protocol specification.</source>
-        <target state="new">JsonRpc server implementation based on the test platform protocol specification.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
-        <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
-        <target state="new">JsonRpc server to client handshake, implementation based on the test platform protocol specification.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -444,34 +429,9 @@
         <target state="translated">'ITestFramework' 型のインスタンスは、サービス プロバイダーを介して登録することはできません。'ITestApplicationBuilder.RegisterTestFramework' を介して登録する必要があります</target>
         <note />
       </trans-unit>
-      <trans-unit id="StartingServer">
-        <source>Starting server. Listening on port '{0}'</source>
-        <target state="new">Starting server. Listening on port '{0}'</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
         <source>An 'ITestExecutionFilterFactory' factory is already set</source>
         <target state="translated">'ITestExecutionFilterFactory' ファクトリは既に設定されています</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TelemetryNotice">
-        <source>Telemetry
----------
-Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
-You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
-
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</source>
-        <target state="new">Telemetry
----------
-Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
-You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
-
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
-        <source>Telemetry provider is already set</source>
-        <target state="new">Telemetry provider is already set</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
@@ -584,11 +544,6 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <target state="translated">かっこで囲まれた式内に、予期しない '/' 演算子がフィルターに含まれています</target>
         <note />
       </trans-unit>
-      <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
-        <source>Unexpected telemetry call, the telemetry is disabled.</source>
-        <target state="new">Unexpected telemetry call, the telemetry is disabled.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
         <source>An unexpected exception occured during byte conversion</source>
         <target state="new">An unexpected exception occured during byte conversion</target>
@@ -604,11 +559,6 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       <trans-unit id="UnexpectedStateErrorMessage">
         <source>Unexpected state in file '{0}' at line '{1}'</source>
         <target state="new">Unexpected state in file '{0}' at line '{1}'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UnknownCommunicationProtocolErrorMessage">
-        <source>The communication protocol '{0}' is not supported</source>
-        <target state="new">The communication protocol '{0}' is not supported</target>
         <note />
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
