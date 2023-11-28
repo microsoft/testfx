@@ -3,7 +3,9 @@
 
 using System.Globalization;
 
+#if !PLATFORM_MSBUILD
 using Microsoft.Testing.Platform.Resources;
+#endif
 
 namespace Microsoft.Testing.Platform.IPC;
 
@@ -21,10 +23,24 @@ internal abstract class NamedPipeBase
     protected INamedPipeSerializer GetSerializer(int id)
         => _idSerializer.TryGetValue(id, out object? serializer)
             ? (INamedPipeSerializer)serializer
-            : throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.NoSerializerRegisteredWithIdErrorMessage, id));
+            : throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture,
+#if PLATFORM_MSBUILD
+                "No serializer registered with id '{0}'",
+#else
+                PlatformResources.NoSerializerRegisteredWithIdErrorMessage,
+#endif
+                id));
 
     protected INamedPipeSerializer GetSerializer(Type type)
         => _typeSerializer.TryGetValue(type, out object? serializer)
             ? (INamedPipeSerializer)serializer
-            : throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.NoSerializerRegisteredWithTypeErrorMessage, type));
+            : throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture,
+#if PLATFORM_MSBUILD
+                "No serializer registered with type '{0}'",
+#else
+                PlatformResources.NoSerializerRegisteredWithTypeErrorMessage,
+#endif
+                type));
 }
