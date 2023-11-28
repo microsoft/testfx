@@ -10,7 +10,8 @@ using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
-#if NET
+
+#if !PLATFORM_MSBUILD
 using Microsoft.Testing.Platform.Resources;
 #endif
 
@@ -264,12 +265,14 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         Directory.CreateDirectory(directoryId);
         return new PipeNameDescription(
             !Directory.Exists(directoryId)
-                ? throw new DirectoryNotFoundException(
+                ? throw new DirectoryNotFoundException(string.Format(
+                    CultureInfo.InvariantCulture,
 #if PLATFORM_MSBUILD
-                    $"Directory: {directoryId} doesn't exist.")
+                    $"Directory: {directoryId} doesn't exist.",
 #else
-                    string.Format(CultureInfo.InvariantCulture, PlatformResources.CouldNotFindDirectoryErrorMessage, directoryId))
+                    PlatformResources.CouldNotFindDirectoryErrorMessage,
 #endif
+                    directoryId))
                 : Path.Combine(directoryId, ".pipe"), true);
     }
 
@@ -289,12 +292,14 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             // To close gracefully we need to ensure that the client closed the stream line 103.
             if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
-                throw new InvalidOperationException(
+                throw new InvalidOperationException(string.Format(
+                    CultureInfo.InvariantCulture,
 #if PLATFORM_MSBUILD
-                    "InternalLoopAsync() didn't exit as expected");
+                    "'{0}' didn't exit as expected",
 #else
-                    string.Format(CultureInfo.InvariantCulture, PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage, nameof(InternalLoopAsync)));
+                    PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage,
 #endif
+                    nameof(InternalLoopAsync)));
             }
         }
 
