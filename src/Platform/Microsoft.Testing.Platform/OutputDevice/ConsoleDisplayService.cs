@@ -116,7 +116,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     public string Description { get; } = "Test Platform default console service";
 
     /// <inheritdoc />
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    public virtual Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     private async Task LogDebugAsync(string message)
     {
