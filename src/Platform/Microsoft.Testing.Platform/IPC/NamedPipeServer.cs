@@ -4,11 +4,13 @@
 #if NETCOREAPP
 using System.Buffers;
 #endif
+using System.Globalization;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.IPC;
 
@@ -185,10 +187,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 byte[] bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
                 try
                 {
-                    if (!BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage))
-                    {
-                        throw new InvalidOperationException("Unexpected exception during the byte conversion");
-                    }
+                    ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
 
                     await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken);
                 }
@@ -205,10 +204,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                 bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
                 try
                 {
-                    if (!BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id))
-                    {
-                        throw new InvalidOperationException("Unexpected exception during the byte conversion");
-                    }
+                    ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, responseNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
 
                     await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken);
                 }
@@ -266,8 +262,8 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         Directory.CreateDirectory(directoryId);
         return new PipeNameDescription(
             !Directory.Exists(directoryId)
-            ? throw new InvalidOperationException($"Directory: {directoryId} doesn't exist.")
-            : Path.Combine(directoryId, ".pipe"), true);
+                ? throw new DirectoryNotFoundException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CouldNotFindDirectoryErrorMessage, directoryId))
+                : Path.Combine(directoryId, ".pipe"), true);
     }
 
     public void Dispose()
@@ -281,15 +277,12 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         {
             // If the loop task is null at this point we have race condition, means that the task didn't start yet and we already dispose.
             // This is unexpected and we throw an exception.
-            if (_loopTask is null)
-            {
-                throw new InvalidOperationException("Unexpected null _loopTask");
-            }
+            ApplicationStateGuard.Ensure(_loopTask is not null);
 
             // To close gracefully we need to ensure that the client closed the stream line 103.
             if (!_loopTask.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
-                throw new InvalidOperationException("InternalLoopAsync() didn't exit as expected");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage, nameof(InternalLoopAsync)));
             }
         }
 
@@ -311,10 +304,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         {
             // If the loop task is null at this point we have race condition, means that the task didn't start yet and we already dispose.
             // This is unexpected and we throw an exception.
-            if (_loopTask is null)
-            {
-                throw new InvalidOperationException("Unexpected null _loopTask");
-            }
+            ApplicationStateGuard.Ensure(_loopTask is not null);
 
             try
             {
@@ -323,7 +313,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
             catch (TimeoutException)
             {
-                throw new InvalidOperationException("InternalLoopAsync() didn't exit as expected");
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.InternalLoopAsyncDidNotExitSuccessfullyErrorMessage, nameof(InternalLoopAsync)));
             }
         }
 

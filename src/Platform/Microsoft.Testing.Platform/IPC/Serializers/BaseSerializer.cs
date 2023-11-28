@@ -6,6 +6,9 @@ using System.Buffers;
 #endif
 using System.Text;
 
+using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Resources;
+
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 internal abstract class BaseSerializer
@@ -35,11 +38,7 @@ internal abstract class BaseSerializer
         try
         {
             Span<byte> len = stackalloc byte[4];
-            if (!BitConverter.TryWriteBytes(len, stringutf8TotalBytes))
-            {
-                throw new InvalidOperationException("Unexpected exception during the byte conversion");
-            }
-
+            ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(len, stringutf8TotalBytes), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
             stream.Write(len);
 
             Encoding.UTF8.GetBytes(str, bytes);
@@ -54,10 +53,7 @@ internal abstract class BaseSerializer
     protected static void WriteInt(Stream stream, int value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int)];
-        if (!BitConverter.TryWriteBytes(bytes, value))
-        {
-            throw new InvalidOperationException("Unexpected exception during the byte conversion");
-        }
+        ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, value), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
 
         stream.Write(bytes);
     }
@@ -65,10 +61,7 @@ internal abstract class BaseSerializer
     protected static void WriteLong(Stream stream, long value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(long)];
-        if (!BitConverter.TryWriteBytes(bytes, value))
-        {
-            throw new InvalidOperationException("Unexpected exception during the byte conversion");
-        }
+        ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, value), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
 
         stream.Write(bytes);
     }

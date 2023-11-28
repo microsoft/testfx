@@ -442,4 +442,19 @@
   <data name="TreeNodeFilterInvalidArgumentCount" xml:space="preserve">
     <value>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</value>
   </data>
+  <data name="CouldNotFindDirectoryErrorMessage" xml:space="preserve">
+    <value>Could not find directory '{0}'</value>
+  </data>
+  <data name="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage" xml:space="preserve">
+    <value>Method '{0}' did not exit successfully</value>
+  </data>
+  <data name="NoSerializerRegisteredWithIdErrorMessage" xml:space="preserve">
+    <value>No serializer registered with ID '{0}'</value>
+  </data>
+  <data name="NoSerializerRegisteredWithTypeErrorMessage" xml:space="preserve">
+    <value>No serializer registered with type '{0}'</value>
+  </data>
+  <data name="UnexpectedExceptionDuringByteConversionErrorMessage" xml:space="preserve">
+    <value>An unexpected exception occured during byte conversion</value>
+  </data>
 </root>
