@@ -304,6 +304,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find directory &apos;{0}&apos;.
+        /// </summary>
+        internal static string CouldNotFindDirectoryErrorMessage {
+            get {
+                return ResourceManager.GetString("CouldNotFindDirectoryErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Provider &apos;{0}&apos; (UID: {1}) failed with error: {2}.
         /// </summary>
         internal static string EnvironmentVariableProviderFailedWithError {
@@ -404,6 +413,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Method &apos;{0}&apos; did not exit successfully.
+        /// </summary>
+        internal static string InternalLoopAsyncDidNotExitSuccessfullyErrorMessage {
+            get {
+                return ResourceManager.GetString("InternalLoopAsyncDidNotExitSuccessfullyErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid command line arguments:.
         /// </summary>
         internal static string InvalidCommandLineArguments {
@@ -436,6 +454,24 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string JsonConfigurationFileParserUnsupportedTokenErrorMessage {
             get {
                 return ResourceManager.GetString("JsonConfigurationFileParserUnsupportedTokenErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No serializer registered with ID &apos;{0}&apos;.
+        /// </summary>
+        internal static string NoSerializerRegisteredWithIdErrorMessage {
+            get {
+                return ResourceManager.GetString("NoSerializerRegisteredWithIdErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No serializer registered with type &apos;{0}&apos;.
+        /// </summary>
+        internal static string NoSerializerRegisteredWithTypeErrorMessage {
+            get {
+                return ResourceManager.GetString("NoSerializerRegisteredWithTypeErrorMessage", resourceCulture);
             }
         }
         
@@ -994,6 +1030,15 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TreeNodeFilterUnexpectedSlashOperatorErrorMessage {
             get {
                 return ResourceManager.GetString("TreeNodeFilterUnexpectedSlashOperatorErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An unexpected exception occured during byte conversion.
+        /// </summary>
+        internal static string UnexpectedExceptionDuringByteConversionErrorMessage {
+            get {
+                return ResourceManager.GetString("UnexpectedExceptionDuringByteConversionErrorMessage", resourceCulture);
             }
         }
         

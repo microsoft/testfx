@@ -8,6 +8,9 @@ using System.IO.Pipes;
 using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Helpers;
+#if NET
+using Microsoft.Testing.Platform.Resources;
+#endif
 
 namespace Microsoft.Testing.Platform.IPC;
 
@@ -24,7 +27,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
     public NamedPipeClient(string name)
     {
-        ArgumentGuard.Ensure(name != null, nameof(name), "Pipe name cannot be null");
+        ArgumentGuard.IsNotNull(name);
         _namedPipeClientStream = new(".", name, PipeDirection.InOut);
         PipeName = name;
     }
@@ -64,11 +67,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
             byte[] bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
             try
             {
-                if (!BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage))
-                {
-                    throw new InvalidOperationException("Unexpected exception during the byte conversion");
-                }
-
+                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, sizeOfTheWholeMessage), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken);
             }
             finally
@@ -84,11 +83,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
             bytes = ArrayPool<byte>.Shared.Rent(sizeof(int));
             try
             {
-                if (!BitConverter.TryWriteBytes(bytes, requestNamedPipeSerializer.Id))
-                {
-                    throw new InvalidOperationException("Unexpected exception during the byte conversion");
-                }
-
+                ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, requestNamedPipeSerializer.Id), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
                 await _messageBuffer.WriteAsync(bytes.AsMemory(0, sizeof(int)), cancellationToken);
             }
             finally

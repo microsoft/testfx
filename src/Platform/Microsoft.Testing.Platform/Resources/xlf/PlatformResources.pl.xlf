@@ -137,6 +137,11 @@
         <target state="translated">Fabryka filtrów wykonywania testów konsoli</target>
         <note />
       </trans-unit>
+      <trans-unit id="CouldNotFindDirectoryErrorMessage">
+        <source>Could not find directory '{0}'</source>
+        <target state="new">Could not find directory '{0}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Dostawca „{0}” (UID:{1}) nie powiódł się z powodu błędu: {2}</target>
@@ -194,6 +199,11 @@
         <target state="new">&lt;test application runner&gt;</target>
         <note />
       </trans-unit>
+      <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
+        <source>Method '{0}' did not exit successfully</source>
+        <target state="new">Method '{0}' did not exit successfully</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InvalidCommandLineArguments">
         <source>Invalid command line arguments:</source>
         <target state="new">Invalid command line arguments:</target>
@@ -212,6 +222,16 @@
       <trans-unit id="JsonConfigurationFileParserUnsupportedTokenErrorMessage">
         <source>Unsupported JSON token '{0}' was found</source>
         <target state="translated">Znaleziono nieobsługiwany token JSON „{0}”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
+        <source>No serializer registered with ID '{0}'</source>
+        <target state="new">No serializer registered with ID '{0}'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
+        <source>No serializer registered with type '{0}'</source>
+        <target state="new">No serializer registered with type '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -522,6 +542,11 @@
       <trans-unit id="TreeNodeFilterUnexpectedSlashOperatorErrorMessage">
         <source>Filter contains an unexpected '/' operator inside a parenthesized expression</source>
         <target state="translated">Filtr zawiera nieoczekiwany operator „/” wewnątrz wyrażenia w nawiasach</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
+        <source>An unexpected exception occured during byte conversion</source>
+        <target state="new">An unexpected exception occured during byte conversion</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
