@@ -16,13 +16,6 @@ namespace MSTestAdapter.PlatformServices.Tests.Utilities;
 public class ReflectionUtilityTests : TestContainer
 #pragma warning restore SA1649 // File name must match first type name
 {
-    private readonly ReflectionUtility _reflectionUtility;
-
-    public ReflectionUtilityTests()
-    {
-        _reflectionUtility = new ReflectionUtility();
-    }
-
     public void GetCustomAttributesShouldReturnAllAttributes()
     {
         var methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");

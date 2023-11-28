@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Generic;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 #pragma warning disable CA1716 // Do not use reserved keywords

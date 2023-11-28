@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET462
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -14,7 +16,6 @@ using TestFramework.ForTestingMSTest;
 
 using ITestMethod = Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod;
 
-#if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class DesktopTestDataSourceTests : TestContainer
@@ -45,7 +46,7 @@ public class DesktopTestDataSourceTests : TestContainer
         TestDataSource testDataSource = new();
         IEnumerable<object> dataRows = testDataSource.GetData(_mockTestMethodInfo.Object, _mockTestContext.Object);
 
-        foreach (DataRow dataRow in dataRows)
+        foreach (DataRow dataRow in dataRows.Cast<DataRow>())
         {
             Verify("v1".Equals(dataRow[3]));
         }
@@ -71,26 +72,20 @@ public class DesktopTestDataSourceTests : TestContainer
 
     public class DummyTestClass
     {
-        private TestContext _testContextInstance;
-
-        public TestContext TestContext
-        {
-            get { return _testContextInstance; }
-            set { _testContextInstance = value; }
-        }
+        public TestContext TestContext { get; set; }
 
         [TestMethod]
         public void PassingTest()
         {
-            Verify(_testContextInstance.DataRow["adapter"].ToString() == "v1");
-            Verify(_testContextInstance.DataRow["targetPlatform"].ToString() == "x86");
+            Verify(TestContext.DataRow["adapter"].ToString() == "v1");
+            Verify(TestContext.DataRow["targetPlatform"].ToString() == "x86");
             TestContext.AddResultFile("C:\\temp.txt");
         }
 
         [TestMethod]
         public void FailingTest()
         {
-            Verify(_testContextInstance.DataRow["configuration"].ToString() == "Release");
+            Verify(TestContext.DataRow["configuration"].ToString() == "Release");
         }
     }
 

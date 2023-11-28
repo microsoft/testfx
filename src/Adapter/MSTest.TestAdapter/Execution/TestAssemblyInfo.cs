@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -92,12 +91,7 @@ public class TestAssemblyInfo
         get
         {
             // If no assembly cleanup, then continue with the next one.
-            if (AssemblyCleanupMethod == null)
-            {
-                return false;
-            }
-
-            return true;
+            return AssemblyCleanupMethod != null;
         }
     }
 
@@ -214,17 +208,10 @@ public class TestAssemblyInfo
             {
                 var realException = ex.InnerException ?? ex;
 
-                string errorMessage;
-
                 // special case AssertFailedException to trim off part of the stack trace
-                if (realException is AssertFailedException or AssertInconclusiveException)
-                {
-                    errorMessage = realException.Message;
-                }
-                else
-                {
-                    errorMessage = realException.GetFormattedExceptionMessage();
-                }
+                string errorMessage = realException is AssertFailedException or AssertInconclusiveException
+                    ? realException.Message
+                    : realException.GetFormattedExceptionMessage();
 
                 DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
                 return string.Format(
@@ -262,17 +249,10 @@ public class TestAssemblyInfo
             {
                 var realException = ex.InnerException ?? ex;
 
-                string errorMessage;
-
                 // special case AssertFailedException to trim off part of the stack trace
-                if (realException is AssertFailedException or AssertInconclusiveException)
-                {
-                    errorMessage = realException.Message;
-                }
-                else
-                {
-                    errorMessage = realException.GetFormattedExceptionMessage();
-                }
+                string errorMessage = realException is AssertFailedException or AssertInconclusiveException
+                    ? realException.Message
+                    : realException.GetFormattedExceptionMessage();
 
                 var exceptionStackTraceInfo = realException.GetStackTraceInformation();
                 DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");

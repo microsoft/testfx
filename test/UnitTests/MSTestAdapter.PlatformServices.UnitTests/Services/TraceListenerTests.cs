@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !WIN_UI
+
 using System;
 using System.IO;
 using System.Text;
@@ -14,7 +16,6 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class TraceListenerTests : TestContainer
 {
-#if !WIN_UI
     public void GetWriterShouldReturnInitializedWriter()
     {
         StringWriter writer = new(new StringBuilder("DummyTrace"));
@@ -34,8 +35,8 @@ public class TraceListenerTests : TestContainer
         var ex = VerifyThrows(ShouldThrowException);
         Verify(ex is ObjectDisposedException);
     }
-#endif
 }
 
+#endif
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName
 

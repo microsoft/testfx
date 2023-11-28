@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -199,12 +197,7 @@ internal static class ExceptionHelper
 
         var stackTrace = TrimStackTrace(stackTraceString);
 
-        if (!StringEx.IsNullOrEmpty(stackTrace))
-        {
-            return new StackTraceInformation(stackTrace, null, 0, 0);
-        }
-
-        return null;
+        return !StringEx.IsNullOrEmpty(stackTrace) ? new StackTraceInformation(stackTrace, null, 0, 0) : null;
     }
 
     /// <summary>

@@ -2,10 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;

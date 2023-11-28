@@ -3,7 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System;
 using System.Security.Policy;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;

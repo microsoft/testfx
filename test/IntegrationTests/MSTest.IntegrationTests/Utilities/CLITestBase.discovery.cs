@@ -5,7 +5,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 
@@ -68,12 +67,11 @@ public partial class CLITestBase : TestContainer
 
     private class InternalDiscoveryContext : IDiscoveryContext
     {
-        private readonly IRunSettings _runSettings;
         private readonly ITestCaseFilterExpression _filter;
 
         public InternalDiscoveryContext(string runSettings, string testCaseFilter)
         {
-            _runSettings = new InternalRunSettings(runSettings);
+            RunSettings = new InternalRunSettings(runSettings);
 
             if (testCaseFilter != null)
             {
@@ -81,7 +79,7 @@ public partial class CLITestBase : TestContainer
             }
         }
 
-        public IRunSettings RunSettings => _runSettings;
+        public IRunSettings RunSettings { get; }
 
         public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
         {
@@ -90,14 +88,12 @@ public partial class CLITestBase : TestContainer
 
         private class InternalRunSettings : IRunSettings
         {
-            private readonly string _runSettings;
-
             public InternalRunSettings(string runSettings)
             {
-                _runSettings = runSettings;
+                SettingsXml = runSettings;
             }
 
-            public string SettingsXml => _runSettings;
+            public string SettingsXml { get; }
 
             public ISettingsProvider GetSettings(string settingsName) => throw new NotImplementedException();
         }

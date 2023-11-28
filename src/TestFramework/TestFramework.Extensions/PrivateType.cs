@@ -3,7 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System;
 using System.Globalization;
 using System.Reflection;
 
@@ -22,11 +21,6 @@ public class PrivateType
         | BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy;
 
     /// <summary>
-    /// The wrapped type.
-    /// </summary>
-    private readonly Type _type;
-
-    /// <summary>
     /// Initializes a new instance of the <see cref="PrivateType"/> class that contains the private type.
     /// </summary>
     /// <param name="assemblyName">Assembly name.</param>
@@ -37,7 +31,7 @@ public class PrivateType
         _ = typeName ?? throw new ArgumentNullException(nameof(typeName));
         Assembly asm = Assembly.Load(assemblyName);
 
-        _type = asm.GetType(typeName, true);
+        ReferencedType = asm.GetType(typeName, true);
     }
 
     /// <summary>
@@ -47,13 +41,13 @@ public class PrivateType
     /// <param name="type">The wrapped Type to create.</param>
     public PrivateType(Type type)
     {
-        _type = type ?? throw new ArgumentNullException(nameof(type));
+        ReferencedType = type ?? throw new ArgumentNullException(nameof(type));
     }
 
     /// <summary>
     /// Gets the referenced type.
     /// </summary>
-    public Type ReferencedType => _type;
+    public Type ReferencedType { get; }
 
     /// <summary>
     /// Invokes static member.
@@ -186,12 +180,7 @@ public class PrivateType
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.InvokeMethod, args, culture);
         }
 
-        MethodInfo member = _type.GetMethod(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, parameterTypes, null);
-        if (member == null)
-        {
-            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
-        }
-
+        MethodInfo member = ReferencedType.GetMethod(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, parameterTypes, null) ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
         try
         {
             if (member.IsGenericMethodDefinition)
@@ -434,12 +423,7 @@ public class PrivateType
             return InvokeHelperStatic(name, bindingFlags | BindingFlags.GetProperty, args, null);
         }
 
-        PropertyInfo? pi = _type.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null);
-        if (pi == null)
-        {
-            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
-        }
-
+        PropertyInfo? pi = ReferencedType.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null) ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
         return pi.GetValue(null, args);
     }
 
@@ -469,13 +453,8 @@ public class PrivateType
 
         if (parameterTypes != null)
         {
-            PropertyInfo pi = _type.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null);
-            if (pi == null)
-            {
-                throw new ArgumentException(
-                    string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
-            }
-
+            PropertyInfo pi = ReferencedType.GetProperty(name, bindingFlags | BindingFlags.Static, null, null, parameterTypes, null)
+                ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
             pi.SetValue(null, value, args);
         }
         else
@@ -500,7 +479,7 @@ public class PrivateType
         _ = name ?? throw new ArgumentNullException(nameof(name));
         try
         {
-            return _type.InvokeMember(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, null, args, culture);
+            return ReferencedType.InvokeMember(name, bindingFlags | BindToEveryThing | BindingFlags.Static, null, null, args, culture);
         }
         catch (TargetInvocationException e)
         {

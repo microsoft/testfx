@@ -2,11 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if WIN_UI
-using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -70,12 +67,7 @@ public class UITestMethodAttribute : TestMethodAttribute
 
         // TODO: Code seems to be assuming DeclaringType is never null, but it can be null.
         // Using 'bang' notation for now to ensure same behavior.
-        var dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType!.Assembly);
-        if (dispatcher == null)
-        {
-            throw new InvalidOperationException(FrameworkMessages.AsyncUITestMethodWithNoDispatcherQueue);
-        }
-
+        var dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType!.Assembly) ?? throw new InvalidOperationException(FrameworkMessages.AsyncUITestMethodWithNoDispatcherQueue);
         if (dispatcher.HasThreadAccess)
         {
             try
@@ -117,12 +109,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     private static Type? GetApplicationType(Assembly assembly)
     {
         var attribute = assembly.GetCustomAttribute<WinUITestTargetAttribute>();
-        if (attribute == null || attribute.ApplicationType == null)
-        {
-            return null;
-        }
-
-        return attribute.ApplicationType;
+        return attribute == null || attribute.ApplicationType == null ? null : attribute.ApplicationType;
     }
 
     private static DispatcherQueue? GetApplicationDispatcherQueue(Assembly assembly)

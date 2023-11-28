@@ -10,7 +10,9 @@ namespace FxExtensibilityTestProject;
 [TestClass]
 public class DynamicDataExTests
 {
+#pragma warning disable IDE0051 // Remove unused private members
     private static IEnumerable<object[]> ReusableTestDataProperty
+#pragma warning restore IDE0051 // Remove unused private members
     {
         get
         {
@@ -19,7 +21,9 @@ public class DynamicDataExTests
     }
 
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
+#pragma warning disable IDE0051 // Remove unused private members
     private static IEnumerable<object[]> ReusableTestDataMethod()
+#pragma warning restore IDE0051 // Remove unused private members
 #pragma warning restore CA1859 // Use concrete types when possible for improved performance
     {
         return new[] { new object[] { "string", 4, true } };

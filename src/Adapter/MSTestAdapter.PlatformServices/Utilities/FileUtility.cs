@@ -3,11 +3,7 @@
 
 #if !WINDOWS_UWP
 
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -62,16 +58,9 @@ internal class FileUtility
         uint iteration = 0;
         do
         {
-            string tryMe;
-            if (iteration == 0)
-            {
-                tryMe = originalDirectoryName;
-            }
-            else
-            {
-                tryMe = string.Format(CultureInfo.InvariantCulture, "{0}[{1}]", originalDirectoryName, iteration.ToString(CultureInfo.InvariantCulture));
-            }
-
+            string tryMe = iteration == 0
+                ? originalDirectoryName
+                : string.Format(CultureInfo.InvariantCulture, "{0}[{1}]", originalDirectoryName, iteration.ToString(CultureInfo.InvariantCulture));
             string tryMePath = Path.Combine(parentDirectoryName, tryMe);
 
             if (!File.Exists(tryMePath) && !Directory.Exists(tryMePath))
@@ -172,7 +161,7 @@ internal class FileUtility
         {
             if (DoesFileExist(pdbSource))
             {
-                pdbDestination = CopyFileOverwrite(pdbSource, pdbDestination, out var warning);
+                pdbDestination = CopyFileOverwrite(pdbSource, pdbDestination, out _);
                 if (!StringEx.IsNullOrEmpty(pdbDestination))
                 {
                     destToSource.Add(relativePdbDestination, pdbSource);
@@ -236,12 +225,11 @@ internal class FileUtility
         DebugEx.Assert(!StringEx.IsNullOrEmpty(path), "path should not be null or empty.");
         DebugEx.Assert(!StringEx.IsNullOrEmpty(rootDir), "rootDir should not be null or empty.");
 
-        if (Path.IsPathRooted(path) && path.StartsWith(rootDir, StringComparison.OrdinalIgnoreCase))
-        {
-            return path.Substring(rootDir.Length).TrimStart(Path.DirectorySeparatorChar);
-        }
-
-        return path;
+#pragma warning disable IDE0057 // Use range operator
+        return Path.IsPathRooted(path) && path.StartsWith(rootDir, StringComparison.OrdinalIgnoreCase)
+            ? path.Substring(rootDir.Length).TrimStart(Path.DirectorySeparatorChar)
+            : path;
+#pragma warning restore IDE0057 // Use range operator
     }
 
     /// <summary>

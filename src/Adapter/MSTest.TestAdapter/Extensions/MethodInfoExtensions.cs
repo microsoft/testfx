@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -153,17 +151,11 @@ internal static class MethodInfoExtensions
             throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, Resource.UTA_TestMethodExpectedParameters);
         }
 
-        Task? task;
-        if (parameters is not null
+        Task? task = parameters is not null
             && methodParameters?.Length == 1
-            && methodParameters[0].ParameterType == typeof(object[]))
-        {
-            task = methodInfo.Invoke(classInstance, new[] { parameters }) as Task;
-        }
-        else
-        {
-            task = methodInfo.Invoke(classInstance, parameters) as Task;
-        }
+            && methodParameters[0].ParameterType == typeof(object[])
+            ? methodInfo.Invoke(classInstance, new[] { parameters }) as Task
+            : methodInfo.Invoke(classInstance, parameters) as Task;
 
         // If methodInfo is an Async method, wait for returned task
         task?.GetAwaiter().GetResult();

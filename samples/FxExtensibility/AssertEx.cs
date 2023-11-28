@@ -21,15 +21,13 @@ public static class AssertEx
     /// <param name="obj">The object.</param>
     /// <returns>True if object is of the given type.</returns>
     /// <exception cref="AssertFailedException">If object is not of the given type.</exception>
+#pragma warning disable IDE0060 // Remove unused parameter
     public static bool IsOfType<T>(this Assert assert, object obj)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
-        if (obj is T)
-        {
-            return true;
-        }
-
-        throw new AssertFailedException(
-            string.Format(
+        return obj is T
+            ? true
+            : throw new AssertFailedException(string.Format(
                 CultureInfo.InvariantCulture,
                 "Expected object of type {0} but found object of type {1}",
                 typeof(T),
@@ -41,7 +39,9 @@ public static class AssertEx
     /// </summary>
     /// <param name="assert">The Assert class.</param>
     /// <returns>The class that contains the assert methods for this grouping.</returns>
+#pragma warning disable IDE0060 // Remove unused parameter
     public static AssertIs Is(this Assert assert)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
         s_assertIs ??= new AssertIs();
 

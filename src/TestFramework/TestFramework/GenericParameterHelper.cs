@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -88,12 +86,9 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// </exception>
     public int CompareTo(object? obj)
     {
-        if (obj is GenericParameterHelper gpf)
-        {
-            return Data.CompareTo(gpf.Data);
-        }
-
-        throw new NotSupportedException("GenericParameterHelper object is designed to compare objects of GenericParameterHelper type only.");
+        return obj is GenericParameterHelper gpf
+            ? Data.CompareTo(gpf.Data)
+            : throw new NotSupportedException("GenericParameterHelper object is designed to compare objects of GenericParameterHelper type only.");
     }
 
     /// <summary>

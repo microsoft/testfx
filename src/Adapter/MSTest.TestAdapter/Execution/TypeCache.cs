@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Security;
 
@@ -676,13 +673,10 @@ internal class TypeCache : MarshalByRefObject
             testMethodInfo = methodBase.DeclaringType!.GetRuntimeMethod(methodBase.Name, parameters);
         }
 
-        if (testMethodInfo is null
-            || !testMethodInfo.HasCorrectTestMethodSignature(true, discoverInternals))
-        {
-            return null;
-        }
-
-        return testMethodInfo;
+        return testMethodInfo is null
+            || !testMethodInfo.HasCorrectTestMethodSignature(true, discoverInternals)
+            ? null
+            : testMethodInfo;
     }
 
     private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
@@ -758,7 +752,7 @@ internal class TypeCache : MarshalByRefObject
         var attributes = testMethodInfo.TestMethod.GetCustomAttributes(typeof(TestPropertyAttribute), false);
         DebugEx.Assert(attributes != null, "attributes is null");
 
-        foreach (TestPropertyAttribute attribute in attributes)
+        foreach (TestPropertyAttribute attribute in attributes.Cast<TestPropertyAttribute>())
         {
             if (!ValidateAndAssignTestProperty(testMethodInfo, testContext, attribute.Name, attribute.Value))
             {

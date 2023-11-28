@@ -1049,7 +1049,7 @@ public class TypeCacheTests : TestContainer
         var customProperty = ((IDictionary<string, object>)testContext.Properties).FirstOrDefault(p => p.Key.Equals("WhoAmI", StringComparison.Ordinal));
 
         Verify((object)customProperty is not null);
-        Verify(customProperty.Value as string == "Me");
+        Verify((customProperty.Value as string) == "Me");
     }
 
     public void GetTestMethodInfoShouldReportWarningIfCustomPropertyHasSameNameAsPredefinedProperties()
@@ -1132,7 +1132,7 @@ public class TypeCacheTests : TestContainer
 
         // Verify that the first value gets set.
         Verify(((IDictionary<string, object>)testContext.Properties).TryGetValue("WhoAmI", out var value));
-        Verify(value as string == "Me");
+        Verify((value as string) == "Me");
     }
 
     public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedTestClasses()
@@ -1530,7 +1530,9 @@ public class TypeCacheTests : TestContainer
 
     private class DummyTestClassWithNoDefaultConstructor
     {
+#pragma warning disable IDE0051 // Remove unused private members
         private DummyTestClassWithNoDefaultConstructor(int a)
+#pragma warning restore IDE0051 // Remove unused private members
         {
         }
     }

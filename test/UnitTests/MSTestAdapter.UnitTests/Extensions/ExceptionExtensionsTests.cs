@@ -122,25 +122,19 @@ public class ExceptionExtensionsTests : TestContainer
     public void IsUnitTestAssertExceptionReturnsTrueIfExceptionIsAssertException()
     {
         var exception = new UTF.AssertInconclusiveException();
-        UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
-
-        Verify(exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo));
+        Verify(exception.TryGetUnitTestAssertException(out _, out _, out _));
     }
 
     public void IsUnitTestAssertExceptionReturnsFalseIfExceptionIsNotAssertException()
     {
         var exception = new NotImplementedException();
-        UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
-
-        Verify(!exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo));
+        Verify(!exception.TryGetUnitTestAssertException(out _, out _, out _));
     }
 
     public void IsUnitTestAssertExceptionSetsOutcomeAsInconclusiveIfAssertInconclusiveException()
     {
         var exception = new UTF.AssertInconclusiveException("Dummy Message", new NotImplementedException("notImplementedException"));
-        UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
-
-        exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo);
+        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out var exceptionMessage, out _);
 
         Verify(outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(exceptionMessage == "Dummy Message");
@@ -149,9 +143,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void IsUnitTestAssertExceptionSetsOutcomeAsFailedIfAssertFailedException()
     {
         var exception = new UTF.AssertFailedException("Dummy Message", new NotImplementedException("notImplementedException"));
-        UTF.UnitTestOutcome outcome = UTF.UnitTestOutcome.Unknown;
-
-        exception.TryGetUnitTestAssertException(out outcome, out var exceptionMessage, out var stackTraceInfo);
+        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out var exceptionMessage, out _);
 
         Verify(outcome == UTF.UnitTestOutcome.Failed);
         Verify(exceptionMessage == "Dummy Message");

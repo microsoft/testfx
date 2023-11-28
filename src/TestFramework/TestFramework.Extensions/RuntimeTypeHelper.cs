@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
@@ -215,19 +214,13 @@ internal class RuntimeTypeHelper
             {
                 if (newMin == 2)
                 {
-                    currentMin = i;
                     ambig = false;
                     currentMin = i;
                 }
             }
         }
 
-        if (ambig)
-        {
-            throw new AmbiguousMatchException();
-        }
-
-        return match[currentMin];
+        return ambig ? throw new AmbiguousMatchException() : match[currentMin];
     }
 
     /// <summary>
@@ -277,18 +270,11 @@ internal class RuntimeTypeHelper
             int hierarchyDepth2 = GetHierarchyDepth(m2.DeclaringType);
 
             // The most derived method is the most specific one.
-            if (hierarchyDepth1 == hierarchyDepth2)
-            {
-                return 0;
-            }
-            else if (hierarchyDepth1 < hierarchyDepth2)
-            {
-                return 2;
-            }
-            else
-            {
-                return 1;
-            }
+            return hierarchyDepth1 == hierarchyDepth2
+                ? 0
+                : hierarchyDepth1 < hierarchyDepth2
+                    ? 2
+                    : 1;
         }
 
         // The match is ambiguous.
@@ -351,23 +337,9 @@ internal class RuntimeTypeHelper
             //          the paramOrder array could contain indexes larger than p.Length - 1
             ////          so any index >= p.Length - 1 is being put in the param array
 
-            if (paramArrayType1 != null && paramOrder1[i] >= p1.Length - 1)
-            {
-                c1 = paramArrayType1;
-            }
-            else
-            {
-                c1 = p1[paramOrder1[i]].ParameterType;
-            }
+            c1 = paramArrayType1 != null && paramOrder1[i] >= p1.Length - 1 ? paramArrayType1 : p1[paramOrder1[i]].ParameterType;
 
-            if (paramArrayType2 != null && paramOrder2[i] >= p2.Length - 1)
-            {
-                c2 = paramArrayType2;
-            }
-            else
-            {
-                c2 = p2[paramOrder2[i]].ParameterType;
-            }
+            c2 = paramArrayType2 != null && paramOrder2[i] >= p2.Length - 1 ? paramArrayType2 : p2[paramOrder2[i]].ParameterType;
 
             if (c1 == c2)
             {
@@ -415,7 +387,7 @@ internal class RuntimeTypeHelper
         }
         else
         {
-            return (p1Less == true) ? 1 : 2;
+            return p1Less ? 1 : 2;
         }
     }
 
@@ -486,19 +458,11 @@ internal class RuntimeTypeHelper
             c2FromC1 = c2.IsAssignableFrom(c1);
         }
 
-        if (c1FromC2 == c2FromC1)
-        {
-            return 0;
-        }
-
-        if (c1FromC2)
-        {
-            return 2;
-        }
-        else
-        {
-            return 1;
-        }
+        return c1FromC2 == c2FromC1
+            ? 0
+            : c1FromC2
+                ? 2
+                : 1;
     }
 }
 #endif

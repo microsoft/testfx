@@ -104,12 +104,9 @@ public partial class CLITestBase : TestContainer
             "Extensions",
             "TestPlatform",
             "vstest.console.exe");
-        if (!File.Exists(vstestConsolePath))
-        {
-            throw new InvalidOperationException($"Could not find vstest.console.exe in {vstestConsolePath}");
-        }
-
-        return vstestConsolePath;
+        return !File.Exists(vstestConsolePath)
+            ? throw new InvalidOperationException($"Could not find vstest.console.exe in {vstestConsolePath}")
+            : vstestConsolePath;
     }
 
     /// <summary>
@@ -315,14 +312,7 @@ public partial class CLITestBase : TestContainer
         {
             var path = paths[i];
 
-            if (!Path.IsPathRooted(path))
-            {
-                paths[i] = GetAssetFullPath(path, targetFramework: targetFramework);
-            }
-            else
-            {
-                paths[i] = Path.GetFullPath(path);
-            }
+            paths[i] = !Path.IsPathRooted(path) ? GetAssetFullPath(path, targetFramework: targetFramework) : Path.GetFullPath(path);
         }
     }
 }

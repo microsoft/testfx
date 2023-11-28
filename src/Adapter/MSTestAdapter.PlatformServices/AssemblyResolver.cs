@@ -2,11 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security;
@@ -558,17 +554,9 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <returns> The <see cref="bool"/>. </returns>
     private bool TryLoadFromCache(string assemblyName, bool isReflectionOnly, out Assembly? assembly)
     {
-        bool isFoundInCache = false;
-
-        if (isReflectionOnly)
-        {
-            isFoundInCache = _reflectionOnlyResolvedAssemblies.TryGetValue(assemblyName, out assembly);
-        }
-        else
-        {
-            isFoundInCache = _resolvedAssemblies.TryGetValue(assemblyName, out assembly);
-        }
-
+        bool isFoundInCache = isReflectionOnly
+            ? _reflectionOnlyResolvedAssemblies.TryGetValue(assemblyName, out assembly)
+            : _resolvedAssemblies.TryGetValue(assemblyName, out assembly);
         if (isFoundInCache)
         {
             SafeLog(

@@ -1,21 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-
 #if NETFRAMEWORK
 using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Data;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ITestDataSource = Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ITestDataSource;
 using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -149,15 +145,10 @@ public class TestDataSource : ITestDataSource
             return;
         }
 
-        UTF.DataSourceElement element = TestConfiguration.ConfigurationSection.DataSources[dataSourceAttribute.DataSourceSettingName];
-        if (element == null)
-        {
-            // TODO: Change exception type to more specific one.
+        UTF.DataSourceElement element = TestConfiguration.ConfigurationSection.DataSources[dataSourceAttribute.DataSourceSettingName]
 #pragma warning disable CA2201 // Do not raise reserved exception types
-            throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_DataSourceConfigurationSectionMissing, dataSourceAttribute.DataSourceSettingName));
+            ?? throw new Exception(string.Format(CultureInfo.CurrentCulture, Resource.UTA_DataSourceConfigurationSectionMissing, dataSourceAttribute.DataSourceSettingName));
 #pragma warning restore CA2201 // Do not raise reserved exception types
-        }
-
         providerNameInvariant = ConfigurationManager.ConnectionStrings[element.ConnectionString].ProviderName;
         connectionString = ConfigurationManager.ConnectionStrings[element.ConnectionString].ConnectionString;
         tableName = element.DataTableName;

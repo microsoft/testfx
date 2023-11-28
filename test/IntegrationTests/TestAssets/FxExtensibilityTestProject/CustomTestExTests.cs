@@ -76,11 +76,8 @@ public class IterativeTestClassAttribute : TestClassAttribute
 
     public override TestMethodAttribute GetTestMethodAttribute(TestMethodAttribute testMethodAttribute)
     {
-        if (testMethodAttribute is IterativeTestMethodAttribute)
-        {
-            return testMethodAttribute;
-        }
-
-        return new IterativeTestMethodAttribute(_stabilityThreshold);
+        return testMethodAttribute is IterativeTestMethodAttribute
+            ? testMethodAttribute
+            : new IterativeTestMethodAttribute(_stabilityThreshold);
     }
 }

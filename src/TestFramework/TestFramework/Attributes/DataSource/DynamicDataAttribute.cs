@@ -1,10 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -150,23 +147,20 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
             var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName)
                 ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
             var parameters = method.GetParameters();
-            if (parameters.Length != 2 ||
+            return parameters.Length != 2 ||
                 parameters[0].ParameterType != typeof(MethodInfo) ||
                 parameters[1].ParameterType != typeof(object[]) ||
                 method.ReturnType != typeof(string) ||
                 !method.IsStatic ||
-                !method.IsPublic)
-            {
-                throw new ArgumentNullException(
+                !method.IsPublic
+                ? throw new ArgumentNullException(
                     string.Format(
                         CultureInfo.InvariantCulture,
                         FrameworkMessages.DynamicDataDisplayName,
                         DynamicDataDisplayName,
-                        typeof(string).Name,
-                        string.Join(", ", typeof(MethodInfo).Name, typeof(object[]).Name)));
-            }
-
-            return method.Invoke(null, [methodInfo, data]) as string;
+                        nameof(String),
+                        string.Join(", ", nameof(MethodInfo), typeof(object[]).Name)))
+                : method.Invoke(null, [methodInfo, data]) as string;
         }
 
         if (data != null)

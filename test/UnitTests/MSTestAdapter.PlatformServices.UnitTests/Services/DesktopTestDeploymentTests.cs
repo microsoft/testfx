@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET462
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -18,7 +19,6 @@ using MSTestAdapter.PlatformServices.Tests.Utilities;
 
 using TestFramework.ForTestingMSTest;
 
-#if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class DesktopTestDeploymentTests : TestContainer
@@ -131,7 +131,7 @@ public class DesktopTestDeploymentTests : TestContainer
             ru =>
             ru.GetCustomAttributes(
                 memberInfo,
-                typeof(DeploymentItemAttribute))).Returns((object[])deploymentItemAttributes.ToArray());
+                typeof(DeploymentItemAttribute))).Returns(deploymentItemAttributes.ToArray());
     }
 
     private TestCase GetTestCase(string source)
