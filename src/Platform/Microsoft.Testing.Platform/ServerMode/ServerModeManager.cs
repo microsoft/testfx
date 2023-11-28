@@ -4,6 +4,7 @@
 using System.Globalization;
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.ServerMode;
@@ -62,7 +63,7 @@ internal sealed partial class ServerModeManager : IServerModeManager
 
                 default:
                     {
-                        throw new NotSupportedException($"Unknown communication protocol '{CommunicationProtocol.GetType()}'");
+                        throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnknownCommunicationProtocolErrorMessage, CommunicationProtocol.GetType()));
                     }
             }
         }

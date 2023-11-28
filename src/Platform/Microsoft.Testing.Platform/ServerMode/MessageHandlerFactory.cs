@@ -1,12 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
@@ -53,7 +55,7 @@ internal sealed partial class ServerModeManager
 
         private async Task<IMessageHandler> ConnectToTestPlatformClientAsync(string clientHost, int clientPort, CancellationToken cancellationToken)
         {
-            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData($"Connecting to the client host '{clientHost}' port '{clientPort}'"));
+            await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, clientHost, clientPort)));
 
             var client = new TcpClient();
 
@@ -75,7 +77,7 @@ internal sealed partial class ServerModeManager
             listener.Start();
             try
             {
-                await _outputDevice.DisplayAsync(this, new TextOutputDeviceData($"Starting server. Listening on port '{((IPEndPoint)listener.LocalEndpoint).Port}'"));
+                await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.StartingServer, ((IPEndPoint)listener.LocalEndpoint).Port)));
 
 #if NETCOREAPP
                 TcpClient client = await listener.AcceptTcpClientAsync(cancellationToken);
