@@ -286,6 +286,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Connecting to client host &apos;{0}&apos; port &apos;{1}&apos;.
+        /// </summary>
+        internal static string ConnectingToClientHost {
+            get {
+                return ResourceManager.GetString("ConnectingToClientHost", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Creates the right test execution filter for console mode.
         /// </summary>
         internal static string ConsoleTestExecutionFilterFactoryDescription {
@@ -454,6 +463,24 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string JsonConfigurationFileParserUnsupportedTokenErrorMessage {
             get {
                 return ResourceManager.GetString("JsonConfigurationFileParserUnsupportedTokenErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to JsonRpc server implementation based on the test platform protocol specification..
+        /// </summary>
+        internal static string JsonRpcTcpServerDescription {
+            get {
+                return ResourceManager.GetString("JsonRpcTcpServerDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to JsonRpc server to client handshake, implementation based on the test platform protocol specification..
+        /// </summary>
+        internal static string JsonRpcTcpServerToSingleClientDescription {
+            get {
+                return ResourceManager.GetString("JsonRpcTcpServerToSingleClientDescription", resourceCulture);
             }
         }
         
@@ -827,6 +854,38 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Starting server. Listening on port &apos;{0}&apos;.
+        /// </summary>
+        internal static string StartingServer {
+            get {
+                return ResourceManager.GetString("StartingServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Telemetry
+        ///---------
+        ///Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
+        ///You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to &apos;1&apos; or &apos;true&apos; using your favorite shell.
+        ///
+        ///Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry.
+        /// </summary>
+        internal static string TelemetryNotice {
+            get {
+                return ResourceManager.GetString("TelemetryNotice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Telemetry provider is already set.
+        /// </summary>
+        internal static string TelemetryProviderAlreadySetErrorMessage {
+            get {
+                return ResourceManager.GetString("TelemetryProviderAlreadySetErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An &apos;ITestFrameworkInvoker&apos; factory is already set.
         /// </summary>
         internal static string TestAdapterInvokerFactoryAlreadySetErrorMessage {
@@ -1034,6 +1093,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unexpected telemetry call, the telemetry is disabled..
+        /// </summary>
+        internal static string UnexpectedCallTelemetryIsDisabledErrorMessage {
+            get {
+                return ResourceManager.GetString("UnexpectedCallTelemetryIsDisabledErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An unexpected exception occured during byte conversion.
         /// </summary>
         internal static string UnexpectedExceptionDuringByteConversionErrorMessage {
@@ -1058,6 +1126,15 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string UnexpectedStateErrorMessage {
             get {
                 return ResourceManager.GetString("UnexpectedStateErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The communication protocol &apos;{0}&apos; is not supported.
+        /// </summary>
+        internal static string UnknownCommunicationProtocolErrorMessage {
+            get {
+                return ResourceManager.GetString("UnknownCommunicationProtocolErrorMessage", resourceCulture);
             }
         }
         

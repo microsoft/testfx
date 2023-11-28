@@ -442,6 +442,35 @@
   <data name="TreeNodeFilterInvalidArgumentCount" xml:space="preserve">
     <value>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</value>
   </data>
+  <data name="ConnectingToClientHost" xml:space="preserve">
+    <value>Connecting to client host '{0}' port '{1}'</value>
+  </data>
+  <data name="JsonRpcTcpServerDescription" xml:space="preserve">
+    <value>JsonRpc server implementation based on the test platform protocol specification.</value>
+  </data>
+  <data name="JsonRpcTcpServerToSingleClientDescription" xml:space="preserve">
+    <value>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</value>
+  </data>
+  <data name="StartingServer" xml:space="preserve">
+    <value>Starting server. Listening on port '{0}'</value>
+  </data>
+  <data name="UnknownCommunicationProtocolErrorMessage" xml:space="preserve">
+    <value>The communication protocol '{0}' is not supported</value>
+  </data>
+  <data name="TelemetryNotice" xml:space="preserve">
+    <value>Telemetry
+---------
+Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
+You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
+
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</value>
+  </data>
+  <data name="TelemetryProviderAlreadySetErrorMessage" xml:space="preserve">
+    <value>Telemetry provider is already set</value>
+  </data>
+  <data name="UnexpectedCallTelemetryIsDisabledErrorMessage" xml:space="preserve">
+    <value>Unexpected telemetry call, the telemetry is disabled.</value>
+  </data>
   <data name="CouldNotFindDirectoryErrorMessage" xml:space="preserve">
     <value>Could not find directory '{0}'</value>
   </data>

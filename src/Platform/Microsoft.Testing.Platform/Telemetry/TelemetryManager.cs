@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Telemetry;
@@ -25,11 +26,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
     public void AddTelemetryCollectorProvider(Func<IServiceProvider, ITelemetryCollector> telemetryFactory)
     {
-        if (_telemetryFactory is not null)
-        {
-            throw new InvalidOperationException("Telemetry provider already set");
-        }
-
+        ApplicationStateGuard.Ensure(_telemetryFactory is null, PlatformResources.TelemetryProviderAlreadySetErrorMessage);
         _telemetryFactory = telemetryFactory;
     }
 
@@ -83,17 +80,8 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
             if (!dontShowLogo && sentinelIsNotPresent)
             {
-                string telemetryNotice =
-                    """
-                    Telemetry
-                    ---------
-                    Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
-                    You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
-
-                    Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry
-                    """;
                 IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
-                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(telemetryNotice));
+                await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.TelemetryNotice));
 
                 string? path = null;
                 try
