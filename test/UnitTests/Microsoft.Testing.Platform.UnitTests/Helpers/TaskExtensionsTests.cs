@@ -21,15 +21,15 @@ public sealed class TaskExtensionsTests : TestBase
 
     public async Task TimeoutAfterAsync_CancellationToken_Succeeds()
         => await Assert.ThrowsAsync<TaskCanceledException>(async () =>
-        await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(
-            TimeSpan.FromSeconds(30),
-            new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token));
+            await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(
+                TimeSpan.FromSeconds(30),
+                new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token));
 
     public async Task TimeoutAfterAsync_CancellationTokenNone_Succeeds()
         => await Assert.ThrowsAsync<TimeoutException>(async () =>
-        await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(
-            TimeSpan.FromSeconds(2),
-            CancellationToken.None));
+            await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(
+                TimeSpan.FromSeconds(2),
+                CancellationToken.None));
 
     public async Task CancellationAsync_Cancellation_Succeeds()
     {
