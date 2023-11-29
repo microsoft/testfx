@@ -161,11 +161,10 @@ internal class AsyncConsumerDataProcessor : IDisposable
         return _totalPayloadReceived;
     }
 
+    // At this point we simply signal the channel as complete and we don't wait for the consumer to complete.
+    // We expect that the CompleteAddingAsync() is already done correctly and so we prefer block the loop and in
+    // case get exception inside the PublishAsync()
     public void Dispose()
-
-        // At this point we simply signal the channel as complete and we don't wait for the consumer to complete.
-        // We expect that the CompleteAddingAsync() is alreay done correctly and so we prefer block the loop and in
-        // case get excepton inside the PublishAsync()
         => _channel.Writer.TryComplete();
 }
 #endif

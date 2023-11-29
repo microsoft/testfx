@@ -54,10 +54,8 @@ internal static class CommandLineParser
                     break;
                 }
 
-                if (
-
-                    // we accept as start for options -- and - all the rest are arguments to the previous option
-                    (args[i].Length > 1 && currentArg[0].Equals('-') && !currentArg[1].Equals('-')) ||
+                // we accept as start for options -- and - all the rest are arguments to the previous option
+                if ((args[i].Length > 1 && currentArg[0].Equals('-') && !currentArg[1].Equals('-')) ||
                     (args[i].Length > 2 && currentArg[0].Equals('-') && currentArg[1].Equals('-') && !currentArg[2].Equals('-')))
                 {
                     if (currentOption is null)

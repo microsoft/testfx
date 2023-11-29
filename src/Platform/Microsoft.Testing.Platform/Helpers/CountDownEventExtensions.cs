@@ -21,17 +21,16 @@ internal static class CountDownEventExtensions
 
             // https://learn.microsoft.com/dotnet/api/system.threading.threadpool.registerwaitforsingleobject?view=net-7.0
 #pragma warning disable SA1115 // Parameter should follow comma
+
+            // timedOut: true if the WaitHandle timed out; false if it was signaled.
+            // executeOnlyOnce set to true to indicate that the thread will no longer wait on the waitObject
+            // parameter after the delegate has been called;
+            // false to indicate that the timer is reset every time the wait operation completes until the wait is unregistered.
             registeredHandle = ThreadPool.RegisterWaitForSingleObject(
                 waitObject: countdownEvent.WaitHandle,
-
-                // timedOut: true if the WaitHandle timed out; false if it was signaled.
                 callBack: (state, timedOut) => ((TaskCompletionSource<bool>)state!).TrySetResult(!timedOut),
                 state: tcs,
                 millisecondsTimeOutInterval: millisecondsTimeOutInterval,
-
-                // true to indicate that the thread will no longer wait on the waitObject
-                // parameter after the delegate has been called;
-                // false to indicate that the timer is reset every time the wait operation completes until the wait is unregistered.
                 executeOnlyOnce: true);
 #pragma warning restore SA1115 // Parameter should follow comma
 

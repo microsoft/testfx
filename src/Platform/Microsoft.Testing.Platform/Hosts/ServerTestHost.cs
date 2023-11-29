@@ -536,10 +536,8 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             }
 
             // Cleanup all services
-            await DisposeServiceProviderAsync(perRequestServiceProvider, obj =>
-
-                // We skip all services that are "cloned" per call because are reused and will be disposed on shutdown.
-                !ServiceProvider.Services.Contains(obj));
+            // We skip all services that are "cloned" per call because are reused and will be disposed on shutdown.
+            await DisposeServiceProviderAsync(perRequestServiceProvider, obj => !ServiceProvider.Services.Contains(obj));
 
             // We need to dispose this service manually because the shared DisposeServiceProviderAsync skip some special service like the ITestApplicationCooperativeLifetimeService
             // that needs to be disposed at process exits.
