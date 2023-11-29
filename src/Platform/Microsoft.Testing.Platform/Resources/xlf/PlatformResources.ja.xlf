@@ -201,7 +201,7 @@
       </trans-unit>
       <trans-unit id="HelpTestApplicationRunner">
         <source>&lt;test application runner&gt;</source>
-        <target state="new">&lt;test application runner&gt;</target>
+        <target state="translated">&lt;テスト アプリケーション ランナー&gt;</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
