@@ -6,8 +6,8 @@ using System.Buffers;
 #endif
 using System.Text;
 
-using Microsoft.Testing.Platform.Helpers;
 #if NET
+using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
 #endif
 

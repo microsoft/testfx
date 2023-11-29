@@ -295,9 +295,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // ======= TEST HOST CONTROLLER MODE ======== //
         // Check if we're in the test host or we should check test controllers extensions
+        // Environment variable check should not be needed but in case we will rollback to use only env var we will need it.
         if (!testHostControllerInfo.HasTestHostController ||
-
-            // This should not be needed but in case we will rollback to use only env var we will need it.
             systemEnvironment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{testHostControllerInfo.GetTestHostControllerPID(true)}") != "1")
         {
             // Clone the service provider to avoid to add the message bus proxy to the main service provider.

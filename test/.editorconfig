@@ -46,3 +46,6 @@ dotnet_diagnostic.CA2201.severity = none
 
 # CA3075: Insecure DTD processing in XML
 dotnet_diagnostic.CA3075.severity = none
+
+# IDE0060: Remove unused parameter
+dotnet_diagnostic.IDE0060.severity = none

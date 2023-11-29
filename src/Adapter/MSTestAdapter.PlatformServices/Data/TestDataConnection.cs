@@ -2,14 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Security;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -30,7 +27,7 @@ internal abstract class TestDataConnection : IDisposable
     // List of places to look for files when substituting |DataDirectory|
     private readonly List<string> _dataFolders;
 
-    internal protected TestDataConnection(List<string> dataFolders)
+    protected internal TestDataConnection(List<string> dataFolders)
     {
         _dataFolders = dataFolders;
     }

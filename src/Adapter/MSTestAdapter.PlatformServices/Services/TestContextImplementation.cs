@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
+#if NETFRAMEWORK
 using System.Data;
 using System.Data.Common;
+#endif
 using System.Globalization;
-using System.IO;
-using System.Linq;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -41,14 +39,14 @@ public class TestContextImplementation : TestContext, ITestContext
     private readonly ITestMethod _testMethod;
 
     /// <summary>
+    /// Properties.
+    /// </summary>
+    private readonly Dictionary<string, object?> _properties;
+
+    /// <summary>
     /// Specifies whether the writer is disposed or not.
     /// </summary>
     private bool _stringWriterDisposed;
-
-    /// <summary>
-    /// Properties.
-    /// </summary>
-    private Dictionary<string, object?> _properties;
 
     /// <summary>
     /// Unit test outcome.
@@ -111,7 +109,7 @@ public class TestContextImplementation : TestContext, ITestContext
 #endif
 
     /// <inheritdoc/>
-    public override IDictionary Properties => (IDictionary)_properties;
+    public override IDictionary Properties => _properties;
 
 #if !WINDOWS_UWP && !WIN_UI
     /// <inheritdoc/>

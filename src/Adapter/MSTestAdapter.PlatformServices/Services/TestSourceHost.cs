@@ -1,18 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 #if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
+#if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+#endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
+#if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+#endif
+#if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -22,7 +24,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 public class TestSourceHost : ITestSourceHost
 {
 #if !WINDOWS_UWP
+#pragma warning disable IDE0052 // Remove unread private members
     private readonly string _sourceFileName;
+#pragma warning restore IDE0052 // Remove unread private members
     private string? _currentDirectory;
 #endif
 
@@ -165,12 +169,9 @@ public class TestSourceHost : ITestSourceHost
     {
 #if NETFRAMEWORK
         // Honor DisableAppDomain setting if it is present in runsettings
-        if (_isAppDomainCreationDisabled)
-        {
-            return Activator.CreateInstance(type, args);
-        }
-
-        return AppDomainUtilities.CreateInstance(AppDomain!, type, args);
+        return _isAppDomainCreationDisabled
+            ? Activator.CreateInstance(type, args)
+            : AppDomainUtilities.CreateInstance(AppDomain!, type, args);
 #else
         return Activator.CreateInstance(type, args);
 #endif
@@ -305,14 +306,9 @@ public class TestSourceHost : ITestSourceHost
         //    UWP platform service assembly at the test source location and since CLR starts looking for assemblies from the app base location,
         //    there would be a mismatch of platform service assemblies during discovery.
         DebugEx.Assert(_targetFrameworkVersion is not null, "Target framework version is null.");
-        if (_targetFrameworkVersion.Contains(Constants.DotNetFrameWorkStringPrefix))
-        {
-            return Path.GetDirectoryName(_sourceFileName) ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
-        }
-        else
-        {
-            return Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
-        }
+        return _targetFrameworkVersion.Contains(Constants.DotNetFrameWorkStringPrefix)
+            ? Path.GetDirectoryName(_sourceFileName) ?? Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)
+            : Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
     }
 
     /// <summary>

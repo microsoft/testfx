@@ -41,7 +41,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
     /// </summary>
     public void ExpectedExceptionAttributeConstructerShouldNotThrowAnyException()
     {
-        ExpectedExceptionAttribute sut = new(typeof(DummyTestClassDerivedFromException), "Dummy");
+        _ = new ExpectedExceptionAttribute(typeof(DummyTestClassDerivedFromException), "Dummy");
     }
 
     public void GetExceptionMsgShouldReturnExceptionMessage()

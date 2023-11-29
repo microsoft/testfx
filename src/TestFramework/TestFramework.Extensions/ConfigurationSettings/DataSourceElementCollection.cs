@@ -3,7 +3,6 @@
 
 #if NETFRAMEWORK
 
-using System;
 using System.Configuration;
 using System.Diagnostics.CodeAnalysis;
 

@@ -37,7 +37,11 @@ public class DeploymentUtilityTests : TestContainer
 
     private readonly DeploymentUtility _deploymentUtility;
 
+#pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable IDE0052 // Remove unread private members
     private IList<string> _warnings;
+#pragma warning restore IDE0052 // Remove unread private members
+#pragma warning restore IDE0044 // Add readonly modifier
 
     public DeploymentUtilityTests()
     {

@@ -119,12 +119,7 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
     {
         get
         {
-            if (MockReflectionOperations != null)
-            {
-                return MockReflectionOperations.Object;
-            }
-
-            return _reflectionOperations ??= new ReflectionOperations();
+            return MockReflectionOperations != null ? MockReflectionOperations.Object : (_reflectionOperations ??= new ReflectionOperations());
         }
     }
 

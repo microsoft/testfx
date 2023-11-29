@@ -19,7 +19,7 @@ public class DiscoverInternalsTests : CLITestBase
 
         // Act
         var testCases = DiscoverTests(assemblyPath);
-        var testResults = RunTests(testCases);
+        _ = RunTests(testCases);
 
         // Assert
         VerifyE2E.AtLeastTestsDiscovered(

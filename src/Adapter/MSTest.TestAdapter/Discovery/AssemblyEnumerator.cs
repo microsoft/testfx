@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Security;
@@ -14,8 +10,6 @@ using System.Text;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
-using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using FrameworkITestDataSource = Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource;
@@ -278,76 +272,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var testMethod = test.TestMethod;
         var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
         var testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
-        if (testMethodInfo == null)
-        {
-            return false;
-        }
-
-        return /* DataSourceAttribute discovery is disabled for now, since we cannot serialize DataRow values.
-                   this.TryProcessDataSource(test, testMethodInfo, testContext, tests) || */
-               TryProcessTestDataSourceTests(test, testMethodInfo, tests);
-    }
-
-    private static bool TryProcessDataSource(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
-    {
-        var dataSourceAttributes = ReflectHelper.GetAttributes<DataSourceAttribute>(testMethodInfo.MethodInfo, false);
-        if (dataSourceAttributes == null)
-        {
-            return false;
-        }
-
-        if (dataSourceAttributes.Length > 1)
-        {
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateDataSourceAttribute_MoreThenOneDefined, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, dataSourceAttributes.Length);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumerator: {message}");
-            throw new InvalidOperationException(message);
-        }
-
-        // when dataSourceAttributes.Length == 1
-        try
-        {
-            return TryProcessDataSourceTests(test, testMethodInfo, testContext, tests);
-        }
-        catch (Exception ex)
-        {
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.CannotEnumerateDataSourceAttribute, test.TestMethod.ManagedTypeName, test.TestMethod.ManagedMethodName, ex);
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"DynamicDataEnumerator: {message}");
-            return false;
-        }
-    }
-
-    private static bool TryProcessDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, ITestContext testContext, List<UnitTestElement> tests)
-    {
-        var dataRows = PlatformServiceProvider.Instance.TestDataSource.GetData(testMethodInfo, testContext);
-        if (dataRows == null || !dataRows.Any())
-        {
-            return false;
-        }
-
-        try
-        {
-            int rowIndex = 0;
-
-            foreach (var dataRow in dataRows)
-            {
-                // TODO: Test serialization
-                rowIndex++;
-
-                var displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, test.DisplayName, rowIndex);
-                var discoveredTest = test.Clone();
-                discoveredTest.DisplayName = displayName;
-                discoveredTest.TestMethod.DataType = DynamicDataType.DataSourceAttribute;
-                discoveredTest.TestMethod.SerializedData = DataSerializationHelper.Serialize(new[] { (object)rowIndex });
-                tests.Add(discoveredTest);
-            }
-
-            return true;
-        }
-        finally
-        {
-            testContext.SetDataConnection(null);
-            testContext.SetDataRow(null);
-        }
+        return testMethodInfo != null && TryProcessTestDataSourceTests(test, testMethodInfo, tests);
     }
 
     private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)

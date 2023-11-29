@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET462
 using System;
 using System.IO;
 using System.Reflection;
@@ -10,7 +11,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 using TestFramework.ForTestingMSTest;
 
-#if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 
 public class DesktopFileOperationsTests : TestContainer

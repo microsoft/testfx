@@ -3,10 +3,7 @@
 
 #if NETFRAMEWORK
 
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;

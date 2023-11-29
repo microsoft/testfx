@@ -32,7 +32,9 @@ public class TestDeploymentTests : TestContainer
     private readonly Mock<ReflectionUtility> _mockReflectionUtility;
     private readonly Mock<FileUtility> _mockFileUtility;
 
+#pragma warning disable IDE0044 // Add readonly modifier
     private IList<string> _warnings;
+#pragma warning restore IDE0044 // Add readonly modifier
 
     public TestDeploymentTests()
     {
@@ -400,7 +402,7 @@ public class TestDeploymentTests : TestContainer
             ru =>
             ru.GetCustomAttributes(
                 memberInfo,
-                typeof(DeploymentItemAttribute))).Returns((object[])deploymentItemAttributes.ToArray());
+                typeof(DeploymentItemAttribute))).Returns(deploymentItemAttributes.ToArray());
     }
 
     private static TestCase GetTestCase(string source)

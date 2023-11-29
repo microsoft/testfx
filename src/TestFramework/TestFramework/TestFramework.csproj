@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(NetCoreAppCurrent);$(NetCoreAppMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -16,6 +17,11 @@
   <ItemGroup>
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\RoslynHashCode.cs" Link="Internal\RoslynHashCode.cs" />
+    <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\SystemPolyfills.cs" Link="Internal\SystemPolyfills.cs" />
   </ItemGroup>
 
   <ItemGroup>

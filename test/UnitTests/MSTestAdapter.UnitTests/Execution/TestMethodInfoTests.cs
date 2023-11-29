@@ -322,7 +322,7 @@ public class TestMethodInfoTests : TestContainer
         var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, null, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(_methodInfo, testClass, _testMethodOptions);
 
-        UTF.TestResult result = null;
+        UTF.TestResult result;
         void RunMethod() => result = method.Invoke(null);
 
         RunMethod();
@@ -335,7 +335,7 @@ public class TestMethodInfoTests : TestContainer
         var testClass = new TestClassInfo(typeof(DummyTestClass), _constructorInfo, testContext, _classAttribute, _testAssemblyInfo);
         var method = new TestMethodInfo(_methodInfo, testClass, _testMethodOptions);
 
-        UTF.TestResult result = null;
+        UTF.TestResult result;
         void RunMethod() => result = method.Invoke(null);
 
         RunMethod();

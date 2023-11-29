@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
@@ -115,14 +112,7 @@ public class TestMethodInfo : ITestMethod
             watch.Start();
             try
             {
-                if (IsTimeoutSet)
-                {
-                    result = ExecuteInternalWithTimeout(arguments);
-                }
-                else
-                {
-                    result = ExecuteInternal(arguments);
-                }
+                result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
             }
             finally
             {
@@ -216,14 +206,9 @@ public class TestMethodInfo : ITestMethod
         {
             // If this is the params parameters, set it to an empty
             // array of that type as DefaultValue is DBNull
-            if (hasParamsValue && parameterNotProvidedIndex == parametersInfo.Length - 1)
-            {
-                newParameters[parameterNotProvidedIndex] = Activator.CreateInstance(parametersInfo[parameterNotProvidedIndex].ParameterType, 0);
-            }
-            else
-            {
-                newParameters[parameterNotProvidedIndex] = parametersInfo[parameterNotProvidedIndex].DefaultValue;
-            }
+            newParameters[parameterNotProvidedIndex] = hasParamsValue && parameterNotProvidedIndex == parametersInfo.Length - 1
+                ? Activator.CreateInstance(parametersInfo[parameterNotProvidedIndex].ParameterType, 0)
+                : parametersInfo[parameterNotProvidedIndex].DefaultValue;
         }
 
         return newParameters;
@@ -286,14 +271,9 @@ public class TestMethodInfo : ITestMethod
 
                 if (result.Outcome != UTF.UnitTestOutcome.Passed)
                 {
-                    if (ex is AssertInconclusiveException || ex.InnerException is AssertInconclusiveException)
-                    {
-                        result.Outcome = UTF.UnitTestOutcome.Inconclusive;
-                    }
-                    else
-                    {
-                        result.Outcome = UTF.UnitTestOutcome.Failed;
-                    }
+                    result.Outcome = ex is AssertInconclusiveException || ex.InnerException is AssertInconclusiveException
+                        ? UTF.UnitTestOutcome.Inconclusive
+                        : UTF.UnitTestOutcome.Failed;
                 }
             }
 
@@ -326,12 +306,7 @@ public class TestMethodInfo : ITestMethod
             RunTestCleanupMethod(classInstance, result);
         }
 
-        if (testRunnerException != null)
-        {
-            throw testRunnerException;
-        }
-
-        return result;
+        return testRunnerException != null ? throw testRunnerException : result;
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]

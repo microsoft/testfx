@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -23,8 +21,6 @@ public class PrivateObject
     private static readonly BindingFlags ConstructorFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.NonPublic;
 
     private object _target;
-    private Type _originalType;
-
     private Dictionary<string, LinkedList<MethodInfo>>? _methodCache;
 
     #endregion
@@ -57,7 +53,7 @@ public class PrivateObject
         }
 
         _target = temp._target;
-        _originalType = temp._originalType;
+        RealType = temp.RealType;
     }
 
     /// <summary>
@@ -112,12 +108,7 @@ public class PrivateObject
         object? o;
         if (parameterTypes != null)
         {
-            ConstructorInfo? ci = type.GetConstructor(BindToEveryThing, null, parameterTypes, null);
-            if (ci == null)
-            {
-                throw new ArgumentException(FrameworkMessages.PrivateAccessorConstructorNotFound);
-            }
-
+            ConstructorInfo? ci = type.GetConstructor(BindToEveryThing, null, parameterTypes, null) ?? throw new ArgumentException(FrameworkMessages.PrivateAccessorConstructorNotFound);
             try
             {
                 o = ci.Invoke(args);
@@ -143,7 +134,7 @@ public class PrivateObject
         _ = o ?? throw new ArgumentNullException(nameof(o));
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
         _target = o;
-        _originalType = o.GetType();
+        RealType = o.GetType();
     }
 
     /// <summary>
@@ -156,7 +147,7 @@ public class PrivateObject
     {
         _ = obj ?? throw new ArgumentNullException(nameof(obj));
         _target = obj;
-        _originalType = obj.GetType();
+        RealType = obj.GetType();
     }
 
     /// <summary>
@@ -170,7 +161,7 @@ public class PrivateObject
     {
         _ = type ?? throw new ArgumentNullException(nameof(type));
         _target = obj;
-        _originalType = type.ReferencedType;
+        RealType = type.ReferencedType;
     }
 
     #endregion
@@ -189,20 +180,14 @@ public class PrivateObject
         {
             _ = value ?? throw new ArgumentNullException(nameof(Target));
             _target = value;
-            _originalType = value.GetType();
+            RealType = value.GetType();
         }
     }
 
     /// <summary>
     /// Gets the type of underlying object.
     /// </summary>
-    public Type RealType
-    {
-        get
-        {
-            return _originalType;
-        }
-    }
+    public Type RealType { get; private set; }
 
     private Dictionary<string, LinkedList<MethodInfo>> GenericMethodCache
     {
@@ -210,7 +195,7 @@ public class PrivateObject
         {
             if (_methodCache == null)
             {
-                BuildGenericMethodCacheForType(_originalType);
+                BuildGenericMethodCacheForType(RealType);
             }
 
             DebugEx.Assert(_methodCache != null, "Invalid method cache for type.");
@@ -381,7 +366,7 @@ public class PrivateObject
         bindingFlags |= BindToEveryThing | BindingFlags.Instance;
 
         // Fix up the parameter types
-        MethodInfo? member = _originalType.GetMethod(name, bindingFlags, null, parameterTypes, null);
+        MethodInfo? member = RealType.GetMethod(name, bindingFlags, null, parameterTypes, null);
 
         // If the method was not found and type arguments were provided for generic parameters,
         // attempt to look up a generic method.
@@ -645,13 +630,8 @@ public class PrivateObject
             return InvokeHelper(name, bindingFlags | BindingFlags.GetProperty, args, null);
         }
 
-        PropertyInfo? pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null);
-        if (pi == null)
-        {
-            throw new ArgumentException(
+        PropertyInfo? pi = RealType.GetProperty(name, bindingFlags, null, null, parameterTypes, null) ?? throw new ArgumentException(
                 string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
-        }
-
         return pi.GetValue(_target, args);
     }
 
@@ -688,7 +668,7 @@ public class PrivateObject
             return;
         }
 
-        PropertyInfo? pi = _originalType.GetProperty(name, bindingFlags, null, null, parameterTypes, null)
+        PropertyInfo? pi = RealType.GetProperty(name, bindingFlags, null, null, parameterTypes, null)
             ?? throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.PrivateAccessorMemberNotFound, name));
 
         pi.SetValue(_target, value, args);
@@ -734,7 +714,7 @@ public class PrivateObject
         // Invoke the actual Method
         try
         {
-            return _originalType.InvokeMember(name, bindingFlags, null, _target, args, culture);
+            return RealType.InvokeMember(name, bindingFlags, null, _target, args, culture);
         }
         catch (TargetInvocationException e)
         {

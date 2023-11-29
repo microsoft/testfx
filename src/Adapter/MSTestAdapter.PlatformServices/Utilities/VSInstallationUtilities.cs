@@ -3,9 +3,7 @@
 
 #if NETFRAMEWORK
 
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
 
 using static System.String;
@@ -103,12 +101,7 @@ public static class VSInstallationUtilities
     {
         // Get the directory of the exe
         var exeDir = Path.GetDirectoryName(exeName);
-        if (!IsNullOrEmpty(exeDir))
-        {
-            return File.Exists(Path.Combine(exeDir, PortableVsTestManifestFilename));
-        }
-
-        return false;
+        return !IsNullOrEmpty(exeDir) && File.Exists(Path.Combine(exeDir, PortableVsTestManifestFilename));
     }
 
     private static string? GetFullPath(string folderName)

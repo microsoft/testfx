@@ -1,16 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.IO;
 using System.Reflection;
 
 #if WIN_UI
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+#if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -48,14 +48,7 @@ public class FileOperations : IFileOperations
         return Assembly.Load(new AssemblyName(fileNameWithoutExtension));
 #elif NETFRAMEWORK
 
-        if (isReflectionOnly)
-        {
-            return Assembly.ReflectionOnlyLoadFrom(assemblyName);
-        }
-        else
-        {
-            return Assembly.LoadFrom(assemblyName);
-        }
+        return isReflectionOnly ? Assembly.ReflectionOnlyLoadFrom(assemblyName) : Assembly.LoadFrom(assemblyName);
 #endif
     }
 
@@ -179,12 +172,7 @@ public class FileOperations : IFileOperations
         return assemblyFileName;
 #elif WIN_UI
         var packagePath = AppModel.GetCurrentPackagePath();
-        if (packagePath == null)
-        {
-            return assemblyFileName;
-        }
-
-        return Path.Combine(packagePath, assemblyFileName);
+        return packagePath == null ? assemblyFileName : Path.Combine(packagePath, assemblyFileName);
 #elif NETFRAMEWORK
 
         return (SafeInvoke(() => Path.GetFullPath(assemblyFileName)) as string) ?? assemblyFileName;

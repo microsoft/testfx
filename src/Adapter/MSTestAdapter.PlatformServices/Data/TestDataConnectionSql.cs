@@ -2,9 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Odbc;
@@ -12,7 +10,6 @@ using System.Data.OleDb;
 using System.Data.SqlClient;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Text;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -25,29 +22,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Dat
 /// </summary>
 internal class TestDataConnectionSql : TestDataConnection
 {
-    private readonly DbCommandBuilder _commandBuilder;
     private readonly DbConnection _connection;
-    private readonly DbProviderFactory _factory;
-
     private string? _quoteSuffix;
     private string? _quotePrefix;
 
     #region Constructor
 
-    internal protected TestDataConnectionSql(string invariantProviderName, string connectionString, List<string> dataFolders)
+    protected internal TestDataConnectionSql(string invariantProviderName, string connectionString, List<string> dataFolders)
         : base(dataFolders)
     {
-        _factory = DbProviderFactories.GetFactory(invariantProviderName);
-        DebugEx.Assert(_factory != null, "factory should not be null.");
-        WriteDiagnostics("DbProviderFactory {0}", _factory);
+        Factory = DbProviderFactories.GetFactory(invariantProviderName);
+        DebugEx.Assert(Factory != null, "factory should not be null.");
+        WriteDiagnostics("DbProviderFactory {0}", Factory);
 
-        _connection = _factory.CreateConnection();
+        _connection = Factory.CreateConnection();
         DebugEx.Assert(_connection != null, "connection");
         WriteDiagnostics("DbConnection {0}", _connection);
 
-        _commandBuilder = _factory.CreateCommandBuilder();
-        DebugEx.Assert(_commandBuilder != null, "builder");
-        WriteDiagnostics("DbCommandBuilder {0}", _commandBuilder);
+        CommandBuilder = Factory.CreateCommandBuilder();
+        DebugEx.Assert(CommandBuilder != null, "builder");
+        WriteDiagnostics("DbCommandBuilder {0}", CommandBuilder);
 
         if (!StringEx.IsNullOrEmpty(connectionString))
         {
@@ -66,9 +60,9 @@ internal class TestDataConnectionSql : TestDataConnection
 
     public override DbConnection Connection => _connection;
 
-    protected DbCommandBuilder CommandBuilder => _commandBuilder;
+    protected DbCommandBuilder CommandBuilder { get; }
 
-    protected DbProviderFactory Factory => _factory;
+    protected DbProviderFactory Factory { get; }
 
     #endregion
 
@@ -380,12 +374,7 @@ internal class TestDataConnectionSql : TestDataConnection
 
     private string MaybeQuote(string identifier, bool force)
     {
-        if (force || FindSeparators(identifier, 0) != -1)
-        {
-            return QuoteIdentifier(identifier);
-        }
-
-        return identifier;
+        return force || FindSeparators(identifier, 0) != -1 ? QuoteIdentifier(identifier) : identifier;
     }
 
     /// <summary>
@@ -567,14 +556,9 @@ internal class TestDataConnectionSql : TestDataConnection
 
                     // If schema is defined and is not equal to default, prepend table schema in front of the table.
                     string? qualifiedTableName = tableName;
-                    if (isDefaultSchema)
-                    {
-                        qualifiedTableName = FormatTableNameForDisplay(null, tableName);
-                    }
-                    else
-                    {
-                        qualifiedTableName = FormatTableNameForDisplay(tableSchema, tableName);
-                    }
+                    qualifiedTableName = isDefaultSchema
+                        ? FormatTableNameForDisplay(null, tableName)
+                        : FormatTableNameForDisplay(tableSchema, tableName);
 
                     WriteDiagnostics("Adding Table {0}", qualifiedTableName);
                     tableNames.Add(qualifiedTableName);
@@ -875,7 +859,7 @@ internal class TestDataConnectionSql : TestDataConnection
 #pragma warning restore SA1202 // Elements must be ordered by access
     {
         // Ensure that we Dispose of all disposables...
-        _commandBuilder?.Dispose();
+        CommandBuilder?.Dispose();
         _connection?.Dispose();
 
         GC.SuppressFinalize(this);

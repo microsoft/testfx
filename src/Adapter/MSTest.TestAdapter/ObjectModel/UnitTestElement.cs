@@ -1,12 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 
 using Microsoft.TestPlatform.AdapterUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -340,18 +336,6 @@ internal class UnitTestElement
 
     private string GetDisplayName()
     {
-        if (StringEx.IsNullOrWhiteSpace(DisplayName))
-        {
-            return TestMethod.Name;
-
-            // This causes compatibility problems with older runners.
-            // return StringEx.IsNullOrWhiteSpace(this.TestMethod.ManagedMethodName)
-            //      ? this.TestMethod.Name
-            //      : this.TestMethod.ManagedMethodName;
-        }
-        else
-        {
-            return DisplayName;
-        }
+        return StringEx.IsNullOrWhiteSpace(DisplayName) ? TestMethod.Name : DisplayName;
     }
 }

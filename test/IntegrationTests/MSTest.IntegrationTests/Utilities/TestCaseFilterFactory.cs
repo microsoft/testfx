@@ -107,16 +107,15 @@ internal static class TestCaseFilterFactory
 
     private class TestFilterExpression : ITestCaseFilterExpression
     {
-        private readonly string _filter;
         private readonly Func<Func<string, object>, bool> _expression;
 
         public TestFilterExpression(string filter, Func<Func<string, object>, bool> expression)
         {
-            _filter = filter;
+            TestCaseFilterValue = filter;
             _expression = expression;
         }
 
-        public string TestCaseFilterValue => _filter;
+        public string TestCaseFilterValue { get; }
 
         public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider) => _expression(propertyValueProvider);
     }

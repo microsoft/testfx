@@ -5,6 +5,7 @@ using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
+
 using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;

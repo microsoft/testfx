@@ -3,14 +3,10 @@
 
 #if !WINDOWS_UWP
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 #if NETFRAMEWORK
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
 #endif
-using System.Linq;
 using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -64,14 +60,7 @@ internal class ReflectionUtility
 
         if (!IsReflectionOnlyLoad(memberInfo))
         {
-            if (shouldGetAllAttributes)
-            {
-                return memberInfo.GetCustomAttributes(inherit);
-            }
-            else
-            {
-                return memberInfo.GetCustomAttributes(type, inherit);
-            }
+            return shouldGetAllAttributes ? memberInfo.GetCustomAttributes(inherit) : memberInfo.GetCustomAttributes(type, inherit);
         }
         else
         {
@@ -143,14 +132,7 @@ internal class ReflectionUtility
             return nonUniqueAttributes.ToArray();
         }
 #else
-        if (type == null)
-        {
-            return memberInfo.GetCustomAttributes(inherit).ToArray();
-        }
-        else
-        {
-            return memberInfo.GetCustomAttributes(type, inherit).ToArray();
-        }
+        return type == null ? memberInfo.GetCustomAttributes(inherit).ToArray() : memberInfo.GetCustomAttributes(type, inherit).ToArray();
 #endif
     }
 
@@ -298,12 +280,7 @@ internal class ReflectionUtility
     /// <returns> True if the member is loaded in a reflection only context. </returns>
     private static bool IsReflectionOnlyLoad(MemberInfo? memberInfo)
     {
-        if (memberInfo != null)
-        {
-            return memberInfo.Module.Assembly.ReflectionOnly;
-        }
-
-        return false;
+        return memberInfo != null ? memberInfo.Module.Assembly.ReflectionOnly : false;
     }
 
     private static bool IsTypeInheriting(Type? type1, Type type2)

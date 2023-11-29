@@ -1,17 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 
 #if WIN_UI
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.AppContainer;
 #endif
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
+#if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+#endif
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -89,12 +87,7 @@ public class TestSource : ITestSource
         bool? utfReference = AssemblyHelper.DoesReferencesAssembly(source, assemblyName);
 
         // If no reference to UTF don't run discovery. Take conservative approach. If not able to find proceed with discovery.
-        if (utfReference.HasValue && utfReference.Value == false)
-        {
-            return false;
-        }
-
-        return true;
+        return !utfReference.HasValue || utfReference.Value;
 #else
         // .NET CORE:
         // There is no way currently in dotnet core to determine referenced assemblies for a source.
