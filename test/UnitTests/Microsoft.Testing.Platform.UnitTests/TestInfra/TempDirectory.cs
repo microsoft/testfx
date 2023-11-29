@@ -204,14 +204,13 @@ public class TempDirectory : IDisposable
         }
     }
 
+    // AGENT_TEMPDIRECTORY is Azure DevOps variable, which is set to path
+    // that is cleaned up after every job. This is preferable to use over
+    // just the normal TEMP, because that is not cleaned up for every run.
+    //
+    // System.IO.Path.GetTempPath is banned from the rest of the code. This is the only
+    // place where we are allowed to use it. All other methods should use our GetTempPath (this method).
     private static string GetTempPath() =>
-
-        // AGENT_TEMPDIRECTORY is Azure DevOps variable, which is set to path
-        // that is cleaned up after every job. This is preferable to use over
-        // just the normal TEMP, because that is not cleaned up for every run.
-        //
-        // System.IO.Path.GetTempPath is banned from the rest of the code. This is the only
-        // place where we are allowed to use it. All other methods should use our GetTempPath (this method).
         Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
             ?? Path.GetTempPath();
 
