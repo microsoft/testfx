@@ -196,7 +196,7 @@
       </trans-unit>
       <trans-unit id="HelpOptions">
         <source>Options:</source>
-        <target state="new">Options:</target>
+        <target state="translated">Optionen:</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpTestApplicationRunner">
@@ -251,12 +251,12 @@
       </trans-unit>
       <trans-unit id="NotAvailable">
         <source>Not available</source>
-        <target state="new">Not available</target>
+        <target state="translated">Nicht verfügbar</target>
         <note />
       </trans-unit>
       <trans-unit id="NotFound">
         <source>Not found</source>
-        <target state="new">Not found</target>
+        <target state="translated">Nicht gefunden</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
