@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
@@ -119,6 +116,7 @@ internal class TestMethodRunner
                 result = [new UnitTestResult()];
             }
 
+#pragma warning disable IDE0056 // Use index operator
             var newResult = new UnitTestResult(new TestFailedException(UnitTestOutcome.Error, ex.TryGetMessage(), ex.TryGetStackTraceInformation()))
             {
                 StandardOut = result[result.Length - 1].StandardOut,
@@ -128,6 +126,7 @@ internal class TestMethodRunner
                 Duration = result[result.Length - 1].Duration,
             };
             result[result.Length - 1] = newResult;
+#pragma warning restore IDE0056 // Use index operator
         }
         finally
         {

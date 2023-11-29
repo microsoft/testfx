@@ -1,16 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
 #if NETFRAMEWORK
 using System.Data;
 using System.Data.Common;
 #endif
 using System.Diagnostics;
 using System.Globalization;
-using System.Threading;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -197,7 +194,7 @@ public abstract class TestContext
     {
         DebugEx.Assert(Properties is not null, "Properties is null");
 #if WINDOWS_UWP || WIN_UI
-        if (!((IDictionary<string, object>)Properties).TryGetValue(name, out object? propertyValue))
+        if (!((System.Collections.Generic.IDictionary<string, object>)Properties).TryGetValue(name, out object? propertyValue))
         {
             return null;
         }

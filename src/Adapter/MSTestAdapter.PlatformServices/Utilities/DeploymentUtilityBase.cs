@@ -3,11 +3,8 @@
 
 #if !WINDOWS_UWP
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
@@ -316,12 +313,9 @@ internal abstract class DeploymentUtilityBase
 
     protected static string GetFullPathToDeploymentItemSource(string deploymentItemSourcePath, string testSource)
     {
-        if (Path.IsPathRooted(deploymentItemSourcePath))
-        {
-            return deploymentItemSourcePath;
-        }
-
-        return Path.Combine(Path.GetDirectoryName(testSource)!, deploymentItemSourcePath);
+        return Path.IsPathRooted(deploymentItemSourcePath)
+            ? deploymentItemSourcePath
+            : Path.Combine(Path.GetDirectoryName(testSource)!, deploymentItemSourcePath);
     }
 
     /// <summary>

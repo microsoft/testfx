@@ -233,9 +233,7 @@ public class TestMethodFilterTests : TestContainer
 
         public IRunSettings RunSettings { get; }
 
-        public ITestCaseFilterExpression GetTestCaseFilter(
-            IEnumerable<string> supportedProperties,
-            Func<string, TestProperty> propertyProvider)
+        public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
         {
             return _getFilter();
         }

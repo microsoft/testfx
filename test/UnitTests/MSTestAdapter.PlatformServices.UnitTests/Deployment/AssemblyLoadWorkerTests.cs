@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET462
 using System;
 using System.IO;
 using System.Linq;
@@ -13,7 +14,6 @@ using Moq;
 
 using TestFramework.ForTestingMSTest;
 
-#if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests.Deployment;
 
 public class AssemblyLoadWorkerTests : TestContainer
@@ -126,12 +126,7 @@ public class AssemblyLoadWorkerTests : TestContainer
 
         public override AssemblyName[] GetReferencedAssemblies()
         {
-            if (GetReferencedAssembliesSetter != null)
-            {
-                return GetReferencedAssembliesSetter.Invoke();
-            }
-
-            return Array.Empty<AssemblyName>();
+            return GetReferencedAssembliesSetter != null ? GetReferencedAssembliesSetter.Invoke() : Array.Empty<AssemblyName>();
         }
 
         public string Name
@@ -143,12 +138,7 @@ public class AssemblyLoadWorkerTests : TestContainer
         {
             get
             {
-                if (FullNameSetter != null)
-                {
-                    return FullNameSetter.Invoke();
-                }
-
-                return GetExecutingAssembly().FullName;
+                return FullNameSetter != null ? FullNameSetter.Invoke() : GetExecutingAssembly().FullName;
             }
         }
 

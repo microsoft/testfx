@@ -3,8 +3,10 @@
 
 using System;
 using System.Collections.Generic;
+#if NET462
 using System.Data;
 using System.Data.Common;
+#endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 

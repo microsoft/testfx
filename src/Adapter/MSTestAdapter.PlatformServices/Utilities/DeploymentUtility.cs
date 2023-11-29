@@ -3,18 +3,20 @@
 
 #if !WINDOWS_UWP
 
-using System;
-using System.Collections.Generic;
+#if NETFRAMEWORK
 using System.Diagnostics;
+#endif
 using System.Globalization;
-using System.IO;
-using System.Linq;
+#if NETFRAMEWORK
 using System.Security;
+#endif
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
+#if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Extensions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+#endif
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 

@@ -319,21 +319,11 @@ public class TestableMSTestAdapterSettings : MSTestAdapterSettings
 
     protected override bool DoesDirectoryExist(string path)
     {
-        if (DoesDirectoryExistSetter == null)
-        {
-            return base.DoesDirectoryExist(path);
-        }
-
-        return DoesDirectoryExistSetter(path);
+        return DoesDirectoryExistSetter == null ? base.DoesDirectoryExist(path) : DoesDirectoryExistSetter(path);
     }
 
     protected override string ExpandEnvironmentVariables(string path)
     {
-        if (ExpandEnvironmentVariablesSetter == null)
-        {
-            return base.ExpandEnvironmentVariables(path);
-        }
-
-        return ExpandEnvironmentVariablesSetter(path);
+        return ExpandEnvironmentVariablesSetter == null ? base.ExpandEnvironmentVariables(path) : ExpandEnvironmentVariablesSetter(path);
     }
 }

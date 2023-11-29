@@ -3,15 +3,11 @@
 
 #if NETFRAMEWORK
 
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Text;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -101,14 +97,9 @@ internal sealed class CsvDataConnection : TestDataConnection
 
         // We have to use the name of the folder which contains the CSV file in the connection string
         // If target platform is x64, then use CsvConnectionTemplate64 connection string.
-        if (IntPtr.Size == 8)
-        {
-            connection.ConnectionString = string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate64, Path.GetDirectoryName(fullPath));
-        }
-        else
-        {
-            connection.ConnectionString = string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate, Path.GetDirectoryName(fullPath));
-        }
+        connection.ConnectionString = IntPtr.Size == 8
+            ? string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate64, Path.GetDirectoryName(fullPath))
+            : string.Format(CultureInfo.InvariantCulture, CsvConnectionTemplate, Path.GetDirectoryName(fullPath));
 
         WriteDiagnostics("Connection String: {0}", connection.ConnectionString);
 
@@ -121,16 +112,9 @@ internal sealed class CsvDataConnection : TestDataConnection
 
         command.Connection = connection;
 
-        string topClause;
-        if (maxRows >= 0)
-        {
-            topClause = string.Format(CultureInfo.InvariantCulture, " top {0}", maxRows.ToString(NumberFormatInfo.InvariantInfo));
-        }
-        else
-        {
-            topClause = string.Empty;
-        }
-
+        string topClause = maxRows >= 0
+            ? string.Format(CultureInfo.InvariantCulture, " top {0}", maxRows.ToString(NumberFormatInfo.InvariantInfo))
+            : string.Empty;
         string columnsClause;
         if (columns != null)
         {

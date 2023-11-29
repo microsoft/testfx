@@ -23,12 +23,9 @@ public class AssertIs
     public bool Divisor(int number, int divisor)
 #pragma warning restore CA1822 // Mark members as static
     {
-        if (number % divisor == 0)
-        {
-            return true;
-        }
-
-        throw new AssertFailedException(string.Format(CultureInfo.InvariantCulture, "{0} is not a divisor of {1}", divisor, number));
+        return number % divisor == 0
+            ? true
+            : throw new AssertFailedException(string.Format(CultureInfo.InvariantCulture, "{0} is not a divisor of {1}", divisor, number));
     }
 
     /// <summary>
@@ -41,11 +38,8 @@ public class AssertIs
     public bool Positive(int number)
 #pragma warning restore CA1822 // Mark members as static
     {
-        if (number > 0)
-        {
-            return true;
-        }
-
-        throw new AssertFailedException(string.Format(CultureInfo.InvariantCulture, "{0} is not positive", number));
+        return number > 0
+            ? true
+            : throw new AssertFailedException(string.Format(CultureInfo.InvariantCulture, "{0} is not positive", number));
     }
 }

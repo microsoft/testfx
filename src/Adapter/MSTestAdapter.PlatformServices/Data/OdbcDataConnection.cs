@@ -3,9 +3,7 @@
 
 #if NETFRAMEWORK
 
-using System.Collections.Generic;
 using System.Data.Odbc;
-using System.Diagnostics;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -47,12 +45,7 @@ internal sealed class OdbcDataConnection : TestDataConnectionSql
 
     public override string? GetDefaultSchema()
     {
-        if (_isMSSql)
-        {
-            return GetDefaultSchemaMSSql();
-        }
-
-        return base.GetDefaultSchema();
+        return _isMSSql ? GetDefaultSchemaMSSql() : base.GetDefaultSchema();
     }
 
     protected override SchemaMetaData[] GetSchemaMetaData()

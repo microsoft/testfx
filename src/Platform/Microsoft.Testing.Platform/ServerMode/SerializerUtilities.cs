@@ -695,10 +695,9 @@ internal static class SerializerUtilities
 
     private static void ValidateJsonRpcHeader(IDictionary<string, object?> properties)
     {
+        // Note: The test anywhere supports only JSON-RPC version 2.0
         if (!properties.TryGetValue(JsonRpcStrings.JsonRpc, out object? rpcVersionObj)
             || rpcVersionObj is not string rpcVersion
-
-            // Note: The test anywhere supports only JSON-RPC version 2.0
             || rpcVersion != "2.0")
         {
             throw new MessageFormatException("jsonrpc field is not valid");

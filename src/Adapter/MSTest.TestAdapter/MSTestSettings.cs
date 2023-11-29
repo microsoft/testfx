@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -206,14 +204,7 @@ public class MSTestSettings
         {
             var settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
 
-            if (settings != null)
-            {
-                CurrentSettings = settings;
-            }
-            else
-            {
-                CurrentSettings = new MSTestSettings();
-            }
+            CurrentSettings = settings ?? new MSTestSettings();
         }
 
         SetGlobalSettings(context.RunSettings.SettingsXml, CurrentSettings);
@@ -248,26 +239,24 @@ public class MSTestSettings
             return null;
         }
 
-        using (var stringReader = new StringReader(runSettingsXml))
+        using var stringReader = new StringReader(runSettingsXml);
+        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+
+        // read to the fist child
+        XmlReaderUtilities.ReadToRootNode(reader);
+        reader.ReadToNextElement();
+
+        // Read till we reach nodeName element or reach EOF
+        while (!string.Equals(reader.Name, settingName, StringComparison.OrdinalIgnoreCase)
+                && !reader.EOF)
         {
-            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            reader.SkipToNextElement();
+        }
 
-            // read to the fist child
-            XmlReaderUtilities.ReadToRootNode(reader);
-            reader.ReadToNextElement();
-
-            // Read till we reach nodeName element or reach EOF
-            while (!string.Equals(reader.Name, settingName, StringComparison.OrdinalIgnoreCase)
-                    && !reader.EOF)
-            {
-                reader.SkipToNextElement();
-            }
-
-            if (!reader.EOF)
-            {
-                // read nodeName element.
-                return ToSettings(reader.ReadSubtree());
-            }
+        if (!reader.EOF)
+        {
+            // read nodeName element.
+            return ToSettings(reader.ReadSubtree());
         }
 
         return null;
@@ -352,19 +341,14 @@ public class MSTestSettings
                     case "CLASSCLEANUPLIFECYCLE":
                         {
                             var value = reader.ReadInnerXml();
-                            if (TryParseEnum(value, out ClassCleanupBehavior lifecycle))
-                            {
-                                settings.ClassCleanupLifecycle = lifecycle;
-                            }
-                            else
-                            {
-                                throw new AdapterSettingsException(
+                            settings.ClassCleanupLifecycle = TryParseEnum(value, out ClassCleanupBehavior lifecycle)
+                                ? (ClassCleanupBehavior?)lifecycle
+                                : throw new AdapterSettingsException(
                                     string.Format(
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidClassCleanupLifecycleValue,
                                         value,
                                         string.Join(", ", Enum.GetNames(typeof(ClassCleanupBehavior)))));
-                            }
 
                             break;
                         }
@@ -484,33 +468,20 @@ public class MSTestSettings
                     case "WORKERS":
                         {
                             var value = reader.ReadInnerXml();
-                            if (int.TryParse(value, out int parallelWorkers))
-                            {
-                                if (parallelWorkers == 0)
-                                {
-                                    settings.ParallelizationWorkers = Environment.ProcessorCount;
-                                }
-                                else if (parallelWorkers > 0)
-                                {
-                                    settings.ParallelizationWorkers = parallelWorkers;
-                                }
-                                else
-                                {
-                                    throw new AdapterSettingsException(
+                            settings.ParallelizationWorkers = int.TryParse(value, out int parallelWorkers)
+                                ? parallelWorkers == 0
+                                    ? Environment.ProcessorCount
+                                    : parallelWorkers > 0
+                                        ? parallelWorkers
+                                        : throw new AdapterSettingsException(string.Format(
+                                            CultureInfo.CurrentCulture,
+                                            Resource.InvalidParallelWorkersValue,
+                                            value))
+                                : throw new AdapterSettingsException(
                                     string.Format(
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidParallelWorkersValue,
                                         value));
-                                }
-                            }
-                            else
-                            {
-                                throw new AdapterSettingsException(
-                                    string.Format(
-                                        CultureInfo.CurrentCulture,
-                                        Resource.InvalidParallelWorkersValue,
-                                        value));
-                            }
 
                             break;
                         }
@@ -518,19 +489,14 @@ public class MSTestSettings
                     case "SCOPE":
                         {
                             var value = reader.ReadInnerXml();
-                            if (TryParseEnum(value, out ExecutionScope scope))
-                            {
-                                settings.ParallelizationScope = scope;
-                            }
-                            else
-                            {
-                                throw new AdapterSettingsException(
+                            settings.ParallelizationScope = TryParseEnum(value, out ExecutionScope scope)
+                                ? (ExecutionScope?)scope
+                                : throw new AdapterSettingsException(
                                     string.Format(
                                         CultureInfo.CurrentCulture,
                                         Resource.InvalidParallelScopeValue,
                                         value,
                                         string.Join(", ", Enum.GetNames(typeof(ExecutionScope)))));
-                            }
 
                             break;
                         }

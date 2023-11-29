@@ -78,7 +78,7 @@ public class UnitTestElementTests : TestContainer
     {
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.GetPropertyValue(Constants.TestClassNameProperty) as string == "C");
+        Verify((testCase.GetPropertyValue(Constants.TestClassNameProperty) as string) == "C");
     }
 
     public void ToTestCaseShouldSetDeclaringClassNameIfPresent()
@@ -91,7 +91,7 @@ public class UnitTestElementTests : TestContainer
         _testMethod.DeclaringClassFullName = "DC";
         testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) as string == "DC");
+        Verify((testCase.GetPropertyValue(Constants.DeclaringClassNameProperty) as string) == "DC");
     }
 
     public void ToTestCaseShouldSetIsAsyncProperty()
@@ -99,7 +99,7 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.IsAsync = true;
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify((bool)testCase.GetPropertyValue(Constants.AsyncTestProperty) == true);
+        Verify((bool)testCase.GetPropertyValue(Constants.AsyncTestProperty));
 
         _unitTestElement.IsAsync = false;
         testCase = _unitTestElement.ToTestCase();
@@ -165,9 +165,9 @@ public class UnitTestElementTests : TestContainer
 
         var testCase = _unitTestElement.ToTestCase();
 
-        Verify(testCase.GetPropertyValue(Constants.CssIterationProperty) as string == "12");
-        Verify(testCase.GetPropertyValue(Constants.CssProjectStructureProperty) as string == "ProjectStructure");
-        Verify(testCase.GetPropertyValue(Constants.DescriptionProperty) as string == "I am a dummy test");
+        Verify((testCase.GetPropertyValue(Constants.CssIterationProperty) as string) == "12");
+        Verify((testCase.GetPropertyValue(Constants.CssProjectStructureProperty) as string) == "ProjectStructure");
+        Verify((testCase.GetPropertyValue(Constants.DescriptionProperty) as string) == "I am a dummy test");
         Verify(new string[] { "2312", "22332" }.SequenceEqual((string[])testCase.GetPropertyValue(Constants.WorkItemIdsProperty)));
     }
 

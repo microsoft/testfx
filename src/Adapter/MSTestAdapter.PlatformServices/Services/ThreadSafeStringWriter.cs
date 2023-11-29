@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
-using System.Threading;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -140,18 +136,9 @@ public class ThreadSafeStringWriter : StringWriter
     {
         lock (StaticLockObject)
         {
-            if (State.Value == null)
-            {
-                return null;
-            }
-            else if (!State.Value.TryGetValue(_outputType, out var stringBuilder))
-            {
-                return null;
-            }
-            else
-            {
-                return stringBuilder;
-            }
+            return State.Value == null
+                ? null
+                : !State.Value.TryGetValue(_outputType, out var stringBuilder) ? null : stringBuilder;
         }
     }
 

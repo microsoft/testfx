@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
+#if !WINDOWS_UWP
 using System.Globalization;
-using System.IO;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-#if !WINDOWS_UWP
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Deployment;
 
 /// <summary>

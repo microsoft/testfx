@@ -1,10 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -38,14 +35,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// <param name="data"> The data. </param>
     public DataRowAttribute(params object?[]? data)
     {
-        if (data == null)
-        {
-            Data = [null];
-        }
-        else
-        {
-            Data = data;
-        }
+        Data = data ?? [null];
     }
 
     /// <summary>

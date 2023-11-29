@@ -181,10 +181,12 @@ public class FileUtilityTests : TestContainer
                 files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') > (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length))
                     .Select(f =>
                     {
+#pragma warning disable IDE0057 // Use range operator
                         var val = f.Substring(
                             f.IndexOf(dp, StringComparison.Ordinal) + dp.Length + 1,
                             f.Length - (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length + 1));
                         return f.Substring(0, dp.Length + 1 + val.IndexOf('\\'));
+#pragma warning restore IDE0057 // Use range operator
                     })
                     .Distinct()
                     .ToArray();

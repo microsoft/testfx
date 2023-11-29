@@ -29,9 +29,8 @@ public class JsonTests : TestBase
 
         foreach (Type deserializableType in SerializerUtilities.DeserializerTypes)
         {
+            // By default we wrap the jsonite serialization, we can override specific types inside the Json .NET runtime implementation.
             deserializers[deserializableType] = new JsonElementDeserializer<object>((json, doc)
-
-                // By default we wrap the jsonite serialization, we can override specific types inside the Json .NET runtime implementation.
                 => SerializerUtilities.Deserialize(deserializableType, json.Bind<JsoniteProperties>(doc)!));
         }
 

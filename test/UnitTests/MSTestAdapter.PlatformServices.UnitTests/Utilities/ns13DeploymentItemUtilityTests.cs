@@ -432,7 +432,7 @@ public class DeploymentItemUtilityTests : TestContainer
             ru =>
             ru.GetCustomAttributes(
                 memberInfo,
-                typeof(DeploymentItemAttribute))).Returns((object[])deploymentItemAttributes.ToArray());
+                typeof(DeploymentItemAttribute))).Returns(deploymentItemAttributes.ToArray());
     }
 
     #endregion

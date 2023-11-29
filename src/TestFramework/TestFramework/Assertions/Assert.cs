@@ -73,21 +73,13 @@ public sealed partial class Assert
     /// The formatted string based on format and parameters.
     /// </returns>
     internal static string BuildUserMessage(string? format, params object?[]? parameters)
-    {
-        if (format is null)
-        {
-            return ReplaceNulls(format);
-        }
-
-        if (format.Length == 0)
-        {
-            return string.Empty;
-        }
-
-        return parameters == null || parameters.Length == 0
+        => format is null
             ? ReplaceNulls(format)
-            : string.Format(CultureInfo.CurrentCulture, ReplaceNulls(format), parameters);
-    }
+            : format.Length == 0
+                ? string.Empty
+                : parameters == null || parameters.Length == 0
+                    ? ReplaceNulls(format)
+                    : string.Format(CultureInfo.CurrentCulture, ReplaceNulls(format), parameters);
 
     /// <summary>
     /// Checks the parameter for valid conditions.
@@ -142,12 +134,7 @@ public sealed partial class Assert
         string? inputString = input.ToString();
 
         // Make sure the class didn't override ToString and return null.
-        if (inputString == null)
-        {
-            return FrameworkMessages.Common_ObjectString.ToString();
-        }
-
-        return ReplaceNullChars(inputString);
+        return inputString == null ? FrameworkMessages.Common_ObjectString.ToString() : ReplaceNullChars(inputString);
     }
 
     private static int CompareInternal(string? expected, string? actual, bool ignoreCase, CultureInfo? culture)
@@ -167,7 +154,9 @@ public sealed partial class Assert
     /// <param name="objB"> Object B. </param>
     /// <returns> False, always. </returns>
     [SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", MessageId = "obj", Justification = "We want to compare 'object A' with 'object B', so it makes sense to have 'obj' in the parameter name")]
+#pragma warning disable IDE0060 // Remove unused parameter
     public static new bool Equals(object? objA, object? objB)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
         Fail(FrameworkMessages.DoNotUseAssertEquals);
         return false;

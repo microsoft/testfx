@@ -1,18 +1,23 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NETCOREAPP
-
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-
-using Microsoft.Testing.Platform;
-
 #pragma warning disable SA1201 // Elements should appear in the correct order
 #pragma warning disable SA1313 // Parameter names should begin with lower-case letter
 #pragma warning disable SA1403 // File may only contain a single namespace
 #pragma warning disable SA1502 // Element should not be on a single line
+#pragma warning disable SA1623 // Property summary documentation should match accessors
+#pragma warning disable SA1642 // Constructor summary documentation should begin with standard text
+#pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved
+
+#if !NETCOREAPP
+using System.ComponentModel;
+#if !NET462
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+
+using Microsoft.Testing.Platform;
+#endif
+
 namespace System.Runtime.CompilerServices
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
@@ -73,6 +78,7 @@ namespace System
             => _hash;
     }
 
+#if !NET462
     /// <summary>Represent a type can be used to index a collection either from the start or the end.</summary>
     /// <remarks>
     /// Index is used by the C# compiler to support the new index syntax.
@@ -267,6 +273,7 @@ namespace System
                 : ((int Offset, int Length))(start, end - start);
         }
     }
+#endif
 }
 
 // This was copied from https://github.com/dotnet/coreclr/blob/60f1e6265bd1039f023a82e0643b524d6aaf7845/src/System.Private.CoreLib/shared/System/Diagnostics/CodeAnalysis/NullableAttributes.cs
@@ -429,6 +436,68 @@ namespace System.Text
     }
 }
 
+#endif
+
+#if NETCOREAPP3_1
+namespace System.Diagnostics.CodeAnalysis
+{
+    /// <summary>Specifies that the method or property will ensure that the listed field and property members have not-null values.</summary>
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
+    internal sealed class MemberNotNullAttribute : Attribute
+    {
+        /// <summary>Initializes the attribute with a field or property member.</summary>
+        /// <param name="member">
+        /// The field or property member that is promised to be not-null.
+        /// </param>
+        public MemberNotNullAttribute(string member) => Members = new[] { member };
+
+        /// <summary>Initializes the attribute with the list of field and property members.</summary>
+        /// <param name="members">
+        /// The list of field and property members that are promised to be not-null.
+        /// </param>
+        public MemberNotNullAttribute(params string[] members) => Members = members;
+
+        /// <summary>Gets field or property member names.</summary>
+        public string[] Members { get; }
+    }
+
+    /// <summary>Specifies that the method or property will ensure that the listed field and property members have not-null values when returning with the specified return value condition.</summary>
+    [AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
+    internal sealed class MemberNotNullWhenAttribute : Attribute
+    {
+        /// <summary>Initializes the attribute with the specified return value condition and a field or property member.</summary>
+        /// <param name="returnValue">
+        /// The return value condition. If the method returns this value, the associated parameter will not be null.
+        /// </param>
+        /// <param name="member">
+        /// The field or property member that is promised to be not-null.
+        /// </param>
+        public MemberNotNullWhenAttribute(bool returnValue, string member)
+        {
+            ReturnValue = returnValue;
+            Members = new[] { member };
+        }
+
+        /// <summary>Initializes the attribute with the specified return value condition and list of field and property members.</summary>
+        /// <param name="returnValue">
+        /// The return value condition. If the method returns this value, the associated parameter will not be null.
+        /// </param>
+        /// <param name="members">
+        /// The list of field and property members that are promised to be not-null.
+        /// </param>
+        public MemberNotNullWhenAttribute(bool returnValue, params string[] members)
+        {
+            ReturnValue = returnValue;
+            Members = members;
+        }
+
+        /// <summary>Gets the return value condition.</summary>
+        public bool ReturnValue { get; }
+
+        /// <summary>Gets field or property member names.</summary>
+        public string[] Members { get; }
+    }
+}
 #endif
 
 #if !NET7_0_OR_GREATER

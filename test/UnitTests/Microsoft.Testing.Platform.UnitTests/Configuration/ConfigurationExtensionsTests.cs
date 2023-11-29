@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Configurations;
+
 using Moq;
 
 namespace Microsoft.Testing.Platform.UnitTests;

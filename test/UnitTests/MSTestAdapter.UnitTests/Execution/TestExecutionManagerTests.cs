@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -113,7 +112,7 @@ public class TestExecutionManagerTests : TestContainer
         var failingTestCase = GetTestCase(typeof(DummyTestClass), "FailingTest");
         TestCase[] tests = [testCase, failingTestCase];
 
-        _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => (p.DisplayName == "PassingTest")));
+        _runContext = new TestableRunContextTestExecutionTests(() => new TestableTestCaseFilterExpression((p) => p.DisplayName == "PassingTest"));
 
         _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, _cancellationToken);
 
@@ -564,12 +563,9 @@ public class TestExecutionManagerTests : TestContainer
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
                 Returns((Assembly asm, Type type) =>
                 {
-                    if (type.FullName.Equals(typeof(ParallelizeAttribute).FullName, StringComparison.Ordinal))
-                    {
-                        return [new ParallelizeAttribute { Workers = 10, Scope = ExecutionScope.MethodLevel }];
-                    }
-
-                    return originalReflectionOperation.GetCustomAttributes(asm, type);
+                    return type.FullName.Equals(typeof(ParallelizeAttribute).FullName, StringComparison.Ordinal)
+                        ? (object[])[new ParallelizeAttribute { Workers = 10, Scope = ExecutionScope.MethodLevel }]
+                        : originalReflectionOperation.GetCustomAttributes(asm, type);
                 });
 
             testablePlatformService.MockReflectionOperations.Setup(
@@ -617,12 +613,9 @@ public class TestExecutionManagerTests : TestContainer
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
                 Returns((Assembly asm, Type type) =>
                 {
-                    if (type.FullName.Equals(typeof(DoNotParallelizeAttribute).FullName, StringComparison.Ordinal))
-                    {
-                        return [new DoNotParallelizeAttribute()];
-                    }
-
-                    return originalReflectionOperation.GetCustomAttributes(asm, type);
+                    return type.FullName.Equals(typeof(DoNotParallelizeAttribute).FullName, StringComparison.Ordinal)
+                        ? (object[])[new DoNotParallelizeAttribute()]
+                        : originalReflectionOperation.GetCustomAttributes(asm, type);
                 });
 
             testablePlatformService.MockReflectionOperations.Setup(
@@ -710,12 +703,9 @@ public class TestExecutionManagerTests : TestContainer
                 ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>())).
                 Returns((Assembly asm, Type type) =>
                 {
-                    if (type.FullName.Equals(typeof(ParallelizeAttribute).FullName, StringComparison.Ordinal))
-                    {
-                        return [new ParallelizeAttribute { Workers = 1 }];
-                    }
-
-                    return originalReflectionOperation.GetCustomAttributes(asm, type);
+                    return type.FullName.Equals(typeof(ParallelizeAttribute).FullName, StringComparison.Ordinal)
+                        ? (object[])[new ParallelizeAttribute { Workers = 1 }]
+                        : originalReflectionOperation.GetCustomAttributes(asm, type);
                 });
 
             testablePlatformService.MockReflectionOperations.Setup(
@@ -1061,32 +1051,26 @@ public class TestExecutionManagerTests : TestContainer
 
 internal sealed class TestableFrameworkHandle : IFrameworkHandle
 {
-    private readonly List<string> _messageList;
-    private readonly List<string> _resultsList;
-    private readonly List<string> _testCaseStartList;
-    private readonly List<string> _testCaseEndList;
-    private readonly List<string> _testDisplayNameList;
-
     public TestableFrameworkHandle()
     {
-        _messageList = [];
-        _resultsList = [];
-        _testCaseStartList = [];
-        _testCaseEndList = [];
-        _testDisplayNameList = [];
+        MessageList = [];
+        ResultsList = [];
+        TestCaseStartList = [];
+        TestCaseEndList = [];
+        TestDisplayNameList = [];
     }
 
     public bool EnableShutdownAfterTestRun { get; set; }
 
-    public List<string> MessageList => _messageList;
+    public List<string> MessageList { get; }
 
-    public List<string> ResultsList => _resultsList;
+    public List<string> ResultsList { get; }
 
-    public List<string> TestCaseStartList => _testCaseStartList;
+    public List<string> TestCaseStartList { get; }
 
-    public List<string> TestCaseEndList => _testCaseEndList;
+    public List<string> TestCaseEndList { get; }
 
-    public List<string> TestDisplayNameList => _testDisplayNameList;
+    public List<string> TestDisplayNameList { get; }
 
     public void RecordResult(TestResult testResult)
     {

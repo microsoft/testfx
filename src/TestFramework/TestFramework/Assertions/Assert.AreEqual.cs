@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
@@ -1316,29 +1314,21 @@ public sealed partial class Assert
         }
 
         string userMessage = BuildUserMessage(message, parameters);
-        string finalMessage;
-
-        // Comparison failed. Check if it was a case-only failure.
-        if (!ignoreCase &&
-            CompareInternal(expected, actual, ignoreCase, culture) == 0)
-        {
-            finalMessage = string.Format(
+        string finalMessage = !ignoreCase && CompareInternal(expected, actual, ignoreCase, culture) == 0
+            ? string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreEqualCaseFailMsg,
                 userMessage,
                 ReplaceNulls(expected),
-                ReplaceNulls(actual));
-        }
-        else
-        {
-            finalMessage = string.Format(
+                ReplaceNulls(actual))
+            : string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreEqualFailMsg,
                 userMessage,
                 ReplaceNulls(expected),
                 ReplaceNulls(actual));
-        }
 
+        // Comparison failed. Check if it was a case-only failure.
         ThrowAssertFailed("Assert.AreEqual", finalMessage);
     }
 

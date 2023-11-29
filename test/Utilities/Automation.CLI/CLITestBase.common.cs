@@ -21,7 +21,9 @@ public partial class CLITestBase : TestContainer
         "Release";
 #endif
 
+#pragma warning disable IDE0051 // Remove unused private members
     private const string TestPlatformCLIPackageName = "Microsoft.TestPlatform";
+#pragma warning restore IDE0051 // Remove unused private members
     private const string DefaultTargetFramework = "net462";
 
     protected static XmlDocument ReadVersionProps()

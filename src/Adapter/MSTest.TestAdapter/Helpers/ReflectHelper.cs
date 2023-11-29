@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Security;
 
@@ -210,17 +207,9 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>True if there is a match.</returns>
     internal static bool MatchReturnType(MethodInfo method, Type returnType)
     {
-        if (method == null)
-        {
-            throw new ArgumentNullException(nameof(method));
-        }
-
-        if (returnType == null)
-        {
-            throw new ArgumentNullException(nameof(returnType));
-        }
-
-        return method.ReturnType.Equals(returnType);
+        return method == null
+            ? throw new ArgumentNullException(nameof(method))
+            : returnType == null ? throw new ArgumentNullException(nameof(returnType)) : method.ReturnType.Equals(returnType);
     }
 
     /// <summary>
@@ -310,7 +299,7 @@ internal class ReflectHelper : MarshalByRefObject
 
         if (categories != null)
         {
-            foreach (TestCategoryBaseAttribute category in categories)
+            foreach (TestCategoryBaseAttribute category in categories.Cast<TestCategoryBaseAttribute>())
             {
                 testCategories.AddRange(category.TestCategories);
             }
@@ -377,12 +366,7 @@ internal class ReflectHelper : MarshalByRefObject
             categories = categories.Concat(GetCustomAttributeForAssembly<TestCategoryBaseAttribute>(owningType.GetTypeInfo())).ToArray();
         }
 
-        if (categories != null)
-        {
-            return categories;
-        }
-
-        return Enumerable.Empty<object>();
+        return categories ?? Enumerable.Empty<object>();
     }
 
     /// <summary>
@@ -498,17 +482,9 @@ internal class ReflectHelper : MarshalByRefObject
                 classInfo.ClassCleanupMethod?.GetCustomAttribute<ClassCleanupAttribute>(true)?.CleanupBehavior,
             };
 
-        if (cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfClass))
-        {
-            return ClassCleanupBehavior.EndOfClass;
-        }
-
-        if (cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfAssembly))
-        {
-            return ClassCleanupBehavior.EndOfAssembly;
-        }
-
-        return null;
+        return cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfClass)
+            ? ClassCleanupBehavior.EndOfClass
+            : cleanupBehaviors.Contains(ClassCleanupBehavior.EndOfAssembly) ? ClassCleanupBehavior.EndOfAssembly : null;
     }
 
     /// <summary>

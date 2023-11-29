@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET462
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +12,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using TestFramework.ForTestingMSTest;
 
-#if NET462
 namespace MSTestAdapter.PlatformServices.UnitTests;
 
 public class AssemblyResolverTests : TestContainer
@@ -212,62 +212,36 @@ public class TestableAssemblyResolver : AssemblyResolver
 
     protected override bool DoesDirectoryExist(string path)
     {
-        if (DoesDirectoryExistSetter == null)
-        {
-            return base.DoesDirectoryExist(path);
-        }
-
-        return DoesDirectoryExistSetter(path);
+        return DoesDirectoryExistSetter == null ? base.DoesDirectoryExist(path) : DoesDirectoryExistSetter(path);
     }
 
     protected override string[] GetDirectories(string path)
     {
-        if (GetDirectoriesSetter == null)
-        {
-            return base.GetDirectories(path);
-        }
-
-        return GetDirectoriesSetter(path);
+        return GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
     }
 
     protected override Assembly SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
     {
-        if (SearchAssemblySetter == null)
-        {
-            return base.SearchAssembly(searchDirectorypaths, name, isReflectionOnly);
-        }
-
-        return SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
+        return SearchAssemblySetter == null
+            ? base.SearchAssembly(searchDirectorypaths, name, isReflectionOnly)
+            : SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
     }
 
     protected override bool DoesFileExist(string filePath)
     {
-        if (DoesFileExistSetter == null)
-        {
-            return base.DoesFileExist(filePath);
-        }
-
-        return DoesFileExistSetter(filePath);
+        return DoesFileExistSetter == null ? base.DoesFileExist(filePath) : DoesFileExistSetter(filePath);
     }
 
     protected override Assembly LoadAssemblyFrom(string path)
     {
-        if (LoadAssemblyFromSetter == null)
-        {
-            return base.LoadAssemblyFrom(path);
-        }
-
-        return LoadAssemblyFromSetter(path);
+        return LoadAssemblyFromSetter == null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
     }
 
     protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path)
     {
-        if (ReflectionOnlyLoadAssemblyFromSetter == null)
-        {
-            return base.ReflectionOnlyLoadAssemblyFrom(path);
-        }
-
-        return ReflectionOnlyLoadAssemblyFromSetter(path);
+        return ReflectionOnlyLoadAssemblyFromSetter == null
+            ? base.ReflectionOnlyLoadAssemblyFrom(path)
+            : ReflectionOnlyLoadAssemblyFromSetter(path);
     }
 }
 #endif

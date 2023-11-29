@@ -238,7 +238,9 @@ internal abstract class DummyTestClass
     {
     }
 
+#pragma warning disable IDE0051 // Remove unused private members
     private void PrivateTestMethod()
+#pragma warning restore IDE0051 // Remove unused private members
     {
     }
 }

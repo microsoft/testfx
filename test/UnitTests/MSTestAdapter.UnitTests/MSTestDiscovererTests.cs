@@ -207,9 +207,10 @@ public class MSTestDiscovererTests : TestContainer
     public void AreValidSourcesShouldThrowIfPlatformsValidSourceExtensionsIsNull()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);
-        void A() => MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy" });
         var ex = VerifyThrows(A);
         Verify(ex.GetType() == typeof(ArgumentNullException));
+
+        static void A() => MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy" });
     }
 
     public void AreValidSourcesShouldReturnFalseIfValidSourceExtensionsIsEmpty()

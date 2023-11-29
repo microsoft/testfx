@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
-using System.IO;
 using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -48,12 +46,7 @@ public class RunConfigurationSettings
 
         var settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
 
-        if (settings != null)
-        {
-            return settings;
-        }
-
-        return new RunConfigurationSettings();
+        return settings ?? new RunConfigurationSettings();
     }
 
     /// <summary>
@@ -64,26 +57,24 @@ public class RunConfigurationSettings
     /// <returns> The settings if found. Null otherwise. </returns>
     internal static RunConfigurationSettings? GetSettings(string runsettingsXml, string settingName)
     {
-        using (var stringReader = new StringReader(runsettingsXml))
+        using var stringReader = new StringReader(runsettingsXml);
+        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+
+        // read to the fist child
+        XmlReaderUtilities.ReadToRootNode(reader);
+        reader.ReadToNextElement();
+
+        // Read till we reach nodeName element or reach EOF
+        while (!string.Equals(reader.Name, settingName, StringComparison.OrdinalIgnoreCase)
+                && !reader.EOF)
         {
-            XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+            reader.SkipToNextElement();
+        }
 
-            // read to the fist child
-            XmlReaderUtilities.ReadToRootNode(reader);
-            reader.ReadToNextElement();
-
-            // Read till we reach nodeName element or reach EOF
-            while (!string.Equals(reader.Name, settingName, StringComparison.OrdinalIgnoreCase)
-                    && !reader.EOF)
-            {
-                reader.SkipToNextElement();
-            }
-
-            if (!reader.EOF)
-            {
-                // read nodeName element.
-                return ToSettings(reader.ReadSubtree());
-            }
+        if (!reader.EOF)
+        {
+            // read nodeName element.
+            return ToSettings(reader.ReadSubtree());
         }
 
         return null;
