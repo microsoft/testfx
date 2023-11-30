@@ -25,6 +25,7 @@ pr:
       - CONTRIBUTING.md
       - README.md
       - SECURITY.md
+      - src/**/*.xlf
 
 parameters:
 - name: isRTM
