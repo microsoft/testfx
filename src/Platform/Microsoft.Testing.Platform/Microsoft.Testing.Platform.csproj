@@ -5,6 +5,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable Condition=" '$(PackTestingPlatform)' == 'true' ">true</IsPackable>
+    <!--
+      To avoid some version conflicting in unit testing of this platform, we hardcode the 3 digits version to match the one
+      brought by the deps of the test framework on the test projects.
+      TODO: Find a way to automate this versioning from the $(MicrosoftTestingPlatformVersion) property.
+      -->
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <AssemblyFileVersion>$(AssemblyVersion)</AssemblyFileVersion>
   </PropertyGroup>
 
   <ItemGroup>
