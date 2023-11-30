@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
-        <target state="new">Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</target>
+        <target state="translated">Не удалось создать уникальный файл журнала через 3 секунды. Последнее использованное имя файла "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
@@ -39,82 +39,82 @@
       </trans-unit>
       <trans-unit id="CommandLineInvalidArgumentsForOption">
         <source>Option '--{0}' has invalid arguments: {1}</source>
-        <target state="new">Option '--{0}' has invalid arguments: {1}</target>
+        <target state="translated">Параметр "--{0}" имеет недопустимые аргументы: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineInvalidArityErrorMessage">
         <source>Invalid arity, maximum must be greater than minimum</source>
-        <target state="new">Invalid arity, maximum must be greater than minimum</target>
+        <target state="translated">Недопустимая арность, максимальное значение должно быть больше минимального</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineInvalidConfiguration">
         <source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</source>
-        <target state="new">Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</target>
+        <target state="translated">Недопустимая конфигурация для поставщика "{0}" (UID: {1}). Ошибка: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineInvalidOptionName">
         <source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</source>
-        <target state="new">Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</target>
+        <target state="translated">Недопустимое имя параметра "{0}", оно может содержать только буквы и символы "-" (например, "my-option")</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
-        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</target>
+        <target state="translated">Для параметра "--{0}" от поставщика "{1}" (UID: {2}) ожидается не менее {3} аргументов</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtMostArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
-        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</target>
+        <target state="translated">Для параметра "--{0}" от поставщика "{1}" (UID: {2}) ожидается не более {3} аргументов</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsNoArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
-        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</target>
+        <target state="translated">Для параметра "--{0}" от поставщика "{1}" (UID: {2}) не ожидается никаких аргументов</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
         <source>Option '--{0}' is declared by multiple extensions: '{0}'</source>
-        <target state="new">Option '--{0}' is declared by multiple extensions: '{0}'</target>
+        <target state="translated">Параметр "--{0}" объявлен несколькими расширениями: "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
         <source>You can fix the previous option clash by overriding the option name using the configuration file</source>
-        <target state="new">You can fix the previous option clash by overriding the option name using the configuration file</target>
+        <target state="translated">Вы можете устранить конфликт предыдущих параметров, переопределив имя параметра с помощью файла конфигурации</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
         <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
-        <target state="new">Option '--{0}' is reserved and cannot be used by providers: '{0}'</target>
+        <target state="translated">Параметр "--{0}" зарезервирован и не может использоваться поставщиками: "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
-        <target state="new">Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</target>
+        <target state="translated">Параметр "--{0}" от поставщика "{1}" (UID: {2}) использует зарезервированный префикс "--internal"</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
-        <target state="new">Unexpected argument {0}</target>
+        <target state="translated">Неожиданный аргумент {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedNullArgument">
         <source>Unexpected null argument at index {0}</source>
-        <target state="new">Unexpected null argument at index {0}</target>
+        <target state="translated">Неожиданный аргумент, имеющий значение NULL, с индексом {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
-        <target state="new">Unexpected single quote in argument: {0}</target>
+        <target state="translated">Неожиданная одинарная кавычка в аргументе: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
         <source>Unexpected single quote in argument: {0} for option '--{1}'</source>
-        <target state="new">Unexpected single quote in argument: {0} for option '--{1}'</target>
+        <target state="translated">Неожиданная одинарная кавычка в аргументе: {0} для параметра "--{1}"</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineUnknownOption">
         <source>Unknown option '--{0}'</source>
-        <target state="new">Unknown option '--{0}'</target>
+        <target state="translated">Неизвестный параметр "--{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -129,7 +129,7 @@
       </trans-unit>
       <trans-unit id="ConnectingToClientHost">
         <source>Connecting to client host '{0}' port '{1}'</source>
-        <target state="new">Connecting to client host '{0}' port '{1}'</target>
+        <target state="translated">Подключение к узлу клиента "{0}" к порту "{1}"</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
-        <target state="new">Could not find directory '{0}'</target>
+        <target state="translated">Не удалось найти каталог "{0}".</target>
         <note />
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -165,7 +165,7 @@
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
-        <target state="new">Failed to write the log to the channel. Missed log content:
+        <target state="translated">Не удалось записать журнал в канал. Отсутствует содержимое журнала:
 {0}</target>
         <note />
       </trans-unit>
@@ -176,22 +176,22 @@
       </trans-unit>
       <trans-unit id="HelpApplicationUsage">
         <source>Usage {0} [option providers] [extension option providers]</source>
-        <target state="new">Usage {0} [option providers] [extension option providers]</target>
+        <target state="translated">Использование {0} [поставщики параметра] [поставщики параметра расширения]</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpExecuteTestApplication">
         <source>Execute a .NET Test Application.</source>
-        <target state="new">Execute a .NET Test Application.</target>
+        <target state="translated">Запуск тестового приложения .NET.</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpExtensionOptions">
         <source>Extension options:</source>
-        <target state="new">Extension options:</target>
+        <target state="translated">Параметры расширения:</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpNoExtensionRegistered">
         <source>    No extension registered.</source>
-        <target state="new">    No extension registered.</target>
+        <target state="translated">    Расширение не зарегистрировано.</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpOptions">
@@ -201,17 +201,17 @@
       </trans-unit>
       <trans-unit id="HelpTestApplicationRunner">
         <source>&lt;test application runner&gt;</source>
-        <target state="new">&lt;test application runner&gt;</target>
+        <target state="translated">&lt;проверка средства выполнения тестов приложения&gt;</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
         <source>Method '{0}' did not exit successfully</source>
-        <target state="new">Method '{0}' did not exit successfully</target>
+        <target state="translated">Сбой выхода метода "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidCommandLineArguments">
         <source>Invalid command line arguments:</source>
-        <target state="new">Invalid command line arguments:</target>
+        <target state="translated">Недопустимые аргументы командной строки:</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -231,22 +231,22 @@
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
         <source>JsonRpc server implementation based on the test platform protocol specification.</source>
-        <target state="new">JsonRpc server implementation based on the test platform protocol specification.</target>
+        <target state="translated">Реализация сервера JsonRpc на основе спецификации протокола платформы тестирования.</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
         <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
-        <target state="new">JsonRpc server to client handshake, implementation based on the test platform protocol specification.</target>
+        <target state="translated">Рукопожатие сервера JsonRpc с клиентом, реализация на основе спецификации протокола платформы тестирования.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
-        <target state="new">No serializer registered with ID '{0}'</target>
+        <target state="translated">Не зарегистрирован сериализатор с ИД "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
         <source>No serializer registered with type '{0}'</source>
-        <target state="new">No serializer registered with type '{0}'</target>
+        <target state="translated">Не зарегистрирован сериализатор с типом "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -261,142 +261,142 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
         <source>Specify the hostname of the client.</source>
-        <target state="new">Specify the hostname of the client.</target>
+        <target state="translated">Укажите имя узла клиента.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionSingleArgument">
         <source>'--client-host' expects a single host name as argument</source>
-        <target state="new">'--client-host' expects a single host name as argument</target>
+        <target state="translated">"--client-host" ожидает в качестве аргумента одно имя узла</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientPortOptionDescription">
         <source>Specify the port of the client.</source>
-        <target state="new">Specify the port of the client.</target>
+        <target state="translated">Укажите порт клиента.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
-        <target state="new">Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</target>
+        <target state="translated">Принудительная синхронная запись журнала с помощью встроенного средства ведения журнала файла. Удобно для сценария, в котором вы не хотите потерять журнал (например, в случае сбоя). Обратите внимание, что это замедляет выполнение теста.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument">
         <source>'--diagnostic-output-fileprefix' expects a single file name prefix argument</source>
-        <target state="new">'--diagnostic-output-fileprefix' expects a single file name prefix argument</target>
+        <target state="translated">"--diagnostic-output-fileprefix" ожидает один аргумент в виде префикса имени файла</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</target>
+        <target state="translated">Включить ведение журнала диагностики. Уровень журнала по умолчанию — "Сведения". Файл с именем log_[MMddHHssfff].diag будет записан в выходной каталог</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
         <source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</source>
-        <target state="new">'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</target>
+        <target state="translated">При указании '--diagnostic-verbosity' ожидается одноуровневый аргумент ("Trace", "Debug", "Information", "Warning", "Error" или "Critical")</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
         <source>'--{0}' requires '--diagnostic' to be provided</source>
-        <target state="new">'--{0}' requires '--diagnostic' to be provided</target>
+        <target state="translated">Для "--{0}" требуется указать "--diagnostic"</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="new">Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</target>
+        <target state="translated">Выходной каталог журнала диагностики, если не указан, файл будет создан в каталоге "TestResults" по умолчанию.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument">
         <source>'--diagnostic-output-directory' expects a single directory name argument</source>
-        <target state="new">'--diagnostic-output-directory' expects a single directory name argument</target>
+        <target state="translated">"--diagnostic-output-directory" ожидает один аргумент в виде имени каталога</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="new">Prefix for the log file name that will replace '[log]_.'</target>
+        <target state="translated">Префикс для имени файла журнала, который заменит "[log]_."</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
         <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
-        <target state="new">Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</target>
+        <target state="translated">Определите уровень детализации для параметра --diagnostic. Доступные значения: "Trace", "Debug", "Information", "Warning", "Error" и "Critical"</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.</source>
-        <target state="new">List available tests.</target>
+        <target state="translated">Список доступных тестов.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">
         <source>Show the command line help.</source>
-        <target state="new">Show the command line help.</target>
+        <target state="translated">Показать справку по командной строке.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
-        <target state="new">Display .NET test application information.</target>
+        <target state="translated">Отображение сведений о тестовом приложении .NET.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
-        <target state="new">'--list-tests' and '--minimum-expected-tests' are incompatible options</target>
+        <target state="translated">Параметры "--list-tests" и "--minimum-expected-tests" несовместимы</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
         <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
-        <target state="new">'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</target>
+        <target state="translated">"--minimum-expected-tests" ожидает одно ненулевое положительное целое число (например, "--minimum-expected-tests 10")</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
-        <target state="new">Do not display the startup banner, the copyright message or the telemetry banner.</target>
+        <target state="translated">Не отображать баннер запуска, сообщение об авторских правах и баннер телеметрии.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineOptionExpectsNoArgumentErrorMessage">
         <source>'--{0}' expects no argument</source>
-        <target state="new">'--{0}' expects no argument</target>
+        <target state="translated">"--{0}" не ожидает никаких аргументов</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
         <source>Specify the port of the server.</source>
-        <target state="new">Specify the port of the server.</target>
+        <target state="translated">Укажите порт сервера.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionSingleArgument">
         <source>'--{0}' expects a single valid port as argument</source>
-        <target state="new">'--{0}' expects a single valid port as argument</target>
+        <target state="translated">"--{0}" ожидает в качестве аргумента один допустимый порт</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
         <source>Microsoft Testing Platform command line provider</source>
-        <target state="new">Microsoft Testing Platform command line provider</target>
+        <target state="translated">Поставщик командной строки платформы тестирования Майкрософт</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
         <source>Platform command line provider</source>
-        <target state="new">Platform command line provider</target>
+        <target state="translated">Поставщик командной строки платформы</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
         <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
-        <target state="new">The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</target>
+        <target state="translated">Каталог, в котором будут размещены результаты теста. Если указанный каталог не существует, он будет создан. Значение по умолчанию — TestResults в каталоге, содержащем тестируемое приложение.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
-        <target state="new">Enable the server mode.</target>
+        <target state="translated">Включите режим сервера.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
         <source>For testing purposes</source>
-        <target state="new">For testing purposes</target>
+        <target state="translated">Для тестирования</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
         <source>Eventual parent test host controller PID.</source>
-        <target state="new">Eventual parent test host controller PID.</target>
+        <target state="translated">Итоговый идентификатор процесса контроллера узла родительского теста.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
         <source>Bridge to VSTest APIs</source>
-        <target state="new">Bridge to VSTest APIs</target>
+        <target state="translated">Мост к API VSTest</target>
         <note />
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
@@ -406,17 +406,17 @@
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
-        <target state="new">Retry failed after {0} times</target>
+        <target state="translated">Повторные попытки ({0}) завершились неудачно</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerLogMessageDescription">
         <source>This data represents a server log message</source>
-        <target state="new">This data represents a server log message</target>
+        <target state="translated">Эти данные представляют сообщение журнала сервера</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerLogMessageDisplayName">
         <source>Server log message</source>
-        <target state="new">Server log message</target>
+        <target state="translated">Сообщение журнала сервера</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">
@@ -446,7 +446,7 @@
       </trans-unit>
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
-        <target state="new">Starting server. Listening on port '{0}'</target>
+        <target state="translated">Выполняется запуск сервера. Прослушивание порта "{0}"</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -461,17 +461,17 @@ Microsoft Testing Platform collects usage data in order to help us improve your 
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</source>
-        <target state="new">Telemetry
+        <target state="translated">Телеметрия
 ---------
-Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
-You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
+Платформа тестирования Майкрософт собирает данные об использовании для повышения удобства. Данные собираются корпорацией Майкрософт и никому не предоставляются.
+Вы можете отключить отправку данных телеметрии, установив значение "1" или "true" для переменной среды TESTINGPLATFORM_TELEMETRY_OPTOUT или DOTNET_CLI_TELEMETRY_OPTOUT в подходящей оболочке.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</target>
+Дополнительные сведения о телеметрии платформы тестирования Майкрософт: https://aka.ms/testingplatform/guides/telemetry</target>
         <note />
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
         <source>Telemetry provider is already set</source>
-        <target state="new">Telemetry provider is already set</target>
+        <target state="translated">Поставщик телеметрии уже настроен</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
@@ -531,12 +531,12 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
         <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
-        <target state="new">Failed to acquire semaphore before timeout of '{0}' seconds</target>
+        <target state="translated">Не удалось получить семафор до истечения времени ожидания ("{0}" с)</target>
         <note />
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs before the timeout of '{0}' seconds</source>
-        <target state="new">Failed to flush logs before the timeout of '{0}' seconds</target>
+        <target state="translated">Не удалось записать журналы на диск до истечения времени ожидания ("{0}" с)</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
@@ -546,7 +546,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TreeNodeFilterDescription">
         <source>Use a tree filter to filter down the tests to execute</source>
-        <target state="new">Use a tree filter to filter down the tests to execute</target>
+        <target state="translated">Используйте фильтр дерева для фильтрации выполняемых тестов</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
@@ -556,7 +556,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TreeNodeFilterInvalidArgumentCount">
         <source>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</source>
-        <target state="new">A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</target>
+        <target state="translated">Ожидается один аргумент (например, "/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]")</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
@@ -586,34 +586,34 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>
-        <target state="new">Unexpected telemetry call, the telemetry is disabled.</target>
+        <target state="translated">Непредвиденный вызов телеметрии. Телеметрия отключена.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
         <source>An unexpected exception occured during byte conversion</source>
-        <target state="new">An unexpected exception occured during byte conversion</target>
+        <target state="translated">При преобразовании байт возникло непредвиденное исключение</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="new">An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+        <target state="translated">В "FileLogger.WriteLogToFileAsync" произошло непредвиденное исключение.
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>
       <trans-unit id="UnexpectedStateErrorMessage">
         <source>Unexpected state in file '{0}' at line '{1}'</source>
-        <target state="new">Unexpected state in file '{0}' at line '{1}'</target>
+        <target state="translated">Непредвиденное состояние в файле "{0}" в строке "{1}"</target>
         <note />
       </trans-unit>
       <trans-unit id="UnknownCommunicationProtocolErrorMessage">
         <source>The communication protocol '{0}' is not supported</source>
-        <target state="new">The communication protocol '{0}' is not supported</target>
+        <target state="translated">Протокол коммуникации "{0}" не поддерживается</target>
         <note />
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
-        <target state="new">This program location is thought to be unreachable. File='{0}' Line={1}</target>
+        <target state="translated">Похоже, что это расположение программы является недоступным. Файл="{0}", строка={1}</target>
         <note />
       </trans-unit>
     </body>
