@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
-        <target state="new">Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</target>
+        <target state="translated">3 秒後無法建立唯一記錄檔。上次嘗試的檔案名稱為 '{0}'。</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
@@ -39,82 +39,82 @@
       </trans-unit>
       <trans-unit id="CommandLineInvalidArgumentsForOption">
         <source>Option '--{0}' has invalid arguments: {1}</source>
-        <target state="new">Option '--{0}' has invalid arguments: {1}</target>
+        <target state="translated">選項 '--{0}' 有無效的引數 {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineInvalidArityErrorMessage">
         <source>Invalid arity, maximum must be greater than minimum</source>
-        <target state="new">Invalid arity, maximum must be greater than minimum</target>
+        <target state="translated">無效的 arity，最大值必須大於最小值</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineInvalidConfiguration">
         <source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</source>
-        <target state="new">Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</target>
+        <target state="translated">提供者 '{0}' (UID: {1}) 的設定無效。錯誤: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineInvalidOptionName">
         <source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</source>
-        <target state="new">Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</target>
+        <target state="translated">選項名稱 '{0}' 無效，只能包含字母和 '-' (例如 my-option)</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
-        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</target>
+        <target state="translated">提供者 '{1}' (UID: {2}) 中的選項 '--{0}' 至少需要 {3} 個引數</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtMostArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
-        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</target>
+        <target state="translated">提供者 '{1}' (UID: {2}) 中的選項 '--{0}' 最多需要 {3} 個引數</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsNoArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
-        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</target>
+        <target state="translated">提供者 '{1}' (UID: {2}) 中的選項 '--{0}' 不需要任何引數</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
         <source>Option '--{0}' is declared by multiple extensions: '{0}'</source>
-        <target state="new">Option '--{0}' is declared by multiple extensions: '{0}'</target>
+        <target state="translated">選項 '--{0}' 是由多個延伸模組 '{0}' 宣告</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
         <source>You can fix the previous option clash by overriding the option name using the configuration file</source>
-        <target state="new">You can fix the previous option clash by overriding the option name using the configuration file</target>
+        <target state="translated">您可以使用設定檔覆寫選項名稱，以修正先前的選項衝突</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
         <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
-        <target state="new">Option '--{0}' is reserved and cannot be used by providers: '{0}'</target>
+        <target state="translated">選項 '--{0}' 已保留，無法供提供者 '{0}' 使用</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
-        <target state="new">Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</target>
+        <target state="translated">提供者 '{1}' (UID: {2}) 中的選項 '--{0}' 使用保留的前置詞 '--internal'</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
-        <target state="new">Unexpected argument {0}</target>
+        <target state="translated">未預期的引數 {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedNullArgument">
         <source>Unexpected null argument at index {0}</source>
-        <target state="new">Unexpected null argument at index {0}</target>
+        <target state="translated">索引 {0} 中有未預期的 Null 引數</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
-        <target state="new">Unexpected single quote in argument: {0}</target>
+        <target state="translated">引數 {0} 中有未預期的單引號</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
         <source>Unexpected single quote in argument: {0} for option '--{1}'</source>
-        <target state="new">Unexpected single quote in argument: {0} for option '--{1}'</target>
+        <target state="translated">選項 '--{1}' 的引數 {0} 中有未預期的單引號</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineUnknownOption">
         <source>Unknown option '--{0}'</source>
-        <target state="new">Unknown option '--{0}'</target>
+        <target state="translated">未知的選項 '--{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -129,7 +129,7 @@
       </trans-unit>
       <trans-unit id="ConnectingToClientHost">
         <source>Connecting to client host '{0}' port '{1}'</source>
-        <target state="new">Connecting to client host '{0}' port '{1}'</target>
+        <target state="translated">正在連接到用戶端主機 '{0}' 連接埠 '{1}'</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
-        <target state="new">Could not find directory '{0}'</target>
+        <target state="translated">找不到目錄 '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -165,7 +165,7 @@
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
-        <target state="new">Failed to write the log to the channel. Missed log content:
+        <target state="translated">無法將記錄寫入通道。遺失的記錄內容:
 {0}</target>
         <note />
       </trans-unit>
@@ -176,22 +176,22 @@
       </trans-unit>
       <trans-unit id="HelpApplicationUsage">
         <source>Usage {0} [option providers] [extension option providers]</source>
-        <target state="new">Usage {0} [option providers] [extension option providers]</target>
+        <target state="translated">使用方式 {0} [option providers] [extension option providers]</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpExecuteTestApplication">
         <source>Execute a .NET Test Application.</source>
-        <target state="new">Execute a .NET Test Application.</target>
+        <target state="translated">執行 .NET 測試應用程式。</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpExtensionOptions">
         <source>Extension options:</source>
-        <target state="new">Extension options:</target>
+        <target state="translated">延伸模組選項:</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpNoExtensionRegistered">
         <source>    No extension registered.</source>
-        <target state="new">    No extension registered.</target>
+        <target state="translated">    未註冊任何延伸模組。</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpOptions">
@@ -201,17 +201,17 @@
       </trans-unit>
       <trans-unit id="HelpTestApplicationRunner">
         <source>&lt;test application runner&gt;</source>
-        <target state="new">&lt;test application runner&gt;</target>
+        <target state="translated">&lt;測試應用程式執行器&gt;</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
         <source>Method '{0}' did not exit successfully</source>
-        <target state="new">Method '{0}' did not exit successfully</target>
+        <target state="translated">方法 '{0}' 未成功結束</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidCommandLineArguments">
         <source>Invalid command line arguments:</source>
-        <target state="new">Invalid command line arguments:</target>
+        <target state="translated">命令列引數無效:</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -231,22 +231,22 @@
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
         <source>JsonRpc server implementation based on the test platform protocol specification.</source>
-        <target state="new">JsonRpc server implementation based on the test platform protocol specification.</target>
+        <target state="translated">根據測試平台通訊協定規格的 JsonRpc 伺服器實作。</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
         <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
-        <target state="new">JsonRpc server to client handshake, implementation based on the test platform protocol specification.</target>
+        <target state="translated">JsonRpc 伺服器至用戶端交握，根據測試平台通訊協定規格的 JsonRpc 伺服器實作。</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
-        <target state="new">No serializer registered with ID '{0}'</target>
+        <target state="translated">沒有使用識別碼 '{0}' 註冊的序列化程式</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
         <source>No serializer registered with type '{0}'</source>
-        <target state="new">No serializer registered with type '{0}'</target>
+        <target state="translated">沒有使用類型 '{0}' 註冊的序列化程式</target>
         <note />
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -261,142 +261,142 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
         <source>Specify the hostname of the client.</source>
-        <target state="new">Specify the hostname of the client.</target>
+        <target state="translated">指定用戶端的主機名稱。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionSingleArgument">
         <source>'--client-host' expects a single host name as argument</source>
-        <target state="new">'--client-host' expects a single host name as argument</target>
+        <target state="translated">'--client-host' 需要單一主機名稱做為引數</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientPortOptionDescription">
         <source>Specify the port of the client.</source>
-        <target state="new">Specify the port of the client.</target>
+        <target state="translated">指定用戶端的連接埠。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
-        <target state="new">Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</target>
+        <target state="translated">強制內建檔案記錄器以同步方式寫入記錄。適用於不想遺失任何記錄的案例 (例如損毀)。請注意，這會減慢測試執行的速度。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument">
         <source>'--diagnostic-output-fileprefix' expects a single file name prefix argument</source>
-        <target state="new">'--diagnostic-output-fileprefix' expects a single file name prefix argument</target>
+        <target state="translated">'--diagnostic-output-fileprefix' 需要單一檔案名稱前置詞引數</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</target>
+        <target state="translated">啟用診斷記錄。預設記錄層級為 'Information'。檔案將以 log_[MMddHHssfff].diag 名稱寫入輸出目錄中</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
         <source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</source>
-        <target state="new">'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</target>
+        <target state="translated">'--diagnostic-verbosity' 需要單一層級引數 ('Trace'、'Debug'、'Information'、'Warning'、'Error' 或 'Critical')</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
         <source>'--{0}' requires '--diagnostic' to be provided</source>
-        <target state="new">'--{0}' requires '--diagnostic' to be provided</target>
+        <target state="translated">'--{0}' 要求必須提供 '--diagnostic'</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="new">Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</target>
+        <target state="translated">診斷記錄的輸出目錄，若未指定，則會在預設的 'TestResults' 目錄內產生檔案。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument">
         <source>'--diagnostic-output-directory' expects a single directory name argument</source>
-        <target state="new">'--diagnostic-output-directory' expects a single directory name argument</target>
+        <target state="translated">'--diagnostic-output-directory' 需要單一目錄名稱引數</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="new">Prefix for the log file name that will replace '[log]_.'</target>
+        <target state="translated">將取代 '[log]_' 的記錄檔名稱前置詞</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
         <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
-        <target state="new">Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</target>
+        <target state="translated">定義 --diagnostic 的詳細程度層級。可用的值為 'Trace'、'Debug'、'Information'、'Warning'、'Error' 和 'Critical'</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.</source>
-        <target state="new">List available tests.</target>
+        <target state="translated">列出可用的測試。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">
         <source>Show the command line help.</source>
-        <target state="new">Show the command line help.</target>
+        <target state="translated">顯示命令列說明。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
-        <target state="new">Display .NET test application information.</target>
+        <target state="translated">顯示 .NET 測試應用程式資訊。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
-        <target state="new">'--list-tests' and '--minimum-expected-tests' are incompatible options</target>
+        <target state="translated">'--list-tests' 和 '--minimum-expected-tests' 是不相容的選項</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
         <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
-        <target state="new">'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</target>
+        <target state="translated">'--minimum-expected-tests' 需要單一非零的正整數值 (例如 '--minimum-expected-tests 10')</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
-        <target state="new">Do not display the startup banner, the copyright message or the telemetry banner.</target>
+        <target state="translated">不要顯示啟動橫幅、著作權訊息或遙測橫幅。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineOptionExpectsNoArgumentErrorMessage">
         <source>'--{0}' expects no argument</source>
-        <target state="new">'--{0}' expects no argument</target>
+        <target state="translated">'--{0}' 不需要引數</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
         <source>Specify the port of the server.</source>
-        <target state="new">Specify the port of the server.</target>
+        <target state="translated">指定伺服器的連接埠。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionSingleArgument">
         <source>'--{0}' expects a single valid port as argument</source>
-        <target state="new">'--{0}' expects a single valid port as argument</target>
+        <target state="translated">'--{0}' 需要單一有效的連接埠做為引數</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
         <source>Microsoft Testing Platform command line provider</source>
-        <target state="new">Microsoft Testing Platform command line provider</target>
+        <target state="translated">Microsoft Testing Platform 命令列提供者</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
         <source>Platform command line provider</source>
-        <target state="new">Platform command line provider</target>
+        <target state="translated">平台命令列提供者</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
         <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
-        <target state="new">The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</target>
+        <target state="translated">將放置測試結果的目錄。如果指定的目錄不存在，系統會建立該目錄。預設值是包含測試應用程式之目錄中的 TestResults。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
-        <target state="new">Enable the server mode.</target>
+        <target state="translated">啟用伺服器模式。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
         <source>For testing purposes</source>
-        <target state="new">For testing purposes</target>
+        <target state="translated">測試用</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
         <source>Eventual parent test host controller PID.</source>
-        <target state="new">Eventual parent test host controller PID.</target>
+        <target state="translated">最終父測試主機控制器 PID。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
         <source>Bridge to VSTest APIs</source>
-        <target state="new">Bridge to VSTest APIs</target>
+        <target state="translated">橋接至 VSTest API</target>
         <note />
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
@@ -406,17 +406,17 @@
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
-        <target state="new">Retry failed after {0} times</target>
+        <target state="translated">在 {0} 次重試之後失敗</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerLogMessageDescription">
         <source>This data represents a server log message</source>
-        <target state="new">This data represents a server log message</target>
+        <target state="translated">此資料代表伺服器記錄訊息</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerLogMessageDisplayName">
         <source>Server log message</source>
-        <target state="new">Server log message</target>
+        <target state="translated">伺服器記錄訊息</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">
@@ -446,7 +446,7 @@
       </trans-unit>
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
-        <target state="new">Starting server. Listening on port '{0}'</target>
+        <target state="translated">正在啟動伺服器。正在連接埠 '{0}' 上聆聽</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -461,17 +461,17 @@ Microsoft Testing Platform collects usage data in order to help us improve your 
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</source>
-        <target state="new">Telemetry
+        <target state="translated">遙測
 ---------
-Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
-You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
+Microsoft 測試平台會收集使用量資料，以協助我們改善您的體驗。資料由 Microsoft 收集，且不會與任何人共用。
+您可以使用您喜愛的殼層，將 TESTINGPLATFORM_TELEMETRY_OPTOUT 或 DOTNET_CLI_TELEMETRY_OPTOUT 環境變數設定為 '1' 或 'true'，以選擇退出遙測。
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</target>
+進一步了解關於 Microsoft 測試平台遙測: https://aka.ms/testingplatform/guides/telemetry</target>
         <note />
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
         <source>Telemetry provider is already set</source>
-        <target state="new">Telemetry provider is already set</target>
+        <target state="translated">遙測提供者已設定</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
@@ -531,12 +531,12 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
         <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
-        <target state="new">Failed to acquire semaphore before timeout of '{0}' seconds</target>
+        <target state="translated">無法在 '{0}' 秒逾時前取得旗號</target>
         <note />
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs before the timeout of '{0}' seconds</source>
-        <target state="new">Failed to flush logs before the timeout of '{0}' seconds</target>
+        <target state="translated">無法在 '{0}' 秒逾時前排清記錄</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
@@ -546,7 +546,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TreeNodeFilterDescription">
         <source>Use a tree filter to filter down the tests to execute</source>
-        <target state="new">Use a tree filter to filter down the tests to execute</target>
+        <target state="translated">使用樹狀篩選來篩選要執行的測試</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
@@ -556,7 +556,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TreeNodeFilterInvalidArgumentCount">
         <source>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</source>
-        <target state="new">A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</target>
+        <target state="translated">需要單一引數 (例如 '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
@@ -586,34 +586,34 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>
-        <target state="new">Unexpected telemetry call, the telemetry is disabled.</target>
+        <target state="translated">未預期的遙測呼叫，遙測已停用。</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
         <source>An unexpected exception occured during byte conversion</source>
-        <target state="new">An unexpected exception occured during byte conversion</target>
+        <target state="translated">位元組轉換期間發生非預期的例外狀況</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="new">An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+        <target state="translated">'FileLogger.WriteLogToFileAsync' 中發生未預期的例外狀況。
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>
       <trans-unit id="UnexpectedStateErrorMessage">
         <source>Unexpected state in file '{0}' at line '{1}'</source>
-        <target state="new">Unexpected state in file '{0}' at line '{1}'</target>
+        <target state="translated">檔案 '{0}' 的第 '{1}' 行出現未預期的狀態</target>
         <note />
       </trans-unit>
       <trans-unit id="UnknownCommunicationProtocolErrorMessage">
         <source>The communication protocol '{0}' is not supported</source>
-        <target state="new">The communication protocol '{0}' is not supported</target>
+        <target state="translated">通訊協定 '{0}' 不受支援</target>
         <note />
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
-        <target state="new">This program location is thought to be unreachable. File='{0}' Line={1}</target>
+        <target state="translated">此程式位置被認為無法連線。File='{0}' Line={1}</target>
         <note />
       </trans-unit>
     </body>

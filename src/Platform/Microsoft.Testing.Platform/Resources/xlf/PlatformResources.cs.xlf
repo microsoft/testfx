@@ -9,7 +9,7 @@
       </trans-unit>
       <trans-unit id="CannotCreateUniqueLogFileErrorMessage">
         <source>Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</source>
-        <target state="new">Failed to create a unique log file after 3 seconds. Lastly tried file name is '{0}'.</target>
+        <target state="translated">Nepodařilo se vytvořit jedinečný soubor protokolu po 3 sekundách. Naposledy vyzkoušený název souboru je {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRemoveEnvironmentVariableAtThisStageErrorMessage">
@@ -39,82 +39,82 @@
       </trans-unit>
       <trans-unit id="CommandLineInvalidArgumentsForOption">
         <source>Option '--{0}' has invalid arguments: {1}</source>
-        <target state="new">Option '--{0}' has invalid arguments: {1}</target>
+        <target state="translated">Možnost --{0} má neplatné argumenty: {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineInvalidArityErrorMessage">
         <source>Invalid arity, maximum must be greater than minimum</source>
-        <target state="new">Invalid arity, maximum must be greater than minimum</target>
+        <target state="translated">Neplatná arita, maximum musí být větší než minimum.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineInvalidConfiguration">
         <source>Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</source>
-        <target state="new">Invalid configuration for provider '{0}' (UID: {1}). Error: {2}</target>
+        <target state="translated">Neplatná konfigurace pro zprostředkovatele {0} (UID: {1}) Chyba: {2}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineInvalidOptionName">
         <source>Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</source>
-        <target state="new">Invalid option name '{0}', it must contain only letter and '-' (e.g. my-option)</target>
+        <target state="translated">Neplatný název možnosti {0}. Musí obsahovat jenom písmena a spojovníky (-), například moje-volba.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtLeastArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</source>
-        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects at least {3} arguments</target>
+        <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) očekává minimálně tento počet argumentů: {3}.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsAtMostArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</source>
-        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects at most {3} arguments</target>
+        <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) očekává maximálně tento počet argumentů: {3}.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionExpectsNoArguments">
         <source>Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</source>
-        <target state="new">Option '--{0}' from provider '{1}' (UID: {2}) expects no arguments</target>
+        <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) neočekává žádné argumenty.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProviders">
         <source>Option '--{0}' is declared by multiple extensions: '{0}'</source>
-        <target state="new">Option '--{0}' is declared by multiple extensions: '{0}'</target>
+        <target state="translated">Možnost --{0} je deklarována více rozšířeními: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsDeclaredByMultipleProvidersWorkaround">
         <source>You can fix the previous option clash by overriding the option name using the configuration file</source>
-        <target state="new">You can fix the previous option clash by overriding the option name using the configuration file</target>
+        <target state="translated">Konflikt předchozí možnosti můžete opravit přepsáním názvu možnosti pomocí konfiguračního souboru.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsReserved">
         <source>Option '--{0}' is reserved and cannot be used by providers: '{0}'</source>
-        <target state="new">Option '--{0}' is reserved and cannot be used by providers: '{0}'</target>
+        <target state="translated">Možnost --{0} je vyhrazená a nelze ji použít zprostředkovateli: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineOptionIsUsingReservedPrefix">
         <source>Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</source>
-        <target state="new">Option `--{0}` from provider '{1}' (UID: {2}) is using the reserved prefix '--internal'</target>
+        <target state="translated">Možnost --{0} od zprostředkovatele {1} (UID: {2}) používá vyhrazenou předponu --internal.</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedArgument">
         <source>Unexpected argument {0}</source>
-        <target state="new">Unexpected argument {0}</target>
+        <target state="translated">Neočekávaný argument {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedNullArgument">
         <source>Unexpected null argument at index {0}</source>
-        <target state="new">Unexpected null argument at index {0}</target>
+        <target state="translated">Neočekávaný argument null v indexu {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgument">
         <source>Unexpected single quote in argument: {0}</source>
-        <target state="new">Unexpected single quote in argument: {0}</target>
+        <target state="translated">Neočekávaná jednoduchá uvozovka v argumentu: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineParserUnexpectedSingleQuoteInArgumentForOption">
         <source>Unexpected single quote in argument: {0} for option '--{1}'</source>
-        <target state="new">Unexpected single quote in argument: {0} for option '--{1}'</target>
+        <target state="translated">Neočekávaná jednoduchá uvozovka v argumentu: {0} pro možnost --{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="CommandLineUnknownOption">
         <source>Unknown option '--{0}'</source>
-        <target state="new">Unknown option '--{0}'</target>
+        <target state="translated">Neznámá možnost --{0}</target>
         <note />
       </trans-unit>
       <trans-unit id="CompositeServiceFactoryInstanceAlreadyRegistered">
@@ -165,7 +165,7 @@
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
-        <target state="new">Failed to write the log to the channel. Missed log content:
+        <target state="translated">Zápis protokolu do kanálu se nezdařil. Nezachycený obsah protokolu:
 {0}</target>
         <note />
       </trans-unit>
@@ -176,22 +176,22 @@
       </trans-unit>
       <trans-unit id="HelpApplicationUsage">
         <source>Usage {0} [option providers] [extension option providers]</source>
-        <target state="new">Usage {0} [option providers] [extension option providers]</target>
+        <target state="translated">Použití {0} [zprostředkovatelé možností] [zprostředkovatelé možností rozšíření]</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpExecuteTestApplication">
         <source>Execute a .NET Test Application.</source>
-        <target state="new">Execute a .NET Test Application.</target>
+        <target state="translated">Spusťte testovací aplikaci .NET.</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpExtensionOptions">
         <source>Extension options:</source>
-        <target state="new">Extension options:</target>
+        <target state="translated">Možnosti rozšíření:</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpNoExtensionRegistered">
         <source>    No extension registered.</source>
-        <target state="new">    No extension registered.</target>
+        <target state="translated">    Není zaregistrované žádné rozšíření.</target>
         <note />
       </trans-unit>
       <trans-unit id="HelpOptions">
@@ -201,7 +201,7 @@
       </trans-unit>
       <trans-unit id="HelpTestApplicationRunner">
         <source>&lt;test application runner&gt;</source>
-        <target state="new">&lt;test application runner&gt;</target>
+        <target state="translated">&lt;spouštěč testovací aplikace&gt;</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -211,7 +211,7 @@
       </trans-unit>
       <trans-unit id="InvalidCommandLineArguments">
         <source>Invalid command line arguments:</source>
-        <target state="new">Invalid command line arguments:</target>
+        <target state="translated">Neplatné argumenty příkazového řádku:</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonConfigurationFileParserDuplicateKeyErrorMessage">
@@ -261,142 +261,142 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
         <source>Specify the hostname of the client.</source>
-        <target state="new">Specify the hostname of the client.</target>
+        <target state="translated">Zadejte název hostitele klienta.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionSingleArgument">
         <source>'--client-host' expects a single host name as argument</source>
-        <target state="new">'--client-host' expects a single host name as argument</target>
+        <target state="translated">--client-host očekává jako argument jeden název hostitele.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientPortOptionDescription">
         <source>Specify the port of the client.</source>
-        <target state="new">Specify the port of the client.</target>
+        <target state="translated">Zadejte port klienta.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
-        <target state="new">Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</target>
+        <target state="translated">Umožňuje vynutit synchronní zápis do protokolu integrovaným protokolovacím nástrojem souborů. Užitečné pro scénář, kdy nechcete přijít o žádný protokol (například v případě chybového ukončení). Poznámka: Toto zpomaluje provádění testu.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument">
         <source>'--diagnostic-output-fileprefix' expects a single file name prefix argument</source>
-        <target state="new">'--diagnostic-output-fileprefix' expects a single file name prefix argument</target>
+        <target state="translated">--diagnostic-output-fileprefix očekává jeden argument předpony názvu souboru.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
         <source>Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="new">Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</target>
+        <target state="translated">Umožňuje povolit protokolování diagnostiky. Výchozí úroveň protokolování je Information. Soubor se zapíše do výstupního adresáře s názvem log_[MMddHHssfff].diag.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
         <source>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</source>
-        <target state="new">'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</target>
+        <target state="translated">--diagnostic-verbosity očekává jeden argument úrovně (Trace, Debug, Information, Warning, Error nebo Critical).</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionIsMissing">
         <source>'--{0}' requires '--diagnostic' to be provided</source>
-        <target state="new">'--{0}' requires '--diagnostic' to be provided</target>
+        <target state="translated">--{0} vyžaduje zadání možnosti --diagnostic.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription">
         <source>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</source>
-        <target state="new">Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</target>
+        <target state="translated">Výstupní adresář diagnostického protokolování. Pokud není zadaný, soubor se vygeneruje ve výchozím adresáři TestResults.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument">
         <source>'--diagnostic-output-directory' expects a single directory name argument</source>
-        <target state="new">'--diagnostic-output-directory' expects a single directory name argument</target>
+        <target state="translated">--diagnostic-output-directory očekává jeden argument názvu adresáře.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
-        <target state="new">Prefix for the log file name that will replace '[log]_.'</target>
+        <target state="translated">Předpona pro název souboru protokolu, který nahradí [log]_</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticVerbosityOptionDescription">
         <source>Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</source>
-        <target state="new">Define the level of the verbosity for the --diagnostic. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'</target>
+        <target state="translated">Umožňuje definovat úroveň podrobností pro možnost --diagnostic. Dostupné hodnoty jsou Trace, Debug, Information, Warning, Error a Critical.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.</source>
-        <target state="new">List available tests.</target>
+        <target state="translated">Umožňuje zobrazit seznam dostupných testů.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">
         <source>Show the command line help.</source>
-        <target state="new">Show the command line help.</target>
+        <target state="translated">Umožňuje zobrazit nápovědu příkazového řádku.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
-        <target state="new">Display .NET test application information.</target>
+        <target state="translated">Umožňuje zobrazit informace o testovací aplikaci .NET.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests">
         <source>'--list-tests' and '--minimum-expected-tests' are incompatible options</source>
-        <target state="new">'--list-tests' and '--minimum-expected-tests' are incompatible options</target>
+        <target state="translated">--list-tests a --minimum-expected-tests jsou nekompatibilní možnosti.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineMinimumExpectedTestsOptionSingleArgument">
         <source>'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</source>
-        <target state="new">'--minimum-expected-tests' expects a single non-zero positive integer value (e.g. '--minimum-expected-tests 10')</target>
+        <target state="translated">--minimum-expected-tests očekává jednu kladnou nenulovou celočíselnou hodnotu (např. --minimum-expected-tests 10).</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
-        <target state="new">Do not display the startup banner, the copyright message or the telemetry banner.</target>
+        <target state="translated">Nezobrazovat úvodní banner, zprávu o autorských právech ani banner telemetrie</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineOptionExpectsNoArgumentErrorMessage">
         <source>'--{0}' expects no argument</source>
-        <target state="new">'--{0}' expects no argument</target>
+        <target state="translated">--{0} neočekává žádný argument.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
         <source>Specify the port of the server.</source>
-        <target state="new">Specify the port of the server.</target>
+        <target state="translated">Zadejte port serveru.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionSingleArgument">
         <source>'--{0}' expects a single valid port as argument</source>
-        <target state="new">'--{0}' expects a single valid port as argument</target>
+        <target state="translated">--{0} očekává jako argument jeden platný port.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDescription">
         <source>Microsoft Testing Platform command line provider</source>
-        <target state="new">Microsoft Testing Platform command line provider</target>
+        <target state="translated">Zprostředkovatel příkazového řádku Microsoft Testing Platform</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineProviderDisplayName">
         <source>Platform command line provider</source>
-        <target state="new">Platform command line provider</target>
+        <target state="translated">Zprostředkovatel příkazového řádku platformy</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineResultDirectoryOptionDescription">
         <source>The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</source>
-        <target state="new">The directory where the test results are going to be placed. If the specified directory doesn't exist, it's created. The default is TestResults in the directory that contains the test application.</target>
+        <target state="translated">Adresář, do kterého budou umístěny výsledky testu. Pokud zadaný adresář neexistuje, vytvoří se. Výchozí hodnota je TestResults v adresáři, který obsahuje testovací aplikaci.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineServerOptionDescription">
         <source>Enable the server mode.</source>
-        <target state="new">Enable the server mode.</target>
+        <target state="translated">Umožňuje povolit režim serveru.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineSkipBuildersNumberCheckOptionDescription">
         <source>For testing purposes</source>
-        <target state="new">For testing purposes</target>
+        <target state="translated">Pro účely testování</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineTestHostControllerPIDOptionDescription">
         <source>Eventual parent test host controller PID.</source>
-        <target state="new">Eventual parent test host controller PID.</target>
+        <target state="translated">Případné PID nadřazeného hostitelského řadiče testů</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineVSTestAdapterModeOptionDescription">
         <source>Bridge to VSTest APIs</source>
-        <target state="new">Bridge to VSTest APIs</target>
+        <target state="translated">Most k rozhraním API VSTest</target>
         <note />
       </trans-unit>
       <trans-unit id="ProcessHasNotYetExitedErrorMessage">
@@ -406,17 +406,17 @@
       </trans-unit>
       <trans-unit id="RetryFailedAfterTriesErrorMessage">
         <source>Retry failed after {0} times</source>
-        <target state="new">Retry failed after {0} times</target>
+        <target state="translated">Opakování se po {0} pokusech nezdařilo.</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerLogMessageDescription">
         <source>This data represents a server log message</source>
-        <target state="new">This data represents a server log message</target>
+        <target state="translated">Tato data představují zprávu protokolu serveru.</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerLogMessageDisplayName">
         <source>Server log message</source>
-        <target state="new">Server log message</target>
+        <target state="translated">Zpráva protokolu serveru</target>
         <note />
       </trans-unit>
       <trans-unit id="ServerTestExecutionFilterFactoryDescription">
@@ -531,12 +531,12 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TimeoutAcquiringSemaphoreErrorMessage">
         <source>Failed to acquire semaphore before timeout of '{0}' seconds</source>
-        <target state="new">Failed to acquire semaphore before timeout of '{0}' seconds</target>
+        <target state="translated">Nepovedlo se získat semafor před vypršením časového limitu {0} s.</target>
         <note />
       </trans-unit>
       <trans-unit id="TimeoutFlushingLogsErrorMessage">
         <source>Failed to flush logs before the timeout of '{0}' seconds</source>
-        <target state="new">Failed to flush logs before the timeout of '{0}' seconds</target>
+        <target state="translated">Nepovedlo se vyprázdnit protokoly před vypršením časového limitu {0} s.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
@@ -546,7 +546,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TreeNodeFilterDescription">
         <source>Use a tree filter to filter down the tests to execute</source>
-        <target state="new">Use a tree filter to filter down the tests to execute</target>
+        <target state="translated">K vyfiltrování testů, které se mají provést, použijte stromový filtr.</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
@@ -556,7 +556,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TreeNodeFilterInvalidArgumentCount">
         <source>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</source>
-        <target state="new">A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</target>
+        <target state="translated">Očekává se jeden argument (například /MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]).</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
@@ -597,13 +597,13 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
         <source>An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
 {0}</source>
-        <target state="new">An unexpected exception occured in 'FileLogger.WriteLogToFileAsync'.
+        <target state="translated">Ve FileLogger.WriteLogToFileAsync došlo k neočekávané výjimce.
 {0}</target>
         <note>{0} exception ToString</note>
       </trans-unit>
       <trans-unit id="UnexpectedStateErrorMessage">
         <source>Unexpected state in file '{0}' at line '{1}'</source>
-        <target state="new">Unexpected state in file '{0}' at line '{1}'</target>
+        <target state="translated">Neočekávaný stav v souboru {0} na řádku {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="UnknownCommunicationProtocolErrorMessage">
@@ -613,7 +613,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
-        <target state="new">This program location is thought to be unreachable. File='{0}' Line={1}</target>
+        <target state="translated">Toto umístění programu se považuje za nedostupné. File={0}, Line={1}</target>
         <note />
       </trans-unit>
     </body>
