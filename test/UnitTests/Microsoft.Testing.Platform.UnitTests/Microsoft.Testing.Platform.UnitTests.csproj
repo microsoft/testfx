@@ -11,6 +11,7 @@
     <UseVSTestRunner>false</UseVSTestRunner>
     <ImplicitUsings>true</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <!-- Testing configuration -->
