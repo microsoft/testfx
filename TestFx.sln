@@ -162,8 +162,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Internal.TestFx.Docu
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestingPlatformRunner", "TestingPlatformRunner", "{A9F9C49E-3CDA-4207-AA53-CC80AF1798FE}"
 	ProjectSection(SolutionItems) = preProject
-		eng\TestingPlatformRunner\TestingPlatformRunner.targets = eng\TestingPlatformRunner\TestingPlatformRunner.targets
 		eng\TestingPlatformRunner\TestingPlatform.Runner.targets = eng\TestingPlatformRunner\TestingPlatform.Runner.targets
+		eng\TestingPlatformRunner\TestingPlatformRunner.targets = eng\TestingPlatformRunner\TestingPlatformRunner.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1 - Runner", "1 - Runner", "{6AEE1440-FDF0-4729-8196-B24D0E333550}"
@@ -171,6 +171,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Testing.Platform", "src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj", "{48FAB979-8DA5-492E-8B3F-5DBBE82F659A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Testing.Platform.UnitTests", "test\UnitTests\Microsoft.Testing.Platform.UnitTests\Microsoft.Testing.Platform.UnitTests.csproj", "{0F1BB08E-BB6C-43E0-A7DF-1D6A03DA5DC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSTest.Sdk", "src\Package\MSTest.Sdk\MSTest.Sdk.csproj", "{10930CFD-EDF9-4486-B0A3-49230B5A6798}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -354,6 +356,10 @@ Global
 		{0F1BB08E-BB6C-43E0-A7DF-1D6A03DA5DC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0F1BB08E-BB6C-43E0-A7DF-1D6A03DA5DC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0F1BB08E-BB6C-43E0-A7DF-1D6A03DA5DC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10930CFD-EDF9-4486-B0A3-49230B5A6798}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10930CFD-EDF9-4486-B0A3-49230B5A6798}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10930CFD-EDF9-4486-B0A3-49230B5A6798}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10930CFD-EDF9-4486-B0A3-49230B5A6798}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -417,6 +423,7 @@ Global
 		{6AEE1440-FDF0-4729-8196-B24D0E333550} = {FF8B1B72-55A1-4FFE-809E-7B79323ED8D0}
 		{48FAB979-8DA5-492E-8B3F-5DBBE82F659A} = {6AEE1440-FDF0-4729-8196-B24D0E333550}
 		{0F1BB08E-BB6C-43E0-A7DF-1D6A03DA5DC7} = {BB874DF1-44FE-415A-B634-A6B829107890}
+		{10930CFD-EDF9-4486-B0A3-49230B5A6798} = {E374A3A6-C364-4890-B315-D60F5C682B6E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}
