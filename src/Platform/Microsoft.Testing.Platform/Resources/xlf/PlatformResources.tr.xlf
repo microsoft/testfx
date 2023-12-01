@@ -129,7 +129,7 @@
       </trans-unit>
       <trans-unit id="ConnectingToClientHost">
         <source>Connecting to client host '{0}' port '{1}'</source>
-        <target state="new">Connecting to client host '{0}' port '{1}'</target>
+        <target state="translated">'{0}' istemci konak, '{1}' bağlantı noktasına bağlanıyor</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
-        <target state="new">Could not find directory '{0}'</target>
+        <target state="translated">'{0}' dizini bulunamadı</target>
         <note />
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -206,7 +206,7 @@
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
         <source>Method '{0}' did not exit successfully</source>
-        <target state="new">Method '{0}' did not exit successfully</target>
+        <target state="translated">'{0}' yöntemi başarıyla çıkmadı</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidCommandLineArguments">
@@ -231,22 +231,22 @@
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
         <source>JsonRpc server implementation based on the test platform protocol specification.</source>
-        <target state="new">JsonRpc server implementation based on the test platform protocol specification.</target>
+        <target state="translated">Test platformu protokol belirtimine dayalı JsonRpc sunucu uygulaması.</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
         <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
-        <target state="new">JsonRpc server to client handshake, implementation based on the test platform protocol specification.</target>
+        <target state="translated">JsonRpc sunucusundan istemciye el sıkışması, test platformu protokol belirtimine dayalı uygulama.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
-        <target state="new">No serializer registered with ID '{0}'</target>
+        <target state="translated">'{0}' kimliğiyle kayıtlı seri hale getirici yok</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
         <source>No serializer registered with type '{0}'</source>
-        <target state="new">No serializer registered with type '{0}'</target>
+        <target state="translated">'{0}' türüyle kayıtlı seri hale getirici yok</target>
         <note />
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -446,7 +446,7 @@
       </trans-unit>
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
-        <target state="new">Starting server. Listening on port '{0}'</target>
+        <target state="translated">Sunucu başlatılıyor. '{0}' bağlantı noktasında dinleme işlemi yapılıyor</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -461,17 +461,17 @@ Microsoft Testing Platform collects usage data in order to help us improve your 
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</source>
-        <target state="new">Telemetry
+        <target state="translated">Telemetri
 ---------
-Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
-You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
+Microsoft Test Platformu, deneyiminizi geliştirmemize yardımcı olmak için kullanım verilerini toplar. Veriler Microsoft tarafından toplanır ve hiç kimseyle paylaşılmaz.
+Sık kullandığınız kabukla TESTINGPLATFORM_TELEMETRY_OPTOUT veya DOTNET_CLI_TELEMETRY_OPTOUT ortam değişkenini '1' veya 'true' olarak ayarlayarak telemetriyi geri çevirebilirsiniz.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</target>
+Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://aka.ms/testingplatform/guides/telemetry</target>
         <note />
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
         <source>Telemetry provider is already set</source>
-        <target state="new">Telemetry provider is already set</target>
+        <target state="translated">Telemetri sağlayıcısı zaten ayarlanmış</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
@@ -586,12 +586,12 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>
-        <target state="new">Unexpected telemetry call, the telemetry is disabled.</target>
+        <target state="translated">Beklenmeyen telemetri çağrısı, telemetri devre dışı bırakıldı.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
         <source>An unexpected exception occured during byte conversion</source>
-        <target state="new">An unexpected exception occured during byte conversion</target>
+        <target state="translated">Bayt dönüştürme sırasında beklenmeyen bir özel durum oluştu</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
@@ -608,7 +608,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="UnknownCommunicationProtocolErrorMessage">
         <source>The communication protocol '{0}' is not supported</source>
-        <target state="new">The communication protocol '{0}' is not supported</target>
+        <target state="translated">'{0}' iletişim protokolü desteklenmiyor</target>
         <note />
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">

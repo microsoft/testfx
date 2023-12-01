@@ -129,7 +129,7 @@
       </trans-unit>
       <trans-unit id="ConnectingToClientHost">
         <source>Connecting to client host '{0}' port '{1}'</source>
-        <target state="new">Connecting to client host '{0}' port '{1}'</target>
+        <target state="translated">Připojování k hostiteli klienta {0}, port{1}</target>
         <note />
       </trans-unit>
       <trans-unit id="ConsoleTestExecutionFilterFactoryDescription">
@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="CouldNotFindDirectoryErrorMessage">
         <source>Could not find directory '{0}'</source>
-        <target state="new">Could not find directory '{0}'</target>
+        <target state="translated">Nepodařilo se najít adresář {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
@@ -206,7 +206,7 @@
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
         <source>Method '{0}' did not exit successfully</source>
-        <target state="new">Method '{0}' did not exit successfully</target>
+        <target state="translated">Metoda {0} nebyla úspěšně ukončena.</target>
         <note />
       </trans-unit>
       <trans-unit id="InvalidCommandLineArguments">
@@ -231,22 +231,22 @@
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerDescription">
         <source>JsonRpc server implementation based on the test platform protocol specification.</source>
-        <target state="new">JsonRpc server implementation based on the test platform protocol specification.</target>
+        <target state="translated">Implementace serveru JsonRpc na základě specifikace protokolu testovací platformy</target>
         <note />
       </trans-unit>
       <trans-unit id="JsonRpcTcpServerToSingleClientDescription">
         <source>JsonRpc server to client handshake, implementation based on the test platform protocol specification.</source>
-        <target state="new">JsonRpc server to client handshake, implementation based on the test platform protocol specification.</target>
+        <target state="translated">Handshake mezi klientem a serverem JsonRpc, implementace na základě specifikace protokolu testovací platformy</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
-        <target state="new">No serializer registered with ID '{0}'</target>
+        <target state="translated">Není zaregistrovaný žádný serializátor s ID {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithTypeErrorMessage">
         <source>No serializer registered with type '{0}'</source>
-        <target state="new">No serializer registered with type '{0}'</target>
+        <target state="translated">Není zaregistrovaný žádný serializátor s typem {0}.</target>
         <note />
       </trans-unit>
       <trans-unit id="NotAvailable">
@@ -446,7 +446,7 @@
       </trans-unit>
       <trans-unit id="StartingServer">
         <source>Starting server. Listening on port '{0}'</source>
-        <target state="new">Starting server. Listening on port '{0}'</target>
+        <target state="translated">Spouští se server. Naslouchání na portu {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="TEstExecutionFilterFactoryFactoryAlreadySetErrorMessage">
@@ -461,17 +461,17 @@ Microsoft Testing Platform collects usage data in order to help us improve your 
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</source>
-        <target state="new">Telemetry
+        <target state="translated">Telemetrie
 ---------
-Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
-You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
+Microsoft Testing Platform shromažďuje data o využití, která nám pomáhají dále vylepšovat prostředí a práci s produktem. Data shromažďuje společnost Microsoft a s nikým se nesdílejí.
+Výslovný nesouhlas s telemetrií můžete vyjádřit tak, že pomocí svého oblíbeného prostředí nastavíte proměnnou prostředí TESTINGPLATFORM_TELEMETRY_OPTOUT nebo DOTNET_CLI_TELEMETRY_OPTOUT na hodnotu 1 nebo true.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</target>
+Přečtěte si další informace o telemetrii Microsoft Testing Platform: https://aka.ms/testingplatform/guides/telemetry</target>
         <note />
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
         <source>Telemetry provider is already set</source>
-        <target state="new">Telemetry provider is already set</target>
+        <target state="translated">Zprostředkovatel telemetrie je už nastavený.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestAdapterInvokerFactoryAlreadySetErrorMessage">
@@ -586,12 +586,12 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="UnexpectedCallTelemetryIsDisabledErrorMessage">
         <source>Unexpected telemetry call, the telemetry is disabled.</source>
-        <target state="new">Unexpected telemetry call, the telemetry is disabled.</target>
+        <target state="translated">Neočekávané volání telemetrie, telemetrie je zakázaná.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionDuringByteConversionErrorMessage">
         <source>An unexpected exception occured during byte conversion</source>
-        <target state="new">An unexpected exception occured during byte conversion</target>
+        <target state="translated">Při převodu bajtů došlo k neočekávané výjimce.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnexpectedExceptionInFileLoggerErrorMessage">
@@ -608,7 +608,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="UnknownCommunicationProtocolErrorMessage">
         <source>The communication protocol '{0}' is not supported</source>
-        <target state="new">The communication protocol '{0}' is not supported</target>
+        <target state="translated">Komunikační protokol {0} není podporován.</target>
         <note />
       </trans-unit>
       <trans-unit id="UnreachableLocationErrorMessage">
