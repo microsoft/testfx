@@ -102,7 +102,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     ];
 
     /// <inheritdoc />
-    public string Uid { get; } = nameof(ConsoleOutputDevice);
+    public virtual string Uid { get; } = nameof(ConsoleOutputDevice);
 
     /// <inheritdoc />
     public string Version { get; } = AppVersion.DefaultSemVer;
