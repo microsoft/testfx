@@ -27,7 +27,7 @@
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
-    <MicrosoftTestingPlatformVersion>1.0.0-alpha.23601.5</MicrosoftTestingPlatformVersion>
+    <MicrosoftTestingPlatformVersion>1.0.0-alpha.23602.1</MicrosoftTestingPlatformVersion>
     <MicrosoftBuildUtilitiesCore>17.7.2</MicrosoftBuildUtilitiesCore>
   </PropertyGroup>
 </Project>
