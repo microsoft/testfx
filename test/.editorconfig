@@ -17,6 +17,9 @@ dotnet_diagnostic.SA1118.severity = none
 # SA1201: Elements should appear in the correct order
 dotnet_diagnostic.SA1201.severity = none
 
+# CA1000: Do not declare static members on generic types
+dotnet_diagnostic.CA1000.severity = suggestion
+
 # CA1018: Mark attributes with AttributeUsageAttribute
 dotnet_diagnostic.CA1018.severity = none
 

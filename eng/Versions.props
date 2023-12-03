@@ -18,10 +18,9 @@
     <!-- CVE-2019-0820 -->
     <SystemDiagnosticsTextWriterTraceListenerVersion>4.3.0</SystemDiagnosticsTextWriterTraceListenerVersion>
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
-    <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
-    <!-- Pinned to 4.18.4 for security -->
-    <MoqVersion>4.18.4</MoqVersion>
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
+    <MicrosoftCodeAnalysisAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisAnalyzersVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>4.6.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
@@ -31,6 +30,11 @@
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
     <MicrosoftTestingPlatformVersion>1.0.0-alpha.23603.1</MicrosoftTestingPlatformVersion>
-    <MicrosoftBuildUtilitiesCore>17.7.2</MicrosoftBuildUtilitiesCore>
+  </PropertyGroup>
+  <PropertyGroup Label="MSTest test dependencies">
+    <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
+    <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.2-beta1.23431.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
+    <!-- Pinned to 4.18.4 for security -->
+    <MoqVersion>4.18.4</MoqVersion>
   </PropertyGroup>
 </Project>
