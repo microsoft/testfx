@@ -5,6 +5,7 @@
   </metadata>
   <files>
     $CommonFileElements$
-    <file src="netstandard2.0\Sdk\**" target="Sdk" />
+    <file src="netstandard2.0\Sdk\Sdk.props" target="Sdk" />
+    <file src="netstandard2.0\Sdk\Sdk.targets" target="Sdk" />
   </files>
 </package>
