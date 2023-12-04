@@ -1,0 +1,10 @@
+﻿<?xml version="1.0"?>
+<package >
+  <metadata>
+    $CommonMetadataElements$
+  </metadata>
+  <files>
+    $CommonFileElements$
+    <file src="netstandard2.0\Sdk\**" target="Sdk" />
+  </files>
+</package>
