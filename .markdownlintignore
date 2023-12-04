@@ -5,3 +5,7 @@ tools/**/*.md
 
 # Ignore release history file
 docs/releases.md
+
+# Ignore analyzer release files
+src/**/AnalyzerReleases.Shipped.md
+src/**/AnalyzerReleases.Unshipped.md
