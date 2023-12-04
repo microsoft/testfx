@@ -133,3 +133,8 @@ project.fragment.lock.json
 .dotnet/
 .packages/
 .tools/
+
+# ===========================
+# Update template files
+# ===========================
+/src/Package/MSTest.Sdk/Sdk/Sdk.props
