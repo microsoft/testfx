@@ -7,7 +7,6 @@
     <UseMSTestRunner>true</UseMSTestRunner>
     <TestingPlatformDonetTestSupport>false</TestingPlatformDonetTestSupport>
     <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
