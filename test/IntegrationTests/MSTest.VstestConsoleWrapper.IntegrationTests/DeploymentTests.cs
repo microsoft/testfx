@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 using Microsoft.MSTestV2.CLIAutomation;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
@@ -32,7 +34,7 @@ public class DeploymentTests : CLITestBase
     public void ValidateTestSourceLocationDeployment_net462()
         => ValidateTestSourceLocationDeployment("net462");
 
-    // TODO: Fix me
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "This is currently ignored and that's why we marked it as private")]
     private void ValidateTestSourceLocationDeployment_netcoreapp31()
         => ValidateTestSourceLocationDeployment("netcoreapp3.1");
 

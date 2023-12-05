@@ -12,7 +12,7 @@ namespace MSTest.Analyzers.Test;
 internal static class CSharpVerifierHelper
 {
     /// <summary>
-    /// By default, the compiler reports diagnostics for nullable reference types at
+    /// Gets by default, the compiler reports diagnostics for nullable reference types at
     /// <see cref="DiagnosticSeverity.Warning"/>, and the analyzer test framework defaults to only validating
     /// diagnostics at <see cref="DiagnosticSeverity.Error"/>. This map contains all compiler diagnostic IDs
     /// related to nullability mapped to <see cref="ReportDiagnostic.Error"/>, which is then used to enable all

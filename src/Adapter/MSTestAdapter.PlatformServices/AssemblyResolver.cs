@@ -401,7 +401,9 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <returns> The <see cref="Assembly"/>.  </returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "senderAppDomain", Justification = "This is an event handler.")]
+#pragma warning disable IDE0060 // Remove unused parameter
     private Assembly? OnResolveInternal(object senderAppDomain, ResolveEventArgs args, bool isReflectionOnly)
+#pragma warning restore IDE0060 // Remove unused parameter
     {
         if (StringEx.IsNullOrEmpty(args?.Name))
         {

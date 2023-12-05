@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -353,7 +354,7 @@ public class TestExecutionManagerTests : TestContainer
 
     #region Run Tests on Sources
 
-    // TODO: This is currently ignored and that's why we marked it as private.
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "This is currently ignored and that's why we marked it as private")]
     private void RunTestsForSourceShouldRunTestsInASource()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
@@ -365,7 +366,7 @@ public class TestExecutionManagerTests : TestContainer
         Verify(_frameworkHandle.ResultsList.Contains("PassingTest  Passed"));
     }
 
-    // TODO: This is currently ignored and that's why we marked it as private.
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "This is currently ignored and that's why we marked it as private")]
     private void RunTestsForSourceShouldPassInTestRunParametersInformationAsPropertiesToTheTest()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
@@ -385,7 +386,7 @@ public class TestExecutionManagerTests : TestContainer
             new KeyValuePair<string, object>("webAppUrl", "http://localhost")));
     }
 
-    // TODO: This is currently ignored and that's why we marked it as private.
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "This is currently ignored and that's why we marked it as private")]
     private void RunTestsForSourceShouldPassInDeploymentInformationAsPropertiesToTheTest()
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
@@ -729,7 +730,7 @@ public class TestExecutionManagerTests : TestContainer
     }
 
     // This is tracked by https://github.com/Microsoft/testfx/issues/320.
-    // TODO: This is currently ignored and that's why we marked it as private.
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "This is currently ignored and that's why we marked it as private")]
     private void RunTestsForTestShouldRunTestsInTheParentDomainsApartmentState()
     {
         var testCase1 = GetTestCase(typeof(DummyTestClassWithDoNotParallelizeMethods), "TestMethod1");

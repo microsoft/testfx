@@ -4,10 +4,18 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <Nullable>enable</Nullable>
+    <LangVersion>Latest</LangVersion>
+    <ImplicitUsings>true</ImplicitUsings>
 
     <!-- Avoid ID conflicts with the package project. -->
     <PackageId>*$(MSBuildProjectFile)*</PackageId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\RoslynHashCode.cs" Link="Helpers\RoslynHashCode.cs" />
+    <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\SystemPolyfills.cs" Link="Helpers\SystemPolyfills.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="MSTest.Analyzers.Test" Key="$(VsPublicKey)" />
