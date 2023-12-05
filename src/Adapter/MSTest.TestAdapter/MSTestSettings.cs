@@ -449,7 +449,9 @@ public class MSTestSettings
 
     internal static void ValidateSettings(IMessageLogger logger)
     {
+#if !WINDOWS_UWP
         MSTestSettingsProvider.Settings.ValidateSettings(logger);
+#endif
     }
 
     private static void SetParallelSettings(XmlReader reader, MSTestSettings settings)
