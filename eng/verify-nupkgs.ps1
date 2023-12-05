@@ -19,11 +19,12 @@ function Unzip {
 function Confirm-NugetPackages {
     Write-Verbose "Starting Confirm-NugetPackages."
     $expectedNumOfFiles = @{
-        "MSTest.Sdk"        = 7;
-        "MSTest.Internal.TestFx.Documentation"        = 10;
-        "MSTest.TestFramework"                        = 94;
-        "MSTest.TestAdapter"                          = 154;
-        "MSTest"                                      = 5;
+        "MSTest.Sdk"                            = 7;
+        "MSTest.Internal.TestFx.Documentation"  = 10;
+        "MSTest.TestFramework"                  = 94;
+        "MSTest.TestAdapter"                    = 154;
+        "MSTest"                                = 5;
+        "MSTest.Analyzers"                      = 9;
     }
 
     $packageDirectory = Resolve-Path "$PSScriptRoot/../artifacts/packages/$configuration"
