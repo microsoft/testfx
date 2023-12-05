@@ -20,6 +20,10 @@
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup Label="NuGet">
+    <NuspecProperty Include="MSBuildProjectDirectory=$(MSBuildProjectDirectory)" />
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="Sdk\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
