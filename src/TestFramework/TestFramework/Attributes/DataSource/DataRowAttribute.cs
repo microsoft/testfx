@@ -21,7 +21,17 @@ public class DataRowAttribute : Attribute, ITestDataSource
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class with an array of object arguments.
+    /// </summary>
+    /// <param name="data"> The data. </param>
+    /// <remarks>This constructor is only kept for CLS compliant tests.</remarks>
+    public DataRowAttribute(object? data)
+    {
+        Data = data is not null ? [data] : [null];
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class with an array of string arguments.
     /// </summary>
     /// <param name="stringArrayData"> The string array data. </param>
     public DataRowAttribute(string?[]? stringArrayData)
@@ -30,7 +40,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class which takes in an array of arguments.
+    /// Initializes a new instance of the <see cref="DataRowAttribute"/> class with an array of object arguments.
     /// </summary>
     /// <param name="data"> The data. </param>
     public DataRowAttribute(params object?[]? data)
