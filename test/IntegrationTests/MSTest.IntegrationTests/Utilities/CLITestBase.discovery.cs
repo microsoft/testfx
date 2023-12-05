@@ -104,7 +104,6 @@ public partial class CLITestBase : TestContainer
         private readonly List<string> _messageList = [];
         private readonly ConcurrentDictionary<TestCase, ConcurrentBag<TestResult>> _testResults = new();
 
-        private TestCase _activeTest;
         private ConcurrentBag<TestResult> _activeResults;
 
         public bool EnableShutdownAfterTestRun { get; set; }
@@ -112,13 +111,11 @@ public partial class CLITestBase : TestContainer
         public void RecordStart(TestCase testCase)
         {
             _activeResults = _testResults.GetOrAdd(testCase, _ => new());
-            _activeTest = testCase;
         }
 
         public void RecordEnd(TestCase testCase, TestOutcome outcome)
         {
             _activeResults = _testResults[testCase];
-            _activeTest = testCase;
         }
 
         public void RecordResult(TestResult testResult)

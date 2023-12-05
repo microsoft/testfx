@@ -476,7 +476,9 @@ public class DummyTestClass
     /// <returns>
     /// The <see cref="string"/>.
     /// </returns>
+#pragma warning disable IDE0051 // Remove unused private members
     private static string GetDynamicDataDisplayNamePrivate(MethodInfo methodInfo, object[] data)
+#pragma warning restore IDE0051 // Remove unused private members
     {
         throw new InvalidOperationException();
     }
