@@ -21,14 +21,10 @@ namespace MSTestAdapter.PlatformServices.UnitTests.Services;
 public class DesktopTestDataSourceTests : TestContainer
 {
     private readonly Mock<ITestMethod> _mockTestMethodInfo;
-    private readonly Mock<ITestMethod> _testMethod;
-    private readonly IDictionary<string, object> _properties;
     private readonly Mock<ITestContext> _mockTestContext;
 
     public DesktopTestDataSourceTests()
     {
-        _testMethod = new Mock<ITestMethod>();
-        _properties = new Dictionary<string, object>();
         _mockTestMethodInfo = new Mock<ITestMethod>();
         _mockTestContext = new Mock<ITestContext>();
     }

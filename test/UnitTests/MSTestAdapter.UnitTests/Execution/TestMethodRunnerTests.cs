@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -11,7 +12,6 @@ using System.Threading.Tasks;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
-using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -28,8 +28,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution;
 
 public class TestMethodRunnerTests : TestContainer
 {
-    private readonly TestMethodRunner _globalTestMethodRunner;
-
     private readonly MethodInfo _methodInfo;
 
     private readonly UTF.TestMethodAttribute _testMethodAttribute;
@@ -40,11 +38,9 @@ public class TestMethodRunnerTests : TestContainer
 
     private readonly TestMethod _testMethod;
 
-    private readonly TestMethodOptions _globaltestMethodOptions;
+    private readonly TestMethodOptions _globalTestMethodOptions;
 
     private readonly TestMethodOptions _testMethodOptions;
-
-    private readonly Mock<ReflectHelper> _mockReflectHelper;
 
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
@@ -66,7 +62,7 @@ public class TestMethodRunnerTests : TestContainer
             classAttribute: classAttribute,
             parent: testAssemblyInfo);
 
-        _globaltestMethodOptions = new TestMethodOptions()
+        _globalTestMethodOptions = new TestMethodOptions()
         {
             Timeout = 3600 * 1000,
             Executor = _testMethodAttribute,
@@ -76,9 +72,8 @@ public class TestMethodRunnerTests : TestContainer
         var globalTestMethodInfo = new TestMethodInfo(
             _methodInfo,
             _testClassInfo,
-            _globaltestMethodOptions);
+            _globalTestMethodOptions);
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, null);
-        _globalTestMethodRunner = new TestMethodRunner(globalTestMethodInfo, _testMethod, _testContextImplementation, false);
 
         _testMethodOptions = new TestMethodOptions()
         {
@@ -87,8 +82,6 @@ public class TestMethodRunnerTests : TestContainer
             TestContext = _testContextImplementation,
             ExpectedException = null,
         };
-
-        _mockReflectHelper = new Mock<ReflectHelper>();
 
         // Reset test hooks
         DummyTestClass.TestConstructorMethodBody = () => { };
@@ -475,6 +468,7 @@ public class TestMethodRunnerTests : TestContainer
 
     #region Test data
 
+    [SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Use through reflection")]
     private static void InitMethodThrowingException(UTFExtension.TestContext tc)
     {
         // TODO: Fix exception type

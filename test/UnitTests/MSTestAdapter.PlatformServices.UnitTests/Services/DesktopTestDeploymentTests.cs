@@ -29,7 +29,9 @@ public class DesktopTestDeploymentTests : TestContainer
     private readonly Mock<ReflectionUtility> _mockReflectionUtility;
     private readonly Mock<FileUtility> _mockFileUtility;
 
+#pragma warning disable IDE0052 // Remove unread private members
     private IList<string> _warnings;
+#pragma warning restore IDE0052 // Remove unread private members
 
     public DesktopTestDeploymentTests()
     {
@@ -118,7 +120,9 @@ public class DesktopTestDeploymentTests : TestContainer
 
     #region private methods
 
+#pragma warning disable IDE0051 // Remove unused private members
     private void SetupDeploymentItems(MemberInfo memberInfo, KeyValuePair<string, string>[] deploymentItems)
+#pragma warning restore IDE0051 // Remove unused private members
     {
         var deploymentItemAttributes = new List<DeploymentItemAttribute>();
 
