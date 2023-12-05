@@ -7,7 +7,7 @@ permissions:
 jobs:
   add_milestone:
     runs-on: ubuntu-latest
-    if: ${{ github.repository == 'microsoft/testfx' && github.event.pull_request.user.login == 'dotnet-bot' && startsWith(github.event.pull_request.title, 'Localized file check-in') }}
+    if: ${{ github.repository == 'microsoft/testfx' && github.event.pull_request.user.login == 'dotnet-bot' && (startsWith(github.event.pull_request.title, 'Localized file check-in') || startsWith(github.event.pull_request.title, 'Update dependencies from https://github.com/dotnet/') || startsWith(github.event.pull_request.title, 'Update dependencies from https://github.com/microsoft/')) }}
     steps:
     - name: Enable pull request auto-merge
       env:
