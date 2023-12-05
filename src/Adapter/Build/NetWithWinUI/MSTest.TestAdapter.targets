@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <TestAdapterContent Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" Condition=" '$(UseMSTestRunner)' != 'true' ">
+    <TestAdapterContent Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" Condition=" '$(EnableMSTestRunner)' != 'true' ">
       <Link>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>False</Visible>
@@ -31,7 +31,7 @@
       (i.e. `<None Remove="@(TestAdapterContent)" />`)
       -->
     <None Include="@(TestAdapterContent)" />
-    <Reference Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" Condition=" '$(UseMSTestRunner)' == 'true' " />
+    <Reference Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" Condition=" '$(EnableMSTestRunner)' == 'true' " />
   </ItemGroup>
 
   <Target Name="GetMSTestV2CultureHierarchy">
