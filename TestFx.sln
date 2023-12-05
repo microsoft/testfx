@@ -182,7 +182,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Analyzers.Package", "src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj", "{DC068986-7549-4B75-8EFC-A9958FD5CF88}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Analyzers.Test", "test\UnitTests\MSTest.Analyzers.Test\MSTest.Analyzers.Test.csproj", "{1FF35C23-C128-4C95-B3F8-67B1B4C51E4D}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Sdk", "src\Package\MSTest.Sdk\MSTest.Sdk.csproj", "{10930CFD-EDF9-4486-B0A3-49230B5A6798}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClsTestProject", "test\IntegrationTests\TestAssets\ClsTestProject\ClsTestProject.csproj", "{100CF515-8291-45FF-9FFD-2A9064FECC72}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -386,6 +389,10 @@ Global
 		{10930CFD-EDF9-4486-B0A3-49230B5A6798}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{10930CFD-EDF9-4486-B0A3-49230B5A6798}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{10930CFD-EDF9-4486-B0A3-49230B5A6798}.Release|Any CPU.Build.0 = Release|Any CPU
+		{100CF515-8291-45FF-9FFD-2A9064FECC72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{100CF515-8291-45FF-9FFD-2A9064FECC72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{100CF515-8291-45FF-9FFD-2A9064FECC72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{100CF515-8291-45FF-9FFD-2A9064FECC72}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -455,6 +462,7 @@ Global
 		{DC068986-7549-4B75-8EFC-A9958FD5CF88} = {E7F15C9C-3928-47AD-8462-64FD29FFCA54}
 		{1FF35C23-C128-4C95-B3F8-67B1B4C51E4D} = {BB874DF1-44FE-415A-B634-A6B829107890}
 		{10930CFD-EDF9-4486-B0A3-49230B5A6798} = {E374A3A6-C364-4890-B315-D60F5C682B6E}
+		{100CF515-8291-45FF-9FFD-2A9064FECC72} = {C9F82701-0E0F-4E61-B05B-AE387E7631F6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {31E0F4D5-975A-41CC-933E-545B2201FAF9}
