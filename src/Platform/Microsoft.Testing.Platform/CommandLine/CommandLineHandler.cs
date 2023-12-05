@@ -213,7 +213,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
         ArgumentGuard.IsNotNull(_parseResult);
 
-        StringBuilder? stringBuilder = null;
+        StringBuilder stringBuilder = new();
         foreach (IGrouping<string, OptionRecord> groupedOptions in _parseResult.Options.GroupBy(x => x.Option))
         {
             // getting the arguments count for an option.
@@ -229,22 +229,19 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
             if (arity > commandLineOption.Arity.Max && commandLineOption.Arity.Max == 0)
             {
-                stringBuilder ??= new();
                 stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsNoArguments, optionName, extension.DisplayName, extension.Uid));
             }
             else if (arity < commandLineOption.Arity.Min)
             {
-                stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsNoArguments, optionName, extension.DisplayName, extension.Uid, commandLineOption.Arity.Min));
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsAtLeastArguments, optionName, extension.DisplayName, extension.Uid, commandLineOption.Arity.Min));
             }
             else if (arity > commandLineOption.Arity.Max)
             {
-                stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsNoArguments, optionName, extension.DisplayName, extension.Uid, commandLineOption.Arity.Max));
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineOptionExpectsAtMostArguments, optionName, extension.DisplayName, extension.Uid, commandLineOption.Arity.Max));
             }
         }
 
-        if (stringBuilder?.Length > 0)
+        if (stringBuilder.Length > 0)
         {
             error = stringBuilder.ToString();
             return true;
