@@ -138,7 +138,6 @@ internal class UnitTestRunner : MarshalByRefObject
                     return notRunnableResult;
                 }
 
-                DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
                 RunRequiredCleanups(testContext, testMethodInfo, testMethod, notRunnableResult);
 
                 return notRunnableResult;
@@ -157,18 +156,21 @@ internal class UnitTestRunner : MarshalByRefObject
         }
     }
 
-    private void RunRequiredCleanups(ITestContext testContext, TestMethodInfo testMethodInfo, TestMethod testMethod, UnitTestResult[] results)
+    private void RunRequiredCleanups(ITestContext testContext, TestMethodInfo? testMethodInfo, TestMethod testMethod, UnitTestResult[] results)
     {
         bool shouldRunClassCleanup = false;
         bool shouldRunClassAndAssemblyCleanup = false;
-        _classCleanupManager?.MarkTestComplete(testMethodInfo, testMethod, out shouldRunClassCleanup, out shouldRunClassAndAssemblyCleanup);
+        if (testMethodInfo is not null)
+        {
+            _classCleanupManager?.MarkTestComplete(testMethodInfo, testMethod, out shouldRunClassCleanup, out shouldRunClassAndAssemblyCleanup);
+        }
 
         using LogMessageListener logListener = new(MSTestSettings.CurrentSettings.CaptureDebugTraces);
         try
         {
             if (shouldRunClassCleanup)
             {
-                testMethodInfo.Parent.ExecuteClassCleanup();
+                testMethodInfo?.Parent.ExecuteClassCleanup();
             }
 
             if (shouldRunClassAndAssemblyCleanup)

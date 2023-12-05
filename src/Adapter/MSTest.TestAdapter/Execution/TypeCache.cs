@@ -2,9 +2,11 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Security;
+using System.Text;
 
 using Microsoft.TestPlatform.AdapterUtilities.ManagedNameUtilities;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -152,6 +154,16 @@ internal class TypeCache : MarshalByRefObject
         {
             // Load the class type
             Type? type = LoadType(typeName, testMethod.AssemblyName);
+
+            // VSTest managed feature is not working properly and ends up providing names that are not fully
+            // unescaped causing reflection to fail loading. For the cases we know this is happening, we will
+            // try to manually unescape the type name and load the type again.
+            if (type == null
+                && TryGetUnescapedManagedTypeName(testMethod, out var unescapedTypeName))
+            {
+                type = LoadType(unescapedTypeName, testMethod.AssemblyName);
+            }
+
             if (type == null)
             {
                 // This means the class containing the test method could not be found.
@@ -167,6 +179,50 @@ internal class TypeCache : MarshalByRefObject
         }
 
         return classInfo;
+    }
+
+    private static bool TryGetUnescapedManagedTypeName(TestMethod testMethod, [NotNullWhen(true)] out string? unescapedTypeName)
+    {
+        if (testMethod.Hierarchy.Count != 4)
+        {
+            unescapedTypeName = null;
+            return false;
+        }
+
+        StringBuilder unescapedTypeNameBuilder = new();
+        int i = -1;
+        foreach (var hierarchyPart in testMethod.Hierarchy)
+        {
+            i++;
+            if (i is not 1 and not 2 || hierarchyPart is null)
+            {
+                continue;
+            }
+
+#if NETCOREAPP
+            if (hierarchyPart.StartsWith('\'') && hierarchyPart.EndsWith('\''))
+            {
+                unescapedTypeNameBuilder.Append(hierarchyPart.AsSpan(1, hierarchyPart.Length - 2));
+            }
+#else
+            if (hierarchyPart.StartsWith("'", StringComparison.Ordinal) && hierarchyPart.EndsWith("'", StringComparison.Ordinal))
+            {
+                unescapedTypeNameBuilder.Append(hierarchyPart.Substring(1, hierarchyPart.Length - 2));
+            }
+#endif
+            else
+            {
+                unescapedTypeNameBuilder.Append(hierarchyPart);
+            }
+
+            if (i == 1)
+            {
+                unescapedTypeNameBuilder.Append('.');
+            }
+        }
+
+        unescapedTypeName = unescapedTypeNameBuilder.ToString();
+        return unescapedTypeName != testMethod.FullClassName;
     }
 
     /// <summary>
