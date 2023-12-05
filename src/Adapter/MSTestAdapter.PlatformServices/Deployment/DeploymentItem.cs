@@ -73,7 +73,7 @@ internal class DeploymentItem
         DebugEx.Assert(!StringEx.IsNullOrEmpty(sourcePath), "sourcePath");
         DebugEx.Assert(relativeOutputDirectory != null, "relativeOutputDirectory");
 
-        SourcePath = sourcePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        SourcePath = sourcePath.TrimEnd('/', '\\');
         RelativeOutputDirectory = relativeOutputDirectory;
         OriginType = originType;
     }
