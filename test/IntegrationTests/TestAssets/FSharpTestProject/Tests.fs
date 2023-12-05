@@ -4,7 +4,7 @@ open System
 open Microsoft.VisualStudio.TestTools.UnitTesting
 
 [<TestClass>]
-type UnitTest1 () =
+type ``This is a test type`` () =
 
     [<TestMethod>]
     member this.``Test method passing with a . in it`` () =
