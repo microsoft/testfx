@@ -9,17 +9,17 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>38aa367e014493c6f6ebfe94d9029bea01d072c4</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="1.0.0-alpha.23603.1">
+    <Dependency Name="Microsoft.Testing.Platform" Version="1.0.0-alpha.23604.2">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>43bcc485747b0f15894cc7b6bcd0551af58ad21c</Sha>
+      <Sha>8dd1f84c3fa4c915838b813faecb5c56a5a09c7d</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="8.0.0-beta.23428.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>3d92d0bfd8c9006f5fe1687e465dc4f8aa068b00</Sha>
     </Dependency>
     <Dependency Name="MSTest" Version="3.2.0-preview.23603.1">
-     <Uri>https://github.com/microsoft/testfx</Uri>
-     <Sha>dea3424f0d567f1549c17494af5c0179f274364f</Sha>
+      <Uri>https://github.com/microsoft/testfx</Uri>
+      <Sha>dea3424f0d567f1549c17494af5c0179f274364f</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
