@@ -437,7 +437,7 @@ internal abstract class DeploymentUtilityBase
         resultDirectory = null;
 
         string directory = GetFullPathToDeploymentItemSource(deploymentItem.SourcePath, testSource);
-        directory = directory.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        directory = directory.TrimEnd('/', '\\');
 
         if (FileUtility.DoesDirectoryExist(directory))
         {
