@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="_SetupEntryPoint" BeforeTargets="GenerateProgramFile" Condition=" '$(UseMSTestRunner)' == 'false' " >
+  <Target Name="_SetupEntryPoint" BeforeTargets="GenerateProgramFile" Condition=" '$(EnableMSTestRunner)' == 'false' " >
     <PropertyGroup>
       <!-- Disable testing platform entry point generation -->
       <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
