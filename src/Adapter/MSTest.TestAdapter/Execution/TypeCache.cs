@@ -204,6 +204,11 @@ internal class TypeCache : MarshalByRefObject
             {
                 unescapedTypeNameBuilder.Append(hierarchyPart.AsSpan(1, hierarchyPart.Length - 2));
             }
+#elif WINDOWS_UWP
+            if (hierarchyPart.StartsWith('\'') && hierarchyPart.EndsWith('\''))
+            {
+                unescapedTypeNameBuilder.Append(hierarchyPart.Substring(1, hierarchyPart.Length - 2));
+            }
 #else
             if (hierarchyPart.StartsWith("'", StringComparison.Ordinal) && hierarchyPart.EndsWith("'", StringComparison.Ordinal))
             {

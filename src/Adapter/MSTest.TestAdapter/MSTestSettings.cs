@@ -7,7 +7,9 @@ using System.Xml;
 using System.Xml.Linq;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+#if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
+#endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -449,7 +451,9 @@ public class MSTestSettings
 
     internal static void ValidateSettings(IMessageLogger logger)
     {
+#if !WINDOWS_UWP
         MSTestSettingsProvider.Settings.ValidateSettings(logger);
+#endif
     }
 
     private static void SetParallelSettings(XmlReader reader, MSTestSettings settings)
