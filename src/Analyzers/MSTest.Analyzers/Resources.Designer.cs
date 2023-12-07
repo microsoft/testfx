@@ -61,7 +61,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to By default, MSTest runs tests sequentially which can lead to sever performance limitation. It is recommended to enable assembly attribute &apos;Parallelize&apos; or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute &apos;DoNotParallelize&apos;..
+        ///   Looks up a localized string similar to By default, MSTest runs tests sequentially which can lead to severe performance limitations. It is recommended to enable assembly attribute &apos;Parallelize&apos; or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute &apos;DoNotParallelize&apos;..
         /// </summary>
         internal static string UseParallelizeAttributeAnalyzerDescription {
             get {
@@ -70,7 +70,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Explicitely enable or disable tests parallelization.
+        ///   Looks up a localized string similar to Explicitly enable or disable tests parallelization.
         /// </summary>
         internal static string UseParallelizeAttributeAnalyzerMessageFormat {
             get {
@@ -79,7 +79,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Enable tests parallelization.
+        ///   Looks up a localized string similar to Explicitly enable or disable tests parallelization.
         /// </summary>
         internal static string UseParallelizeAttributeAnalyzerTitle {
             get {
