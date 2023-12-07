@@ -44,7 +44,7 @@ public class ArgumentArityTests : TestBase
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
-            Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option '--zeroArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments{Environment.NewLine}", StringComparison.Ordinal)));
+            Assert.AreEqual($"Option '--zeroArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments{Environment.NewLine}", ((TextOutputDeviceData)data).Text, StringComparer.Ordinal));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
@@ -64,7 +64,7 @@ public class ArgumentArityTests : TestBase
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
-            Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments{Environment.NewLine}", StringComparison.Ordinal)));
+            Assert.AreEqual($"Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments{Environment.NewLine}", ((TextOutputDeviceData)data).Text, StringComparer.Ordinal));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
@@ -84,7 +84,7 @@ public class ArgumentArityTests : TestBase
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
-            Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments{Environment.NewLine}", StringComparison.Ordinal)));
+            Assert.AreEqual($"Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments{Environment.NewLine}", ((TextOutputDeviceData)data).Text, StringComparer.Ordinal));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
@@ -104,7 +104,7 @@ public class ArgumentArityTests : TestBase
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
-            Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option '--zeroOrOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments{Environment.NewLine}", StringComparison.Ordinal)));
+            Assert.AreEqual($"Option '--zeroOrOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments{Environment.NewLine}", ((TextOutputDeviceData)data).Text, StringComparer.Ordinal));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
@@ -124,7 +124,7 @@ public class ArgumentArityTests : TestBase
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
-            Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option '--oneOrMoreArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments{Environment.NewLine}", StringComparison.Ordinal)));
+            Assert.AreEqual($"Option '--oneOrMoreArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments{Environment.NewLine}", ((TextOutputDeviceData)data).Text, StringComparer.Ordinal));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
