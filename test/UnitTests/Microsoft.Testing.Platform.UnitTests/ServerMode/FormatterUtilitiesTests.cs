@@ -4,6 +4,7 @@
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.TestInfrastructure;
 
 using TestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
 

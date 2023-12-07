@@ -9,6 +9,7 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.TestInfrastructure;
 
 using Moq;
 

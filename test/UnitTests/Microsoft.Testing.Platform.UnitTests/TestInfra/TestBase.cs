@@ -2,9 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Framework;
-using Microsoft.Testing.TestInfrastructure;
 
-namespace Microsoft.Testing.Platform.UnitTests;
+namespace Microsoft.Testing.TestInfrastructure;
 
 public abstract class TestBase
 {

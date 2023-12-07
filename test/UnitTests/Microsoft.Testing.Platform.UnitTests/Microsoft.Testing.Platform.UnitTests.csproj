@@ -35,8 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Do not change this to use RepoRoot, it will be defined to incorrect path when building from parent repository.  -->
-    <ProjectReference Include="..\..\..\src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
   </ItemGroup>
 
   <ItemGroup>

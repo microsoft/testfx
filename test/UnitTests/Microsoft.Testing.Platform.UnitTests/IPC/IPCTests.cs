@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.IPC;
 using Microsoft.Testing.Platform.IPC.Models;
 using Microsoft.Testing.Platform.IPC.Serializers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.TestInfrastructure;
 
 using Moq;
 

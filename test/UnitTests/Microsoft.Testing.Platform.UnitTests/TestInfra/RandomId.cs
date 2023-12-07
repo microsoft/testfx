@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 namespace Microsoft.Testing.TestInfrastructure;
 
 /// <summary>
-/// Slightly random id that is just good enough for creating disctinct directories for each test.
+/// Slightly random id that is just good enough for creating distinct directories for each test.
 /// </summary>
 public static class RandomId
 {

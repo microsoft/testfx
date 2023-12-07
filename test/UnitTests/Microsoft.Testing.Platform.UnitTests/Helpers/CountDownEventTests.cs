@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.TestInfrastructure;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 

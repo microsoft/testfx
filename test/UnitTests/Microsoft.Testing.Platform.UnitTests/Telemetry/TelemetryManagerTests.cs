@@ -10,6 +10,7 @@ using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.Telemetry;
+using Microsoft.Testing.TestInfrastructure;
 
 using Moq;
 
