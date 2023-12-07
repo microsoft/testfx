@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="CodeFixTitle">
         <source>Make uppercase</source>
-        <target state="new">Make uppercase</target>
+        <target state="translated">Büyük harfe dönüştür</target>
         <note>The title of the code fix.</note>
       </trans-unit>
     </body>
