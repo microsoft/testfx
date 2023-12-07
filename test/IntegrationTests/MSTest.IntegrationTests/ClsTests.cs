@@ -9,6 +9,8 @@ public class ClsTests : CLITestBase
 {
     private const string TestAssetName = "ClsTestProject";
 
+    // This test in itself is not so important. What matters is that the asset gets build. If we regress and start having
+    // the [DataRow] attribute no longer CLS compliant, the build will raise a warning in VS (and the build will fail in CI).
     public void TestsAreRun()
     {
         // Arrange
@@ -23,6 +25,8 @@ public class ClsTests : CLITestBase
             testResults,
             "TestMethod",
             "IntDataRow (10)",
-            "StringDataRow (some string)");
+            "StringDataRow (some string)",
+            "StringDataRow2 (some string)",
+            "StringDataRow2 (some other string)");
     }
 }
