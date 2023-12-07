@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.TestInfrastructure;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
