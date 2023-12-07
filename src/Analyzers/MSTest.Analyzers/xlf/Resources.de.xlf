@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
         <source>By default, MSTest runs tests sequentially which can lead to sever performance limitation. It is recommended to enable assembly attribute 'Parallelize' or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute 'DoNotParallelize'.</source>
-        <target state="new">By default, MSTest runs tests sequentially which can lead to sever performance limitation. It is recommended to enable assembly attribute 'Parallelize' or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute 'DoNotParallelize'.</target>
+        <target state="translated">Standardmäßig führt MSTest Tests sequentiell aus, was zu erheblichen Leistungseinschränkungen führen kann. Es wird empfohlen, das Assembly-Attribut "Parallelize" zu aktivieren oder, wenn bekannt ist, dass die Assembly nicht parallelisierbar ist, explizit das Assembly-Attribut "DoNotParallelize" zu verwenden.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerMessageFormat">
         <source>Explicitely enable or disable tests parallelization</source>
-        <target state="new">Explicitely enable or disable tests parallelization</target>
+        <target state="translated">Parallelisierung von Tests explizit aktivieren oder deaktivieren</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerTitle">
         <source>Enable tests parallelization</source>
-        <target state="new">Enable tests parallelization</target>
+        <target state="translated">Parallelisierung von Tests aktivieren</target>
         <note />
       </trans-unit>
     </body>
