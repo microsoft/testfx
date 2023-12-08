@@ -24,8 +24,8 @@
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>3.3.4</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
-    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>9.0.0-beta.23607.2</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <MSTestVersion>3.2.0-preview.23608.1</MSTestVersion>
+    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>9.0.0-beta.23606.1</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
+    <MSTestVersion>3.2.0-preview.23608.2</MSTestVersion>
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
