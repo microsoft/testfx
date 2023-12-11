@@ -5,10 +5,9 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsPackable>true</IsPackable>
+    <IsPackable Condition=" '$(OS)' == 'Windows_NT' ">true</IsPackable>
     <IsShippingPackage>false</IsShippingPackage>
-    <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.Internal.TestFx.Documentation.nuspec</NuspecFile>
-    <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.Internal.TestFx.Documentation.Linux.nuspec</NuspecFile>
+    <NuspecFile>MSTest.Internal.TestFx.Documentation.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageId>MSTest.Internal.TestFx.Documentation</PackageId>
     <PackageTags>MSTest TestFramework MSTestV2</PackageTags>
