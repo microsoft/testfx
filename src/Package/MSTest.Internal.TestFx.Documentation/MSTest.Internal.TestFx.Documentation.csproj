@@ -7,7 +7,8 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <IsShippingPackage>false</IsShippingPackage>
-    <NuspecFile>MSTest.Internal.TestFx.Documentation.nuspec</NuspecFile>
+    <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.Internal.TestFx.Documentation.nuspec</NuspecFile>
+    <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.Internal.TestFx.Documentation.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageId>MSTest.Internal.TestFx.Documentation</PackageId>
     <PackageTags>MSTest TestFramework MSTestV2</PackageTags>
