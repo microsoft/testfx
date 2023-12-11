@@ -1,7 +1,7 @@
 ﻿<Project Sdk="MSBuild.Sdk.Extras">
 
   <PropertyGroup>
-    <TargetFrameworks>$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetFrameworkMinimum);$(NetCoreAppMinimum);$(NetCoreAppCurrent)</TargetFrameworks>
+    <TargetFrameworks>$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseAssemblyVersion14>true</UseAssemblyVersion14>
   </PropertyGroup>
