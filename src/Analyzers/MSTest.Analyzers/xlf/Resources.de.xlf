@@ -3,18 +3,18 @@
   <file datatype="xml" source-language="en" target-language="de" original="../Resources.resx">
     <body>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
-        <source>By default, MSTest runs tests sequentially which can lead to severe performance limitations. It is recommended to enable assembly attribute 'Parallelize' or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute 'DoNotParallelize'.</source>
-        <target state="needs-review-translation">Standardmäßig führt MSTest Tests sequentiell aus, was zu erheblichen Leistungseinschränkungen führen kann. Es wird empfohlen, das Assembly-Attribut "Parallelize" zu aktivieren oder, wenn bekannt ist, dass die Assembly nicht parallelisierbar ist, explizit das Assembly-Attribut "DoNotParallelize" zu verwenden.</target>
+        <source>By default, MSTest runs tests sequentially which can lead to sever performance limitation. It is recommended to enable assembly attribute 'Parallelize' or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute 'DoNotParallelize'.</source>
+        <target state="translated">Standardmäßig führt MSTest Tests sequentiell aus, was zu erheblichen Leistungseinschränkungen führen kann. Es wird empfohlen, das Assembly-Attribut "Parallelize" zu aktivieren oder, wenn bekannt ist, dass die Assembly nicht parallelisierbar ist, explizit das Assembly-Attribut "DoNotParallelize" zu verwenden.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerMessageFormat">
-        <source>Explicitly enable or disable tests parallelization</source>
-        <target state="needs-review-translation">Parallelisierung von Tests explizit aktivieren oder deaktivieren</target>
+        <source>Explicitely enable or disable tests parallelization</source>
+        <target state="translated">Parallelisierung von Tests explizit aktivieren oder deaktivieren</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerTitle">
-        <source>Explicitly enable or disable tests parallelization</source>
-        <target state="needs-review-translation">Parallelisierung von Tests aktivieren</target>
+        <source>Enable tests parallelization</source>
+        <target state="translated">Parallelisierung von Tests aktivieren</target>
         <note />
       </trans-unit>
     </body>
