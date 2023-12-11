@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
+    <TargetFrameworks>$(NetFrameworkMinimum)</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <NoWarn>$(NoWarn),1685</NoWarn>
   </PropertyGroup>

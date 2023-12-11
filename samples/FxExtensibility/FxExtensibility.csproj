@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
+    <TargetFrameworks>$(NetFrameworkMinimum)</TargetFrameworks>
     <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -12,11 +12,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="System" />
-  </ItemGroup>
-
+  
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
   </ItemGroup>

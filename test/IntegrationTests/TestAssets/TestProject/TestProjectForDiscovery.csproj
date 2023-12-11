@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
+    <TargetFrameworks>$(NetFrameworkMinimum)</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -11,10 +11,6 @@
     <IsCodedUITest>False</IsCodedUITest>
     <TestProjectType>UnitTest</TestProjectType>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="System" />
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
