@@ -3,9 +3,9 @@
 ###############################################################################
  * text=auto encoding=UTF-8 
 
-# Force bash scripts to always use lf line endings so that if a repo is accessed
-# in Unix via a file share from Windows, the scripts will work.
-*.sh text eol=lf
+*.sh text=auto eol=lf
+*.cmd text=auto eol=crlf
+*.bat text=auto eol=crlf
 
 ###############################################################################
 # Set default behavior for command prompt diff.
