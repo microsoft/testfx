@@ -17,6 +17,12 @@ dotnet_diagnostic.SA1118.severity = none
 # SA1201: Elements should appear in the correct order
 dotnet_diagnostic.SA1201.severity = none
 
+# SA1311: Static readonly fields should begin with upper-case letter
+dotnet_diagnostic.SA1311.severity = none
+
+# SA1602: Enumeration items should be documented
+dotnet_diagnostic.SA1602.severity = none
+
 # CA1000: Do not declare static members on generic types
 dotnet_diagnostic.CA1000.severity = suggestion
 
