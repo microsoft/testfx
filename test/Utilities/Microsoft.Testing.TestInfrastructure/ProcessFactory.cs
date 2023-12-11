@@ -5,18 +5,18 @@ using System.Diagnostics;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
-public sealed class ProcessHelper : IProcessHelper
+public static class ProcessFactory
 {
-    public IProcessHandle Start(ProcessStartInfo startInfo, bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false, int timeoutInSeconds = 300)
+    public static IProcessHandle Start(ProcessConfiguration config, bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false, int timeoutInSeconds = 300)
     {
-        string fullPath = startInfo.FileName; // Path.GetFullPath(startInfo.FileName);
-        string workingDirectory = startInfo.WorkingDirectory
-            .OrDefault(Path.GetDirectoryName(startInfo.FileName).OrDefault(Directory.GetCurrentDirectory()));
+        string fullPath = config.FileName; // Path.GetFullPath(startInfo.FileName);
+        string workingDirectory = config.WorkingDirectory
+            .OrDefault(Path.GetDirectoryName(config.FileName).OrDefault(Directory.GetCurrentDirectory()));
 
-        var processStartInfo = new System.Diagnostics.ProcessStartInfo()
+        var processStartInfo = new ProcessStartInfo()
         {
             FileName = fullPath,
-            Arguments = startInfo.Arguments,
+            Arguments = config.Arguments,
             WorkingDirectory = workingDirectory,
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -25,7 +25,7 @@ public sealed class ProcessHelper : IProcessHelper
             RedirectStandardInput = true,
         };
 
-        if (startInfo.EnvironmentVariables is not null)
+        if (config.EnvironmentVariables is not null)
         {
             if (cleanDefaultEnvironmentVariableIfCustomAreProvided)
             {
@@ -33,7 +33,7 @@ public sealed class ProcessHelper : IProcessHelper
                 processStartInfo.EnvironmentVariables.Clear();
             }
 
-            foreach (KeyValuePair<string, string> kvp in startInfo.EnvironmentVariables)
+            foreach (KeyValuePair<string, string> kvp in config.EnvironmentVariables)
             {
                 if (kvp.Value is null)
                 {
@@ -58,26 +58,26 @@ public sealed class ProcessHelper : IProcessHelper
         var processHandleInfo = new ProcessHandleInfo();
         var processHandle = new ProcessHandle(process, processHandleInfo);
 
-        process.Exited += (s, e) => startInfo?.OnExit?.Invoke(processHandle, process.ExitCode);
+        process.Exited += (s, e) => config?.OnExit?.Invoke(processHandle, process.ExitCode);
 
-        if (startInfo.OnStandardOutput != null)
+        if (config.OnStandardOutput != null)
         {
             process.OutputDataReceived += (s, e) =>
             {
                 if (!string.IsNullOrWhiteSpace(e.Data))
                 {
-                    startInfo.OnStandardOutput(processHandle, e.Data);
+                    config.OnStandardOutput(processHandle, e.Data);
                 }
             };
         }
 
-        if (startInfo.OnErrorOutput != null)
+        if (config.OnErrorOutput != null)
         {
             process.ErrorDataReceived += (s, e) =>
             {
                 if (!string.IsNullOrWhiteSpace(e.Data))
                 {
-                    startInfo.OnErrorOutput(processHandle, e.Data);
+                    config.OnErrorOutput(processHandle, e.Data);
                 }
             };
         }
@@ -99,12 +99,12 @@ public sealed class ProcessHelper : IProcessHelper
 
         processHandleInfo.Id = process.Id;
 
-        if (startInfo.OnStandardOutput != null)
+        if (config.OnStandardOutput != null)
         {
             process.BeginOutputReadLine();
         }
 
-        if (startInfo.OnErrorOutput != null)
+        if (config.OnErrorOutput != null)
         {
             process.BeginErrorReadLine();
         }

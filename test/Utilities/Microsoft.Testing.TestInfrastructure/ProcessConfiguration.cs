@@ -3,9 +3,9 @@
 
 namespace Microsoft.Testing.TestInfrastructure;
 
-public sealed class ProcessStartInfo
+public sealed class ProcessConfiguration
 {
-    public ProcessStartInfo(string fileName)
+    public ProcessConfiguration(string fileName)
     {
         FileName = fileName;
     }
@@ -18,9 +18,9 @@ public sealed class ProcessStartInfo
 
     public IDictionary<string, string>? EnvironmentVariables { get; init; }
 
-    public Action<ProcessHandle, string>? OnErrorOutput { get; init; }
+    public Action<IProcessHandle, string>? OnErrorOutput { get; init; }
 
-    public Action<ProcessHandle, string>? OnStandardOutput { get; init; }
+    public Action<IProcessHandle, string>? OnStandardOutput { get; init; }
 
-    public Action<ProcessHandle, int>? OnExit { get; init; }
+    public Action<IProcessHandle, int>? OnExit { get; init; }
 }

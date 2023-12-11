@@ -2,8 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
@@ -53,14 +51,14 @@ public sealed class CommandLine : IDisposable
         string arguments = string.Join(" ", tokens.Skip(1));
         _errorOutputLines.Clear();
         _standardOutputLines.Clear();
-        var startInfo = new ProcessStartInfo(command)
+        var startInfo = new ProcessConfiguration(command)
         {
             Arguments = arguments,
             EnvironmentVariables = environmentVariables,
             OnErrorOutput = (_, o) => _errorOutputLines.Add(o),
             OnStandardOutput = (_, o) => _standardOutputLines.Add(o),
         };
-        _process = new ProcessHelper().Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided, timeoutInSeconds);
+        _process = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided, timeoutInSeconds);
 
         Task<int> exited = _process.WaitForExitAsync();
         int seconds = timeoutInSeconds;
@@ -68,7 +66,11 @@ public sealed class CommandLine : IDisposable
         var timedOut = Task.Delay(TimeSpan.FromSeconds(seconds), cancellationTokenSource.Token);
         if (await Task.WhenAny(exited, timedOut) == exited)
         {
+#if NET8_0_OR_GREATER
+            await cancellationTokenSource.CancelAsync();
+#else
             cancellationTokenSource.Cancel();
+#endif
             return await exited;
         }
         else
@@ -83,8 +85,5 @@ public sealed class CommandLine : IDisposable
         }
     }
 
-    public void Dispose()
-    {
-        _process?.Kill();
-    }
+    public void Dispose() => _process?.Kill();
 }

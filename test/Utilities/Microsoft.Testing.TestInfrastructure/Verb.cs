@@ -3,7 +3,8 @@
 
 namespace Microsoft.Testing.TestInfrastructure;
 
-public interface IProcessHelper
+public enum Verb
 {
-    IProcessHandle Start(ProcessStartInfo startInfo, bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false, int timeoutInSeconds = 300);
+    Build,
+    Publish,
 }

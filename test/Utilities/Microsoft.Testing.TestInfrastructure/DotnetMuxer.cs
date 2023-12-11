@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
-using System.Threading;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
@@ -111,9 +110,7 @@ public class DotnetMuxer : IDisposable
     public ReadOnlyCollection<string> StandardErrorLines => _commandLine.ErrorOutputLines;
 
     public async Task<int> Args(string arguments)
-    {
-        return await Args(arguments, _environmentVariables);
-    }
+        => await Args(arguments, _environmentVariables);
 
     public async Task<int> Args(
         string arguments,
