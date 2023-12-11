@@ -151,6 +151,13 @@ stages:
           condition: failed()
 
         - ${{ if eq(variables._RunAsInternal, True) }}:
+          - task: PowerShell@2
+            displayName: 'Delete Microsoft.Testing.Platform NuGet package'
+            inputs:
+              targetType: 'inline'
+              script: |
+                Remove-Item -Force ./artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg
+
           - task: NuGetAuthenticate@0
             displayName: 'NuGet Authenticate to test-tools feed'
 
