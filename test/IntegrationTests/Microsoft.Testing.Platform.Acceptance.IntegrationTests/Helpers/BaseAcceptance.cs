@@ -17,11 +17,4 @@ public abstract class BaseAcceptanceTests : TestBase
     }
 
     public AcceptanceFixture AcceptanceFixture { get; }
-
-    public static async Task<AssetManager> CopyAssetAsync(string assetName)
-    {
-        var assetManager = new AssetManager(assetName);
-        await assetManager.CopyAssets();
-        return assetManager;
-    }
 }

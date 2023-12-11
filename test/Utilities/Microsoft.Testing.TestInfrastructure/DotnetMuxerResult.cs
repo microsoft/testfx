@@ -7,9 +7,10 @@ using System.Text;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
-public sealed class TestHostResult(string command, int exitCode, string standardOutput, ReadOnlyCollection<string> standardOutputLines, string standardError, ReadOnlyCollection<string> standardErrorLines)
+public sealed class DotnetMuxerResult(string args, int exitCode, string standardOutput, ReadOnlyCollection<string> standardOutputLines,
+    string standardError, ReadOnlyCollection<string> standardErrorLines)
 {
-    public string Command { get; } = command;
+    public string Args { get; } = args;
 
     public int ExitCode { get; } = exitCode;
 
@@ -24,12 +25,9 @@ public sealed class TestHostResult(string command, int exitCode, string standard
     public override string ToString()
     {
         var stringBuilder = new StringBuilder();
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Command: {Command}");
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"====================");
+        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Args: {Args}");
         stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"ExitCode: {ExitCode}");
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"====================");
         stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"StandardOutput: {StandardOutput}");
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"====================");
         stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"StandardError: {StandardError}");
 
         return stringBuilder.ToString();

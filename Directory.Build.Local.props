@@ -62,6 +62,7 @@
   <PropertyGroup>
     <Copyright>$(CopyrightMicrosoft)</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <DoNotShipTestingPlatformPackage>true</DoNotShipTestingPlatformPackage>
   </PropertyGroup>
 
   <!-- Sign config -->

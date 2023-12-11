@@ -8,7 +8,7 @@ public class RetryHelper
     public static async Task Retry(Func<Task> action, uint times, TimeSpan every, Func<Exception, bool>? predicate = null)
     {
         var exceptions = new List<Exception>();
-        uint timestoTry = times;
+        uint totalTries = times;
         while (times > 0)
         {
             try
@@ -25,7 +25,7 @@ public class RetryHelper
 
                 if (times == 1)
                 {
-                    throw new RetryException($"Retried {timestoTry} times. Last exception:\n{ex}", exceptions.ToArray());
+                    throw new RetryException($"Retry failed after {totalTries} time(s)", exceptions.ToArray());
                 }
             }
 
@@ -37,7 +37,7 @@ public class RetryHelper
     public static async Task<T> Retry<T>(Func<Task<T>> action, uint times, TimeSpan every, Func<Exception, bool>? predicate = null)
     {
         var exceptions = new List<Exception>();
-        uint timestoTry = times;
+        uint totalTries = times;
         while (times > 0)
         {
             try
@@ -53,7 +53,7 @@ public class RetryHelper
 
                 if (times == 1)
                 {
-                    throw new RetryException($"Retried {timestoTry} times. Last exception:\n{ex}", exceptions.ToArray());
+                    throw new RetryException($"Retry failed after {totalTries} time(s)", exceptions.ToArray());
                 }
 
                 exceptions.Add(ex);
@@ -63,7 +63,7 @@ public class RetryHelper
             times--;
         }
 
-        throw new InvalidOperationException($"Unexpected souce code reached");
+        throw new InvalidOperationException("This program location is thought to be unreachable.");
     }
 }
 

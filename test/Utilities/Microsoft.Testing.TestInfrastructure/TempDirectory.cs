@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Text;
+
 namespace Microsoft.Testing.TestInfrastructure;
 
 public class TempDirectory : IDisposable
@@ -14,7 +16,7 @@ public class TempDirectory : IDisposable
     /// </summary>
     public TempDirectory(string? subDirectory = null, bool arcadeConvention = true, bool cleanup = true)
     {
-        if (Environment.GetEnvironmentVariable("Microsoft_Testing_Tests_Common_TempDirectory_Cleanup") == "0")
+        if (Environment.GetEnvironmentVariable("Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup") == "0")
         {
             cleanup = false;
         }
@@ -47,9 +49,7 @@ public class TempDirectory : IDisposable
     }
 
     public DirectoryInfo CreateDirectory(string dir)
-    {
-        return Directory.CreateDirectory(Path.Combine(DirectoryPath, dir));
-    }
+        => Directory.CreateDirectory(Path.Combine(DirectoryPath, dir));
 
     public static async Task WriteFileAsync(string targetDirectory, string fileName, string fileContents)
     {
@@ -61,9 +61,7 @@ public class TempDirectory : IDisposable
     }
 
     public async Task CopyDirectoryAsync(string sourceDirectory, string targetDirectory, bool retainAttributes = false)
-    {
-        await CopyDirectoryAsync(new DirectoryInfo(sourceDirectory), new DirectoryInfo(targetDirectory), retainAttributes);
-    }
+        => await CopyDirectoryAsync(new DirectoryInfo(sourceDirectory), new DirectoryInfo(targetDirectory), retainAttributes);
 
     public static async Task CopyDirectoryAsync(DirectoryInfo source, DirectoryInfo target, bool retainAttributes = false)
     {
@@ -95,9 +93,7 @@ public class TempDirectory : IDisposable
     }
 
     public void CopyDirectory(string sourceDirectory, string targetDirectory)
-    {
-        CopyDirectory(new DirectoryInfo(sourceDirectory), new DirectoryInfo(targetDirectory));
-    }
+        => CopyDirectory(new DirectoryInfo(sourceDirectory), new DirectoryInfo(targetDirectory));
 
     public static void CopyDirectory(DirectoryInfo source, DirectoryInfo target)
     {
@@ -208,17 +204,15 @@ public class TempDirectory : IDisposable
         }
     }
 
+    // AGENT_TEMPDIRECTORY is Azure DevOps variable, which is set to path
+    // that is cleaned up after every job. This is preferable to use over
+    // just the normal TEMP, because that is not cleaned up for every run.
+    //
+    // System.IO.Path.GetTempPath is banned from the rest of the code. This is the only
+    // place where we are allowed to use it. All other methods should use our GetTempPath (this method).
     private static string GetTempPath()
-    {
-        // AGENT_TEMPDIRECTORY is Azure DevOps variable, which is set to path
-        // that is cleaned up after every job. This is preferable to use over
-        // just the normal TEMP, because that is not cleaned up for every run.
-        //
-        // System.IO.Path.GetTempPath is banned from the rest of the code. This is the only
-        // place where we are allowed to use it. All other methods should use our GetTempPath (this method).
-        return Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
-            ?? Path.GetTempPath();
-    }
+        => Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
+        ?? Path.GetTempPath();
 
     public static void TryRemoveDirectory(string directory)
     {
@@ -243,10 +237,7 @@ public class TempDirectory : IDisposable
         }
     }
 
-    public override string ToString()
-    {
-        return DirectoryPath;
-    }
+    public override string ToString() => DirectoryPath;
 
     internal sealed class InlineFile(string name, string content)
     {
