@@ -23,7 +23,7 @@ public class TelemetryTests : BaseAcceptanceTests
         _buildFixture = buildFixture;
     }
 
-    [ArgumentsProvider(nameof(All_Tfms))]
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Telemetry_ByDefault_TelemetryIsEnabled(string tfm)
     {
         string diagPath = Path.Combine(_buildFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
@@ -32,7 +32,7 @@ public class TelemetryTests : BaseAcceptanceTests
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic");
 
-        AcceptanceAssert.HasExitCode(ExitCodes.ZeroTests, testHostResult);
+        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -46,7 +46,7 @@ public class TelemetryTests : BaseAcceptanceTests
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
     }
 
-    [ArgumentsProvider(nameof(All_Tfms))]
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Telemetry_WhenOptingOutTelemetry_WithEnvironmentVariable_TelemetryIsDisabled(string tfm)
     {
         string diagPath = Path.Combine(_buildFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
@@ -60,7 +60,7 @@ public class TelemetryTests : BaseAcceptanceTests
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
             });
 
-        AcceptanceAssert.HasExitCode(ExitCodes.ZeroTests, testHostResult);
+        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -74,7 +74,7 @@ public class TelemetryTests : BaseAcceptanceTests
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
     }
 
-    [ArgumentsProvider(nameof(All_Tfms))]
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Telemetry_WhenOptingOutTelemetry_With_DOTNET_CLI_EnvironmentVariable_TelemetryIsDisabled(string tfm)
     {
         string diagPath = Path.Combine(_buildFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
@@ -88,7 +88,7 @@ public class TelemetryTests : BaseAcceptanceTests
                 { EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "1" },
             });
 
-        AcceptanceAssert.HasExitCode(ExitCodes.ZeroTests, testHostResult);
+        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -102,7 +102,7 @@ public class TelemetryTests : BaseAcceptanceTests
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
     }
 
-    [ArgumentsProvider(nameof(All_Tfms))]
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Telemetry_WhenEnableTelemetryIsFalse_WithTestApplicationOptions_TelemetryIsDisabled(string tfm)
     {
         string diagPath = Path.Combine(_buildFixture.TargetAssetPathWithDisableTelemetry, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
@@ -111,7 +111,7 @@ public class TelemetryTests : BaseAcceptanceTests
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPathWithDisableTelemetry, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic");
 
-        AcceptanceAssert.HasExitCode(ExitCodes.ZeroTests, testHostResult);
+        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -127,12 +127,12 @@ public class TelemetryTests : BaseAcceptanceTests
 
     private async Task<string> AssertDiagnosticReportAsync(TestHostResult testHostResult, string diagPathPattern, string diagContentsPattern, string level = "Information", string flushType = "async")
     {
-        AcceptanceAssert.HasExitCode(ExitCodes.ZeroTests, testHostResult);
+        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
 
         string outputPattern = $"""
 Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 """;
-        AcceptanceAssert.OutputMatchesRegex(outputPattern, testHostResult);
+        testHostResult.AssertOutputMatchesRegex(outputPattern);
         Match match = Regex.Match(testHostResult.StandardOutput, diagPathPattern);
         Assert.IsTrue(match.Success, $"{testHostResult}\n{diagPathPattern}");
 
@@ -169,12 +169,12 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         {
             _testAsset = await TestAsset.GenerateAssetAsync(
                 AssetName,
-                TestCode.PatchCodeWithRegularExpression("tfms", All_Tfms.ToTargetFrameworksElementContent()).PatchCodeWithRegularExpression("disableTelemetry", string.Empty));
+                TestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToJoinedFrameworks()).PatchCodeWithRegularExpression("disableTelemetry", string.Empty));
             await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
 
             _testAssetWithDisableTelemetry = await TestAsset.GenerateAssetAsync(
                 AssetName,
-                TestCode.PatchCodeWithRegularExpression("tfms", All_Tfms.ToTargetFrameworksElementContent()).PatchCodeWithRegularExpression("disableTelemetry", ", new TestApplicationOptions() { EnableTelemetry = false }"));
+                TestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToJoinedFrameworks()).PatchCodeWithRegularExpression("disableTelemetry", ", new TestApplicationOptions() { EnableTelemetry = false }"));
             await DotnetCli.RunAsync($"build -nodeReuse:false {_testAssetWithDisableTelemetry.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
         }
 
