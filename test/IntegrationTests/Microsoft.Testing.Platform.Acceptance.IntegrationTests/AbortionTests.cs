@@ -2,8 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -32,16 +32,17 @@ public class AbortionTests : BaseAcceptanceTests
 
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_abortionTestsFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
-        Assert.AreEqual(ExitCodes.TestSessionAborted, testHostResult.ExitCode, because: testHostResult.ToString());
+
+        AcceptanceAssert.HasExitCode(ExitCodes.TestSessionAborted, testHostResult);
 
         // We check only in netcore for netfx is now showing in CI every time, the same behavior in local something works sometime nope.
         // Manual test works pretty always as expected, looks like the implementation is different, we care more on .NET Core.
         if (NET_Tfms.Select(x => x.Arguments).Contains(tfm))
         {
-            Assert.That(Regex.IsMatch(testHostResult.StandardOutput, "Cancelling the test session.*"), testHostResult.ToString());
+            AcceptanceAssert.OutputMatchesRegex("Cancelling the test session.*", testHostResult);
         }
 
-        Assert.That(Regex.IsMatch(testHostResult.StandardOutput, "Aborted - Failed: 0, Passed: 0, Skipped: 0, Total: 0 -.*"), testHostResult.ToString());
+        AcceptanceAssert.OutputMatchesRegex("Aborted - Failed: 0, Passed: 0, Skipped: 0, Total: 0 -.*", testHostResult);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
