@@ -29,7 +29,7 @@
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
-    <MicrosoftTestingPlatformVersion>1.0.0-alpha.23610.1</MicrosoftTestingPlatformVersion>
+    <MicrosoftTestingPlatformVersion>1.0.0-alpha.23611.1</MicrosoftTestingPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="MSTest test dependencies">
     <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
