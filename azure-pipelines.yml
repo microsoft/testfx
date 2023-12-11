@@ -158,7 +158,8 @@ stages:
             displayName: 'Publish NuGet packages to test-tools feed'
             inputs:
               command: push
-              packagesToPush: 'artifacts/packages/$(_BuildConfig)/**/*.nupkg;!artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg'
+              # Do not push symbol packages nor Microsoft.Testing.Platform package
+              packagesToPush: 'artifacts/packages/$(_BuildConfig)/**/*.nupkg;!artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg;!artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg'
               publishVstsFeed: 'public/test-tools'
 
       - job: Linux
