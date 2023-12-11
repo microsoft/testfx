@@ -9,9 +9,9 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>3faeb9817f465151aa4bbcdb315f0a6170206760</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="1.0.0-alpha.23608.1">
+    <Dependency Name="Microsoft.Testing.Platform" Version="1.0.0-alpha.23610.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>d61363e017c87858918b7b15f08a9ca85a33a24e</Sha>
+      <Sha>1b8bcd2c28890b559dfc66bc11c5e6ae09b97b35</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="9.0.0-beta.23607.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
