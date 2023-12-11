@@ -2,14 +2,6 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
-  <!-- Linux properties -->
-  <PropertyGroup Condition=" '$(OS)' != 'Windows_NT' ">
-    <!-- Force setting TargetFrameworks only if it was set -->
-    <TargetFrameworks Condition=" '$(TargetFrameworks)' != '' ">$(NetCurrent)</TargetFrameworks>
-    <!-- Force setting TargetFramework only if it was set -->
-    <TargetFramework Condition=" '$(TargetFramework)' != '' ">$(NetCurrent)</TargetFramework>
-  </PropertyGroup>
-
   <PropertyGroup Condition=" '$(UseAssemblyVersion14)' == 'true' ">
     <!--
       It appears that AssemblyVersion should always be set to 14.0.0.0 for some backward compatibility cases,
