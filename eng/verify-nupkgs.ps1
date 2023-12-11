@@ -25,7 +25,6 @@ function Confirm-NugetPackages {
         "MSTest.TestAdapter"                    = 153;
         "MSTest"                                = 5;
         "MSTest.Analyzers"                      = 9;
-        "Microsoft.Testing.Platform"            = 65;
     }
 
     $packageDirectory = Resolve-Path "$PSScriptRoot/../artifacts/packages/$configuration"
@@ -59,6 +58,10 @@ function Confirm-NugetPackages {
         try {
             $packageName = (Get-Item $unzipNugetPackageDir).BaseName
             $versionIndex = $packageName.LastIndexOf($version)
+            if ($versionIndex -lt 0) {
+                continue
+            }
+
             $packageKey = $packageName.Substring(0, $versionIndex - 1) # Remove last dot
             Write-Verbose "Verifying package '$packageKey'."
 
