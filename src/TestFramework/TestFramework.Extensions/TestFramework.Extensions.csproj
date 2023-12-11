@@ -1,14 +1,20 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras">
+﻿<Project>
+
+  <!-- SDK top import -->
+  <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
   <PropertyGroup>
-    <TargetFrameworks>$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseAssemblyVersion14>true</UseAssemblyVersion14>
   </PropertyGroup>
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <NuspecFile>MSTest.TestFramework.nuspec</NuspecFile>
+    <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.TestFramework.nuspec</NuspecFile>
+    <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.TestFramework.Linux.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageId>MSTest.TestFramework</PackageId>
     <PackageTags>MSTest TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
@@ -74,5 +80,9 @@
   <ItemGroup Label="NuGet">
     <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
   </ItemGroup>
+
+  <!-- SDK bottom import -->
+  <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
 </Project>
