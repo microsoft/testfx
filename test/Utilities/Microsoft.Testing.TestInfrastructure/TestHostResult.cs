@@ -28,9 +28,9 @@ public sealed class TestHostResult(string command, int exitCode, string standard
         stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"====================");
         stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"ExitCode: {ExitCode}");
         stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"====================");
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"StandardOutput: {StandardOutput}");
+        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"StandardOutput:\n{StandardOutput}");
         stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"====================");
-        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"StandardError: {StandardError}");
+        stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"StandardError:\n{StandardError}");
 
         return stringBuilder.ToString();
     }
