@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0</TargetFrameworks>
+    <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
     <UseVSTestRunner>false</UseVSTestRunner>
     <ImplicitUsings>true</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -10,6 +10,9 @@
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" Version="$(MSBuildStructuredLogger)" />
+    <PackageReference Include="Microsoft.Testing.Platform.Extensions" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
+    <PackageReference Include="Microsoft.Testing.Platform.Extensions.HangDump" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
+    <PackageReference Include="Microsoft.Testing.Platform.Extensions.TestReports.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
     <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" />
   </ItemGroup>
@@ -30,5 +33,17 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <Target Name="CopyNuGet" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <MicrosoftTestingPlatformExtensionsPackage Include="$(PkgMicrosoft_Testing_Platform_Extensions)\microsoft.testing.platform.extensions.*.nupkg" />
+      <MicrosoftTestingPlatformExtensionsHangDumpPackage Include="$(PkgMicrosoft_Testing_Platform_Extensions_HangDump)\microsoft.testing.platform.extensions.hangdump.*.nupkg" />
+      <MicrosoftTestingPlatformExtensionsTestReportsTrxReportPackage Include="$(PkgMicrosoft_Testing_Platform_Extensions_TestReports_TrxReport)\microsoft.testing.platform.extensions.testreports.trxreport.*.nupkg" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(MicrosoftTestingPlatformExtensionsPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+    <Copy SourceFiles="@(MicrosoftTestingPlatformExtensionsHangDumpPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+    <Copy SourceFiles="@(MicrosoftTestingPlatformExtensionsTestReportsTrxReportPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+  </Target>
 
 </Project>

@@ -56,10 +56,6 @@ public class DotnetMuxer : IDisposable
     {
     }
 
-    public static string ARTIFACTS_PACKAGES_NONSHIPPING => $"{Path.Combine(RootFinder.Find(), "artifacts", "packages", Constants.BuildConfiguration, "NonShipping")}";
-
-    public static string ARTIFACTS_PACKAGES_SHIPPING => $"{Path.Combine(RootFinder.Find(), "artifacts", "packages", Constants.BuildConfiguration, "Shipping")}";
-
     private DotnetMuxer(
         IDictionary<string, string> defaultEnvironmentVariables,
         IDictionary<string, string> environmentVariables,
@@ -75,10 +71,18 @@ public class DotnetMuxer : IDisposable
 
         if (useDefaultArtifactsPackages)
         {
-            _environmentVariables["ARTIFACTS_PACKAGES_NONSHIPPING"] = ARTIFACTS_PACKAGES_NONSHIPPING;
-            _environmentVariables["ARTIFACTS_PACKAGES_SHIPPING"] = ARTIFACTS_PACKAGES_SHIPPING;
+            _environmentVariables["ArtifactsPackagesNonShipping"] = Constants.ArtifactsPackagesNonShipping;
+            _environmentVariables["ArtifactsPackagesShipping"] = Constants.ArtifactsPackagesShipping;
         }
     }
+
+    public string StandardOutput => _commandLine.StandardOutput;
+
+    public ReadOnlyCollection<string> StandardOutputLines => _commandLine.StandardOutputLines;
+
+    public string StandardError => _commandLine.ErrorOutput;
+
+    public ReadOnlyCollection<string> StandardErrorLines => _commandLine.ErrorOutputLines;
 
     public void Dispose()
     {
@@ -100,14 +104,6 @@ public class DotnetMuxer : IDisposable
 
         _isDisposed = true;
     }
-
-    public string StandardOutput => _commandLine.StandardOutput;
-
-    public ReadOnlyCollection<string> StandardOutputLines => _commandLine.StandardOutputLines;
-
-    public string StandardError => _commandLine.ErrorOutput;
-
-    public ReadOnlyCollection<string> StandardErrorLines => _commandLine.ErrorOutputLines;
 
     public async Task<int> Args(string arguments)
         => await Args(arguments, _environmentVariables);

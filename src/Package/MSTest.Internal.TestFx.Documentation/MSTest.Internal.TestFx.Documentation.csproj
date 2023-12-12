@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
-    <IsPackable>true</IsPackable>
+    <IsPackable Condition=" '$(OS)' == 'Windows_NT' ">true</IsPackable>
     <IsShippingPackage>false</IsShippingPackage>
     <NuspecFile>MSTest.Internal.TestFx.Documentation.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
