@@ -54,7 +54,7 @@ public class TestAsset : IDisposable
         return (name, content);
     }
 
-    public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, bool addDefaultNugetConfigFile = true)
+    public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, bool addDefaultNuGetConfigFile = true)
     {
         string defaultNuGetConfig = $"""
 
@@ -75,7 +75,7 @@ public class TestAsset : IDisposable
 </configuration>
 
 """;
-        var testAsset = new TestAsset(assetName, addDefaultNugetConfigFile ? string.Concat(code, defaultNuGetConfig) : code);
+        var testAsset = new TestAsset(assetName, addDefaultNuGetConfigFile ? string.Concat(code, defaultNuGetConfig) : code);
         string[] splitFiles = testAsset._assetCode.Split(new string[] { FileTag }, StringSplitOptions.RemoveEmptyEntries);
         foreach (string fileContent in splitFiles)
         {
