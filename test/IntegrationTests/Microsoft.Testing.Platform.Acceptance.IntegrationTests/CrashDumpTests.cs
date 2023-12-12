@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -21,7 +22,7 @@ public sealed class CrashDumpTests : BaseAcceptanceTests
         _hangDumpFixture = hangDumpFixture;
     }
 
-    [ArgumentsProvider(nameof(NET_Tfms))]
+    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
     public async Task CrashDump_DefaultSetting_CreateDump(string tfm)
         => await RetryHelper.Retry(
             async () =>
@@ -29,7 +30,7 @@ public sealed class CrashDumpTests : BaseAcceptanceTests
                 string resultDirectory = Path.Combine(_hangDumpFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
                 TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_hangDumpFixture.TargetAssetPath, "CrashDump", tfm);
                 TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --results-directory {resultDirectory}");
-                Assert.AreEqual(ExitCodes.TestHostProcessExitedNonGracefully, testHostResult.ExitCode, testHostResult.ToString());
+                testHostResult.AssertHasExitCode(ExitCodes.TestHostProcessExitedNonGracefully);
                 string? dumpFile = Directory.GetFiles(resultDirectory, "CrashDump.dll_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
                 Assert.IsTrue(dumpFile is not null, $"Dump file not found '{tfm}'\n{testHostResult}'");
             }, 3, TimeSpan.FromSeconds(3), RetryPolicy);
@@ -37,9 +38,9 @@ public sealed class CrashDumpTests : BaseAcceptanceTests
     public async Task CrashDump_CustomDumpName_CreateDump()
     {
         string resultDirectory = Path.Combine(_hangDumpFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_hangDumpFixture.TargetAssetPath, "CrashDump", MainNET_Tfm.Arguments);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_hangDumpFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent.Arguments);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crashdump-filename customdumpname.dmp --results-directory {resultDirectory}");
-        Assert.AreEqual(ExitCodes.TestHostProcessExitedNonGracefully, testHostResult.ExitCode, testHostResult.ToString());
+        testHostResult.AssertHasExitCode(ExitCodes.TestHostProcessExitedNonGracefully);
         Assert.IsTrue(Directory.GetFiles(resultDirectory, "customdumpname.dmp", SearchOption.AllDirectories).SingleOrDefault() is not null, "Dump file not found");
     }
 
@@ -52,9 +53,9 @@ public sealed class CrashDumpTests : BaseAcceptanceTests
             async () =>
             {
                 string resultDirectory = Path.Combine(_hangDumpFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-                TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_hangDumpFixture.TargetAssetPath, "CrashDump", MainNET_Tfm.Arguments);
+                TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_hangDumpFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent.Arguments);
                 TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump --crashdump-type {format} --results-directory {resultDirectory}");
-                Assert.AreEqual(ExitCodes.TestHostProcessExitedNonGracefully, testHostResult.ExitCode, $"{testHostResult}\n{format}");
+                testHostResult.AssertHasExitCode(ExitCodes.TestHostProcessExitedNonGracefully);
                 string? dumpFile = Directory.GetFiles(resultDirectory, "CrashDump.dll_*.dmp", SearchOption.AllDirectories).SingleOrDefault();
                 Assert.IsTrue(dumpFile is not null, $"Dump file not found '{format}'\n{testHostResult}'");
                 File.Delete(dumpFile);
@@ -63,10 +64,10 @@ public sealed class CrashDumpTests : BaseAcceptanceTests
     public async Task CrashDump_InvalidFormat_ShouldFail()
     {
         string resultDirectory = Path.Combine(_hangDumpFixture.TargetAssetPath, Guid.NewGuid().ToString("N"));
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_hangDumpFixture.TargetAssetPath, "CrashDump", MainNET_Tfm.Arguments);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_hangDumpFixture.TargetAssetPath, "CrashDump", TargetFrameworks.NetCurrent.Arguments);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--crashdump  --crashdump-type invalid --results-directory {resultDirectory}");
-        Assert.AreEqual(ExitCodes.InvalidCommandLine, testHostResult.ExitCode, testHostResult.ToString());
-        Assert.That(testHostResult.StandardOutput.Contains("Option '--crashdump-type' has invalid arguments: 'invalid' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'", StringComparison.OrdinalIgnoreCase), testHostResult.StandardOutput);
+        testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertOutputContains("Option '--crashdump-type' has invalid arguments: 'invalid' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' and 'Full'");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -84,7 +85,7 @@ public sealed class CrashDumpTests : BaseAcceptanceTests
 
         public async Task InitializeAsync(InitializationContext context)
         {
-            _testAsset = await TestAsset.GenerateAssetAsync("CrashDumpFixture", Sources.PatchCodeWithRegularExpression("tfms", All_Tfms.ToTargetFrameworksElementContent()));
+            _testAsset = await TestAsset.GenerateAssetAsync("CrashDumpFixture", Sources.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToJoinedFrameworks()));
             await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
         }
 

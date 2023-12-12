@@ -20,7 +20,7 @@ public class AbortionTests : BaseAcceptanceTests
         _abortionTestsFixture = abortionTestsFixture;
     }
 
-    [ArgumentsProvider(nameof(All_Tfms))]
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_TestHost_Succeeded(string tfm)
     {
         // We expect the same semantic for Linux, the test setup is not cross and we're using specific
@@ -33,16 +33,16 @@ public class AbortionTests : BaseAcceptanceTests
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_abortionTestsFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
-        AcceptanceAssert.HasExitCode(ExitCodes.TestSessionAborted, testHostResult);
+        testHostResult.AssertHasExitCode(ExitCodes.TestSessionAborted);
 
         // We check only in netcore for netfx is now showing in CI every time, the same behavior in local something works sometime nope.
         // Manual test works pretty always as expected, looks like the implementation is different, we care more on .NET Core.
-        if (NET_Tfms.Select(x => x.Arguments).Contains(tfm))
+        if (TargetFrameworks.Net.Select(x => x.Arguments).Contains(tfm))
         {
-            AcceptanceAssert.OutputMatchesRegex("Cancelling the test session.*", testHostResult);
+            testHostResult.AssertOutputMatchesRegex("Cancelling the test session.*");
         }
 
-        AcceptanceAssert.OutputMatchesRegex("Aborted - Failed: 0, Passed: 0, Skipped: 0, Total: 0 -.*", testHostResult);
+        testHostResult.AssertOutputMatchesRegex("Aborted - Failed: 0, Passed: 0, Skipped: 0, Total: 0 -.*");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -60,7 +60,7 @@ public class AbortionTests : BaseAcceptanceTests
 
         public async Task InitializeAsync(InitializationContext context)
         {
-            _testAsset = await TestAsset.GenerateAssetAsync(AssetName, Sources.PatchCodeWithRegularExpression("tfms", All_Tfms.ToTargetFrameworksElementContent()));
+            _testAsset = await TestAsset.GenerateAssetAsync(AssetName, Sources.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToJoinedFrameworks()));
 
             // We expect the same semantic for Linux, the test setup is not cross and we're using specific
             // Windows API because this gesture is not easy xplat.

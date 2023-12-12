@@ -24,17 +24,17 @@ public class NoBannerTests : BaseAcceptanceTests
         _buildFixture = buildFixture;
     }
 
-    [ArgumentsProvider(nameof(All_Tfms))]
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task UsingNoBanner_TheBannerDoesNotAppear(string tfm)
     {
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--no-banner");
 
-        AcceptanceAssert.HasExitCode(ExitCodes.ZeroTests, testHostResult);
-        AcceptanceAssert.OutputDoesNotMatchRegex(_bannerRegexMatchPattern, testHostResult);
+        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
     }
 
-    [ArgumentsProvider(nameof(All_Tfms))]
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task UsingNoBanner_InTheEnvironmentVars_TheBannerDoesNotAppear(string tfm)
     {
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
@@ -45,11 +45,11 @@ public class NoBannerTests : BaseAcceptanceTests
                 { "TESTINGPLATFORM_NOBANNER", "true" },
             });
 
-        AcceptanceAssert.HasExitCode(ExitCodes.ZeroTests, testHostResult);
-        AcceptanceAssert.OutputDoesNotMatchRegex(_bannerRegexMatchPattern, testHostResult);
+        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
     }
 
-    [ArgumentsProvider(nameof(All_Tfms))]
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task UsingDotnetNoLogo_InTheEnvironmentVars_TheBannerDoesNotAppear(string tfm)
     {
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
@@ -60,18 +60,18 @@ public class NoBannerTests : BaseAcceptanceTests
                 { "DOTNET_NOLOGO", "true" },
             });
 
-        AcceptanceAssert.HasExitCode(ExitCodes.ZeroTests, testHostResult);
-        AcceptanceAssert.OutputDoesNotMatchRegex(_bannerRegexMatchPattern, testHostResult);
+        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
     }
 
-    [ArgumentsProvider(nameof(All_Tfms))]
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task WithoutUsingNoBanner_TheBannerAppears(string tfm)
     {
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
-        AcceptanceAssert.HasExitCode(ExitCodes.ZeroTests, testHostResult);
-        AcceptanceAssert.OutputMatchesRegex(_bannerRegexMatchPattern, testHostResult);
+        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertOutputMatchesRegex(_bannerRegexMatchPattern);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -91,7 +91,7 @@ public class NoBannerTests : BaseAcceptanceTests
         {
             _testAsset = await TestAsset.GenerateAssetAsync(
                 AssetName,
-                NoBannerTestCode.PatchCodeWithRegularExpression("tfms", All_Tfms.ToTargetFrameworksElementContent()));
+                NoBannerTestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToJoinedFrameworks()));
             await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
         }
 
