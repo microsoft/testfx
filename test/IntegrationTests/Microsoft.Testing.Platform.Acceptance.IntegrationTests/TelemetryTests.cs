@@ -169,12 +169,12 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         {
             _testAsset = await TestAsset.GenerateAssetAsync(
                 AssetName,
-                TestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToJoinedFrameworks()).PatchCodeWithRegularExpression("disableTelemetry", string.Empty));
+                TestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()).PatchCodeWithRegularExpression("disableTelemetry", string.Empty));
             await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
 
             _testAssetWithDisableTelemetry = await TestAsset.GenerateAssetAsync(
                 AssetName,
-                TestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToJoinedFrameworks()).PatchCodeWithRegularExpression("disableTelemetry", ", new TestApplicationOptions() { EnableTelemetry = false }"));
+                TestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()).PatchCodeWithRegularExpression("disableTelemetry", ", new TestApplicationOptions() { EnableTelemetry = false }"));
             await DotnetCli.RunAsync($"build -nodeReuse:false {_testAssetWithDisableTelemetry.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
         }
 

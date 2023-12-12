@@ -64,16 +64,10 @@ public class TestAsset : IDisposable
 <configuration>
     <packageSources>
         <clear/>
-        <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
-        <add key="dotnet-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" />
-        <add key="dotnet-eng" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
-        <add key="vs-buildservices" value="https://pkgs.dev.azure.com/azure-public/vside/_packaging/vs-buildservices/nuget/v3/index.json" />
-        <add key="dotnet7" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json" />
-        <add key="dotnet8" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8/nuget/v3/index.json" />
-        <add key="dotnet9" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet9/nuget/v3/index.json" />
         <add key="local-nonshipping" value="{Constants.ArtifactsPackagesNonShipping}" />
         <add key="local-shipping" value="{Constants.ArtifactsPackagesShipping}" />
-        <add key="local-test-packages" value="{Constants.ArtifactsTmpPackages}" />
+        <add key="local-tmp-packages" value="{Constants.ArtifactsTmpPackages}" />
+        <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />        
     </packageSources>
     <config>
         <add key="globalPackagesFolder" value=".packages" />

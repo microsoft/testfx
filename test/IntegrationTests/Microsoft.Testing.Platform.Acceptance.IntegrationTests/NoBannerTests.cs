@@ -91,7 +91,7 @@ public class NoBannerTests : BaseAcceptanceTests
         {
             _testAsset = await TestAsset.GenerateAssetAsync(
                 AssetName,
-                NoBannerTestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToJoinedFrameworks()));
+                NoBannerTestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
             await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
         }
 

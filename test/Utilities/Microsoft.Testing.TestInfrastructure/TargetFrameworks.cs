@@ -24,6 +24,6 @@ public static class TargetFrameworks
         ? Net.Concat(NetFramework).ToArray()
         : Net;
 
-    public static string ToJoinedFrameworks(this TestArgumentsEntry<string>[] targetFrameworksEntries)
+    public static string ToMSBuildTargetFrameworks(this TestArgumentsEntry<string>[] targetFrameworksEntries)
         => string.Join(";", targetFrameworksEntries.Select(x => x.Arguments));
 }

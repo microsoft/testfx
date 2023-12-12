@@ -176,7 +176,7 @@ public class UnhandledExceptionPolicyTests : BaseAcceptanceTests
 
         public async Task InitializeAsync(InitializationContext context)
         {
-            _testAsset = await TestAsset.GenerateAssetAsync("UnhandledExceptionPolicyTests", Sources.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToJoinedFrameworks()));
+            _testAsset = await TestAsset.GenerateAssetAsync("UnhandledExceptionPolicyTests", Sources.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
             await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
         }
 
