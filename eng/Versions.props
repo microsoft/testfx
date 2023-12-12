@@ -25,11 +25,11 @@
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>9.0.0-beta.23611.2</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <MSTestVersion>3.2.0-preview.23611.12</MSTestVersion>
+    <MSTestVersion>3.2.0-preview.23611.13</MSTestVersion>
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
-    <MicrosoftTestingPlatformVersion>1.0.0-alpha.23611.3</MicrosoftTestingPlatformVersion>
+    <MicrosoftTestingPlatformVersion>1.0.0-preview.23611.13</MicrosoftTestingPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="MSTest test dependencies">
     <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
