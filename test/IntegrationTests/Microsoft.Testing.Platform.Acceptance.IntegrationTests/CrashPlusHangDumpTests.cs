@@ -7,22 +7,22 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public sealed class CrashAndHangDumpTests : BaseAcceptanceTests
+public sealed class CrashPlusHangDumpTests : BaseAcceptanceTests
 {
-    private readonly CrashAndHangDumpFixture _crashAndHangDumpFixture;
+    private readonly CrashPlusHangDumpFixture _crashPlusHangDumpFixture;
 
-    public CrashAndHangDumpTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture, CrashAndHangDumpFixture nangDumpFixture)
+    public CrashPlusHangDumpTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture, CrashPlusHangDumpFixture crashPlusHangDumpFixture)
         : base(testExecutionContext, acceptanceFixture)
     {
-        _crashAndHangDumpFixture = nangDumpFixture;
+        _crashPlusHangDumpFixture = crashPlusHangDumpFixture;
     }
 
-    public async Task HangDump_InCaseOfCrash_CreateCrashDump()
+    public async Task CrashPlusHangDump_InCaseOfCrash_CreateCrashDump()
         => await RetryHelper.Retry(
             async () =>
             {
-                string resultDirectory = Path.Combine(_crashAndHangDumpFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent.Arguments);
-                TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_crashAndHangDumpFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent.Arguments);
+                string resultDirectory = Path.Combine(_crashPlusHangDumpFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent.Arguments);
+                TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_crashPlusHangDumpFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent.Arguments);
                 TestHostResult testHostResult = await testHost.ExecuteAsync(
                     $"--hangdump --hangdump-timeout 5m --crashdump --results-directory {resultDirectory}",
                     new Dictionary<string, string>()
@@ -34,7 +34,7 @@ public sealed class CrashAndHangDumpTests : BaseAcceptanceTests
 
                 testHostResult.AssertHasExitCode(ExitCodes.TestHostProcessExitedNonGracefully);
                 testHostResult.AssertOutputMatchesRegex(@"Test host process with PID \'.+\' crashed, a dump file was generated");
-                testHostResult.AssertOutputContains(@"Hang dump timeout '00:00:08' expired");
+                testHostResult.AssertOutputDoesNotContain(@"Hang dump timeout '00:00:08' expired");
 
                 string? dumpFile = Directory.GetFiles(resultDirectory, "CrashPlusHangDump.dll*_crash.dmp", SearchOption.AllDirectories).SingleOrDefault();
                 Assert.IsTrue(dumpFile is not null, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
@@ -42,12 +42,12 @@ public sealed class CrashAndHangDumpTests : BaseAcceptanceTests
                 Assert.IsFalse(dumpFile is not null, $"Dump file not found '{TargetFrameworks.NetCurrent}'\n{testHostResult}'");
             }, 3, TimeSpan.FromSeconds(3), CrashDumpTests.RetryPolicy);
 
-    public async Task HangDump_InCaseOfHang_CreateHangDump()
+    public async Task CrashPlusHangDump_InCaseOfHang_CreateHangDump()
         => await RetryHelper.Retry(
             async () =>
             {
-                string resultDirectory = Path.Combine(_crashAndHangDumpFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent.Arguments);
-                TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_crashAndHangDumpFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent.Arguments);
+                string resultDirectory = Path.Combine(_crashPlusHangDumpFixture.TargetAssetPath, Guid.NewGuid().ToString("N"), TargetFrameworks.NetCurrent.Arguments);
+                TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_crashPlusHangDumpFixture.TargetAssetPath, "CrashPlusHangDump", TargetFrameworks.NetCurrent.Arguments);
                 TestHostResult testHostResult = await testHost.ExecuteAsync(
                     $"--hangdump --hangdump-timeout 8s --crashdump --results-directory {resultDirectory}",
                     new Dictionary<string, string>()
@@ -58,7 +58,7 @@ public sealed class CrashAndHangDumpTests : BaseAcceptanceTests
                     });
 
                 testHostResult.AssertHasExitCode(ExitCodes.TestHostProcessExitedNonGracefully);
-                testHostResult.AssertOutputMatchesRegex(@"Test host process with PID '.+' crashed, a dump file was generated");
+                testHostResult.AssertOutputDoesNotMatchRegex(@"Test host process with PID '.+' crashed, a dump file was generated");
                 testHostResult.AssertOutputContains(@"Hang dump timeout of '00:00:08' expired");
 
                 string? dumpFile = Directory.GetFiles(resultDirectory, "CrashPlusHangDump.dll*_crash.dmp", SearchOption.AllDirectories).SingleOrDefault();
@@ -68,12 +68,12 @@ public sealed class CrashAndHangDumpTests : BaseAcceptanceTests
             }, 3, TimeSpan.FromSeconds(3), CrashDumpTests.RetryPolicy);
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class CrashAndHangDumpFixture : IAsyncInitializable, IDisposable
+    public sealed class CrashPlusHangDumpFixture : IAsyncInitializable, IDisposable
     {
         private readonly AcceptanceFixture _acceptanceFixture;
         private TestAsset? _testAsset;
 
-        public CrashAndHangDumpFixture(AcceptanceFixture acceptanceFixture)
+        public CrashPlusHangDumpFixture(AcceptanceFixture acceptanceFixture)
         {
             _acceptanceFixture = acceptanceFixture;
         }
@@ -82,7 +82,7 @@ public sealed class CrashAndHangDumpTests : BaseAcceptanceTests
 
         public async Task InitializeAsync(InitializationContext context)
         {
-            _testAsset = await TestAsset.GenerateAssetAsync("CrashAndHangDumpFixture", Sources.PatchCodeWithRegularExpression("tfm", TargetFrameworks.NetCurrent.Arguments));
+            _testAsset = await TestAsset.GenerateAssetAsync("CrashPlusHangDumpFixture", Sources.PatchCodeWithRegularExpression("tfm", TargetFrameworks.NetCurrent.Arguments));
             await DotnetCli.RunAsync($"build {_testAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
         }
 

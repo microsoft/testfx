@@ -86,7 +86,7 @@ public sealed class HangDumpTests : BaseAcceptanceTests
                 { "SLEEPTIMEMS2", "600000" },
             });
         testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
-        testHostResult.AssertOutputContains("Option '--hangdump-type' has invalid arguments: 'invalid' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .Net 6+) and 'Full'");
+        testHostResult.AssertOutputContains("Option '--hangdump-type' has invalid arguments: 'invalid' is not a valid dump type. Valid options are 'Mini', 'Heap', 'Triage' (only available in .NET 6+) and 'Full'");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]

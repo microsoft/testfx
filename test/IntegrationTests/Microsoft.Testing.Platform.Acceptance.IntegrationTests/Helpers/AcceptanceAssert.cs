@@ -16,8 +16,11 @@ internal static class AcceptanceAssert
     public static void AssertOutputDoesNotMatchRegex(this TestHostResult testHostResult, string pattern)
         => Assert.That(!Regex.IsMatch(testHostResult.StandardOutput, pattern), GenerateFailedAssertionMessage(testHostResult));
 
-    public static void AssertOutputContains(this TestHostResult testHostResult, string pattern)
-        => Assert.That(testHostResult.StandardOutput.Contains(pattern, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult));
+    public static void AssertOutputContains(this TestHostResult testHostResult, string value)
+        => Assert.That(testHostResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult));
+
+    public static void AssertOutputDoesNotContain(this TestHostResult testHostResult, string value)
+        => Assert.That(!testHostResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult));
 
     private static string GenerateFailedAssertionMessage(TestHostResult testHostResult)
         => $"Output of the test host is:\n{testHostResult}";
