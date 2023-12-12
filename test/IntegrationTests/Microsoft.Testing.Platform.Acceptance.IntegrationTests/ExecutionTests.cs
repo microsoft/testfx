@@ -154,7 +154,7 @@ Minimum expected tests policy violation, tests ran 4, minimum expected 5 - Faile
         {
             _testAsset = await TestAsset.GenerateAssetAsync(
                 AssetName,
-                TestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToJoinedFrameworks()));
+                TestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
             await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c {AssetBuildConfiguration}", _acceptanceFixture.NuGetGlobalPackagesFolder);
         }
 

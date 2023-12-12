@@ -60,7 +60,7 @@ public class AbortionTests : BaseAcceptanceTests
 
         public async Task InitializeAsync(InitializationContext context)
         {
-            _testAsset = await TestAsset.GenerateAssetAsync(AssetName, Sources.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToJoinedFrameworks()));
+            _testAsset = await TestAsset.GenerateAssetAsync(AssetName, Sources.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
 
             // We expect the same semantic for Linux, the test setup is not cross and we're using specific
             // Windows API because this gesture is not easy xplat.

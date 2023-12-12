@@ -160,7 +160,7 @@ public class TempDirectory : IDisposable
                 throw new InvalidOperationException("artifacts folder not found");
             }
 
-            string directoryPath = Path.Combine(currentDirectory, "testsuite", RandomId.Next());
+            string directoryPath = Path.Combine(currentDirectory, "tmp", Constants.BuildConfiguration, "testsuite", RandomId.Next());
             Directory.CreateDirectory(directoryPath);
 
             string directoryProp = Path.Combine(directoryPath, "Directory.Build.props");
