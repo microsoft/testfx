@@ -340,6 +340,25 @@ public sealed class TestApplication : ITestApplication
             synchronousWrite = environmentSynchronousWrite == "1";
         }
 
-        return new(logLevel, result, new(directory, logLevel, prefixName, customDirectory, synchronousWrite, clock, task, console), synchronousWrite);
+        return new(
+            logLevel,
+            result,
+            new(
+                new FileLoggerOptions(
+                    directory,
+                    prefixName,
+                    fileName: null,
+                    synchronousWrite),
+                logLevel,
+                customDirectory,
+                clock,
+                task,
+                console,
+#if NETCOREAPP
+                new SystemChannelFactory<string>(),
+#endif
+                new SystemFileStreamFactory(),
+                new SystemStreamWriterFactory()),
+            synchronousWrite);
     }
 }

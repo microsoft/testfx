@@ -23,35 +23,49 @@ internal sealed class FileLogger : IDisposable
 #endif
 {
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-    private readonly string _logFolder;
-    private readonly IClock _clock;
+    private readonly FileLoggerOptions _options;
     private readonly LogLevel _logLevel;
-    private readonly string _logPrefixName;
-    private readonly bool _syncFlush;
+    private readonly IClock _clock;
     private readonly IConsole _console;
-    private readonly FileStream _fileStream;
-    private readonly StreamWriter _writer;
+    private readonly IFileStream _fileStream;
+    private readonly IFileStreamFactory _fileStreamFactory;
+    private readonly IStreamWriter _writer;
+    private readonly IStreamWriterFactory _writerFactory;
     private readonly Task? _logLoop;
 #if NETCOREAPP
-    private readonly Channel<string>? _channel;
+    private readonly IChannel<string>? _channel;
+    private readonly IChannelFactory<string> _channelFactory;
 #else
     private readonly BlockingCollection<string>? _asyncLogs;
 #endif
     private bool _disposed;
 
-    public FileLogger(string logFolder, string? fileName, LogLevel logLevel, string logPrefixName, bool syncFlush, IClock clock, ITask task, IConsole console)
+    public FileLogger(
+        FileLoggerOptions options,
+        LogLevel logLevel,
+        IClock clock,
+        ITask task,
+        IConsole console,
+#if NETCOREAPP
+        IChannelFactory<string> channelFactory,
+#endif
+        IFileStreamFactory fileStreamFactory,
+        IStreamWriterFactory streamWriterFactory)
     {
-        _logFolder = logFolder;
+        _options = options;
         _clock = clock;
         _logLevel = logLevel;
-        _logPrefixName = logPrefixName;
-        _syncFlush = syncFlush;
         _console = console;
+#if NETCOREAPP
+        _channelFactory = channelFactory;
+#endif
+        _fileStreamFactory = fileStreamFactory;
+        _writerFactory = streamWriterFactory;
 
-        if (!_syncFlush)
+        if (!_options.SyncFlush)
         {
 #if NETCOREAPP
-            _channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions()
+            _channel = _channelFactory.CreateUnbounded(new UnboundedChannelOptions()
             {
                 // We process only 1 data at a time
                 SingleReader = true,
@@ -70,12 +84,12 @@ internal sealed class FileLogger : IDisposable
 #endif
         }
 
-        if (fileName is not null)
+        if (_options.FileName is not null)
         {
-            string fileNameFullPath = Path.Combine(logFolder, fileName);
+            string fileNameFullPath = Path.Combine(_options.LogFolder, _options.FileName);
             _fileStream = File.Exists(fileNameFullPath)
-                ? OpenFileStreamForAppend(Path.Combine(logFolder, fileName))
-                : CreateFileStream(Path.Combine(logFolder, fileName));
+                ? OpenFileStreamForAppend(Path.Combine(_options.LogFolder, _options.FileName))
+                : CreateFileStream(Path.Combine(_options.LogFolder, _options.FileName));
         }
         else
         {
@@ -85,22 +99,22 @@ internal sealed class FileLogger : IDisposable
         FileName = _fileStream.Name;
 
         // In case of malformed UTF8 characters we don't want to throw.
-        _writer = new StreamWriter(_fileStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false))
-        {
-            AutoFlush = true,
-        };
+        _writer = _writerFactory.CreateStreamWriter(
+            _fileStream,
+            new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false),
+            autoFlush: true);
     }
 
     public string FileName { get; private set; }
 
-    private static FileStream OpenFileStreamForAppend(string fileName)
-        => new(fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
+    private IFileStream OpenFileStreamForAppend(string fileName)
+        => _fileStreamFactory.Create(fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
 
-    private FileStream CreateFileStream(string? fileName = null)
+    private IFileStream CreateFileStream(string? fileName = null)
     {
         if (fileName is not null)
         {
-            return new(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
+            return _fileStreamFactory.Create(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
         }
 
         DateTimeOffset firstTryTime = _clock.UtcNow;
@@ -113,8 +127,8 @@ internal sealed class FileLogger : IDisposable
 
             try
             {
-                fileName = $"{_logPrefixName}_{_clock.UtcNow.ToString("MMddHHssfff", CultureInfo.InvariantCulture)}.diag";
-                return new(Path.Combine(_logFolder, fileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
+                fileName = $"{_options.LogPrefixName}_{_clock.UtcNow.ToString("MMddHHssfff", CultureInfo.InvariantCulture)}.diag";
+                return _fileStreamFactory.Create(Path.Combine(_options.LogFolder, fileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
             }
             catch (IOException)
             {
@@ -127,7 +141,7 @@ internal sealed class FileLogger : IDisposable
 
     public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
     {
-        if (_syncFlush)
+        if (_options.SyncFlush)
         {
             InternalSyncLog(logLevel, state, exception, formatter, category);
         }
@@ -161,7 +175,7 @@ internal sealed class FileLogger : IDisposable
 
     public async Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
     {
-        if (_syncFlush)
+        if (_options.SyncFlush)
         {
             await InternalAsyncLogAsync(logLevel, state, exception, formatter, category);
         }
@@ -171,7 +185,7 @@ internal sealed class FileLogger : IDisposable
         }
     }
 
-    public async Task InternalAsyncLogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
+    private async Task InternalAsyncLogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
     {
         if (!IsEnabled(logLevel))
         {
@@ -204,7 +218,7 @@ internal sealed class FileLogger : IDisposable
 
         string log = $"[{_clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)} {category} - {logLevel}] {formatter(state, exception)}";
 #if NETCOREAPP
-        if (!_channel.Writer.TryWrite(log))
+        if (!_channel.TryWrite(log))
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.FailedToWriteLogToChannelErrorMessage, log));
         }
@@ -222,9 +236,9 @@ internal sealed class FileLogger : IDisposable
         try
         {
             // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
-            while (await _channel.Reader.WaitToReadAsync())
+            while (await _channel.WaitToReadAsync())
             {
-                await _writer.WriteLineAsync(await _channel.Reader.ReadAsync());
+                await _writer.WriteLineAsync(await _channel.ReadAsync());
             }
         }
         catch (Exception ex)
@@ -274,13 +288,13 @@ internal sealed class FileLogger : IDisposable
             return;
         }
 
-        if (!_syncFlush)
+        if (!_options.SyncFlush)
         {
             EnsureAsyncLogObjectsAreNotNull();
 
 #if NETCOREAPP
             // Wait for all logs to be written
-            _channel.Writer.TryComplete();
+            _channel.TryComplete();
 #else
             // Wait for all logs to be written
             _asyncLogs.CompleteAdding();
@@ -295,6 +309,7 @@ internal sealed class FileLogger : IDisposable
         _semaphore.Dispose();
         _writer.Flush();
         _fileStream.Dispose();
+        _writer.Dispose();
         _disposed = true;
     }
 
@@ -306,18 +321,19 @@ internal sealed class FileLogger : IDisposable
             return;
         }
 
-        if (!_syncFlush)
+        if (!_options.SyncFlush)
         {
             EnsureAsyncLogObjectsAreNotNull();
 
             // Wait for all logs to be written
-            _channel.Writer.TryComplete();
+            _channel.TryComplete();
             await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
         }
 
         _semaphore.Dispose();
         await _writer.FlushAsync();
         await _fileStream.DisposeAsync();
+        await _writer.DisposeAsync();
         _disposed = true;
     }
 #endif
