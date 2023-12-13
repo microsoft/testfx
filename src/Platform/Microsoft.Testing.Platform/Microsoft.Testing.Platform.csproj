@@ -4,9 +4,9 @@
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>    
     <IsPackable>true</IsPackable>
     <IsShippingPackage Condition=" '$(DoNotShipTestingPlatformPackage)' == 'true' ">false</IsShippingPackage>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>    
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(FixupTestingPlatformVersion)' == 'true' ">
@@ -95,4 +95,13 @@
       <LastGenOutput>PlatformResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+
+  <Target Name="MoveNuGetPackage" AfterTargets="Pack" Condition=" '$(DoNotShipTestingPlatformPackage)' == 'true' ">
+    <ItemGroup>
+      <MicrosoftTestingPlatformNuGetPackage Include="$(ArtifactsNonShippingPackagesDir)Microsoft.Testing.Platform.*.nupkg" />
+    </ItemGroup>
+    
+    <Move SourceFiles="@(MicrosoftTestingPlatformNuGetPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+  </Target>
+  
 </Project>

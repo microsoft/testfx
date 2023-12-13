@@ -141,14 +141,6 @@ stages:
           name: Test
           displayName: Test
 
-        - ${{ if eq(variables._RunAsInternal, True) }}:
-          - task: PowerShell@2
-            displayName: 'Delete Microsoft.Testing.Platform NuGet package'
-            inputs:
-              targetType: 'inline'
-              script: |
-                Remove-Item -Force ./artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg
-
         # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
         # through the console or trx
         - task: PublishBuildArtifacts@1
@@ -200,14 +192,6 @@ stages:
             ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest
           name: Test
           displayName: Tests
-
-        - ${{ if eq(variables._RunAsInternal, True) }}:
-          - task: PowerShell@2
-            displayName: 'Delete Microsoft.Testing.Platform NuGet package'
-            inputs:
-              targetType: 'inline'
-              script: |
-                Remove-Item -Force ./artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg
 
   - ${{ if eq(variables._RunAsInternal, True) }}:
     - template: /eng/common/templates/job/onelocbuild.yml
