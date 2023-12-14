@@ -225,6 +225,8 @@ global using Microsoft.Testing.Platform.Extensions;
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="[1.0.0-*,)" />
         <PackageReference Include="MSTest" Version="[1.0.0-*,)" />
     </ItemGroup>
 </Project>

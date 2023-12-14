@@ -27,4 +27,22 @@ public static class Constants
 
     public static readonly string ArtifactsTmpPackages =
         Path.Combine(Root, "artifacts", "tmp", BuildConfiguration, "packages");
+
+    static Constants()
+    {
+        if (!Directory.Exists(ArtifactsPackagesNonShipping))
+        {
+            Directory.CreateDirectory(ArtifactsPackagesNonShipping);
+        }
+
+        if (!Directory.Exists(ArtifactsPackagesShipping))
+        {
+            Directory.CreateDirectory(ArtifactsPackagesShipping);
+        }
+
+        if (!Directory.Exists(ArtifactsTmpPackages))
+        {
+            Directory.CreateDirectory(ArtifactsTmpPackages);
+        }
+    }
 }
