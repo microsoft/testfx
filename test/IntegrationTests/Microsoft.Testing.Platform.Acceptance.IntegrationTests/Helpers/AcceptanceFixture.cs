@@ -6,11 +6,8 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestFixture(TestFixtureSharingStrategy.PerTestApplication)]
 public sealed class AcceptanceFixture : IDisposable
 {
-    private readonly TempDirectory _nuGetGlobalPackagesFolder = new("NugetCache");
-
-    public string NuGetGlobalPackagesFolder
-        => _nuGetGlobalPackagesFolder.DirectoryPath;
+    public TempDirectory NuGetGlobalPackagesFolder { get; } = new("NugetCache");
 
     public void Dispose()
-        => _nuGetGlobalPackagesFolder.Dispose();
+        => NuGetGlobalPackagesFolder.Dispose();
 }

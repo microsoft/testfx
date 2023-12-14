@@ -21,7 +21,7 @@ public sealed class TestHost
 
     public string DirectoryName { get; }
 
-    public async Task<TestHostResult> ExecuteAsync(string? command = null, Dictionary<string, string>? environmentVariables = null)
+    public async Task<TestHostResult> ExecuteAsync(string? command = null, Dictionary<string, string>? environmentVariables = null, bool disableTelemetry = true)
     {
         if (command?.StartsWith(_testHostModuleName, StringComparison.OrdinalIgnoreCase) ?? false)
         {
@@ -29,6 +29,12 @@ public sealed class TestHost
         }
 
         environmentVariables ??= new Dictionary<string, string>();
+
+        if (disableTelemetry)
+        {
+            environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+        }
+
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
             // Skip all unwanted environment variables.

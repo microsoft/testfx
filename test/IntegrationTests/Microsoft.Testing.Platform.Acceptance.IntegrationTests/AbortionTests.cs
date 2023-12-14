@@ -9,15 +9,15 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class AbortionTests : BaseAcceptanceTests
+public class AbortionTests : AcceptanceTestBase
 {
     private const string AssetName = "Abort";
-    private readonly AbortionTestsFixture _abortionTestsFixture;
+    private readonly TestAssetFixture _testAssetFixture;
 
-    public AbortionTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture, AbortionTestsFixture abortionTestsFixture)
-        : base(testExecutionContext, acceptanceFixture)
+    public AbortionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
+        : base(testExecutionContext)
     {
-        _abortionTestsFixture = abortionTestsFixture;
+        _testAssetFixture = testAssetFixture;
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -30,7 +30,7 @@ public class AbortionTests : BaseAcceptanceTests
             return;
         }
 
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_abortionTestsFixture.TargetAssetPath, AssetName, tfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertHasExitCode(ExitCodes.TestSessionAborted);
@@ -46,40 +46,27 @@ public class AbortionTests : BaseAcceptanceTests
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class AbortionTestsFixture : IAsyncInitializable, IDisposable
+    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        private readonly AcceptanceFixture _acceptanceFixture;
-        private TestAsset? _testAsset;
+        public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public AbortionTestsFixture(AcceptanceFixture acceptanceFixture)
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            _acceptanceFixture = acceptanceFixture;
-        }
-
-        public string TargetAssetPath => _testAsset is null ? throw new ArgumentNullException(nameof(TestAsset)) : _testAsset.TargetAssetPath;
-
-        public async Task InitializeAsync(InitializationContext context)
-        {
-            _testAsset = await TestAsset.GenerateAssetAsync(AssetName, Sources.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
-
             // We expect the same semantic for Linux, the test setup is not cross and we're using specific
             // Windows API because this gesture is not easy xplat.
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return;
+                yield break;
             }
 
-            await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
+            yield return (AssetName, AssetName, Sources.PatchTargetFrameworks(TargetFrameworks.All));
         }
 
-        public void Dispose() => _testAsset?.Dispose();
-    }
-
-    private const string Sources = """
+        private const string Sources = """
 #file Abort.csproj
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>tfms</TargetFrameworks>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseAppHost>true</UseAppHost>
     <Nullable>enable</Nullable>
@@ -179,6 +166,6 @@ internal class Capabilities : ITestFrameworkCapabilities
 {
     ITestFrameworkCapability[] ICapabilities<ITestFrameworkCapability>.Capabilities => Array.Empty<ITestFrameworkCapability>();
 }
-
 """;
+    }
 }

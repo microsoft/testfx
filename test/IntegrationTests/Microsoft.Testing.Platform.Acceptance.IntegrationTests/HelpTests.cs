@@ -7,23 +7,21 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class HelpTests : BaseAcceptanceTests
+public class HelpTests : AcceptanceTestBase
 {
-    private readonly HelpAssetsFixture _helpAssetsFixture;
+    private readonly TestAssetFixture _testAssetFixture;
 
-    public HelpTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture, HelpAssetsFixture helpAssetsFixture)
-        : base(testExecutionContext, acceptanceFixture)
+    public HelpTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
+        : base(testExecutionContext)
     {
-        _helpAssetsFixture = helpAssetsFixture;
+        _testAssetFixture = testAssetFixture;
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Help_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_helpAssetsFixture.NoExtensionTargetAssetPath, HelpAssetsFixture.NoExtensionAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--help",
-            new Dictionary<string, string> { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
 
         testHostResult.AssertHasExitCode(ExitCodes.Success);
 
@@ -32,7 +30,7 @@ Microsoft\(R\) Testing Platform Execution Command Line Tool
 Version: \d+\.\d+\.\d+(-.*)?
 RuntimeInformation: .+
 Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
-Usage {HelpAssetsFixture.NoExtensionAssetName}.* \[option providers\] \[extension option providers\]
+Usage {TestAssetFixture.NoExtensionAssetName}.* \[option providers\] \[extension option providers\]
 Execute a .NET Test Application\.
 Options:
   --diagnostic                             Enable the diagnostic logging\. The default log level is 'Information'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
@@ -57,14 +55,14 @@ Extension options:
     {
         const string UnknownOption = "aaa";
 
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_helpAssetsFixture.NoExtensionTargetAssetPath, HelpAssetsFixture.NoExtensionAssetName, tfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"-{UnknownOption}");
 
         testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
 
         const string RegexMatchPattern = $"""
 Unknown option '--{UnknownOption}'
-Usage {HelpAssetsFixture.NoExtensionAssetName}.* \[option providers\] \[extension option providers\]
+Usage {TestAssetFixture.NoExtensionAssetName}.* \[option providers\] \[extension option providers\]
 Execute a \.NET Test Application\.
 Options:
   --diagnostic                             Enable the diagnostic logging\. The default log level is 'Information'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
@@ -87,10 +85,8 @@ Extension options:
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Help_WhenMSTestExtensionRegistered_OutputHelpContentOfRegisteredExtension(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_helpAssetsFixture.MSTestTargetAssetPath, HelpAssetsFixture.MSTestAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--help",
-            new Dictionary<string, string> { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
 
         testHostResult.AssertHasExitCode(ExitCodes.Success);
 
@@ -99,7 +95,7 @@ Microsoft\(R\) Testing Platform Execution Command Line Tool
 Version: \d+\.\d+\.\d+(-.*)?
 RuntimeInformation: .+
 Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
-Usage {HelpAssetsFixture.MSTestAssetName}.* \[option providers\] \[extension option providers\]
+Usage {TestAssetFixture.MSTestAssetName}.* \[option providers\] \[extension option providers\]
 Execute a .NET Test Application\.
 Options:
   --diagnostic                             Enable the diagnostic logging\. The default log level is 'Information'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
@@ -121,59 +117,26 @@ Extension options:
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class HelpAssetsFixture : IAsyncInitializable, IDisposable
+    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string NoExtensionAssetName = "NoExtensionHelpTest";
         public const string MSTestAssetName = "MSTestHelpTest";
 
-        private readonly AcceptanceFixture _acceptanceFixture;
-        private TestAsset? _noExtensionTestAsset;
-        private TestAsset? _mstestTestAsset;
+        public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
 
-        public string NoExtensionTargetAssetPath => _noExtensionTestAsset!.TargetAssetPath;
+        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
 
-        public string MSTestTargetAssetPath => _mstestTestAsset!.TargetAssetPath;
-
-        public HelpAssetsFixture(AcceptanceFixture acceptanceFixture)
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            _acceptanceFixture = acceptanceFixture;
+            yield return (NoExtensionAssetName, NoExtensionAssetName, NoExtensionHelpTestCode.PatchTargetFrameworks(TargetFrameworks.All));
+            yield return (MSTestAssetName, MSTestAssetName, MSTestCode.PatchTargetFrameworks(TargetFrameworks.All));
         }
 
-        public async Task InitializeAsync(InitializationContext context)
-        {
-            await Task.WhenAll(
-                GenerateNoExtensionTestAsset(),
-                GenerateMSTestTestAsset());
-
-            async Task GenerateNoExtensionTestAsset()
-            {
-                _noExtensionTestAsset = await TestAsset.GenerateAssetAsync(
-                    NoExtensionAssetName,
-                    NoExtensionHelpTestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
-                await DotnetCli.RunAsync($"build -nodeReuse:false {_noExtensionTestAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
-            }
-
-            async Task GenerateMSTestTestAsset()
-            {
-                _mstestTestAsset = await TestAsset.GenerateAssetAsync(
-                    MSTestAssetName,
-                    MSTestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
-                await DotnetCli.RunAsync($"build -nodeReuse:false {_mstestTestAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
-            }
-        }
-
-        public void Dispose()
-        {
-            _noExtensionTestAsset?.Dispose();
-            _mstestTestAsset?.Dispose();
-        }
-    }
-
-    private const string NoExtensionHelpTestCode = """
+        private const string NoExtensionHelpTestCode = """
 #file NoExtensionHelpTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>tfms</TargetFrameworks>
+        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
@@ -211,11 +174,11 @@ global using Microsoft.Testing.Framework;
 global using Microsoft.Testing.Platform.Extensions;
 """;
 
-    private const string MSTestCode = """
+        private const string MSTestCode = """
 #file MSTestHelpTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>tfms</TargetFrameworks>
+        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
@@ -256,4 +219,5 @@ global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.Testing.Platform.Extensions;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 """;
+    }
 }

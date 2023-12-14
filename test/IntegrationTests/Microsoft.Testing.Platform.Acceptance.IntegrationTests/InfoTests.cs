@@ -7,20 +7,20 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class InfoTests : BaseAcceptanceTests
+public class InfoTests : AcceptanceTestBase
 {
-    private readonly InfoAssetsFixture _infoAssetsFixture;
+    private readonly TestAssetFixture _testAssetFixture;
 
-    public InfoTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture, InfoAssetsFixture infoAssetsFixture)
-        : base(testExecutionContext, acceptanceFixture)
+    public InfoTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
+        : base(testExecutionContext)
     {
-        _infoAssetsFixture = infoAssetsFixture;
+        _testAssetFixture = testAssetFixture;
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Info_WhenNoExtensionRegistered_OutputDefaultInfoContent(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_infoAssetsFixture.NoExtensionTargetAssetPath, InfoAssetsFixture.NoExtensionAssetName, tfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
         testHostResult.AssertHasExitCode(ExitCodes.Success);
@@ -34,7 +34,7 @@ Microsoft Testing Platform:
   Version: \d+\.\d+\.\d+(-.*)?
   Dynamic Code Supported: True
   Runtime information: .+({Environment.NewLine}  Runtime location: .+)?
-  Test module: .+{InfoAssetsFixture.NoExtensionAssetName}.*
+  Test module: .+{TestAssetFixture.NoExtensionAssetName}.*
 Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
@@ -133,10 +133,8 @@ Registered tools:
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Info_WhenMSTestExtensionRegistered_OutputInfoContentOfRegisteredExtension(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_infoAssetsFixture.MSTestTargetAssetPath, InfoAssetsFixture.MSTestAssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--info",
-            new Dictionary<string, string> { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
         testHostResult.AssertHasExitCode(ExitCodes.Success);
 
@@ -161,55 +159,26 @@ Registered command line providers:
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class InfoAssetsFixture : IAsyncInitializable, IDisposable
+    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string NoExtensionAssetName = "NoExtensionInfoTest";
         public const string MSTestAssetName = "MSTestInfoTest";
 
-        private readonly AcceptanceFixture _acceptanceFixture;
-        private TestAsset? _noExtensionTestAsset;
-        private TestAsset? _mstestTestAsset;
+        public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
 
-        public InfoAssetsFixture(AcceptanceFixture acceptanceFixture)
+        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            _acceptanceFixture = acceptanceFixture;
+            yield return (NoExtensionAssetName, NoExtensionAssetName, NoExtensionTestCode.PatchTargetFrameworks(TargetFrameworks.All));
+            yield return (MSTestAssetName, MSTestAssetName, MSTestCode.PatchTargetFrameworks(TargetFrameworks.All));
         }
 
-        public string NoExtensionTargetAssetPath => _noExtensionTestAsset!.TargetAssetPath;
-
-        public string MSTestTargetAssetPath => _mstestTestAsset!.TargetAssetPath;
-
-        public async Task InitializeAsync(InitializationContext context)
-        {
-            await Task.WhenAll(
-                GenerateNoExtensionTestAsset(),
-                GenerateMSTestTestAsset());
-
-            async Task GenerateNoExtensionTestAsset()
-            {
-                _noExtensionTestAsset = await TestAsset.GenerateAssetAsync(
-                    NoExtensionAssetName,
-                    NoExtensionTestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
-                await DotnetCli.RunAsync($"build -nodeReuse:false {_noExtensionTestAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
-            }
-
-            async Task GenerateMSTestTestAsset()
-            {
-                _mstestTestAsset = await TestAsset.GenerateAssetAsync(
-                    MSTestAssetName,
-                    MSTestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
-                await DotnetCli.RunAsync($"build -nodeReuse:false {_mstestTestAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
-            }
-        }
-
-        public void Dispose() => _noExtensionTestAsset?.Dispose();
-    }
-
-    private const string NoExtensionTestCode = """
+        private const string NoExtensionTestCode = """
 #file NoExtensionInfoTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>tfms</TargetFrameworks>
+        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
@@ -247,11 +216,11 @@ global using Microsoft.Testing.Framework;
 global using Microsoft.Testing.Platform.Extensions;
 """;
 
-    private const string MSTestCode = """
+        private const string MSTestCode = """
 #file MSTestInfoTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>tfms</TargetFrameworks>
+        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
@@ -292,4 +261,5 @@ global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.Testing.Platform.Extensions;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 """;
+    }
 }

@@ -21,11 +21,11 @@ public class TempDirectory : IDisposable
             cleanup = false;
         }
 
-        (_baseDirectory, DirectoryPath) = CreateUniqueDirectory(subDirectory, arcadeConvention);
+        (_baseDirectory, Path) = CreateUniqueDirectory(subDirectory, arcadeConvention);
         _cleanup = cleanup;
     }
 
-    public string DirectoryPath { get; }
+    public string Path { get; }
 
     public void Dispose()
     {
@@ -49,12 +49,12 @@ public class TempDirectory : IDisposable
     }
 
     public DirectoryInfo CreateDirectory(string dir)
-        => Directory.CreateDirectory(Path.Combine(DirectoryPath, dir));
+        => Directory.CreateDirectory(System.IO.Path.Combine(Path, dir));
 
     public static async Task WriteFileAsync(string targetDirectory, string fileName, string fileContents)
     {
-        string finalFile = Path.Combine(targetDirectory, fileName);
-        Directory.CreateDirectory(Path.GetDirectoryName(finalFile)!);
+        string finalFile = System.IO.Path.Combine(targetDirectory, fileName);
+        Directory.CreateDirectory(System.IO.Path.GetDirectoryName(finalFile)!);
         using var fs = new FileStream(finalFile, FileMode.CreateNew);
         using var stream = new StreamWriter(fs);
         await stream.WriteLineAsync(fileContents);
@@ -72,13 +72,13 @@ public class TempDirectory : IDisposable
         {
             if (retainAttributes)
             {
-                File.Copy(fi.FullName, Path.Combine(target.FullName, fi.Name));
+                File.Copy(fi.FullName, System.IO.Path.Combine(target.FullName, fi.Name));
             }
             else
             {
                 using FileStream fileStream = File.OpenRead(fi.FullName);
                 using var destinationStream = new FileStream(
-                    Path.Combine(target.FullName, fi.Name),
+                    System.IO.Path.Combine(target.FullName, fi.Name),
                     FileMode.CreateNew);
                 await fileStream.CopyToAsync(destinationStream);
             }
@@ -102,7 +102,7 @@ public class TempDirectory : IDisposable
         // Copy each file into the new directory.
         foreach (FileInfo fi in source.GetFiles())
         {
-            fi.CopyTo(Path.Combine(target.FullName, fi.Name), true);
+            fi.CopyTo(System.IO.Path.Combine(target.FullName, fi.Name), true);
         }
 
         // Copy each subdirectory using recursion.
@@ -121,7 +121,7 @@ public class TempDirectory : IDisposable
         var paths = new List<string>(filePaths.Length);
         foreach (string filePath in filePaths)
         {
-            string destination = Path.Combine(DirectoryPath, Path.GetFileName(filePath));
+            string destination = System.IO.Path.Combine(Path, System.IO.Path.GetFileName(filePath));
             File.Copy(filePath, destination);
             paths.Add(destination);
         }
@@ -134,7 +134,7 @@ public class TempDirectory : IDisposable
     /// </summary>
     public string CopyFile(string filePath)
     {
-        string destination = Path.Combine(DirectoryPath, Path.GetFileName(filePath));
+        string destination = System.IO.Path.Combine(Path, System.IO.Path.GetFileName(filePath));
         File.Copy(filePath, destination);
         return destination;
     }
@@ -150,9 +150,9 @@ public class TempDirectory : IDisposable
         if (arcadeConvention)
         {
             string currentDirectory = AppContext.BaseDirectory;
-            while (Path.GetFileName(currentDirectory) != "artifacts" && currentDirectory is not null)
+            while (System.IO.Path.GetFileName(currentDirectory) != "artifacts" && currentDirectory is not null)
             {
-                currentDirectory = Path.GetDirectoryName(currentDirectory)!;
+                currentDirectory = System.IO.Path.GetDirectoryName(currentDirectory)!;
             }
 
             if (currentDirectory is null)
@@ -160,16 +160,16 @@ public class TempDirectory : IDisposable
                 throw new InvalidOperationException("artifacts folder not found");
             }
 
-            string directoryPath = Path.Combine(currentDirectory, "tmp", Constants.BuildConfiguration, "testsuite", RandomId.Next());
+            string directoryPath = System.IO.Path.Combine(currentDirectory, "tmp", Constants.BuildConfiguration, "testsuite", RandomId.Next());
             Directory.CreateDirectory(directoryPath);
 
-            string directoryProp = Path.Combine(directoryPath, "Directory.Build.props");
-            string directoryTarget = Path.Combine(directoryPath, "Directory.Build.targets");
+            string directoryProp = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
+            string directoryTarget = System.IO.Path.Combine(directoryPath, "Directory.Build.targets");
             File.WriteAllText(directoryProp, $"""
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
     <PropertyGroup>
-      <RepoRoot>{Path.GetDirectoryName(currentDirectory)}/</RepoRoot>
+      <RepoRoot>{System.IO.Path.GetDirectoryName(currentDirectory)}/</RepoRoot>
     </PropertyGroup>
 </Project>
 """);
@@ -181,7 +181,7 @@ public class TempDirectory : IDisposable
             string finalDirectory = directoryPath;
             if (!string.IsNullOrWhiteSpace(subDirectory))
             {
-                finalDirectory = Path.Combine(directoryPath, subDirectory);
+                finalDirectory = System.IO.Path.Combine(directoryPath, subDirectory);
             }
 
             Directory.CreateDirectory(finalDirectory);
@@ -191,11 +191,11 @@ public class TempDirectory : IDisposable
         else
         {
             string temp = GetTempPath();
-            string directoryPath = Path.Combine(temp, "testingplatform", RandomId.Next());
+            string directoryPath = System.IO.Path.Combine(temp, "testingplatform", RandomId.Next());
             string finalDirectory = directoryPath;
             if (!string.IsNullOrWhiteSpace(subDirectory))
             {
-                finalDirectory = Path.Combine(directoryPath, subDirectory);
+                finalDirectory = System.IO.Path.Combine(directoryPath, subDirectory);
             }
 
             Directory.CreateDirectory(finalDirectory);
@@ -212,7 +212,7 @@ public class TempDirectory : IDisposable
     // place where we are allowed to use it. All other methods should use our GetTempPath (this method).
     private static string GetTempPath()
         => Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
-        ?? Path.GetTempPath();
+        ?? System.IO.Path.GetTempPath();
 
     public static void TryRemoveDirectory(string directory)
     {
@@ -233,11 +233,11 @@ public class TempDirectory : IDisposable
         List<InlineFile> files = InlineFileParser.ParseFiles(fileContents);
         foreach (InlineFile file in files)
         {
-            File.WriteAllText(Path.Combine(DirectoryPath, file.Name), file.Content, Encoding.UTF8);
+            File.WriteAllText(System.IO.Path.Combine(Path, file.Name), file.Content, Encoding.UTF8);
         }
     }
 
-    public override string ToString() => DirectoryPath;
+    public override string ToString() => Path;
 
     internal sealed class InlineFile(string name, string content)
     {

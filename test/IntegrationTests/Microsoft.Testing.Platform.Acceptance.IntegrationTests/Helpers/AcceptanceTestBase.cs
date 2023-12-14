@@ -11,19 +11,19 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// At the moment are static because we need to share them between perclass/id fixtures and
 /// it's not supported at the moment.
 /// </summary>
-public abstract partial class BaseAcceptanceTests : TestBase
+public abstract partial class AcceptanceTestBase : TestBase
 {
     [GeneratedRegex("^(.*?)\\.(?=(?:[0-9]+\\.){2,}[0-9]+(?:-[a-z]+)?\\.nupkg)(.*?)\\.nupkg$")]
-    private static partial Regex ParseNugetPacakgeFileName();
+    private static partial Regex ParseNuGetPackageFileNameRegex();
 
     internal static string RID { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
 
     public static string MSTestCurrentVersion { get; private set; }
 
-    static BaseAcceptanceTests()
+    static AcceptanceTestBase()
     {
         var mstestTestFrameworkPackage = Path.GetFileName(Directory.GetFiles(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework*.nupkg", SearchOption.AllDirectories).Single());
-        Match match = ParseNugetPacakgeFileName().Match(mstestTestFrameworkPackage);
+        Match match = ParseNuGetPackageFileNameRegex().Match(mstestTestFrameworkPackage);
         if (!match.Success)
         {
             throw new InvalidOperationException("Package version not found");
@@ -32,13 +32,10 @@ public abstract partial class BaseAcceptanceTests : TestBase
         MSTestCurrentVersion = match.Groups[2].Value;
     }
 
-    protected BaseAcceptanceTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
+    protected AcceptanceTestBase(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        AcceptanceFixture = acceptanceFixture;
     }
-
-    public AcceptanceFixture AcceptanceFixture { get; }
 
     internal static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixTfmBuildConfiguration()
     {
