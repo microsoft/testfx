@@ -11,7 +11,7 @@ internal static class AcceptanceAssert
         => Assert.That(exitCode == testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult));
 
     public static void AssertExitCodeIsNot(this TestHostResult testHostResult, int exitCode)
-        => Assert.That(exitCode == testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult));
+        => Assert.That(exitCode != testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult));
 
     public static void AssertOutputMatchesRegex(this TestHostResult testHostResult, string pattern)
         => Assert.That(Regex.IsMatch(testHostResult.StandardOutput, pattern), GenerateFailedAssertionMessage(testHostResult));
