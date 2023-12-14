@@ -4,8 +4,6 @@
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
-using Microsoft.Testing.Framework;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 /// <summary>
