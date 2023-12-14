@@ -3,11 +3,15 @@
 
 #if NETCOREAPP
 using System.Threading.Channels;
+#endif
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-internal interface IChannelFactory<T>
+internal interface IProducerConsumerFactory<T>
 {
-    IChannel<T> CreateUnbounded(UnboundedChannelOptions options);
-}
+#if NETCOREAPP
+    IChannel<T> Create(UnboundedChannelOptions options);
+#else
+    IBlockingCollection<T> Create();
 #endif
+}

@@ -12,9 +12,8 @@ internal sealed class FileLoggerProvider(
     IClock clock,
     ITask task,
     IConsole console,
-#if NETCOREAPP
-    IChannelFactory<string> channelFactory,
-#endif
+    IFileSystem fileSystem,
+    IProducerConsumerFactory<string> producerConsumerFactory,
     IFileStreamFactory fileStreamFactory,
     IStreamWriterFactory streamWriterFactory) : IFileLoggerProvider, IDisposable
 #if NETCOREAPP
@@ -27,10 +26,9 @@ internal sealed class FileLoggerProvider(
     private readonly IClock _clock = clock;
     private readonly ITask _task = task;
     private readonly IConsole _console = console;
+    private readonly IFileSystem _fileSystem = fileSystem;
     private readonly bool _customDirectory = customDirectory;
-#if NETCOREAPP
-    private readonly IChannelFactory<string> _channelFactory = channelFactory;
-#endif
+    private readonly IProducerConsumerFactory<string> _producerConsumerFactory = producerConsumerFactory;
     private readonly IFileStreamFactory _fileStreamFactory = fileStreamFactory;
     private readonly IStreamWriterFactory _streamWriterFactory = streamWriterFactory;
 
@@ -42,9 +40,8 @@ internal sealed class FileLoggerProvider(
         clock,
         task,
         console,
-#if NETCOREAPP
-        channelFactory,
-#endif
+        fileSystem,
+        producerConsumerFactory,
         fileStreamFactory,
         streamWriterFactory);
 
@@ -73,9 +70,8 @@ internal sealed class FileLoggerProvider(
             _clock,
             _task,
             _console,
-#if NETCOREAPP
-            _channelFactory,
-#endif
+            _fileSystem,
+            _producerConsumerFactory,
             _fileStreamFactory,
             _streamWriterFactory);
     }

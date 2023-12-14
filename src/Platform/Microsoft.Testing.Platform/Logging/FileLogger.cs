@@ -3,8 +3,6 @@
 
 #if NETCOREAPP
 using System.Threading.Channels;
-#else
-using System.Collections.Concurrent;
 #endif
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -27,16 +25,18 @@ internal sealed class FileLogger : IDisposable
     private readonly LogLevel _logLevel;
     private readonly IClock _clock;
     private readonly IConsole _console;
+    private readonly IFileSystem _fileSystem;
     private readonly IFileStream _fileStream;
     private readonly IFileStreamFactory _fileStreamFactory;
     private readonly IStreamWriter _writer;
     private readonly IStreamWriterFactory _writerFactory;
     private readonly Task? _logLoop;
+
+    private readonly IProducerConsumerFactory<string> _producerConsumerFactory;
 #if NETCOREAPP
     private readonly IChannel<string>? _channel;
-    private readonly IChannelFactory<string> _channelFactory;
 #else
-    private readonly BlockingCollection<string>? _asyncLogs;
+    private readonly IBlockingCollection<string>? _asyncLogs;
 #endif
     private bool _disposed;
 
@@ -46,9 +46,8 @@ internal sealed class FileLogger : IDisposable
         IClock clock,
         ITask task,
         IConsole console,
-#if NETCOREAPP
-        IChannelFactory<string> channelFactory,
-#endif
+        IFileSystem fileSystem,
+        IProducerConsumerFactory<string> producerConsumerFactory,
         IFileStreamFactory fileStreamFactory,
         IStreamWriterFactory streamWriterFactory)
     {
@@ -56,16 +55,15 @@ internal sealed class FileLogger : IDisposable
         _clock = clock;
         _logLevel = logLevel;
         _console = console;
-#if NETCOREAPP
-        _channelFactory = channelFactory;
-#endif
+        _fileSystem = fileSystem;
+        _producerConsumerFactory = producerConsumerFactory;
         _fileStreamFactory = fileStreamFactory;
         _writerFactory = streamWriterFactory;
 
         if (!_options.SyncFlush)
         {
 #if NETCOREAPP
-            _channel = _channelFactory.CreateUnbounded(new UnboundedChannelOptions()
+            _channel = _producerConsumerFactory.Create(new UnboundedChannelOptions()
             {
                 // We process only 1 data at a time
                 SingleReader = true,
@@ -76,18 +74,17 @@ internal sealed class FileLogger : IDisposable
                 // We want to unlink the caller from the consumer
                 AllowSynchronousContinuations = false,
             });
+#else
+            _asyncLogs = _producerConsumerFactory.Create();
+#endif
 
             _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
-#else
-            _asyncLogs = [];
-            _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
-#endif
         }
 
         if (_options.FileName is not null)
         {
             string fileNameFullPath = Path.Combine(_options.LogFolder, _options.FileName);
-            _fileStream = File.Exists(fileNameFullPath)
+            _fileStream = _fileSystem.Exists(fileNameFullPath)
                 ? OpenFileStreamForAppend(Path.Combine(_options.LogFolder, _options.FileName))
                 : CreateFileStream(Path.Combine(_options.LogFolder, _options.FileName));
         }

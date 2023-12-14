@@ -354,9 +354,8 @@ public sealed class TestApplication : ITestApplication
                 clock,
                 task,
                 console,
-#if NETCOREAPP
-                new SystemChannelFactory<string>(),
-#endif
+                new SystemFileSystem(),
+                new SystemProducerConsumerFactory<string>(),
                 new SystemFileStreamFactory(),
                 new SystemStreamWriterFactory()),
             synchronousWrite);
