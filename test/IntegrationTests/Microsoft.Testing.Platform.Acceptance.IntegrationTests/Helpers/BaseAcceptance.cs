@@ -16,12 +16,12 @@ public abstract class BaseAcceptanceTests : TestBase
 {
     internal static string RID { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
 
-    private static readonly string MsTestCurrentVersion = string.Empty;
+    public static string MSTestCurrentVersion { get; private set; }
 
     static BaseAcceptanceTests()
     {
-        foreach (var package in Directory.GetFiles(DotnetMuxer.ARTIFACTS_PACKAGES_NONSHIPPING, "*.nupkg", SearchOption.AllDirectories)
-            .Union(Directory.GetFiles(DotnetMuxer.ARTIFACTS_PACKAGES_SHIPPING, "*.nupkg", SearchOption.AllDirectories)).Distinct())
+        foreach (var package in Directory.GetFiles(Constants.ArtifactsPackagesNonShipping, "*MSTest*.nupkg", SearchOption.AllDirectories)
+            .Union(Directory.GetFiles(Constants.ArtifactsPackagesShipping, "*MSTest*.nupkg", SearchOption.AllDirectories)).Distinct())
         {
             using FileStream fs = File.OpenRead(package);
             var packageReader = new PackageArchiveReader(fs);
@@ -31,21 +31,24 @@ public abstract class BaseAcceptanceTests : TestBase
                 throw new InvalidOperationException("Unexpected null nupkg version");
             }
 
-            if (MsTestCurrentVersion == string.Empty)
+            if (MSTestCurrentVersion is null)
             {
-                MsTestCurrentVersion = version.OriginalVersion;
+                MSTestCurrentVersion = version.OriginalVersion;
             }
             else
             {
-                if (version.OriginalVersion != MsTestCurrentVersion)
+                if (version.OriginalVersion != MSTestCurrentVersion)
                 {
-                    throw new InvalidOperationException($"Unexpected different package version found in the package folder {version.OriginalVersion} != {MsTestCurrentVersion}");
+                    throw new InvalidOperationException($"Unexpected different package version found in the package folder {version.OriginalVersion} != {MSTestCurrentVersion}");
                 }
             }
         }
-    }
 
-    public string MSTestCurrentVersion => MsTestCurrentVersion;
+        if (MSTestCurrentVersion is null)
+        {
+            throw new InvalidOperationException("Unexpected null nupkg version");
+        }
+    }
 
     protected BaseAcceptanceTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
         : base(testExecutionContext)
@@ -72,7 +75,7 @@ public abstract class BaseAcceptanceTests : TestBase
 
     internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixTfmBuildConfiguration()
     {
-        foreach (TestArgumentsEntry<string> tfm in All_Tfms)
+        foreach (TestArgumentsEntry<string> tfm in TargetFrameworks.All)
         {
             foreach (BuildConfiguration compilationMode in GetBuildConfiguration())
             {
@@ -85,7 +88,7 @@ public abstract class BaseAcceptanceTests : TestBase
     {
         foreach (BuildConfiguration compilationMode in GetBuildConfiguration())
         {
-            yield return (All_Tfms.ToTargetFrameworksElementContent(), compilationMode);
+            yield return (TargetFrameworks.All.ToJoinedFrameworks(), compilationMode);
         }
     }
 }

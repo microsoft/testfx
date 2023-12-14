@@ -1,9 +1,9 @@
 <Project>
-  
+
   <PropertyGroup>
     <EnableMSTestV2CopyResources Condition=" '$(EnableMSTestV2CopyResources)' == '' ">true</EnableMSTestV2CopyResources>
     <EnableMSTestRunner Condition=" '$(EnableMSTestRunner)' == '' ">false</EnableMSTestRunner>
-    <GenerateTestingPlatformEntryPoint>$(EnableMSTestRunner)</GenerateTestingPlatformEntryPoint>
+    <IsTestingPlatformApplication>$(EnableMSTestRunner)</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>
