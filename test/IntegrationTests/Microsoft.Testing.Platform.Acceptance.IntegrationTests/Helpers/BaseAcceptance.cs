@@ -52,12 +52,4 @@ public abstract partial class BaseAcceptanceTests : TestBase
             }
         }
     }
-
-    internal static IEnumerable<(string TargetFrameworksElementContent, BuildConfiguration BuildConfiguration)> GetBuildMatrixMultiTfm()
-    {
-        foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
-        {
-            yield return (TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode);
-        }
-    }
 }
