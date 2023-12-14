@@ -58,15 +58,6 @@ public abstract class BaseAcceptanceTests : TestBase
 
     public AcceptanceFixture AcceptanceFixture { get; }
 
-    internal static IEnumerable<BuildConfiguration> GetBuildConfiguration()
-    {
-        string[] compilationModes = new[] { "Debug", "Release" };
-        foreach (string compilationMode in compilationModes)
-        {
-            yield return compilationMode == "Debug" ? BuildConfiguration.Debug : BuildConfiguration.Release;
-        }
-    }
-
     internal static TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)> FormatGetBuildMatrixTfmBuildConfigurationEntry(TestArgumentsContext ctx)
     {
         var entry = ((string, BuildConfiguration))ctx.Arguments;
@@ -77,7 +68,7 @@ public abstract class BaseAcceptanceTests : TestBase
     {
         foreach (TestArgumentsEntry<string> tfm in TargetFrameworks.All)
         {
-            foreach (BuildConfiguration compilationMode in GetBuildConfiguration())
+            foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
             {
                 yield return (tfm.Arguments, compilationMode);
             }
@@ -86,7 +77,7 @@ public abstract class BaseAcceptanceTests : TestBase
 
     internal static IEnumerable<(string TargetFrameworksElementContent, BuildConfiguration BuildConfiguration)> GetBuildMatrixMultiTfm()
     {
-        foreach (BuildConfiguration compilationMode in GetBuildConfiguration())
+        foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
         {
             yield return (TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode);
         }
