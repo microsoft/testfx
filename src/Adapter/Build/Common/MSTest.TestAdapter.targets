@@ -1,5 +1,11 @@
 <Project>
 
+  <!-- Handle the coexistance between testing platform and Microsoft.NET.Test.Sdk  -->
+  <PropertyGroup>
+    <GenerateTestingPlatformEntryPoint>$(EnableMSTestRunner)</GenerateTestingPlatformEntryPoint>
+    <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <TestAdapterContent Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" Condition=" '$(EnableMSTestRunner)' != 'true' ">
       <Link>Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</Link>

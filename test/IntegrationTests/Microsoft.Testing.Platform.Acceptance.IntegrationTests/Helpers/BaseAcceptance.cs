@@ -88,7 +88,7 @@ public abstract class BaseAcceptanceTests : TestBase
     {
         foreach (BuildConfiguration compilationMode in GetBuildConfiguration())
         {
-            yield return (TargetFrameworks.All.ToJoinedFrameworks(), compilationMode);
+            yield return (TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode);
         }
     }
 }
