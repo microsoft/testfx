@@ -9,6 +9,7 @@ using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.TestInfrastructure;
 
 using Moq;
 
@@ -124,19 +125,16 @@ public class ConfigurationManagerTests : TestBase
         Mock<IConfigurationProvider> mockConfigurationProvider = new();
         mockConfigurationProvider.Setup(x => x.LoadAsync()).Callback(() => { });
 
-        Mock<FakeConfigurationSource> fakeConfigurationSource = new();
-        fakeConfigurationSource.Setup(x => x.IsEnabledAsync()).ReturnsAsync(true);
-        fakeConfigurationSource.Setup(x => x.InitializeAsync()).Callback(() => { });
-        fakeConfigurationSource.Setup(x => x.Build()).Returns(mockConfigurationProvider.Object);
+        FakeConfigurationSource fakeConfigurationSource = new()
+        {
+            ConfigurationProvider = mockConfigurationProvider.Object,
+        };
 
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo);
-        configurationManager.AddConfigurationSource(() => fakeConfigurationSource.Object);
+        configurationManager.AddConfigurationSource(() => fakeConfigurationSource);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null));
-
-        fakeConfigurationSource.Verify(x => x.IsEnabledAsync(), Times.Once);
-        fakeConfigurationSource.Verify(x => x.InitializeAsync(), Times.Once);
     }
 }
 
@@ -150,9 +148,11 @@ internal class FakeConfigurationSource : IConfigurationSource, IAsyncInitializab
 
     public string Description => nameof(FakeConfigurationSource);
 
-    public virtual IConfigurationProvider Build() => throw new NotImplementedException();
+    public required IConfigurationProvider ConfigurationProvider { get; set; }
 
-    public virtual Task InitializeAsync() => throw new NotImplementedException();
+    public IConfigurationProvider Build() => ConfigurationProvider;
 
-    public virtual Task<bool> IsEnabledAsync() => throw new NotImplementedException();
+    public Task InitializeAsync() => Task.CompletedTask;
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 }

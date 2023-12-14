@@ -21,8 +21,8 @@ function Confirm-NugetPackages {
     $expectedNumOfFiles = @{
         "MSTest.Sdk"                            = 7;
         "MSTest.Internal.TestFx.Documentation"  = 10;
-        "MSTest.TestFramework"                  = 94;
-        "MSTest.TestAdapter"                    = 154;
+        "MSTest.TestFramework"                  = 130;
+        "MSTest.TestAdapter"                    = 153;
         "MSTest"                                = 5;
         "MSTest.Analyzers"                      = 9;
     }
@@ -58,6 +58,10 @@ function Confirm-NugetPackages {
         try {
             $packageName = (Get-Item $unzipNugetPackageDir).BaseName
             $versionIndex = $packageName.LastIndexOf($version)
+            if ($versionIndex -lt 0) {
+                continue
+            }
+
             $packageKey = $packageName.Substring(0, $versionIndex - 1) # Remove last dot
             Write-Verbose "Verifying package '$packageKey'."
 

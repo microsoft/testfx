@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
+    <UseVSTestRunner>false</UseVSTestRunner>
+    <ImplicitUsings>true</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GenerateProgramFile>false</GenerateProgramFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSBuild.StructuredLogger" Version="$(MSBuildStructuredLogger)" />
+    <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
+    <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
+  </ItemGroup>
+
+  <!-- Packages needed for the test assets but that we don't want to reference -->
+  <ItemGroup>
+    <PackageDownload Include="Microsoft.Testing.Platform.Extensions" Version="[$(MicrosoftTestingPlatformVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Platform.Extensions.HangDump" Version="[$(MicrosoftTestingPlatformVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Platform.Extensions.TestReports.TrxReport" Version="[$(MicrosoftTestingPlatformVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="[$(MicrosoftTestingPlatformVersion)]" />
+    <PackageDownload Include="Microsoft.Testing.Platform.MSBuild" Version="[$(MicrosoftTestingPlatformVersion)]" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Microsoft.Testing.Platform.csproj" />
+    <ProjectReference Include="$(RepoRoot)test\Utilities\Microsoft.Testing.TestInfrastructure\Microsoft.Testing.TestInfrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Microsoft.Testing.Platform.Acceptance.IntegrationTests.launcher.config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Microsoft.Testing.Platform.Acceptance.IntegrationTests.testingplatformconfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="testsbaseline.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <MicrosoftTestingFrameworkPackage Include="$(PkgMicrosoft_Testing_Framework)\microsoft.testing.framework.*.nupkg" />
+      <MicrosoftTestingFrameworkSourceGenerationPackage Include="$(PkgMicrosoft_Testing_Framework_SourceGeneration)\microsoft.testing.framework.sourcegeneration.*.nupkg" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(MicrosoftTestingFrameworkPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+    <Copy SourceFiles="@(MicrosoftTestingFrameworkSourceGenerationPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.platform.extensions\$(MicrosoftTestingPlatformVersion)\microsoft.testing.platform.extensions.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.platform.extensions.$(MicrosoftTestingPlatformVersion).nupkg" />
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.platform.extensions.hangdump\$(MicrosoftTestingPlatformVersion)\microsoft.testing.platform.extensions.hangdump.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.platform.extensions.hangdump.$(MicrosoftTestingPlatformVersion).nupkg" />
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.platform.extensions.testreports.trxreport\$(MicrosoftTestingPlatformVersion)\microsoft.testing.platform.extensions.testreports.trxreport.$(microsofttestingplatformversion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.platform.extensions.testreports.trxreport.$(MicrosoftTestingPlatformVersion).nupkg" />
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.platform.extensions.vstestbridge\$(MicrosoftTestingPlatformVersion)\microsoft.testing.platform.extensions.vstestbridge.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.platform.extensions.vstestbridge.$(MicrosoftTestingPlatformVersion).nupkg" />
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.platform.msbuild\$(MicrosoftTestingPlatformVersion)\microsoft.testing.platform.msbuild.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.platform.msbuild.$(MicrosoftTestingPlatformVersion).nupkg" />
+  </Target>
+
+</Project>

@@ -9,7 +9,7 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
-    private readonly List<(string TestId, double Milliseconds)> _testPerf = [];
+    private readonly List<(string TestId, double Milliseconds)> _testPerf = new();
 
     public Type[] DataTypesConsumed => new[] { typeof(TestNodeUpdateMessage) };
 

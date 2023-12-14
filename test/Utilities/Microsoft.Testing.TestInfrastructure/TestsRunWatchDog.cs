@@ -11,16 +11,12 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class TestsRunWatchDog
 {
-#pragma warning disable IDE1006 // Naming Styles
-#pragma warning disable SA1311 // Static readonly fields should begin with upper-case letter
-    private static readonly ConcurrentDictionary<TestNodeUid, int> s_testNodes = new();
-#pragma warning restore SA1311 // Static readonly fields should begin with upper-case letter
-#pragma warning restore IDE1006 // Naming Styles
+    private static readonly ConcurrentDictionary<TestNodeUid, int> TestNodes = new();
 
     public static string? BaselineFile { get; set; }
 
     public static void AddTestRun(TestNodeUid testNodeUid)
-        => s_testNodes.AddOrUpdate(testNodeUid, 1, (_, count) => count + 1);
+        => TestNodes.AddOrUpdate(testNodeUid, 1, (_, count) => count + 1);
 
     public static async Task Verify(bool skip = false, bool fixBaseLine = false)
     {
@@ -34,7 +30,7 @@ public static class TestsRunWatchDog
             throw new InvalidOperationException("Baseline file should not be null");
         }
 
-        if (s_testNodes.IsEmpty)
+        if (TestNodes.IsEmpty)
         {
             throw new InvalidOperationException("No tests were executed. Have you called 'TestsRunWatchDog.AddTestRun'?");
         }
@@ -52,24 +48,24 @@ public static class TestsRunWatchDog
                     // Skip empty lines.
                     continue;
                 }
-                else if (!s_testNodes.TryGetValue(testFullyQualifiedName, out int _))
+                else if (!TestNodes.TryGetValue(testFullyQualifiedName, out int _))
                 {
                     expectedTestsDidNotRun.Add(testFullyQualifiedName);
                 }
                 else
                 {
-                    s_testNodes[testFullyQualifiedName]--;
-                    if (s_testNodes[testFullyQualifiedName] == 0)
+                    TestNodes[testFullyQualifiedName]--;
+                    if (TestNodes[testFullyQualifiedName] == 0)
                     {
-                        s_testNodes.TryRemove(testFullyQualifiedName, out _);
+                        TestNodes.TryRemove(testFullyQualifiedName, out _);
                     }
                 }
             }
         }
 
-        if (!s_testNodes.IsEmpty)
+        if (!TestNodes.IsEmpty)
         {
-            foreach (KeyValuePair<TestNodeUid, int> notRunNodes in s_testNodes)
+            foreach (KeyValuePair<TestNodeUid, int> notRunNodes in TestNodes)
             {
                 for (int i = 0; i < notRunNodes.Value; i++)
                 {
@@ -113,8 +109,8 @@ public static class TestsRunWatchDog
             if (fixBaseLine)
             {
                 List<string> tests = new(File.ReadAllLines(BaselineFile));
-                tests.RemoveAll(expectedTestsDidNotRun.Contains);
-                tests.AddRange(unexpectedRanTests ?? []);
+                tests.RemoveAll(t => expectedTestsDidNotRun.Contains(t));
+                tests.AddRange(unexpectedRanTests ?? new List<string>());
                 tests.Sort();
                 File.WriteAllLines(BaselineFile, tests);
                 Console.WriteLine();

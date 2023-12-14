@@ -1,11 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-
-using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Resources;
-
 namespace Microsoft.Testing.TestInfrastructure;
 
 public class RetryHelper
@@ -30,7 +25,7 @@ public class RetryHelper
 
                 if (times == 1)
                 {
-                    throw new RetryException(string.Format(CultureInfo.InvariantCulture, PlatformResources.RetryFailedAfterTriesErrorMessage, totalTries), exceptions.ToArray());
+                    throw new RetryException($"Retry failed after {totalTries} time(s)", exceptions.ToArray());
                 }
             }
 
@@ -58,7 +53,7 @@ public class RetryHelper
 
                 if (times == 1)
                 {
-                    throw new RetryException(string.Format(CultureInfo.InvariantCulture, PlatformResources.RetryFailedAfterTriesErrorMessage, totalTries), exceptions.ToArray());
+                    throw new RetryException($"Retry failed after {totalTries} time(s)", exceptions.ToArray());
                 }
 
                 exceptions.Add(ex);
@@ -68,7 +63,7 @@ public class RetryHelper
             times--;
         }
 
-        throw ApplicationStateGuard.Unreachable();
+        throw new InvalidOperationException("This program location is thought to be unreachable.");
     }
 }
 

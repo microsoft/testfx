@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
+using Microsoft.Testing.TestInfrastructure;
 
 using Moq;
 

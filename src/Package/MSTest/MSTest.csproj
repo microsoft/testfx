@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
   </PropertyGroup>
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <NuspecFile>MSTest.nuspec</NuspecFile>
+    <NuspecFile Condition=" '$(OS)' == 'Windows_NT' ">MSTest.nuspec</NuspecFile>
+    <NuspecFile Condition=" '$(OS)' != 'Windows_NT' ">MSTest.Linux.nuspec</NuspecFile>
     <NuspecBasePath>$(OutputPath)</NuspecBasePath>
     <PackageId>MSTest</PackageId>
     <PackageTags>MSTest TestFramework TestAdapter VisualStudio Unittest MSTestV2 Microsoft</PackageTags>
@@ -18,7 +19,7 @@
       Supported platforms:
       - .NET 4.6.2+
       - .NET Core 3.1+
-      - .NET 6.0
+      - .NET 6.0+
       - .NET 6.0 Windows.18362+
       - UWP 10.0.16299
     </PackageDescription>

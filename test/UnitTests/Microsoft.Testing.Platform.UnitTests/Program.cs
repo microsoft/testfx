@@ -6,9 +6,6 @@ using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
-#if ENABLE_CODECOVERAGE
-using Microsoft.Testing.Platform.Extensions.CodeCoverage;
-#endif
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.TestInfrastructure;
@@ -17,16 +14,12 @@ using Microsoft.Testing.TestInfrastructure;
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.GetCommandLineOptions()));
 builder.AddTestFramework(new Microsoft.Testing.Platform.UnitTests.SourceGeneratedTestNodesBuilder());
-#if ENABLE_CODECOVERAGE
-builder.AddCodeCoverage();
-#endif
 
 var commandLine = new FakeTrxReportGeneratorCommandLine();
 builder.CommandLine.AddProvider(() => commandLine);
 
 // Custom suite tools
-CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
-    = new(_ => new SlowestTestsConsumer());
+CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory = new(_ => new SlowestTestsConsumer());
 builder.TestHost.AddDataConsumer(slowestTestCompositeServiceFactory);
 builder.TestHost.AddTestSessionLifetimeHandle(slowestTestCompositeServiceFactory);
 ITestApplication app = await builder.BuildAsync();

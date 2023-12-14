@@ -6,16 +6,12 @@ using System.Security.Cryptography;
 namespace Microsoft.Testing.TestInfrastructure;
 
 /// <summary>
-/// Slightly random id that is just good enough for creating disctinct directories for each test.
+/// Slightly random id that is just good enough for creating distinct directories for each test.
 /// </summary>
 public static class RandomId
 {
     private const string Pool = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-#pragma warning disable IDE1006 // Naming Styles
-#pragma warning disable SA1311 // Static readonly fields should begin with upper-case letter
-    private static readonly RandomNumberGenerator s_rng = RandomNumberGenerator.Create();
-#pragma warning restore SA1311 // Static readonly fields should begin with upper-case letter
-#pragma warning restore IDE1006 // Naming Styles
+    private static readonly RandomNumberGenerator Rng = RandomNumberGenerator.Create();
 
     /// <summary>
     /// 5 character long id from 0-9A-Za-z0, for example fUfko, A6uvM, sOMXa, RY1ei, KvdJZ.
@@ -34,7 +30,7 @@ public static class RandomId
                 while (poolIndex >= poolLength)
                 {
                     byte[] bytes = new byte[1];
-                    s_rng.GetNonZeroBytes(bytes);
+                    Rng.GetNonZeroBytes(bytes);
                     poolIndex = bytes[0];
                 }
 

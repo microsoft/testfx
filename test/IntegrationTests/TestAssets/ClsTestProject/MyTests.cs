@@ -31,4 +31,12 @@ public class ClsTests
     {
         Assert.IsNotNull(s);
     }
+
+    [TestMethod]
+    [DataRow("some string")]
+    [DataRow("some other string")]
+    public void StringDataRow2(string s)
+    {
+        Assert.IsNotNull(s);
+    }
 }

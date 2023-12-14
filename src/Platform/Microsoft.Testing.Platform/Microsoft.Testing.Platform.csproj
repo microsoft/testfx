@@ -4,11 +4,13 @@
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable Condition=" '$(PackTestingPlatform)' == 'true' ">true</IsPackable>    
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>    
+    <IsPackable>true</IsPackable>
+    <IsShippingPackage Condition=" '$(DoNotShipTestingPlatformPackage)' == 'true' ">false</IsShippingPackage>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(FixupTestingPlatformVersion)' == 'true' ">
+    <VersionPrefix>1.0.0</VersionPrefix>
     <!--
       To avoid some version conflicting in unit testing of this platform, we hardcode the version to match the one
       brought by the deps of the test framework on the test projects.
@@ -93,4 +95,13 @@
       <LastGenOutput>PlatformResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+
+  <Target Name="MoveNuGetPackage" AfterTargets="Pack" Condition=" '$(DoNotShipTestingPlatformPackage)' == 'true' ">
+    <ItemGroup>
+      <MicrosoftTestingPlatformNuGetPackage Include="$(ArtifactsNonShippingPackagesDir)Microsoft.Testing.Platform.*.nupkg" />
+    </ItemGroup>
+    
+    <Move SourceFiles="@(MicrosoftTestingPlatformNuGetPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+  </Target>
+  
 </Project>

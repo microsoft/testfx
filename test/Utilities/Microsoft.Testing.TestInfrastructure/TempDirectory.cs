@@ -16,7 +16,7 @@ public class TempDirectory : IDisposable
     /// </summary>
     public TempDirectory(string? subDirectory = null, bool arcadeConvention = true, bool cleanup = true)
     {
-        if (Environment.GetEnvironmentVariable("Microsoft_Testing_Tests_Common_TempDirectory_Cleanup") == "0")
+        if (Environment.GetEnvironmentVariable("Microsoft_Testing_TestInfrastructure_TempDirectory_Cleanup") == "0")
         {
             cleanup = false;
         }
@@ -160,7 +160,7 @@ public class TempDirectory : IDisposable
                 throw new InvalidOperationException("artifacts folder not found");
             }
 
-            string directoryPath = Path.Combine(currentDirectory, "testsuite", RandomId.Next());
+            string directoryPath = Path.Combine(currentDirectory, "tmp", Constants.BuildConfiguration, "testsuite", RandomId.Next());
             Directory.CreateDirectory(directoryPath);
 
             string directoryProp = Path.Combine(directoryPath, "Directory.Build.props");
@@ -210,9 +210,9 @@ public class TempDirectory : IDisposable
     //
     // System.IO.Path.GetTempPath is banned from the rest of the code. This is the only
     // place where we are allowed to use it. All other methods should use our GetTempPath (this method).
-    private static string GetTempPath() =>
-        Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
-            ?? Path.GetTempPath();
+    private static string GetTempPath()
+        => Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
+        ?? Path.GetTempPath();
 
     public static void TryRemoveDirectory(string directory)
     {
@@ -250,10 +250,10 @@ public class TempDirectory : IDisposable
     {
         internal static List<InlineFile> ParseFiles(string fileContents)
         {
-            List<InlineFile> files = [];
+            List<InlineFile> files = new();
             string? name = null;
             bool inFile = false;
-            List<string> lines = [];
+            List<string> lines = new();
             foreach (string line in fileContents.Split('\n'))
             {
                 if (line.Trim()?.StartsWith("### ", StringComparison.InvariantCulture) ?? false)
