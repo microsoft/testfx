@@ -4,6 +4,7 @@
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.TestInfrastructure;
 
 using Moq;
 

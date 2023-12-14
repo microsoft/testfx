@@ -305,8 +305,8 @@ internal sealed class FileLogger : IDisposable
 
         _semaphore.Dispose();
         _writer.Flush();
-        _fileStream.Dispose();
         _writer.Dispose();
+        _fileStream.Dispose();
         _disposed = true;
     }
 
@@ -329,8 +329,8 @@ internal sealed class FileLogger : IDisposable
 
         _semaphore.Dispose();
         await _writer.FlushAsync();
-        await _fileStream.DisposeAsync();
         await _writer.DisposeAsync();
+        await _fileStream.DisposeAsync();
         _disposed = true;
     }
 #endif

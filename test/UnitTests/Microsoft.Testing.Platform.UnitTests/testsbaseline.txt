@@ -249,3 +249,5 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.Logger
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerFactoryTests.LoggerFactory_WriteLogFromFactory()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogAsyncTest()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogTest()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_NullFileSyncFlush_FileStreamCreated()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_NullFileSyncFlush_FileStreamCreationThrows()
