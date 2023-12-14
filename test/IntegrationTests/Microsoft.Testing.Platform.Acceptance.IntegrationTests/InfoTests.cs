@@ -23,7 +23,7 @@ public class InfoTests : AcceptanceTestBase
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string regexMatchPattern = $"""
 Microsoft\(R\) Testing Platform Execution Command Line Tool
@@ -136,7 +136,7 @@ Registered tools:
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string RegexMatchPattern = $"""
 Registered command line providers:

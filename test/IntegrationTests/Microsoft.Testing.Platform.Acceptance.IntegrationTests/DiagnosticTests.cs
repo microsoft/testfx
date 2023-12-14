@@ -80,7 +80,7 @@ public class DiagnosticTests : AcceptanceTestBase
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic-output-fileprefix cccc");
 
-        testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("'--diagnostic-output-fileprefix' requires '--diagnostic' to be provided");
     }
 
@@ -90,7 +90,7 @@ public class DiagnosticTests : AcceptanceTestBase
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic-output-directory cccc");
 
-        testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("'--diagnostic-output-directory' requires '--diagnostic' to be provided");
     }
 
@@ -100,7 +100,7 @@ public class DiagnosticTests : AcceptanceTestBase
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic-output-fileprefix aaaa --diagnostic-output-directory cccc");
 
-        testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("'--diagnostic-output-directory' requires '--diagnostic' to be provided");
     }
 
@@ -186,17 +186,17 @@ public class DiagnosticTests : AcceptanceTestBase
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC, "0" },
             });
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputDoesNotContain("Diagnostic file");
 
         testHostResult = await testHost.ExecuteAsync("--diagnostic");
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("Diagnostic file");
     }
 
     private async Task<string> AssertDiagnosticReportWasGeneratedAsync(TestHostResult testHostResult, string diagPathPattern, string level = "Information", string flushType = "async")
     {
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string outputPattern = $"""
 Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}

@@ -24,7 +24,7 @@ public class ExecutionTests : AcceptanceTestBase
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = """
 The following Tests are available:
@@ -42,7 +42,7 @@ FilteredOutTest$
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = $"""
 Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName}.+$
@@ -56,7 +56,7 @@ Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --treenode-filter \"/ExecutionTests/ExecutionTests/UnitTest1/TestMethod*\"");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = """
 The following Tests are available:
@@ -73,7 +73,7 @@ TestMethod3$
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--treenode-filter \"/ExecutionTests/ExecutionTests/UnitTest1/TestMethod*\"");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = $"""
 Passed! - Failed: 0, Passed: 3, Skipped: 0, Total: 3, Duration: .+s - {AssetName}.+$
@@ -87,7 +87,7 @@ Passed! - Failed: 0, Passed: 3, Skipped: 0, Total: 3, Duration: .+s - {AssetName
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 4");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = $"""
 Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName}.+$
@@ -101,7 +101,7 @@ Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 5");
 
-        testHostResult.AssertHasExitCode(ExitCodes.MinimumExpectedTestsPolicyViolation);
+        testHostResult.AssertExitCodeIs(ExitCodes.MinimumExpectedTestsPolicyViolation);
 
         const string OutputPattern = $"""
 Minimum expected tests policy violation, tests ran 4, minimum expected 5 - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName}.+$
@@ -115,7 +115,7 @@ Minimum expected tests policy violation, tests ran 4, minimum expected 5 - Faile
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --minimum-expected-tests 4");
 
-        testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
 
         const string OutputPattern = "Error: '--list-tests' and '--minimum-expected-tests' are incompatible options";
         Assert.That(testHostResult.StandardOutput.Contains(OutputPattern), $"Output of the test host is:\n{testHostResult}");

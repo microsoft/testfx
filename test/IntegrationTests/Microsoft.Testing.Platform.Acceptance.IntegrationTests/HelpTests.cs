@@ -23,7 +23,7 @@ public class HelpTests : AcceptanceTestBase
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string RegexMatchPattern = $"""
 Microsoft\(R\) Testing Platform Execution Command Line Tool
@@ -58,7 +58,7 @@ Extension options:
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"-{UnknownOption}");
 
-        testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
 
         const string RegexMatchPattern = $"""
 Unknown option '--{UnknownOption}'
@@ -88,7 +88,7 @@ Extension options:
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string RegexMatchPattern = $"""
 Microsoft\(R\) Testing Platform Execution Command Line Tool

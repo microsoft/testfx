@@ -33,7 +33,7 @@ public class AbortionTests : AcceptanceTestBase
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
-        testHostResult.AssertHasExitCode(ExitCodes.TestSessionAborted);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
 
         // We check only in netcore for netfx is now showing in CI every time, the same behavior in local something works sometime nope.
         // Manual test works pretty always as expected, looks like the implementation is different, we care more on .NET Core.

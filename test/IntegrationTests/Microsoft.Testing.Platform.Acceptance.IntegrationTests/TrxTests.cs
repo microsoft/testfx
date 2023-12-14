@@ -25,7 +25,7 @@ public class TrxTests : AcceptanceTestBase
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string outputPattern = """
 Out of process file artifacts produced:
@@ -56,7 +56,7 @@ Out of process file artifacts produced:
             $"--crashdump --report-trx --report-trx-filename {fileName}.trx",
             new() { { "CRASHPROCESS", "1" } });
 
-        testHostResult.AssertHasExitCode(ExitCodes.TestHostProcessExitedNonGracefully);
+        testHostResult.AssertExitCodeIs(ExitCodes.TestHostProcessExitedNonGracefully);
 
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
         string trxContent = File.ReadAllText(trxFile);
@@ -71,7 +71,7 @@ Out of process file artifacts produced:
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithSkippedTest, TestAssetFixture.AssetNameUsingMSTest, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
 
@@ -107,7 +107,7 @@ Out of process file artifacts produced:
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithSkippedTest, TestAssetFixture.AssetNameUsingMSTest, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {fileName}.trx");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
 
@@ -131,7 +131,7 @@ Out of process file artifacts produced:
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {Path.Combine(testResultsPath, "report.trx")}");
 
-        testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Option '--report-trx-filename' has invalid arguments: file name argument must not contain path (e.g. --report-trx-filename myreport.trx)");
     }
 
@@ -141,7 +141,7 @@ Out of process file artifacts produced:
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --report-trx-filename {Path.Combine("aaa", "report.trx")}");
 
-        testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Option '--report-trx-filename' has invalid arguments: file name argument must not contain path (e.g. --report-trx-filename myreport.trx)");
     }
 
@@ -151,7 +151,7 @@ Out of process file artifacts produced:
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx-filename report.trx");
 
-        testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Error: '--report-trx-filename' requires '--report-trx' to be enabled");
     }
 
@@ -161,13 +161,13 @@ Out of process file artifacts produced:
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, TestAssetFixture.AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--report-trx --list-tests");
 
-        testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
         testHostResult.AssertOutputContains("Error: '--report-trx' cannot be enabled when using '--list-tests'");
     }
 
     private async Task AssertTrxReportWasGeneratedAsync(TestHostResult testHostResult, string trxPathPattern, int numberOfTests)
     {
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string outputPattern = $"""
 In process file artifacts produced:

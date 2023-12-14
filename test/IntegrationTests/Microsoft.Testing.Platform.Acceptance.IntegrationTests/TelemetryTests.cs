@@ -31,7 +31,7 @@ public class TelemetryTests : AcceptanceTestBase
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -60,7 +60,7 @@ public class TelemetryTests : AcceptanceTestBase
             },
             disableTelemetry: false);
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -89,7 +89,7 @@ public class TelemetryTests : AcceptanceTestBase
             },
             disableTelemetry: false);
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -112,7 +112,7 @@ public class TelemetryTests : AcceptanceTestBase
         TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithDisableTelemetry, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -128,7 +128,7 @@ public class TelemetryTests : AcceptanceTestBase
 
     private async Task<string> AssertDiagnosticReportAsync(TestHostResult testHostResult, string diagPathPattern, string diagContentsPattern, string level = "Information", string flushType = "async")
     {
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string outputPattern = $"""
 Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}

@@ -31,7 +31,7 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
                 { "MyValue", "MyVal" },
                 { "MYENVVAR__MYPROP1__MYPROP2", "MyVal" },
             });
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -46,7 +46,7 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
                 { "MyValue", "MyVal" },
                 { "MYENVVAR__MYPROP1__MYPROP2", "MyVal" },
             });
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -59,7 +59,7 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
             {
                 { "EnableConfigurationSource", "false" },
             });
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]

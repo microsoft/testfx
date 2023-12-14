@@ -7,7 +7,10 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 internal static class AcceptanceAssert
 {
-    public static void AssertHasExitCode(this TestHostResult testHostResult, int exitCode)
+    public static void AssertExitCodeIs(this TestHostResult testHostResult, int exitCode)
+        => Assert.That(exitCode == testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult));
+
+    public static void AssertExitCodeIsNot(this TestHostResult testHostResult, int exitCode)
         => Assert.That(exitCode == testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult));
 
     public static void AssertOutputMatchesRegex(this TestHostResult testHostResult, string pattern)

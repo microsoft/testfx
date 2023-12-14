@@ -58,19 +58,19 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                     case Mode.Enabled:
                         File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": true"));
                         testHostResult = await testHost.ExecuteAsync(null, new() { { "UNOBSERVEDTASKEXCEPTION", "1" } });
-                        testHostResult.AssertHasExitCode(ExitCodes.Success);
+                        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
                         testHostResult.AssertOutputContains("[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException(testhost controller workflow)]");
                         break;
                     case Mode.Disabled:
                         File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": false"));
                         testHostResult = await testHost.ExecuteAsync(null, new() { { "UNOBSERVEDTASKEXCEPTION", "1" } });
-                        testHostResult.AssertHasExitCode(ExitCodes.Success);
+                        testHostResult.AssertExitCodeIs(ExitCodes.Success);
                         testHostResult.AssertOutputDoesNotContain("[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException]");
                         break;
                     case Mode.Default:
                         File.Delete(configFileName);
                         testHostResult = await testHost.ExecuteAsync(null, new() { { "UNOBSERVEDTASKEXCEPTION", "1" } });
-                        testHostResult.AssertHasExitCode(ExitCodes.Success);
+                        testHostResult.AssertExitCodeIs(ExitCodes.Success);
                         testHostResult.AssertOutputDoesNotContain("[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException]");
                         break;
                     case Mode.DisabledByEnvironmentVariable:
@@ -80,7 +80,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                             { "UNOBSERVEDTASKEXCEPTION", "1" },
                             { EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION, "0" },
                         });
-                        testHostResult.AssertHasExitCode(ExitCodes.Success);
+                        testHostResult.AssertExitCodeIs(ExitCodes.Success);
                         testHostResult.AssertOutputDoesNotContain("[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException]");
                         break;
                     case Mode.EnabledByEnvironmentVariable:
@@ -90,7 +90,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                             { "UNOBSERVEDTASKEXCEPTION", "1" },
                             { EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION, "1" },
                         });
-                        Assert.That(testHostResult.ExitCode != ExitCodes.Success, $"{testHostResult}\n{File.ReadAllText(configFileName)}");
+                        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
                         testHostResult.AssertOutputContains("[UnhandledExceptionHandler.OnTaskSchedulerUnobservedTaskException(testhost controller workflow)]");
                         break;
                     default:
@@ -118,20 +118,20 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                     case Mode.Enabled:
                         File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": true"));
                         testHostResult = await testHost.ExecuteAsync(null, new() { { "UNHANDLEDEXCEPTION", "1" } });
-                        Assert.That(testHostResult.StandardOutput.Contains("[UnhandledExceptionHandler.OnCurrentDomainUnhandledException(testhost controller workflow)]", StringComparison.OrdinalIgnoreCase), testHostResult.ToString());
-                        Assert.That(testHostResult.StandardOutput.Contains("IsTerminating: True", StringComparison.OrdinalIgnoreCase), testHostResult.ToString());
-                        Assert.That(testHostResult.ExitCode != ExitCodes.Success, $"{testHostResult}\n{File.ReadAllText(configFileName)}");
+                        testHostResult.AssertOutputContains("[UnhandledExceptionHandler.OnCurrentDomainUnhandledException(testhost controller workflow)]");
+                        testHostResult.AssertOutputContains("IsTerminating: True");
+                        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
                         break;
                     case Mode.Disabled:
                         File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": false"));
                         testHostResult = await testHost.ExecuteAsync(null, new() { { "UNHANDLEDEXCEPTION", "1" } });
                         Assert.IsTrue(testHostResult.StandardError.Contains("Unhandled exception", StringComparison.OrdinalIgnoreCase), testHostResult.ToString());
-                        Assert.That(testHostResult.ExitCode != ExitCodes.Success, $"{testHostResult}\n{File.ReadAllText(configFileName)}");
+                        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
                         break;
                     case Mode.Default:
                         File.Delete(configFileName);
                         testHostResult = await testHost.ExecuteAsync(null, new() { { "UNHANDLEDEXCEPTION", "1" } });
-                        Assert.That(testHostResult.ExitCode != ExitCodes.Success, testHostResult.ToString());
+                        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
                         break;
                     case Mode.DisabledByEnvironmentVariable:
                         File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": true"));
@@ -141,8 +141,8 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                              { EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION, "0" },
                          });
                         Assert.IsTrue(testHostResult.StandardError.Contains("Unhandled exception", StringComparison.OrdinalIgnoreCase), testHostResult.ToString());
-                        Assert.That(!testHostResult.StandardOutput.Contains("IsTerminating: True", StringComparison.OrdinalIgnoreCase), testHostResult.ToString());
-                        Assert.That(testHostResult.ExitCode != ExitCodes.Success, $"{testHostResult}\n{File.ReadAllText(configFileName)}");
+                        testHostResult.AssertOutputDoesNotContain("IsTerminating: True");
+                        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
                         break;
                     case Mode.EnabledByEnvironmentVariable:
                         File.WriteAllText(configFileName, contentFile.Replace("\"exitProcessOnUnhandledException\": false", "\"exitProcessOnUnhandledException\": false"));
@@ -151,9 +151,9 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
                             { "UNHANDLEDEXCEPTION", "1" },
                             { EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION, "1" },
                         });
-                        Assert.That(testHostResult.StandardOutput.Contains("[UnhandledExceptionHandler.OnCurrentDomainUnhandledException(testhost controller workflow)]", StringComparison.OrdinalIgnoreCase), testHostResult.ToString());
-                        Assert.That(testHostResult.StandardOutput.Contains("IsTerminating: True", StringComparison.OrdinalIgnoreCase), testHostResult.ToString());
-                        Assert.That(testHostResult.ExitCode != ExitCodes.Success, $"{testHostResult}\n{File.ReadAllText(configFileName)}");
+                        testHostResult.AssertOutputContains("[UnhandledExceptionHandler.OnCurrentDomainUnhandledException(testhost controller workflow)]");
+                        testHostResult.AssertOutputContains("IsTerminating: True");
+                        testHostResult.AssertExitCodeIsNot(ExitCodes.Success);
                         break;
                     default:
                         throw new NotImplementedException($"Mode not found '{mode}'");
