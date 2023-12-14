@@ -54,8 +54,13 @@ public class TestAsset : IDisposable
         return (name, content);
     }
 
-    public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, bool addDefaultNuGetConfigFile = true)
+    public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, bool addDefaultNuGetConfigFile = true, bool addPublicFeeds = false)
     {
+        string publicFeedsFragment = addPublicFeeds ? """
+        <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+        <add key="test-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
+""" : string.Empty;
+
         string defaultNuGetConfig = $"""
 
 #file NuGet.config
@@ -64,10 +69,11 @@ public class TestAsset : IDisposable
 <configuration>
     <packageSources>
         <clear/>
+        {publicFeedsFragment}
         <add key="local-nonshipping" value="{Constants.ArtifactsPackagesNonShipping}" />
         <add key="local-shipping" value="{Constants.ArtifactsPackagesShipping}" />
         <add key="local-tmp-packages" value="{Constants.ArtifactsTmpPackages}" />
-        <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />        
+        <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
     </packageSources>
     <config>
         <add key="globalPackagesFolder" value=".packages" />

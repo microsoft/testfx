@@ -1,4 +1,11 @@
 <Project>
+
+  <!-- Handle the coexistance between testing platform and Microsoft.NET.Test.Sdk  -->
+  <PropertyGroup>
+    <GenerateTestingPlatformEntryPoint>$(EnableMSTestRunner)</GenerateTestingPlatformEntryPoint>
+    <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
+  </PropertyGroup>
+
   <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
     <__TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)winui/</__TestAdapterPlatformServicesRoot>
   </PropertyGroup>
@@ -64,10 +71,10 @@
     <ItemGroup>
       <Content Include="@(MSTestV2Files->'%(RootDir)%(Directory)$(CurrentUICultureHierarchy)\%(FileName).resources.dll')"
                Condition="Exists('%(RootDir)%(Directory)$(CurrentUICultureHierarchy)\%(FileName).resources.dll')">
-         <Link>$(CurrentUICultureHierarchy)\%(FileName).resources.dll</Link>
-         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-         <BaseAssemblyFullPath>%(FullPath)</BaseAssemblyFullPath>
-         <Visible>False</Visible>
+        <Link>$(CurrentUICultureHierarchy)\%(FileName).resources.dll</Link>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <BaseAssemblyFullPath>%(FullPath)</BaseAssemblyFullPath>
+        <Visible>False</Visible>
       </Content>
     </ItemGroup>
   </Target>
