@@ -2,8 +2,9 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
-using NuGet.Packaging;
+using Microsoft.Testing.Framework;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -12,42 +13,25 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// At the moment are static because we need to share them between perclass/id fixtures and
 /// it's not supported at the moment.
 /// </summary>
-public abstract class BaseAcceptanceTests : TestBase
+public abstract partial class BaseAcceptanceTests : TestBase
 {
+    [GeneratedRegex("^(.*?)\\.(?=(?:[0-9]+\\.){2,}[0-9]+(?:-[a-z]+)?\\.nupkg)(.*?)\\.nupkg$")]
+    private static partial Regex ParseNugetPacakgeFileName();
+
     internal static string RID { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
 
     public static string MSTestCurrentVersion { get; private set; }
 
     static BaseAcceptanceTests()
     {
-        foreach (var package in Directory.GetFiles(Constants.ArtifactsPackagesNonShipping, "*MSTest*.nupkg", SearchOption.AllDirectories)
-            .Union(Directory.GetFiles(Constants.ArtifactsPackagesShipping, "*MSTest*.nupkg", SearchOption.AllDirectories)).Distinct())
+        var mstestTestFrameworkPackage = Path.GetFileName(Directory.GetFiles(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework*.nupkg", SearchOption.AllDirectories).Single());
+        Match match = ParseNugetPacakgeFileName().Match(mstestTestFrameworkPackage);
+        if (!match.Success)
         {
-            using FileStream fs = File.OpenRead(package);
-            var packageReader = new PackageArchiveReader(fs);
-            var version = packageReader.NuspecReader.GetVersion();
-            if (version.OriginalVersion is null)
-            {
-                throw new InvalidOperationException("Unexpected null nupkg version");
-            }
-
-            if (MSTestCurrentVersion is null)
-            {
-                MSTestCurrentVersion = version.OriginalVersion;
-            }
-            else
-            {
-                if (version.OriginalVersion != MSTestCurrentVersion)
-                {
-                    throw new InvalidOperationException($"Unexpected different package version found in the package folder {version.OriginalVersion} != {MSTestCurrentVersion}");
-                }
-            }
+            throw new InvalidOperationException("Package version not found");
         }
 
-        if (MSTestCurrentVersion is null)
-        {
-            throw new InvalidOperationException("Unexpected null nupkg version");
-        }
+        MSTestCurrentVersion = match.Groups[2].Value;
     }
 
     protected BaseAcceptanceTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
@@ -58,19 +42,13 @@ public abstract class BaseAcceptanceTests : TestBase
 
     public AcceptanceFixture AcceptanceFixture { get; }
 
-    internal static TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)> FormatGetBuildMatrixTfmBuildConfigurationEntry(TestArgumentsContext ctx)
-    {
-        var entry = ((string, BuildConfiguration))ctx.Arguments;
-        return new TestArgumentsEntry<(string, BuildConfiguration)>(entry, $"{entry.Item1},{entry.Item2}");
-    }
-
-    internal static IEnumerable<(string Tfm, BuildConfiguration BuildConfiguration)> GetBuildMatrixTfmBuildConfiguration()
+    internal static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixTfmBuildConfiguration()
     {
         foreach (TestArgumentsEntry<string> tfm in TargetFrameworks.All)
         {
             foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
             {
-                yield return (tfm.Arguments, compilationMode);
+                yield return new TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)>((tfm.Arguments, compilationMode), $"{tfm.Arguments},{compilationMode}");
             }
         }
     }

@@ -1,21 +1,23 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
+
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class RunnerTests : BaseAcceptanceTests
+public class MSTestRunnerTests : BaseAcceptanceTests
 {
     private readonly AcceptanceFixture _acceptanceFixture;
     private const string AssetName = "MSTestProject";
 
-    public RunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
+    public MSTestRunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
         : base(testExecutionContext, acceptanceFixture)
     {
         _acceptanceFixture = acceptanceFixture;
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration), TestArgumentsEntryProviderMethodName = nameof(FormatGetBuildMatrixTfmBuildConfigurationEntry))]
+    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration))]
     public async Task EnableMSTestRunner_True_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -33,10 +35,10 @@ public class RunnerTests : BaseAcceptanceTests
             _acceptanceFixture.NuGetGlobalPackagesFolder, failIfReturnValueIsNotZero: false);
         var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
         var testHostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
-        Assert.IsTrue(testHostResult.StandardOutput.Contains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1"), $"Standard output:\n'{testHostResult.StandardOutput}'");
+        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration), TestArgumentsEntryProviderMethodName = nameof(FormatGetBuildMatrixTfmBuildConfigurationEntry))]
+    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration))]
     public async Task EnableMSTestRunner_False_Will_Run_Empty_Program_EntryPoint_From_Tpv2_SDK(string tfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
