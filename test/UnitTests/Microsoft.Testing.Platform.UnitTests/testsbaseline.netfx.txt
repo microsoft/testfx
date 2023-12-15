@@ -252,3 +252,5 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLo
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_ValidFileNameSyncFlush_FileStreamWrite()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_ValidFileNameSyncFlush_FileStreamWriteAsync()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_ValidFileNameAsyncFlush_FileStreamWriteAsync()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_Log()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_LogAsync()

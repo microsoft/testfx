@@ -33,7 +33,6 @@ public class FileLoggerTests : TestBase
             string.Format(CultureInfo.InvariantCulture, "{0}{1}", state, exception is not null ? $" -- {exception}" : string.Empty);
 
     private readonly Mock<IClock> _mockClock = new();
-    private readonly Mock<ITask> _mockTask = new();
     private readonly Mock<IConsole> _mockConsole = new();
     private readonly Mock<IFileSystem> _mockFileSystem = new();
 #if NETCOREAPP
@@ -122,7 +121,7 @@ public class FileLoggerTests : TestBase
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
-            _mockTask.Object,
+            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockSemaphoreFactory.Object,
@@ -156,7 +155,7 @@ public class FileLoggerTests : TestBase
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
-            _mockTask.Object,
+            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockSemaphoreFactory.Object,
@@ -183,7 +182,7 @@ public class FileLoggerTests : TestBase
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
-            _mockTask.Object,
+            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockSemaphoreFactory.Object,
@@ -216,7 +215,7 @@ public class FileLoggerTests : TestBase
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
             LogLevel.Trace,
             _mockClock.Object,
-            _mockTask.Object,
+            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockSemaphoreFactory.Object,
@@ -253,7 +252,7 @@ public class FileLoggerTests : TestBase
             LogLevel.Information,
             customDirectory: true,
             _mockClock.Object,
-            _mockTask.Object,
+            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockSemaphoreFactory.Object,
@@ -312,7 +311,7 @@ public class FileLoggerTests : TestBase
             LogLevel.Information,
             customDirectory: true,
             _mockClock.Object,
-            _mockTask.Object,
+            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockSemaphoreFactory.Object,
@@ -376,7 +375,7 @@ public class FileLoggerTests : TestBase
             LogLevel.Information,
             customDirectory: false,
             _mockClock.Object,
-            _mockTask.Object,
+            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockSemaphoreFactory.Object,
@@ -439,7 +438,7 @@ public class FileLoggerTests : TestBase
             LogLevel.Information,
             customDirectory: true,
             _mockClock.Object,
-            _mockTask.Object,
+            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockSemaphoreFactory.Object,

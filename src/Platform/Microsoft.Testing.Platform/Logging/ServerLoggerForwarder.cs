@@ -4,16 +4,15 @@
 #if NETCOREAPP
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Channels;
+
 #else
-using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 #endif
 using System.Globalization;
 
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Resources;
-using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.ServerMode;
 
 namespace Microsoft.Testing.Platform.Logging;
 
@@ -28,23 +27,29 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
-    private readonly IServiceProvider _services;
     private readonly LogLevel _logLevel;
     private readonly Task _logLoop;
+    private readonly IServerTestHost? _serverTestHost;
+    private readonly IProducerConsumerFactory<ServerLogMessage> _producerConsumerFactory;
 #if NETCOREAPP
-    private readonly Channel<ServerLogMessage>? _channel;
+    private readonly IChannel<ServerLogMessage>? _channel;
 #else
-    private readonly BlockingCollection<ServerLogMessage>? _asyncLogs;
+    private readonly IBlockingCollection<ServerLogMessage>? _asyncLogs;
 #endif
 
     private bool _isDisposed;
 
-    public ServerLoggerForwarder(IServiceProvider services, LogLevel logLevel)
+    public ServerLoggerForwarder(
+        LogLevel logLevel,
+        ITask task,
+        IServerTestHost? serverTestHost,
+        IProducerConsumerFactory<ServerLogMessage> producerConsumerFactory)
     {
-        _services = services;
         _logLevel = logLevel;
+        _serverTestHost = serverTestHost;
+        _producerConsumerFactory = producerConsumerFactory;
 #if NETCOREAPP
-        _channel = Channel.CreateUnbounded<ServerLogMessage>(new UnboundedChannelOptions()
+        _channel = _producerConsumerFactory.Create(new UnboundedChannelOptions()
         {
             // We process only 1 data at a time
             SingleReader = true,
@@ -56,9 +61,9 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
             AllowSynchronousContinuations = false,
         });
 #else
-        _asyncLogs = [];
+        _asyncLogs = _producerConsumerFactory.Create();
 #endif
-        _logLoop = services.GetTask().Run(WriteLogMessageAsync, CancellationToken.None);
+        _logLoop = task.Run(WriteLogMessageAsync, CancellationToken.None);
     }
 
     private async Task WriteLogMessageAsync()
@@ -68,9 +73,9 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
         ApplicationStateGuard.Ensure(_channel is not null);
 
         // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
-        while (await _channel.Reader.WaitToReadAsync())
+        while (await _channel.WaitToReadAsync())
         {
-            await PushServerLogMessageToTheMessageBusAsync(await _channel.Reader.ReadAsync());
+            await PushServerLogMessageToTheMessageBusAsync(await _channel.ReadAsync());
         }
 #else
         ApplicationStateGuard.Ensure(_asyncLogs is not null);
@@ -88,11 +93,16 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 
     public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
+        if (!IsEnabled(logLevel))
+        {
+            return;
+        }
+
         string message = formatter(state, exception);
         var logMessage = new ServerLogMessage(logLevel, message);
         EnsureAsyncLogObjectsAreNotNull();
 #if NETCOREAPP
-        if (!_channel.Writer.TryWrite(logMessage))
+        if (!_channel.TryWrite(logMessage))
         {
             throw new InvalidOperationException("Failed to write the log to the channel");
         }
@@ -115,10 +125,9 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 
     private async Task PushServerLogMessageToTheMessageBusAsync(ServerLogMessage logMessage)
     {
-        ServerTestHost? server = _services.GetService<ServerTestHost>();
-        if (server?.IsInitialized == true)
+        if (_serverTestHost?.IsInitialized == true)
         {
-            await server.PushDataAsync(logMessage);
+            await _serverTestHost.PushDataAsync(logMessage);
         }
     }
 
@@ -145,7 +154,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
             EnsureAsyncLogObjectsAreNotNull();
 #if NETCOREAPP
             // Wait for all logs to be written
-            _channel.Writer.TryComplete();
+            _channel.TryComplete();
             if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
@@ -170,7 +179,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
             EnsureAsyncLogObjectsAreNotNull();
 
             // Wait for all logs to be written
-            _channel.Writer.TryComplete();
+            _channel.TryComplete();
             await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
             _isDisposed = true;
         }
