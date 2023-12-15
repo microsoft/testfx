@@ -7,19 +7,6 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public class DotnetMuxer : IDisposable
 {
-    private static int s_maxMuxerPerProcessValue = int.MaxValue;
-    private static SemaphoreSlim s_maxMuxerPerProcess = new(s_maxMuxerPerProcessValue);
-
-    public static int MaxMuxerPerProcess
-    {
-        get => s_maxMuxerPerProcessValue;
-        set
-        {
-            s_maxMuxerPerProcessValue = value;
-            s_maxMuxerPerProcess = new SemaphoreSlim(s_maxMuxerPerProcessValue);
-        }
-    }
-
     private static readonly string Root = RootFinder.Find();
     private static readonly IDictionary<string, string> DefaultEnvironmentVariables
         = new Dictionary<string, string>()
@@ -112,15 +99,7 @@ public class DotnetMuxer : IDisposable
         string arguments,
         IDictionary<string, string> environmentVariables)
     {
-        await s_maxMuxerPerProcess.WaitAsync();
-        try
-        {
-            return await _commandLine.RunAsyncAndReturnExitCode($"{_dotnet} {arguments}", environmentVariables, cleanDefaultEnvironmentVariableIfCustomAreProvided: true, 60 * 30);
-        }
-        finally
-        {
-            s_maxMuxerPerProcess.Release();
-        }
+        return await _commandLine.RunAsyncAndReturnExitCode($"{_dotnet} {arguments}", environmentVariables, cleanDefaultEnvironmentVariableIfCustomAreProvided: true, 60 * 30);
     }
 
     private IDictionary<string, string> MergeEnvironmentVariables(

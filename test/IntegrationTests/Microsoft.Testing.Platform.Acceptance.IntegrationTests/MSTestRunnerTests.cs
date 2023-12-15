@@ -6,57 +6,59 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class MSTestRunnerTests : BaseAcceptanceTests
+public class MSTestRunnerTests : AcceptanceTestBase
 {
     private readonly AcceptanceFixture _acceptanceFixture;
     private const string AssetName = "MSTestProject";
 
     public MSTestRunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
-        : base(testExecutionContext, acceptanceFixture)
+        : base(testExecutionContext)
     {
         _acceptanceFixture = acceptanceFixture;
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration))]
-    public async Task EnableMSTestRunner_True_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration)
+    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    public async Task EnableMSTestRunner_True_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
-            CurrentTemplateSourceCode
-            .PatchCodeWithRegularExpression("tfm", tfm)
-            .PatchCodeWithRegularExpression("mstestversion", MSTestCurrentVersion)
-            .PatchCodeWithRegularExpression("enablemstestrunner", "<EnableMSTestRunner>true</EnableMSTestRunner>")
-            .PatchCodeWithRegularExpression("outputtype", "<OutputType>Exe</OutputType>"),
+            CurrentMSTestSourceCode
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestCurrentVersion)
+            .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
+            .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>"),
             addPublicFeeds: true);
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder);
+        var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult = await DotnetCli.RunAsync(
-            $"build -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
-            _acceptanceFixture.NuGetGlobalPackagesFolder, failIfReturnValueIsNotZero: false);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-        var testHostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+            $"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
+        var testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration))]
-    public async Task EnableMSTestRunner_False_Will_Run_Empty_Program_EntryPoint_From_Tpv2_SDK(string tfm, BuildConfiguration buildConfiguration)
+    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
+    public async Task EnableMSTestRunner_False_Will_Run_Empty_Program_EntryPoint_From_Tpv2_SDK(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
-            CurrentTemplateSourceCode
-            .PatchCodeWithRegularExpression("tfm", tfm)
-            .PatchCodeWithRegularExpression("mstestversion", MSTestCurrentVersion)
-            .PatchCodeWithRegularExpression("enablemstestrunner", "<EnableMSTestRunner>false</EnableMSTestRunner>")
-            .PatchCodeWithRegularExpression("outputtype", "<OutputType>Exe</OutputType>"),
+            CurrentMSTestSourceCode
+            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestCurrentVersion)
+            .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>false</EnableMSTestRunner>")
+            .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>"),
             addPublicFeeds: true);
 
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder);
+        var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         try
         {
-            compilationResult = await DotnetCli.RunAsync($"build -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder);
-            var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            var testHostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+            compilationResult = await DotnetCli.RunAsync($"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
+            var testHostResult = await testHost.ExecuteAsync();
             Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
         }
         catch (Exception ex)
@@ -70,38 +72,4 @@ public class MSTestRunnerTests : BaseAcceptanceTests
             }
         }
     }
-
-    private const string CurrentTemplateSourceCode = """
-#file MSTestProject.csproj
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>tfm</TargetFramework>
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-    outputtype
-    enablemstestrunner
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="*" />
-    <PackageReference Include="MSTest.TestAdapter" Version="mstestversion" />
-    <PackageReference Include="MSTest.TestFramework" Version="mstestversion" />
-    <PackageReference Include="coverlet.collector" Version="6.0.0" />
-  </ItemGroup>
-
-</Project>
-
-#file UnitTest1.cs
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-[TestClass]
-public class UnitTest1
-{
-    [TestMethod]
-    public void TestMethod1()
-    {
-    }
-}
-""";
 }

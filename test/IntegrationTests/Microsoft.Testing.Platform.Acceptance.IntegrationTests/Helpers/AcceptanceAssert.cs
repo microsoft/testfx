@@ -7,8 +7,11 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 internal static class AcceptanceAssert
 {
-    public static void AssertHasExitCode(this TestHostResult testHostResult, int exitCode)
+    public static void AssertExitCodeIs(this TestHostResult testHostResult, int exitCode)
         => Assert.That(exitCode == testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult));
+
+    public static void AssertExitCodeIsNot(this TestHostResult testHostResult, int exitCode)
+        => Assert.That(exitCode != testHostResult.ExitCode, GenerateFailedAssertionMessage(testHostResult));
 
     public static void AssertOutputMatchesRegex(this TestHostResult testHostResult, string pattern)
         => Assert.That(Regex.IsMatch(testHostResult.StandardOutput, pattern), GenerateFailedAssertionMessage(testHostResult));
@@ -19,9 +22,15 @@ internal static class AcceptanceAssert
     public static void AssertOutputContains(this TestHostResult testHostResult, string value)
         => Assert.That(testHostResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult));
 
+    public static void AssertOutputContains(this DotnetMuxerResult dotnetMuxerResult, string value)
+        => Assert.That(dotnetMuxerResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(dotnetMuxerResult));
+
     public static void AssertOutputDoesNotContain(this TestHostResult testHostResult, string value)
         => Assert.That(!testHostResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult));
 
     private static string GenerateFailedAssertionMessage(TestHostResult testHostResult)
         => $"Output of the test host is:\n{testHostResult}";
+
+    private static string GenerateFailedAssertionMessage(DotnetMuxerResult dotnetMuxerResult)
+        => $"Output of the dotnet muxer is:\n{dotnetMuxerResult}";
 }

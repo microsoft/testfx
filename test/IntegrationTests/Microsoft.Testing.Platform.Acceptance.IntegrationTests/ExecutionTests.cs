@@ -7,28 +7,24 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class ExecutionTests : BaseAcceptanceTests
+public class ExecutionTests : AcceptanceTestBase
 {
     private const string AssetName = "ExecutionTests";
-    private const BuildConfiguration AssetBuildConfiguration = BuildConfiguration.Release;
+    private readonly TestAssetFixture _testAssetFixture;
 
-    private readonly BuildFixture _buildFixture;
-
-    public ExecutionTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture, BuildFixture buildFixture)
-        : base(testExecutionContext, acceptanceFixture)
+    public ExecutionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
+        : base(testExecutionContext)
     {
-        _buildFixture = buildFixture;
+        _testAssetFixture = testAssetFixture;
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenListTestsIsSpecified_AllTestsAreFound(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--list-tests",
-            new Dictionary<string, string> { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = """
 The following Tests are available:
@@ -43,12 +39,10 @@ FilteredOutTest$
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenOnlyAssetNameIsSpecified_AllTestsAreRun(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            null,
-            new Dictionary<string, string> { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync();
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = $"""
 Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName}.+$
@@ -59,12 +53,10 @@ Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenListTestsAndFilterAreSpecified_OnlyFilteredTestsAreFound(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--list-tests --treenode-filter \"/ExecutionTests/ExecutionTests/UnitTest1/TestMethod*\"",
-            new Dictionary<string, string> { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --treenode-filter \"/ExecutionTests/ExecutionTests/UnitTest1/TestMethod*\"");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = """
 The following Tests are available:
@@ -78,12 +70,10 @@ TestMethod3$
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenFilterIsSpecified_OnlyFilteredTestsAreRun(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            $"--treenode-filter \"/ExecutionTests/ExecutionTests/UnitTest1/TestMethod*\"",
-            new Dictionary<string, string> { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--treenode-filter \"/ExecutionTests/ExecutionTests/UnitTest1/TestMethod*\"");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = $"""
 Passed! - Failed: 0, Passed: 3, Skipped: 0, Total: 3, Duration: .+s - {AssetName}.+$
@@ -94,12 +84,10 @@ Passed! - Failed: 0, Passed: 3, Skipped: 0, Total: 3, Duration: .+s - {AssetName
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenMinimumExpectedTestsIsSpecifiedAndEnoughTestsRun_ResultIsOk(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--minimum-expected-tests 4",
-            new Dictionary<string, string> { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 4");
 
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string OutputPattern = $"""
 Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName}.+$
@@ -110,12 +98,10 @@ Passed! - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenMinimumExpectedTestsIsSpecifiedAndNotEnoughTestsRun_ResultIsNotOk(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--minimum-expected-tests 5",
-            new Dictionary<string, string> { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--minimum-expected-tests 5");
 
-        testHostResult.AssertHasExitCode(ExitCodes.MinimumExpectedTestsPolicyViolation);
+        testHostResult.AssertExitCodeIs(ExitCodes.MinimumExpectedTestsPolicyViolation);
 
         const string OutputPattern = $"""
 Minimum expected tests policy violation, tests ran 4, minimum expected 5 - Failed: 0, Passed: 4, Skipped: 0, Total: 4, Duration: .+s - {AssetName}.+$
@@ -126,46 +112,30 @@ Minimum expected tests policy violation, tests ran 4, minimum expected 5 - Faile
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Exec_WhenListTestsAndMinimumExpectedTestsAreSpecified_DiscoveryFails(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
-            "--list-tests --minimum-expected-tests 4",
-            new Dictionary<string, string> { { "TESTINGPLATFORM_TELEMETRY_OPTOUT", "1" } });
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --minimum-expected-tests 4");
 
-        testHostResult.AssertHasExitCode(ExitCodes.InvalidCommandLine);
+        testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
 
         const string OutputPattern = "Error: '--list-tests' and '--minimum-expected-tests' are incompatible options";
         Assert.That(testHostResult.StandardOutput.Contains(OutputPattern), $"Output of the test host is:\n{testHostResult}");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class BuildFixture : IAsyncInitializable, IDisposable
+    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        private readonly AcceptanceFixture _acceptanceFixture;
-        private TestAsset? _testAsset;
+        public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public string TargetAssetPath => _testAsset!.TargetAssetPath;
-
-        public BuildFixture(AcceptanceFixture acceptanceFixture)
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            _acceptanceFixture = acceptanceFixture;
+            yield return (AssetName, AssetName, TestCode.PatchTargetFrameworks(TargetFrameworks.All));
         }
 
-        public async Task InitializeAsync(InitializationContext context)
-        {
-            _testAsset = await TestAsset.GenerateAssetAsync(
-                AssetName,
-                TestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
-            await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c {AssetBuildConfiguration}", _acceptanceFixture.NuGetGlobalPackagesFolder);
-        }
-
-        public void Dispose() => _testAsset?.Dispose();
-    }
-
-    private const string TestCode = """
+        private const string TestCode = """
 #file ExecutionTests.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>tfms</TargetFrameworks>
+        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
@@ -217,4 +187,5 @@ global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.Testing.Framework;
 global using Microsoft.Testing.Platform.Extensions;
 """;
+    }
 }

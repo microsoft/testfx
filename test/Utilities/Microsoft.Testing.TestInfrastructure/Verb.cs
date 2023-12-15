@@ -3,8 +3,9 @@
 
 namespace Microsoft.Testing.TestInfrastructure;
 
+#pragma warning disable SA1300 // We keep the lower case so we can use it in the command line without the needs of ToLowerInvariant()
 public enum Verb
 {
-    Build,
-    Publish,
+    build,
+    publish,
 }
