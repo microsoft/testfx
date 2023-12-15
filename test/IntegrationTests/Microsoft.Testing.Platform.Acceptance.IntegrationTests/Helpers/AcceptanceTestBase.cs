@@ -37,13 +37,16 @@ public abstract partial class AcceptanceTestBase : TestBase
     {
     }
 
-    internal static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixTfmBuildConfiguration()
+    internal static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)>> GetBuildMatrixTfmBuildConfiguration()
     {
         foreach (TestArgumentsEntry<string> tfm in TargetFrameworks.All)
         {
             foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
             {
-                yield return new TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)>((tfm.Arguments, compilationMode), $"{tfm.Arguments},{compilationMode}");
+                foreach (Verb verb in Enum.GetValues<Verb>())
+                {
+                    yield return new TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)>((tfm.Arguments, compilationMode, verb), $"{tfm.Arguments},{compilationMode},{verb}");
+                }
             }
         }
     }
