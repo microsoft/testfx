@@ -143,7 +143,8 @@ public class FileLoggerTests : TestBase
     {
         // First return is to compute the expected file name. It's ok that first time is greater
         // than all following ones.
-        _mockClock.SetupSequence(x => x.UtcNow)
+        _mockClock
+            .SetupSequence(x => x.UtcNow)
             .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 13)))
             .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
         _mockFileStreamFactory
@@ -172,7 +173,7 @@ public class FileLoggerTests : TestBase
         _mockStream.Setup(x => x.Name).Returns(FileName);
         _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(fileExists);
         _mockFileStreamFactory
-            .SetupSequence(x => x.Create(It.IsAny<string>(), fileExists ? FileMode.Append : FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Setup(x => x.Create(It.IsAny<string>(), fileExists ? FileMode.Append : FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
         _mockStreamWriterFactory
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
@@ -205,7 +206,7 @@ public class FileLoggerTests : TestBase
         _mockStream.Setup(x => x.Name).Returns(FileName);
         _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(true);
         _mockFileStreamFactory
-            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
         _mockStreamWriterFactory
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
@@ -238,7 +239,7 @@ public class FileLoggerTests : TestBase
         _mockStream.Setup(x => x.Name).Returns(FileName);
         _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(true);
         _mockFileStreamFactory
-            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
         _mockStreamWriterFactory
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
@@ -247,9 +248,10 @@ public class FileLoggerTests : TestBase
             .Returns(true)
             .Returns(false);
 
-        using FileLogger fileLogger = new(
+        using FileLoggerProvider fileLoggerProvider = new(
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
             LogLevel.Information,
+            customDirectory: true,
             _mockClock.Object,
             _mockTask.Object,
             _mockConsole.Object,
@@ -259,7 +261,7 @@ public class FileLoggerTests : TestBase
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
 
-        FileLoggerCategory fileLoggerCategory = new(fileLogger, Category);
+        FileLoggerCategory fileLoggerCategory = (fileLoggerProvider.CreateLogger(Category) as FileLoggerCategory)!;
 
         _mockFileStreamFactory.Verify(
             x => x.Create(expectedPath, FileMode.Append, FileAccess.Write, FileShare.Read),
@@ -267,7 +269,7 @@ public class FileLoggerTests : TestBase
         _mockStreamWriterFactory.Verify(
             x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
             Times.Once);
-        Assert.AreEqual(FileName, fileLogger.FileName);
+        Assert.AreEqual(FileName, fileLoggerProvider.FileLogger.FileName);
 
         Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Information));
         Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Critical));
@@ -292,7 +294,7 @@ public class FileLoggerTests : TestBase
         _mockStream.Setup(x => x.Name).Returns(FileName);
         _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(true);
         _mockFileStreamFactory
-            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
         _mockStreamWriterFactory
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
@@ -305,9 +307,10 @@ public class FileLoggerTests : TestBase
         _mockProducerConsumer.Setup(x => x.Add(It.IsAny<string>()));
 #endif
 
-        using FileLogger fileLogger = new(
+        using FileLoggerProvider fileLoggerProvider = new(
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
             LogLevel.Information,
+            customDirectory: true,
             _mockClock.Object,
             _mockTask.Object,
             _mockConsole.Object,
@@ -317,7 +320,7 @@ public class FileLoggerTests : TestBase
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
 
-        FileLoggerCategory fileLoggerCategory = new(fileLogger, Category);
+        FileLoggerCategory fileLoggerCategory = (fileLoggerProvider.CreateLogger(Category) as FileLoggerCategory)!;
 
         _mockFileStreamFactory.Verify(
             x => x.Create(expectedPath, FileMode.Append, FileAccess.Write, FileShare.Read),
@@ -325,7 +328,7 @@ public class FileLoggerTests : TestBase
         _mockStreamWriterFactory.Verify(
             x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
             Times.Once);
-        Assert.AreEqual(FileName, fileLogger.FileName);
+        Assert.AreEqual(FileName, fileLoggerProvider.FileLogger.FileName);
 
         Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Information));
         Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Critical));
@@ -357,8 +360,9 @@ public class FileLoggerTests : TestBase
         string expectedPath = Path.Combine(LogFolder, FileName);
         _mockStream.Setup(x => x.Name).Returns(FileName);
         _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(true);
+        _mockFileSystem.Setup(x => x.Move(It.IsAny<string>(), It.IsAny<string>()));
         _mockFileStreamFactory
-            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Setup(x => x.Create(It.IsAny<string>(), It.IsAny<FileMode>(), FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
         _mockStreamWriterFactory
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
@@ -367,9 +371,10 @@ public class FileLoggerTests : TestBase
             .Returns(Task.FromResult(true))
             .Returns(Task.FromResult(false));
 
-        using FileLogger fileLogger = new(
+        using FileLoggerProvider fileLoggerProvider = new(
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
             LogLevel.Information,
+            customDirectory: false,
             _mockClock.Object,
             _mockTask.Object,
             _mockConsole.Object,
@@ -379,15 +384,18 @@ public class FileLoggerTests : TestBase
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
 
-        FileLoggerCategory fileLoggerCategory = new(fileLogger, Category);
+        await fileLoggerProvider.CheckLogFolderAndMoveToTheNewIfNeededAsync("TestFolder");
+        _mockFileSystem.Verify(x => x.Move(It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+
+        FileLoggerCategory fileLoggerCategory = (fileLoggerProvider.CreateLogger(Category) as FileLoggerCategory)!;
 
         _mockFileStreamFactory.Verify(
             x => x.Create(expectedPath, FileMode.Append, FileAccess.Write, FileShare.Read),
             Times.Once);
         _mockStreamWriterFactory.Verify(
             x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
-            Times.Once);
-        Assert.AreEqual(FileName, fileLogger.FileName);
+            Times.Exactly(2));
+        Assert.AreEqual(FileName, fileLoggerProvider.FileLogger.FileName);
 
         Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Information));
         Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Critical));
@@ -411,8 +419,9 @@ public class FileLoggerTests : TestBase
         string expectedPath = Path.Combine(LogFolder, FileName);
         _mockStream.Setup(x => x.Name).Returns(FileName);
         _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(true);
+        _mockFileSystem.Setup(x => x.Move(It.IsAny<string>(), It.IsAny<string>()));
         _mockFileStreamFactory
-            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Setup(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
         _mockStreamWriterFactory
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
@@ -425,9 +434,10 @@ public class FileLoggerTests : TestBase
         _mockProducerConsumer.Setup(x => x.Add(It.IsAny<string>()));
 #endif
 
-        using FileLogger fileLogger = new(
+        using FileLoggerProvider fileLoggerProvider = new(
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
             LogLevel.Information,
+            customDirectory: true,
             _mockClock.Object,
             _mockTask.Object,
             _mockConsole.Object,
@@ -437,7 +447,10 @@ public class FileLoggerTests : TestBase
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
 
-        FileLoggerCategory fileLoggerCategory = new(fileLogger, Category);
+        await fileLoggerProvider.CheckLogFolderAndMoveToTheNewIfNeededAsync("TestFolder");
+        _mockFileSystem.Verify(x => x.Move(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+
+        FileLoggerCategory fileLoggerCategory = (fileLoggerProvider.CreateLogger(Category) as FileLoggerCategory)!;
 
         _mockFileStreamFactory.Verify(
             x => x.Create(expectedPath, FileMode.Append, FileAccess.Write, FileShare.Read),
@@ -445,7 +458,7 @@ public class FileLoggerTests : TestBase
         _mockStreamWriterFactory.Verify(
             x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
             Times.Once);
-        Assert.AreEqual(FileName, fileLogger.FileName);
+        Assert.AreEqual(FileName, fileLoggerProvider.FileLogger.FileName);
 
         Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Information));
         Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Critical));
