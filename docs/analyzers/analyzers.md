@@ -4,6 +4,6 @@ MSTest.Analyzers provide a set of rules for C# and VB.NET that helps a better us
 
 ## Categories
 
-**[Performance rules](PerformanceRules.md)**
+**[Performance rules](performance-warnings.md)**
 
 Rules that support high-performance testing.

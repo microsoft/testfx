@@ -5,7 +5,7 @@
 | **Rule ID**                         | MSTEST0001                                          |
 | **Title**                           | Explicitly enable or disable tests parallelization. |
 | **Category**                        | [Performance](performance-warnings.md)              |
-| **Enabled by default in .NET 8**    | Yes                                                 |
+| **Enabled by default**    | Yes                                                 |
 
 ## Cause
 
