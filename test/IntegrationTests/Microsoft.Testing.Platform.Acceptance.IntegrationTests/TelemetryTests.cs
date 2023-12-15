@@ -10,29 +10,28 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class TelemetryTests : BaseAcceptanceTests
+public class TelemetryTests : AcceptanceTestBase
 {
     private const string AssetName = "TelemetryTest";
 
-    private readonly BuildFixture _buildFixture;
+    private readonly TestAssetFixture _testAssetFixture;
 
-    public TelemetryTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture,
-        BuildFixture buildFixture)
-        : base(testExecutionContext, acceptanceFixture)
+    public TelemetryTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
+        : base(testExecutionContext)
     {
-        _buildFixture = buildFixture;
+        _testAssetFixture = testAssetFixture;
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Telemetry_ByDefault_TelemetryIsEnabled(string tfm)
     {
-        string diagPath = Path.Combine(_buildFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic");
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -49,18 +48,19 @@ public class TelemetryTests : BaseAcceptanceTests
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Telemetry_WhenOptingOutTelemetry_WithEnvironmentVariable_TelemetryIsDisabled(string tfm)
     {
-        string diagPath = Path.Combine(_buildFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--diagnostic",
             new Dictionary<string, string>()
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT, "1" },
-            });
+            },
+            disableTelemetry: false);
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -77,18 +77,19 @@ public class TelemetryTests : BaseAcceptanceTests
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Telemetry_WhenOptingOutTelemetry_With_DOTNET_CLI_EnvironmentVariable_TelemetryIsDisabled(string tfm)
     {
-        string diagPath = Path.Combine(_buildFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--diagnostic",
             new Dictionary<string, string>()
             {
                 { EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT, "1" },
-            });
+            },
+            disableTelemetry: false);
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -105,13 +106,13 @@ public class TelemetryTests : BaseAcceptanceTests
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Telemetry_WhenEnableTelemetryIsFalse_WithTestApplicationOptions_TelemetryIsDisabled(string tfm)
     {
-        string diagPath = Path.Combine(_buildFixture.TargetAssetPathWithDisableTelemetry, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
+        string diagPath = Path.Combine(_testAssetFixture.TargetAssetPathWithDisableTelemetry, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPathWithDisableTelemetry, AssetName, tfm);
-        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic");
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithDisableTelemetry, AssetName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string diagContentsPattern =
 """
@@ -127,7 +128,7 @@ public class TelemetryTests : BaseAcceptanceTests
 
     private async Task<string> AssertDiagnosticReportAsync(TestHostResult testHostResult, string diagPathPattern, string diagContentsPattern, string level = "Information", string flushType = "async")
     {
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 
         string outputPattern = $"""
 Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
@@ -149,47 +150,33 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class BuildFixture : IAsyncInitializable, IDisposable
+    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        private readonly AcceptanceFixture _acceptanceFixture;
+        private const string WithTelemetry = nameof(WithTelemetry);
+        private const string WithoutTelemetry = nameof(WithoutTelemetry);
 
-        private TestAsset? _testAsset;
-        private TestAsset? _testAssetWithDisableTelemetry;
+        public string TargetAssetPath => GetAssetPath(WithTelemetry);
 
-        public string TargetAssetPath => _testAsset!.TargetAssetPath;
+        public string TargetAssetPathWithDisableTelemetry => GetAssetPath(WithoutTelemetry);
 
-        public string TargetAssetPathWithDisableTelemetry => _testAssetWithDisableTelemetry!.TargetAssetPath;
-
-        public BuildFixture(AcceptanceFixture acceptanceFixture)
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            _acceptanceFixture = acceptanceFixture;
+            yield return (WithTelemetry, AssetName,
+                TestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$TelemetryArg$", string.Empty));
+
+            yield return (WithoutTelemetry, AssetName,
+                TestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$TelemetryArg$", ", new TestApplicationOptions() { EnableTelemetry = false }"));
         }
 
-        public async Task InitializeAsync(InitializationContext context)
-        {
-            _testAsset = await TestAsset.GenerateAssetAsync(
-                AssetName,
-                TestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()).PatchCodeWithRegularExpression("disableTelemetry", string.Empty));
-            await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
-
-            _testAssetWithDisableTelemetry = await TestAsset.GenerateAssetAsync(
-                AssetName,
-                TestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()).PatchCodeWithRegularExpression("disableTelemetry", ", new TestApplicationOptions() { EnableTelemetry = false }"));
-            await DotnetCli.RunAsync($"build -nodeReuse:false {_testAssetWithDisableTelemetry.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
-        }
-
-        public void Dispose()
-        {
-            _testAsset?.Dispose();
-            _testAssetWithDisableTelemetry?.Dispose();
-        }
-    }
-
-    private const string TestCode = """
+        private const string TestCode = """
 #file TelemetryTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>tfms</TargetFrameworks>
+        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
@@ -216,7 +203,7 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args disableTelemetry);
+        ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args$TelemetryArg$);
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_,__) => new DummyTestAdapter());
         using ITestApplication app = await builder.BuildAsync();
         return await app.RunAsync();
@@ -240,4 +227,5 @@ public class DummyTestAdapter : ITestFramework
     public Task ExecuteRequestAsync(ExecuteRequestContext context) => Task.CompletedTask;
 }
 """;
+    }
 }

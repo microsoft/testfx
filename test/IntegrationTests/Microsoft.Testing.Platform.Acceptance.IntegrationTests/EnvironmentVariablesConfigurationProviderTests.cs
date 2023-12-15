@@ -7,15 +7,14 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public sealed class EnvironmentVariablesConfigurationProviderTests : BaseAcceptanceTests
+public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceTestBase
 {
-    private readonly EnvironmentVariablesConfigurationProviderFixture _environmentVariablesConfigurationProviderFixture;
+    private readonly TestAssetFixture _testAssetFixture;
 
-    public EnvironmentVariablesConfigurationProviderTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture,
-        EnvironmentVariablesConfigurationProviderFixture environmentVariablesConfigurationProviderFixture)
-        : base(testExecutionContext, acceptanceFixture)
+    public EnvironmentVariablesConfigurationProviderTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
+        : base(testExecutionContext)
     {
-        _environmentVariablesConfigurationProviderFixture = environmentVariablesConfigurationProviderFixture;
+        _testAssetFixture = testAssetFixture;
     }
 
     private const string AssetName = "EnvironmentVariablesConfigurationProvider";
@@ -23,7 +22,7 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : BaseAccepta
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task DefaultEnabledEnvironmentVariablesConfiguration_SetEnvironmentVariable_ShouldSucceed(string currentTfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_environmentVariablesConfigurationProviderFixture.TargetAssetPath, AssetName, currentTfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
             new Dictionary<string, string>()
@@ -32,13 +31,13 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : BaseAccepta
                 { "MyValue", "MyVal" },
                 { "MYENVVAR__MYPROP1__MYPROP2", "MyVal" },
             });
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task EnabledEnvironmentVariablesConfiguration_SetEnvironmentVariable_ShouldSucceed(string currentTfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_environmentVariablesConfigurationProviderFixture.TargetAssetPath, AssetName, currentTfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
             new Dictionary<string, string>()
@@ -47,50 +46,39 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : BaseAccepta
                 { "MyValue", "MyVal" },
                 { "MYENVVAR__MYPROP1__MYPROP2", "MyVal" },
             });
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task DisabledEnvironmentVariablesConfiguration_SetEnvironmentVariable_ShouldSucceed(string currentTfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_environmentVariablesConfigurationProviderFixture.TargetAssetPath, AssetName, currentTfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
             new Dictionary<string, string>()
             {
                 { "EnableConfigurationSource", "false" },
             });
-        testHostResult.AssertHasExitCode(ExitCodes.Success);
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class EnvironmentVariablesConfigurationProviderFixture : IAsyncInitializable, IDisposable
+    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture)
+        : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        private readonly AcceptanceFixture _acceptanceFixture;
-        private TestAsset? _testAsset;
+        public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public string TargetAssetPath => _testAsset is null ? throw new ArgumentNullException(nameof(TestAsset)) : _testAsset.TargetAssetPath;
-
-        public EnvironmentVariablesConfigurationProviderFixture(AcceptanceFixture acceptanceFixture)
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            _acceptanceFixture = acceptanceFixture;
+            yield return (AssetName, AssetName, Sources.PatchTargetFrameworks(TargetFrameworks.All));
         }
 
-        public async Task InitializeAsync(InitializationContext context)
-        {
-            _testAsset = await TestAsset.GenerateAssetAsync(AssetName, Sources.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
-            await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
-        }
-
-        public void Dispose() => _testAsset?.Dispose();
-    }
-
-    private const string Sources = """
+        private const string Sources = """
 #file EnvironmentVariablesConfigurationProvider.csproj
 
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>tfms</TargetFrameworks>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseAppHost>true</UseAppHost>
     <Nullable>enable</Nullable>
@@ -219,4 +207,5 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
     }
 }
 """;
+    }
 }

@@ -39,7 +39,7 @@ public class TestAsset : IDisposable
         _isDisposed = true;
     }
 
-    public string TargetAssetPath => _tempDirectory.DirectoryPath;
+    public string TargetAssetPath => _tempDirectory.Path;
 
     private static (string Name, string Content) ParseFile(string fileContent)
     {
@@ -86,7 +86,7 @@ public class TestAsset : IDisposable
         foreach (string fileContent in splitFiles)
         {
             (string, string) fileInfo = ParseFile(fileContent);
-            await TempDirectory.WriteFileAsync(testAsset._tempDirectory.DirectoryPath, fileInfo.Item1, fileInfo.Item2);
+            await TempDirectory.WriteFileAsync(testAsset._tempDirectory.Path, fileInfo.Item1, fileInfo.Item2);
         }
 
         return testAsset;

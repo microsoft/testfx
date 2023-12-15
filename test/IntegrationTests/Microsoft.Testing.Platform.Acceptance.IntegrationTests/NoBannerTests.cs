@@ -7,10 +7,10 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class NoBannerTests : BaseAcceptanceTests
+public class NoBannerTests : AcceptanceTestBase
 {
     private const string AssetName = "NoBannerTest";
-    private readonly BuildFixture _buildFixture;
+    private readonly TestAssetFixture _testAssetFixture;
     private readonly string _bannerRegexMatchPattern = """
 \s*Microsoft\(R\) Testing Platform Execution Command Line Tool.*
 \s*Version:.*
@@ -18,26 +18,26 @@ public class NoBannerTests : BaseAcceptanceTests
 \s*Copyright\(c\) Microsoft Corporation[.]  All rights reserved[.].*
 """;
 
-    public NoBannerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture, BuildFixture buildFixture)
-        : base(testExecutionContext, acceptanceFixture)
+    public NoBannerTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
+        : base(testExecutionContext)
     {
-        _buildFixture = buildFixture;
+        _testAssetFixture = testAssetFixture;
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task UsingNoBanner_TheBannerDoesNotAppear(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--no-banner");
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task UsingNoBanner_InTheEnvironmentVars_TheBannerDoesNotAppear(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
             new Dictionary<string, string>()
@@ -45,14 +45,14 @@ public class NoBannerTests : BaseAcceptanceTests
                 { "TESTINGPLATFORM_NOBANNER", "true" },
             });
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task UsingDotnetNoLogo_InTheEnvironmentVars_TheBannerDoesNotAppear(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
             new Dictionary<string, string>()
@@ -60,49 +60,35 @@ public class NoBannerTests : BaseAcceptanceTests
                 { "DOTNET_NOLOGO", "true" },
             });
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputDoesNotMatchRegex(_bannerRegexMatchPattern);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task WithoutUsingNoBanner_TheBannerAppears(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_buildFixture.TargetAssetPath, AssetName, tfm);
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
-        testHostResult.AssertHasExitCode(ExitCodes.ZeroTests);
+        testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
         testHostResult.AssertOutputMatchesRegex(_bannerRegexMatchPattern);
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
-    public sealed class BuildFixture : IAsyncInitializable, IDisposable
+    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        private readonly AcceptanceFixture _acceptanceFixture;
-        private TestAsset? _testAsset;
+        public string TargetAssetPath => GetAssetPath(AssetName);
 
-        public string TargetAssetPath => _testAsset!.TargetAssetPath;
-
-        public BuildFixture(AcceptanceFixture acceptanceFixture)
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            _acceptanceFixture = acceptanceFixture;
+            yield return (AssetName, AssetName, NoBannerTestCode.PatchTargetFrameworks(TargetFrameworks.All));
         }
 
-        public async Task InitializeAsync(InitializationContext context)
-        {
-            _testAsset = await TestAsset.GenerateAssetAsync(
-                AssetName,
-                NoBannerTestCode.PatchCodeWithRegularExpression("tfms", TargetFrameworks.All.ToMSBuildTargetFrameworks()));
-            await DotnetCli.RunAsync($"build -nodeReuse:false {_testAsset.TargetAssetPath} -c Release", _acceptanceFixture.NuGetGlobalPackagesFolder);
-        }
-
-        public void Dispose() => _testAsset?.Dispose();
-    }
-
-    private const string NoBannerTestCode = """
+        private const string NoBannerTestCode = """
 #file NoBannerTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <TargetFrameworks>tfms</TargetFrameworks>
+        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
@@ -153,4 +139,5 @@ public class DummyTestAdapter : ITestFramework
     public Task ExecuteRequestAsync(ExecuteRequestContext context) => Task.CompletedTask;
 }
 """;
+    }
 }
