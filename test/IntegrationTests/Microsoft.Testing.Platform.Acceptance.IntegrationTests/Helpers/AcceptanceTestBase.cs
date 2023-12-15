@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
@@ -11,10 +10,10 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// At the moment are static because we need to share them between perclass/id fixtures and
 /// it's not supported at the moment.
 /// </summary>
-public abstract partial class AcceptanceTestBase : TestBase
+public abstract class AcceptanceTestBase : TestBase
 {
-    [GeneratedRegex("^(.*?)\\.(?=(?:[0-9]+\\.){2,}[0-9]+(?:-[a-z]+)?\\.nupkg)(.*?)\\.nupkg$")]
-    private static partial Regex ParseNuGetPackageFileNameRegex();
+    private const string MSTestTestFrameworkPackageNamePrefix = "MSTest.TestFramework.";
+    private const string NuGetPackageExtensionName = ".nupkg";
 
     internal static string RID { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
 
@@ -22,14 +21,10 @@ public abstract partial class AcceptanceTestBase : TestBase
 
     static AcceptanceTestBase()
     {
-        var mstestTestFrameworkPackage = Path.GetFileName(Directory.GetFiles(Constants.ArtifactsPackagesShipping, "MSTest.TestFramework*.nupkg", SearchOption.AllDirectories).Single());
-        Match match = ParseNuGetPackageFileNameRegex().Match(mstestTestFrameworkPackage);
-        if (!match.Success)
-        {
-            throw new InvalidOperationException("Package version not found");
-        }
-
-        MSTestCurrentVersion = match.Groups[2].Value;
+        var mstestTestFrameworkPackage = Path.GetFileName(Directory.GetFiles(Constants.ArtifactsPackagesShipping, MSTestTestFrameworkPackageNamePrefix + "*" + NuGetPackageExtensionName, SearchOption.AllDirectories).Single());
+        MSTestCurrentVersion = mstestTestFrameworkPackage.Substring(
+            MSTestTestFrameworkPackageNamePrefix.Length,
+            mstestTestFrameworkPackage.Length - MSTestTestFrameworkPackageNamePrefix.Length - NuGetPackageExtensionName.Length);
     }
 
     protected AcceptanceTestBase(ITestExecutionContext testExecutionContext)
