@@ -20,23 +20,23 @@ public class LoggingExtensionsTests : TestBase
     public LoggingExtensionsTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        _mockLogger.Setup(x => x.Log(LogLevel.Trace, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.Log(LogLevel.Debug, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.Log(LogLevel.Information, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.Log(LogLevel.Warning, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.Log(LogLevel.Error, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.Log(LogLevel.Error, Message, _exception, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.Log(LogLevel.Error, _exception.ToString(), null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.Log(LogLevel.Critical, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
+        _mockLogger.Setup(x => x.Log(LogLevel.Trace, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.Log(LogLevel.Debug, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.Log(LogLevel.Information, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.Log(LogLevel.Warning, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.Log(LogLevel.Error, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.Log(LogLevel.Error, Message, _exception, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.Log(LogLevel.Error, _exception.ToString(), null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.Log(LogLevel.Critical, Message, null, LoggingExtensions.Formatter));
 
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Trace, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Debug, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Information, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Warning, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, Message, _exception, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, _exception.ToString(), null, LoggingExtensions.Formatter)).Callback(() => { });
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Critical, Message, null, LoggingExtensions.Formatter)).Callback(() => { });
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Trace, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Debug, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Information, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Warning, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, Message, _exception, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, _exception.ToString(), null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Critical, Message, null, LoggingExtensions.Formatter));
     }
 
     public void LoggerExtensions_LogTest()

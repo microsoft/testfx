@@ -82,8 +82,9 @@ public class FileLoggerTests : TestBase
     public void Write_IfMalformedUTF8_ShouldNotCrash()
     {
         using TempDirectory tempDirectory = new(nameof(Write_IfMalformedUTF8_ShouldNotCrash));
+<<<<<<< HEAD
         using FileLogger fileLogger = new(
-            new FileLoggerOptions(tempDirectory.Path, "Test", fileName: null, true),
+            new FileLoggerOptions(tempDirectory.DirectoryPath, "Test", fileName: null, true),
             LogLevel.Trace,
             new SystemClock(),
             new SystemTask(),
@@ -93,6 +94,9 @@ public class FileLoggerTests : TestBase
             new SystemProducerConsumerFactory<string>(),
             new SystemFileStreamFactory(),
             new SystemStreamWriterFactory());
+=======
+        using FileLogger fileLogger = new(tempDirectory.Path, fileName: null, LogLevel.Trace, "Test", true, new SystemClock(), new SystemTask(), new SystemConsole());
+>>>>>>> main
         fileLogger.Log(LogLevel.Trace, "\uD886", null, LoggingExtensions.Formatter, "Category");
     }
 

@@ -35,7 +35,7 @@ public class LoggerTests : TestBase
     public LoggerTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        _mockConsole.Setup(x => x.WriteLine(It.IsAny<string>())).Callback(() => { });
+        _mockConsole.Setup(x => x.WriteLine(It.IsAny<string>()));
         _mockClock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 13)));
 
         _logger = new Logger(

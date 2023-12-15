@@ -33,7 +33,7 @@ public class ConsoleLoggerTests : TestBase
     public ConsoleLoggerTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        _mockConsole.Setup(x => x.WriteLine(It.IsAny<string>())).Callback(() => { });
+        _mockConsole.Setup(x => x.WriteLine(It.IsAny<string>()));
         _mockClock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 13)));
 
         _consoleLogger = (new ConsoleLoggerProvider(MinimumLogLevel, _mockConsole.Object, _mockClock.Object).CreateLogger(Category) as ConsoleLogger)!;
