@@ -17,16 +17,17 @@ public class MSTestRunnerTests : AcceptanceTestBase
         _acceptanceFixture = acceptanceFixture;
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration))]
+    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
     public async Task EnableMSTestRunner_True_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
-            CurrentTemplateSourceCode
+            CurrentMSTestSourceCode
             .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestCurrentVersion)
-            .PatchCodeWithReplace("$EnableMSTestRunner$", "true")
-            .PatchCodeWithReplace("$OutputType$", "Exe"),
+            .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
+            .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>"),
             addPublicFeeds: true);
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
         var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
@@ -38,16 +39,17 @@ public class MSTestRunnerTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration))]
+    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
     public async Task EnableMSTestRunner_False_Will_Run_Empty_Program_EntryPoint_From_Tpv2_SDK(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
-            CurrentTemplateSourceCode
+            CurrentMSTestSourceCode
             .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestCurrentVersion)
-            .PatchCodeWithReplace("$EnableMSTestRunner$", "false")
-            .PatchCodeWithReplace("$OutputType$", "Exe"),
+            .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>false</EnableMSTestRunner>")
+            .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>"),
             addPublicFeeds: true);
 
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
@@ -70,38 +72,4 @@ public class MSTestRunnerTests : AcceptanceTestBase
             }
         }
     }
-
-    private const string CurrentTemplateSourceCode = """
-#file MSTestProject.csproj
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <PropertyGroup>
-    <TargetFramework>$TargetFramework$</TargetFramework>
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
-    <OutputType>$OutputType$</OutputType>
-    <EnableMSTestRunner>$EnableMSTestRunner$</EnableMSTestRunner>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="*" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
-    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
-    <PackageReference Include="coverlet.collector" Version="6.0.0" />
-  </ItemGroup>
-
-</Project>
-
-#file UnitTest1.cs
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-[TestClass]
-public class UnitTest1
-{
-    [TestMethod]
-    public void TestMethod1()
-    {
-    }
-}
-""";
 }
