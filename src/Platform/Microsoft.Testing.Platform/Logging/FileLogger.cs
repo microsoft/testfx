@@ -20,7 +20,8 @@ internal sealed class FileLogger : IDisposable
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private readonly ISemaphore _semaphore;
+    private readonly ISemaphoreFactory _semaphoreFactory;
     private readonly FileLoggerOptions _options;
     private readonly LogLevel _logLevel;
     private readonly IClock _clock;
@@ -47,6 +48,7 @@ internal sealed class FileLogger : IDisposable
         ITask task,
         IConsole console,
         IFileSystem fileSystem,
+        ISemaphoreFactory semaphoreFactory,
         IProducerConsumerFactory<string> producerConsumerFactory,
         IFileStreamFactory fileStreamFactory,
         IStreamWriterFactory streamWriterFactory)
@@ -56,9 +58,12 @@ internal sealed class FileLogger : IDisposable
         _logLevel = logLevel;
         _console = console;
         _fileSystem = fileSystem;
+        _semaphoreFactory = semaphoreFactory;
         _producerConsumerFactory = producerConsumerFactory;
         _fileStreamFactory = fileStreamFactory;
         _writerFactory = streamWriterFactory;
+
+        _semaphore = _semaphoreFactory.Create(1, 1);
 
         if (!_options.SyncFlush)
         {
@@ -85,8 +90,8 @@ internal sealed class FileLogger : IDisposable
         {
             string fileNameFullPath = Path.Combine(_options.LogFolder, _options.FileName);
             _fileStream = _fileSystem.Exists(fileNameFullPath)
-                ? OpenFileStreamForAppend(Path.Combine(_options.LogFolder, _options.FileName))
-                : CreateFileStream(Path.Combine(_options.LogFolder, _options.FileName));
+                ? OpenFileStreamForAppend(fileNameFullPath)
+                : CreateFileStream(fileNameFullPath);
         }
         else
         {
@@ -226,57 +231,51 @@ internal sealed class FileLogger : IDisposable
 
     private async Task WriteLogToFileAsync()
     {
+        // We do this check out of the try because we want to crash the process if the _channel/_asyncLogs is null.
 #if NETCOREAPP
-        // We do this check out of the try because we want to crash the process if the _channel is null.
         ApplicationStateGuard.Ensure(_channel is not null);
+#else
+        // We do this check out of the try because we want to crash the process if the _asyncLogs is null.
+        ApplicationStateGuard.Ensure(_asyncLogs is not null);
+#endif
 
         try
         {
+#if NETCOREAPP
             // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
             while (await _channel.WaitToReadAsync())
             {
                 await _writer.WriteLineAsync(await _channel.ReadAsync());
             }
-        }
-        catch (Exception ex)
-        {
-            _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, ex));
-        }
 #else
-        // We do this check out of the try because we want to crash the process if the _asyncLogs is null.
-        ApplicationStateGuard.Ensure(_asyncLogs is not null);
-
-        try
-        {
             // We don't need cancellation token because the task will be stopped when the BlockingCollection is completed thanks to the call to CompleteAdding()
             // inside the Dispose method.
             foreach (string message in _asyncLogs.GetConsumingEnumerable())
             {
                 await _writer.WriteLineAsync(message);
             }
+#endif
         }
         catch (Exception ex)
         {
             _console.WriteLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.UnexpectedExceptionInFileLoggerErrorMessage, ex));
         }
-#endif
     }
 
 #if NETCOREAPP
     [MemberNotNull(nameof(_channel), nameof(_logLoop))]
-    private void EnsureAsyncLogObjectsAreNotNull()
-    {
-        ApplicationStateGuard.Ensure(_channel is not null);
-        ApplicationStateGuard.Ensure(_logLoop is not null);
-    }
 #else
     [MemberNotNull(nameof(_asyncLogs), nameof(_logLoop))]
+#endif
     private void EnsureAsyncLogObjectsAreNotNull()
     {
+#if NETCOREAPP
+        ApplicationStateGuard.Ensure(_channel is not null);
+#else
         ApplicationStateGuard.Ensure(_asyncLogs is not null);
+#endif
         ApplicationStateGuard.Ensure(_logLoop is not null);
     }
-#endif
 
     public void Dispose()
     {

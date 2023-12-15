@@ -23,6 +23,14 @@ public class FileLoggerTests : TestBase
     private const string LogFolder = "aaa";
     private const string LogPrefix = "bbb";
     private const string FileName = "ccc";
+    private const string Result1 = "Result1";
+    private const string Result2 = "Result2";
+    private const string Category = "Test";
+    private const string Message = "Message";
+
+    private static readonly Func<string, Exception?, string> Formatter =
+        (state, exception) =>
+            string.Format(CultureInfo.InvariantCulture, "{0}{1}", state, exception is not null ? $" -- {exception}" : string.Empty);
 
     private readonly Mock<IClock> _mockClock = new();
     private readonly Mock<ITask> _mockTask = new();
@@ -33,6 +41,8 @@ public class FileLoggerTests : TestBase
 #else
     private readonly Mock<IBlockingCollection<string>> _mockProducerConsumer = new();
 #endif
+    private readonly Mock<ISemaphore> _mockSemaphore = new();
+    private readonly Mock<ISemaphoreFactory> _mockSemaphoreFactory = new();
     private readonly Mock<IProducerConsumerFactory<string>> _mockProducerConsumerFactory = new();
     private readonly Mock<IFileStream> _mockStream = new();
     private readonly Mock<IFileStreamFactory> _mockFileStreamFactory = new();
@@ -42,10 +52,30 @@ public class FileLoggerTests : TestBase
     public FileLoggerTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
+        _mockSemaphore.Setup(x => x.Release());
+        _mockSemaphore.Setup(x => x.Dispose());
+        _mockSemaphoreFactory.Setup(x => x.Create(It.IsAny<int>(), It.IsAny<int>()))
+            .Returns(_mockSemaphore.Object);
+        _mockStream.Setup(x => x.Dispose());
+        _mockStreamWriter.Setup(x => x.Flush());
+        _mockStreamWriter.Setup(x => x.Dispose());
+        _mockStreamWriter.Setup(x => x.WriteLine(It.IsAny<string>()));
+        _mockStreamWriter.Setup(x => x.WriteLineAsync(It.IsAny<string>()));
 #if NETCOREAPP
+        _mockStream.Setup(x => x.DisposeAsync());
+        _mockStreamWriter.Setup(x => x.DisposeAsync());
         _mockProducerConsumerFactory.Setup(x => x.Create(It.IsAny<UnboundedChannelOptions>())).Returns(_mockProducerConsumer.Object);
+        _mockProducerConsumer.SetupSequence(x => x.WaitToReadAsync(It.IsAny<CancellationToken>()))
+            .Returns(new ValueTask<bool>(true))
+            .Returns(new ValueTask<bool>(true))
+            .Returns(new ValueTask<bool>(false));
+        _mockProducerConsumer.SetupSequence(x => x.ReadAsync(It.IsAny<CancellationToken>()))
+            .Returns(new ValueTask<string>(Result1))
+            .Returns(new ValueTask<string>(Result2));
 #else
         _mockProducerConsumerFactory.Setup(x => x.Create()).Returns(_mockProducerConsumer.Object);
+        _mockProducerConsumer.Setup(x => x.GetConsumingEnumerable())
+            .Returns(new List<string>() { Result1, Result2 });
 #endif
     }
 
@@ -59,6 +89,7 @@ public class FileLoggerTests : TestBase
             new SystemTask(),
             new SystemConsole(),
             new SystemFileSystem(),
+            new SystemSemaphoreFactory(),
             new SystemProducerConsumerFactory<string>(),
             new SystemFileStreamFactory(),
             new SystemStreamWriterFactory());
@@ -94,6 +125,7 @@ public class FileLoggerTests : TestBase
             _mockTask.Object,
             _mockConsole.Object,
             _mockFileSystem.Object,
+            _mockSemaphoreFactory.Object,
             _mockProducerConsumerFactory.Object,
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
@@ -126,8 +158,317 @@ public class FileLoggerTests : TestBase
             _mockTask.Object,
             _mockConsole.Object,
             _mockFileSystem.Object,
+            _mockSemaphoreFactory.Object,
             _mockProducerConsumerFactory.Object,
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object));
+    }
+
+    [Arguments(true)]
+    [Arguments(false)]
+    public void FileLogger_ValidFileNameSyncFlush_FileStreamCreatedSuccessfully(bool fileExists)
+    {
+        string expectedPath = Path.Combine(LogFolder, FileName);
+        _mockStream.Setup(x => x.Name).Returns(FileName);
+        _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(fileExists);
+        _mockFileStreamFactory
+            .SetupSequence(x => x.Create(It.IsAny<string>(), fileExists ? FileMode.Append : FileMode.CreateNew, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+        _mockStreamWriterFactory
+            .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
+            .Returns(_mockStreamWriter.Object);
+
+        using FileLogger fileLogger = new(
+            new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
+            LogLevel.Trace,
+            _mockClock.Object,
+            _mockTask.Object,
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockSemaphoreFactory.Object,
+            _mockProducerConsumerFactory.Object,
+            _mockFileStreamFactory.Object,
+            _mockStreamWriterFactory.Object);
+
+        _mockFileStreamFactory.Verify(
+            x => x.Create(expectedPath, fileExists ? FileMode.Append : FileMode.CreateNew, FileAccess.Write, FileShare.Read),
+            Times.Once);
+        _mockStreamWriterFactory.Verify(
+            x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
+            Times.Once);
+        Assert.AreEqual(FileName, fileLogger.FileName);
+    }
+
+    public void FileLogger_ValidFileNameAsyncFlush_FileStreamCreatedSuccessfully()
+    {
+        string expectedPath = Path.Combine(LogFolder, FileName);
+        _mockStream.Setup(x => x.Name).Returns(FileName);
+        _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(true);
+        _mockFileStreamFactory
+            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+        _mockStreamWriterFactory
+            .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
+            .Returns(_mockStreamWriter.Object);
+
+        using FileLogger fileLogger = new(
+            new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
+            LogLevel.Trace,
+            _mockClock.Object,
+            _mockTask.Object,
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockSemaphoreFactory.Object,
+            _mockProducerConsumerFactory.Object,
+            _mockFileStreamFactory.Object,
+            _mockStreamWriterFactory.Object);
+
+        _mockFileStreamFactory.Verify(
+            x => x.Create(expectedPath, FileMode.Append, FileAccess.Write, FileShare.Read),
+            Times.Once);
+        _mockStreamWriterFactory.Verify(
+            x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
+            Times.Once);
+        Assert.AreEqual(FileName, fileLogger.FileName);
+    }
+
+    public void FileLogger_ValidFileNameSyncFlush_FileStreamWrite()
+    {
+        string expectedPath = Path.Combine(LogFolder, FileName);
+        _mockStream.Setup(x => x.Name).Returns(FileName);
+        _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(true);
+        _mockFileStreamFactory
+            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+        _mockStreamWriterFactory
+            .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
+            .Returns(_mockStreamWriter.Object);
+        _mockSemaphore.SetupSequence(x => x.Wait(It.IsAny<TimeSpan>()))
+            .Returns(true)
+            .Returns(false);
+
+        using FileLogger fileLogger = new(
+            new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
+            LogLevel.Information,
+            _mockClock.Object,
+            _mockTask.Object,
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockSemaphoreFactory.Object,
+            _mockProducerConsumerFactory.Object,
+            _mockFileStreamFactory.Object,
+            _mockStreamWriterFactory.Object);
+
+        FileLoggerCategory fileLoggerCategory = new(fileLogger, Category);
+
+        _mockFileStreamFactory.Verify(
+            x => x.Create(expectedPath, FileMode.Append, FileAccess.Write, FileShare.Read),
+            Times.Once);
+        _mockStreamWriterFactory.Verify(
+            x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
+            Times.Once);
+        Assert.AreEqual(FileName, fileLogger.FileName);
+
+        Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Information));
+        Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Critical));
+        Assert.IsFalse(fileLoggerCategory.IsEnabled(LogLevel.Trace));
+
+        fileLoggerCategory.Log(LogLevel.Trace, Message, null, Formatter);
+        _mockSemaphore.Verify(x => x.Wait(It.IsAny<TimeSpan>()), Times.Never);
+
+        fileLoggerCategory.Log(LogLevel.Information, Message, null, Formatter);
+        _mockStreamWriter.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Once);
+        _mockSemaphore.Verify(x => x.Wait(It.IsAny<TimeSpan>()), Times.Once);
+        _mockSemaphore.Verify(x => x.Release(), Times.Once);
+
+        Assert.Throws<InvalidOperationException>(() =>
+            fileLoggerCategory.Log(LogLevel.Information, Message, null, Formatter));
+        _mockSemaphore.Verify(x => x.Wait(It.IsAny<TimeSpan>()), Times.Exactly(2));
+    }
+
+    public void FileLogger_ValidFileNameAsyncFlush_FileStreamWrite()
+    {
+        string expectedPath = Path.Combine(LogFolder, FileName);
+        _mockStream.Setup(x => x.Name).Returns(FileName);
+        _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(true);
+        _mockFileStreamFactory
+            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+        _mockStreamWriterFactory
+            .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
+            .Returns(_mockStreamWriter.Object);
+#if NETCOREAPP
+        _mockProducerConsumer.SetupSequence(x => x.TryWrite(It.IsAny<string>()))
+            .Returns(true)
+            .Returns(false);
+#else
+        _mockProducerConsumer.Setup(x => x.Add(It.IsAny<string>()));
+#endif
+
+        using FileLogger fileLogger = new(
+            new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
+            LogLevel.Information,
+            _mockClock.Object,
+            _mockTask.Object,
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockSemaphoreFactory.Object,
+            _mockProducerConsumerFactory.Object,
+            _mockFileStreamFactory.Object,
+            _mockStreamWriterFactory.Object);
+
+        FileLoggerCategory fileLoggerCategory = new(fileLogger, Category);
+
+        _mockFileStreamFactory.Verify(
+            x => x.Create(expectedPath, FileMode.Append, FileAccess.Write, FileShare.Read),
+            Times.Once);
+        _mockStreamWriterFactory.Verify(
+            x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
+            Times.Once);
+        Assert.AreEqual(FileName, fileLogger.FileName);
+
+        Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Information));
+        Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Critical));
+        Assert.IsFalse(fileLoggerCategory.IsEnabled(LogLevel.Trace));
+
+        fileLoggerCategory.Log(LogLevel.Trace, Message, null, Formatter);
+#if NETCOREAPP
+        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Never);
+#else
+        _mockProducerConsumer.Verify(x => x.Add(It.IsAny<string>()), Times.Never);
+#endif
+
+        fileLoggerCategory.Log(LogLevel.Information, Message, null, Formatter);
+#if NETCOREAPP
+        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Once);
+#else
+        _mockProducerConsumer.Verify(x => x.Add(It.IsAny<string>()), Times.Once);
+#endif
+
+#if NETCOREAPP
+        Assert.Throws<InvalidOperationException>(() =>
+            fileLoggerCategory.Log(LogLevel.Information, Message, null, Formatter));
+        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Exactly(2));
+#endif
+    }
+
+    public async ValueTask FileLogger_ValidFileNameSyncFlush_FileStreamWriteAsync()
+    {
+        string expectedPath = Path.Combine(LogFolder, FileName);
+        _mockStream.Setup(x => x.Name).Returns(FileName);
+        _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(true);
+        _mockFileStreamFactory
+            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+        _mockStreamWriterFactory
+            .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
+            .Returns(_mockStreamWriter.Object);
+        _mockSemaphore.SetupSequence(x => x.WaitAsync(It.IsAny<TimeSpan>()))
+            .Returns(Task.FromResult(true))
+            .Returns(Task.FromResult(false));
+
+        using FileLogger fileLogger = new(
+            new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
+            LogLevel.Information,
+            _mockClock.Object,
+            _mockTask.Object,
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockSemaphoreFactory.Object,
+            _mockProducerConsumerFactory.Object,
+            _mockFileStreamFactory.Object,
+            _mockStreamWriterFactory.Object);
+
+        FileLoggerCategory fileLoggerCategory = new(fileLogger, Category);
+
+        _mockFileStreamFactory.Verify(
+            x => x.Create(expectedPath, FileMode.Append, FileAccess.Write, FileShare.Read),
+            Times.Once);
+        _mockStreamWriterFactory.Verify(
+            x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
+            Times.Once);
+        Assert.AreEqual(FileName, fileLogger.FileName);
+
+        Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Information));
+        Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Critical));
+        Assert.IsFalse(fileLoggerCategory.IsEnabled(LogLevel.Trace));
+
+        await fileLoggerCategory.LogAsync(LogLevel.Trace, Message, null, Formatter);
+        _mockSemaphore.Verify(x => x.WaitAsync(It.IsAny<TimeSpan>()), Times.Never);
+
+        await fileLoggerCategory.LogAsync(LogLevel.Information, Message, null, Formatter);
+        _mockStreamWriter.Verify(x => x.WriteLineAsync(It.IsAny<string>()), Times.Once);
+        _mockSemaphore.Verify(x => x.WaitAsync(It.IsAny<TimeSpan>()), Times.Once);
+        _mockSemaphore.Verify(x => x.Release(), Times.Once);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await fileLoggerCategory.LogAsync(LogLevel.Information, Message, null, Formatter));
+        _mockSemaphore.Verify(x => x.WaitAsync(It.IsAny<TimeSpan>()), Times.Exactly(2));
+    }
+
+    public async ValueTask FileLogger_ValidFileNameAsyncFlush_FileStreamWriteAsync()
+    {
+        string expectedPath = Path.Combine(LogFolder, FileName);
+        _mockStream.Setup(x => x.Name).Returns(FileName);
+        _mockFileSystem.Setup(x => x.Exists(expectedPath)).Returns(true);
+        _mockFileStreamFactory
+            .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.Append, FileAccess.Write, FileShare.Read))
+            .Returns(_mockStream.Object);
+        _mockStreamWriterFactory
+            .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
+            .Returns(_mockStreamWriter.Object);
+#if NETCOREAPP
+        _mockProducerConsumer.SetupSequence(x => x.TryWrite(It.IsAny<string>()))
+            .Returns(true)
+            .Returns(false);
+#else
+        _mockProducerConsumer.Setup(x => x.Add(It.IsAny<string>()));
+#endif
+
+        using FileLogger fileLogger = new(
+            new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
+            LogLevel.Information,
+            _mockClock.Object,
+            _mockTask.Object,
+            _mockConsole.Object,
+            _mockFileSystem.Object,
+            _mockSemaphoreFactory.Object,
+            _mockProducerConsumerFactory.Object,
+            _mockFileStreamFactory.Object,
+            _mockStreamWriterFactory.Object);
+
+        FileLoggerCategory fileLoggerCategory = new(fileLogger, Category);
+
+        _mockFileStreamFactory.Verify(
+            x => x.Create(expectedPath, FileMode.Append, FileAccess.Write, FileShare.Read),
+            Times.Once);
+        _mockStreamWriterFactory.Verify(
+            x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
+            Times.Once);
+        Assert.AreEqual(FileName, fileLogger.FileName);
+
+        Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Information));
+        Assert.IsTrue(fileLoggerCategory.IsEnabled(LogLevel.Critical));
+        Assert.IsFalse(fileLoggerCategory.IsEnabled(LogLevel.Trace));
+
+        await fileLoggerCategory.LogAsync(LogLevel.Trace, Message, null, Formatter);
+#if NETCOREAPP
+        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Never);
+#else
+        _mockProducerConsumer.Verify(x => x.Add(It.IsAny<string>()), Times.Never);
+#endif
+
+        await fileLoggerCategory.LogAsync(LogLevel.Information, Message, null, Formatter);
+#if NETCOREAPP
+        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Once);
+#else
+        _mockProducerConsumer.Verify(x => x.Add(It.IsAny<string>()), Times.Once);
+#endif
+
+#if NETCOREAPP
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await fileLoggerCategory.LogAsync(LogLevel.Information, Message, null, Formatter));
+        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Exactly(2));
+#endif
     }
 }
