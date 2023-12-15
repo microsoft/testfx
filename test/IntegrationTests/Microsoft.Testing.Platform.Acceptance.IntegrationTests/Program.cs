@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Framework.Configurations;
@@ -15,8 +14,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.GetCommandLineOptions()));
 
-// Experiment, set the max tests to the processor count let's see if tests will be less flaky due to the less parallel processes.
-builder.AddTestFramework(new TestFrameworkConfiguration(Debugger.IsAttached ? 1 : Environment.ProcessorCount), new SourceGeneratedTestNodesBuilder());
+builder.AddTestFramework(new TestFrameworkConfiguration(), new SourceGeneratedTestNodesBuilder());
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverage();
 #endif

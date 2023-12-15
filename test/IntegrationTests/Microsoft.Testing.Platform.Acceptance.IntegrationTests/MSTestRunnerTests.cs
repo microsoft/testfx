@@ -18,7 +18,7 @@ public class MSTestRunnerTests : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration))]
-    public async Task EnableMSTestRunner_True_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration)
+    public async Task EnableMSTestRunner_True_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
@@ -31,15 +31,15 @@ public class MSTestRunnerTests : AcceptanceTestBase
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
         var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult = await DotnetCli.RunAsync(
-            $"build -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
+            $"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
         var testHostResult = await testHost.ExecuteAsync();
         testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration))]
-    public async Task EnableMSTestRunner_False_Will_Run_Empty_Program_EntryPoint_From_Tpv2_SDK(string tfm, BuildConfiguration buildConfiguration)
+    public async Task EnableMSTestRunner_False_Will_Run_Empty_Program_EntryPoint_From_Tpv2_SDK(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
@@ -54,8 +54,8 @@ public class MSTestRunnerTests : AcceptanceTestBase
         var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         try
         {
-            compilationResult = await DotnetCli.RunAsync($"build -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-            var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+            compilationResult = await DotnetCli.RunAsync($"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
             var testHostResult = await testHost.ExecuteAsync();
             Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
         }
