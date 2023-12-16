@@ -152,7 +152,11 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                         int index = informationalVersion.LastIndexOfAny(PlusSign);
                         if (index != -1)
                         {
+#if NETCOREAPP
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {informationalVersion[..(index + 10)]}");
+#else
                             stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {informationalVersion.Substring(0, index + 10)}");
+#endif
                         }
                         else
                         {
