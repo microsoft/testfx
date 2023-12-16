@@ -25,7 +25,7 @@ public class MSTestRunnerTests : AcceptanceTestBase
             CurrentMSTestSourceCode
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestCurrentVersion)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
             .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>"),
             addPublicFeeds: true);
@@ -47,7 +47,7 @@ public class MSTestRunnerTests : AcceptanceTestBase
             CurrentMSTestSourceCode
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestCurrentVersion)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>false</EnableMSTestRunner>")
             .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>"),
             addPublicFeeds: true);

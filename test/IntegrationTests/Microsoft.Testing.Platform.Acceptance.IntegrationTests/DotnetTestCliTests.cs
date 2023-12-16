@@ -25,7 +25,7 @@ public class DotnetTestCliTests : AcceptanceTestBase
             CurrentMSTestSourceCode
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestCurrentVersion)
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
             .PatchCodeWithReplace("$OutputType$", string.Empty),
             addPublicFeeds: true);

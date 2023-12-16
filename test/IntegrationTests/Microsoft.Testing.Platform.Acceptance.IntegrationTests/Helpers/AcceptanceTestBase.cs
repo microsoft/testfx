@@ -13,24 +13,30 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// </summary>
 public abstract class AcceptanceTestBase : TestBase
 {
+#if !MSTEST_DOWNLOADED
     private const string MSTestTestFrameworkPackageNamePrefix = "MSTest.TestFramework.";
     private const string NuGetPackageExtensionName = ".nupkg";
+#endif
 
     internal static string RID { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
 
-    public static string MSTestCurrentVersion { get; private set; }
+    public static string MSTestVersion { get; private set; }
 
     public static string MicrosoftNETTestSdkVersion { get; private set; }
 
     static AcceptanceTestBase()
     {
-        var mstestTestFrameworkPackage = Path.GetFileName(Directory.GetFiles(Constants.ArtifactsPackagesShipping, MSTestTestFrameworkPackageNamePrefix + "*" + NuGetPackageExtensionName, SearchOption.AllDirectories).Single());
-        MSTestCurrentVersion = mstestTestFrameworkPackage.Substring(
-            MSTestTestFrameworkPackageNamePrefix.Length,
-            mstestTestFrameworkPackage.Length - MSTestTestFrameworkPackageNamePrefix.Length - NuGetPackageExtensionName.Length);
-
         XDocument versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
         MicrosoftNETTestSdkVersion = versionsPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
+
+#if MSTEST_DOWNLOADED
+        MSTestVersion = versionsPropFileDoc.Descendants("MSTestVersion").Single().Value;
+#else
+        var mstestTestFrameworkPackage = Path.GetFileName(Directory.GetFiles(Constants.ArtifactsPackagesShipping, MSTestTestFrameworkPackageNamePrefix + "*" + NuGetPackageExtensionName, SearchOption.AllDirectories).Single());
+        MSTestVersion = mstestTestFrameworkPackage.Substring(
+            MSTestTestFrameworkPackageNamePrefix.Length,
+            mstestTestFrameworkPackage.Length - MSTestTestFrameworkPackageNamePrefix.Length - NuGetPackageExtensionName.Length);
+#endif
     }
 
     protected AcceptanceTestBase(ITestExecutionContext testExecutionContext)
@@ -39,7 +45,7 @@ public abstract class AcceptanceTestBase : TestBase
     }
 
     protected const string CurrentMSTestSourceCode = """
-#file MSTestProject.csproj
+# file MSTestProject.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -59,7 +65,7 @@ public abstract class AcceptanceTestBase : TestBase
 
 </Project>
 
-#file UnitTest1.cs
+# file UnitTest1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
