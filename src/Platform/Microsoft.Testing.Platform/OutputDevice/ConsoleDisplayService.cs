@@ -152,7 +152,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                         int index = informationalVersion.LastIndexOfAny(PlusSign);
                         if (index != -1)
                         {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {informationalVersion.Substring(0, index + 9)}");
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {informationalVersion.Substring(0, index + 10)}");
                         }
                         else
                         {
