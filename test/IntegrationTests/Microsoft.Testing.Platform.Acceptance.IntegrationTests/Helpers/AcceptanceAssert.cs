@@ -25,6 +25,9 @@ internal static class AcceptanceAssert
     public static void AssertOutputContains(this DotnetMuxerResult dotnetMuxerResult, string value)
         => Assert.That(dotnetMuxerResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(dotnetMuxerResult));
 
+    public static void AssertOutputRegEx(this DotnetMuxerResult dotnetMuxerResult, string pattern)
+        => Assert.That(Regex.IsMatch(dotnetMuxerResult.StandardOutput, pattern), GenerateFailedAssertionMessage(dotnetMuxerResult));
+
     public static void AssertOutputDoesNotContain(this TestHostResult testHostResult, string value)
         => Assert.That(!testHostResult.StandardOutput.Contains(value, StringComparison.Ordinal), GenerateFailedAssertionMessage(testHostResult));
 

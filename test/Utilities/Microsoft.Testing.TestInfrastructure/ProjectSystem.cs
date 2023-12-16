@@ -16,6 +16,7 @@ VisualStudioVersion = 16.0.28701.123
 MinimumVisualStudioVersion = 10.0.40219.1
 {0}
 ";
+
     private const string SlnGlobalSectionTemplate = @"
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -139,7 +140,6 @@ public abstract class Project : Folder
     public Project(string projectFolder)
         : base(projectFolder)
     {
-
     }
 }
 
@@ -160,13 +160,7 @@ public abstract class Folder
     public void AddOrUpdateFileContent(string relativePath, string fileContent)
     {
         string finalPath = Path.Combine(FolderPath, relativePath);
-        string? finalPathDirectory = Path.GetDirectoryName(finalPath);
-
-        if (finalPathDirectory is null)
-        {
-            throw new ArgumentNullException(nameof(finalPathDirectory));
-        }
-
+        string? finalPathDirectory = Path.GetDirectoryName(finalPath) ?? throw new InvalidOperationException("Unexpected null 'finalPathDirectory'");
         Directory.CreateDirectory(finalPathDirectory);
         File.WriteAllText(finalPath, fileContent);
     }

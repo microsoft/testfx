@@ -23,7 +23,7 @@ public class DotnetTestCliTests : AcceptanceTestBase
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
             CurrentMSTestSourceCode
-            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{tfm}</TargetFramework>")
             .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
