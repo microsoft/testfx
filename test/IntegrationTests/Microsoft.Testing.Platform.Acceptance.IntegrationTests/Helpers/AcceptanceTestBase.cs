@@ -45,7 +45,7 @@ public abstract class AcceptanceTestBase : TestBase
     }
 
     protected const string CurrentMSTestSourceCode = """
-# file MSTestProject.csproj
+#file MSTestProject.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -65,7 +65,7 @@ public abstract class AcceptanceTestBase : TestBase
 
 </Project>
 
-# file UnitTest1.cs
+#file UnitTest1.cs
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
