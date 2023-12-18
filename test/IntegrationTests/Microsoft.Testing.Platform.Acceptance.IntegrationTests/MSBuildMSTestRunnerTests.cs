@@ -28,7 +28,7 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
         foreach (TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)> entry in GetBuildMatrixMultiTfmBuildConfiguration())
         {
             yield return new TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)>(
-                (entry.Arguments.MultiTfm, entry.Arguments.BuildConfiguration, true), $"{entry.Arguments.MultiTfm},{entry.Arguments.BuildConfiguration}");
+                (entry.Arguments.MultiTfm, entry.Arguments.BuildConfiguration, true), $"multitfm,{entry.Arguments.BuildConfiguration}");
         }
     }
 
