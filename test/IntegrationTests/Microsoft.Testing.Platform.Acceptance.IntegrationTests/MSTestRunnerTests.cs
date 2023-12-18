@@ -57,7 +57,7 @@ builder.AddMSTest(() => new[] { typeof(Program).Assembly });
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 """)
-            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{tfm}</TargetFramework>")
             .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
