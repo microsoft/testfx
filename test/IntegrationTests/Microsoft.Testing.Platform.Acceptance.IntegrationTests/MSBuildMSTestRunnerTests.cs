@@ -63,7 +63,7 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
         }
 
         // Build the solution
-        await DotnetCli.RunAsync($"build {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         var testResult = await DotnetCli.RunAsync($"msbuild /t:Test {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         if (isMultiTfm)
         {
