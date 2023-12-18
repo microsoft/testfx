@@ -53,7 +53,7 @@ public sealed class TestHost
         string finalArguments = command ?? string.Empty;
 
         CommandLine commandLine = new();
-        int exitCode = await commandLine.RunAsyncAndReturnExitCode($"{FullName} {finalArguments}", environmentVariables, cleanDefaultEnvironmentVariableIfCustomAreProvided: true, 60 * 30);
+        int exitCode = await commandLine.RunAsyncAndReturnExitCode($"{FullName} {finalArguments}", environmentVariables: environmentVariables, workingDirectory: null, cleanDefaultEnvironmentVariableIfCustomAreProvided: true, 60 * 30);
         string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
         return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
     }

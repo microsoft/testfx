@@ -17,9 +17,9 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>2f7acdc5f9b87f260119bb32d01c24d2773773eb</Sha>
     </Dependency>
-    <Dependency Name="MSTest" Version="3.2.0-preview.23615.11">
+    <Dependency Name="MSTest" Version="3.2.0-preview.23618.2">
       <Uri>https://github.com/microsoft/testfx</Uri>
-      <Sha>1869ea6e8d4f50074c2d333d5c35fb2f59b54e09</Sha>
+      <Sha>840e3fe6d8c2efca59dfa8c26f28174fde426a02</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

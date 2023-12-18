@@ -49,11 +49,13 @@ public abstract class AcceptanceTestBase : TestBase
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$TargetFramework$</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    $TargetFramework$
     $OutputType$
     $EnableMSTestRunner$
+    $Extra$
   </PropertyGroup>
 
   <ItemGroup>
@@ -100,6 +102,14 @@ public class UnitTest1
             {
                 yield return new TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)>((tfm.Arguments, compilationMode), $"{tfm.Arguments},{compilationMode}");
             }
+        }
+    }
+
+    internal static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixMultiTfmBuildConfiguration()
+    {
+        foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
+        {
+            yield return new TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>((TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode), $"{TargetFrameworks.All.ToMSBuildTargetFrameworks()},{compilationMode}");
         }
     }
 }
