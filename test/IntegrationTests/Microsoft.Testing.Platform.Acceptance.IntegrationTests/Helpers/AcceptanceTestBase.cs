@@ -54,6 +54,7 @@ public abstract class AcceptanceTestBase : TestBase
     <IsTestProject>true</IsTestProject>
     $OutputType$
     $EnableMSTestRunner$
+    $Extra$
   </PropertyGroup>
 
   <ItemGroup>
