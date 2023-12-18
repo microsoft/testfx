@@ -27,7 +27,8 @@ public class DotnetTestCliTests : AcceptanceTestBase
             .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
-            .PatchCodeWithReplace("$OutputType$", string.Empty),
+            .PatchCodeWithReplace("$OutputType$", string.Empty)
+            .PatchCodeWithReplace("$Extra$", string.Empty),
             addPublicFeeds: true);
 
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
