@@ -2,7 +2,7 @@
 
   <!-- Handle the coexistance between testing platform and Microsoft.NET.Test.Sdk  -->
   <PropertyGroup>
-    <GenerateTestingPlatformEntryPoint>$(EnableMSTestRunner)</GenerateTestingPlatformEntryPoint>
+    <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' ">$(EnableMSTestRunner)</GenerateTestingPlatformEntryPoint>
     <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
   </PropertyGroup>
 
