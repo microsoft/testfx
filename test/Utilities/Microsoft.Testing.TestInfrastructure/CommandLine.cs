@@ -42,6 +42,7 @@ public sealed class CommandLine : IDisposable
     public async Task<int> RunAsyncAndReturnExitCode(
         string commandLine,
         IDictionary<string, string>? environmentVariables = null,
+        string? workingDirectory = null,
         bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false,
         int timeoutInSeconds = 300)
     {
@@ -57,6 +58,7 @@ public sealed class CommandLine : IDisposable
             EnvironmentVariables = environmentVariables,
             OnErrorOutput = (_, o) => _errorOutputLines.Add(o),
             OnStandardOutput = (_, o) => _standardOutputLines.Add(o),
+            WorkingDirectory = workingDirectory,
         };
         _process = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided, timeoutInSeconds);
 
