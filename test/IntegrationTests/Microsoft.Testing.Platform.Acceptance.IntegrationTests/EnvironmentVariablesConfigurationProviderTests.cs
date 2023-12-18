@@ -86,7 +86,6 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Platform" Version="[1.0.0-*,)" />
-    <PackageReference Include="Microsoft.Testing.Platform.Extensions" Version="[1.0.0-*,)" />
   </ItemGroup>
 </Project>
 
