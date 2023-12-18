@@ -55,7 +55,7 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
         using TempDirectory tempDirectory = new();
         string solutionFolder = Path.Combine(tempDirectory.Path, "Solution");
         VSSolution solution = new(solutionFolder, "MSTestSolution");
-        solution.AddOrUpdateFileContent("Nuget.config", nugetConfigContent);
+        string nugetFile = solution.AddOrUpdateFileContent("Nuget.config", nugetConfigContent);
         for (int i = 0; i < 3; i++)
         {
             CSharpProject project = solution.CreateCSharpProject($"TestProject{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : new[] { singleTfmOrMultiTfm });
@@ -64,10 +64,10 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
         }
 
         // Build the solution
-        var buildResult = await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: solution.FolderPath);
-        buildResult.AssertOutputNotContains("An approximate best match of");
+        var restoreResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        restoreResult.AssertOutputNotContains("An approximate best match of");
+        var testResult = await DotnetCli.RunAsync($"build --no-restore /t:Test -nodeReuse:false {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
-        var testResult = await DotnetCli.RunAsync($"msbuild /t:Test {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         if (isMultiTfm)
         {
             foreach (string tfm in singleTfmOrMultiTfm.Split(';'))

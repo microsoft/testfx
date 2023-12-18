@@ -157,11 +157,12 @@ public abstract class Folder
         FolderPath = Path.GetFullPath(folderPath);
     }
 
-    public void AddOrUpdateFileContent(string relativePath, string fileContent)
+    public string AddOrUpdateFileContent(string relativePath, string fileContent)
     {
         string finalPath = Path.Combine(FolderPath, relativePath);
         string? finalPathDirectory = Path.GetDirectoryName(finalPath) ?? throw new InvalidOperationException("Unexpected null 'finalPathDirectory'");
         Directory.CreateDirectory(finalPathDirectory);
         File.WriteAllText(finalPath, fileContent);
+        return finalPath;
     }
 }
