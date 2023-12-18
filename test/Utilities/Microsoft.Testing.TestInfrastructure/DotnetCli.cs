@@ -10,6 +10,7 @@ public static class DotnetCli
     public static async Task<DotnetMuxerResult> RunAsync(
         string args,
         string nugetGlobalPackagesFolder,
+        string? workingDirectory = null,
         Dictionary<string, string>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true)
     {
@@ -38,7 +39,7 @@ public static class DotnetCli
                 }
 
                 using var dotnet = new DotnetMuxer(environmentVariables);
-                int exitCode = await dotnet.Args(args);
+                int exitCode = await dotnet.Args(args, workingDirectory);
 
                 return exitCode != 0 && failIfReturnValueIsNotZero
                     ? throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}")
