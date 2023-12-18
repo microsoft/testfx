@@ -64,7 +64,9 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
         }
 
         // Build the solution
-        await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: solution.FolderPath);
+        var buildResult = await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, workingDirectory: solution.FolderPath);
+        buildResult.AssertOutputNotContains("An approximate best match of");
+
         var testResult = await DotnetCli.RunAsync($"msbuild /t:Test {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         if (isMultiTfm)
         {
