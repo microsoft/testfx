@@ -10,7 +10,7 @@ This is a fully supported, open source and cross-platform implementation of the 
 
 ## Documentation
 
-See [Documentation](docs/README.md) for full documentation about how to contribute, build, test MSTest v2. This documentation also contains information about history, context and supported or unsupported features.
+See [Documentation](docs/README.md) for full documentation about how to contribute, build, test MSTest. This documentation also contains information about history, context and supported or unsupported features.
 
 ## NuGet Feeds
 
