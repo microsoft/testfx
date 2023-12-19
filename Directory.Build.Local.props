@@ -20,6 +20,8 @@
         CS1591: Missing XML comment for publicly visible type or member 'Type_or_Member'
       -->
     <NoWarn>$(NoWarn),1573,1591</NoWarn>
+    <!-- Workaround for AD0001 in analyzers with .NET 9 -->
+    <BuildWithNetFrameworkHostedCompiler>true</BuildWithNetFrameworkHostedCompiler>
   </PropertyGroup>
 
   <!-- The TFMs to build and test against. -->
