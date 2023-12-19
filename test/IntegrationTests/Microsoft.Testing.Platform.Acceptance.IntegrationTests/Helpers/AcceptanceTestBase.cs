@@ -14,9 +14,9 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public abstract class AcceptanceTestBase : TestBase
 {
     private const string MicrosoftTestingPlatformNamePrefix = "Microsoft.Testing.Platform.";
+    private const string NuGetPackageExtensionName = ".nupkg";
 #if !MSTEST_DOWNLOADED
     private const string MSTestTestFrameworkPackageNamePrefix = "MSTest.TestFramework.";
-    private const string NuGetPackageExtensionName = ".nupkg";
 #endif
 
     static AcceptanceTestBase()
