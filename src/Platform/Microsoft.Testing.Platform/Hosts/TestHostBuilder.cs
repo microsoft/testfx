@@ -576,14 +576,25 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             // We keep the bag of the already created composite service factory to reuse the instance.
             List<ICompositeExtensionFactory> newBuiltCompositeServices = [];
-            foreach (IDataConsumer consumerService in await testSessionManager.BuildDataConsumersAsync(serviceProvider, newBuiltCompositeServices))
-            {
-                await RegisterAsServiceOrConsumerOrBothAsync(consumerService, serviceProvider, dataConsumersBuilder);
-            }
+            (IExtension Consumer, int RegistrationOrder)[] consumers = await testSessionManager.BuildDataConsumersAsync(serviceProvider, newBuiltCompositeServices);
+            (IExtension TestSessionLifetimeHandler, int RegistrationOrder)[] sessionLifeTimeHandlers = await testSessionManager.BuildTestSessionLifetimeHandleAsync(serviceProvider, newBuiltCompositeServices);
 
-            foreach (ITestSessionLifetimeHandler testApplicationLifetimeService in await testSessionManager.BuildTestSessionLifetimeHandleAsync(serviceProvider, newBuiltCompositeServices))
+            // Register the test session lifetime handlers for the notifications
+            TestSessionLifetimeHandlersContainer testSessionLifetimeHandlersContainer =
+                new(sessionLifeTimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler));
+            serviceProvider.AddService(testSessionLifetimeHandlersContainer);
+
+            // Keep the registration order
+            foreach ((IExtension Extension, int _) testhostExtension in consumers.Union(sessionLifeTimeHandlers).OrderBy(x => x.RegistrationOrder))
             {
-                await AddServiceIfNotSkippedAsync(testApplicationLifetimeService, serviceProvider);
+                if (testhostExtension.Extension is IDataConsumer)
+                {
+                    await RegisterAsServiceOrConsumerOrBothAsync(testhostExtension.Extension, serviceProvider, dataConsumersBuilder);
+                }
+                else
+                {
+                    await AddServiceIfNotSkippedAsync(testhostExtension.Extension, serviceProvider);
+                }
             }
         }
 
