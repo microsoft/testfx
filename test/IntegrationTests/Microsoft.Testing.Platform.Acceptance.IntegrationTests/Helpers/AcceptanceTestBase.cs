@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Runtime.InteropServices;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
@@ -120,20 +119,26 @@ public class UnitTest1
         }
     }
 
-    private static string FindPackage(string packagePrefixName, string rootFolder)
-    {
-        var matches = Directory.GetFiles(rootFolder, packagePrefixName + "*" + NuGetPackageExtensionName, SearchOption.TopDirectoryOnly);
-        return matches.Length != 1
-            ? throw new InvalidOperationException($"Was expecting to find a single NuGet package named '{packagePrefixName}' in '{rootFolder}' but found {matches.Length}.")
-            : matches[0];
-    }
-
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
     {
         var matches = Directory.GetFiles(rootFolder, packagePrefixName + "*" + NuGetPackageExtensionName, SearchOption.TopDirectoryOnly);
-        return matches.Length != 1
-            ? throw new InvalidOperationException($"Was expecting to find a single NuGet package named '{packagePrefixName}' in '{rootFolder}' but found {matches.Length}.")
-            : matches[0].Substring(packagePrefixName.Length, matches[0].Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
+
+        if (matches.Length > 1)
+        {
+            // For some packages the find pattern will match multiple packages, for example:
+            // Microsoft.Testing.Platform.1.0.0.nupkg
+            // Microsoft.Testing.Platform.Extensions.1.0.0.nupkg
+            // Let's take shortest name which should be closest to the package we are looking for.
+            matches = [matches.OrderBy(x => x.Length).First()];
+        }
+
+        if (matches.Length != 1)
+        {
+            throw new InvalidOperationException($"Was expecting to find a single NuGet package named '{packagePrefixName}' in '{rootFolder}' but found {matches.Length}.");
+        }
+
+        var packageFullName = Path.GetFileName(matches[0]);
+        return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
 
     private static string ExtractVersionFromVersionPropsFile(XDocument versionPropsXmlDocument, string entryName)

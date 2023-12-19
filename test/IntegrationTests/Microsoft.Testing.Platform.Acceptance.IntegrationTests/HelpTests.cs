@@ -128,8 +128,17 @@ Extension options:
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            yield return (NoExtensionAssetName, NoExtensionAssetName, NoExtensionHelpTestCode.PatchTargetFrameworks(TargetFrameworks.All));
-            yield return (MSTestAssetName, MSTestAssetName, MSTestCode.PatchTargetFrameworks(TargetFrameworks.All));
+            yield return (NoExtensionAssetName, NoExtensionAssetName,
+                NoExtensionHelpTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+            yield return (MSTestAssetName, MSTestAssetName,
+                MSTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
         private const string NoExtensionHelpTestCode = """
@@ -144,8 +153,9 @@ Extension options:
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Framework" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Framework" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
 
@@ -187,10 +197,9 @@ global using Microsoft.Testing.Platform.Extensions;
         <EnableMSTestRunner>true</EnableMSTestRunner>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Platform" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="[1.0.0-*,)" />
-        <PackageReference Include="MSTest" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="MSTest" Version="$MSTestVersion$" />
     </ItemGroup>
 </Project>
 

@@ -231,7 +231,11 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            yield return (AssetName, AssetName, TestCode.PatchTargetFrameworks(TargetFrameworks.All));
+            yield return (AssetName, AssetName,
+                TestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
         }
 
         private const string TestCode = """
@@ -246,8 +250,9 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Framework" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Framework" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
 
