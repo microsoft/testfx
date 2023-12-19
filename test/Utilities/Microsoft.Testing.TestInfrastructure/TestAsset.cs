@@ -56,6 +56,19 @@ public class TestAsset : IDisposable
 
     public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, bool addDefaultNuGetConfigFile = true, bool addPublicFeeds = false)
     {
+        var testAsset = new TestAsset(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNugetConfig(addPublicFeeds)) : code);
+        string[] splitFiles = testAsset._assetCode.Split(new string[] { FileTag }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (string fileContent in splitFiles)
+        {
+            (string, string) fileInfo = ParseFile(fileContent);
+            await TempDirectory.WriteFileAsync(testAsset._tempDirectory.Path, fileInfo.Item1, fileInfo.Item2);
+        }
+
+        return testAsset;
+    }
+
+    public static string GetNugetConfig(bool addPublicFeeds = false)
+    {
         string publicFeedsFragment = addPublicFeeds ? """
         <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
         <add key="test-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
@@ -81,14 +94,7 @@ public class TestAsset : IDisposable
 </configuration>
 
 """;
-        var testAsset = new TestAsset(assetName, addDefaultNuGetConfigFile ? string.Concat(code, defaultNuGetConfig) : code);
-        string[] splitFiles = testAsset._assetCode.Split(new string[] { FileTag }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (string fileContent in splitFiles)
-        {
-            (string, string) fileInfo = ParseFile(fileContent);
-            await TempDirectory.WriteFileAsync(testAsset._tempDirectory.Path, fileInfo.Item1, fileInfo.Item2);
-        }
 
-        return testAsset;
+        return defaultNuGetConfig;
     }
 }

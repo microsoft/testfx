@@ -56,9 +56,10 @@ public abstract class AcceptanceTestBase : TestBase
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$TargetFramework$</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    $TargetFramework$
     $OutputType$
     $EnableMSTestRunner$
     $Extra$

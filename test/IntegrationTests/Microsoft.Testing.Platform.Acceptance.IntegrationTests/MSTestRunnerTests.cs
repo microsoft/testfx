@@ -23,7 +23,7 @@ public class MSTestRunnerTests : AcceptanceTestBase
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
             CurrentMSTestSourceCode
-            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{tfm}</TargetFramework>")
             .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
@@ -57,7 +57,7 @@ builder.AddMSTest(() => new[] { typeof(Program).Assembly });
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 """)
-            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{tfm}</TargetFramework>")
             .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
@@ -83,7 +83,7 @@ return await app.RunAsync();
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
             CurrentMSTestSourceCode
-            .PatchCodeWithReplace("$TargetFramework$", tfm)
+            .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{tfm}</TargetFramework>")
             .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
             .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>false</EnableMSTestRunner>")
