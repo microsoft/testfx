@@ -2,11 +2,13 @@
 <package >
   <metadata>
     $CommonMetadataElements$
+    <readme>PACKAGE.md</readme>
   </metadata>
   <files>
     $CommonFileElements$
 
     <file src="$MSBuildProjectDirectory$/Sdk/Sdk.props" target="Sdk" />
     <file src="$MSBuildProjectDirectory$/Sdk/Sdk.targets" target="Sdk" />
+    <file src="$RepoRoot$src\Package\MSTest.Sdk\PACKAGE.md" target="" />
   </files>
 </package>
