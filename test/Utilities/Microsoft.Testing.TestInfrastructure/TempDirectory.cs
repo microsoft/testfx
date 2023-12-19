@@ -42,7 +42,7 @@ public class TempDirectory : IDisposable
 
         if (disposing && _cleanup)
         {
-            TryRemoveDirectory(_baseDirectory);
+            Clean();
         }
 
         _isDisposed = true;
@@ -170,6 +170,11 @@ public class TempDirectory : IDisposable
 <Project>
     <PropertyGroup>
       <RepoRoot>{System.IO.Path.GetDirectoryName(currentDirectory)}/</RepoRoot>
+      <!--
+        Do not warn about package downgrade. NuGet uses alphabetical sort as ordering so -dev or -ci are considered downgrades of -preview.
+        -->
+      <NoWarn>NU1605</NoWarn>
+      <RunAnalyzers>false</RunAnalyzers>
     </PropertyGroup>
 </Project>
 """);
@@ -214,17 +219,19 @@ public class TempDirectory : IDisposable
         => Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
         ?? System.IO.Path.GetTempPath();
 
-    public static void TryRemoveDirectory(string directory)
+    public void Clean()
     {
-        if (Directory.Exists(directory))
+        if (!Directory.Exists(_baseDirectory))
         {
-            try
-            {
-                Directory.Delete(directory, recursive: true);
-            }
-            catch
-            {
-            }
+            return;
+        }
+
+        try
+        {
+            Directory.Delete(_baseDirectory, recursive: true);
+        }
+        catch
+        {
         }
     }
 
@@ -283,5 +290,5 @@ public class TempDirectory : IDisposable
         }
     }
 
-    ~TempDirectory() => TryRemoveDirectory(_baseDirectory);
+    ~TempDirectory() => Clean();
 }
