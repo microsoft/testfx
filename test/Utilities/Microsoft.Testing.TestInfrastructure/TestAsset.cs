@@ -11,11 +11,10 @@ public class TestAsset : IDisposable
     private readonly string _assetCode;
     private bool _isDisposed;
 
-    public TestAsset(string targetPath, string assetCode, bool cleanup = true)
+    public TestAsset(string targetPath, string assetCode)
     {
         _assetCode = assetCode;
-
-        _tempDirectory = new(targetPath, cleanup: cleanup);
+        _tempDirectory = new(targetPath, arcadeConvention: true, cleanup: false);
     }
 
     public void Dispose()
@@ -33,13 +32,18 @@ public class TestAsset : IDisposable
 
         if (disposing)
         {
-            _tempDirectory.Dispose();
+            if (DotnetResult is null || DotnetResult.ExitCode == 0)
+            {
+                _tempDirectory.Dispose();
+            }
         }
 
         _isDisposed = true;
     }
 
     public string TargetAssetPath => _tempDirectory.Path;
+
+    public DotnetMuxerResult? DotnetResult { get; internal set; }
 
     private static (string Name, string Content) ParseFile(string fileContent)
     {
@@ -56,7 +60,7 @@ public class TestAsset : IDisposable
 
     public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, bool addDefaultNuGetConfigFile = true, bool addPublicFeeds = false)
     {
-        var testAsset = new TestAsset(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNugetConfig(addPublicFeeds)) : code);
+        var testAsset = new TestAsset(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNuGetConfig(addPublicFeeds)) : code);
         string[] splitFiles = testAsset._assetCode.Split(new string[] { FileTag }, StringSplitOptions.RemoveEmptyEntries);
         foreach (string fileContent in splitFiles)
         {
@@ -67,7 +71,7 @@ public class TestAsset : IDisposable
         return testAsset;
     }
 
-    public static string GetNugetConfig(bool addPublicFeeds = false)
+    public static string GetNuGetConfig(bool addPublicFeeds = false)
     {
         string publicFeedsFragment = addPublicFeeds ? """
         <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />

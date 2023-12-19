@@ -217,12 +217,14 @@ In process file artifacts produced:
                 MSTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$IgnoreTestAttributeOrNothing$", "[Ignore]"));
             yield return (WithDataRow, AssetNameUsingMSTest,
                 MSTestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$IgnoreTestAttributeOrNothing$", string.Empty));
         }
@@ -292,6 +294,7 @@ global using Microsoft.Testing.Platform.Extensions;
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Platform.Extensions" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="MSTest" Version="$MSTestVersion$" />
     </ItemGroup>
 </Project>
