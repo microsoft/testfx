@@ -59,7 +59,10 @@ public class AbortionTests : AcceptanceTestBase
                 yield break;
             }
 
-            yield return (AssetName, AssetName, Sources.PatchTargetFrameworks(TargetFrameworks.All));
+            yield return (AssetName, AssetName,
+                Sources
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         }
 
         private const string Sources = """
@@ -73,7 +76,7 @@ public class AbortionTests : AcceptanceTestBase
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Platform" Version="[1.0.0-*,)" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 </Project>
 
