@@ -43,7 +43,7 @@ public class TestAsset : IDisposable
 
     private static (string Name, string Content) ParseFile(string fileContent)
     {
-        int fileNameEndIndex = fileContent.IndexOf(Environment.NewLine, StringComparison.InvariantCulture);
+        int fileNameEndIndex = fileContent.Replace("\r\n", "\n").IndexOf("\n", StringComparison.InvariantCulture);
         if (fileNameEndIndex < 0)
         {
             return (string.Empty, string.Empty);
