@@ -170,6 +170,9 @@ public class TempDirectory : IDisposable
 <Project>
     <PropertyGroup>
       <RepoRoot>{System.IO.Path.GetDirectoryName(currentDirectory)}/</RepoRoot>
+      <!-- Disable the default implicit warnings as errors -->
+      <WarningsAsErrors></WarningsAsErrors>
+      <RunAnalyzers>false</RunAnalyzers>
     </PropertyGroup>
 </Project>
 """);
