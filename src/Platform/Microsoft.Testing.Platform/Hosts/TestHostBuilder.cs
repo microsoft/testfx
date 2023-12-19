@@ -220,11 +220,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         ILoggerFactory loggerFactory = await ((LoggingManager)Logging).BuildAsync(serviceProvider, loggingState.LogLevel, systemMonitor);
         serviceProvider.TryAddService(loggerFactory);
 
-        // Add global telemetry service.
-        ITelemetryCollector telemetryService = await ((TelemetryManager)Telemetry).BuildAsync(serviceProvider, loggerFactory, testApplicationOptions);
-        serviceProvider.TryAddService(telemetryService);
-        AddApplicationMetadata(serviceProvider, builderMetrics);
-
         // At this point we start to build extensions so we need to have all the information complete for the usage,
         // here we ensure to override the result directory if user passed the argument --results-directory in command line.
         // After this check users can get the result directory using IConfiguration["testingPlatform:resultDirectory"] or the
@@ -240,6 +235,12 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             await platformOutputDevice.DisplayBannerAsync();
         }
+
+        // Add global telemetry service.
+        // Add at this point or the telemetry banner appearance order will be wrong, we want the testing app banner before the telemetry banner.
+        ITelemetryCollector telemetryService = await ((TelemetryManager)Telemetry).BuildAsync(serviceProvider, loggerFactory, testApplicationOptions);
+        serviceProvider.TryAddService(telemetryService);
+        AddApplicationMetadata(serviceProvider, builderMetrics);
 
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
 
