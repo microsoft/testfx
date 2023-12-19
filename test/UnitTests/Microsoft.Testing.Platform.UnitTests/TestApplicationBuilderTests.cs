@@ -91,8 +91,8 @@ public sealed class TestApplicationBuilderTests : TestBase
         testHostManager.AddTestSessionLifetimeHandle(compositeExtensionFactory);
         testHostManager.AddDataConsumer(compositeExtensionFactory);
         var compositeExtensions = new List<ICompositeExtensionFactory>();
-        IDataConsumer[] consumers = await testHostManager.BuildDataConsumersAsync(_serviceProvider, compositeExtensions);
-        ITestSessionLifetimeHandler[] sessionLifetimeHandle = await testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, compositeExtensions);
+        IDataConsumer[] consumers = (await testHostManager.BuildDataConsumersAsync(_serviceProvider, compositeExtensions)).Select(x => (IDataConsumer)x.Consumer).ToArray();
+        ITestSessionLifetimeHandler[] sessionLifetimeHandle = (await testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, compositeExtensions)).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler).ToArray();
         Assert.AreEqual(1, consumers.Length);
         Assert.AreEqual(1, sessionLifetimeHandle.Length);
         Assert.AreEqual(compositeExtensions[0].GetInstance(), consumers[0]);

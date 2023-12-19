@@ -14,6 +14,9 @@ namespace Microsoft.Testing.Platform.TestHostControllers;
 
 internal sealed class TestHostControllersManager : ITestHostControllersManager
 {
+    // Registration ordering
+    private readonly List<object> _factoryOrdering = [];
+
     private readonly List<Func<IServiceProvider, ITestHostEnvironmentVariableProvider>> _environmentVariableProviderFactories = [];
     private readonly List<Func<IServiceProvider, ITestHostProcessLifetimeHandler>> _lifetimeHandlerFactories = [];
     private readonly List<ICompositeExtensionFactory> _environmentVariableProviderCompositeFactories = [];
@@ -24,6 +27,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
     {
         ArgumentGuard.IsNotNull(environmentVariableProviderFactory);
         _environmentVariableProviderFactories.Add(environmentVariableProviderFactory);
+        _factoryOrdering.Add(environmentVariableProviderFactory);
     }
 
     public void AddEnvironmentVariableProvider<T>(CompositeExtensionFactory<T> compositeServiceFactory)
@@ -36,12 +40,14 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         }
 
         _environmentVariableProviderCompositeFactories.Add(compositeServiceFactory);
+        _factoryOrdering.Add(compositeServiceFactory);
     }
 
     public void AddProcessLifetimeHandler(Func<IServiceProvider, ITestHostProcessLifetimeHandler> lifetimeHandler)
     {
         ArgumentGuard.IsNotNull(lifetimeHandler);
         _lifetimeHandlerFactories.Add(lifetimeHandler);
+        _factoryOrdering.Add(lifetimeHandler);
     }
 
     public void AddProcessLifetimeHandler<T>(CompositeExtensionFactory<T> compositeServiceFactory)
@@ -54,6 +60,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         }
 
         _lifetimeHandlerCompositeFactories.Add(compositeServiceFactory);
+        _factoryOrdering.Add(compositeServiceFactory);
     }
 
     internal async Task<TestHostControllerConfiguration> BuildAsync(ServiceProvider serviceProvider)
@@ -66,16 +73,16 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         ArgumentGuard.IsNotNull(currentWorkingDirectory);
         aggregatedConfiguration.SetTestHostWorkingDirectory(currentWorkingDirectory);
 
-        List<ITestHostEnvironmentVariableProvider> environmentVariableProviders = [];
+        List<(ITestHostEnvironmentVariableProvider TestHostEnvironmentVariableProvider, int RegistrationOrder)> environmentVariableProviders = [];
         foreach (Func<IServiceProvider, ITestHostEnvironmentVariableProvider> environmentVariableProviderFactory in _environmentVariableProviderFactories)
         {
             ITestHostEnvironmentVariableProvider envVarProvider = environmentVariableProviderFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            if (environmentVariableProviders.Any(x => x.Uid == envVarProvider.Uid))
+            if (environmentVariableProviders.Any(x => x.TestHostEnvironmentVariableProvider.Uid == envVarProvider.Uid))
             {
-                ITestHostEnvironmentVariableProvider currentRegisteredExtension = environmentVariableProviders.Single(x => x.Uid == envVarProvider.Uid);
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, envVarProvider.Uid, currentRegisteredExtension.GetType()));
+                (ITestHostEnvironmentVariableProvider TestHostEnvironmentVariableProvider, int _) currentRegisteredExtension = environmentVariableProviders.Single(x => x.TestHostEnvironmentVariableProvider.Uid == envVarProvider.Uid);
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, envVarProvider.Uid, currentRegisteredExtension.TestHostEnvironmentVariableProvider.GetType()));
             }
 
             // We initialize only if enabled
@@ -87,7 +94,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 }
 
                 // Register the extension for usage
-                environmentVariableProviders.Add(envVarProvider);
+                environmentVariableProviders.Add((envVarProvider, _factoryOrdering.IndexOf(environmentVariableProviderFactory)));
                 serviceProvider.TryAddService(envVarProvider);
             }
         }
@@ -101,10 +108,10 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 var instance = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
 
                 // Check if we have already extensions of the same type with same id registered
-                if (environmentVariableProviders.Any(x => x.Uid == instance.Uid))
+                if (environmentVariableProviders.Any(x => x.TestHostEnvironmentVariableProvider.Uid == instance.Uid))
                 {
-                    ITestHostEnvironmentVariableProvider currentRegisteredExtension = environmentVariableProviders.Single(x => x.Uid == instance.Uid);
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.GetType()));
+                    (ITestHostEnvironmentVariableProvider TestHostEnvironmentVariableProvider, int _) currentRegisteredExtension = environmentVariableProviders.Single(x => x.TestHostEnvironmentVariableProvider.Uid == instance.Uid);
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.TestHostEnvironmentVariableProvider.GetType()));
                 }
 
                 // We initialize only if enabled
@@ -129,7 +136,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 if (extension is ITestHostEnvironmentVariableProvider testHostEnvironmentVariableProvider)
                 {
                     // Register the extension for usage
-                    environmentVariableProviders.Add(testHostEnvironmentVariableProvider);
+                    environmentVariableProviders.Add((testHostEnvironmentVariableProvider, _factoryOrdering.IndexOf(compositeServiceFactory)));
                     serviceProvider.TryAddService(testHostEnvironmentVariableProvider);
                 }
                 else
@@ -139,16 +146,16 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             }
         }
 
-        List<ITestHostProcessLifetimeHandler> lifetimeHandlers = [];
+        List<(ITestHostProcessLifetimeHandler TestHostProcessLifetimeHandler, int RegistrationOrder)> lifetimeHandlers = [];
         foreach (Func<IServiceProvider, ITestHostProcessLifetimeHandler> lifetimeHandlerFactory in _lifetimeHandlerFactories)
         {
             ITestHostProcessLifetimeHandler lifetimeHandler = lifetimeHandlerFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            if (lifetimeHandlers.Any(x => x.Uid == lifetimeHandler.Uid))
+            if (lifetimeHandlers.Any(x => x.TestHostProcessLifetimeHandler.Uid == lifetimeHandler.Uid))
             {
-                ITestHostProcessLifetimeHandler currentRegisteredExtension = lifetimeHandlers.Single(x => x.Uid == lifetimeHandler.Uid);
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, lifetimeHandler.Uid, currentRegisteredExtension.GetType()));
+                (ITestHostProcessLifetimeHandler TestHostProcessLifetimeHandler, int _) currentRegisteredExtension = lifetimeHandlers.Single(x => x.TestHostProcessLifetimeHandler.Uid == lifetimeHandler.Uid);
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, lifetimeHandler.Uid, currentRegisteredExtension.TestHostProcessLifetimeHandler.GetType()));
             }
 
             // We initialize only if enabled
@@ -160,7 +167,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 }
 
                 // Register the extension for usage
-                lifetimeHandlers.Add(lifetimeHandler);
+                lifetimeHandlers.Add((lifetimeHandler, _factoryOrdering.IndexOf(lifetimeHandlerFactory)));
                 serviceProvider.TryAddService(lifetimeHandler);
             }
         }
@@ -173,10 +180,10 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 // Get the singleton for init
                 var instance = (IExtension)compositeServiceFactory.GetInstance(serviceProvider);
 
-                if (lifetimeHandlers.Any(x => x.Uid == instance.Uid))
+                if (lifetimeHandlers.Any(x => x.TestHostProcessLifetimeHandler.Uid == instance.Uid))
                 {
-                    ITestHostProcessLifetimeHandler currentRegisteredExtension = lifetimeHandlers.Single(x => x.Uid == instance.Uid);
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.GetType()));
+                    (ITestHostProcessLifetimeHandler TestHostProcessLifetimeHandler, int _) currentRegisteredExtension = lifetimeHandlers.Single(x => x.TestHostProcessLifetimeHandler.Uid == instance.Uid);
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.TestHostProcessLifetimeHandler.GetType()));
                 }
 
                 // We initialize only if enabled
@@ -201,7 +208,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 if (extension is ITestHostProcessLifetimeHandler testHostProcessLifetimeHandler)
                 {
                     // Register the extension for usage
-                    lifetimeHandlers.Add(testHostProcessLifetimeHandler);
+                    lifetimeHandlers.Add((testHostProcessLifetimeHandler, _factoryOrdering.IndexOf(compositeServiceFactory)));
                     serviceProvider.TryAddService(testHostProcessLifetimeHandler);
                 }
                 else
@@ -213,7 +220,8 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
         bool requireProcessRestart = environmentVariableProviders.Count > 0 || lifetimeHandlers.Count > 0;
         return new TestHostControllerConfiguration(
-            environmentVariableProviders.ToArray(),
-            lifetimeHandlers.ToArray(), requireProcessRestart);
+            environmentVariableProviders.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostEnvironmentVariableProvider).ToArray(),
+            lifetimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => x.TestHostProcessLifetimeHandler).ToArray(),
+            requireProcessRestart);
     }
 }
