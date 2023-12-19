@@ -10,6 +10,7 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
 {
     private readonly AcceptanceFixture _acceptanceFixture;
     private const string AssetName = "MSTestProject";
+    private const string DotnetTestVerb = "test";
 
     public MSBuildMSTestRunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
         : base(testExecutionContext)
@@ -17,23 +18,24 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
         _acceptanceFixture = acceptanceFixture;
     }
 
-    internal static IEnumerable<TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)>> GetBuildMatrixSingleAndMultiTfmBuildConfiguration()
+    internal static IEnumerable<TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)>> GetBuildMatrix()
     {
-        foreach (TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)> entry in GetBuildMatrixTfmBuildConfiguration())
+        foreach (TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)> entry in GetBuildMatrixSingleAndMultiTfmBuildConfiguration())
         {
-            yield return new TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)>(
-                (entry.Arguments.Tfm, entry.Arguments.BuildConfiguration, false), $"{entry.Arguments.Tfm},{entry.Arguments.BuildConfiguration}");
-        }
-
-        foreach (TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)> entry in GetBuildMatrixMultiTfmBuildConfiguration())
-        {
-            yield return new TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)>(
-                (entry.Arguments.MultiTfm, entry.Arguments.BuildConfiguration, true), $"multitfm,{entry.Arguments.BuildConfiguration}");
+            foreach (var command in new string[]
+            {
+                "build --no-restore /t:Test",
+                DotnetTestVerb,
+            })
+            {
+                yield return new TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)>(
+                (entry.Arguments.SingleTfmOrMultiTfm, entry.Arguments.BuildConfiguration, entry.Arguments.IsMultiTfm, command), $"{(entry.Arguments.IsMultiTfm ? "multitfm" : entry.Arguments.SingleTfmOrMultiTfm)},{entry.Arguments.BuildConfiguration},{command}");
+            }
         }
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixSingleAndMultiTfmBuildConfiguration))]
-    public async Task MSBuildTestTarget_SingleAndMultiTfm_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration buildConfiguration, bool isMultiTfm)
+    [ArgumentsProvider(nameof(GetBuildMatrix))]
+    public async Task MSBuildTestTarget_SingleAndMultiTfm_Should_Run_Solution_Tests(string singleTfmOrMultiTfm, BuildConfiguration buildConfiguration, bool isMultiTfm, string command)
     {
         // Get the template project
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -44,7 +46,7 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
            .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
            .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
-           .PatchCodeWithReplace("$Extra$", string.Empty),
+           .PatchCodeWithReplace("$Extra$", command == DotnetTestVerb ? "<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>" : string.Empty),
            addPublicFeeds: true);
 
         string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSTestProject.csproj", SearchOption.AllDirectories).Single());
@@ -66,7 +68,7 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
         // Build the solution
         var restoreResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         restoreResult.AssertOutputNotContains("An approximate best match of");
-        var testResult = await DotnetCli.RunAsync($"build --no-restore /t:Test -nodeReuse:false {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        var testResult = await DotnetCli.RunAsync($"{command} -nodeReuse:false {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         if (isMultiTfm)
         {
