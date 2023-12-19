@@ -29,7 +29,7 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
             })
             {
                 yield return new TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm, string Command)>(
-                (entry.Arguments.SingleTfmOrMultiTfm, entry.Arguments.BuildConfiguration, entry.Arguments.IsMultiTfm, command), $"{entry.Arguments.SingleTfmOrMultiTfm},{entry.Arguments.BuildConfiguration},{command}");
+                (entry.Arguments.SingleTfmOrMultiTfm, entry.Arguments.BuildConfiguration, entry.Arguments.IsMultiTfm, command), $"{(entry.Arguments.IsMultiTfm ? "multitfm" : entry.Arguments.SingleTfmOrMultiTfm)},{entry.Arguments.BuildConfiguration},{command}");
             }
         }
     }
