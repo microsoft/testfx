@@ -46,7 +46,12 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
            .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
            .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
-           .PatchCodeWithReplace("$Extra$", command == DotnetTestVerb ? "<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>" : string.Empty),
+           .PatchCodeWithReplace("$Extra$", command == DotnetTestVerb ?
+"""
+           <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+           <TestingPlatformCaptureOutput>false</TestingPlatformCaptureOutput>
+""" :
+           string.Empty),
            addPublicFeeds: true);
 
         string projectContent = File.ReadAllText(Directory.GetFiles(generator.TargetAssetPath, "MSTestProject.csproj", SearchOption.AllDirectories).Single());
