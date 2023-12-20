@@ -20,16 +20,16 @@
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
     <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.23525.2</MicrosoftCodeAnalysisAnalyzersVersion>
-    <MicrosoftCodeAnalysisCSharpVersion>4.9.0-2.final</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>3.11.0-beta1.23525.2</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
-    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>9.0.0-beta.23619.2</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <MSTestVersion>3.2.0-preview.23619.9</MSTestVersion>
+    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>9.0.0-beta.23620.1</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
+    <MSTestVersion>3.2.0-preview.23620.1</MSTestVersion>
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
-    <MicrosoftTestingPlatformVersion>1.0.0-preview.23618.2</MicrosoftTestingPlatformVersion>
+    <MicrosoftTestingPlatformVersion>1.0.0-preview.23620.3</MicrosoftTestingPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="MSTest test dependencies">
     <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
