@@ -12,7 +12,7 @@ using Microsoft.Testing.TestInfrastructure;
 // DebuggerUtility.AttachVSToCurrentProcess();
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.GetCommandLineOptions()));
-builder.AddTestFramework(new MSTest.Analyzers.Test.SourceGeneratedTestNodesBuilder());
+builder.AddTestFramework(new MSTest.Analyzers.UnitTests.SourceGeneratedTestNodesBuilder());
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory = new(_ => new SlowestTestsConsumer());
