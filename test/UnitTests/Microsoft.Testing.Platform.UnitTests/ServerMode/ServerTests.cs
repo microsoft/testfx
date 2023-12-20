@@ -37,7 +37,7 @@ public class ServerTests : TestBase
     public async Task ServerCanBeStartedAndAborted_TcpIp()
     {
 #if !NETCOREAPP
-        // The nefxversion is flaky on netfx
+        // The netfx version is flaky
         await Task.CompletedTask;
 #else
         using var server = TcpServer.Create();
