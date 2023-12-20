@@ -571,6 +571,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Virtual callback that allows to the VSTest mode to register custom services needed by the bridge.
         AfterTestAdapterCreation(serviceProvider);
 
+        // Prepare the session lifetime handlers for the notifications
+        List<ITestSessionLifetimeHandler> testSessionLifetimeHandlers = [];
+
         // When we run a discovery request we don't want to run any user extensions, the only needed extension is the test adapter that will "discover" tests.
         if (!isForDiscoveryRequest)
         {
@@ -580,9 +583,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             (IExtension TestSessionLifetimeHandler, int RegistrationOrder)[] sessionLifeTimeHandlers = await testSessionManager.BuildTestSessionLifetimeHandleAsync(serviceProvider, newBuiltCompositeServices);
 
             // Register the test session lifetime handlers for the notifications
-            TestSessionLifetimeHandlersContainer testSessionLifetimeHandlersContainer =
-                new(sessionLifeTimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler));
-            serviceProvider.AddService(testSessionLifetimeHandlersContainer);
+            testSessionLifetimeHandlers.AddRange(sessionLifeTimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler));
 
             // Keep the registration order
             foreach ((IExtension Extension, int _) testhostExtension in consumers.Union(sessionLifeTimeHandlers).OrderBy(x => x.RegistrationOrder))
@@ -602,8 +603,17 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // node updates to the correct request id.
         foreach (IDataConsumer consumerService in serverPerCallConsumers)
         {
+            if (consumerService is ITestSessionLifetimeHandler handler)
+            {
+                testSessionLifetimeHandlers.Add(handler);
+            }
+
             await RegisterAsServiceOrConsumerOrBothAsync(consumerService, serviceProvider, dataConsumersBuilder);
         }
+
+        // Register the test session lifetime handlers container
+        TestSessionLifetimeHandlersContainer testSessionLifetimeHandlersContainer = new(testSessionLifetimeHandlers);
+        serviceProvider.AddService(testSessionLifetimeHandlersContainer);
 
         // Register the ITestApplicationResult
         var testApplicationResult = new TestApplicationResult(
