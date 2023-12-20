@@ -297,6 +297,7 @@ global using Microsoft.Testing.Platform.Extensions;
         <PackageReference Include="Microsoft.Testing.Platform.Extensions" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="MSTest" Version="$MSTestVersion$" />
         <!-- Required for internal build -->
+        <PackageReference Include="Microsoft.Testing.Platform.Extensions.Telemetry" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
