@@ -12,7 +12,8 @@ public static class DotnetCli
         string nugetGlobalPackagesFolder,
         string? workingDirectory = null,
         Dictionary<string, string>? environmentVariables = null,
-        bool failIfReturnValueIsNotZero = true)
+        bool failIfReturnValueIsNotZero = true,
+        bool disableTelemetry = true)
     {
         environmentVariables ??= new Dictionary<string, string>();
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
@@ -24,6 +25,11 @@ public static class DotnetCli
             }
 
             environmentVariables.Add(entry.Key!.ToString()!, entry.Value!.ToString()!);
+        }
+
+        if (disableTelemetry)
+        {
+            environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
         }
 
         environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
