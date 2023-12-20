@@ -15,7 +15,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.GetCommandLineOptions()));
 
-builder.AddTestFramework(new TestFrameworkConfiguration(Debugger.IsAttached ? 1 : int.MaxValue), new SourceGeneratedTestNodesBuilder());
+builder.AddTestFramework(new TestFrameworkConfiguration(Debugger.IsAttached ? 1 : Environment.ProcessorCount), new SourceGeneratedTestNodesBuilder());
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverage();
 #endif
