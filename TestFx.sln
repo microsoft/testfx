@@ -181,7 +181,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Analyzers.CodeFixes"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Analyzers.Package", "src\Analyzers\MSTest.Analyzers.Package\MSTest.Analyzers.Package.csproj", "{DC068986-7549-4B75-8EFC-A9958FD5CF88}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Analyzers.Test", "test\UnitTests\MSTest.Analyzers.Test\MSTest.Analyzers.Test.csproj", "{1FF35C23-C128-4C95-B3F8-67B1B4C51E4D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Analyzers.UnitTests", "test\UnitTests\MSTest.Analyzers.UnitTests\MSTest.Analyzers.UnitTests.csproj", "{1FF35C23-C128-4C95-B3F8-67B1B4C51E4D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Sdk", "src\Package\MSTest.Sdk\MSTest.Sdk.csproj", "{10930CFD-EDF9-4486-B0A3-49230B5A6798}"
 EndProject

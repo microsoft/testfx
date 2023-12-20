@@ -3,6 +3,8 @@
 
 using System.Collections.Immutable;
 
+using Analyzer.Utilities.Extensions;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -61,7 +63,7 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
         if (!hasParallelizeAttribute && !hasDoNotParallelizeAttribute)
         {
             // We cannot provide any good location for assembly level missing attributes
-            context.ReportDiagnostic(Diagnostic.Create(Rule, Location.None));
+            context.ReportNoLocationDiagnostic(Rule);
         }
     }
 }

@@ -61,6 +61,60 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to MSTest only considers public classes marked with the &apos;[TestClass]&apos; attribute as test classes..
+        /// </summary>
+        internal static string TestClassShouldBePublicDescription {
+            get {
+                return ResourceManager.GetString("TestClassShouldBePublicDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should be public.
+        /// </summary>
+        internal static string TestClassShouldBePublicMessageFormat {
+            get {
+                return ResourceManager.GetString("TestClassShouldBePublicMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Classes marked with &apos;[TestClass]&apos; should be public.
+        /// </summary>
+        internal static string TestClassShouldBePublicTitle {
+            get {
+                return ResourceManager.GetString("TestClassShouldBePublicTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to MSTest only considers public methods marked with the &apos;[TestMethod]&apos; attribute as test methods..
+        /// </summary>
+        internal static string TestMethodShouldBePublicDescription {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBePublicDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should be public.
+        /// </summary>
+        internal static string TestMethodShouldBePublicMessageFormat {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBePublicMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Methods marked with &apos;[TestMethod]&apos; should be public.
+        /// </summary>
+        internal static string TestMethodShouldBePublicTitle {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBePublicTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to By default, MSTest runs tests sequentially which can lead to severe performance limitations. It is recommended to enable assembly attribute &apos;Parallelize&apos; or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute &apos;DoNotParallelize&apos;..
         /// </summary>
         internal static string UseParallelizeAttributeAnalyzerDescription {

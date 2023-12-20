@@ -6,4 +6,6 @@ namespace MSTest.Analyzers;
 internal static class DiagnosticIds
 {
     public const string UseParallelizedAttributeRuleId = "MSTEST0001";
+    public const string TestClassShouldBePublicRuleId = "MSTEST0002";
+    public const string TestMethodShouldBePublicRuleId = "MSTEST0003";
 }
