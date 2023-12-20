@@ -10,7 +10,7 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
-[DiagnosticAnalyzer(LanguageNames.CSharp)]
+[DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseParallelizeAttributeAnalyzerTitle), Resources.ResourceManager, typeof(Resources));

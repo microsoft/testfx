@@ -20,7 +20,7 @@
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
     <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.23525.2</MicrosoftCodeAnalysisAnalyzersVersion>
-    <MicrosoftCodeAnalysisCSharpVersion>4.9.0-2.final</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>3.11.0-beta1.23525.2</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
