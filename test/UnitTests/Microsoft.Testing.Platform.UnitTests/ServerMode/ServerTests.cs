@@ -40,6 +40,7 @@ public class ServerTests : TestBase
 #if !NETCOREAPP
         // The nefxversion is flaky on netfx
         await Task.CompletedTask;
+        return;
 #endif
 
         using var server = TcpServer.Create();
