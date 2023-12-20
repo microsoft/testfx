@@ -10,6 +10,24 @@ public sealed class TestHost
 {
     private readonly string _testHostModuleName;
 
+    private static int s_maxOutstandingExecutions = Environment.ProcessorCount;
+    private static SemaphoreSlim s_maxOutstandingExecutions_semaphore = new(s_maxOutstandingExecutions, s_maxOutstandingExecutions);
+
+    public static int MaxOutstandingExecutions
+    {
+        get
+        {
+            return s_maxOutstandingExecutions;
+        }
+
+        set
+        {
+            s_maxOutstandingExecutions = value;
+            s_maxOutstandingExecutions_semaphore.Dispose();
+            s_maxOutstandingExecutions_semaphore = new SemaphoreSlim(s_maxOutstandingExecutions, s_maxOutstandingExecutions);
+        }
+    }
+
     private TestHost(string testHostFullName, string testHostModuleName)
     {
         FullName = testHostFullName;
@@ -23,39 +41,47 @@ public sealed class TestHost
 
     public async Task<TestHostResult> ExecuteAsync(string? command = null, Dictionary<string, string>? environmentVariables = null, bool disableTelemetry = true)
     {
-        if (command?.StartsWith(_testHostModuleName, StringComparison.OrdinalIgnoreCase) ?? false)
+        await s_maxOutstandingExecutions_semaphore.WaitAsync();
+        try
         {
-            throw new InvalidOperationException($"Command should not start with module name '{_testHostModuleName}'.");
-        }
-
-        environmentVariables ??= new Dictionary<string, string>();
-
-        if (disableTelemetry)
-        {
-            environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
-        }
-
-        foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
-        {
-            // Skip all unwanted environment variables.
-            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
+            if (command?.StartsWith(_testHostModuleName, StringComparison.OrdinalIgnoreCase) ?? false)
             {
-                continue;
+                throw new InvalidOperationException($"Command should not start with module name '{_testHostModuleName}'.");
             }
 
-            environmentVariables.Add(entry.Key!.ToString()!, entry.Value!.ToString()!);
+            environmentVariables ??= new Dictionary<string, string>();
+
+            if (disableTelemetry)
+            {
+                environmentVariables.Add("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+            }
+
+            foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
+            {
+                // Skip all unwanted environment variables.
+                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                environmentVariables.Add(entry.Key!.ToString()!, entry.Value!.ToString()!);
+            }
+
+            // Define DOTNET_ROOT to point to the dotnet we install for this repository, to avoid
+            // computer configuration having impact on our tests.
+            environmentVariables.Add("DOTNET_ROOT", $"{RootFinder.Find()}/.dotnet");
+
+            string finalArguments = command ?? string.Empty;
+
+            CommandLine commandLine = new();
+            int exitCode = await commandLine.RunAsyncAndReturnExitCode($"{FullName} {finalArguments}", environmentVariables: environmentVariables, workingDirectory: null, cleanDefaultEnvironmentVariableIfCustomAreProvided: true, 60 * 30);
+            string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
+            return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
         }
-
-        // Define DOTNET_ROOT to point to the dotnet we install for this repository, to avoid
-        // computer configuration having impact on our tests.
-        environmentVariables.Add("DOTNET_ROOT", $"{RootFinder.Find()}/.dotnet");
-
-        string finalArguments = command ?? string.Empty;
-
-        CommandLine commandLine = new();
-        int exitCode = await commandLine.RunAsyncAndReturnExitCode($"{FullName} {finalArguments}", environmentVariables: environmentVariables, workingDirectory: null, cleanDefaultEnvironmentVariableIfCustomAreProvided: true, 60 * 30);
-        string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
-        return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
+        finally
+        {
+            s_maxOutstandingExecutions_semaphore.Release();
+        }
     }
 
     public static TestHost LocateFrom(string rootFolder, string testHostModuleNameWithoutExtension)
