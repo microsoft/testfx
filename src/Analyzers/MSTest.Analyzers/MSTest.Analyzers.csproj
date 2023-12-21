@@ -4,9 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-    <Nullable>enable</Nullable>
     <LangVersion>Latest</LangVersion>
-    <ImplicitUsings>true</ImplicitUsings>
 
     <!-- Avoid ID conflicts with the package project. -->
     <PackageId>*$(MSBuildProjectFile)*</PackageId>

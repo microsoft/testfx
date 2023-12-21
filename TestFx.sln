@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FF8B1B72-55A1-4FFE-809E-7B79323ED8D0}"
 	ProjectSection(SolutionItems) = preProject
 		src\.editorconfig = src\.editorconfig
+		src\Directory.Build.props = src\Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "2 - Adapter", "2 - Adapter", "{24088844-2107-4DB2-8F3F-CBCA94FC4B28}"
@@ -21,7 +22,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A9596292-7E67-4566-9096-143DDAA4E8D8}"
 	ProjectSection(SolutionItems) = preProject
 		test\.editorconfig = test\.editorconfig
-		test\Directory.Build.targets = test\Directory.Build.targets
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFramework.Extensions", "src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj", "{DF131865-84EE-4540-8112-E88ACEBDEA09}"

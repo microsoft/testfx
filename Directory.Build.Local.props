@@ -11,6 +11,7 @@
   <PropertyGroup>
     <!-- default to allowing all language features -->
     <LangVersion>preview</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <!--
         Make sure any documentation comments which are included in code get checked for syntax during the build, but do
@@ -20,8 +21,6 @@
         CS1591: Missing XML comment for publicly visible type or member 'Type_or_Member'
       -->
     <NoWarn>$(NoWarn),1573,1591</NoWarn>
-    <!-- Workaround for AD0001 in analyzers with .NET 9 -->
-    <BuildWithNetFrameworkHostedCompiler>true</BuildWithNetFrameworkHostedCompiler>
   </PropertyGroup>
 
   <!-- The TFMs to build and test against. -->
@@ -44,6 +43,8 @@
     <!-- PDB -->
     <DebugSymbols>true</DebugSymbols>
     <DebugType>embedded</DebugType>
+    <!-- Workaround for AD0001 in analyzers with .NET 9. See https://github.com/dotnet/arcade/issues/14311 -->
+    <BuildWithNetFrameworkHostedCompiler>true</BuildWithNetFrameworkHostedCompiler>
   </PropertyGroup>
 
   <!-- Pack config -->
