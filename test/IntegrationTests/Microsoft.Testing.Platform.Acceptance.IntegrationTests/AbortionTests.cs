@@ -20,10 +20,9 @@ public class AbortionTests : AcceptanceTestBase
         _testAssetFixture = testAssetFixture;
     }
 
+    // We retry because sometime the Cancelling the session message is not showing up.
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_TestHost_Succeeded(string tfm)
-
-     // We retry because sometime the Cancelling the session message is not showing up.
         => await RetryHelper.Retry(
             async () =>
             {
@@ -31,21 +30,21 @@ public class AbortionTests : AcceptanceTestBase
                 // Windows API because this gesture is not easy xplat.
                 if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                return;
+                    return;
                 }
-            
+
                 TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
                 TestHostResult testHostResult = await testHost.ExecuteAsync();
-            
+
                 testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);
-            
+
                 // We check only in netcore for netfx is now showing in CI every time, the same behavior in local something works sometime nope.
                 // Manual test works pretty always as expected, looks like the implementation is different, we care more on .NET Core.
                 if (TargetFrameworks.Net.Select(x => x.Arguments).Contains(tfm))
                 {
-                testHostResult.AssertOutputMatchesRegex("Cancelling the test session.*");
+                    testHostResult.AssertOutputMatchesRegex("Cancelling the test session.*");
                 }
-            
+
                 testHostResult.AssertOutputMatchesRegex("Aborted - Failed: 0, Passed: 0, Skipped: 0, Total: 0 -.*");
             }, 3, TimeSpan.FromSeconds(10));
 
