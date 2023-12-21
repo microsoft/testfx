@@ -10,6 +10,25 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class DotnetCli
 {
+    private static readonly string[] CodeCoverageEnvironmentVariables = new[]
+{
+        "MicrosoftInstrumentationEngine_ConfigPath32_VanguardInstrumentationProfiler",
+        "MicrosoftInstrumentationEngine_ConfigPath64_VanguardInstrumentationProfiler",
+        "CORECLR_PROFILER_PATH_32",
+        "CORECLR_PROFILER_PATH_64",
+        "CORECLR_ENABLE_PROFILING",
+        "CORECLR_PROFILER",
+        "COR_PROFILER_PATH_32",
+        "COR_PROFILER_PATH_64",
+        "COR_ENABLE_PROFILING",
+        "COR_PROFILER",
+        "CODE_COVERAGE_SESSION_NAME",
+        "CODE_COVERAGE_PIPE_PATH",
+        "MicrosoftInstrumentationEngine_LogLevel",
+        "MicrosoftInstrumentationEngine_DisableCodeSignatureValidation",
+        "MicrosoftInstrumentationEngine_FileLogPath",
+};
+
     private static int s_maxOutstandingCommand = Environment.ProcessorCount;
     private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
 
@@ -35,7 +54,8 @@ public static class DotnetCli
         Dictionary<string, string>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
-        int timeoutInSeconds = 60)
+        int timeoutInSeconds = 60,
+        bool disableCodeCoverage = true)
     {
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
@@ -47,6 +67,15 @@ public static class DotnetCli
                 if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
                 {
                     continue;
+                }
+
+                if (disableCodeCoverage)
+                {
+                    // Disable the code coverage during the build.
+                    if (CodeCoverageEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
                 }
 
                 environmentVariables.Add(entry.Key!.ToString()!, entry.Value!.ToString()!);
