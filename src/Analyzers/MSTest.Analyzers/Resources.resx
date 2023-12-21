@@ -119,7 +119,7 @@
   </resheader>
   <data name="TestClassShouldBeValidDescription" xml:space="preserve">
     <value>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public'
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
 - it should not be generic.</value>
   </data>
@@ -132,18 +132,21 @@
   <data name="TestClassShouldBeValidMessageFormat_Public" xml:space="preserve">
     <value>Test class '{0}' should be 'public'</value>
   </data>
+  <data name="TestClassShouldBeValidMessageFormat_PublicOrInternal" xml:space="preserve">
+    <value>Test class '{0}' should be 'public' or 'internal'</value>
+  </data>
   <data name="TestClassShouldBeValidTitle" xml:space="preserve">
     <value>Test classes should have valid layout</value>
   </data>
   <data name="TestMethodShouldBeValidDescription" xml:space="preserve">
     <value>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public'
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
 - return type should be 'void' or 'Task'
 - it should not be 'async void'
-- it should be a method of kind 'ordinary'.</value>
+- it should be a special method (finalizer, operator...).</value>
   </data>
   <data name="TestMethodShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
     <value>Test method '{0}' should not be 'abstract'</value>
@@ -162,6 +165,9 @@
   </data>
   <data name="TestMethodShouldBeValidMessageFormat_Public" xml:space="preserve">
     <value>Test method '{0}' should be 'public'</value>
+  </data>
+  <data name="TestMethodShouldBeValidMessageFormat_PublicOrInternal" xml:space="preserve">
+    <value>Test method '{0}' should be 'public' or 'internal'</value>
   </data>
   <data name="TestMethodShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
     <value>Test method '{0}' should return 'void' or 'Task'</value>

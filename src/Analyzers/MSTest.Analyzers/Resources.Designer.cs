@@ -62,7 +62,7 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Test classes, classes marked with the &apos;[TestClass]&apos; attribute, should respect the following layout to be considered valid by MSTest:
-        ///- it should be &apos;public&apos;
+        ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos;
         ///- it should not be generic..
         /// </summary>
@@ -100,6 +100,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should be &apos;public&apos; or &apos;internal&apos;.
+        /// </summary>
+        internal static string TestClassShouldBeValidMessageFormat_PublicOrInternal {
+            get {
+                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat_PublicOrInternal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test classes should have valid layout.
         /// </summary>
         internal static string TestClassShouldBeValidTitle {
@@ -110,13 +119,13 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Test methods, methods marked with the &apos;[TestMethod]&apos; attribute, should respect the following layout to be considered valid by MSTest:
-        ///- it should be &apos;public&apos;
+        ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos;
         ///- it should not be generic
         ///- it should not be &apos;abstract&apos;
         ///- return type should be &apos;void&apos; or &apos;Task&apos;
         ///- it should not be &apos;async void&apos;
-        ///- it should be a method of kind &apos;ordinary&apos;..
+        ///- it should be a special method (finalizer, operator...)..
         /// </summary>
         internal static string TestMethodShouldBeValidDescription {
             get {
@@ -175,6 +184,15 @@ namespace MSTest.Analyzers {
         internal static string TestMethodShouldBeValidMessageFormat_Public {
             get {
                 return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_Public", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should be &apos;public&apos; or &apos;internal&apos;.
+        /// </summary>
+        internal static string TestMethodShouldBeValidMessageFormat_PublicOrInternal {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_PublicOrInternal", resourceCulture);
             }
         }
         

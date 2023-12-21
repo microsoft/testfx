@@ -4,11 +4,11 @@
     <body>
       <trans-unit id="TestClassShouldBeValidDescription">
         <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public'
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
 - it should not be generic.</source>
         <target state="new">Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public'
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
 - it should not be generic.</target>
         <note />
@@ -28,6 +28,11 @@
         <target state="new">Test class '{0}' should be 'public'</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_PublicOrInternal">
+        <source>Test class '{0}' should be 'public' or 'internal'</source>
+        <target state="new">Test class '{0}' should be 'public' or 'internal'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidTitle">
         <source>Test classes should have valid layout</source>
         <target state="new">Test classes should have valid layout</target>
@@ -35,21 +40,21 @@
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">
         <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public'
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
 - return type should be 'void' or 'Task'
 - it should not be 'async void'
-- it should be a method of kind 'ordinary'.</source>
+- it should be a special method (finalizer, operator...).</source>
         <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public'
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
 - return type should be 'void' or 'Task'
 - it should not be 'async void'
-- it should be a method of kind 'ordinary'.</target>
+- it should be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
@@ -80,6 +85,11 @@
       <trans-unit id="TestMethodShouldBeValidMessageFormat_Public">
         <source>Test method '{0}' should be 'public'</source>
         <target state="new">Test method '{0}' should be 'public'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_PublicOrInternal">
+        <source>Test method '{0}' should be 'public' or 'internal'</source>
+        <target state="new">Test method '{0}' should be 'public' or 'internal'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">

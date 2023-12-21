@@ -29,6 +29,17 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
         Description,
         $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.TestMethodShouldBeValidRuleId}.md");
 
+    private static readonly LocalizableResourceString PublicOrInternalMessageFormat = new(nameof(Resources.TestMethodShouldBeValidMessageFormat_PublicOrInternal), Resources.ResourceManager, typeof(Resources));
+    internal static readonly DiagnosticDescriptor PublicOrInternalRule = new(
+        DiagnosticIds.TestMethodShouldBeValidRuleId,
+        Title,
+        PublicOrInternalMessageFormat,
+        Categories.Usage,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        Description,
+        $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.TestMethodShouldBeValidRuleId}.md");
+
     private static readonly LocalizableResourceString NotStaticMessageFormat = new(nameof(Resources.TestMethodShouldBeValidMessageFormat_NotStatic), Resources.ResourceManager, typeof(Resources));
     internal static readonly DiagnosticDescriptor NotStaticRule = new(
         DiagnosticIds.TestMethodShouldBeValidRuleId,
@@ -108,12 +119,16 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out var testMethodAttributeSymbol))
             {
                 var taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
-                context.RegisterSymbolAction(context => AnalyzeSymbol(context, testMethodAttributeSymbol, taskSymbol), SymbolKind.Method);
+                bool canDiscoverInternals = context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute, out var discoverInternalsAttributeSymbol)
+                    && context.Compilation.Assembly.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, discoverInternalsAttributeSymbol));
+
+                context.RegisterSymbolAction(context => AnalyzeSymbol(context, testMethodAttributeSymbol, taskSymbol, canDiscoverInternals), SymbolKind.Method);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol? taskSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol? taskSymbol,
+        bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         if (!methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testMethodAttributeSymbol)))
@@ -144,10 +159,16 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotGenericRule, methodSymbol.Name));
         }
 
-        if (methodSymbol.GetResultantVisibility() != SymbolVisibility.Public
-            || methodSymbol.DeclaredAccessibility != Accessibility.Public)
+        if (methodSymbol.GetResultantVisibility() is { } resultantVisibility)
         {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicRule, methodSymbol.Name));
+            if (!canDiscoverInternals && (resultantVisibility != SymbolVisibility.Public || methodSymbol.DeclaredAccessibility != Accessibility.Public))
+            {
+                context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicRule, methodSymbol.Name));
+            }
+            else if (canDiscoverInternals && resultantVisibility == SymbolVisibility.Private)
+            {
+                context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicOrInternalRule, methodSymbol.Name));
+            }
         }
 
         if (methodSymbol.ReturnsVoid && methodSymbol.IsAsync)

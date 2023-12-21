@@ -271,4 +271,95 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
                 .WithLocation(0)
                 .WithArguments("MyTestMethod"));
     }
+
+    public async Task WhenTestMethodIsInternalAndDiscoverInternals_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                internal void MyTestMethod()
+                {
+                }
+            }
+
+            [TestClass]
+            internal class MyTestClass2
+            {
+                [TestMethod]
+                internal void MyTestMethod()
+                {
+                }
+            }
+
+            [TestClass]
+            internal class MyTestClass3
+            {
+                [TestMethod]
+                public void MyTestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestMethodIsPrivateAndDiscoverInternals_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                private void {|#0:MyTestMethod|}()
+                {
+                }
+            }
+            
+            public class Outer
+            {
+                [TestClass]
+                private class MyTestClass2
+                {
+                    [TestMethod]
+                    public void {|#1:MyTestMethod|}()
+                    {
+                    }
+                }
+
+                [TestClass]
+                private class MyTestClass3
+                {
+                    [TestMethod]
+                    private void {|#2:MyTestMethod|}()
+                    {
+                    }
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.PublicOrInternalRule)
+                .WithLocation(0)
+                .WithArguments("MyTestMethod"),
+            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.PublicOrInternalRule)
+                .WithLocation(1)
+                .WithArguments("MyTestMethod"),
+            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.PublicOrInternalRule)
+                .WithLocation(2)
+                .WithArguments("MyTestMethod"));
+    }
 }

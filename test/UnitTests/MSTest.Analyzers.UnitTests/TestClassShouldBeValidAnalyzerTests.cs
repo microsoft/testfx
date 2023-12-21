@@ -138,6 +138,27 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
                 .WithArguments("MyTestClass"));
     }
 
+    public async Task WhenClassIsNotGenericButAsOuterGeneric_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyClass<T>
+            {
+                [TestClass]
+                public class {|#0:MyTestClass|}
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotGenericRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"));
+    }
+
     public async Task WhenMultipleViolations_MultipleDiagnostics()
     {
         var code = """
@@ -159,6 +180,45 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
                 .WithArguments("MyTestClass"),
             VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotGenericRule)
                 .WithLocation(2)
+                .WithArguments("MyTestClass"));
+    }
+
+    public async Task WhenDiscoverInternalsAndTypeIsInternal_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            internal class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenDiscoverInternalsAndTypeIsPrivate_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            public class A
+            {
+                [TestClass]
+                private class {|#0:MyTestClass|}
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.PublicOrInternalRule)
+                .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
 }

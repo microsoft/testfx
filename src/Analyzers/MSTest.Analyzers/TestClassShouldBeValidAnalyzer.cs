@@ -29,6 +29,17 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
         Description,
         $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.TestClassShouldBeValidRuleId}.md");
 
+    private static readonly LocalizableResourceString PublicOrInternalMessageFormat = new(nameof(Resources.TestClassShouldBeValidMessageFormat_PublicOrInternal), Resources.ResourceManager, typeof(Resources));
+    internal static readonly DiagnosticDescriptor PublicOrInternalRule = new(
+        DiagnosticIds.TestClassShouldBeValidRuleId,
+        Title,
+        PublicOrInternalMessageFormat,
+        Categories.Usage,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        Description,
+        $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.TestClassShouldBeValidRuleId}.md");
+
     private static readonly LocalizableResourceString NotStaticMessageFormat = new(nameof(Resources.TestClassShouldBeValidMessageFormat_NotStatic), Resources.ResourceManager, typeof(Resources));
     internal static readonly DiagnosticDescriptor NotStaticRule = new(
         DiagnosticIds.TestClassShouldBeValidRuleId,
@@ -63,12 +74,15 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out var testClassAttributeSymbol))
             {
-                context.RegisterSymbolAction(context => AnalyzeSymbol(context, testClassAttributeSymbol), SymbolKind.NamedType);
+                bool canDiscoverInternals = context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute, out var discoverInternalsAttributeSymbol)
+                    && context.Compilation.Assembly.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, discoverInternalsAttributeSymbol));
+
+                context.RegisterSymbolAction(context => AnalyzeSymbol(context, testClassAttributeSymbol, canDiscoverInternals), SymbolKind.NamedType);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, bool canDiscoverInternals)
     {
         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
         if (namedTypeSymbol.TypeKind != TypeKind.Class
@@ -77,9 +91,16 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (namedTypeSymbol.GetResultantVisibility() != SymbolVisibility.Public)
+        if (namedTypeSymbol.GetResultantVisibility() is { } resultantVisibility)
         {
-            context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(PublicRule, namedTypeSymbol.Name));
+            if (!canDiscoverInternals && resultantVisibility != SymbolVisibility.Public)
+            {
+                context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(PublicRule, namedTypeSymbol.Name));
+            }
+            else if (canDiscoverInternals && resultantVisibility == SymbolVisibility.Private)
+            {
+                context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(PublicOrInternalRule, namedTypeSymbol.Name));
+            }
         }
 
         if (namedTypeSymbol.IsGenericType)
