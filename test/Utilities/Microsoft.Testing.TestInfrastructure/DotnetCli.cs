@@ -3,6 +3,9 @@
 
 using System.Collections;
 
+using Polly;
+using Polly.Contrib.WaitAndRetry;
+
 namespace Microsoft.Testing.TestInfrastructure;
 
 public static class DotnetCli
@@ -56,10 +59,14 @@ public static class DotnetCli
 
             environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
 
-            // Retry in case of:
-            // Plugin 'CredentialProvider.Microsoft' failed within 21.143 seconds with exit code
-            return await RetryHelper.Retry(
-                async () =>
+            // Retry up to 5 times with exponential backoff.
+            // 3 seconds, 6 seconds, 9 seconds, 12 seconds, 15 seconds
+            // total wait time: 45 seconds
+            var delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 2);
+            return await Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(delay)
+                .ExecuteAsync(async () =>
                 {
                     if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
                     {
@@ -72,7 +79,7 @@ public static class DotnetCli
                     return exitCode != 0 && failIfReturnValueIsNotZero
                         ? throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}")
                         : new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines);
-                }, 3, TimeSpan.FromSeconds(3), exception => exception.ToString().Contains("Plugin 'CredentialProvider.Microsoft' failed"));
+                });
         }
         finally
         {
