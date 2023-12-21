@@ -1,7 +1,5 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the MIT license.  See License.txt in the project root for license information.
 
-using System;
-
 namespace Analyzer.Utilities.Extensions
 {
 #pragma warning disable CA1027 // Mark enums with FlagsAttribute

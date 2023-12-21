@@ -2,9 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WIN_UI
-using System;
 using System.Diagnostics;
-using System.IO;
 using System.Text;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
