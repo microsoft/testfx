@@ -61,6 +61,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
+        /// </summary>
+        internal static string PublicTypeShouldBeTestClassDescription {
+            get {
+                return ResourceManager.GetString("PublicTypeShouldBeTestClassDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Public type &apos;{0}&apos; should be marked with &apos;[TestClass]&apos; or changed to &apos;internal&apos;.
+        /// </summary>
+        internal static string PublicTypeShouldBeTestClassMessageFormat {
+            get {
+                return ResourceManager.GetString("PublicTypeShouldBeTestClassMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Public types should be test classes.
+        /// </summary>
+        internal static string PublicTypeShouldBeTestClassTitle {
+            get {
+                return ResourceManager.GetString("PublicTypeShouldBeTestClassTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test classes, classes marked with the &apos;[TestClass]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos;
