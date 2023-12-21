@@ -247,4 +247,28 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task WhenTestMethodIsAsyncVoid_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public async void {|#0:MyTestMethod|}()
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestMethodShouldBeValidAnalyzer.NotAsyncVoidRule)
+                .WithLocation(0)
+                .WithArguments("MyTestMethod"));
+    }
 }

@@ -115,6 +115,7 @@ namespace MSTest.Analyzers {
         ///- it should not be generic
         ///- it should not be &apos;abstract&apos;
         ///- return type should be &apos;void&apos; or &apos;Task&apos;
+        ///- it should not be &apos;async void&apos;
         ///- it should be a method of kind &apos;ordinary&apos;..
         /// </summary>
         internal static string TestMethodShouldBeValidDescription {
@@ -129,6 +130,15 @@ namespace MSTest.Analyzers {
         internal static string TestMethodShouldBeValidMessageFormat_NotAbstract {
             get {
                 return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotAbstract", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be &apos;async void&apos;.
+        /// </summary>
+        internal static string TestMethodShouldBeValidMessageFormat_NotAsyncVoid {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
             }
         }
         

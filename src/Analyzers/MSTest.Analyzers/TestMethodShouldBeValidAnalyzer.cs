@@ -84,6 +84,17 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
         Description,
         $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.TestMethodShouldBeValidRuleId}.md");
 
+    private static readonly LocalizableResourceString NotAsyncVoidMessageFormat = new(nameof(Resources.TestMethodShouldBeValidMessageFormat_NotAsyncVoid), Resources.ResourceManager, typeof(Resources));
+    internal static readonly DiagnosticDescriptor NotAsyncVoidRule = new(
+        DiagnosticIds.TestMethodShouldBeValidRuleId,
+        Title,
+        NotAsyncVoidMessageFormat,
+        Categories.Usage,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true,
+        Description,
+        $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.TestMethodShouldBeValidRuleId}.md");
+
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(PublicRule);
 
@@ -137,6 +148,11 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
             || methodSymbol.DeclaredAccessibility != Accessibility.Public)
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicRule, methodSymbol.Name));
+        }
+
+        if (methodSymbol.ReturnsVoid && methodSymbol.IsAsync)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAsyncVoidRule, methodSymbol.Name));
         }
 
         if (!methodSymbol.ReturnsVoid

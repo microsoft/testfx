@@ -142,10 +142,14 @@
 - it should not be generic
 - it should not be 'abstract'
 - return type should be 'void' or 'Task'
+- it should not be 'async void'
 - it should be a method of kind 'ordinary'.</value>
   </data>
   <data name="TestMethodShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
     <value>Test method '{0}' should not be 'abstract'</value>
+  </data>
+  <data name="TestMethodShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
+    <value>Test method '{0}' should not be 'async void'</value>
   </data>
   <data name="TestMethodShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
     <value>Test method '{0}' should not be generic</value>
