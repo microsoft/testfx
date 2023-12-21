@@ -31,7 +31,8 @@ public static class DotnetCli
         string? workingDirectory = null,
         Dictionary<string, string>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
-        bool disableTelemetry = true)
+        bool disableTelemetry = true,
+        int timeoutInSeconds = 60)
     {
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
@@ -66,7 +67,7 @@ public static class DotnetCli
                     }
 
                     using var dotnet = new DotnetMuxer(environmentVariables);
-                    int exitCode = await dotnet.Args(args, workingDirectory);
+                    int exitCode = await dotnet.Args(args, workingDirectory, timeoutInSeconds);
 
                     return exitCode != 0 && failIfReturnValueIsNotZero
                         ? throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}")

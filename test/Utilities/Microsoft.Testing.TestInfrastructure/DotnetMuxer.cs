@@ -92,15 +92,21 @@ public class DotnetMuxer : IDisposable
         _isDisposed = true;
     }
 
-    public async Task<int> Args(string arguments, string? workingDirectory = null)
-        => await Args(arguments, workingDirectory, _environmentVariables);
+    public async Task<int> Args(string arguments, string? workingDirectory = null, int timeoutInSeconds = 60)
+        => await Args(arguments, workingDirectory, _environmentVariables, timeoutInSeconds);
 
     public async Task<int> Args(
         string arguments,
         string? workingDirectory,
-        IDictionary<string, string> environmentVariables)
+        IDictionary<string, string> environmentVariables,
+        int timeoutInSeconds = 60)
     {
-        return await _commandLine.RunAsyncAndReturnExitCode($"{_dotnet} {arguments}", environmentVariables, workingDirectory: workingDirectory, cleanDefaultEnvironmentVariableIfCustomAreProvided: true, 60 * 30);
+        return await _commandLine.RunAsyncAndReturnExitCode(
+            $"{_dotnet} {arguments}",
+            environmentVariables,
+            workingDirectory: workingDirectory,
+            cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
+            timeoutInSeconds: timeoutInSeconds);
     }
 
     private IDictionary<string, string> MergeEnvironmentVariables(

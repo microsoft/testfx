@@ -7,7 +7,7 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class ProcessFactory
 {
-    public static IProcessHandle Start(ProcessConfiguration config, bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false, int timeoutInSeconds = 300)
+    public static IProcessHandle Start(ProcessConfiguration config, bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false)
     {
         string fullPath = config.FileName; // Path.GetFullPath(startInfo.FileName);
         string workingDirectory = config.WorkingDirectory

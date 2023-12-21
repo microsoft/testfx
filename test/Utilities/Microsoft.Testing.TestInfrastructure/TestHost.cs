@@ -39,7 +39,11 @@ public sealed class TestHost
 
     public string DirectoryName { get; }
 
-    public async Task<TestHostResult> ExecuteAsync(string? command = null, Dictionary<string, string>? environmentVariables = null, bool disableTelemetry = true)
+    public async Task<TestHostResult> ExecuteAsync(
+        string? command = null,
+        Dictionary<string, string>? environmentVariables = null,
+        bool disableTelemetry = true,
+        int timeoutSeconds = 60)
     {
         await s_maxOutstandingExecutions_semaphore.WaitAsync();
         try
@@ -74,7 +78,12 @@ public sealed class TestHost
             string finalArguments = command ?? string.Empty;
 
             CommandLine commandLine = new();
-            int exitCode = await commandLine.RunAsyncAndReturnExitCode($"{FullName} {finalArguments}", environmentVariables: environmentVariables, workingDirectory: null, cleanDefaultEnvironmentVariableIfCustomAreProvided: true, 60 * 30);
+            int exitCode = await commandLine.RunAsyncAndReturnExitCode(
+                $"{FullName} {finalArguments}",
+                environmentVariables: environmentVariables,
+                workingDirectory: null,
+                cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
+                timeoutInSeconds: timeoutSeconds);
             string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
             return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
         }
