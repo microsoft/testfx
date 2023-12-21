@@ -6,4 +6,5 @@ namespace MSTest.Analyzers;
 internal static class Categories
 {
     public const string Performance = nameof(Performance);
+    public const string Usage = nameof(Usage);
 }

@@ -5,4 +5,6 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0001 | Performance | Warning | UseParallelizeAttributeAnalyzer
+MSTEST0001 | Performance | Warning | UseParallelizeAttributeAnalyzer, [Documentation](https://github.com/microsoft/testfx/blob/main/docs/analyzers/MSTEST0001.md)
+MSTEST0002 | Usage | Warning | TestClassShouldBePublicAnalyzer, [Documentation](https://github.com/microsoft/testfx/blob/main/docs/analyzers/MSTEST0002.md)
+MSTEST0003 | Usage | Warning | TestMethodShouldBePublicAnalyzer, [Documentation](https://github.com/microsoft/testfx/blob/main/docs/analyzers/MSTEST0003.md)
