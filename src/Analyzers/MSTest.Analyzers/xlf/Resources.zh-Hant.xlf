@@ -2,34 +2,87 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hant" original="../Resources.resx">
     <body>
-      <trans-unit id="TestClassShouldBePublicDescription">
-        <source>MSTest only considers public classes marked with the '[TestClass]' attribute as test classes.</source>
-        <target state="new">MSTest only considers public classes marked with the '[TestClass]' attribute as test classes.</target>
+      <trans-unit id="TestClassShouldBeValidDescription">
+        <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public'
+- it should not be 'static'
+- it should not be generic.</source>
+        <target state="new">Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public'
+- it should not be 'static'
+- it should not be generic.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestClassShouldBePublicMessageFormat">
-        <source>Test class '{0}' should be public</source>
-        <target state="new">Test class '{0}' should be public</target>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
+        <source>Test class '{0}' should not be generic</source>
+        <target state="new">Test class '{0}' should not be generic</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestClassShouldBePublicTitle">
-        <source>Classes marked with '[TestClass]' should be public</source>
-        <target state="new">Classes marked with '[TestClass]' should be public</target>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
+        <source>Test class '{0}' should not be 'static'</source>
+        <target state="new">Test class '{0}' should not be 'static'</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestMethodShouldBePublicDescription">
-        <source>MSTest only considers public methods marked with the '[TestMethod]' attribute as test methods.</source>
-        <target state="new">MSTest only considers public methods marked with the '[TestMethod]' attribute as test methods.</target>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_Public">
+        <source>Test class '{0}' should be 'public'</source>
+        <target state="new">Test class '{0}' should be 'public'</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestMethodShouldBePublicMessageFormat">
-        <source>Test method '{0}' should be public</source>
-        <target state="new">Test method '{0}' should be public</target>
+      <trans-unit id="TestClassShouldBeValidTitle">
+        <source>Test classes should have valid layout</source>
+        <target state="new">Test classes should have valid layout</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestMethodShouldBePublicTitle">
-        <source>Methods marked with '[TestMethod]' should be public</source>
-        <target state="new">Methods marked with '[TestMethod]' should be public</target>
+      <trans-unit id="TestMethodShouldBeValidDescription">
+        <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public'
+- it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
+- return type should be 'void' or 'Task'
+- it should be a method of kind 'ordinary'.</source>
+        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public'
+- it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
+- return type should be 'void' or 'Task'
+- it should be a method of kind 'ordinary'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
+        <source>Test method '{0}' should not be 'abstract'</source>
+        <target state="new">Test method '{0}' should not be 'abstract'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotGeneric">
+        <source>Test method '{0}' should not be generic</source>
+        <target state="new">Test method '{0}' should not be generic</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotStatic">
+        <source>Test method '{0}' should not be 'static'</source>
+        <target state="new">Test method '{0}' should not be 'static'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_Ordinary">
+        <source>Test method '{0}' should be an 'ordinary' method</source>
+        <target state="new">Test method '{0}' should be an 'ordinary' method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_Public">
+        <source>Test method '{0}' should be 'public'</source>
+        <target state="new">Test method '{0}' should be 'public'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
+        <source>Test method '{0}' should return 'void' or 'Task'</source>
+        <target state="new">Test method '{0}' should return 'void' or 'Task'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidTitle">
+        <source>Test methods should have valid layout</source>
+        <target state="new">Test methods should have valid layout</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

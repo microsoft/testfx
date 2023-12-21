@@ -61,56 +61,128 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MSTest only considers public classes marked with the &apos;[TestClass]&apos; attribute as test classes..
+        ///   Looks up a localized string similar to Test classes, classes marked with the &apos;[TestClass]&apos; attribute, should respect the following layout to be considered valid by MSTest:
+        ///- it should be &apos;public&apos;
+        ///- it should not be &apos;static&apos;
+        ///- it should not be generic..
         /// </summary>
-        internal static string TestClassShouldBePublicDescription {
+        internal static string TestClassShouldBeValidDescription {
             get {
-                return ResourceManager.GetString("TestClassShouldBePublicDescription", resourceCulture);
+                return ResourceManager.GetString("TestClassShouldBeValidDescription", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should be public.
+        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should not be generic.
         /// </summary>
-        internal static string TestClassShouldBePublicMessageFormat {
+        internal static string TestClassShouldBeValidMessageFormat_NotGeneric {
             get {
-                return ResourceManager.GetString("TestClassShouldBePublicMessageFormat", resourceCulture);
+                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat_NotGeneric", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Classes marked with &apos;[TestClass]&apos; should be public.
+        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should not be &apos;static&apos;.
         /// </summary>
-        internal static string TestClassShouldBePublicTitle {
+        internal static string TestClassShouldBeValidMessageFormat_NotStatic {
             get {
-                return ResourceManager.GetString("TestClassShouldBePublicTitle", resourceCulture);
+                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat_NotStatic", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to MSTest only considers public methods marked with the &apos;[TestMethod]&apos; attribute as test methods..
+        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should be &apos;public&apos;.
         /// </summary>
-        internal static string TestMethodShouldBePublicDescription {
+        internal static string TestClassShouldBeValidMessageFormat_Public {
             get {
-                return ResourceManager.GetString("TestMethodShouldBePublicDescription", resourceCulture);
+                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat_Public", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should be public.
+        ///   Looks up a localized string similar to Test classes should have valid layout.
         /// </summary>
-        internal static string TestMethodShouldBePublicMessageFormat {
+        internal static string TestClassShouldBeValidTitle {
             get {
-                return ResourceManager.GetString("TestMethodShouldBePublicMessageFormat", resourceCulture);
+                return ResourceManager.GetString("TestClassShouldBeValidTitle", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Methods marked with &apos;[TestMethod]&apos; should be public.
+        ///   Looks up a localized string similar to Test methods, methods marked with the &apos;[TestMethod]&apos; attribute, should respect the following layout to be considered valid by MSTest:
+        ///- it should be &apos;public&apos;
+        ///- it should not be &apos;static&apos;
+        ///- it should not be generic
+        ///- it should not be &apos;abstract&apos;
+        ///- return type should be &apos;void&apos; or &apos;Task&apos;
+        ///- it should be a method of kind &apos;ordinary&apos;..
         /// </summary>
-        internal static string TestMethodShouldBePublicTitle {
+        internal static string TestMethodShouldBeValidDescription {
             get {
-                return ResourceManager.GetString("TestMethodShouldBePublicTitle", resourceCulture);
+                return ResourceManager.GetString("TestMethodShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be &apos;abstract&apos;.
+        /// </summary>
+        internal static string TestMethodShouldBeValidMessageFormat_NotAbstract {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotAbstract", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be generic.
+        /// </summary>
+        internal static string TestMethodShouldBeValidMessageFormat_NotGeneric {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotGeneric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be &apos;static&apos;.
+        /// </summary>
+        internal static string TestMethodShouldBeValidMessageFormat_NotStatic {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_NotStatic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
+        /// </summary>
+        internal static string TestMethodShouldBeValidMessageFormat_Ordinary {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_Ordinary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should be &apos;public&apos;.
+        /// </summary>
+        internal static string TestMethodShouldBeValidMessageFormat_Public {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_Public", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should return &apos;void&apos; or &apos;Task&apos;.
+        /// </summary>
+        internal static string TestMethodShouldBeValidMessageFormat_ReturnType {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBeValidMessageFormat_ReturnType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test methods should have valid layout.
+        /// </summary>
+        internal static string TestMethodShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("TestMethodShouldBeValidTitle", resourceCulture);
             }
         }
         
