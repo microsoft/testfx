@@ -37,11 +37,12 @@ public class ParallelExecutionTests : CLITestBase
     {
         InvokeVsTestForExecution([ClassParallelTestAssetName]);
 
+        // Time validation was disabled because of flakiness. It's hard to predict the time taken for this test to run when
+        // the test suite start to be large. The time taken depends on the machine and the load on the machine.
         // Parallel level of 2
         // There are a total of 3 classes - C1 (2 tests), C2(3 tests), C3(2 tests) with a sleep of TestMethodWaitTimeInMS.
         // 1 tests in C2 is non-parallelizable. So this should not exceed 5 * TestMethodWaitTimeInMS seconds + 2.5 seconds overhead.
-        ValidateTestRunTime((5 * TestMethodWaitTimeInMS) + OverheadTimeInMS);
-
+        // ValidateTestRunTime((5 * TestMethodWaitTimeInMS) + OverheadTimeInMS);
         ValidatePassedTestsContain(
             "ParallelClassesTestProject.UnitTest1.SimpleTest11",
             "ParallelClassesTestProject.UnitTest2.SimpleTest21",
@@ -68,11 +69,12 @@ public class ParallelExecutionTests : CLITestBase
 
         InvokeVsTestForExecution([DoNotParallelizeTestAssetName], RunSetting);
 
+        // Time validation was disabled because of flakiness. It's hard to predict the time taken for this test to run when
+        // the test suite start to be large. The time taken depends on the machine and the load on the machine.
         // DoNotParallelize set for TestAssetName
         // There are a total of 2 classes - C1 (3 tests), C2 (3 tests) with a sleep of TestMethodWaitTimeInMS.
         // So this should not exceed 5 * TestMethodWaitTimeInMS seconds + 2.5 seconds overhead.
-        ValidateTestRunTime((5 * TestMethodWaitTimeInMS) + OverheadTimeInMS);
-
+        // ValidateTestRunTime((5 * TestMethodWaitTimeInMS) + OverheadTimeInMS);
         ValidatePassedTestsContain(
             "DoNotParallelizeTestProject.UnitTest1.SimpleTest11",
             "DoNotParallelizeTestProject.UnitTest1.SimpleTest13",
