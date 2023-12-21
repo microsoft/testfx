@@ -3,10 +3,32 @@
 
 using System.Collections;
 
+using Polly;
+using Polly.Contrib.WaitAndRetry;
+
 namespace Microsoft.Testing.TestInfrastructure;
 
 public static class DotnetCli
 {
+    private static readonly string[] CodeCoverageEnvironmentVariables = new[]
+{
+        "MicrosoftInstrumentationEngine_ConfigPath32_VanguardInstrumentationProfiler",
+        "MicrosoftInstrumentationEngine_ConfigPath64_VanguardInstrumentationProfiler",
+        "CORECLR_PROFILER_PATH_32",
+        "CORECLR_PROFILER_PATH_64",
+        "CORECLR_ENABLE_PROFILING",
+        "CORECLR_PROFILER",
+        "COR_PROFILER_PATH_32",
+        "COR_PROFILER_PATH_64",
+        "COR_ENABLE_PROFILING",
+        "COR_PROFILER",
+        "CODE_COVERAGE_SESSION_NAME",
+        "CODE_COVERAGE_PIPE_PATH",
+        "MicrosoftInstrumentationEngine_LogLevel",
+        "MicrosoftInstrumentationEngine_DisableCodeSignatureValidation",
+        "MicrosoftInstrumentationEngine_FileLogPath",
+};
+
     private static int s_maxOutstandingCommand = Environment.ProcessorCount;
     private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
 
@@ -32,7 +54,8 @@ public static class DotnetCli
         Dictionary<string, string>? environmentVariables = null,
         bool failIfReturnValueIsNotZero = true,
         bool disableTelemetry = true,
-        int timeoutInSeconds = 60)
+        int timeoutInSeconds = 60,
+        bool disableCodeCoverage = true)
     {
         await s_maxOutstandingCommands_semaphore.WaitAsync();
         try
@@ -46,6 +69,15 @@ public static class DotnetCli
                     continue;
                 }
 
+                if (disableCodeCoverage)
+                {
+                    // Disable the code coverage during the build.
+                    if (CodeCoverageEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+                }
+
                 environmentVariables.Add(entry.Key!.ToString()!, entry.Value!.ToString()!);
             }
 
@@ -56,10 +88,14 @@ public static class DotnetCli
 
             environmentVariables["NUGET_PACKAGES"] = nugetGlobalPackagesFolder;
 
-            // Retry in case of:
-            // Plugin 'CredentialProvider.Microsoft' failed within 21.143 seconds with exit code
-            return await RetryHelper.Retry(
-                async () =>
+            // Retry up to 5 times with exponential backoff.
+            // 3 seconds, 6 seconds, 9 seconds, 12 seconds, 15 seconds
+            // total wait time: 45 seconds
+            var delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 2);
+            return await Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(delay)
+                .ExecuteAsync(async () =>
                 {
                     if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
                     {
@@ -72,7 +108,7 @@ public static class DotnetCli
                     return exitCode != 0 && failIfReturnValueIsNotZero
                         ? throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}")
                         : new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines);
-                }, 3, TimeSpan.FromSeconds(3), exception => exception.ToString().Contains("Plugin 'CredentialProvider.Microsoft' failed"));
+                });
         }
         finally
         {

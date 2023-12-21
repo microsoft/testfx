@@ -4,6 +4,9 @@
 using System.Collections;
 using System.Runtime.InteropServices;
 
+using Polly;
+using Polly.Contrib.WaitAndRetry;
+
 namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class TestHost
@@ -77,15 +80,25 @@ public sealed class TestHost
 
             string finalArguments = command ?? string.Empty;
 
-            CommandLine commandLine = new();
-            int exitCode = await commandLine.RunAsyncAndReturnExitCode(
-                $"{FullName} {finalArguments}",
-                environmentVariables: environmentVariables,
-                workingDirectory: null,
-                cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
-                timeoutInSeconds: timeoutSeconds);
-            string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
-            return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
+            // Retry up to 5 times with exponential backoff.
+            // 3 seconds, 6 seconds, 9 seconds, 12 seconds, 15 seconds
+            // total wait time: 45 seconds
+            var delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 2);
+            return await Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(delay)
+                .ExecuteAsync(async () =>
+                {
+                    CommandLine commandLine = new();
+                    int exitCode = await commandLine.RunAsyncAndReturnExitCode(
+                        $"{FullName} {finalArguments}",
+                        environmentVariables: environmentVariables,
+                        workingDirectory: null,
+                        cleanDefaultEnvironmentVariableIfCustomAreProvided: true,
+                        timeoutInSeconds: timeoutSeconds);
+                    string fullCommand = command is not null ? $"{FullName} {command}" : FullName;
+                    return new TestHostResult(fullCommand, exitCode, commandLine.StandardOutput, commandLine.StandardOutputLines, commandLine.ErrorOutput, commandLine.ErrorOutputLines);
+                });
         }
         finally
         {

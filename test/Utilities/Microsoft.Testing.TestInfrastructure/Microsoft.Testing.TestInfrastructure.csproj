@@ -8,6 +8,8 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageReference Include="Polly" Version="$(PollyVersion)" />
+    <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="$(PollyContribWaitAndRetryVersion)" />
   </ItemGroup>
 
 </Project>
