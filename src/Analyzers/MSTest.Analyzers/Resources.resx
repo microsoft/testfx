@@ -117,6 +117,15 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="PublicTypeShouldBeTestClassDescription" xml:space="preserve">
+    <value>It's considered a good practice to have only test classes marked public in a test project.</value>
+  </data>
+  <data name="PublicTypeShouldBeTestClassMessageFormat" xml:space="preserve">
+    <value>Public type '{0}' should be marked with '[TestClass]' or changed to 'internal'</value>
+  </data>
+  <data name="PublicTypeShouldBeTestClassTitle" xml:space="preserve">
+    <value>Public types should be test classes</value>
+  </data>
   <data name="TestClassShouldBeValidDescription" xml:space="preserve">
     <value>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
