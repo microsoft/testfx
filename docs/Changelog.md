@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [3.2.0-preview.23623.1] - 2023-12-23
+
+See full log [here](https://github.com/Microsoft/testfx/compare/v3.2.0-preview.23622.1...3.2.0-preview.23623.1)
+
+### Fixed
+
+* Add auto-generated header to generated entry point (through upgrade of `Microsoft.Testing.Platform.MSBuild` to 1.0.0-preview.23622.9)
+
+### Artifacts
+
+* MSTest: [3.2.0-preview.23623.1](https://www.nuget.org/packages/MSTest/3.2.0-preview.23623.1)
+* MSTest.TestFramework: [3.2.0-preview.23623.1](https://www.nuget.org/packages/MSTest.TestFramework/3.2.0-preview.23623.1)
+* MSTest.TestAdapter: [3.2.0-preview.23623.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.2.0-preview.23623.1)
+* MSTest.Analyzers: [3.2.0-preview.23623.1](https://www.nuget.org/packages/MSTest.Analyzers/3.2.0-preview.23623.1)
+
 ## [3.2.0-preview.23622.1] - 2023-12-22
 
 See full log [here](https://github.com/Microsoft/testfx/compare/v3.1.1...v3.2.0-preview.23622.1)
