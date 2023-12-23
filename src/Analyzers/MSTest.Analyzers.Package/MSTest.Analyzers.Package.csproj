@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -10,6 +10,7 @@
   <PropertyGroup>
     <IsPackable>true</IsPackable>
     <PackageId>MSTest.Analyzers</PackageId>
+    <PackageReadmeFile>PACKAGE.md</PackageReadmeFile>
     <PackageTags>MSTest Analyzers TestFramework Unittest MSTestV2 Microsoft Test Testing TDD Framework</PackageTags>
     <PackageDescription>
       MSTest is Microsoft supported Test Framework.
@@ -28,6 +29,7 @@
 
   <ItemGroup>
     <None Update="tools\*.ps1" CopyToOutputDirectory="PreserveNewest" Pack="true" PackagePath="" />
+    <None Include="$(PackageReadmeFile)" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <Target Name="_AddAnalyzersToOutput">
