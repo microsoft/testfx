@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "MSTest.Performance.Runner": {
+      "commandName": "Project"
+    }
+  }
+}
