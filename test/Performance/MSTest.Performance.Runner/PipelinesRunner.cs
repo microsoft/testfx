@@ -9,7 +9,7 @@ internal class PipelinesRunner
 {
     private readonly List<PipelineInfo> _pipelines = new();
 
-    public void AddPipeline(string groupName, string pipelineName, OSPlatform oSPlatform, Action<IDictionary<string, object>> func, Action<IDictionary<string, object>>? updatePropertyBag = null, string[]? traits = null)
+    public void AddPipeline(string groupName, string pipelineName, OSPlatform[] oSPlatform, Action<IDictionary<string, object>> func, Action<IDictionary<string, object>>? updatePropertyBag = null, string[]? traits = null)
     {
         _pipelines.Add(new PipelineInfo(groupName, pipelineName, oSPlatform, func, updatePropertyBag, traits));
     }
@@ -20,7 +20,7 @@ internal class PipelinesRunner
 
         foreach (PipelineInfo pipeline in _pipelines)
         {
-            if (!RuntimeInformation.IsOSPlatform(pipeline.OSPlatform))
+            if (!pipeline.OSPlatform.Any(x => RuntimeInformation.IsOSPlatform(x)))
             {
                 WriteConsole($"Skip '{pipeline.PipelineName}', OS expected: '{pipeline.OSPlatform}', current OS: '{RuntimeInformation.OSDescription}'", ConsoleColor.Yellow);
                 continue;
@@ -65,5 +65,5 @@ internal class PipelinesRunner
         }
     }
 
-    private record class PipelineInfo(string GroupName, string PipelineName, OSPlatform OSPlatform, Action<IDictionary<string, object>> Func, Action<IDictionary<string, object>>? UpdatePropertyBag = null, string[]? Traits = null);
+    private record class PipelineInfo(string GroupName, string PipelineName, OSPlatform[] OSPlatform, Action<IDictionary<string, object>> Func, Action<IDictionary<string, object>>? UpdatePropertyBag = null, string[]? Traits = null);
 }
