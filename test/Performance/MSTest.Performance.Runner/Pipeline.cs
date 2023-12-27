@@ -10,8 +10,6 @@ internal static class Pipeline
     public static TOutput FirstStep<TOutput>(Func<IStep<NoInputOutput, TOutput>> step, IDictionary<string, object> bagParameters)
        where TOutput : class, IPayload
     {
-        Console.WriteLine();
-        WriteConsole("======= Starting new session =======");
         AsyncLocal.Value!.Init(bagParameters);
         var stepInstance = step();
         WriteConsole($"Execute step: '{stepInstance.Description}'");

@@ -86,7 +86,7 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
               RedirectStandardError = true,
               RedirectStandardInput = true,
           };
-        Console.WriteLine($"VSDiagnostics start command: '{startCollection.FileName} {startCollection.Arguments}'");
+        Console.WriteLine($"VSDiagnostics stop command: '{stopCollection.FileName} {stopCollection.Arguments}'");
         process = Process.Start(stopCollection)!;
         process.EnableRaisingEvents = true;
         process.BeginOutputReadLine();
