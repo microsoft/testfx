@@ -11,13 +11,15 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
 {
     private readonly string _agentConfigName;
     private readonly string _reportFileName;
+    private readonly CompressionLevel _compressionLevel;
 
     public string Description => "Run under VSDiagnostics.exe";
 
-    public VSDiagnostics(string agentConfigName, string reportFileName)
+    public VSDiagnostics(string agentConfigName, string reportFileName, CompressionLevel compressionLevel = CompressionLevel.Fastest)
     {
         _agentConfigName = agentConfigName;
         _reportFileName = reportFileName;
+        _compressionLevel = compressionLevel;
     }
 
     public async Task<Files> ExecuteAsync(BuildArtifact payload, IContext context)
@@ -73,10 +75,10 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
         // Wait for process exit
         profiledProcessExited.Wait();
 
-        string diagSessionFileNames = Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "session.diagsession");
-        File.Delete(diagSessionFileNames);
+        string diagSessionFileName = Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "session.diagsession");
+        File.Delete(diagSessionFileName);
         ProcessStartInfo stopCollection =
-          new(vSDiagnostics, $"stop {sessionID} /output:{diagSessionFileNames}")
+          new(vSDiagnostics, $"stop {sessionID} /output:{diagSessionFileName}")
           {
               UseShellExecute = false,
               RedirectStandardOutput = true,
@@ -96,7 +98,7 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);
         Console.WriteLine($"Compressing to '{sample}'");
-        ZipFile.CreateFromDirectory(payload.TestAsset.TargetAssetPath, sample, CompressionLevel.SmallestSize, includeBaseDirectory: true);
+        ZipFile.CreateFromDirectory(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
 
         return new Files(new[] { sample });
     }

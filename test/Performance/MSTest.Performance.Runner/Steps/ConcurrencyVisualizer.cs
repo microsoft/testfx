@@ -14,13 +14,15 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
 {
     private readonly string _reportFileName;
     private readonly string _symbols;
+    private readonly CompressionLevel _compressionLevel;
 
     public string Description => "run under ConcurrencyVisualizer";
 
-    public ConcurrencyVisualizer(string reportFileName, string symbols = "https://msdl.microsoft.com/download/symbols")
+    public ConcurrencyVisualizer(string reportFileName, string symbols = "https://msdl.microsoft.com/download/symbols", CompressionLevel compressionLevel = CompressionLevel.Fastest)
     {
         _reportFileName = reportFileName;
         _symbols = symbols;
+        _compressionLevel = compressionLevel;
     }
 
     public async Task<Files> ExecuteAsync(BuildArtifact payload, IContext context)
@@ -134,7 +136,7 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);
         Console.WriteLine($"Compressing to '{sample}'");
-        ZipFile.CreateFromDirectory(payload.TestAsset.TargetAssetPath, sample, CompressionLevel.SmallestSize, includeBaseDirectory: true);
+        ZipFile.CreateFromDirectory(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
 
         return new Files(new[] { sample });
     }
