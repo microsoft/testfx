@@ -3,7 +3,7 @@
 
 using Microsoft.Extensions.FileSystemGlobbing;
 
-namespace MSTest.Performance.Runner;
+namespace MSTest.Performance.Runner.Steps;
 
 internal class MoveFiles : IStep<Files, Files>
 {

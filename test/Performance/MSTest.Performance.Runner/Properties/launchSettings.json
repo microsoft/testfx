@@ -1,7 +1,9 @@
 {
   "profiles": {
     "MSTest.Performance.Runner": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "execute"
+      // "commandLineArgs": "execute --pipelineNameFilter *PerfView*"
     }
   }
 }

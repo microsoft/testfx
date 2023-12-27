@@ -3,12 +3,9 @@
 
 using System.Diagnostics;
 using System.IO.Compression;
-using System.Management;
 using System.Runtime.InteropServices;
 
-using MSTest.Performance.Runner.Runners;
-
-namespace MSTest.Performance.Runner.Runner;
+namespace MSTest.Performance.Runner.Steps;
 
 internal class VSDiagnostics : IStep<BuildArtifact, Files>
 {
@@ -57,7 +54,7 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
         ManualResetEventSlim profiledProcessExited = new(false);
         WindowsProcessWatcher processWatcher = new(Path.GetFileName(payload.TestHost.FullName));
         processWatcher.Start();
-        processWatcher.ProcessDeleted += (object? _, ManagementBaseObject _) =>
+        processWatcher.ProcessDeleted += (_, _) =>
         {
             Console.WriteLine($"Process '{Path.GetFileName(payload.TestHost.FullName)}' exited.");
             profiledProcessExited.Set();
