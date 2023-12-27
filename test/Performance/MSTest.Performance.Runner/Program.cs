@@ -68,6 +68,13 @@ internal class EntryPoint
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
+        pipelineRunner.AddPipeline("Default", "Scenario1_ConcurrencyVisualizer", new[] { OSPlatform.Windows }, parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new ConcurrencyVisualizer("Scenario1_ConcurrencyVisualizer.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
         return pipelineRunner.Run(pipelineNameFilter);
     }
 }

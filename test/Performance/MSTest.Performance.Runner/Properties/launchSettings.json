@@ -3,7 +3,7 @@
     "MSTest.Performance.Runner": {
       "commandName": "Project",
       "commandLineArgs": "execute"
-      // "commandLineArgs": "execute --pipelineNameFilter *PerfView*"
+      // "commandLineArgs": "execute --pipelineNameFilter *ConcurrencyVisualizer*"
     }
   }
 }
