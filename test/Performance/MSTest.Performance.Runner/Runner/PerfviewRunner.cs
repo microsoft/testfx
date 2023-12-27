@@ -29,6 +29,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
+            Console.WriteLine("Skip run, not supported in Windows");
             return new Files(Array.Empty<string>());
         }
 

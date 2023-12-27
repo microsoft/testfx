@@ -35,7 +35,7 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
         _workers = workers;
     }
 
-    public string Description => "create SimpleScenario";
+    public string Description => "create Scenario1";
 
     public async Task<SingleProject> ExecuteAsync(NoInputOutput payload, IContext context)
     {

@@ -27,14 +27,14 @@ internal class EntryPoint
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer())
-            .NextStep(() => new VSDiagnostics("DotNetObjectAllocLow.json", "Scenario1_DotNetObjectAllocBase.zip", 60))
+            .NextStep(() => new VSDiagnostics("DotNetObjectAllocLow.json", "Scenario1_DotNetObjectAllocBase.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable());
 
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer())
-            .NextStep(() => new VSDiagnostics("CpuUsageHigh.json", "Scenario1_CpuUsageLow.zip", 10))
+            .NextStep(() => new VSDiagnostics("CpuUsageHigh.json", "Scenario1_CpuUsageLow.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable());
 
