@@ -3,6 +3,8 @@
 
 using System.Runtime.InteropServices;
 
+using Microsoft.Extensions.FileSystemGlobbing;
+
 namespace MSTest.Performance.Runner;
 
 internal class PipelinesRunner
@@ -14,12 +16,21 @@ internal class PipelinesRunner
         _pipelines.Add(new PipelineInfo(groupName, pipelineName, oSPlatform, func, updatePropertyBag, traits));
     }
 
-    public int Run(IDictionary<string, object>? parametersBag = null)
+    public int Run(string pipelineNameFilter, IDictionary<string, object>? parametersBag = null)
     {
         parametersBag ??= new Dictionary<string, object>();
 
+        Matcher pipelineNameFilterMatcher = new();
+        pipelineNameFilterMatcher.AddInclude(string.IsNullOrEmpty(pipelineNameFilter) ? "*.*" : pipelineNameFilter);
+
         foreach (PipelineInfo pipeline in _pipelines)
         {
+            if (!pipelineNameFilterMatcher.Match(pipeline.PipelineName).HasMatches)
+            {
+                WriteConsole($"Skip '{pipeline.PipelineName}' for filter '{pipelineNameFilter}'", ConsoleColor.DarkGray);
+                continue;
+            }
+
             if (!pipeline.OSPlatform.Any(x => RuntimeInformation.IsOSPlatform(x)))
             {
                 WriteConsole($"Skip '{pipeline.PipelineName}', OS expected: '{pipeline.OSPlatform}', current OS: '{RuntimeInformation.OSDescription}'", ConsoleColor.Yellow);

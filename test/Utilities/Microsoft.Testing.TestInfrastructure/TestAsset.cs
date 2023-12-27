@@ -11,10 +11,10 @@ public class TestAsset : IDisposable
     private readonly string _assetCode;
     private bool _isDisposed;
 
-    public TestAsset(string targetPath, string assetCode)
+    public TestAsset(string targetPath, string assetCode, bool cleanup = true)
     {
         _assetCode = assetCode;
-        _tempDirectory = new(targetPath, arcadeConvention: true, cleanup: false);
+        _tempDirectory = new(targetPath, arcadeConvention: true, cleanup);
     }
 
     public void Dispose()

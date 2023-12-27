@@ -5,7 +5,7 @@
 
 using System.Management;
 
-namespace MSTest.Performance.Runner.Runner;
+namespace MSTest.Performance.Runner.Steps;
 
 public class WindowsProcessWatcher : ManagementEventWatcher
 {

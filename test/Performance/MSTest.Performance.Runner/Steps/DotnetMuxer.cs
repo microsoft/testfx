@@ -3,9 +3,7 @@
 
 using Microsoft.Testing.TestInfrastructure;
 
-using MSTest.Performance.Runner.Scenarios;
-
-namespace MSTest.Performance.Runner.Runners;
+namespace MSTest.Performance.Runner.Steps;
 
 internal class DotnetMuxer : IStep<SingleProject, BuildArtifact>
 {

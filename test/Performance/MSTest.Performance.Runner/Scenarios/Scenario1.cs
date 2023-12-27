@@ -7,7 +7,7 @@ using System.Xml.Linq;
 
 using Microsoft.Testing.TestInfrastructure;
 
-namespace MSTest.Performance.Runner.Scenarios;
+namespace MSTest.Performance.Runner.Steps;
 
 internal enum ExecutionScope
 {
