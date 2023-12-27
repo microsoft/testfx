@@ -52,6 +52,14 @@ internal class EntryPoint
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
+        pipelineRunner.AddPipeline("Default", "Scenario1_DotnetTrace", new[] { OSPlatform.Windows }, parametersBag =>
+        Pipeline
+            .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
+            .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
+            .NextStep(() => new DotnetTrace("--profile cpu-sampling", "DotnetTrace_CPU_Sampling.zip"))
+            .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
+            .NextStep(() => new CleanupDisposable()));
+
         // C:\Program Files\Microsoft Visual Studio\2022\Preview\Team Tools\DiagnosticsHub\Collector\AgentConfigs
         pipelineRunner.AddPipeline("Default", "Scenario1_DotNetObjectAllocBase", new[] { OSPlatform.Windows }, parametersBag =>
         Pipeline
