@@ -16,6 +16,9 @@ internal class EntryPoint
     {
         Console.WriteLine("Microsoft (R) MSTest Performance Profiler Command Line Tool");
 
+        // Opt out telemetry for clean stacks, AppInsight is allocating strings and polluting the results.
+        Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+
         var pipelineRunner = new PipelinesRunner();
 
         pipelineRunner.AddPipeline("Default", "Scenario1_PerfView", new[] { OSPlatform.Windows }, parametersBag =>
