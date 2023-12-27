@@ -3,6 +3,8 @@
 
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Management;
+using System.Runtime.InteropServices;
 
 using MSTest.Performance.Runner.Runners;
 
@@ -12,19 +14,23 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
 {
     private readonly string _agentConfigName;
     private readonly string _reportFileName;
-    private readonly int _stopAfterSeconds;
 
     public string Description => "Run under VSDiagnostics.exe";
 
-    public VSDiagnostics(string agentConfigName, string reportFileName, int stopAfterSeconds)
+    public VSDiagnostics(string agentConfigName, string reportFileName)
     {
         _agentConfigName = agentConfigName;
         _reportFileName = reportFileName;
-        _stopAfterSeconds = stopAfterSeconds;
     }
 
     public async Task<Files> ExecuteAsync(BuildArtifact payload, IContext context)
     {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Console.WriteLine("Skip run, not supported in Windows");
+            return new Files(Array.Empty<string>());
+        }
+
         string vsProgramFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Visual Studio");
         string? vSDiagnostics = Directory.GetFiles(vsProgramFile, "VSDiagnostics.exe", SearchOption.AllDirectories).SingleOrDefault();
         if (vSDiagnostics is null)
@@ -48,6 +54,15 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
                RedirectStandardInput = true,
            };
 
+        ManualResetEventSlim profiledProcessExited = new(false);
+        WindowsProcessWatcher processWatcher = new(Path.GetFileName(payload.TestHost.FullName));
+        processWatcher.Start();
+        processWatcher.ProcessDeleted += (object? _, ManagementBaseObject _) =>
+        {
+            Console.WriteLine($"Process '{Path.GetFileName(payload.TestHost.FullName)}' exited.");
+            profiledProcessExited.Set();
+        };
+
         Console.WriteLine($"VSDiagnostics start command: '{startCollection.FileName} {startCollection.Arguments}'");
         Process process = Process.Start(startCollection)!;
         process.EnableRaisingEvents = true;
@@ -56,10 +71,10 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
         {
             Console.WriteLine(args.Data);
         };
-        process.WaitForExit();
+        await process.WaitForExitAsync();
 
-        // Wait app start
-        await Task.Delay(TimeSpan.FromSeconds(_stopAfterSeconds));
+        // Wait for process exit
+        profiledProcessExited.Wait();
 
         string diagSessionFileNames = Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "session.diagsession");
         File.Delete(diagSessionFileNames);
@@ -79,7 +94,7 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
         {
             Console.WriteLine(args.Data);
         };
-        process.WaitForExit();
+        await process.WaitForExitAsync();
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);
         File.Delete(sample);
