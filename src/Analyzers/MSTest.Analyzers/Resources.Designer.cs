@@ -145,6 +145,73 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to TestContext property should follow the following layout to be valid:
+        ///- it should be a property
+        ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
+        ///- it should not be &apos;static&apos;
+        ///- it should not be readonly..
+        /// </summary>
+        internal static string TestContextShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("TestContextShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Member &apos;TestContext&apos; should be a property and not a field.
+        /// </summary>
+        internal static string TestContextShouldBeValidMessageFormat_NotField {
+            get {
+                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_NotField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be settable.
+        /// </summary>
+        internal static string TestContextShouldBeValidMessageFormat_NotReadonly {
+            get {
+                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_NotReadonly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should not be &apos;static&apos;.
+        /// </summary>
+        internal static string TestContextShouldBeValidMessageFormat_NotStatic {
+            get {
+                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_NotStatic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be &apos;public&apos;.
+        /// </summary>
+        internal static string TestContextShouldBeValidMessageFormat_Public {
+            get {
+                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_Public", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Property &apos;TestContext&apos; should be &apos;public&apos; or &apos;internal&apos;.
+        /// </summary>
+        internal static string TestContextShouldBeValidMessageFormat_PublicOrInternal {
+            get {
+                return ResourceManager.GetString("TestContextShouldBeValidMessageFormat_PublicOrInternal", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test context property should have valid layout.
+        /// </summary>
+        internal static string TestContextShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("TestContextShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test methods, methods marked with the &apos;[TestMethod]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos;

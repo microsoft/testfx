@@ -20,6 +20,7 @@ public static partial class CSharpCodeFixVerifier<TAnalyzer, TCodeFix>
         {
             ReferenceAssemblies = ReferenceAssemblies.Net.Net60;
             TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(ParallelizeAttribute).Assembly.Location));
+            TestState.AdditionalReferences.Add(MetadataReference.CreateFromFile(typeof(TestContext).Assembly.Location));
             SolutionTransforms.Add((solution, projectId) =>
             {
                 var compilationOptions = solution.GetProject(projectId).CompilationOptions;
