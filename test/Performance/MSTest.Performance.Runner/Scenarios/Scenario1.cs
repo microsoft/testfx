@@ -51,14 +51,29 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
 [TestClass]
 public class UnitTest{i}
 {{");
-            for (int k = 0; k < _methodsPerClass; k++)
+            for (int k = 1; k < _methodsPerClass + 1; k++)
             {
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $@"
+                if (k % 2 == 0)
+                {
+                    stringBuilder.AppendLine(CultureInfo.InvariantCulture, $@"
         [TestMethod]
+        [System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+        public System.Threading.Tasks.Task TestMethod{k}()
+        {{
+            return System.Threading.Tasks.Task.CompletedTask;
+        }}
+");
+                }
+                else
+                {
+                    stringBuilder.AppendLine(CultureInfo.InvariantCulture, $@"
+        [TestMethod]
+        [System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         public void TestMethod{k}()
         {{
         }}
 ");
+                }
             }
 
             stringBuilder.AppendLine("}");
