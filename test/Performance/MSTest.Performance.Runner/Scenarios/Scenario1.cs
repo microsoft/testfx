@@ -57,6 +57,7 @@ public class UnitTest{i}
                 {
                     stringBuilder.AppendLine(CultureInfo.InvariantCulture, $@"
         [TestMethod]
+        [System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         public System.Threading.Tasks.Task TestMethod{k}()
         {{
             return System.Threading.Tasks.Task.CompletedTask;
@@ -67,6 +68,7 @@ public class UnitTest{i}
                 {
                     stringBuilder.AppendLine(CultureInfo.InvariantCulture, $@"
         [TestMethod]
+        [System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         public void TestMethod{k}()
         {{
         }}
