@@ -9,4 +9,5 @@ internal static class DiagnosticIds
     public const string TestClassShouldBeValidRuleId = "MSTEST0002";
     public const string TestMethodShouldBeValidRuleId = "MSTEST0003";
     public const string PublicTypeShouldBeTestClassRuleId = "MSTEST0004";
+    public const string TestContextShouldBeValidRuleId = "MSTEST0005";
 }

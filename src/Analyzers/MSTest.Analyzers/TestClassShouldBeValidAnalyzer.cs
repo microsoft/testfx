@@ -74,9 +74,7 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out var testClassAttributeSymbol))
             {
-                bool canDiscoverInternals = context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute, out var discoverInternalsAttributeSymbol)
-                    && context.Compilation.Assembly.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, discoverInternalsAttributeSymbol));
-
+                bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
                 context.RegisterSymbolAction(context => AnalyzeSymbol(context, testClassAttributeSymbol, canDiscoverInternals), SymbolKind.NamedType);
             }
         });
