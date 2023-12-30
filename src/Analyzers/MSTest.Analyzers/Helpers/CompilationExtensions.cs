@@ -11,6 +11,8 @@ namespace MSTest.Analyzers.Helpers;
 
 internal static class CompilationExtensions
 {
+    private static readonly BoundedCacheWithFactory<Compilation, bool> CanDiscoverInternalsCache = new();
+
     /// <summary>
     /// Gets a type by its full type name and cache it at the compilation level.
     /// </summary>
@@ -28,4 +30,14 @@ internal static class CompilationExtensions
     /// <returns>The <see cref="INamedTypeSymbol"/> if found, null otherwise.</returns>
     internal static bool TryGetOrCreateTypeByMetadataName(this Compilation compilation, string fullTypeName, [NotNullWhen(returnValue: true)] out INamedTypeSymbol? namedTypeSymbol)
         => WellKnownTypeProvider.GetOrCreate(compilation).TryGetOrCreateTypeByMetadataName(fullTypeName, out namedTypeSymbol);
+
+    internal static bool CanDiscoverInternals(this Compilation compilation)
+    {
+        return CanDiscoverInternalsCache.GetOrCreateValue(compilation, GetCanDiscoverInternals);
+
+        // Local functions
+        static bool GetCanDiscoverInternals(Compilation compilation)
+            => compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute, out var discoverInternalsAttributeSymbol)
+            && compilation.Assembly.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, discoverInternalsAttributeSymbol));
+    }
 }
