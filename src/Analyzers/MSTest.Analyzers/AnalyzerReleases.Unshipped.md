@@ -10,3 +10,4 @@ MSTEST0002 | Usage | Warning | TestClassShouldBeValidAnalyzer, [Documentation](h
 MSTEST0003 | Usage | Warning | TestMethodShouldBeValidAnalyzer, [Documentation](https://github.com/microsoft/testfx/blob/main/docs/analyzers/MSTEST0003.md)
 MSTEST0004 | Design | Disabled | PublicTypeShouldBeTestClassAnalyzer, [Documentation](https://github.com/microsoft/testfx/blob/main/docs/analyzers/MSTEST0004.md)
 MSTEST0005 | Usage | Warning | TestContextShouldBeValidAnalyzer, [Documentation](https://github.com/microsoft/testfx/blob/main/docs/analyzers/MSTEST0005.md)
+MSTEST0006 | Design | Info | AvoidExpectedExceptionAttributeAnalyzer, [Documentation](https://github.com/microsoft/testfx/blob/main/docs/analyzers/MSTEST0002.md)
