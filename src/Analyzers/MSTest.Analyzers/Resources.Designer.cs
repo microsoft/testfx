@@ -61,6 +61,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsException&apos; or &apos;Assert.ThrowsExceptionAsync&apos; over &apos;[ExpectedException]&apos; as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption..
+        /// </summary>
+        internal static string AvoidExpectedExceptionAttributeDescription {
+            get {
+                return ResourceManager.GetString("AvoidExpectedExceptionAttributeDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsException/ThrowsExceptionAsync&apos; over &apos;[ExpectedException]&apos;.
+        /// </summary>
+        internal static string AvoidExpectedExceptionAttributeMessageFormat {
+            get {
+                return ResourceManager.GetString("AvoidExpectedExceptionAttributeMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Avoid &apos;[ExpectedException]&apos;.
+        /// </summary>
+        internal static string AvoidExpectedExceptionAttributeTitle {
+            get {
+                return ResourceManager.GetString("AvoidExpectedExceptionAttributeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
         /// </summary>
         internal static string PublicTypeShouldBeTestClassDescription {
