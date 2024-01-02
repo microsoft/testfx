@@ -40,7 +40,7 @@ internal sealed class ActionResult<TResult> : ActionResult
     }
 
     [MemberNotNullWhen(true, nameof(Result))]
-    public new bool IsSuccess { get; }
+    public new bool IsSuccess => base.IsSuccess;
 
     public new TResult? Result { get; }
 
