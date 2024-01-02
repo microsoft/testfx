@@ -253,27 +253,33 @@ public class TestMethodInfo : ITestMethod
             catch (Exception ex)
             {
                 isExceptionThrown = true;
+                Exception realException = GetRealException(ex);
 
-                if (IsExpectedException(ex, result))
+                if (realException is MissingMethodException)
                 {
-                    // Expected Exception was thrown, so Pass the test
-                    result.Outcome = UTF.UnitTestOutcome.Passed;
+                    result.Outcome = UTF.UnitTestOutcome.NotFound;
+                    result.TestFailureException = realException;
                 }
                 else
                 {
-                    // This block should not throw. If it needs to throw, then handling of
-                    // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
-                    result.TestFailureException ??= HandleMethodException(
-                        ex,
-                        TestClassName,
-                        TestMethodName);
-                }
+                    if (IsExpectedException(realException, result))
+                    {
+                        // Expected Exception was thrown, so Pass the test
+                        result.Outcome = UTF.UnitTestOutcome.Passed;
+                    }
+                    else
+                    {
+                        // This block should not throw. If it needs to throw, then handling of
+                        // ThreadAbortException will need to be revisited. See comment in RunTestMethod.
+                        result.TestFailureException ??= HandleMethodException(ex, realException, TestClassName, TestMethodName);
+                    }
 
-                if (result.Outcome != UTF.UnitTestOutcome.Passed)
-                {
-                    result.Outcome = ex is AssertInconclusiveException || ex.InnerException is AssertInconclusiveException
-                        ? UTF.UnitTestOutcome.Inconclusive
-                        : UTF.UnitTestOutcome.Failed;
+                    if (result.Outcome != UTF.UnitTestOutcome.Passed)
+                    {
+                        result.Outcome = ex is AssertInconclusiveException || ex.InnerException is AssertInconclusiveException
+                            ? UTF.UnitTestOutcome.Inconclusive
+                            : UTF.UnitTestOutcome.Failed;
+                    }
                 }
             }
 
@@ -312,8 +318,6 @@ public class TestMethodInfo : ITestMethod
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     private bool IsExpectedException(Exception ex, TestResult result)
     {
-        Exception realException = GetRealException(ex);
-
         // if the user specified an expected exception, we need to check if this
         // exception was thrown. If it was thrown, we should pass the test. In
         // case a different exception was thrown, the test is seen as failure
@@ -327,7 +331,7 @@ public class TestMethodInfo : ITestMethod
         {
             // If the expected exception attribute's Verify method returns, then it
             // considers this exception as expected, so the test passed
-            TestMethodOptions.ExpectedException.Verify(realException);
+            TestMethodOptions.ExpectedException.Verify(ex);
             return true;
         }
         catch (Exception verifyEx)
@@ -354,7 +358,7 @@ public class TestMethodInfo : ITestMethod
                 ? ObjectModelUnitTestOutcome.Inconclusive
                 : ObjectModelUnitTestOutcome.Failed,
             exceptionFromVerify.TryGetMessage(),
-            realException.TryGetStackTraceInformation());
+            ex.TryGetStackTraceInformation());
         return false;
     }
 
@@ -382,7 +386,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="className">The class name.</param>
     /// <param name="methodName">The method name.</param>
     /// <returns>Test framework exception with details.</returns>
-    private static TestFailedException HandleMethodException(Exception ex, string className, string methodName)
+    private static TestFailedException HandleMethodException(Exception ex, Exception realException, string className, string methodName)
     {
         DebugEx.Assert(ex != null, "exception should not be null.");
 
@@ -394,7 +398,6 @@ public class TestMethodInfo : ITestMethod
         }
 
         // Get the real exception thrown by the test method
-        Exception realException = GetRealException(ex);
         if (realException.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out var exceptionMessage, out var exceptionStackTraceInfo))
         {
             return new TestFailedException(outcome.ToUnitTestOutcome(), exceptionMessage, exceptionStackTraceInfo, realException);
