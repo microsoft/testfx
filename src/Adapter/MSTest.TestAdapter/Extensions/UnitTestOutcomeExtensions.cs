@@ -23,6 +23,7 @@ public static class UnitTestOutcomeExtensions
             UTF.UnitTestOutcome.Passed => UnitTestOutcome.Passed,
             UTF.UnitTestOutcome.Timeout => UnitTestOutcome.Timeout,
             UTF.UnitTestOutcome.NotRunnable => UnitTestOutcome.NotRunnable,
+            UTF.UnitTestOutcome.NotFound => UnitTestOutcome.NotFound,
             _ => UnitTestOutcome.Error,
         };
 

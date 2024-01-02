@@ -54,4 +54,9 @@ public enum UnitTestOutcome : int
     /// Test cannot be executed.
     /// </summary>
     NotRunnable,
+
+    /// <summary>
+    /// The specific test cannot be found.
+    /// </summary>
+    NotFound,
 }
