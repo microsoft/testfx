@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
-        <target state="new">Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</target>
+        <target state="translated">Preferisci 'Assert.ThrowsException' o 'Assert.ThrowsExceptionAsync' a '[ExpectedException]', perché garantisce che solo la chiamata prevista lanci l'eccezione prevista. Le API di asserzione forniscono anche una maggiore flessibilità e consentono l’asserzione delle proprietà aggiuntive dell'eccezione.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
         <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
-        <target state="new">Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</target>
+        <target state="translated">Preferisci 'Assert.ThrowsException/ThrowsExceptionAsync' a '[ExpectedException]'.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
         <source>Avoid '[ExpectedException]'</source>
-        <target state="new">Avoid '[ExpectedException]'</target>
+        <target state="translated">Evita '[ExpectedException]'</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
