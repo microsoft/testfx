@@ -84,8 +84,8 @@ EndProject{4}", projectGuid, projectName, newProject.ProjectFile, configGuid, En
 
 public class CSharpProject : Project
 {
-    private XElement _projectContent = new("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"), new XElement("PropertyGroup"), new XElement("ItemGroup"));
     private readonly string _projectFileName;
+    private XElement _projectContent = new("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"), new XElement("PropertyGroup"), new XElement("ItemGroup"));
 
     public string ProjectFile { get; private set; }
 
