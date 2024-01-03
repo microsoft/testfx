@@ -84,8 +84,8 @@ EndProject{4}", projectGuid, projectName, newProject.ProjectFile, configGuid, En
 
 public class CSharpProject : Project
 {
-    private readonly XElement _projectContent = new("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"), new XElement("PropertyGroup"), new XElement("ItemGroup"));
     private readonly string _projectFileName;
+    private XElement _projectContent = new("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"), new XElement("PropertyGroup"), new XElement("ItemGroup"));
 
     public string ProjectFile { get; private set; }
 
@@ -130,6 +130,7 @@ public class CSharpProject : Project
 
     public void AddProjectReference(string projectPath)
     {
+        _projectContent = XElement.Load(ProjectFile);
         _projectContent.Element("ItemGroup")?.Add(new XElement("ProjectReference", new XAttribute("Include", projectPath)));
         AddOrUpdateFileContent(_projectFileName, _projectContent.ToString());
     }
