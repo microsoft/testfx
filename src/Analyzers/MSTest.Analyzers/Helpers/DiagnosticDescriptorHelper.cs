@@ -35,8 +35,12 @@ internal static class DiagnosticDescriptorHelper
         }
 
         string[] tags = new string[customTags.Length + 1];
-        customTags.CopyTo(tags, 0);
-        customTags[^1] = WellKnownCustomTags.CompilationEnd;
+        if (customTags.Length > 0)
+        {
+            customTags.CopyTo(tags, 0);
+        }
+
+        tags[^1] = WellKnownCustomTags.CompilationEnd;
 
         return tags;
     }
