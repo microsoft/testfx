@@ -19,15 +19,14 @@ public sealed class PublicTypeShouldBeTestClassAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Description = new(nameof(Resources.PublicTypeShouldBeTestClassDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.PublicTypeShouldBeTestClassMessageFormat), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor Rule = new(
+    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.PublicTypeShouldBeTestClassRuleId,
         Title,
         MessageFormat,
-        Categories.Design,
-        DiagnosticSeverity.Info,
-        isEnabledByDefault: false,
         Description,
-        $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.PublicTypeShouldBeTestClassRuleId}.md");
+        Category.Design,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: false);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
