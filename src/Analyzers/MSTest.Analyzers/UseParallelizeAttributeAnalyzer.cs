@@ -18,16 +18,15 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseParallelizeAttributeAnalyzerTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseParallelizeAttributeAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.UseParallelizeAttributeAnalyzerDescription), Resources.ResourceManager, typeof(Resources));
-    internal static readonly DiagnosticDescriptor Rule = new(
+    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.UseParallelizedAttributeRuleId,
         Title,
         MessageFormat,
-        Categories.Performance,
+        Description,
+        Category.Performance,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true,
-        Description,
-        $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.UseParallelizedAttributeRuleId}.md",
-        WellKnownCustomTags.CompilationEnd);
+        isReportedAtCompilationEnd: true);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);

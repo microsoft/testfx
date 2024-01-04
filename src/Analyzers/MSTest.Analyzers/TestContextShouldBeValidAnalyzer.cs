@@ -17,61 +17,21 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.TestContextShouldBeValidTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.TestContextShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestContextShouldBeValidMessageFormat_Public), Resources.ResourceManager, typeof(Resources));
 
-    private static readonly LocalizableResourceString NotFieldMessageFormat = new(nameof(Resources.TestContextShouldBeValidMessageFormat_NotField), Resources.ResourceManager, typeof(Resources));
-    internal static readonly DiagnosticDescriptor NotFieldRule = new(
+    internal static readonly DiagnosticDescriptor PublicRule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestContextShouldBeValidRuleId,
         Title,
-        NotFieldMessageFormat,
-        Categories.Usage,
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true,
+        MessageFormat,
         Description,
-        $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.TestContextShouldBeValidRuleId}.md");
+        Category.Usage,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
 
-    private static readonly LocalizableResourceString PublicMessageFormat = new(nameof(Resources.TestContextShouldBeValidMessageFormat_Public), Resources.ResourceManager, typeof(Resources));
-    internal static readonly DiagnosticDescriptor PublicRule = new(
-        DiagnosticIds.TestContextShouldBeValidRuleId,
-        Title,
-        PublicMessageFormat,
-        Categories.Usage,
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true,
-        Description,
-        $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.TestContextShouldBeValidRuleId}.md");
-
-    private static readonly LocalizableResourceString PublicOrInternalMessageFormat = new(nameof(Resources.TestContextShouldBeValidMessageFormat_PublicOrInternal), Resources.ResourceManager, typeof(Resources));
-    internal static readonly DiagnosticDescriptor PublicOrInternalRule = new(
-        DiagnosticIds.TestContextShouldBeValidRuleId,
-        Title,
-        PublicOrInternalMessageFormat,
-        Categories.Usage,
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true,
-        Description,
-        $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.TestContextShouldBeValidRuleId}.md");
-
-    private static readonly LocalizableResourceString NotStaticMessageFormat = new(nameof(Resources.TestContextShouldBeValidMessageFormat_NotStatic), Resources.ResourceManager, typeof(Resources));
-    internal static readonly DiagnosticDescriptor NotStaticRule = new(
-        DiagnosticIds.TestContextShouldBeValidRuleId,
-        Title,
-        NotStaticMessageFormat,
-        Categories.Usage,
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true,
-        Description,
-        $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.TestContextShouldBeValidRuleId}.md");
-
-    private static readonly LocalizableResourceString NotReadonlyMessageFormat = new(nameof(Resources.TestContextShouldBeValidMessageFormat_NotReadonly), Resources.ResourceManager, typeof(Resources));
-    internal static readonly DiagnosticDescriptor NotReadonlyRule = new(
-        DiagnosticIds.TestContextShouldBeValidRuleId,
-        Title,
-        NotReadonlyMessageFormat,
-        Categories.Usage,
-        DiagnosticSeverity.Warning,
-        isEnabledByDefault: true,
-        Description,
-        $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.TestContextShouldBeValidRuleId}.md");
+    internal static readonly DiagnosticDescriptor PublicOrInternalRule = PublicRule.WithMessage(new(nameof(Resources.TestContextShouldBeValidMessageFormat_PublicOrInternal), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor NotStaticRule = PublicRule.WithMessage(new(nameof(Resources.TestContextShouldBeValidMessageFormat_NotStatic), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor NotReadonlyRule = PublicRule.WithMessage(new(nameof(Resources.TestContextShouldBeValidMessageFormat_NotReadonly), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor NotFieldRule = PublicRule.WithMessage(new(nameof(Resources.TestContextShouldBeValidMessageFormat_NotField), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(PublicRule);

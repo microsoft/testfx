@@ -19,15 +19,14 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString Description = new(nameof(Resources.AvoidExpectedExceptionAttributeDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AvoidExpectedExceptionAttributeMessageFormat), Resources.ResourceManager, typeof(Resources));
 
-    internal static readonly DiagnosticDescriptor Rule = new(
+    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.AvoidExpectedExceptionAttributeRuleId,
         Title,
         MessageFormat,
-        Categories.Design,
-        DiagnosticSeverity.Info,
-        isEnabledByDefault: true,
         Description,
-        $"https://github.com/microsoft/testfx/blob/main/docs/analyzers/{DiagnosticIds.AvoidExpectedExceptionAttributeRuleId}.md");
+        Category.Design,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
