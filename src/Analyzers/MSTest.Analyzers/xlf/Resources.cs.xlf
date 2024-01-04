@@ -4,17 +4,17 @@
     <body>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
-        <target state="new">Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</target>
+        <target state="translated">Preferujte Assert.ThrowsException nebo Assert.ThrowsExceptionAsync před [ExpectedException], protože zajišťuje, že očekávanou výjimku vyvolá pouze očekávané volání. Rozhraní API assert také poskytují větší flexibilitu a umožňují vyhodnocovat další vlastnosti výjimky.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
         <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
-        <target state="new">Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</target>
+        <target state="translated">Preferovat Assert.ThrowsException/ThrowsExceptionAsync před [ExpectedException]</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
         <source>Avoid '[ExpectedException]'</source>
-        <target state="new">Avoid '[ExpectedException]'</target>
+        <target state="translated">Vyhněte se [ExpectedException]</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
