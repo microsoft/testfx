@@ -113,6 +113,19 @@ internal sealed class TestApplicationResult(
             exitCode = exitCode == ExitCodes.Success && _totalRanTests < int.Parse(argumentList[0], CultureInfo.InvariantCulture) ? ExitCodes.MinimumExpectedTestsPolicyViolation : exitCode;
         }
 
+        if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string[]? exitCodes))
+        {
+            if (exitCodes is null || exitCodes.Length == 0 || (exitCodes.Length == 1 && exitCodes[0] == string.Empty))
+            {
+                return 0;
+            }
+
+            if (exitCodes[0].Split(';').Any(code => code == exitCode.ToString(CultureInfo.InvariantCulture)))
+            {
+                return 0;
+            }
+        }
+
         return exitCode;
     }
 

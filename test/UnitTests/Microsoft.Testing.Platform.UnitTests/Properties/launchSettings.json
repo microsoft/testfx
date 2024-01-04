@@ -2,7 +2,7 @@
   "profiles": {
     "Microsoft.Testing.Platform.UnitTests": {
       "commandName": "Project",
-      "commandLineArgs": "--treenode-filter /*/*/*/**",
+      "commandLineArgs": "--treenode-filter /*/*/*/GetProcessExitCodeAsync_IgnoreExitCodes_ByCommandLine/*GetProcessExitCodeAsync_IgnoreExitCodes_ByCommandLine*",
       "environmentVariables": {
         //"TESTINGPLATFORM_HOTRELOAD_ENABLED": "1"
       }

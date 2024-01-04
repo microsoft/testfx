@@ -204,6 +204,11 @@
         <target state="translated">&lt;test application runner&gt;</target>
         <note />
       </trans-unit>
+      <trans-unit id="IgnoreExitCodeOptionDescription">
+        <source>Do not report non successful exit value for all or specific exit codes (e.g. '--ignore-exit-code' ignore all non 0 exit code, '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="new">Do not report non successful exit value for all or specific exit codes (e.g. '--ignore-exit-code' ignore all non 0 exit code, '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
         <source>Method '{0}' did not exit successfully</source>
         <target state="translated">La méthode « {0} » ne s’est pas arrêtée correctement</target>

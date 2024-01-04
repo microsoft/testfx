@@ -169,6 +169,33 @@ public sealed class TestApplicationResultTests : TestBase
         Assert.AreEqual(ExitCodes.Success, await testApplicationResult.GetProcessExitCodeAsync());
     }
 
+    [Arguments(null, ExitCodes.Success)]
+    [Arguments("", ExitCodes.Success)]
+    [Arguments("8", ExitCodes.Success)]
+    [Arguments("8;2", ExitCodes.Success)]
+    [Arguments("8;", ExitCodes.Success)]
+    [Arguments("8;2;", ExitCodes.Success)]
+    [Arguments("5", ExitCodes.ZeroTests)]
+    [Arguments("5;7", ExitCodes.ZeroTests)]
+    [Arguments("5;", ExitCodes.ZeroTests)]
+    [Arguments("5;7;", ExitCodes.ZeroTests)]
+    public async Task GetProcessExitCodeAsync_IgnoreExitCodes_ByCommandLine(string argument, int expectedExitCode)
+    {
+        TestApplicationResult testApplicationResult
+            = new(new Mock<IOutputDevice>().Object, new Mock<ITestApplicationCancellationTokenSource>().Object,
+            new CommandLineOption(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, argument is null ? Array.Empty<string>() : new[] { argument }));
+
+        await testApplicationResult.ConsumeAsync(new DummyProducer(), new TestNodeUpdateMessage(
+            default,
+            new Extensions.Messages.TestNode()
+            {
+                Uid = new Extensions.Messages.TestNodeUid("id"),
+                DisplayName = "DisplayName",
+            }), CancellationToken.None);
+
+        Assert.AreEqual(expectedExitCode, await testApplicationResult.GetProcessExitCodeAsync());
+    }
+
     internal static IEnumerable<TestNodeStateProperty> FailedState()
     {
         yield return new FailedTestNodeStateProperty();

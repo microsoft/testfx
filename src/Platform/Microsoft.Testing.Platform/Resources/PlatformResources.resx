@@ -486,4 +486,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="UnexpectedExceptionDuringByteConversionErrorMessage" xml:space="preserve">
     <value>An unexpected exception occured during byte conversion</value>
   </data>
+  <data name="IgnoreExitCodeOptionDescription" xml:space="preserve">
+    <value>Do not report non successful exit value for all or specific exit codes (e.g. '--ignore-exit-code' ignore all non 0 exit code, '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</value>
+  </data>
 </root>
