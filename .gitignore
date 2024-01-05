@@ -139,5 +139,5 @@ project.fragment.lock.json
 # ===========================
 /src/Package/MSTest.Sdk/Sdk/Sdk.props
 
-# Playground launchSettings
-/samples/Playground/Properties/launchSettings.json
+# Playground project (use force add if a change is really worth it)
+/samples/Playground/
