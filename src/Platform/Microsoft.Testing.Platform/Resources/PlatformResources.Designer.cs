@@ -647,6 +647,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do not report non successful exit value for specific exit codes (e.g. &apos;--ignore-exit-code 8;9&apos; ignore exit code 8 and 9 and will return 0 in these case).
+        /// </summary>
+        internal static string PlatformCommandLineIgnoreExitCodeOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineIgnoreExitCodeOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Display .NET test application information..
         /// </summary>
         internal static string PlatformCommandLineInfoOptionDescription {

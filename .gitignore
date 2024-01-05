@@ -138,3 +138,6 @@ project.fragment.lock.json
 # Update template files
 # ===========================
 /src/Package/MSTest.Sdk/Sdk/Sdk.props
+
+# Playground project (use force add if a change is really worth it)
+/samples/Playground/
