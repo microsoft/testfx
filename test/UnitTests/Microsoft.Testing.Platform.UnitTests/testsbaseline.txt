@@ -1,4 +1,19 @@
-﻿Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ArgumentArityTests.ParseAndValidate_WhenOptionsGetsTheExpectedNumberOfArguments_ReturnsTrue()
+﻿Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDefaultDirectory()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDirectoryFromCommandLineProvider()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDirectoryFromStore()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_CurrentWorkingDirectorySet_DirectoryIsNotNull()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetAndNoConfigurationProviders_DirectoryIsNull(string) (key: "testingPlatform:currentWorkingDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetAndNoConfigurationProviders_DirectoryIsNull(string) (key: "testingPlatform:resultDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetAndNoConfigurationProviders_DirectoryIsNull(string) (key: "testingPlatform:testHostWorkingDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNotNull(string) (key: "testingPlatform:currentWorkingDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNotNull(string) (key: "testingPlatform:resultDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNotNull(string) (key: "testingPlatform:testHostWorkingDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNull(string) (key: "testingPlatform:currentWorkingDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNull(string) (key: "testingPlatform:resultDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNull(string) (key: "testingPlatform:testHostWorkingDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_ResultDirectorySet_DirectoryIsNotNull()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_TestHostWorkingDirectorySet_DirectoryIsNotNull()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ArgumentArityTests.ParseAndValidate_WhenOptionsGetsTheExpectedNumberOfArguments_ReturnsTrue()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ArgumentArityTests.ParseAndValidate_WhenOptionWithArityExactlyOneIsCalledWithoutArguments_ReturnsFalse()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ArgumentArityTests.ParseAndValidate_WhenOptionWithArityExactlyOneIsCalledWithTwoArguments_ReturnsFalse()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ArgumentArityTests.ParseAndValidate_WhenOptionWithArityOneOrMoreIsCalledWithoutArguments_ReturnsFalse()
@@ -22,6 +37,15 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.Comman
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CommandLineHandlerTests.ParseAndValidateAsync_ReservedOptions_ReturnsFalse()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CommandLineHandlerTests.ParseAndValidateAsync_ReservedOptionsPrefix_ReturnsFalse()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CommandLineHandlerTests.ParseAndValidateAsync_UnknownOption_ReturnsFalse()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ReturnsExpectedPath(string) (key: "testingPlatform:currentWorkingDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ReturnsExpectedPath(string) (key: "testingPlatform:resultDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ReturnsExpectedPath(string) (key: "testingPlatform:testHostWorkingDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ThrowsArgumentNullException(string) (key: "testingPlatform:currentWorkingDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ThrowsArgumentNullException(string) (key: "testingPlatform:resultDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ThrowsArgumentNullException(string) (key: "testingPlatform:testHostWorkingDirectory")
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.BuildAsync_ConfigurationSourceIsAsyncInitializableExtension_InitializeAsyncIsCalled()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.BuildAsync_ConfigurationSourcesNotEnabledAsync_ThrowsException()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.BuildAsync_EmptyConfigurationSources_ThrowsException()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJson(string, string, string?) [0]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJson(string, string, string?) [1]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJson(string, string, string?) [10]
@@ -35,6 +59,19 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.Config
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJson(string, string, string?) [7]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJson(string, string, string?) [8]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJson(string, string, string?) [9]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [10]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [11]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [12]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [6]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [7]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [8]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [9]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.InvalidJson_Fail()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CountDownEventTests.CountDownEvent_WaitAsync_Succeeded()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CountDownEventTests.CountDownEvent_WaitAsyncCancelled_Succeeded()
@@ -167,6 +204,17 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestAp
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_If_MinimumExpectedTests_Violated_Returns_MinimumExpectedTestsPolicyViolation()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_If_No_Tests_Ran_Returns_ZeroTestsRan()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_If_TestAdapter_Returns_TestAdapterTestSessionFailure()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_IgnoreExitCodes(string, int) (argument: ";", expectedExitCode: 8)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_IgnoreExitCodes(string, int) (argument: "", expectedExitCode: 8)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_IgnoreExitCodes(string, int) (argument: "5;", expectedExitCode: 8)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_IgnoreExitCodes(string, int) (argument: "5;7;", expectedExitCode: 8)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_IgnoreExitCodes(string, int) (argument: "5;7", expectedExitCode: 8)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_IgnoreExitCodes(string, int) (argument: "5", expectedExitCode: 8)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_IgnoreExitCodes(string, int) (argument: "8;", expectedExitCode: 0)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_IgnoreExitCodes(string, int) (argument: "8;2;", expectedExitCode: 0)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_IgnoreExitCodes(string, int) (argument: "8;2", expectedExitCode: 0)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_IgnoreExitCodes(string, int) (argument: "8", expectedExitCode: 0)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_IgnoreExitCodes(string, int) (argument: null, expectedExitCode: 8)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_OnDiscovery_No_Tests_Discovered_Returns_ZeroTests()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestApplicationResultTests.GetProcessExitCodeAsync_OnDiscovery_Some_Tests_Discovered_Returns_Success()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TestNodeUidTests.TestNodeUid_EqualityChecks_ShouldWorkAsExpected()
@@ -200,40 +248,3 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TreeNo
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TreeNodeFilterTests.TestNodeFilterNeedsUrlEncodingOfSlashes(string, string, bool) (filter: "/A/B", nodePath: "/A%2FB", isMatched: false)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TreeNodeFilterTests.TestNodeFilterNeedsUrlEncodingOfSlashes(string, string, bool) (filter: "/A%2FB", nodePath: "/A/B", isMatched: false)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TreeNodeFilterTests.TestNodeFilterNeedsUrlEncodingOfSlashes(string, string, bool) (filter: "/A%2FB", nodePath: "/A%2FB", isMatched: true)
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ReturnsExpectedPath(string) (key: "testingPlatform:resultDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ReturnsExpectedPath(string) (key: "testingPlatform:testHostWorkingDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ReturnsExpectedPath(string) (key: "testingPlatform:currentWorkingDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ThrowsArgumentNullException(string) (key: "testingPlatform:resultDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ThrowsArgumentNullException(string) (key: "testingPlatform:testHostWorkingDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationExtensionsTests.ConfigurationExtensions_TestedMethod_ThrowsArgumentNullException(string) (key: "testingPlatform:currentWorkingDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [4]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [0]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [1]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [10]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [3]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [9]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [7]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [12]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [5]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [8]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [6]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [11]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [2]
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.BuildAsync_ConfigurationSourceIsAsyncInitializableExtension_InitializeAsyncIsCalled()
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.BuildAsync_EmptyConfigurationSources_ThrowsException()
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.BuildAsync_ConfigurationSourcesNotEnabledAsync_ThrowsException()
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNotNull(string) (key: "testingPlatform:resultDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNull(string) (key: "testingPlatform:resultDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetAndNoConfigurationProviders_DirectoryIsNull(string) (key: "testingPlatform:currentWorkingDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_CurrentWorkingDirectorySet_DirectoryIsNotNull()
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetAndNoConfigurationProviders_DirectoryIsNull(string) (key: "testingPlatform:testHostWorkingDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNotNull(string) (key: "testingPlatform:currentWorkingDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNull(string) (key: "testingPlatform:currentWorkingDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetAndNoConfigurationProviders_DirectoryIsNull(string) (key: "testingPlatform:resultDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_ResultDirectorySet_DirectoryIsNotNull()
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNotNull(string) (key: "testingPlatform:testHostWorkingDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_TestHostWorkingDirectorySet_DirectoryIsNotNull()
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.IndexerTest_DirectoryNotSetButConfigurationProvidersPresent_DirectoryIsNull(string) (key: "testingPlatform:testHostWorkingDirectory")
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDirectoryFromCommandLineProvider()
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDefaultDirectory()
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.AggregatedConfigurationTests.CheckTestResultsDirectoryOverrideAndCreateItAsync_ResultsDirectoryIsNull_GetDirectoryFromStore()

@@ -620,7 +620,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         var testApplicationResult = new TestApplicationResult(
             platformOutputDisplayService,
             serviceProvider.GetTestApplicationCancellationTokenSource(),
-            serviceProvider.GetCommandLineOptions());
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetEnvironment());
         await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
 
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();
