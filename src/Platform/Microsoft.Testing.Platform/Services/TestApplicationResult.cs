@@ -127,7 +127,7 @@ internal sealed class TestApplicationResult(
 
         if (exitCodeToIgnore is not null)
         {
-            if (exitCodeToIgnore.Split(';').Any(code => code == exitCode.ToString(CultureInfo.InvariantCulture)))
+            if (exitCodeToIgnore.Split(';').Any(code => int.Parse(code, CultureInfo.InvariantCulture) == exitCode))
             {
                 exitCode = ExitCodes.Success;
             }
