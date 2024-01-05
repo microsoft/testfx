@@ -73,6 +73,10 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Show the command line help\.
+      --ignore-exit-code
+        Arity: 1
+        Hidden: False
+        Description: Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
       --info
         Arity: 0
         Hidden: False

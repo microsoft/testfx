@@ -18,11 +18,13 @@ namespace Microsoft.Testing.Platform.Services;
 internal sealed class TestApplicationResult(
     IOutputDevice outputService,
     ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
-    ICommandLineOptions commandLineOptions) : ITestApplicationProcessExitCode, ILoggerProvider, IOutputDeviceDataProducer
+    ICommandLineOptions commandLineOptions,
+    IEnvironment environment) : ITestApplicationProcessExitCode, ILoggerProvider, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputService = outputService;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     private readonly ICommandLineOptions _commandLineOptions = commandLineOptions;
+    private readonly IEnvironment _environment = environment;
     private readonly List<TestApplicationResultLogger> _testApplicationResultLoggers = [];
     private readonly List<TestNode> _failedTests = [];
     private int _totalRanTests;
@@ -113,14 +115,19 @@ internal sealed class TestApplicationResult(
             exitCode = exitCode == ExitCodes.Success && _totalRanTests < int.Parse(argumentList[0], CultureInfo.InvariantCulture) ? ExitCodes.MinimumExpectedTestsPolicyViolation : exitCode;
         }
 
-        if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string[]? exitCodes))
+        // If the user has specified the IgnoreExitCode, then we don't want to return a non-zero exit code if the exit code matches the one specified.
+        string? exitCodeToIgnore = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE);
+        if (exitCodeToIgnore is null)
         {
-            if (exitCodes is null || exitCodes.Length == 0 || (exitCodes.Length == 1 && exitCodes[0] == string.Empty))
+            if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string[]? commandLineExitCodes) && commandLineExitCodes.Length > 0)
             {
-                return 0;
+                exitCodeToIgnore = commandLineExitCodes[0];
             }
+        }
 
-            if (exitCodes[0].Split(';').Any(code => code == exitCode.ToString(CultureInfo.InvariantCulture)))
+        if (exitCodeToIgnore is not null)
+        {
+            if (exitCodeToIgnore.Split(';').Any(code => code == exitCode.ToString(CultureInfo.InvariantCulture)))
             {
                 return 0;
             }

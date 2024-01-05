@@ -62,7 +62,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             new(DiagnosticFileLoggerSynchronousWriteOptionKey, PlatformResources.PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
             MinimumExpectedTests,
             new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
-            new(IgnoreExitCodeOptionKey, PlatformResources.IgnoreExitCodeOptionDescription, ArgumentArity.ZeroOrOne, false, isBuiltIn: true),
+            new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
 
             // Hidden options
             new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),

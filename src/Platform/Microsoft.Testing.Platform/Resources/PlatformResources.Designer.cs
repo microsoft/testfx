@@ -422,15 +422,6 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Do not report non successful exit value for all or specific exit codes (e.g. &apos;--ignore-exit-code&apos; ignore all non 0 exit code, &apos;--ignore-exit-code 8;9&apos; ignore exit code 8 and 9 and will return 0 in these case).
-        /// </summary>
-        internal static string IgnoreExitCodeOptionDescription {
-            get {
-                return ResourceManager.GetString("IgnoreExitCodeOptionDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Method &apos;{0}&apos; did not exit successfully.
         /// </summary>
         internal static string InternalLoopAsyncDidNotExitSuccessfullyErrorMessage {
@@ -652,6 +643,15 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string PlatformCommandLineHelpOptionDescription {
             get {
                 return ResourceManager.GetString("PlatformCommandLineHelpOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not report non successful exit value for specific exit codes (e.g. &apos;--ignore-exit-code 8;9&apos; ignore exit code 8 and 9 and will return 0 in these case).
+        /// </summary>
+        internal static string PlatformCommandLineIgnoreExitCodeOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineIgnoreExitCodeOptionDescription", resourceCulture);
             }
         }
         
