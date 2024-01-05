@@ -25,12 +25,10 @@
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>9.0.0-beta.24053.1</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <!-- MSTest version is used for acceptance tests and Sdk project -->
-    <MSTestVersion>3.2.0-preview.24054.5</MSTestVersion>
-    <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
-    <StrongNamerVersion>0.2.5</StrongNamerVersion>
-    <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
+    <!-- Testing platform (this comment is here to avoid conflict on darc PRs) -->
     <MicrosoftTestingPlatformVersion>1.0.0-preview.24052.7</MicrosoftTestingPlatformVersion>
+    <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>    
+    <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
   </PropertyGroup>
   <PropertyGroup Label="MSTest test dependencies">
     <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
@@ -38,7 +36,9 @@
     <!-- Pinned to 4.18.4 for security -->
     <MoqVersion>4.18.4</MoqVersion>
     <MSBuildStructuredLogger>2.1.858</MSBuildStructuredLogger>
+    <MSTestVersion>3.2.0-preview.24054.5</MSTestVersion>
     <PollyVersion>8.2.0</PollyVersion>
     <PollyContribWaitAndRetryVersion>1.1.1</PollyContribWaitAndRetryVersion>
+    <StrongNamerVersion>0.2.5</StrongNamerVersion>
   </PropertyGroup>
 </Project>
