@@ -6,7 +6,6 @@ A later stage in the Dockerfile, then adds a layer containing the tests for the 
 
 The advantage here is that we can build our application, and test the same build of the application that we are shipping. Our images are also smaller, becuase they don't depend on .NET SDK.
 
-
 ## Usage
 
 Build the final application, and tag it:

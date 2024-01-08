@@ -10,7 +10,7 @@ Each project is configured to use Microsoft Code Coverage and to produce a TRX f
 
 Each project is first built using `dotnet build`, and then the test execution is run 3 times to allow some warm-up of the execution.
 
-We are measuring the process execution time using the Powershell `Measure-Command { ... }`.
+We are measuring the process execution time using the PowerShell `Measure-Command { ... }`.
 
 Running tests:
 
