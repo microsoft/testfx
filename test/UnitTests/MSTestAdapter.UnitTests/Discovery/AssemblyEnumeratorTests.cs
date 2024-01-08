@@ -88,7 +88,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.DefinedTypes).Returns(new List<TypeInfo>());
 
-        Verify(AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings).Length == 0);
+        Verify(AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings).Count == 0);
     }
 
     public void GetTypesShouldReturnSetOfDefinedTypes()
@@ -238,7 +238,7 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(new List<TypeInfo>() { typeof(DummyTestClass).GetTypeInfo() });
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
-        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out _warnings))
+        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
             .Returns((ICollection<UnitTestElement>)null);
 
         Verify(_assemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings).Count == 0);
@@ -255,7 +255,7 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(new List<TypeInfo>() { typeof(DummyTestClass).GetTypeInfo() });
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
-        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out _warnings))
+        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
             .Returns(new Collection<UnitTestElement> { unitTestElement });
 
         var testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
@@ -275,7 +275,7 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(new List<TypeInfo>() { typeof(DummyTestClass).GetTypeInfo() });
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
-        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out _warnings))
+        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
             .Returns(expectedTestElements);
 
         var testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
@@ -295,7 +295,7 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(new List<TypeInfo>() { typeof(DummyTestClass).GetTypeInfo(), typeof(DummyTestClass).GetTypeInfo() });
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
-        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out _warnings))
+        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings))
             .Returns(expectedTestElements);
 
         var testElements = testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
@@ -316,7 +316,7 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(new List<TypeInfo>() { typeof(InternalTestClass).GetTypeInfo() });
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
-        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out warningsFromTypeEnumerator));
+        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(warningsFromTypeEnumerator));
 
         testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
         Verify(_warnings.Count == 0);
@@ -336,7 +336,7 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(new List<TypeInfo>() { typeof(InternalTestClass).GetTypeInfo() });
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
-        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out warningsFromTypeEnumerator));
+        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(warningsFromTypeEnumerator));
 
         testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
 
@@ -354,7 +354,7 @@ public class AssemblyEnumeratorTests : TestContainer
             .Returns(new List<TypeInfo>() { typeof(InternalTestClass).GetTypeInfo() });
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("DummyAssembly", false))
             .Returns(mockAssembly.Object);
-        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(out _warnings)).Throws(exception);
+        testableAssemblyEnumerator.MockTypeEnumerator.Setup(te => te.Enumerate(_warnings)).Throws(exception);
 
         testableAssemblyEnumerator.EnumerateAssembly("DummyAssembly", out _warnings);
 

@@ -25,7 +25,7 @@ public class TypeEnumeratorTests : TestContainer
     private readonly Mock<TypeValidator> _mockTypeValidator;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
-    private ICollection<string> _warnings;
+    private readonly List<string> _warnings = new();
 
     public TypeEnumeratorTests()
     {
@@ -52,7 +52,7 @@ public class TypeEnumeratorTests : TestContainer
     public void EnumerateShouldReturnNullIfTypeIsNotValid()
     {
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(IDummyInterface), string.Empty);
-        Verify(typeEnumerator.Enumerate(out _warnings) is null);
+        Verify(typeEnumerator.Enumerate(_warnings) is null);
     }
 
     public void EnumerateShouldReturnEmptyCollectionWhenNoValidTestMethodsExist()
@@ -60,7 +60,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: false, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), string.Empty);
 
-        var tests = typeEnumerator.Enumerate(out _warnings);
+        var tests = typeEnumerator.Enumerate(_warnings);
 
         Verify(tests is not null);
         Verify(tests.Count == 0);
@@ -75,7 +75,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyBaseTestClass), Assembly.GetExecutingAssembly().FullName);
 
-        var tests = typeEnumerator.Enumerate(out _warnings);
+        var tests = typeEnumerator.Enumerate(_warnings);
 
         Verify(tests is not null);
 
@@ -88,7 +88,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
 
-        var tests = typeEnumerator.Enumerate(out _warnings);
+        var tests = typeEnumerator.Enumerate(_warnings);
 
         Verify(tests is not null);
 
@@ -102,7 +102,7 @@ public class TypeEnumeratorTests : TestContainer
 
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
 
-        var tests = typeEnumerator.Enumerate(out _warnings);
+        var tests = typeEnumerator.Enumerate(_warnings);
 
         Verify(tests is not null);
 
@@ -130,7 +130,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
 
-        var tests = typeEnumerator.Enumerate(out _warnings);
+        var tests = typeEnumerator.Enumerate(_warnings);
 
         Verify(tests is not null);
 
@@ -159,7 +159,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: false);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
 
-        var tests = typeEnumerator.Enumerate(out _warnings);
+        var tests = typeEnumerator.Enumerate(_warnings);
 
         Verify(tests is not null);
 
@@ -173,7 +173,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyHidingTestClass), Assembly.GetExecutingAssembly().FullName);
 
-        var tests = typeEnumerator.Enumerate(out _warnings);
+        var tests = typeEnumerator.Enumerate(_warnings);
 
         Verify(tests is not null);
 
@@ -192,7 +192,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyOverridingTestClass), Assembly.GetExecutingAssembly().FullName);
 
-        var tests = typeEnumerator.Enumerate(out _warnings);
+        var tests = typeEnumerator.Enumerate(_warnings);
 
         Verify(tests is not null);
 
@@ -215,7 +215,7 @@ public class TypeEnumeratorTests : TestContainer
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummySecondHidingTestClass), Assembly.GetExecutingAssembly().FullName);
 
-        var tests = typeEnumerator.Enumerate(out _warnings);
+        var tests = typeEnumerator.Enumerate(_warnings);
 
         Verify(tests is not null);
 

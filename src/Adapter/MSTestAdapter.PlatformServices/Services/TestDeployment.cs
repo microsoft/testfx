@@ -183,7 +183,7 @@ public class TestDeployment : ITestDeployment
 #if !WINDOWS_UWP
     internal static IDictionary<string, object> GetDeploymentInformation(string source)
     {
-        var properties = new Dictionary<string, object>();
+        var properties = new Dictionary<string, object>(8);
 
         string applicationBaseDirectory = string.Empty;
 

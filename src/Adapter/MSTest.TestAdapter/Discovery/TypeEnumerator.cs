@@ -17,6 +17,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// </summary>
 internal class TypeEnumerator
 {
+    private static readonly Collection<UnitTestElement> EmptyUnitTestElements = new();
     private readonly Type _type;
     private readonly string _assemblyFilePath;
     private readonly TypeValidator _typeValidator;
@@ -48,10 +49,8 @@ internal class TypeEnumerator
     /// </summary>
     /// <param name="warnings"> Contains warnings if any, that need to be passed back to the caller. </param>
     /// <returns> list of test cases.</returns>
-    internal virtual ICollection<UnitTestElement>? Enumerate(out ICollection<string> warnings)
+    internal virtual ICollection<UnitTestElement>? Enumerate(ICollection<string> warnings)
     {
-        warnings = new Collection<string>();
-
         if (!_typeValidator.IsValidTestClass(_type, warnings))
         {
             return null;
@@ -69,8 +68,8 @@ internal class TypeEnumerator
     internal Collection<UnitTestElement> GetTests(ICollection<string> warnings)
     {
         bool foundDuplicateTests = false;
-        var foundTests = new HashSet<string>();
-        var tests = new Collection<UnitTestElement>();
+        HashSet<string>? foundTests = null;
+        Collection<UnitTestElement>? tests = null;
 
         // Test class is already valid. Verify methods.
         foreach (var method in _type.GetRuntimeMethods())
@@ -85,11 +84,16 @@ internal class TypeEnumerator
 
             if (_testMethodValidator.IsValidTestMethod(method, _type, warnings))
             {
-                foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.Name);
+                foundDuplicateTests = foundDuplicateTests || !(foundTests ??= new()).Add(method.Name);
                 var testMethod = GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings);
 
-                tests.Add(testMethod);
+                (tests ??= new()).Add(testMethod);
             }
+        }
+
+        if (tests is null)
+        {
+            return EmptyUnitTestElements;
         }
 
         if (!foundDuplicateTests)
@@ -107,7 +111,7 @@ internal class TypeEnumerator
         {
             inheritanceDepths[currentType.FullName!] = currentDepth;
             ++currentDepth;
-            currentType = currentType.GetTypeInfo().BaseType;
+            currentType = currentType.BaseType;
         }
 
         return new Collection<UnitTestElement>(
@@ -144,7 +148,7 @@ internal class TypeEnumerator
         {
             testMethod.DeclaringAssemblyName =
                 PlatformServiceProvider.Instance.FileOperations.GetAssemblyPath(
-                    method.DeclaringType.GetTypeInfo().Assembly);
+                    method.DeclaringType.Assembly);
         }
 
         var testElement = new UnitTestElement(testMethod)
@@ -190,7 +194,7 @@ internal class TypeEnumerator
         }
 
         var workItemAttributes = _reflectHelper.GetCustomAttributes<WorkItemAttribute>(method);
-        if (workItemAttributes.Length != 0)
+        if (workItemAttributes.Any())
         {
             testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture)).ToArray();
         }

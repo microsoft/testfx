@@ -21,6 +21,7 @@ internal static class MethodInfoExtensions
     {
         DebugEx.Assert(method != null, "method should not be null.");
 
+        // TODO: PERF We're allocating here, can we do this check using metadata tokens?
         ParameterInfo[] parameters = method.GetParameters();
 
         return
@@ -43,6 +44,8 @@ internal static class MethodInfoExtensions
         return
             method.IsStatic &&
             method.IsPublic &&
+
+            // TODO: PERF We're allocating here, can we do this check using metadata tokens?
             (method.GetParameters().Length == 0) &&
             method.IsVoidOrTaskReturnType();
     }
@@ -59,6 +62,8 @@ internal static class MethodInfoExtensions
         return
             !method.IsStatic &&
             method.IsPublic &&
+
+            // TODO: PERF We're allocating here, can we do this check using metadata tokens?
             (method.GetParameters().Length == 0) &&
             method.IsVoidOrTaskReturnType();
     }
@@ -80,6 +85,8 @@ internal static class MethodInfoExtensions
             !method.IsStatic &&
             !method.IsGenericMethod &&
             (method.IsPublic || (discoverInternals && method.IsAssembly)) &&
+
+            // TODO: PERF We're allocating here, can we do this check using metadata tokens?
             (method.GetParameters().Length == 0 || ignoreParameterLength) &&
             method.IsVoidOrTaskReturnType(); // Match return type Task for async methods only. Else return type void.
     }
@@ -94,14 +101,14 @@ internal static class MethodInfoExtensions
         DebugEx.Assert(method != null, "method should not be null.");
 
         // There should be one and only one TimeoutAttribute.
-        var attributes = ReflectHelper.GetCustomAttributes<TimeoutAttribute>(method, false);
-        if (attributes?.Length != 1)
+        var attributes = ReflectHelper.Instance.GetCustomAttributes<TimeoutAttribute>(method, false);
+        if (attributes is null || !attributes.Any())
         {
             return false;
         }
 
         // Timeout cannot be less than 0.
-        return !(attributes[0]?.Timeout < 0);
+        return !(attributes?.First()!.Timeout < 0);
     }
 
     /// <summary>
@@ -123,7 +130,7 @@ internal static class MethodInfoExtensions
     /// <returns>Compiler generated type name for given async test method..</returns>
     internal static string? GetAsyncTypeName(this MethodInfo method)
     {
-        var asyncStateMachineAttribute = ReflectHelper.GetCustomAttributes<AsyncStateMachineAttribute>(method, false).FirstOrDefault();
+        var asyncStateMachineAttribute = ReflectHelper.Instance.GetCustomAttributes<AsyncStateMachineAttribute>(method, false).FirstOrDefault();
 
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }

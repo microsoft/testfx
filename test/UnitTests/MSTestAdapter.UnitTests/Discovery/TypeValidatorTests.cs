@@ -233,37 +233,37 @@ public class TypeValidatorTests : TestContainer
 
     public void HasCorrectTestContextSignatureShouldReturnTrueForClassesWithNoTestContextProperty()
     {
-        Verify(TypeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)));
+        Verify(TypeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass).GetTypeInfo()));
     }
 
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithNoSetters()
     {
-        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
+        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly).GetTypeInfo()));
     }
 
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithPrivateSetter()
     {
-        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
+        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter).GetTypeInfo()));
     }
 
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithStaticSetter()
     {
-        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)));
+        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext).GetTypeInfo()));
     }
 
     public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithAbstractSetter()
     {
-        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext)));
+        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext).GetTypeInfo()));
     }
 
     public void HasCorrectTestContextSignatureShouldNotThrowForAGenericClassWithRandomProperties()
     {
-        Verify(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>)));
+        Verify(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>).GetTypeInfo()));
     }
 
     public void HasCorrectTestContextSignatureShouldReturnTrueForAGenericClassWithTestContext()
     {
-        Verify(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>)));
+        Verify(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>).GetTypeInfo()));
     }
 
     #endregion

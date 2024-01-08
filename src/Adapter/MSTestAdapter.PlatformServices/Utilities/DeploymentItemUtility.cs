@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP
 
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -18,12 +19,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 /// </summary>
 internal class DeploymentItemUtility
 {
+    private static readonly List<DeploymentItem> EmptyDeploymentItems = new();
     private readonly ReflectionUtility _reflectionUtility;
 
     /// <summary>
     /// A cache for class level deployment items.
     /// </summary>
-    private readonly Dictionary<Type, IList<DeploymentItem>> _classLevelDeploymentItems;
+    private readonly ConcurrentDictionary<Type, IList<DeploymentItem>> _classLevelDeploymentItems;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeploymentItemUtility"/> class.
@@ -48,7 +50,15 @@ internal class DeploymentItemUtility
             var deploymentItemAttributes = _reflectionUtility.GetCustomAttributes(
                 type.GetTypeInfo(),
                 typeof(DeploymentItemAttribute));
-            value = GetDeploymentItems(deploymentItemAttributes, warnings);
+            if (deploymentItemAttributes.Length > 0)
+            {
+                value = GetDeploymentItems(deploymentItemAttributes, warnings);
+            }
+            else
+            {
+                value = EmptyDeploymentItems;
+            }
+
             _classLevelDeploymentItems[type] = value;
         }
 

@@ -49,23 +49,18 @@ internal class TypeValidator
     /// <returns>Return true if it is a valid test class.</returns>
     internal virtual bool IsValidTestClass(Type type, ICollection<string> warnings)
     {
-        if (!type.GetTypeInfo().IsClass
-            || (!_reflectHelper.IsAttributeDefined<TestClassAttribute>(type, false)
-            && !_reflectHelper.HasAttributeDerivedFrom<TestClassAttribute>(type, false)))
-        {
-            return false;
-        }
+        TypeInfo typeInfo = type.GetTypeInfo();
 
-        // inaccessible class
-        if (!TypeHasValidAccessibility(type.GetTypeInfo(), _discoverInternals))
+        // Check the attribute
+        if (!typeInfo.IsClass
+            || (!_reflectHelper.IsAttributeDefined<TestClassAttribute>(typeInfo, false)
+            && !_reflectHelper.HasAttributeDerivedFrom<TestClassAttribute>(typeInfo, false)))
         {
-            var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
-            warnings.Add(warning);
             return false;
         }
 
         // Generic class
-        if (type.GetTypeInfo().IsGenericTypeDefinition && !type.GetTypeInfo().IsAbstract)
+        if (typeInfo.IsGenericTypeDefinition && !typeInfo.IsAbstract)
         {
             // In IDE generic classes that are not abstract are treated as not runnable. Keep consistence.
             var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
@@ -73,8 +68,16 @@ internal class TypeValidator
             return false;
         }
 
+        // inaccessible class
+        if (!TypeHasValidAccessibility(typeInfo, _discoverInternals))
+        {
+            var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
+            warnings.Add(warning);
+            return false;
+        }
+
         // Class is not valid if the testContext property is incorrect
-        if (!HasCorrectTestContextSignature(type))
+        if (!HasCorrectTestContextSignature(typeInfo))
         {
             var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInValidTestContextSignature, type.FullName);
             warnings.Add(warning);
@@ -89,33 +92,34 @@ internal class TypeValidator
         // What we do is:
         //   - report the class as "not valid" test class. This will cause to skip enumerating tests from it.
         //   - Do not generate warnings/do not create NOT RUNNABLE tests.
-        return !type.GetTypeInfo().IsAbstract;
+        return !typeInfo.IsAbstract;
     }
 
     /// <summary>
     /// Determines if the type has a valid TestContext property definition.
     /// </summary>
-    /// <param name="type">The reflected type.</param>
+    /// <param name="typeInfo">The reflected type.</param>
     /// <returns>Returns true if type has a valid TestContext property definition.</returns>
-    internal static bool HasCorrectTestContextSignature(Type type)
+    internal static bool HasCorrectTestContextSignature(TypeInfo typeInfo)
     {
-        DebugEx.Assert(type != null, "HasCorrectTestContextSignature type is null");
+        DebugEx.Assert(typeInfo != null, "HasCorrectTestContextSignature type is null");
 
-        var propertyInfoEnumerable = type.GetTypeInfo().DeclaredProperties;
-        var propertyInfo = new List<PropertyInfo>();
+        // https://github.com/dotnet/runtime/blob/main/src/libraries/System.Private.CoreLib/src/System/Reflection/TypeInfo.cs#L98
+        PropertyInfo[] declaredProperties = typeInfo.GetProperties(BindingFlags.DeclaredOnly);
+        if (declaredProperties.Length == 0)
+        {
+            return true;
+        }
 
-        foreach (var pinfo in propertyInfoEnumerable)
+        List<PropertyInfo> propertyInfo = new(declaredProperties.Length);
+
+        foreach (var pinfo in declaredProperties)
         {
             // PropertyType.FullName can be null if the property is a generic type.
             if (TestContextFullName.Equals(pinfo.PropertyType.FullName, StringComparison.Ordinal))
             {
                 propertyInfo.Add(pinfo);
             }
-        }
-
-        if (propertyInfo.Count == 0)
-        {
-            return true;
         }
 
         foreach (var pinfo in propertyInfo)
@@ -182,6 +186,7 @@ internal class TypeValidator
         var declaringType = type.DeclaringType;
         while (declaringType != null && parentsArePublicOrInternal)
         {
+            var typeInfoDeclaringType = declaringType.GetTypeInfo();
             var declaringTypeIsPublicOrInternal =
 
                 // Declaring type is non-nested type, and we are looking for internal or public, which are the only
@@ -190,7 +195,7 @@ internal class TypeValidator
 
                 // Or the type is nested internal, or nested public type, but not any other
                 // like nested protected internal type, or nested private type.
-                || declaringType.GetTypeInfo().IsNestedAssembly || declaringType.GetTypeInfo().IsNestedPublic;
+                || typeInfoDeclaringType.IsNestedAssembly || typeInfoDeclaringType.IsNestedPublic;
 
             if (!declaringTypeIsPublicOrInternal)
             {

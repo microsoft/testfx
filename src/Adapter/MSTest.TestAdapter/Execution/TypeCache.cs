@@ -98,15 +98,8 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestMethodInfo"/>. </returns>
     public TestMethodInfo? GetTestMethodInfo(TestMethod testMethod, ITestContext testContext, bool captureDebugTraces)
     {
-        if (testMethod == null)
-        {
-            throw new ArgumentNullException(nameof(testMethod));
-        }
-
-        if (testContext == null)
-        {
-            throw new ArgumentNullException(nameof(testContext));
-        }
+        DebugEx.Assert(testMethod != null, "TestMethod cannot be null");
+        DebugEx.Assert(testContext != null, "ITestContext cannot be null");
 
         // Get the classInfo (This may throw as GetType calls assembly.GetType(..,true);)
         var testClassInfo = GetClassInfo(testMethod);
@@ -175,7 +168,8 @@ internal class TypeCache : MarshalByRefObject
             classInfo = CreateClassInfo(type, testMethod);
 
             // Use the full type name for the cache.
-            classInfo = _classInfoCache.GetOrAdd(typeName, classInfo);
+            _classInfoCache.TryAdd(typeName, classInfo);
+            return classInfo;
         }
 
         return classInfo;
@@ -280,7 +274,8 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestClassInfo"/>. </returns>
     private TestClassInfo CreateClassInfo(Type classType, TestMethod testMethod)
     {
-        var constructors = classType.GetTypeInfo().DeclaredConstructors;
+        var classTypeInfo = classType.GetTypeInfo();
+        var constructors = classTypeInfo.DeclaredConstructors;
         var constructor = constructors.FirstOrDefault(ctor => ctor.GetParameters().Length == 0 && ctor.IsPublic);
 
         if (constructor == null)
@@ -293,38 +288,38 @@ internal class TypeCache : MarshalByRefObject
 
         var assemblyInfo = GetAssemblyInfo(classType);
 
-        var testClassAttribute = ReflectHelper.GetDerivedAttribute<TestClassAttribute>(classType, false);
+        var testClassAttribute = ReflectHelper.Instance.GetDerivedAttribute<TestClassAttribute>(classTypeInfo, false);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
         var classInfo = new TestClassInfo(classType, constructor, testContextProperty, testClassAttribute, assemblyInfo);
 
         // List holding the instance of the initialize/cleanup methods
         // to be passed into the tuples' queue  when updating the class info.
-        var initAndCleanupMethods = new MethodInfo[2];
+        List<MethodInfo>? initAndCleanupMethods = null;
 
         // List of instance methods present in the type as well its base type
         // which is used to decide whether TestInitialize/TestCleanup methods
         // present in the base type should be used or not. They are not used if
         // the method is overridden in the derived type.
-        var instanceMethods = new Dictionary<string, string?>();
+        Dictionary<string, string?>? instanceMethods = null;
 
-        foreach (var methodInfo in classType.GetTypeInfo().DeclaredMethods)
+        foreach (var methodInfo in classTypeInfo.DeclaredMethods)
         {
             // Update test initialize/cleanup method
-            UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, false, instanceMethods);
+            UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, false, ref instanceMethods);
 
             // Update class initialize/cleanup method
             UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods);
         }
 
-        var baseType = classType.GetTypeInfo().BaseType;
-        while (baseType != null)
+        var baseType = classTypeInfo.BaseType;
+        while (baseType != null && baseType != typeof(object))
         {
             foreach (var methodInfo in baseType.GetTypeInfo().DeclaredMethods)
             {
                 if (methodInfo.IsPublic && !methodInfo.IsStatic)
                 {
                     // Update test initialize/cleanup method from base type.
-                    UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, instanceMethods);
+                    UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, ref instanceMethods);
                 }
 
                 if (methodInfo.IsPublic && methodInfo.IsStatic)
@@ -383,7 +378,7 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
     private TestAssemblyInfo GetAssemblyInfo(Type type)
     {
-        var assembly = type.GetTypeInfo().Assembly;
+        var assembly = type.Assembly;
 
         if (_testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo? assemblyInfo))
         {
@@ -396,6 +391,12 @@ internal class TypeCache : MarshalByRefObject
 
         foreach (var t in types)
         {
+            // We've already found the initialize and cleanup methods
+            if (assemblyInfo.AssemblyInitializeMethod is not null && assemblyInfo.AssemblyCleanupMethod is not null)
+            {
+                break;
+            }
+
             if (t == null)
             {
                 continue;
@@ -422,8 +423,15 @@ internal class TypeCache : MarshalByRefObject
             }
 
             // Enumerate through all methods and identify the Assembly Init and cleanup methods.
+            // TODO: PERF We already read all methods during tests method analysis, so we should cache that read and reuse
             foreach (var methodInfo in t.GetTypeInfo().DeclaredMethods)
             {
+                // We've already found the initialize and cleanup methods
+                if (assemblyInfo.AssemblyInitializeMethod is not null && assemblyInfo.AssemblyCleanupMethod is not null)
+                {
+                    break;
+                }
+
                 if (IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
                 {
                     assemblyInfo.AssemblyInitializeMethod = methodInfo;
@@ -435,7 +443,7 @@ internal class TypeCache : MarshalByRefObject
             }
         }
 
-        assemblyInfo = _testAssemblyInfoCache.GetOrAdd(assembly, assemblyInfo);
+        _testAssemblyInfoCache.TryAdd(assembly, assemblyInfo);
 
         return assemblyInfo;
     }
@@ -495,9 +503,9 @@ internal class TypeCache : MarshalByRefObject
     /// <param name="initAndCleanupMethods"> An array with the Initialize and Cleanup Methods Info. </param>
     private static void UpdateInfoWithInitializeAndCleanupMethods(
         TestClassInfo classInfo,
-        ref MethodInfo[] initAndCleanupMethods)
+        ref List<MethodInfo>? initAndCleanupMethods)
     {
-        if (initAndCleanupMethods.Any(x => x != null))
+        if (initAndCleanupMethods?.Any(x => x != null) == true)
         {
             classInfo.BaseClassInitAndCleanupMethods.Enqueue(
                     new Tuple<MethodInfo?, MethodInfo?>(
@@ -505,7 +513,7 @@ internal class TypeCache : MarshalByRefObject
                         initAndCleanupMethods.LastOrDefault()));
         }
 
-        initAndCleanupMethods = new MethodInfo[2];
+        initAndCleanupMethods = new(2);
     }
 
     /// <summary>
@@ -519,7 +527,7 @@ internal class TypeCache : MarshalByRefObject
         TestClassInfo classInfo,
         MethodInfo methodInfo,
         bool isBase,
-        ref MethodInfo[] initAndCleanupMethods)
+        ref List<MethodInfo>? initAndCleanupMethods)
     {
         var isInitializeMethod = IsAssemblyOrClassInitializeMethod<ClassInitializeAttribute>(methodInfo);
         var isCleanupMethod = IsAssemblyOrClassCleanupMethod<ClassCleanupAttribute>(methodInfo);
@@ -531,7 +539,7 @@ internal class TypeCache : MarshalByRefObject
                 if (_reflectionHelper.GetCustomAttribute<ClassInitializeAttribute>(methodInfo)!
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
-                    initAndCleanupMethods[0] = methodInfo;
+                    (initAndCleanupMethods ??= new(2))[0] = methodInfo;
                 }
             }
             else
@@ -548,7 +556,7 @@ internal class TypeCache : MarshalByRefObject
                 if (_reflectionHelper.GetCustomAttribute<ClassCleanupAttribute>(methodInfo)!
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
-                    initAndCleanupMethods[1] = methodInfo;
+                    (initAndCleanupMethods ??= new(2))[1] = methodInfo;
                 }
             }
             else
@@ -570,7 +578,7 @@ internal class TypeCache : MarshalByRefObject
         TestClassInfo classInfo,
         MethodInfo methodInfo,
         bool isBase,
-        Dictionary<string, string?> instanceMethods)
+        ref Dictionary<string, string?>? instanceMethods)
     {
         var hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
         var hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
@@ -579,7 +587,7 @@ internal class TypeCache : MarshalByRefObject
         {
             if (methodInfo.HasCorrectTestInitializeOrCleanupSignature())
             {
-                instanceMethods[methodInfo.Name] = null;
+                (instanceMethods ??= new())[methodInfo.Name] = null;
             }
 
             return;
@@ -599,7 +607,7 @@ internal class TypeCache : MarshalByRefObject
             }
             else
             {
-                if (!instanceMethods.ContainsKey(methodInfo.Name))
+                if (instanceMethods is null || !instanceMethods.ContainsKey(methodInfo.Name))
                 {
                     classInfo.BaseTestInitializeMethodsQueue.Enqueue(methodInfo);
                 }
@@ -614,14 +622,14 @@ internal class TypeCache : MarshalByRefObject
             }
             else
             {
-                if (!instanceMethods.ContainsKey(methodInfo.Name))
+                if (instanceMethods is null || !instanceMethods.ContainsKey(methodInfo.Name))
                 {
                     classInfo.BaseTestCleanupMethodsQueue.Enqueue(methodInfo);
                 }
             }
         }
 
-        instanceMethods[methodInfo.Name] = null;
+        (instanceMethods ??= new())[methodInfo.Name] = null;
     }
 
     /// <summary>
@@ -805,12 +813,13 @@ internal class TypeCache : MarshalByRefObject
     /// </summary>
     /// <param name="testMethodInfo"> The test Method Info. </param>
     /// <param name="testContext"> The test Context. </param>
-    private static void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
+    private void SetCustomProperties(TestMethodInfo testMethodInfo, ITestContext testContext)
     {
         DebugEx.Assert(testMethodInfo != null, "testMethodInfo is Null");
         DebugEx.Assert(testMethodInfo.TestMethod != null, "testMethodInfo.TestMethod is Null");
 
-        var attributes = testMethodInfo.TestMethod.GetCustomAttributes(typeof(TestPropertyAttribute), false);
+        var attributes = _reflectionHelper.GetCustomAttributes<TestPropertyAttribute>(testMethodInfo.TestMethod, false);
+
         DebugEx.Assert(attributes != null, "attributes is null");
 
         foreach (TestPropertyAttribute attribute in attributes.Cast<TestPropertyAttribute>())

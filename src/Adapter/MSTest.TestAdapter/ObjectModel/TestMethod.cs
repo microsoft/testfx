@@ -27,6 +27,8 @@ public sealed class TestMethod : ITestMethod
     public const int TotalHierarchyLevels = HierarchyConstants.Levels.TotalLevelCount;
 
     private readonly ReadOnlyCollection<string?> _hierarchy;
+    private readonly string?[] _hierarchyArray;
+
     private string? _declaringClassFullName;
     private string? _declaringAssemblyName;
 
@@ -51,7 +53,8 @@ public sealed class TestMethod : ITestMethod
         hierarchy[HierarchyConstants.Levels.ClassIndex] = name;
         hierarchy[HierarchyConstants.Levels.TestGroupIndex] = name;
 
-        _hierarchy = new ReadOnlyCollection<string?>(hierarchy);
+        _hierarchyArray = hierarchy;
+        _hierarchy = new ReadOnlyCollection<string?>(_hierarchyArray);
         TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
     }
 
@@ -77,7 +80,8 @@ public sealed class TestMethod : ITestMethod
         ManagedTypeName = managedType;
         ManagedMethodName = managedMethod;
         TestIdGenerationStrategy = testIdGenerationStrategy;
-        _hierarchy = new ReadOnlyCollection<string?>(hierarchyValues);
+        _hierarchyArray = hierarchyValues;
+        _hierarchy = new ReadOnlyCollection<string?>(_hierarchyArray);
     }
 
     internal TestMethod(string? managedTypeName, string? managedMethodName, string[] hierarchyValues, string name,
@@ -87,7 +91,8 @@ public sealed class TestMethod : ITestMethod
         ManagedTypeName = managedTypeName;
         ManagedMethodName = managedMethodName;
         TestIdGenerationStrategy = testIdGenerationStrategy;
-        _hierarchy = new ReadOnlyCollection<string?>(hierarchyValues);
+        _hierarchyArray = hierarchyValues;
+        _hierarchy = new ReadOnlyCollection<string?>(_hierarchyArray);
     }
 
     /// <inheritdoc />
@@ -147,6 +152,8 @@ public sealed class TestMethod : ITestMethod
 
     /// <inheritdoc />
     public IReadOnlyCollection<string?> Hierarchy => _hierarchy;
+
+    internal string?[] HierarchyArray => _hierarchyArray;
 
     /// <inheritdoc />
     public TestIdGenerationStrategy TestIdGenerationStrategy { get; }

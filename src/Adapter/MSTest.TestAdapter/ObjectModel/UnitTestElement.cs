@@ -25,11 +25,7 @@ internal class UnitTestElement
     /// <exception cref="ArgumentNullException"> Thrown when method is null. </exception>
     public UnitTestElement(TestMethod testMethod)
     {
-        if (testMethod == null)
-        {
-            throw new ArgumentNullException(nameof(testMethod));
-        }
-
+        DebugEx.Assert(testMethod != null, "TestMethod cannot be empty");
         DebugEx.Assert(testMethod.FullClassName != null, "Full className cannot be empty");
         TestMethod = testMethod;
     }
@@ -104,6 +100,7 @@ internal class UnitTestElement
     /// </summary>
     internal string[]? WorkItemIds { get; set; }
 
+    // TODO: Do it manually MemberwiseClone is slow https://learn.microsoft.com/en-us/dotnet/api/system.object.memberwiseclone?view=net-8.0#remarks
     internal UnitTestElement Clone()
     {
         var clone = (UnitTestElement)MemberwiseClone();
@@ -143,10 +140,10 @@ internal class UnitTestElement
             testCase.SetPropertyValue(Constants.TestClassNameProperty, TestMethod.FullClassName);
         }
 
-        var hierarchy = TestMethod.Hierarchy;
-        if (hierarchy != null && hierarchy.Count > 0)
+        var hierarchy = TestMethod.HierarchyArray;
+        if (hierarchy != null && hierarchy.Length > 0)
         {
-            testCase.SetHierarchy(hierarchy.ToArray());
+            testCase.SetHierarchy(hierarchy);
         }
 
         // Set declaring type if present so the correct method info can be retrieved
@@ -296,6 +293,8 @@ internal class UnitTestElement
 
     private Guid GenerateSerializedDataStrategyTestId(string testFullName)
     {
+        // TODO: PERF TestIdProvider is using an helper from AdapterUtilities where sha1 is implemented manually
+        // it means we don't have the gain from the runtime implementation/improvements.
         var idProvider = new TestIdProvider();
 
         idProvider.AppendString(Constants.ExecutorUriString);

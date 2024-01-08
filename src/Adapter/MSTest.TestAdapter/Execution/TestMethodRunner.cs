@@ -291,12 +291,10 @@ internal class TestMethodRunner
         }
         else
         {
-            UTF.ITestDataSource[]? testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)
-                ?.Where(a => a is UTF.ITestDataSource)
-                .OfType<UTF.ITestDataSource>()
-                .ToArray();
+            IEnumerable<UTF.ITestDataSource>? testDataSources =
+                _testMethodInfo.GetAttributes<Attribute>(false)?.Where(a => a is UTF.ITestDataSource).OfType<UTF.ITestDataSource>();
 
-            if (testDataSources != null && testDataSources.Length > 0)
+            if (testDataSources != null && testDataSources?.Count() > 0)
             {
                 isDataDriven = true;
                 foreach (var testDataSource in testDataSources)

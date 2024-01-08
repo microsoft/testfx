@@ -89,8 +89,9 @@ public class TestMethodInfo : ITestMethod
 
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
-        => ReflectHelper.GetAttributes<TAttributeType>(TestMethod, inherit)
-        ?? Array.Empty<TAttributeType>();
+
+        // This class is public...atm we cannot avoid the ToArray() call
+        => (ReflectHelper.Instance.GetAttributes<TAttributeType>(TestMethod, inherit)! ?? Array.Empty<TAttributeType>()).ToArray();
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.

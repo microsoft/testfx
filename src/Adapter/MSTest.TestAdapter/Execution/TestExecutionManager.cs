@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
@@ -235,7 +234,7 @@ public class TestExecutionManager
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
         // Default test set is filtered tests based on user provided filter criteria
-        ICollection<TestCase> testsToRun = Array.Empty<TestCase>();
+        IEnumerable<TestCase> testsToRun;
         var filterExpression = TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
         if (filterHasError)
         {
@@ -243,7 +242,7 @@ public class TestExecutionManager
             return;
         }
 
-        testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, TestMethodFilter)).ToArray();
+        testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, TestMethodFilter));
 
         // this is done so that appropriate values of test context properties are set at source level
         // and are merged with session level parameters
@@ -292,28 +291,25 @@ public class TestExecutionManager
                 TestMessageLevel.Informational,
                 string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
 
-            // Create test sets for execution, we can execute them in parallel based on parallel settings
-            IEnumerable<IGrouping<bool, TestCase>> testSets = Enumerable.Empty<IGrouping<bool, TestCase>>();
-
             // Parallel and not parallel sets.
-            testSets = testsToRun.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, false));
+            IEnumerable<IGrouping<bool, TestCase>> testSets = testsToRun.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, false));
 
-            var parallelizableTestSet = testSets.FirstOrDefault(g => g.Key == false);
-            var nonParallelizableTestSet = testSets.FirstOrDefault(g => g.Key);
+            IGrouping<bool, TestCase> parallelizableTestSet = testSets.FirstOrDefault(g => g.Key == false)!;
+            IGrouping<bool, TestCase> nonParallelizableTestSet = testSets.FirstOrDefault(g => g.Key)!;
 
             if (parallelizableTestSet != null)
             {
-                ConcurrentQueue<IEnumerable<TestCase>>? queue = null;
+                IExecutionQueue<IEnumerable<TestCase>>? queue = null;
 
                 // Chunk the sets into further groups based on parallel level
                 switch (parallelScope)
                 {
                     case ExecutionScope.MethodLevel:
-                        queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.Select(t => new[] { t }));
+                        queue = new MethodLevelScheduleQueue(parallelizableTestSet.AsEnumerable());
                         break;
 
                     case ExecutionScope.ClassLevel:
-                        queue = new ConcurrentQueue<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.TestClassNameProperty) as string));
+                        queue = new ConcurrentQueueWrapper<IEnumerable<TestCase>>(parallelizableTestSet.GroupBy(t => t.GetPropertyValue(Constants.TestClassNameProperty) as string));
                         break;
                 }
 
@@ -356,11 +352,12 @@ public class TestExecutionManager
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
     }
 
-    private static void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, ICollection<TestCase> testsToRun, TestAssemblySettings sourceSettings)
+    private static void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, IEnumerable<TestCase> testsToRun, TestAssemblySettings sourceSettings)
     {
         try
         {
-            var unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
+            // TODO: PERF We discovery already UnitTestElement...we should avoid allocation converting back and forth and reuse what we've discovered
+            var unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source));
             testRunner.InitializeClassCleanupManager(unitTestElements, (int)sourceSettings.ClassCleanupLifecycle);
         }
         catch (Exception ex)
@@ -446,11 +443,12 @@ public class TestExecutionManager
         try
         {
             var testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
-            if (testRunParameters != null)
+
+            // Clear sessionParameters to prevent key collisions of test run parameters in case
+            // "Keep Test Execution Engine Alive" is selected in VS.
+            _sessionParameters.Clear();
+            if (testRunParameters?.Count > 0)
             {
-                // Clear sessionParameters to prevent key collisions of test run parameters in case
-                // "Keep Test Execution Engine Alive" is selected in VS.
-                _sessionParameters.Clear();
                 foreach (var kvp in testRunParameters)
                 {
                     _sessionParameters.Add(kvp);

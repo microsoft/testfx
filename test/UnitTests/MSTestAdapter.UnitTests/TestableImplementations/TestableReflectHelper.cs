@@ -34,7 +34,7 @@ internal sealed class TestableReflectHelper : ReflectHelper
             : values;
     }
 
-    internal override TAttribute[] GetCustomAttributeForAssembly<TAttribute>(MemberInfo memberInfo)
+    internal override IEnumerable<TAttribute> GetCustomAttributeForAssembly<TAttribute>(MemberInfo memberInfo)
     {
         var hashCode = MemberTypes.All.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
 
@@ -43,7 +43,7 @@ internal sealed class TestableReflectHelper : ReflectHelper
             : Array.Empty<TAttribute>();
     }
 
-    internal override TAttribute[] GetCustomAttributes<TAttribute>(MemberInfo memberInfo)
+    internal override IEnumerable<TAttribute> GetCustomAttributes<TAttribute>(MemberInfo memberInfo)
     {
         var hashCode = memberInfo.MemberType.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
 

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Reflection;
 
 #if WIN_UI
@@ -19,6 +20,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 public class FileOperations : IFileOperations
 {
+#pragma warning disable IDE0052 // Remove unread private members
+    private readonly ConcurrentDictionary<string, Assembly> _assembliesCache = new();
+#pragma warning restore IDE0052 // Remove unread private members
+
 #if WIN_UI
     private readonly bool _isPackaged;
 
@@ -44,8 +49,26 @@ public class FileOperations : IFileOperations
             return Assembly.LoadFrom(assemblyName);
         }
 #endif
+        if (_assembliesCache.TryGetValue(assemblyName, out Assembly? assembly))
+        {
+            return assembly;
+        }
+
+        // If the assembly is already loaded is not needed to load it again.
+        // This optimization cut the stack.
+        foreach (Assembly alreadyLoadedAssembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            if (alreadyLoadedAssembly.Location == assemblyName)
+            {
+                _assembliesCache.TryAdd(assemblyName, alreadyLoadedAssembly);
+                return alreadyLoadedAssembly;
+            }
+        }
+
         var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
-        return Assembly.Load(new AssemblyName(fileNameWithoutExtension));
+        var loadedAssembly = Assembly.Load(new AssemblyName(fileNameWithoutExtension));
+        _assembliesCache.TryAdd(assemblyName, loadedAssembly);
+        return loadedAssembly;
 #elif NETFRAMEWORK
 
         return isReflectionOnly ? Assembly.ReflectionOnlyLoadFrom(assemblyName) : Assembly.LoadFrom(assemblyName);

@@ -48,17 +48,18 @@ internal class TestMethodValidator
     /// <returns> Return true if a method is a valid test method. </returns>
     internal virtual bool IsValidTestMethod(MethodInfo testMethodInfo, Type type, ICollection<string> warnings)
     {
-        if (!_reflectHelper.IsAttributeDefined<TestMethodAttribute>(testMethodInfo, false)
-            && !_reflectHelper.HasAttributeDerivedFrom<TestMethodAttribute>(testMethodInfo, false))
-        {
-            return false;
-        }
-
         // Generic method Definitions are not valid.
         if (testMethodInfo.IsGenericMethodDefinition)
         {
             var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, testMethodInfo.DeclaringType!.FullName, testMethodInfo.Name);
             warnings.Add(message);
+            return false;
+        }
+
+        // We do this check at the end because it's expensive.
+        if (!_reflectHelper.IsAttributeDefined<TestMethodAttribute>(testMethodInfo, false)
+            && !_reflectHelper.HasAttributeDerivedFrom<TestMethodAttribute>(testMethodInfo, false))
+        {
             return false;
         }
 

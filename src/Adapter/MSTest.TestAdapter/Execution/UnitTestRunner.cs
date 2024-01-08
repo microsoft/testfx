@@ -83,7 +83,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// </summary>
     /// <param name="testsToRun">the list of tests that will be run in this execution.</param>
     /// <param name="classCleanupLifecycle">The assembly level class cleanup lifecycle.</param>
-    internal void InitializeClassCleanupManager(ICollection<UnitTestElement> testsToRun, int? classCleanupLifecycle)
+    internal void InitializeClassCleanupManager(IEnumerable<UnitTestElement> testsToRun, int? classCleanupLifecycle)
     {
         // We can't transport the Enum across AppDomain boundaries because of backwards and forwards compatibility.
         // So we're converting here if we can, or falling back to the default.

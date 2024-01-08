@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET8_0_OR_GREATER
+using System.Collections.Frozen;
+#endif
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -21,6 +25,10 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 /// </summary>
 internal class AssemblyEnumerator : MarshalByRefObject
 {
+    private static readonly List<UnitTestElement> EmptyUnitTestElements = new();
+    private static readonly ConcurrentDictionary<Assembly, IReadOnlyCollection<Type?>> AssemblyTypeCache = new();
+    private static readonly StringWriter CachedAndNotUsedWriter = new();
+
     /// <summary>
     /// Helper for reflection API's.
     /// </summary>
@@ -122,12 +130,23 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The file name of the assembly.</param>
     /// <param name="warningMessages">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Gets the types defined in the provided assembly.</returns>
-    internal static Type?[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
+    internal static IReadOnlyCollection<Type?> GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
     {
-        var types = new List<Type>();
+        if (AssemblyTypeCache.TryGetValue(assembly, out var cachedTypes))
+        {
+            return cachedTypes!;
+        }
+
+        var definedTypes = assembly.DefinedTypes;
+        var types = new List<Type>(definedTypes.Count());
         try
         {
-            types.AddRange(assembly.DefinedTypes.Select(typeInfo => typeInfo.AsType()));
+#if NET8_0_OR_GREATER
+            AssemblyTypeCache.TryAdd(assembly, definedTypes.Select(typeInfo => typeInfo.AsType()).ToFrozenSet());
+#else
+            AssemblyTypeCache.TryAdd(assembly, definedTypes.Select(typeInfo => typeInfo.AsType()).ToList());
+#endif
+            return AssemblyTypeCache[assembly];
         }
         catch (ReflectionTypeLoadException ex)
         {
@@ -150,7 +169,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return ex.Types!;
         }
 
-        return types.ToArray();
+        throw new InvalidOperationException("Unreachable");
     }
 
     /// <summary>
@@ -208,53 +227,47 @@ internal class AssemblyEnumerator : MarshalByRefObject
         List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
         TestIdGenerationStrategy testIdGenerationStrategy)
     {
-        var tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
+        IDictionary<string, object> tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
         tempSourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(tempSourceLevelParameters)
             ?? tempSourceLevelParameters
             ?? new Dictionary<string, object>();
-        var sourceLevelParameters = tempSourceLevelParameters.ToDictionary(x => x.Key, x => (object?)x.Value);
 
-        string? typeFullName = null;
-        var tests = new List<UnitTestElement>();
-
+        List<UnitTestElement>? tests = null;
         try
         {
-            typeFullName = type.FullName;
-            var testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
-            var unitTestCases = testTypeEnumerator.Enumerate(out var warningsFromTypeEnumerator);
-            var typeIgnored = ReflectHelper.IsAttributeDefined<IgnoreAttribute>(type, false);
-
-            if (warningsFromTypeEnumerator != null)
+            TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
+            ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(warningMessages);
+            if (unitTestCases is null || unitTestCases?.Count == 0)
             {
-                warningMessages.AddRange(warningsFromTypeEnumerator);
+                return EmptyUnitTestElements;
             }
 
-            if (unitTestCases != null)
+            tests = new List<UnitTestElement>();
+            foreach (var test in unitTestCases!)
             {
-                foreach (var test in unitTestCases)
+                if (discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
                 {
-                    if (discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
+#pragma warning disable CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
+                    if (DynamicDataAttached(tempSourceLevelParameters, test, tests))
+#pragma warning restore CS8620 // Argument cannot be used for parameter due to differences in the nullability of reference types.
                     {
-                        if (DynamicDataAttached(sourceLevelParameters, test, tests))
-                        {
-                            continue;
-                        }
+                        continue;
                     }
-
-                    tests.Add(test);
                 }
+
+                tests.Add(test);
             }
         }
         catch (Exception exception)
         {
             // If we fail to discover type from a class, then don't abort the discovery
             // Move to the next type.
-            string message = string.Format(CultureInfo.CurrentCulture, Resource.CouldNotInspectTypeDuringDiscovery, typeFullName, assemblyFileName, exception.Message);
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.CouldNotInspectTypeDuringDiscovery, type.FullName, assemblyFileName, exception.Message);
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo($"AssemblyEnumerator: {message}");
             warningMessages.Add(message);
         }
 
-        return tests;
+        return tests!;
     }
 
     private bool DynamicDataAttached(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test, List<UnitTestElement> tests)
@@ -268,9 +281,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         // NOTE: From this place we don't have any path that would let the user write a message on the TestContext and we don't do
         // anything with what would be printed anyway so we can simply use a simple StringWriter.
-        using var writer = new StringWriter();
         var testMethod = test.TestMethod;
-        var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
+        var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, CachedAndNotUsedWriter, sourceLevelParameters);
         var testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
         return testMethodInfo != null && TryProcessTestDataSourceTests(test, testMethodInfo, tests);
     }
@@ -278,8 +290,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
     private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
     {
         var methodInfo = testMethodInfo.MethodInfo;
-        var testDataSources = ReflectHelper.GetAttributes<Attribute>(methodInfo, false)?.Where(a => a is FrameworkITestDataSource).OfType<FrameworkITestDataSource>().ToArray();
-        if (testDataSources == null || testDataSources.Length == 0)
+        var testDataSources = ReflectHelper.Instance.GetAttributes<Attribute>(methodInfo, false)?.Where(a => a is FrameworkITestDataSource).OfType<FrameworkITestDataSource>();
+        if (testDataSources == null || !testDataSources.Any())
         {
             return false;
         }
@@ -296,7 +308,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, FrameworkITestDataSource[] testDataSources,
+    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, IEnumerable<FrameworkITestDataSource> testDataSources,
         List<UnitTestElement> tests)
     {
         foreach (var dataSource in testDataSources)
