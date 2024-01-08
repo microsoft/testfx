@@ -27,6 +27,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string SkipBuildersNumberCheckOptionKey = "internal-testingplatform-skipbuildercheck";
     public const string DiscoverTestsOptionKey = "list-tests";
     public const string ResultDirectoryOptionKey = "results-directory";
+    public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
 
@@ -61,6 +62,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             new(DiagnosticFileLoggerSynchronousWriteOptionKey, PlatformResources.PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
             MinimumExpectedTests,
             new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+            new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
 
             // Hidden options
             new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),

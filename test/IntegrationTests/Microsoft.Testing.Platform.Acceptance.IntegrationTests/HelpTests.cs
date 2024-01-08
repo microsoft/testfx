@@ -39,6 +39,7 @@ Options:
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
   --help                                   Show the command line help\.
+  --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
   --list-tests                             List available tests\.
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run\.
@@ -71,6 +72,7 @@ Options:
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
   --help                                   Show the command line help\.
+  --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
   --list-tests                             List available tests\.
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run\.
@@ -104,6 +106,7 @@ Options:
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
   --help                                   Show the command line help\.
+  --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
   --list-tests                             List available tests\.
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run\.

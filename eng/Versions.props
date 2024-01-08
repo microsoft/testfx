@@ -24,12 +24,11 @@
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>3.11.0-beta1.23525.2</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
-    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>9.0.0-beta.24052.1</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <MSTestVersion>3.2.0-preview.24053.5</MSTestVersion>
+    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>9.0.0-beta.24055.2</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
+    <!-- Testing platform (this comment is here to avoid conflict on darc PRs) -->
+    <MicrosoftTestingPlatformVersion>1.0.0-preview.24058.1</MicrosoftTestingPlatformVersion>
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
-    <StrongNamerVersion>0.2.5</StrongNamerVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
-    <MicrosoftTestingPlatformVersion>1.0.0-preview.24052.7</MicrosoftTestingPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Label="MSTest test dependencies">
     <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
@@ -39,5 +38,6 @@
     <MSBuildStructuredLogger>2.1.858</MSBuildStructuredLogger>
     <PollyVersion>8.2.0</PollyVersion>
     <PollyContribWaitAndRetryVersion>1.1.1</PollyContribWaitAndRetryVersion>
+    <StrongNamerVersion>0.2.5</StrongNamerVersion>
   </PropertyGroup>
 </Project>

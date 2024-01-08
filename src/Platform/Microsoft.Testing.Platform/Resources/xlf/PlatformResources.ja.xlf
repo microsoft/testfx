@@ -329,6 +329,11 @@
         <target state="translated">コマンド ラインヘルプを表示します。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
+        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="translated">特定の終了コードの成功しなかった終了値を報告しない (例: '--ignore-exit-code 8;9' は終了コード 8 と 9 を無視し、この場合は 0 を返します)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
         <target state="translated">.NET テスト アプリケーション情報を表示します。</target>
@@ -460,13 +465,13 @@
 Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</source>
-        <target state="translated">テレメトリ 
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
+        <target state="new">Telemetry
 ---------
-Microsoft Testing Platform は、お客様のエクスペリエンスの向上に役立てるために使用状況データを収集します。データは Microsoft によって収集され、誰とも共有されません。
-テレメトリをオプトアウトするには、お気に入りのシェルを使用して、TESTINGPLATFORM_TELEMETRY_OPTOUT または DOTNET_CLI_TELEMETRY_OPTOUT 環境変数を '1' または 'true' に設定します。
+Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
+You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatform/guides/telemetry</target>
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</target>
         <note />
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">
