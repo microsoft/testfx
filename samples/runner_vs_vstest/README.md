@@ -21,8 +21,11 @@ NOTE: Values are reported from our work machines as examples, you may see differ
 
 ## Results of comparison
 
-| Project   | Number of tests | Machine     | VSTest time (in ms) | MSTest runner time (in ms) |
-|-----------|-----------------|-------------|---------------------|----------------------------|
-| 10C100M   | 1K              | @Evangelink | 3090.915            | 1181.1558                  |
-| 100C100M  | 10K             | @Evangelink | 8962.4006           | 3452.7159                  |
-| 1000C100M | 100K            | @Evangelink | 36813.3982          | 20099.726                  |
+| Project   | Number of tests | Machine          | VSTest time (in ms) | MSTest runner time (in ms) |
+|-----------|-----------------|------------------|---------------------|----------------------------|
+| 10C100M   | 1K              | @Evangelink      | 3090.915            | 1181.1558                  |
+| 100C100M  | 10K             | @Evangelink      | 8962.4006           | 3452.7159                  |
+| 1000C100M | 100K            | @Evangelink      | 36813.3982          | 20099.726                  |
+| 10C100M   | 1K              | @MarcoRossignoli | 3592.1288           | 1369.9419                  |
+| 100C100M  | 10K             | @MarcoRossignoli | 10484.8188          | 3693.4448                  |
+| 1000C100M | 100K            | @MarcoRossignoli | 43045.2458          | 22567.1521                 |
