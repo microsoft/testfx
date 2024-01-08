@@ -877,7 +877,7 @@ namespace Microsoft.Testing.Platform.Resources {
         ///Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
         ///You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to &apos;1&apos; or &apos;true&apos; using your favorite shell.
         ///
-        ///Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry.
+        ///Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry.
         /// </summary>
         internal static string TelemetryNotice {
             get {
