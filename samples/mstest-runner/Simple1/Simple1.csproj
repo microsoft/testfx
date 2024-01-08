@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Enable the MSTest runner, this is an opt-in feature -->
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <OutputType>Exe</OutputType>
+
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 
+      MSTest meta package is the recommended way to reference MSTest.
+      It's equivalent to referencing:
+          Microsoft.NET.Test.Sdk
+          MSTest.TestAdapter
+          MSTest.TestFramework
+          MSTest.Analyzers
+    -->    
+    <PackageReference Include="MSTest" Version="3.2.0-preview.23623.1" />
+
+    <!-- 
+      Coverlet collector isn't compatible with MSTest runner, you can 
+      either switch to Microsoft CodeCoverage (as shown below),
+      or switch to be using coverlet global tool
+      https://github.com/coverlet-coverage/coverlet#net-global-tool-guide-suffers-from-possible-known-issue
+    --> 
+    <PackageReference Include="Microsoft.Testing.Platform.Extensions.CodeCoverage" 
+                      Version="17.10.0-preview.23621.6" />
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+
+</Project>
