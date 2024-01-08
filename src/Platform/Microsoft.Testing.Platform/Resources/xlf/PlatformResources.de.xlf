@@ -331,7 +331,7 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
         <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
-        <target state="new">Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</target>
+        <target state="translated">Melden Sie keinen nicht erfolgreichen Beendigungswert für bestimmte Exitcodes (z. B. "--ignore-exit-code 8;9" Exitcode 8 und 9 ignorieren und in diesem Fall 0 zurückgeben)</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
