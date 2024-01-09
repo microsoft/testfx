@@ -21,14 +21,20 @@ NOTE: Values are reported from our work machines as examples, you may see differ
 
 ## Results of comparison
 
-| Project   | Number of tests | Machine          | VSTest time (in ms) | MSTest runner time (in ms) |
-|-----------|-----------------|------------------|---------------------|----------------------------|
-| 10C100M   | 1K              | @Evangelink      | 3090.915            | 1181.1558                  |
-| 100C100M  | 10K             | @Evangelink      | 8962.4006           | 3452.7159                  |
-| 1000C100M | 100K            | @Evangelink      | 36813.3982          | 20099.726                  |
-| 10C100M   | 1K              | @MarcoRossignoli | 3592.1288           | 1369.9419                  |
-| 100C100M  | 10K             | @MarcoRossignoli | 10484.8188          | 3693.4448                  |
-| 1000C100M | 100K            | @MarcoRossignoli | 43045.2458          | 22567.1521                 |
-| 10C100M   | 1K              | @jakubch1        | 3059.7666           | 1223.2776                  |
-| 100C100M  | 10K             | @jakubch1        | 8897.0455           | 3675.4061                  |
-| 1000C100M | 100K            | @jakubch1        | 40240.6792          | 25915.2722                 |
+| Project   | Number of tests | Configuration        | Machine          | VSTest time (in ms) | MSTest runner time (in ms) | Gain (%) |
+|-----------|-----------------|----------------------|------------------|---------------------|----------------------------|----------|
+| 10C100M   | 1K              | Plugged, performance | @Evangelink      | 3090.915            | 1181.1558                  | 262      |
+| 100C100M  | 10K             | Plugged, performance | @Evangelink      | 8962.4006           | 3452.7159                  | 259      |
+| 1000C100M | 100K            | Plugged, performance | @Evangelink      | 36813.3982          | 20099.726                  | 183      |
+| 10C100M   | 1K              | Plugged, performance | @MarcoRossignoli | 3592.1288           | 1369.9419                  | 262      |
+| 100C100M  | 10K             | Plugged, performance | @MarcoRossignoli | 10484.8188          | 3693.4448                  | 284      |
+| 1000C100M | 100K            | Plugged, performance | @MarcoRossignoli | 43045.2458          | 22567.1521                 | 191      |
+| 10C100M   | 1K              | Plugged, performance | @jakubch1        | 3059.7666           | 1223.2776                  | 250      |
+| 100C100M  | 10K             | Plugged, performance | @jakubch1        | 8897.0455           | 3675.4061                  | 242      |
+| 1000C100M | 100K            | Plugged, performance | @jakubch1        | 40240.6792          | 25915.2722                 | 155      |
+| 10C100M   | 1K              | Plugged, performance | @nohwnd          | 3959                | 1012                       | 391      |
+| 100C100M  | 10K             | Plugged, performance | @nohwnd          | 11989               | 3940                       | 304      |
+| 1000C100M | 100K            | Plugged, performance | @nohwnd          | 57055               | 22100                      | 258      |
+| 10C100M   | 1K              | Battery, Balanced    | @nohwnd          | 7508                | 1795                       | 418      |
+| 100C100M  | 10K             | Battery, Balanced    | @nohwnd          | 20904               | 6179                       | 338      |
+| 1000C100M | 100K            | Battery, Balanced    | @nohwnd          | 126123              | 37845                      | 333      |
