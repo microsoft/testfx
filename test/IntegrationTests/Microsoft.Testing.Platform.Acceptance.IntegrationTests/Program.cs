@@ -7,6 +7,10 @@ using System.Runtime.InteropServices;
 using Microsoft.Testing.Framework.Configurations;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.TestHost;
+
+
 #if ENABLE_CODECOVERAGE
 using Microsoft.Testing.Extensions.CodeCoverage;
 #endif

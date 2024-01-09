@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Extensions.TestHost;
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Extensions;
-using Microsoft.Testing.Extensions.TestHost;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.TestInfrastructure;
 

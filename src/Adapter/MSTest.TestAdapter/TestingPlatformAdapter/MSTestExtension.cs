@@ -2,6 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
+using Microsoft.Testing.Platform.Extensions;
+
 namespace Microsoft.Testing.Extensions.MSTest;
 
 internal sealed class MSTestExtension : IExtension

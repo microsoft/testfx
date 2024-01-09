@@ -58,9 +58,9 @@
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Telemetry" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Telemetry.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Trx" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.TestAdapter" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.VSTestBridge.TestAdapter" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Framework" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Framework.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
