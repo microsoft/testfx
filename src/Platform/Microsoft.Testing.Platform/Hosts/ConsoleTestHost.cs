@@ -4,9 +4,9 @@
 using System.Diagnostics;
 using System.Globalization;
 
+using Microsoft.Testing.Extensions.TestFramework;
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -22,16 +22,16 @@ namespace Microsoft.Testing.Platform.Hosts;
 internal sealed class ConsoleTestHost(
     ServiceProvider serviceProvider,
     Func<ServiceProvider,
-                      ITestExecutionRequestFactory,
-                      ITestFrameworkInvoker,
-                      ITestExecutionFilterFactory,
-                      IPlatformOutputDevice,
-                      IEnumerable<IDataConsumer>,
-                      TestFrameworkManager,
-                      TestHostManager,
-                      MessageBusProxy,
-                      bool,
-                      Task<ITestFramework>> buildTestFrameworkAsync,
+        ITestExecutionRequestFactory,
+        ITestFrameworkInvoker,
+        ITestExecutionFilterFactory,
+        IPlatformOutputDevice,
+        IEnumerable<IDataConsumer>,
+        TestFrameworkManager,
+        TestHostManager,
+        MessageBusProxy,
+        bool,
+        Task<ITestFramework>> buildTestFrameworkAsync,
     TestFrameworkManager testFrameworkManager,
     TestHostManager testHostManager) : CommonTestHost(serviceProvider)
 {

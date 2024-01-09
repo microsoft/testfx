@@ -3,6 +3,6 @@
 
 global using Microsoft.Testing.Framework;
 global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Platform.Extensions;
+global using Microsoft.Testing.Extensions;
 global using Microsoft.Testing.Platform.Services;
 global using Microsoft.Testing.TestInfrastructure;

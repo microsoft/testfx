@@ -21,7 +21,8 @@ internal sealed class ToolsTestHost(
     CommandLineParseResult parseResult,
     ICommandLineOptionsProvider[] extensionsCommandLineOptionsProviders,
     ICommandLineHandler commandLineHandler,
-    IPlatformOutputDevice platformOutputDevice) : ITestHost, IOutputDeviceDataProducer
+    IPlatformOutputDevice platformOutputDevice)
+    : ITestHost, IOutputDeviceDataProducer
 {
     private readonly ToolsInformation _toolsInformation = toolsInformation;
     private readonly ServiceProvider _serviceProvider = serviceProvider;

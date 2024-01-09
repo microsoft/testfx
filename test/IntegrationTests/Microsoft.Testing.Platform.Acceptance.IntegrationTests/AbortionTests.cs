@@ -90,8 +90,8 @@ using System.Threading;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Extensions.Messages;
+using Microsoft.Testing.Extensions.TestFramework;
 using System.Runtime.InteropServices;
 
 internal sealed class Program

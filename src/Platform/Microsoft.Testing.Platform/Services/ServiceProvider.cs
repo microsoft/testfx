@@ -7,7 +7,7 @@ using System.Reflection;
 
 using System.Globalization;
 
-using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;

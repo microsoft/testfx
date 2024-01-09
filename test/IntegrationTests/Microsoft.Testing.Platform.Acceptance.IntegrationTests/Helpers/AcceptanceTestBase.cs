@@ -142,7 +142,7 @@ public class UnitTest1
         {
             // For some packages the find pattern will match multiple packages, for example:
             // Microsoft.Testing.Platform.1.0.0.nupkg
-            // Microsoft.Testing.Platform.Extensions.1.0.0.nupkg
+            // Microsoft.Testing.Extensions.1.0.0.nupkg
             // Let's take shortest name which should be closest to the package we are looking for.
             matches = [matches.OrderBy(x => x.Length).First()];
         }

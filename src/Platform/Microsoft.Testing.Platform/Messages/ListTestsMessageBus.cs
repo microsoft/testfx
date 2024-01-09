@@ -1,9 +1,9 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -19,7 +19,8 @@ internal class ListTestsMessageBus(
     IOutputDevice outputDisplay,
     IAsyncMonitorFactory asyncMonitorFactory,
     IEnvironment environment,
-    ITestApplicationProcessExitCode testApplicationProcessExitCode) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
+    ITestApplicationProcessExitCode testApplicationProcessExitCode)
+    : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
 {
     private readonly ITestFramework _testFrameworkAdapter = testFrameworkAdapter;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;

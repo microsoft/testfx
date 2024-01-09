@@ -3,7 +3,7 @@
 
 using Microsoft.Testing.Platform.TestHost;
 
-namespace Microsoft.Testing.Platform.Extensions.TestFramework;
+namespace Microsoft.Testing.Extensions.TestFramework;
 
 /// <summary>
 /// Context passed to a test framework adapter when <see cref="ITestFramework.CloseTestSessionAsync(CloseTestSessionContext)"/> is called.

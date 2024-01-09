@@ -17,10 +17,3 @@ internal interface ITestApplicationProcessExitCode : IDataConsumer
 
     Statistics GetStatistics();
 }
-
-internal class Statistics
-{
-    public int TotalRanTests { get; set; }
-
-    public int TotalFailedTests { get; set; }
-}

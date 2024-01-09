@@ -4,7 +4,7 @@
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.Testing.Platform.Requests;
 
-namespace Microsoft.Testing.Platform.Extensions.TestFramework;
+namespace Microsoft.Testing.Extensions.TestFramework;
 
 /// <summary>
 /// Context passed to a test framework adapter when <see cref="ITestFramework.ExecuteRequestAsync(ExecuteRequestContext)"/> is called.

@@ -6,13 +6,13 @@ using System.Diagnostics;
 using System.Reflection;
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions.VSTestBridge;
-using Microsoft.Testing.Platform.Extensions.VSTestBridge.Requests;
+using Microsoft.Testing.Extensions.VSTestBridge;
+using Microsoft.Testing.Extensions.VSTestBridge.Requests;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
-namespace Microsoft.Testing.Platform.Extensions.MSTest;
+namespace Microsoft.Testing.Extensions.MSTest;
 
 internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTestBridgedTestFramework
 {

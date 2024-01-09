@@ -6,13 +6,13 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
+using Microsoft.Testing.Extensions.TestFramework;
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
 using Microsoft.Testing.Platform.Helpers;
@@ -32,7 +32,9 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
+internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment,
+    IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo)
+    : ITestHostBuilder
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
@@ -660,14 +662,14 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
     protected virtual ConsoleTestHost CreateConsoleTestHost(
         ServiceProvider serviceProvider,
         Func<ServiceProvider,
-                          ITestExecutionRequestFactory, ITestFrameworkInvoker,
-                          ITestExecutionFilterFactory, IPlatformOutputDevice,
-                          IEnumerable<IDataConsumer>,
-                          TestFrameworkManager,
-                          TestHostManager,
-                          MessageBusProxy,
-                          bool,
-                          Task<ITestFramework>> buildTestFrameworkAsync,
+            ITestExecutionRequestFactory, ITestFrameworkInvoker,
+            ITestExecutionFilterFactory, IPlatformOutputDevice,
+            IEnumerable<IDataConsumer>,
+            TestFrameworkManager,
+            TestHostManager,
+            MessageBusProxy,
+            bool,
+            Task<ITestFramework>> buildTestFrameworkAsync,
         TestFrameworkManager testFrameworkManager,
         TestHostManager testHostManager)
         => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager);

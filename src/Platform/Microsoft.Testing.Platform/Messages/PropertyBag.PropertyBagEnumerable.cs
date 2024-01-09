@@ -49,7 +49,7 @@ public sealed partial class PropertyBag
                 }
             }
 
-            if (!object.ReferenceEquals(_testNodeStateProperty, _current) && _testNodeStateProperty is not null)
+            if (!ReferenceEquals(_testNodeStateProperty, _current) && _testNodeStateProperty is not null)
             {
                 _current = _testNodeStateProperty;
                 return true;

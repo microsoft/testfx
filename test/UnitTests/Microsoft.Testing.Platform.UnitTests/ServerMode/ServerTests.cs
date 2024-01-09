@@ -5,11 +5,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
+using Microsoft.Testing.Extensions.TestFramework;
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.ServerMode;

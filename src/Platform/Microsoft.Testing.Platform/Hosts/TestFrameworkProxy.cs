@@ -3,7 +3,7 @@
 
 using System.Globalization;
 
-using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Hosts;

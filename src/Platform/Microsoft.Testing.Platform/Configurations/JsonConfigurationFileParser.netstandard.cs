@@ -33,7 +33,7 @@ internal sealed class JsonConfigurationFileParser
     private (Dictionary<string, string?> SingleValueData, Dictionary<string, string?> PropertyToAllChildren) ParseStream(Stream input)
     {
         using var reader = new StreamReader(input);
-        var doc = (JsonObject)Jsonite.Json.Deserialize(reader.ReadToEnd(), _settings);
+        var doc = (JsonObject)Json.Deserialize(reader.ReadToEnd(), _settings);
         if (doc is not null)
         {
             VisitObjectElement(doc);
@@ -66,7 +66,7 @@ internal sealed class JsonConfigurationFileParser
             throw new FormatException(string.Format(CultureInfo.InvariantCulture, PlatformResources.JsonConfigurationFileParserDuplicateKeyErrorMessage, key));
         }
 
-        _propertyToAllChildren[key] = Jsonite.Json.Serialize(property, _settings);
+        _propertyToAllChildren[key] = Json.Serialize(property, _settings);
     }
 
     private void VisitArrayElement(JsonArray array)
@@ -116,7 +116,7 @@ internal sealed class JsonConfigurationFileParser
                 // Adapt to the System.Text.Json serialization outcome
                 _singleValueData[key] = value is bool boolean
                     ? CultureInfo.InvariantCulture.TextInfo.ToTitleCase(boolean.ToString())
-                    : value is string stringValue ? stringValue.Trim('\"') : Jsonite.Json.Serialize(value, _settings);
+                    : value is string stringValue ? stringValue.Trim('\"') : Json.Serialize(value, _settings);
 
                 break;
         }

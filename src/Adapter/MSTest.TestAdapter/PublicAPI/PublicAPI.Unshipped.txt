@@ -1,5 +1,5 @@
 ﻿#nullable enable
-Microsoft.Testing.Platform.Extensions.MSTest.TestingPlatformBuilderHook
+Microsoft.Testing.Extensions.MSTest.TestingPlatformBuilderHook
 Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions
-static Microsoft.Testing.Platform.Extensions.MSTest.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! arguments) -> void
+static Microsoft.Testing.Extensions.MSTest.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! arguments) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions.AddMSTest(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, System.Func<System.Collections.Generic.IEnumerable<System.Reflection.Assembly!>!>! getTestAssemblies) -> void

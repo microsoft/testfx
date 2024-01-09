@@ -18,7 +18,8 @@ namespace Microsoft.Testing.Platform.ServerMode;
 /// <summary>
 /// This class converts the events send to the message bus and sends these back to the client.
 /// </summary>
-internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvider, Guid runId, ITask task) : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
+internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvider, Guid runId, ITask task)
+    : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
 {
     private const int TestNodeUpdateDelayInMs = 200;
 

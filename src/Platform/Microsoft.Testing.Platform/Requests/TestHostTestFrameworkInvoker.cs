@@ -3,11 +3,11 @@
 
 using System.Diagnostics;
 
+using Microsoft.Testing.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
@@ -18,7 +18,8 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
+internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider)
+    : ITestFrameworkInvoker, IOutputDeviceDataProducer, IDataProducer
 {
     protected IServiceProvider ServiceProvider { get; } = serviceProvider;
 

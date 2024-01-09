@@ -4,8 +4,8 @@
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.TestHost;
+using Microsoft.Testing.Extensions;
+using Microsoft.Testing.Extensions.TestHost;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.TestInfrastructure;
 

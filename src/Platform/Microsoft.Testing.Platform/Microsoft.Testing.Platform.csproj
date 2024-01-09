@@ -50,21 +50,23 @@
   <!-- end netstandard2.0 polyfill -->
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.CrashDump" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Experimental" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HangDump" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.HotReload" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Retry" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Telemetry" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Telemetry.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.Trx" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.TestAdapter" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Framework" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Framework.UnitTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.UnitTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.ServerMode.IntegrationTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.Enterprise" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.UnitTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.Telemetry" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.Experimental" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.HangDump" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.VSTestBridge.TestAdapter" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.MSBuild" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.ServerMode.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.TestInfrastructure" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="DynamicProxyGenAssembly2" Key="$(MoqPublicKey)" />
   </ItemGroup>
