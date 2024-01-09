@@ -427,6 +427,19 @@ internal class TypeCache : MarshalByRefObject
                 if (IsAssemblyOrClassInitializeMethod<AssemblyInitializeAttribute>(methodInfo))
                 {
                     assemblyInfo.AssemblyInitializeMethod = methodInfo;
+
+                    if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+                    {
+                        if (!methodInfo.HasCorrectTimeout())
+                        {
+                            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+                            throw new TypeInspectionException(message);
+                        }
+
+                        var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
+                        DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
+                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = timeoutAttribute.Timeout;
+                    }
                 }
                 else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
                 {

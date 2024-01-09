@@ -12,6 +12,13 @@ namespace Playground;
 [TestClass]
 public class TestClass
 {
+    [AssemblyInitialize]
+    [Timeout(2000)]
+    public static async Task AsmInit(TestContext testContext)
+    {
+        await Task.Delay(10_000, testContext.CancellationTokenSource.Token);
+    }
+
     [TestMethod]
     public async Task Test1()
     {

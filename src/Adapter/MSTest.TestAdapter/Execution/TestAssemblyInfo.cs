@@ -21,6 +21,7 @@ public class TestAssemblyInfo
     private readonly object _assemblyInfoExecuteSyncObject;
 
     private MethodInfo? _assemblyInitializeMethod;
+    private int? _assemblyInitializeMethodTimeoutMilliseconds;
     private MethodInfo? _assemblyCleanupMethod;
 
     /// <summary>
@@ -51,6 +52,15 @@ public class TestAssemblyInfo
 
             _assemblyInitializeMethod = value;
         }
+    }
+
+    /// <summary>
+    /// Gets or sets the AssemblyInitializeMethod timeout.
+    /// </summary>
+    internal int? AssemblyInitializeMethodTimeoutMilliseconds
+    {
+        get => _assemblyInitializeMethodTimeoutMilliseconds;
+        set => _assemblyInitializeMethodTimeoutMilliseconds = value;
     }
 
     /// <summary>
@@ -134,7 +144,21 @@ public class TestAssemblyInfo
                 {
                     try
                     {
-                        AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                        CancellationTokenSource? timeoutTokenSource = null;
+                        try
+                        {
+                            if (AssemblyInitializeMethodTimeoutMilliseconds is not null)
+                            {
+                                timeoutTokenSource = new(AssemblyInitializeMethodTimeoutMilliseconds.Value);
+                                timeoutTokenSource.Token.Register(() => testContext.CancellationTokenSource.Cancel());
+                            }
+
+                            AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                        }
+                        finally
+                        {
+                            timeoutTokenSource?.Dispose();
+                        }
                     }
                     catch (Exception ex)
                     {
