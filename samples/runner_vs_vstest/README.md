@@ -29,3 +29,6 @@ NOTE: Values are reported from our work machines as examples, you may see differ
 | 10C100M   | 1K              | @MarcoRossignoli | 3592.1288           | 1369.9419                  |
 | 100C100M  | 10K             | @MarcoRossignoli | 10484.8188          | 3693.4448                  |
 | 1000C100M | 100K            | @MarcoRossignoli | 43045.2458          | 22567.1521                 |
+| 10C100M   | 1K              | @jakubch1        | 3059.7666           | 1223.2776                  |
+| 100C100M  | 10K             | @jakubch1        | 8897.0455           | 3675.4061                  |
+| 1000C100M | 100K            | @jakubch1        | 40240.6792          | 25915.2722                 |
