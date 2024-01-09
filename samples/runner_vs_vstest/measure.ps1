@@ -17,7 +17,7 @@ foreach ($project in $projects) {
     dotnet test $dir --no-restore --no-build --logger trx # --collect "Code Coverage"
     $vstest = $sw.ElapsedMilliseconds
 
-    $entry = "|$name|$user|$vstest|$runner|$([math]::round($vstest/$runner * 100 , 0))%|`n"
+    $entry = "| $name | $user | $vstest | $runner | $([math]::round($vstest/$runner * 100 , 0))% |`n"
     $entry
     $table += $entry
 }
