@@ -57,7 +57,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFe
 #pragma warning restore IL3000
         }
 
-        moduleName = TAString.IsNullOrEmpty(moduleName)
+        moduleName = RoslynString.IsNullOrEmpty(moduleName)
             ? GetProcessPath(_environment, _process)
             : moduleName;
 

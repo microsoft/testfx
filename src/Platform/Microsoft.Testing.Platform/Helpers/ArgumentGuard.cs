@@ -26,7 +26,7 @@ internal static class ArgumentGuard
     public static void IsNotNullOrWhiteSpace([NotNull] string? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
     {
         IsNotNull(argument, paramName);
-        Ensure(!TAString.IsNullOrWhiteSpace(argument), paramName!, $"{paramName} should not be empty or whitespace");
+        Ensure(!RoslynString.IsNullOrWhiteSpace(argument), paramName!, $"{paramName} should not be empty or whitespace");
     }
 
     public static void Ensure([DoesNotReturnIf(false)] bool condition, string paramName, string errorMessage)

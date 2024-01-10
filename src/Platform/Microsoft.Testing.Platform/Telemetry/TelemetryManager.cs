@@ -75,7 +75,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
             IFileSystem fileSystem = serviceProvider.GetFileSystem();
             bool sentinelIsNotPresent =
-                TAString.IsNullOrWhiteSpace(directory)
+                RoslynString.IsNullOrWhiteSpace(directory)
                 || !fileSystem.Exists(Path.Combine(directory, fileName));
 
             if (!dontShowLogo && sentinelIsNotPresent)
@@ -87,7 +87,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
                 try
                 {
                     // See if we should write the file, and write it.
-                    if (!TAString.IsNullOrWhiteSpace(directory))
+                    if (!RoslynString.IsNullOrWhiteSpace(directory))
                     {
                         Directory.CreateDirectory(directory);
 

@@ -478,7 +478,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 #endif
 
             string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-            moduleName = TAString.IsNullOrEmpty(moduleName)
+            moduleName = RoslynString.IsNullOrEmpty(moduleName)
 #if NETCOREAPP
                 ? _environment.ProcessPath
 #else
