@@ -1,6 +1,11 @@
 <Project>
 
-  <Import Condition="Exists('$(MSBuildThisFileDirectory)\..\Directory.Build.props')" Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
-  <Import Condition="!Exists('$(MSBuildThisFileDirectory)\..\Directory.Build.props')" Project="$(MSBuildThisFileDirectory)\Directory.Build.Local.props" />
+  <Import Condition=" Exists('$(MSBuildThisFileDirectory)\..\Directory.Build.props') " Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
+  <Import Condition=" !Exists('$(MSBuildThisFileDirectory)\..\Directory.Build.props') " Project="$(MSBuildThisFileDirectory)\Directory.Build.Local.props" />
+
+  <PropertyGroup Condition=" Exists('$(MSBuildThisFileDirectory)\..\Directory.Build.props') ">
+    <PackageLicenseExpressionInternal></PackageLicenseExpressionInternal>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
 
 </Project>

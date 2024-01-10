@@ -151,7 +151,7 @@ stages:
           condition: failed()
 
         - ${{ if eq(variables._RunAsInternal, True) }}:
-          - task: NuGetAuthenticate@0
+          - task: NuGetAuthenticate@1
             displayName: 'NuGet Authenticate to test-tools feed'
 
           - task: NuGetCommand@2
@@ -167,10 +167,10 @@ stages:
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
             name: NetCore-Public
-            demands: ImageOverride -equals build.ubuntu.1804.amd64.open
+            demands: ImageOverride -equals build.ubuntu.2004.amd64.open
           ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals build.ubuntu.1804.amd64
+            demands: ImageOverride -equals build.ubuntu.2004.amd64
         strategy:
           matrix:
             Release:

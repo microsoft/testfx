@@ -3,7 +3,6 @@
 
 #if NET462
 
-using System.Linq;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;

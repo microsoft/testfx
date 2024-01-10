@@ -3,7 +3,6 @@
 
 #if NET462
 
-using System;
 using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;

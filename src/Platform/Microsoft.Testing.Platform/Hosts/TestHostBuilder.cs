@@ -224,11 +224,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         ILoggerFactory loggerFactory = await ((LoggingManager)Logging).BuildAsync(serviceProvider, loggingState.LogLevel, systemMonitor);
         serviceProvider.TryAddService(loggerFactory);
 
-        // Add global telemetry service.
-        ITelemetryCollector telemetryService = await ((TelemetryManager)Telemetry).BuildAsync(serviceProvider, loggerFactory, testApplicationOptions);
-        serviceProvider.TryAddService(telemetryService);
-        AddApplicationMetadata(serviceProvider, builderMetrics);
-
         // At this point we start to build extensions so we need to have all the information complete for the usage,
         // here we ensure to override the result directory if user passed the argument --results-directory in command line.
         // After this check users can get the result directory using IConfiguration["testingPlatform:resultDirectory"] or the
@@ -244,6 +239,12 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             await platformOutputDevice.DisplayBannerAsync();
         }
+
+        // Add global telemetry service.
+        // Add at this point or the telemetry banner appearance order will be wrong, we want the testing app banner before the telemetry banner.
+        ITelemetryCollector telemetryService = await ((TelemetryManager)Telemetry).BuildAsync(serviceProvider, loggerFactory, testApplicationOptions);
+        serviceProvider.TryAddService(telemetryService);
+        AddApplicationMetadata(serviceProvider, builderMetrics);
 
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
 
@@ -575,19 +576,31 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Virtual callback that allows to the VSTest mode to register custom services needed by the bridge.
         AfterTestAdapterCreation(serviceProvider);
 
+        // Prepare the session lifetime handlers for the notifications
+        List<ITestSessionLifetimeHandler> testSessionLifetimeHandlers = [];
+
         // When we run a discovery request we don't want to run any user extensions, the only needed extension is the test adapter that will "discover" tests.
         if (!isForDiscoveryRequest)
         {
             // We keep the bag of the already created composite service factory to reuse the instance.
             List<ICompositeExtensionFactory> newBuiltCompositeServices = [];
-            foreach (IDataConsumer consumerService in await testSessionManager.BuildDataConsumersAsync(serviceProvider, newBuiltCompositeServices))
-            {
-                await RegisterAsServiceOrConsumerOrBothAsync(consumerService, serviceProvider, dataConsumersBuilder);
-            }
+            (IExtension Consumer, int RegistrationOrder)[] consumers = await testSessionManager.BuildDataConsumersAsync(serviceProvider, newBuiltCompositeServices);
+            (IExtension TestSessionLifetimeHandler, int RegistrationOrder)[] sessionLifeTimeHandlers = await testSessionManager.BuildTestSessionLifetimeHandleAsync(serviceProvider, newBuiltCompositeServices);
 
-            foreach (ITestSessionLifetimeHandler testApplicationLifetimeService in await testSessionManager.BuildTestSessionLifetimeHandleAsync(serviceProvider, newBuiltCompositeServices))
+            // Register the test session lifetime handlers for the notifications
+            testSessionLifetimeHandlers.AddRange(sessionLifeTimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler));
+
+            // Keep the registration order
+            foreach ((IExtension Extension, int _) testhostExtension in consumers.Union(sessionLifeTimeHandlers).OrderBy(x => x.RegistrationOrder))
             {
-                await AddServiceIfNotSkippedAsync(testApplicationLifetimeService, serviceProvider);
+                if (testhostExtension.Extension is IDataConsumer)
+                {
+                    await RegisterAsServiceOrConsumerOrBothAsync(testhostExtension.Extension, serviceProvider, dataConsumersBuilder);
+                }
+                else
+                {
+                    await AddServiceIfNotSkippedAsync(testhostExtension.Extension, serviceProvider);
+                }
             }
         }
 
@@ -595,14 +608,24 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // node updates to the correct request id.
         foreach (IDataConsumer consumerService in serverPerCallConsumers)
         {
+            if (consumerService is ITestSessionLifetimeHandler handler)
+            {
+                testSessionLifetimeHandlers.Add(handler);
+            }
+
             await RegisterAsServiceOrConsumerOrBothAsync(consumerService, serviceProvider, dataConsumersBuilder);
         }
+
+        // Register the test session lifetime handlers container
+        TestSessionLifetimeHandlersContainer testSessionLifetimeHandlersContainer = new(testSessionLifetimeHandlers);
+        serviceProvider.AddService(testSessionLifetimeHandlersContainer);
 
         // Register the ITestApplicationResult
         var testApplicationResult = new TestApplicationResult(
             platformOutputDisplayService,
             serviceProvider.GetTestApplicationCancellationTokenSource(),
-            serviceProvider.GetCommandLineOptions());
+            serviceProvider.GetCommandLineOptions(),
+            serviceProvider.GetEnvironment());
         await RegisterAsServiceOrConsumerOrBothAsync(testApplicationResult, serviceProvider, dataConsumersBuilder);
 
         IDataConsumer[] dataConsumerServices = dataConsumersBuilder.ToArray();

@@ -164,11 +164,13 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
             yield return (WithTelemetry, AssetName,
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$TelemetryArg$", string.Empty));
 
             yield return (WithoutTelemetry, AssetName,
                 TestCode
                 .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$TelemetryArg$", ", new TestApplicationOptions() { EnableTelemetry = false }"));
         }
 
@@ -185,7 +187,7 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Platform" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
 

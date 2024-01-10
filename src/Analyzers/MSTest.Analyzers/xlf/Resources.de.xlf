@@ -2,9 +2,182 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="de" original="../Resources.resx">
     <body>
+      <trans-unit id="AvoidExpectedExceptionAttributeDescription">
+        <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
+        <target state="translated">„Assert.ThrowsException“ oder „Assert.ThrowsExceptionAsync“ gegenüber „[ExpectedException]“ bevorzugen, da dadurch sichergestellt wird, dass nur der erwartete Aufruf die erwartete Ausnahme auslöst. Die Assert-APIs bieten außerdem mehr Flexibilität und ermöglichen es Ihnen, zusätzliche Eigenschaften der Ausführung zu bestätigen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
+        <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
+        <target state="translated">„Assert.ThrowsException/ThrowsExceptionAsync“ gegenüber „[ExpectedException]“ bevorzugen</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidExpectedExceptionAttributeTitle">
+        <source>Avoid '[ExpectedException]'</source>
+        <target state="translated">„[ExpectedException]“ vermeiden</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PublicTypeShouldBeTestClassDescription">
+        <source>It's considered a good practice to have only test classes marked public in a test project.</source>
+        <target state="translated">Es wird als bewährte Methode angesehen, nur Testklassen in einem Testprojekt als öffentlich gekennzeichnet zu lassen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PublicTypeShouldBeTestClassMessageFormat">
+        <source>Public type '{0}' should be marked with '[TestClass]' or changed to 'internal'</source>
+        <target state="translated">Der öffentliche Typ "{0}" sollte mit "[TestClass]" gekennzeichnet oder in "internal" geändert werden.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PublicTypeShouldBeTestClassTitle">
+        <source>Public types should be test classes</source>
+        <target state="translated">Öffentliche Typen sollten Testklassen sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidDescription">
+        <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static'
+- it should not be generic.</source>
+        <target state="translated">Testklassen, Klassen, die mit dem Attribut "[TestClass]" gekennzeichnet sind, sollten das folgende Layout berücksichtigen, um von MSTest als gültig angesehen zu werden:
+– es darf "public" (oder "internal" sein, wenn das Attribut "[assembly: DiscoverInternals]" festgelegt ist)
+– es darf nicht "static" sein
+– es darf nicht generisch sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
+        <source>Test class '{0}' should not be generic</source>
+        <target state="translated">Die Testklasse "{0}" darf nicht generisch sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
+        <source>Test class '{0}' should not be 'static'</source>
+        <target state="translated">Die Testklasse "{0}" darf nicht "static" sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_Public">
+        <source>Test class '{0}' should be 'public'</source>
+        <target state="translated">Die Testklasse "{0}" muss "public" sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_PublicOrInternal">
+        <source>Test class '{0}' should be 'public' or 'internal'</source>
+        <target state="translated">Die Testklasse "{0}" muss "public" oder "internal" sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidTitle">
+        <source>Test classes should have valid layout</source>
+        <target state="translated">Testklassen müssen über ein gültiges Layout verfügen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidDescription">
+        <source>TestContext property should follow the following layout to be valid:
+- it should be a property
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static'
+- it should not be readonly.</source>
+        <target state="translated">Die TestContext-Eigenschaft muss dem folgenden Layout folgen, um gültig zu sein:
+– sie muss eine Eigenschaft sein
+– sie muss "public" (oder "internal" sein, wenn das Attribut "[assembly: DiscoverInternals]" festgelegt ist)
+– sie darf nicht "static" sein
+– sie darf nicht schreibgeschützt sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat_NotField">
+        <source>Member 'TestContext' should be a property and not a field</source>
+        <target state="translated">Der Member "TestContext" muss eine Eigenschaft und kein Feld sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat_NotReadonly">
+        <source>Property 'TestContext' should be settable</source>
+        <target state="translated">Die Eigenschaft "TestContext" muss festgelegt werden können.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat_NotStatic">
+        <source>Property 'TestContext' should not be 'static'</source>
+        <target state="translated">Die Eigenschaft "TestContext" darf nicht "static" sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat_Public">
+        <source>Property 'TestContext' should be 'public'</source>
+        <target state="translated">Die Eigenschaft "TestContext" muss "public" sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat_PublicOrInternal">
+        <source>Property 'TestContext' should be 'public' or 'internal'</source>
+        <target state="translated">Die Eigenschaft "TestContext" muss "public" oder "internal" sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidTitle">
+        <source>Test context property should have valid layout</source>
+        <target state="translated">Die Testkontexteigenschaft muss ein gültiges Layout aufweisen.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidDescription">
+        <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
+- return type should be 'void' or 'Task'
+- it should not be 'async void'
+- it should be a special method (finalizer, operator...).</source>
+        <target state="translated">Testmethoden, Methoden, die mit dem Attribut "[TestMethod]" gekennzeichnet sind, sollten das folgende Layout berücksichtigen, um von MSTest als gültig angesehen zu werden:
+– es darf "public" (oder "internal" sein, wenn das Attribut "[assembly: DiscoverInternals]" festgelegt ist)
+– es darf nicht "static" sein
+– es darf nicht generisch sein
+– es darf nicht "abstract" sein
+– Rückgabetyp darf "void" oder "Task" sein
+– es darf nicht "async void" sein
+– es darf eine spezielle Methode sein (Finalizer, Operator...).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
+        <source>Test method '{0}' should not be 'abstract'</source>
+        <target state="translated">Die Testmethode "{0}" darf nicht "abstract" sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAsyncVoid">
+        <source>Test method '{0}' should not be 'async void'</source>
+        <target state="translated">Die Testmethode "{0}" darf nicht "async void" sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotGeneric">
+        <source>Test method '{0}' should not be generic</source>
+        <target state="translated">Die Testmethode "{0}" darf nicht generisch sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotStatic">
+        <source>Test method '{0}' should not be 'static'</source>
+        <target state="translated">Die Testmethode "{0}" darf nicht "static" sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_Ordinary">
+        <source>Test method '{0}' should be an 'ordinary' method</source>
+        <target state="translated">Die Testmethode "{0}" darf eine "ordinary" Methode sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_Public">
+        <source>Test method '{0}' should be 'public'</source>
+        <target state="translated">Die Testmethode "{0}" muss "public" sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_PublicOrInternal">
+        <source>Test method '{0}' should be 'public' or 'internal'</source>
+        <target state="translated">Die Testmethode "{0}" muss "public" oder "internal" sein.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
+        <source>Test method '{0}' should return 'void' or 'Task'</source>
+        <target state="translated">Die Testmethode "{0}" sollte "void" oder "Task" zurückgeben.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidTitle">
+        <source>Test methods should have valid layout</source>
+        <target state="translated">Testmethoden müssen über ein gültiges Layout verfügen.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
-        <source>By default, MSTest runs tests sequentially which can lead to severe performance limitations. It is recommended to enable assembly attribute 'Parallelize' or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute 'DoNotParallelize'.</source>
-        <target state="translated">Standardmäßig führt MSTest Tests sequentiell aus, was zu erheblichen Leistungseinschränkungen führen kann. Es wird empfohlen, das Assembly-Attribut "Parallelize" zu aktivieren oder, wenn bekannt ist, dass die Assembly nicht parallelisierbar ist, explizit das Assembly-Attribut "DoNotParallelize" zu verwenden.</target>
+        <source>By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute '[Parallelize]' to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute '[DoNotParallelize]'.</source>
+        <target state="translated">Standardmäßig führt MSTest Tests in derselben Assembly sequentiell aus, was zu erheblichen Leistungseinschränkungen führen kann. Es wird empfohlen, das Assembly-Attribut "[Parallelize]" zu aktivieren, um Tests parallel auszuführen, oder, wenn bekannt ist, dass die Assembly nicht parallelisierbar ist, explizit das Assembly-Attribut "[DoNotParallelize]" zu verwenden.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerMessageFormat">

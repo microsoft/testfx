@@ -13,25 +13,37 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 /// </summary>
 public abstract class AcceptanceTestBase : TestBase
 {
-    private const string MSTestTestFrameworkPackageNamePrefix = "MSTest.TestFramework.";
+    private const string MicrosoftTestingPlatformNamePrefix = "Microsoft.Testing.Platform.";
     private const string NuGetPackageExtensionName = ".nupkg";
-
-    internal static string RID { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
-
-    public static string MSTestCurrentVersion { get; private set; }
-
-    public static string MicrosoftNETTestSdkVersion { get; private set; }
+#if !MSTEST_DOWNLOADED
+    private const string MSTestTestFrameworkPackageNamePrefix = "MSTest.TestFramework.";
+#endif
 
     static AcceptanceTestBase()
     {
-        var mstestTestFrameworkPackage = Path.GetFileName(Directory.GetFiles(Constants.ArtifactsPackagesShipping, MSTestTestFrameworkPackageNamePrefix + "*" + NuGetPackageExtensionName, SearchOption.AllDirectories).Single());
-        MSTestCurrentVersion = mstestTestFrameworkPackage.Substring(
-            MSTestTestFrameworkPackageNamePrefix.Length,
-            mstestTestFrameworkPackage.Length - MSTestTestFrameworkPackageNamePrefix.Length - NuGetPackageExtensionName.Length);
-
         XDocument versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
         MicrosoftNETTestSdkVersion = versionsPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
+
+#if MSTEST_DOWNLOADED
+        MSTestVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
+        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MicrosoftTestingPlatformNamePrefix);
+        MicrosoftTestingPlatformExtensionsVersion = MicrosoftTestingPlatformVersion;
+#else
+        MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MSTestTestFrameworkPackageNamePrefix);
+        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsTmpPackages, MicrosoftTestingPlatformNamePrefix);
+        MicrosoftTestingPlatformExtensionsVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MicrosoftTestingPlatformVersion");
+#endif
     }
+
+    internal static string RID { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
+
+    public static string MSTestVersion { get; private set; }
+
+    public static string MicrosoftNETTestSdkVersion { get; private set; }
+
+    public static string MicrosoftTestingPlatformVersion { get; private set; }
+
+    public static string MicrosoftTestingPlatformExtensionsVersion { get; private set; }
 
     protected AcceptanceTestBase(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
@@ -43,11 +55,13 @@ public abstract class AcceptanceTestBase : TestBase
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$TargetFramework$</TargetFramework>
+    <PlatformTarget>x64</PlatformTarget>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    $TargetFramework$
     $OutputType$
     $EnableMSTestRunner$
+    $Extra$
   </PropertyGroup>
 
   <ItemGroup>
@@ -95,5 +109,58 @@ public class UnitTest1
                 yield return new TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)>((tfm.Arguments, compilationMode), $"{tfm.Arguments},{compilationMode}");
             }
         }
+    }
+
+    internal static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixMultiTfmBuildConfiguration()
+    {
+        foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
+        {
+            yield return new TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>((TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode), $"{TargetFrameworks.All.ToMSBuildTargetFrameworks()},{compilationMode}");
+        }
+    }
+
+    internal static IEnumerable<TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)>> GetBuildMatrixSingleAndMultiTfmBuildConfiguration()
+    {
+        foreach (TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration)> entry in GetBuildMatrixTfmBuildConfiguration())
+        {
+            yield return new TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)>(
+                (entry.Arguments.Tfm, entry.Arguments.BuildConfiguration, false), $"{entry.Arguments.Tfm},{entry.Arguments.BuildConfiguration}");
+        }
+
+        foreach (TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)> entry in GetBuildMatrixMultiTfmBuildConfiguration())
+        {
+            yield return new TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)>(
+                (entry.Arguments.MultiTfm, entry.Arguments.BuildConfiguration, true), $"multitfm,{entry.Arguments.BuildConfiguration}");
+        }
+    }
+
+    private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
+    {
+        var matches = Directory.GetFiles(rootFolder, packagePrefixName + "*" + NuGetPackageExtensionName, SearchOption.TopDirectoryOnly);
+
+        if (matches.Length > 1)
+        {
+            // For some packages the find pattern will match multiple packages, for example:
+            // Microsoft.Testing.Platform.1.0.0.nupkg
+            // Microsoft.Testing.Platform.Extensions.1.0.0.nupkg
+            // Let's take shortest name which should be closest to the package we are looking for.
+            matches = [matches.OrderBy(x => x.Length).First()];
+        }
+
+        if (matches.Length != 1)
+        {
+            throw new InvalidOperationException($"Was expecting to find a single NuGet package named '{packagePrefixName}' in '{rootFolder}' but found {matches.Length}.");
+        }
+
+        var packageFullName = Path.GetFileName(matches[0]);
+        return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
+    }
+
+    private static string ExtractVersionFromVersionPropsFile(XDocument versionPropsXmlDocument, string entryName)
+    {
+        var matches = versionPropsXmlDocument.Descendants(entryName).ToArray();
+        return matches.Length != 1
+            ? throw new InvalidOperationException($"Was expecting to find a single entry for '{entryName}' but found {matches.Length}.")
+            : matches[0].Value;
     }
 }

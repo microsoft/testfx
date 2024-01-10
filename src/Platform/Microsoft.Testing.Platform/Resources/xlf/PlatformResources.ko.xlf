@@ -329,6 +329,11 @@
         <target state="translated">명령줄 도움말을 표시합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
+        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="translated">특정 종료 코드에 대해 성공하지 못한 종료 값을 보고하지 마세요(예: '--ignore-exit-code 8; 9'는 종료 코드 8 및 9를 무시하고 이 경우 0을 반환함).</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
         <target state="translated">.NET 테스트 애플리케이션 정보를 표시합니다.</target>
@@ -460,13 +465,13 @@
 Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</source>
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
         <target state="translated">원격 분석
 ---------
 Microsoft 테스트 플랫폼은 사용자 환경 개선을 위해 사용량 데이터를 수집합니다. 데이터는 Microsoft에서 수집하며 누구와도 공유되지 않습니다.
 즐겨 찾는 셸을 사용하여 TESTINGPLATFORM_TELEMETRY_OPTOUT 또는 DOTNET_CLI_TELEMETRY_OPTOUT 환경 변수를 '1' 또는 'true'로 설정하여 원격 분석을 옵트아웃할 수 있습니다.
 
-Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: https://aka.ms/testingplatform/guides/telemetry</target>
+Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: https://aka.ms/testingplatform/telemetry</target>
         <note />
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">

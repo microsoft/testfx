@@ -3,6 +3,8 @@
 
 using System.Collections.Immutable;
 
+using Analyzer.Utilities.Extensions;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -10,13 +12,21 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
-[DiagnosticAnalyzer(LanguageNames.CSharp)]
+[DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
 {
     private static readonly LocalizableResourceString Title = new(nameof(Resources.UseParallelizeAttributeAnalyzerTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.UseParallelizeAttributeAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.UseParallelizeAttributeAnalyzerDescription), Resources.ResourceManager, typeof(Resources));
-    internal static readonly DiagnosticDescriptor Rule = new(DiagnosticIds.UseParallelizedAttributeRuleId, Title, MessageFormat, Categories.Performance, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description, customTags: WellKnownCustomTags.CompilationEnd);
+    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.UseParallelizedAttributeRuleId,
+        Title,
+        MessageFormat,
+        Description,
+        Category.Performance,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true,
+        isReportedAtCompilationEnd: true);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(Rule);
@@ -52,7 +62,7 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
         if (!hasParallelizeAttribute && !hasDoNotParallelizeAttribute)
         {
             // We cannot provide any good location for assembly level missing attributes
-            context.ReportDiagnostic(Diagnostic.Create(Rule, Location.None));
+            context.ReportNoLocationDiagnostic(Rule);
         }
     }
 }

@@ -2,9 +2,183 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ja" original="../Resources.resx">
     <body>
+      <trans-unit id="AvoidExpectedExceptionAttributeDescription">
+        <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
+        <target state="translated">'[ExpectedException]' よりも 'Assert.ThrowsException' または 'Assert.ThrowsExceptionAsync' を優先します。これは、予期された呼び出しのみが予期された例外をスローするようにするためです。アサート API も柔軟性が高く、例外の追加プロパティをアサートできます。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidExpectedExceptionAttributeMessageFormat">
+        <source>Prefer 'Assert.ThrowsException/ThrowsExceptionAsync' over '[ExpectedException]'</source>
+        <target state="translated">'[ExpectedException]' よりも 'Assert.ThrowsException/ThrowsExceptionAsync' を優先します</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AvoidExpectedExceptionAttributeTitle">
+        <source>Avoid '[ExpectedException]'</source>
+        <target state="translated">'[ExpectedException]' を回避する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PublicTypeShouldBeTestClassDescription">
+        <source>It's considered a good practice to have only test classes marked public in a test project.</source>
+        <target state="translated">テスト プロジェクトでは、テスト クラスのみをパブリックとしてマークすることをお勧めします。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PublicTypeShouldBeTestClassMessageFormat">
+        <source>Public type '{0}' should be marked with '[TestClass]' or changed to 'internal'</source>
+        <target state="translated">パブリック型 '{0}' は '[TestClass]' でマークするか、'internal' に変更する必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PublicTypeShouldBeTestClassTitle">
+        <source>Public types should be test classes</source>
+        <target state="translated">パブリック型はテスト クラスである必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidDescription">
+        <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static'
+- it should not be generic.</source>
+        <target state="translated">テスト クラス ('[TestClass]' 属性でマークされたクラス) は、MSTest によって有効と見なされるように、次のレイアウトを考慮する必要があります:
+- 'public' ('[assembly: DiscoverInternals]' 属性が設定されている場合は 'internal' である必要があります)
+- 'static' にすることはできません
+- ジェネリックにすることはできません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
+        <source>Test class '{0}' should not be generic</source>
+        <target state="translated">テスト クラス '{0}' をジェネリックにすることはできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
+        <source>Test class '{0}' should not be 'static'</source>
+        <target state="translated">テスト クラス '{0}' を 'static' にすることはできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_Public">
+        <source>Test class '{0}' should be 'public'</source>
+        <target state="translated">テスト クラス '{0}' は 'public' である必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_PublicOrInternal">
+        <source>Test class '{0}' should be 'public' or 'internal'</source>
+        <target state="translated">テスト クラス '{0}' は 'public' または 'internal' である必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldBeValidTitle">
+        <source>Test classes should have valid layout</source>
+        <target state="translated">テスト クラスには有効なレイアウトが必要です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidDescription">
+        <source>TestContext property should follow the following layout to be valid:
+- it should be a property
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static'
+- it should not be readonly.</source>
+        <target state="translated">TestContext プロパティを有効にするには、次のレイアウトに従う必要があります: 
+- 
+ プロパティである必要があります
+- 'public' ('[assembly: DiscoverInternals]' 属性が設定されている場合は 'internal' である必要があります)
+- 'static' にすることはできません
+- 読み取り専用にすることはできません。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat_NotField">
+        <source>Member 'TestContext' should be a property and not a field</source>
+        <target state="translated">メンバー 'TestContext' はフィールドではなくプロパティにする必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat_NotReadonly">
+        <source>Property 'TestContext' should be settable</source>
+        <target state="translated">プロパティ 'TestContext' は設定可能である必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat_NotStatic">
+        <source>Property 'TestContext' should not be 'static'</source>
+        <target state="translated">プロパティ 'TestContext' を 'static' にすることはできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat_Public">
+        <source>Property 'TestContext' should be 'public'</source>
+        <target state="translated">プロパティ 'TestContext' は 'public' である必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidMessageFormat_PublicOrInternal">
+        <source>Property 'TestContext' should be 'public' or 'internal'</source>
+        <target state="translated">プロパティ 'TestContext' は 'public' または 'internal' である必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestContextShouldBeValidTitle">
+        <source>Test context property should have valid layout</source>
+        <target state="translated">テスト コンテキスト プロパティには有効なレイアウトが必要です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidDescription">
+        <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
+- return type should be 'void' or 'Task'
+- it should not be 'async void'
+- it should be a special method (finalizer, operator...).</source>
+        <target state="translated">'[TestMethod]' 属性でマークされたテスト メソッドは、MSTest によって有効と見なされるように、次のレイアウトを考慮する必要があります:
+- 'public' ('[assembly: DiscoverInternals]' 属性が設定されている場合は 'internal' である必要があります)
+- 'static' にすることはできません
+- ジェネリックにすることはできません
+- 'abstract' にすることはできません
+- 戻り値の型は 'void' または 'Task' である必要があります
+- 'async void' にすることはできません
+- 特殊なメソッド (ファイナライザー、演算子...) である必要があります。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
+        <source>Test method '{0}' should not be 'abstract'</source>
+        <target state="translated">テスト メソッド '{0}' を 'abstract' にすることはできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAsyncVoid">
+        <source>Test method '{0}' should not be 'async void'</source>
+        <target state="translated">テスト メソッド '{0}' を 'async void' にすることはできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotGeneric">
+        <source>Test method '{0}' should not be generic</source>
+        <target state="translated">テスト メソッド '{0}' をジェネリックにすることはできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_NotStatic">
+        <source>Test method '{0}' should not be 'static'</source>
+        <target state="translated">テスト メソッド '{0}' を 'static' にすることはできません</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_Ordinary">
+        <source>Test method '{0}' should be an 'ordinary' method</source>
+        <target state="translated">テスト メソッド '{0}' は '通常' メソッドである必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_Public">
+        <source>Test method '{0}' should be 'public'</source>
+        <target state="translated">テスト メソッド '{0}' は 'public' である必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_PublicOrInternal">
+        <source>Test method '{0}' should be 'public' or 'internal'</source>
+        <target state="translated">テスト メソッド '{0}' は 'public' または 'internal' である必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
+        <source>Test method '{0}' should return 'void' or 'Task'</source>
+        <target state="translated">テスト メソッド '{0}' は 'void' または 'Task' を返す必要があります</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldBeValidTitle">
+        <source>Test methods should have valid layout</source>
+        <target state="translated">テスト メソッドには有効なレイアウトが必要です</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
-        <source>By default, MSTest runs tests sequentially which can lead to severe performance limitations. It is recommended to enable assembly attribute 'Parallelize' or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute 'DoNotParallelize'.</source>
-        <target state="translated">既定では、MSTest はテストを順番に実行するため、重大なパフォーマンス制限が生じる可能性があります。アセンブリ属性 'Parallelize' を有効にするか、アセンブリが並列化できないことがわかっている場合は、アセンブリ レベル属性 'DoNotParallelize' を明示的に使用することをお勧めします。</target>
+        <source>By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute '[Parallelize]' to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute '[DoNotParallelize]'.</source>
+        <target state="translated">既定では、MSTest は同じアセンブリ内でテストを順番に実行するため、重大なパフォーマンス制限が生じる可能性があります。アセンブリ属性 '[Parallelize]' を有効にして並列でテストを実行するか、アセンブリが並列化できないことがわかっている場合は、アセンブリ レベル属性 '[DoNotParallelize]' を明示的に使用することをお勧めします。</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerMessageFormat">

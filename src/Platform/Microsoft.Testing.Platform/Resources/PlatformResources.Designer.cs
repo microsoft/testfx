@@ -647,6 +647,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do not report non successful exit value for specific exit codes (e.g. &apos;--ignore-exit-code 8;9&apos; ignore exit code 8 and 9 and will return 0 in these case).
+        /// </summary>
+        internal static string PlatformCommandLineIgnoreExitCodeOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineIgnoreExitCodeOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Display .NET test application information..
         /// </summary>
         internal static string PlatformCommandLineInfoOptionDescription {
@@ -868,7 +877,7 @@ namespace Microsoft.Testing.Platform.Resources {
         ///Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
         ///You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to &apos;1&apos; or &apos;true&apos; using your favorite shell.
         ///
-        ///Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry.
+        ///Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry.
         /// </summary>
         internal static string TelemetryNotice {
             get {

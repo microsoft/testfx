@@ -81,7 +81,10 @@ public class NoBannerTests : AcceptanceTestBase
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            yield return (AssetName, AssetName, NoBannerTestCode.PatchTargetFrameworks(TargetFrameworks.All));
+            yield return (AssetName, AssetName,
+                NoBannerTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
         }
 
         private const string NoBannerTestCode = """
@@ -97,7 +100,7 @@ public class NoBannerTests : AcceptanceTestBase
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Platform" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
     </ItemGroup>
 </Project>
 

@@ -302,7 +302,7 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result);
-        Assert.IsTrue(messages.Count is 22);
+        Assert.IsTrue(messages.Count is 23);
         Assert.IsTrue(messages[0].Equals($"Unknown option '--x'{Environment.NewLine}", StringComparison.Ordinal));
     }
 

@@ -53,8 +53,11 @@
         <dependency id="Microsoft.NET.Test.Sdk" version="$TestPlatformVersion$" />
       </group>
     </dependencies>
+    <readme>PACKAGE.md</readme>
   </metadata>
   <files>
     $CommonFileElements$
+
+    <file src="$RepoRoot$src\Package\MSTest\PACKAGE.md" target="" />
   </files>
 </package>

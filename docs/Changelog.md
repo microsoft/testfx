@@ -4,6 +4,69 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [3.2.0-preview.23623.1] - 2023-12-23
+
+See full log [here](https://github.com/Microsoft/testfx/compare/v3.2.0-preview.23622.1...3.2.0-preview.23623.1)
+
+### Fixed
+
+* Add auto-generated header to generated entry point (through upgrade of `Microsoft.Testing.Platform.MSBuild` to 1.0.0-preview.23622.9)
+
+### Artifacts
+
+* MSTest: [3.2.0-preview.23623.1](https://www.nuget.org/packages/MSTest/3.2.0-preview.23623.1)
+* MSTest.TestFramework: [3.2.0-preview.23623.1](https://www.nuget.org/packages/MSTest.TestFramework/3.2.0-preview.23623.1)
+* MSTest.TestAdapter: [3.2.0-preview.23623.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.2.0-preview.23623.1)
+* MSTest.Analyzers: [3.2.0-preview.23623.1](https://www.nuget.org/packages/MSTest.Analyzers/3.2.0-preview.23623.1)
+
+## [3.2.0-preview.23622.1] - 2023-12-22
+
+See full log [here](https://github.com/Microsoft/testfx/compare/v3.1.1...v3.2.0-preview.23622.1)
+
+### Added
+
+* MSTest runner by @Evangelink in [#1775](https://github.com/microsoft/testfx/pull/1775)
+* Add analyzers by @Evangelink in [#1870](https://github.com/microsoft/testfx/pull/1870)
+* Add more analyzers by @Evangelink in [#1974](https://github.com/microsoft/testfx/pull/1974)
+* Rework MSTEST0002 and MSTEST0003 by @Evangelink in [#1985](https://github.com/microsoft/testfx/pull/1985)
+* Update description of MSTEST0001 by @Evangelink in [#1988](https://github.com/microsoft/testfx/pull/1988)
+* MSTEST0004: Public types should be test classes by @Evangelink in [#1989](https://github.com/microsoft/testfx/pull/1989)
+
+### Fixed
+
+* Don't stop by @nohwnd in [#1737](https://github.com/microsoft/testfx/pull/1737)
+* Fix DataRowAttribute to be cls compliant by @Evangelink in [#1878](https://github.com/microsoft/testfx/pull/1878)
+* Workaround issue with managed type name utility by @Evangelink in [#1876](https://github.com/microsoft/testfx/pull/1876)
+* Fix path normalization by @Evangelink in [#1880](https://github.com/microsoft/testfx/pull/1880)
+
+### Chores
+
+* Bump and cleanup global versions by @Evangelink in [#1754](https://github.com/microsoft/testfx/pull/1754)
+* Eng and global.json housekeeping by @Evangelink in [#1756](https://github.com/microsoft/testfx/pull/1756)
+* Code clean-up  by @ViktorHofer in [#1757](https://github.com/microsoft/testfx/pull/1757)
+* Bump StyleCop analyzers version by @Evangelink in [#1761](https://github.com/microsoft/testfx/pull/1761)
+* Bump version of test dependencies by @Evangelink in [#1762](https://github.com/microsoft/testfx/pull/1762)
+* Bump VSTest deps to 17.7.2 by @Evangelink in [#1769](https://github.com/microsoft/testfx/pull/1769)
+* Pin Moq to 4.18.4 for security by @Evangelink in [#1770](https://github.com/microsoft/testfx/pull/1770)
+* Clean nuget.config by @Evangelink in [#1772](https://github.com/microsoft/testfx/pull/1772)
+* Fix warnings and cleanup infra by @Evangelink in [#1773](https://github.com/microsoft/testfx/pull/1773)
+* Drop ruleset in favor of editorconfig by @Evangelink in [#1780](https://github.com/microsoft/testfx/pull/1780)
+* Enable CA1001 by @Evangelink in [#1811](https://github.com/microsoft/testfx/pull/1811)
+* Set analysis level to latest-recommended by @Evangelink in [#1816](https://github.com/microsoft/testfx/pull/1816)
+* Use modern styles and rules by @Evangelink in [#1852](https://github.com/microsoft/testfx/pull/1852)
+* Add third-parties licenses by @Evangelink in [#1955](https://github.com/microsoft/testfx/pull/1955)
+
+### New Contributors
+
+* @ViktorHofer made their first contribution in [#1757](https://github.com/microsoft/testfx/pull/1757)
+
+### Artifacts
+
+* MSTest: [3.2.0-preview.23622.1](https://www.nuget.org/packages/MSTest/3.2.0-preview.23622.1)
+* MSTest.TestFramework: [3.2.0-preview.23622.1](https://www.nuget.org/packages/MSTest.TestFramework/3.2.0-preview.23622.1)
+* MSTest.TestAdapter: [3.2.0-preview.23622.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.2.0-preview.23622.1)
+* MSTest.Analyzers: [3.2.0-preview.23622.1](https://www.nuget.org/packages/MSTest.Analyzers/3.2.0-preview.23622.1)
+
 ## [3.1.1] - 2023-07-14
 
 ### Fixed

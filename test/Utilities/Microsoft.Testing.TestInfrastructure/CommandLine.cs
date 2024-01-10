@@ -42,8 +42,9 @@ public sealed class CommandLine : IDisposable
     public async Task<int> RunAsyncAndReturnExitCode(
         string commandLine,
         IDictionary<string, string>? environmentVariables = null,
+        string? workingDirectory = null,
         bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false,
-        int timeoutInSeconds = 300)
+        int timeoutInSeconds = 60)
     {
         Interlocked.Increment(ref s_totalProcessesAttempt);
         string[] tokens = commandLine.Split(' ');
@@ -57,19 +58,20 @@ public sealed class CommandLine : IDisposable
             EnvironmentVariables = environmentVariables,
             OnErrorOutput = (_, o) => _errorOutputLines.Add(o),
             OnStandardOutput = (_, o) => _standardOutputLines.Add(o),
+            WorkingDirectory = workingDirectory,
         };
-        _process = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided, timeoutInSeconds);
+        _process = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided);
 
         Task<int> exited = _process.WaitForExitAsync();
         int seconds = timeoutInSeconds;
-        var cancellationTokenSource = new CancellationTokenSource();
-        var timedOut = Task.Delay(TimeSpan.FromSeconds(seconds), cancellationTokenSource.Token);
+        var stopTheTimer = new CancellationTokenSource();
+        var timedOut = Task.Delay(TimeSpan.FromSeconds(seconds), stopTheTimer.Token);
         if (await Task.WhenAny(exited, timedOut) == exited)
         {
 #if NET8_0_OR_GREATER
-            await cancellationTokenSource.CancelAsync();
+            await stopTheTimer.CancelAsync();
 #else
-            cancellationTokenSource.Cancel();
+            stopTheTimer.Cancel();
 #endif
             return await exited;
         }

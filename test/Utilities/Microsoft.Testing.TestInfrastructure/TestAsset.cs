@@ -14,8 +14,7 @@ public class TestAsset : IDisposable
     public TestAsset(string targetPath, string assetCode, bool cleanup = true)
     {
         _assetCode = assetCode;
-
-        _tempDirectory = new(targetPath, cleanup: cleanup);
+        _tempDirectory = new(targetPath, arcadeConvention: true, cleanup);
     }
 
     public void Dispose()
@@ -33,7 +32,10 @@ public class TestAsset : IDisposable
 
         if (disposing)
         {
-            _tempDirectory.Dispose();
+            if (DotnetResult is null || DotnetResult.ExitCode == 0)
+            {
+                _tempDirectory.Dispose();
+            }
         }
 
         _isDisposed = true;
@@ -41,9 +43,11 @@ public class TestAsset : IDisposable
 
     public string TargetAssetPath => _tempDirectory.Path;
 
+    public DotnetMuxerResult? DotnetResult { get; internal set; }
+
     private static (string Name, string Content) ParseFile(string fileContent)
     {
-        int fileNameEndIndex = fileContent.IndexOf(Environment.NewLine, StringComparison.InvariantCulture);
+        int fileNameEndIndex = fileContent.Replace("\r\n", "\n").IndexOf("\n", StringComparison.InvariantCulture);
         if (fileNameEndIndex < 0)
         {
             return (string.Empty, string.Empty);
@@ -55,6 +59,19 @@ public class TestAsset : IDisposable
     }
 
     public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, bool addDefaultNuGetConfigFile = true, bool addPublicFeeds = false)
+    {
+        var testAsset = new TestAsset(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNuGetConfig(addPublicFeeds)) : code);
+        string[] splitFiles = testAsset._assetCode.Split(new string[] { FileTag }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (string fileContent in splitFiles)
+        {
+            (string, string) fileInfo = ParseFile(fileContent);
+            await TempDirectory.WriteFileAsync(testAsset._tempDirectory.Path, fileInfo.Item1, fileInfo.Item2);
+        }
+
+        return testAsset;
+    }
+
+    public static string GetNuGetConfig(bool addPublicFeeds = false)
     {
         string publicFeedsFragment = addPublicFeeds ? """
         <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
@@ -81,14 +98,7 @@ public class TestAsset : IDisposable
 </configuration>
 
 """;
-        var testAsset = new TestAsset(assetName, addDefaultNuGetConfigFile ? string.Concat(code, defaultNuGetConfig) : code);
-        string[] splitFiles = testAsset._assetCode.Split(new string[] { FileTag }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (string fileContent in splitFiles)
-        {
-            (string, string) fileInfo = ParseFile(fileContent);
-            await TempDirectory.WriteFileAsync(testAsset._tempDirectory.Path, fileInfo.Item1, fileInfo.Item2);
-        }
 
-        return testAsset;
+        return defaultNuGetConfig;
     }
 }

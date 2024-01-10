@@ -21,6 +21,7 @@
 
   <ItemGroup Label="NuGet">
     <NuspecProperty Include="MSBuildProjectDirectory=$(MSBuildProjectDirectory)" />
+    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,17 +33,23 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
   </ItemGroup>
+  
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
-      <_TemplateProperties>MSTestVersion=$(MSTestVersion);MicrosoftTestingPlatformVersion=$(MicrosoftTestingPlatformVersion);MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion)</_TemplateProperties>
+      <_TemplateProperties>Version=$(Version);MicrosoftTestingPlatformVersion=$(MicrosoftTestingPlatformVersion);MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion)</_TemplateProperties>
     </PropertyGroup>
-    <!-- List all templates that use ${} template, that will be replaced by the properties defined below.
-    This will happen on every build. When adding a new file, also add the destination fileto .gitignore. -->
+
+    <!--
+      List all templates that use ${} template, that will be replaced by the properties defined below.
+      This will happen on every build. When adding a new file, also add the destination fileto .gitignore.
+      -->
     <ItemGroup>
       <_TemplateCsproj Include="$(MSBuildProjectDirectory)/Sdk/Sdk.props.template" Destination="$(MSBuildProjectDirectory)/Sdk/Sdk.props" />
     </ItemGroup>
+
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
     </GenerateFileFromTemplate>
   </Target>
+  
 </Project>

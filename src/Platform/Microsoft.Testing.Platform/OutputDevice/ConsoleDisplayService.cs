@@ -43,6 +43,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private readonly ILogger? _logger;
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly bool _underProcessMonitor;
+    private static readonly char[] PlusSign = new[] { '+' };
 
     private int _totalTests;
     private int _totalPassedTests;
@@ -147,7 +148,20 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                     var version = (AssemblyInformationalVersionAttribute?)Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
                     if (version is not null)
                     {
-                        stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {version.InformationalVersion}");
+                        string informationalVersion = version.InformationalVersion;
+                        int index = informationalVersion.LastIndexOfAny(PlusSign);
+                        if (index != -1)
+                        {
+#if NETCOREAPP
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {informationalVersion[..(index + 10)]}");
+#else
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {informationalVersion.Substring(0, index + 10)}");
+#endif
+                        }
+                        else
+                        {
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {informationalVersion}");
+                        }
 
                         var buildTime = Assembly.GetExecutingAssembly()
                             .GetCustomAttributes(typeof(AssemblyMetadataAttribute))

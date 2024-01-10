@@ -329,6 +329,11 @@
         <target state="translated">Umožňuje zobrazit nápovědu příkazového řádku.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
+        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="translated">Neohlašujte neúspěšnou ukončovací hodnotu pro konkrétní ukončovací kódy (např. „--ignore-exit-code 8; 9“ ignoruje ukončovací kód 8 a 9 a v takovém případě vrátí hodnotu 0.)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
         <target state="translated">Umožňuje zobrazit informace o testovací aplikaci .NET.</target>
@@ -460,13 +465,13 @@
 Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</source>
-        <target state="translated">Telemetrie
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
+        <target state="new">Telemetry
 ---------
-Microsoft Testing Platform shromažďuje data o využití, která nám pomáhají dále vylepšovat prostředí a práci s produktem. Data shromažďuje společnost Microsoft a s nikým se nesdílejí.
-Výslovný nesouhlas s telemetrií můžete vyjádřit tak, že pomocí svého oblíbeného prostředí nastavíte proměnnou prostředí TESTINGPLATFORM_TELEMETRY_OPTOUT nebo DOTNET_CLI_TELEMETRY_OPTOUT na hodnotu 1 nebo true.
+Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
+You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Přečtěte si další informace o telemetrii Microsoft Testing Platform: https://aka.ms/testingplatform/guides/telemetry</target>
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</target>
         <note />
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">

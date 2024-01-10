@@ -14,6 +14,9 @@ namespace Microsoft.Testing.Platform.TestHost;
 
 internal sealed class TestHostManager : ITestHostManager
 {
+    // Registration ordering
+    private readonly List<object> _factoryOrdering = [];
+
     // Exposed extension points
     private readonly List<Func<IServiceProvider, ITestApplicationLifecycleCallbacks>> _testApplicationLifecycleCallbacksFactories = [];
     private readonly List<Func<IServiceProvider, IDataConsumer>> _dataConsumerFactories = [];
@@ -133,6 +136,7 @@ internal sealed class TestHostManager : ITestHostManager
     {
         ArgumentGuard.IsNotNull(dataConsumerFactory);
         _dataConsumerFactories.Add(dataConsumerFactory);
+        _factoryOrdering.Add(dataConsumerFactory);
     }
 
     public void AddDataConsumer<T>(CompositeExtensionFactory<T> compositeServiceFactory)
@@ -145,20 +149,21 @@ internal sealed class TestHostManager : ITestHostManager
         }
 
         _dataConsumersCompositeServiceFactories.Add(compositeServiceFactory);
+        _factoryOrdering.Add(compositeServiceFactory);
     }
 
-    internal async Task<IDataConsumer[]> BuildDataConsumersAsync(ServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
+    internal async Task<(IExtension Consumer, int RegistrationOrder)[]> BuildDataConsumersAsync(ServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
     {
-        List<IDataConsumer> dataConsumers = [];
+        List<(IExtension Consumer, int RegistrtionOrder)> dataConsumers = [];
         foreach (Func<IServiceProvider, IDataConsumer> dataConsumerFactory in _dataConsumerFactories)
         {
             IDataConsumer service = dataConsumerFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            if (dataConsumers.Any(x => x.Uid == service.Uid))
+            if (dataConsumers.Any(x => x.Consumer.Uid == service.Uid))
             {
-                IDataConsumer currentRegisteredExtension = dataConsumers.Single(x => x.Uid == service.Uid);
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, currentRegisteredExtension.GetType()));
+                (IExtension Consumer, int Order) currentRegisteredExtension = dataConsumers.Single(x => x.Consumer.Uid == service.Uid);
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, currentRegisteredExtension.Consumer.GetType()));
             }
 
             // We initialize only if enabled
@@ -170,7 +175,7 @@ internal sealed class TestHostManager : ITestHostManager
                 }
 
                 // Register the extension for usage
-                dataConsumers.Add(service);
+                dataConsumers.Add((service, _factoryOrdering.IndexOf(dataConsumerFactory)));
             }
         }
 
@@ -188,10 +193,10 @@ internal sealed class TestHostManager : ITestHostManager
                 var instance = (IExtension)compositeFactoryInstance.GetInstance(serviceProvider);
 
                 // Check if we have already extensions of the same type with same id registered
-                if (dataConsumers.Any(x => x.Uid == instance.Uid))
+                if (dataConsumers.Any(x => x.Consumer.Uid == instance.Uid))
                 {
-                    IDataConsumer currentRegisteredExtension = dataConsumers.Single(x => x.Uid == instance.Uid);
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.GetType()));
+                    (IExtension Consumer, int _) currentRegisteredExtension = dataConsumers.Single(x => x.Consumer.Uid == instance.Uid);
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.Consumer.GetType()));
                 }
 
                 // We initialize only if enabled
@@ -216,7 +221,7 @@ internal sealed class TestHostManager : ITestHostManager
                 if (extension is IDataConsumer consumer)
                 {
                     // Register the extension for usage
-                    dataConsumers.Add(consumer);
+                    dataConsumers.Add((consumer, _factoryOrdering.IndexOf(compositeServiceFactory)));
                     continue;
                 }
 
@@ -231,6 +236,7 @@ internal sealed class TestHostManager : ITestHostManager
     {
         ArgumentGuard.IsNotNull(testSessionLifetimeHandleFactory);
         _testSessionLifetimeHandlerFactories.Add(testSessionLifetimeHandleFactory);
+        _factoryOrdering.Add(testSessionLifetimeHandleFactory);
     }
 
     public void AddTestSessionLifetimeHandle<T>(CompositeExtensionFactory<T> compositeServiceFactory)
@@ -243,20 +249,21 @@ internal sealed class TestHostManager : ITestHostManager
         }
 
         _testSessionLifetimeHandlerCompositeFactories.Add(compositeServiceFactory);
+        _factoryOrdering.Add(compositeServiceFactory);
     }
 
-    internal async Task<ITestSessionLifetimeHandler[]> BuildTestSessionLifetimeHandleAsync(ServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
+    internal async Task<(IExtension TestSessionLifetimeHandler, int RegistrationOrder)[]> BuildTestSessionLifetimeHandleAsync(ServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
     {
-        List<ITestSessionLifetimeHandler> testSessionLifetimeHandlers = [];
+        List<(IExtension TestSessionLifetimeHandler, int RegistrationOrder)> testSessionLifetimeHandlers = [];
         foreach (Func<IServiceProvider, ITestSessionLifetimeHandler> testSessionLifetimeHandlerFactory in _testSessionLifetimeHandlerFactories)
         {
             ITestSessionLifetimeHandler service = testSessionLifetimeHandlerFactory(serviceProvider);
 
             // Check if we have already extensions of the same type with same id registered
-            if (testSessionLifetimeHandlers.Any(x => x.Uid == service.Uid))
+            if (testSessionLifetimeHandlers.Any(x => x.TestSessionLifetimeHandler.Uid == service.Uid))
             {
-                ITestSessionLifetimeHandler currentRegisteredExtension = testSessionLifetimeHandlers.Single(x => x.Uid == service.Uid);
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, currentRegisteredExtension.GetType()));
+                (IExtension TestSessionLifetimeHandler, int _) currentRegisteredExtension = testSessionLifetimeHandlers.Single(x => x.TestSessionLifetimeHandler.Uid == service.Uid);
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, service.Uid, currentRegisteredExtension.TestSessionLifetimeHandler.GetType()));
             }
 
             // We initialize only if enabled
@@ -268,7 +275,7 @@ internal sealed class TestHostManager : ITestHostManager
                 }
 
                 // Register the extension for usage
-                testSessionLifetimeHandlers.Add(service);
+                testSessionLifetimeHandlers.Add((service, _factoryOrdering.IndexOf(testSessionLifetimeHandlerFactory)));
             }
         }
 
@@ -286,10 +293,10 @@ internal sealed class TestHostManager : ITestHostManager
                 var instance = (IExtension)compositeFactoryInstance.GetInstance(serviceProvider);
 
                 // Check if we have already extensions of the same type with same id registered
-                if (testSessionLifetimeHandlers.Any(x => x.Uid == instance.Uid))
+                if (testSessionLifetimeHandlers.Any(x => x.TestSessionLifetimeHandler.Uid == instance.Uid))
                 {
-                    ITestSessionLifetimeHandler currentRegisteredExtension = testSessionLifetimeHandlers.Single(x => x.Uid == instance.Uid);
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.GetType()));
+                    (IExtension TestSessionLifetimeHandler, int _) currentRegisteredExtension = testSessionLifetimeHandlers.Single(x => x.TestSessionLifetimeHandler.Uid == instance.Uid);
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.TestSessionLifetimeHandler.GetType()));
                 }
 
                 // We initialize only if enabled
@@ -314,7 +321,7 @@ internal sealed class TestHostManager : ITestHostManager
                 if (extension is ITestSessionLifetimeHandler testSessionLifetimeHandler)
                 {
                     // Register the extension for usage
-                    testSessionLifetimeHandlers.Add(testSessionLifetimeHandler);
+                    testSessionLifetimeHandlers.Add((testSessionLifetimeHandler, _factoryOrdering.IndexOf(compositeServiceFactory)));
                 }
                 else
                 {

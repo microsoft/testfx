@@ -29,6 +29,7 @@
 
   <ItemGroup Label="NuGet">
     <NuspecProperty Include="TestPlatformVersion=$(MicrosoftNETTestSdkVersion)" />
+    <NuspecProperty Include="RepoRoot=$(RepoRoot)" />
   </ItemGroup>
 
   <ItemGroup>

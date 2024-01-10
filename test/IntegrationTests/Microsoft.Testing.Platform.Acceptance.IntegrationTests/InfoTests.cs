@@ -73,6 +73,10 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Show the command line help\.
+      --ignore-exit-code
+        Arity: 1
+        Hidden: False
+        Description: Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
       --info
         Arity: 0
         Hidden: False
@@ -145,11 +149,11 @@ Registered command line providers:
     Version: \d+\.\d+\.\d+(-.*)?
     Description: MSTest Framework for Microsoft Testing Platform
     Options:
-      --vstest-runsettings
+      --settings
         Arity: 0\.\.1
         Hidden: False
         Description: The path, relative or absolute, to the \.runsettings file\.For more information and examples on how to configure test run, see https://learn\.microsoft\.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
-      --vstest-filter
+      --filter
         Arity: 0\.\.1
         Hidden: False
         Description: Filters tests using the given expression\. For more information, see the Filter option details section\. For more information and examples on how to use selective unit test filtering, see https://learn\.microsoft\.com/dotnet/core/testing/selective-unit-tests\.
@@ -170,8 +174,17 @@ Registered command line providers:
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            yield return (NoExtensionAssetName, NoExtensionAssetName, NoExtensionTestCode.PatchTargetFrameworks(TargetFrameworks.All));
-            yield return (MSTestAssetName, MSTestAssetName, MSTestCode.PatchTargetFrameworks(TargetFrameworks.All));
+            yield return (NoExtensionAssetName, NoExtensionAssetName,
+                NoExtensionTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+            yield return (MSTestAssetName, MSTestAssetName,
+                MSTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
         private const string NoExtensionTestCode = """
@@ -186,8 +199,9 @@ Registered command line providers:
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Framework" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Framework" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
 
@@ -229,10 +243,11 @@ global using Microsoft.Testing.Platform.Extensions;
         <EnableMSTestRunner>true</EnableMSTestRunner>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Platform" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="[1.0.0-*,)" />
-        <PackageReference Include="MSTest" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+        <!-- Required for internal build -->
+        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
 

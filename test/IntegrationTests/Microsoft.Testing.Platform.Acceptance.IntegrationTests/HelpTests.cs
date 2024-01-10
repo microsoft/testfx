@@ -39,6 +39,7 @@ Options:
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
   --help                                   Show the command line help\.
+  --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
   --list-tests                             List available tests\.
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run\.
@@ -71,6 +72,7 @@ Options:
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
   --help                                   Show the command line help\.
+  --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
   --list-tests                             List available tests\.
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run\.
@@ -104,13 +106,14 @@ Options:
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
   --help                                   Show the command line help\.
+  --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
   --list-tests                             List available tests\.
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run\.
   --results-directory                      The directory where the test results are going to be placed\. If the specified directory doesn't exist, it's created\. The default is TestResults in the directory that contains the test application\.
 Extension options:
-  --vstest-filter      Filters tests using the given expression\. For more information, see the Filter option details section\. For more information and examples on how to use selective unit test filtering, see https://learn\.microsoft\.com/dotnet/core/testing/selective-unit-tests\.
-  --vstest-runsettings The path, relative or absolute, to the \.runsettings file\.For more information and examples on how to configure test run, see https://learn\.microsoft\.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
+  --filter   Filters tests using the given expression\. For more information, see the Filter option details section\. For more information and examples on how to use selective unit test filtering, see https://learn\.microsoft\.com/dotnet/core/testing/selective-unit-tests\.
+  --settings The path, relative or absolute, to the \.runsettings file\.For more information and examples on how to configure test run, see https://learn\.microsoft\.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
 """;
 
         testHostResult.AssertOutputMatchesRegex(RegexMatchPattern);
@@ -128,8 +131,17 @@ Extension options:
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            yield return (NoExtensionAssetName, NoExtensionAssetName, NoExtensionHelpTestCode.PatchTargetFrameworks(TargetFrameworks.All));
-            yield return (MSTestAssetName, MSTestAssetName, MSTestCode.PatchTargetFrameworks(TargetFrameworks.All));
+            yield return (NoExtensionAssetName, NoExtensionAssetName,
+                NoExtensionHelpTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+            yield return (MSTestAssetName, MSTestAssetName,
+                MSTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
         private const string NoExtensionHelpTestCode = """
@@ -144,8 +156,9 @@ Extension options:
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Framework" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Framework" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
 
@@ -187,10 +200,11 @@ global using Microsoft.Testing.Platform.Extensions;
         <EnableMSTestRunner>true</EnableMSTestRunner>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Platform" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="[1.0.0-*,)" />
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="[1.0.0-*,)" />
-        <PackageReference Include="MSTest" Version="[1.0.0-*,)" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+        <!-- Required for internal build -->
+        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
 

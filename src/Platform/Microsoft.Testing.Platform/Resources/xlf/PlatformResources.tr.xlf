@@ -329,6 +329,11 @@
         <target state="translated">Komut satırı yardımını gösterir.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
+        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="translated">Belirli çıkış kodları için başarılı olmayan çıkış değerini bildirme (örneğin, '--ignore-exit-code 8;9' çıkış kodu 8 ve 9'u yoksayar ve bu durumda 0 değerini döndürür)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
         <target state="translated">.NET test uygulaması bilgilerini görüntüler.</target>
@@ -460,13 +465,13 @@
 Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</source>
-        <target state="translated">Telemetri
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
+        <target state="new">Telemetry
 ---------
-Microsoft Test Platformu, deneyiminizi geliştirmemize yardımcı olmak için kullanım verilerini toplar. Veriler Microsoft tarafından toplanır ve hiç kimseyle paylaşılmaz.
-Sık kullandığınız kabukla TESTINGPLATFORM_TELEMETRY_OPTOUT veya DOTNET_CLI_TELEMETRY_OPTOUT ortam değişkenini '1' veya 'true' olarak ayarlayarak telemetriyi geri çevirebilirsiniz.
+Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
+You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://aka.ms/testingplatform/guides/telemetry</target>
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</target>
         <note />
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">

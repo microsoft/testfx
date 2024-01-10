@@ -6,6 +6,7 @@
 
   <ItemGroup Condition=" '$(OS)' != 'Windows_NT' ">
     <ProjectToBuild Include="$(RepoRoot)src/**/*.csproj" />
+    <ProjectToBuild Include="$(RepoRoot)test/UnitTests/MSTest.Analyzers.UnitTests/MSTest.Analyzers.UnitTests.csproj" />
     <ProjectToBuild Include="$(RepoRoot)test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj" />
     <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj" />
   </ItemGroup>

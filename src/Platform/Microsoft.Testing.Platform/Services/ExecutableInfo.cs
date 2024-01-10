@@ -3,11 +3,11 @@
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class ExecutableInfo(string fileName, string[] arguments, string workspace)
+internal sealed class ExecutableInfo(string fileName, IReadOnlyCollection<string> arguments, string workspace)
 {
     public string FileName { get; } = fileName;
 
-    public string[] Arguments { get; } = arguments;
+    public IReadOnlyCollection<string> Arguments { get; } = arguments;
 
     public string Workspace { get; } = workspace;
 }

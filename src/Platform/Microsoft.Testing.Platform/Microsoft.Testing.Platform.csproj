@@ -2,11 +2,10 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>    
     <IsPackable>true</IsPackable>
     <IsShippingPackage Condition=" '$(DoNotShipTestingPlatformPackage)' == 'true' ">false</IsShippingPackage>
+    <SuppressLicenseValidation>true</SuppressLicenseValidation>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(FixupTestingPlatformVersion)' == 'true' ">
@@ -58,6 +57,7 @@
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.Enterprise" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.Telemetry" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.Experimental" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.HangDump" Key="$(VsPublicKey)" />
