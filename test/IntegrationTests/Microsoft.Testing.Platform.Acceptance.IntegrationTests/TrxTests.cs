@@ -251,8 +251,8 @@ In process file artifacts produced:
 using TrxTest;
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
-builder.AddCrashDumpGenerator();
-builder.AddTrxReportGenerator();
+builder.AddCrashDumpProvider();
+builder.AddTrxReportProvider();
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 
@@ -308,7 +308,7 @@ using TrxTestUsingMSTest;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.AddMSTest(() => new[] { typeof(Program).Assembly });
-builder.AddTrxReportGenerator();
+builder.AddTrxReportProvider();
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 
