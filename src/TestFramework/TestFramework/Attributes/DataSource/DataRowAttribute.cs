@@ -86,6 +86,34 @@ public class DataRowAttribute : Attribute, ITestDataSource
             ? new object[] { data.AsEnumerable() }
             : data.AsEnumerable();
 
+        // On the most basic level, if we only used TestMethodAttribute the problem could be fixed here,
+        // but user can inherit from the attribute type (not a big problem we could construct it), or (worse) they can provide
+        // an override for every attribute on the class that is determined by GetTestMethodAttribute
+        // (as shown in https://github.com/microsoft/testfx/issues/1635#issuecomment-1532714683)
+        // This means that we cannot naively pick up DisplayName from the attribute and use it,
+        // because we don't hold that final instance.
+        //
+        // This whole replacement is implemented on the Adapter level (incorrectly?), and so we don't have access to the
+        // TestMethodInfo type, which holds all of the information of how the adapter resolved the type. It probably is also not
+        // our job to do some difficult logic here.
+        //
+        // So maybe the simplest solution would be to replace the return type with a result type, and return a multi part name,
+        // which can describe DisplayNameOverride and parameters. That way the upper logic knows if it should pick up the name,
+        // or use the method name, and also has the parameters.
+        //
+        // Problem with this is that it is not universal, and that this interface is public.
+        //
+        // We could also hot patch based on something else, like returning just name starting with ( from the data source,
+        // but that will cause issues in the future.
+        //
+        // We could also replace object?[]? data with the same data and custom type (so we can detect it above the interface)
+        // and that way communicate the multi part name out. The data are not used for anything else now,
+        // so this is probably the safest way to fix this for 3.2.
+        var attribute = methodInfo.GetCustomAttribute<TestMethodAttribute>(true);
+
+        var testClassAttributeType = typeof(TestClassAttribute);
+        CustomAttributeData? classAttribute = methodInfo.CustomAttributes.FirstOrDefault(a => testClassAttributeType.IsAssignableFrom(a.AttributeType));
+
         return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,
             string.Join(",", displayData));
     }

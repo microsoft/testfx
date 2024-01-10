@@ -178,6 +178,36 @@ public class DataRowAttributeTests : TestContainer
         Verify(displayName == "MyMethod (System.String[],System.String[])");
     }
 
+    public void WhenTestMethodDisplayNameIsOverridden_DisplayNameShouldUseTheDisplayNameButAlsoKeepData()
+    {
+        // Arrange
+        var dataRowAttribute = new DataRowAttribute(1);
+
+        var dummyTestClass = new DisplayNameTestClass();
+        var testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod(nameof(DisplayNameTestClass.TestMethodWithDisplayName));
+
+        // Act
+        var displayName = dataRowAttribute.GetDisplayName(testMethodInfo, dataRowAttribute.Data);
+
+        // Assert
+        Verify(displayName == "MethodDisplayName (1)");
+    }
+
+    public void WhenDataRowDisplayNameIsOverridden_DisplayNameShouldUseTheDisplayNameAndNotKeepData()
+    {
+        // Arrange
+        var dataRowAttribute = new DataRowAttribute(1) { DisplayName = "DataRowDisplayName" };
+
+        var dummyTestClass = new DisplayNameTestClass();
+        var testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod(nameof(DisplayNameTestClass.TestMethodWithDisplayName));
+
+        // Act
+        var displayName = dataRowAttribute.GetDisplayName(testMethodInfo, dataRowAttribute.Data);
+
+        // Assert
+        Verify(displayName == "DataRowDisplayName");
+    }
+
     private class DummyDataRowAttribute : DataRowAttribute
     {
         public DummyDataRowAttribute()

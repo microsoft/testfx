@@ -481,6 +481,14 @@ public class DummyTestClass
     }
 }
 
+public class DisplayNameTestClass
+{
+    [TestMethod(displayName: "MethodDisplayName")]
+    public void TestMethodWithDisplayName()
+    {
+    }
+}
+
 public class DummyTestClass2
 {
     /// <summary>
