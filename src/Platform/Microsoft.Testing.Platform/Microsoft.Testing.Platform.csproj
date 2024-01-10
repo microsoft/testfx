@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(MicrosoftTestingTargetFrameworks);netstandard2.0</TargetFrameworks>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>    
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IsPackable>true</IsPackable>
     <IsShippingPackage Condition=" '$(DoNotShipTestingPlatformPackage)' == 'true' ">false</IsShippingPackage>
     <SuppressLicenseValidation>true</SuppressLicenseValidation>
@@ -63,8 +63,8 @@
     <InternalsVisibleTo Include="Microsoft.Testing.Framework" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Framework.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.UnitTests" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.MSBuild" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.ServerMode.IntegrationTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.UnitTests" Key="$(VsPublicKey)" />
@@ -102,8 +102,8 @@
     <ItemGroup>
       <MicrosoftTestingPlatformNuGetPackage Include="$(ArtifactsNonShippingPackagesDir)Microsoft.Testing.Platform.*.nupkg" />
     </ItemGroup>
-    
+
     <Move SourceFiles="@(MicrosoftTestingPlatformNuGetPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
   </Target>
-  
+
 </Project>
