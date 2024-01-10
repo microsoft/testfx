@@ -168,7 +168,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                             .OfType<AssemblyMetadataAttribute>()
                             .FirstOrDefault(x => x.Key == BUILDTIME_ATTRIBUTE_NAME);
 
-                        if (buildTime is not null && !TAString.IsNullOrEmpty(buildTime.Value))
+                        if (buildTime is not null && !RoslynString.IsNullOrEmpty(buildTime.Value))
                         {
                             stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildTime.Value})");
                         }
@@ -231,11 +231,11 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
             string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
 #if !NETCOREAPP
-            moduleName = TAString.IsNullOrEmpty(moduleName)
+            moduleName = RoslynString.IsNullOrEmpty(moduleName)
                 ? _process.GetCurrentProcess().MainModule.FileName
                 : moduleName;
 #else
-            moduleName = TAString.IsNullOrEmpty(moduleName)
+            moduleName = RoslynString.IsNullOrEmpty(moduleName)
                 ? _environment.ProcessPath
                 : moduleName;
 #endif
@@ -605,7 +605,7 @@ internal static class OutputFormatter
         }
 
 #pragma warning disable IDE0046 // Convert to conditional expression
-        if (TAString.IsNullOrWhiteSpace(text))
+        if (RoslynString.IsNullOrWhiteSpace(text))
         {
             return text.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t");
         }

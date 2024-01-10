@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform;
 
 [SuppressMessage("ApiDesign", "RS0030:Do not use banned APIs", Justification = "This is the replacement helper")]
 [ExcludeFromCodeCoverage]
-internal static class TAString
+internal static class RoslynString
 {
     /// <inheritdoc cref="string.IsNullOrEmpty(string)"/>
     public static bool IsNullOrEmpty([NotNullWhen(returnValue: false)] string? value)
