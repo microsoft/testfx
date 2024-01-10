@@ -109,12 +109,16 @@ public class DataRowAttribute : Attribute, ITestDataSource
         // We could also replace object?[]? data with the same data and custom type (so we can detect it above the interface)
         // and that way communicate the multi part name out. The data are not used for anything else now,
         // so this is probably the safest way to fix this for 3.2.
-        var attribute = methodInfo.GetCustomAttribute<TestMethodAttribute>(true);
-
-        var testClassAttributeType = typeof(TestClassAttribute);
-        CustomAttributeData? classAttribute = methodInfo.CustomAttributes.FirstOrDefault(a => testClassAttributeType.IsAssignableFrom(a.AttributeType));
-
-        return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,
+        string formattedParameters = string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, string.Empty,
             string.Join(",", displayData));
+
+        for (int i = 0; i < data.Length; i++)
+        {
+            data[i] = null;
+        }
+
+        data[0] = formattedParameters;
+
+        return "MSTestReservedSeeData";
     }
 }

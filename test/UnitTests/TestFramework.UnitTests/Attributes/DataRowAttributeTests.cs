@@ -190,7 +190,8 @@ public class DataRowAttributeTests : TestContainer
         var displayName = dataRowAttribute.GetDisplayName(testMethodInfo, dataRowAttribute.Data);
 
         // Assert
-        Verify(displayName == "MethodDisplayName (1)");
+        Verify(displayName == "MSTestReservedSeeData");
+        Verify((string)dataRowAttribute.Data[0] == " (1)");
     }
 
     public void WhenDataRowDisplayNameIsOverridden_DisplayNameShouldUseTheDisplayNameAndNotKeepData()

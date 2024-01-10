@@ -341,6 +341,10 @@ internal class TestMethodRunner
             if (testDataSource != null)
             {
                 displayName = testDataSource.GetDisplayName(_testMethodInfo.MethodInfo, data);
+                if (displayName == "MSTestReservedSeeData")
+                {
+                    displayName = $"{_testMethodInfo.TestMethodOptions.Executor?.DisplayName ?? _test.Name}{data?[0] as string}";
+                }
             }
             else if (hasDisplayName)
             {

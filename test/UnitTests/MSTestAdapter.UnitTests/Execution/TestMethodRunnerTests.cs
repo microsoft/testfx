@@ -436,6 +436,32 @@ public class TestMethodRunnerTests : TestContainer
         Verify(results[0].DisplayName == "DummyTestMethod (2,DummyString)");
     }
 
+    public void RunTestMethodShouldFillInDisplayNameWithDataRowDisplayNameIfProvidedForTheTestMethodOfTheDataDriveTest()
+    {
+        UTF.TestResult testResult = new();
+
+        // [TestMethod("AAA")]
+        _testMethodOptions.Executor = new UTF.TestMethodAttribute(displayName: "AAA");
+
+        var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => testResult);
+
+        var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
+
+        int dummyIntData = 2;
+        string dummyStringData = "DummyString";
+        UTF.DataRowAttribute dataRowAttribute = new(dummyIntData, dummyStringData);
+
+        var attribs = new Attribute[] { dataRowAttribute };
+
+        // Setup mocks
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+
+        var results = testMethodRunner.RunTestMethod();
+
+        Verify(results.Length == 1);
+        Verify(results[0].DisplayName == "AAA (2,DummyString)");
+    }
+
     public void RunTestMethodShouldSetResultFilesIfPresentForDataDrivenTests()
     {
         UTF.TestResult testResult = new()
