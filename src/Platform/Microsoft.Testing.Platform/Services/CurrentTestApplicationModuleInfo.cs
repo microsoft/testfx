@@ -111,6 +111,6 @@ internal sealed class CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFe
                 ? MuxerExec.Concat(commandLineArguments)
                 : commandLineArguments;
 
-        return new(fileName, arguments.ToArray(), Path.GetDirectoryName(currentTestApplicationFullPath)!);
+        return new(fileName, arguments.ToReadOnlyCollectionEnumerator(), Path.GetDirectoryName(currentTestApplicationFullPath)!);
     }
 }

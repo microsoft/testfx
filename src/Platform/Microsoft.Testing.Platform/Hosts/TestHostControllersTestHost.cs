@@ -81,11 +81,11 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         try
         {
             List<string> partialCommandLine = new(executableInfo.Arguments)
-        {
-            $"--{PlatformCommandLineProvider.TestHostControllerPIDOptionKey}",
-            process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture),
-        };
-            CommandLineInfo finalCommandLine = new(executableInfo.FileName, partialCommandLine.ToArray(), testApplicationFullPath);
+            {
+                $"--{PlatformCommandLineProvider.TestHostControllerPIDOptionKey}",
+                process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture),
+            };
+            CommandLineInfo finalCommandLine = new(executableInfo.FileName, partialCommandLine, testApplicationFullPath);
 
             ProcessStartInfo processStartInfo = new()
             {
