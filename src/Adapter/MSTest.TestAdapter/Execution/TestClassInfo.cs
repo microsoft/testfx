@@ -103,7 +103,7 @@ public class TestClassInfo
 
     /// <summary>
     /// Gets the timeout for the class initialize methods.
-    /// We can use a dictionary because the MethodInfo is unique in a inheritance hierarchy.
+    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
     internal Dictionary<MethodInfo, int> ClassInitializeMethodTimeoutMilliseconds { get; }
 
