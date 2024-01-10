@@ -6,7 +6,6 @@ using System.Reflection;
 
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions.MSTest;
 using Microsoft.Testing.Platform.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Platform.Extensions.VSTestBridge.Helpers;
 
