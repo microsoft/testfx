@@ -21,7 +21,6 @@ public class TestAssemblyInfo
     private readonly object _assemblyInfoExecuteSyncObject;
 
     private MethodInfo? _assemblyInitializeMethod;
-    private int? _assemblyInitializeMethodTimeoutMilliseconds;
     private MethodInfo? _assemblyCleanupMethod;
 
     /// <summary>
@@ -57,11 +56,7 @@ public class TestAssemblyInfo
     /// <summary>
     /// Gets or sets the AssemblyInitializeMethod timeout.
     /// </summary>
-    internal int? AssemblyInitializeMethodTimeoutMilliseconds
-    {
-        get => _assemblyInitializeMethodTimeoutMilliseconds;
-        set => _assemblyInitializeMethodTimeoutMilliseconds = value;
-    }
+    internal int? AssemblyInitializeMethodTimeoutMilliseconds { get; set; }
 
     /// <summary>
     /// Gets <c>AssemblyCleanup</c> method for the assembly.
