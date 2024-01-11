@@ -4,7 +4,6 @@
 using System.Globalization;
 
 using Microsoft.Testing.Framework;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.TestInfrastructure;
 
@@ -20,66 +19,176 @@ public class LoggerTests : TestBase
             string.Format(CultureInfo.InvariantCulture, "{0}{1}", state, exception is not null ? $" -- {exception}" : string.Empty);
 
     private const string Message = "Test";
-    private const string Category = "ConsoleLoggerTests";
-    private const LogLevel MinimumLogLevel = LogLevel.Information;
-
-    private readonly string _expectedPrefix = "[03:42:13 ConsoleLoggerTests - {0}]";
     private readonly Exception _exception = new("TestException");
-
-    private readonly Mock<IConsole> _mockConsole = new();
-    private readonly Mock<IClock> _mockClock = new();
-    private readonly Mock<ILoggerFactory> _mockLoggerFactory = new();
-    private readonly Logger _logger;
-    private readonly Logger<string> _genericLogger;
+    private readonly Mock<ILogger> _mockLogger = new();
 
     public LoggerTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        _mockConsole.Setup(x => x.WriteLine(It.IsAny<string>()));
-        _mockClock.Setup(x => x.UtcNow).Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 13)));
-
-        _logger = new Logger(
-            new[]
-            {
-                new ConsoleLoggerProvider(MinimumLogLevel, _mockConsole.Object, _mockClock.Object).CreateLogger(Category),
-                new NopLogger(),
-            },
-            MinimumLogLevel);
-
-        _mockLoggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_logger);
-        _genericLogger = new Logger<string>(_mockLoggerFactory.Object);
+        _mockLogger.Setup(x => x.Log(It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception>(), Formatter));
+        _mockLogger.Setup(x => x.LogAsync(It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception>(), Formatter));
     }
 
-    public void Logger_CheckEnabled()
+    private Logger<string> CreateLogger(LogLevel logLevel)
     {
-        Assert.IsTrue(_genericLogger.IsEnabled(LogLevel.Information));
-        Assert.IsTrue(_genericLogger.IsEnabled(LogLevel.Error));
-        Assert.IsFalse(_genericLogger.IsEnabled(LogLevel.Trace));
+        _mockLogger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns<LogLevel>(currentLogLevel => currentLogLevel >= logLevel);
+
+        Logger logger = new(new[] { _mockLogger.Object }, logLevel);
+
+        Mock<ILoggerFactory> mockLoggerFactory = new();
+        mockLoggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(logger);
+        return new Logger<string>(mockLoggerFactory.Object);
     }
 
-    public void Logger_Log_FormattedStringIsCorrect()
+    [Arguments(LogLevel.Trace, LogLevel.Trace, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Debug, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Information, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Error, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Debug, LogLevel.Debug, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Information, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Error, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Information, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Information, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Information, LogLevel.Information, true)]
+    [Arguments(LogLevel.Information, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Information, LogLevel.Error, true)]
+    [Arguments(LogLevel.Information, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Information, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Error, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Error, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Error, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Error, LogLevel.Information, false)]
+    [Arguments(LogLevel.Error, LogLevel.Warning, false)]
+    [Arguments(LogLevel.Error, LogLevel.Error, true)]
+    [Arguments(LogLevel.Error, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Critical, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Information, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Warning, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Error, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Critical, true)]
+    [Arguments(LogLevel.None, LogLevel.Trace, false)]
+    [Arguments(LogLevel.None, LogLevel.Debug, false)]
+    [Arguments(LogLevel.None, LogLevel.Information, false)]
+    [Arguments(LogLevel.None, LogLevel.Warning, false)]
+    [Arguments(LogLevel.None, LogLevel.Error, false)]
+    [Arguments(LogLevel.None, LogLevel.Critical, false)]
+    public void Logger_CheckEnabled(LogLevel defaultLogLevel, LogLevel currentLogLevel, bool shouldBeEnabled)
     {
-        _genericLogger.Log(LogLevel.Error, Message, _exception, Formatter);
-        _genericLogger.Log(LogLevel.Information, Message, null, Formatter);
-
-        _mockConsole.Verify(
-            x => x.WriteLine($"{string.Format(CultureInfo.InvariantCulture, _expectedPrefix, LogLevel.Information)} {Formatter(Message, null)}"),
-            Times.Once);
-        _mockConsole.Verify(
-            x => x.WriteLine($"{string.Format(CultureInfo.InvariantCulture, _expectedPrefix, LogLevel.Error)} {Formatter(Message, _exception)}"),
-            Times.Once);
+        Logger<string> logger = CreateLogger(defaultLogLevel);
+        Assert.AreEqual(logger.IsEnabled(currentLogLevel), shouldBeEnabled);
     }
 
-    public async ValueTask Logger_LogAsync_FormattedStringIsCorrect()
+    [Arguments(LogLevel.Trace, LogLevel.Trace, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Debug, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Information, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Error, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Debug, LogLevel.Debug, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Information, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Error, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Information, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Information, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Information, LogLevel.Information, true)]
+    [Arguments(LogLevel.Information, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Information, LogLevel.Error, true)]
+    [Arguments(LogLevel.Information, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Information, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Error, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Error, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Error, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Error, LogLevel.Information, false)]
+    [Arguments(LogLevel.Error, LogLevel.Warning, false)]
+    [Arguments(LogLevel.Error, LogLevel.Error, true)]
+    [Arguments(LogLevel.Error, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Critical, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Information, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Warning, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Error, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Critical, true)]
+    [Arguments(LogLevel.None, LogLevel.Trace, false)]
+    [Arguments(LogLevel.None, LogLevel.Debug, false)]
+    [Arguments(LogLevel.None, LogLevel.Information, false)]
+    [Arguments(LogLevel.None, LogLevel.Warning, false)]
+    [Arguments(LogLevel.None, LogLevel.Error, false)]
+    [Arguments(LogLevel.None, LogLevel.Critical, false)]
+    public void Logger_Log_FormattedStringIsCorrect(LogLevel defaultLogLevel, LogLevel currentLogLevel, bool shouldBeEnabled)
     {
-        await _genericLogger.LogAsync(LogLevel.Error, Message, _exception, Formatter);
-        await _genericLogger.LogAsync(LogLevel.Information, Message, null, Formatter);
+        Logger<string> logger = CreateLogger(defaultLogLevel);
 
-        _mockConsole.Verify(
-            x => x.WriteLine($"{string.Format(CultureInfo.InvariantCulture, _expectedPrefix, LogLevel.Information)} {Formatter(Message, null)}"),
-            Times.Once);
-        _mockConsole.Verify(
-            x => x.WriteLine($"{string.Format(CultureInfo.InvariantCulture, _expectedPrefix, LogLevel.Error)} {Formatter(Message, _exception)}"),
-            Times.Once);
+        logger.Log(currentLogLevel, Message, _exception, Formatter);
+        _mockLogger.Verify(
+            x => x.Log(currentLogLevel, Message, _exception, Formatter),
+            shouldBeEnabled ? Times.Once : Times.Never);
+    }
+
+    [Arguments(LogLevel.Trace, LogLevel.Trace, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Debug, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Information, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Error, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Debug, LogLevel.Debug, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Information, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Error, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Information, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Information, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Information, LogLevel.Information, true)]
+    [Arguments(LogLevel.Information, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Information, LogLevel.Error, true)]
+    [Arguments(LogLevel.Information, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Information, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Error, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Error, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Error, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Error, LogLevel.Information, false)]
+    [Arguments(LogLevel.Error, LogLevel.Warning, false)]
+    [Arguments(LogLevel.Error, LogLevel.Error, true)]
+    [Arguments(LogLevel.Error, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Critical, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Information, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Warning, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Error, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Critical, true)]
+    [Arguments(LogLevel.None, LogLevel.Trace, false)]
+    [Arguments(LogLevel.None, LogLevel.Debug, false)]
+    [Arguments(LogLevel.None, LogLevel.Information, false)]
+    [Arguments(LogLevel.None, LogLevel.Warning, false)]
+    [Arguments(LogLevel.None, LogLevel.Error, false)]
+    [Arguments(LogLevel.None, LogLevel.Critical, false)]
+    public async ValueTask Logger_LogAsync_FormattedStringIsCorrect(LogLevel defaultLogLevel, LogLevel currentLogLevel, bool shouldBeEnabled)
+    {
+        Logger<string> logger = CreateLogger(defaultLogLevel);
+
+        await logger.LogAsync(currentLogLevel, Message, _exception, Formatter);
+        _mockLogger.Verify(
+            x => x.LogAsync(currentLogLevel, Message, _exception, Formatter),
+            shouldBeEnabled ? Times.Once : Times.Never);
     }
 }

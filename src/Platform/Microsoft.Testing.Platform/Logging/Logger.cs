@@ -15,7 +15,7 @@ internal sealed class Logger(ILogger[] loggers, LogLevel logLevel) : ILogger
     {
         foreach (ILogger logger in _loggers)
         {
-            if (logger.IsEnabled(_logLevel))
+            if (logger.IsEnabled(logLevel))
             {
                 logger.Log(logLevel, state, exception, formatter);
             }
@@ -26,7 +26,7 @@ internal sealed class Logger(ILogger[] loggers, LogLevel logLevel) : ILogger
     {
         foreach (ILogger logger in _loggers)
         {
-            if (logger.IsEnabled(_logLevel))
+            if (logger.IsEnabled(logLevel))
             {
                 await logger.LogAsync(logLevel, state, exception, formatter);
             }

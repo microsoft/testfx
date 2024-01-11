@@ -29,26 +29,38 @@ public class NopLoggerTests : TestBase
         _nopLogger = new NopLogger();
     }
 
-    public void NopLogger_CheckDisabled()
+    [Arguments(LogLevel.Trace)]
+    [Arguments(LogLevel.Debug)]
+    [Arguments(LogLevel.Information)]
+    [Arguments(LogLevel.Warning)]
+    [Arguments(LogLevel.Error)]
+    [Arguments(LogLevel.Critical)]
+    public void NopLogger_CheckDisabled(LogLevel logLevel)
     {
-        Assert.IsFalse(_nopLogger.IsEnabled(LogLevel.Information));
-        Assert.IsFalse(_nopLogger.IsEnabled(LogLevel.Error));
-        Assert.IsFalse(_nopLogger.IsEnabled(LogLevel.Trace));
+        Assert.IsFalse(_nopLogger.IsEnabled(logLevel));
     }
 
-    public void NopLogger_Log_NoFormatterCalls()
+    [Arguments(LogLevel.Trace)]
+    [Arguments(LogLevel.Debug)]
+    [Arguments(LogLevel.Information)]
+    [Arguments(LogLevel.Warning)]
+    [Arguments(LogLevel.Error)]
+    [Arguments(LogLevel.Critical)]
+    public void NopLogger_Log_NoFormatterCalls(LogLevel logLevel)
     {
-        _nopLogger.Log(LogLevel.Error, Message, _exception, Formatter);
-        _nopLogger.Log(LogLevel.Information, Message, null, Formatter);
-
+        _nopLogger.Log(logLevel, Message, _exception, Formatter);
         Assert.AreEqual(0, s_formatterCalls);
     }
 
-    public async ValueTask NopLogger_LogAsync_NoFormatterCalls()
+    [Arguments(LogLevel.Trace)]
+    [Arguments(LogLevel.Debug)]
+    [Arguments(LogLevel.Information)]
+    [Arguments(LogLevel.Warning)]
+    [Arguments(LogLevel.Error)]
+    [Arguments(LogLevel.Critical)]
+    public async ValueTask NopLogger_LogAsync_NoFormatterCalls(LogLevel logLevel)
     {
-        await _nopLogger.LogAsync(LogLevel.Error, Message, _exception, Formatter);
-        await _nopLogger.LogAsync(LogLevel.Information, Message, null, Formatter);
-
+        await _nopLogger.LogAsync(logLevel, Message, _exception, Formatter);
         Assert.AreEqual(0, s_formatterCalls);
     }
 }
