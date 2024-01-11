@@ -10,16 +10,16 @@
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" Version="$(MSBuildStructuredLogger)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
+    <PackageReference Include="Microsoft.Testing.Extensions.Trx" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
     <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
     <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
   </ItemGroup>
 
   <!-- Packages needed for the test assets but that we don't want to reference -->
-  <ItemGroup>
-    <PackageDownload Include="Microsoft.Testing.Extensions.CrashDump" Version="[$(MicrosoftTestingPlatformVersion)]" />
+  <ItemGroup>    
     <PackageDownload Include="Microsoft.Testing.Extensions.HangDump" Version="[$(MicrosoftTestingPlatformVersion)]" />
     <PackageDownload Include="Microsoft.Testing.Extensions.Telemetry" Version="[$(MicrosoftTestingPlatformVersion)]" />
-    <PackageDownload Include="Microsoft.Testing.Extensions.Trx" Version="[$(MicrosoftTestingPlatformVersion)]" />
     <PackageDownload Include="Microsoft.Testing.Extensions.Trx.Abstractions" Version="[$(MicrosoftTestingPlatformVersion)]" />
     <PackageDownload Include="Microsoft.Testing.Extensions.VSTestBridge" Version="[$(MicrosoftTestingPlatformVersion)]" />
     <PackageDownload Include="Microsoft.Testing.Platform.MSBuild" Version="[$(MicrosoftTestingPlatformVersion)]" />
@@ -51,11 +51,10 @@
     <Copy SourceFiles="@(MicrosoftTestingFrameworkPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
     <Copy SourceFiles="@(MicrosoftTestingFrameworkSourceGenerationPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
 
-    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.platform.extensions\$(MicrosoftTestingPlatformVersion)\microsoft.testing.platform.extensions.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.platform.extensions.$(MicrosoftTestingPlatformVersion).nupkg" />
-    <Copy SourceFiles="$(NuGetPackageRoot)Microsoft.Testing.Extensions.HangDump\$(MicrosoftTestingPlatformVersion)\Microsoft.Testing.Extensions.HangDump.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/Microsoft.Testing.Extensions.HangDump.$(MicrosoftTestingPlatformVersion).nupkg" />
-    <Copy SourceFiles="$(NuGetPackageRoot)Microsoft.Testing.Extensions.Trx.Abstractions\$(MicrosoftTestingPlatformVersion)\Microsoft.Testing.Extensions.Trx.Abstractions.$(microsofttestingplatformversion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/Microsoft.Testing.Extensions.Trx.Abstractions.$(MicrosoftTestingPlatformVersion).nupkg" />
-    <Copy SourceFiles="$(NuGetPackageRoot)Microsoft.Testing.Extensions.VSTestBridge\$(MicrosoftTestingPlatformVersion)\Microsoft.Testing.Extensions.VSTestBridge.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/Microsoft.Testing.Extensions.VSTestBridge.$(MicrosoftTestingPlatformVersion).nupkg" />
-    <Copy SourceFiles="$(NuGetPackageRoot)Microsoft.Testing.Extensions.Telemetry\$(MicrosoftTestingPlatformVersion)\Microsoft.Testing.Extensions.Telemetry.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/Microsoft.Testing.Extensions.Telemetry.$(MicrosoftTestingPlatformVersion).nupkg" />
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.hangdump\$(MicrosoftTestingPlatformVersion)\Microsoft.Testing.Extensions.HangDump.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.hangdump.$(MicrosoftTestingPlatformVersion).nupkg" />
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.trx.abstractions\$(MicrosoftTestingPlatformVersion)\Microsoft.Testing.Extensions.Trx.Abstractions.$(microsofttestingplatformversion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.trx.abstractions.$(MicrosoftTestingPlatformVersion).nupkg" />
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.vstestbridge\$(MicrosoftTestingPlatformVersion)\Microsoft.Testing.Extensions.VSTestBridge.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.vstestBridge.$(MicrosoftTestingPlatformVersion).nupkg" />
+    <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.telemetry\$(MicrosoftTestingPlatformVersion)\Microsoft.Testing.Extensions.Telemetry.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.telemetry.$(MicrosoftTestingPlatformVersion).nupkg" />
     <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.platform.msbuild\$(MicrosoftTestingPlatformVersion)\microsoft.testing.platform.msbuild.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.platform.msbuild.$(MicrosoftTestingPlatformVersion).nupkg" />
   </Target>
 
