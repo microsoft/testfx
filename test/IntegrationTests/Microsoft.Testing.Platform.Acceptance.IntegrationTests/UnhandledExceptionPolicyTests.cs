@@ -42,7 +42,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
 
     [ArgumentsProvider(nameof(ModeProvider))]
     public async Task UnhandledExceptionPolicy_ConfigFile_UnobservedTaskException_ShouldCrashProcessIfEnabled(Mode mode, string tfm)
-        => await RetryHelper.Retry(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);
@@ -102,7 +102,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
 
     [ArgumentsProvider(nameof(ModeProvider))]
     public async Task UnhandledExceptionPolicy_EnvironmentVariable_UnhandledException_ShouldCrashProcessIfEnabled(Mode mode, string tfm)
-        => await RetryHelper.Retry(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);
@@ -219,14 +219,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
 
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Requests;
-using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
 
 public class Startup
 {

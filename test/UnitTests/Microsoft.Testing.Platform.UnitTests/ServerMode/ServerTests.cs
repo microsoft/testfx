@@ -35,7 +35,7 @@ public class ServerTests : TestBase
     || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
 
     public async Task ServerCanBeStartedAndAborted_TcpIp()
-        => await RetryHelper.Retry(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 using var server = TcpServer.Create();

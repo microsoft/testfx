@@ -172,7 +172,7 @@ public sealed class TestApplication : ITestApplication
         await logger.LogInformationAsync($"IsDynamicCodeSupported: {isDynamicCodeSupported}");
 
         string? moduleName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-        moduleName = TAString.IsNullOrEmpty(moduleName)
+        moduleName = RoslynString.IsNullOrEmpty(moduleName)
 #if !NETCOREAPP
             ? systemProcessHandler.GetCurrentProcess().MainModule.FileName
 #else
@@ -281,7 +281,7 @@ public sealed class TestApplication : ITestApplication
 
         // Override the log level if the environment variable is set
         string? environmentLogLevel = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY);
-        if (!TAString.IsNullOrEmpty(environmentLogLevel))
+        if (!RoslynString.IsNullOrEmpty(environmentLogLevel))
         {
             if (!Enum.TryParse(environmentLogLevel, out LogLevel parsedLogLevel))
             {
@@ -309,7 +309,7 @@ public sealed class TestApplication : ITestApplication
 
         // Override the output directory
         string? environmentOutputDirectory = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_DIRECTORY);
-        if (!TAString.IsNullOrEmpty(environmentOutputDirectory))
+        if (!RoslynString.IsNullOrEmpty(environmentOutputDirectory))
         {
             directory = environmentOutputDirectory;
             customDirectory = true;
@@ -326,7 +326,7 @@ public sealed class TestApplication : ITestApplication
 
         // Override the prefix name
         string? environmentFilePrefix = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_OUTPUT_FILEPREFIX);
-        if (!TAString.IsNullOrEmpty(environmentFilePrefix))
+        if (!RoslynString.IsNullOrEmpty(environmentFilePrefix))
         {
             prefixName = environmentFilePrefix;
         }
@@ -335,7 +335,7 @@ public sealed class TestApplication : ITestApplication
 
         // Override the synchronous write
         string? environmentSynchronousWrite = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_FILELOGGER_SYNCHRONOUSWRITE);
-        if (!TAString.IsNullOrEmpty(environmentSynchronousWrite))
+        if (!RoslynString.IsNullOrEmpty(environmentSynchronousWrite))
         {
             synchronousWrite = environmentSynchronousWrite == "1";
         }

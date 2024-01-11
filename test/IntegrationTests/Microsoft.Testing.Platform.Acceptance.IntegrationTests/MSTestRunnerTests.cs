@@ -49,7 +49,6 @@ public class MSTestRunnerTests : AcceptanceTestBase
 #file Program.cs
 
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
