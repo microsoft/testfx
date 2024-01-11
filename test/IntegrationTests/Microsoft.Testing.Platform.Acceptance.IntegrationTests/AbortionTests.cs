@@ -9,14 +9,6 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class A(ITestExecutionContext testExecutionContext) : AcceptanceTestBase(testExecutionContext)
-{
-    public void AA()
-    {
-    }
-}
-
-// [TestGroup]
 public class AbortionTests : AcceptanceTestBase
 {
     private const string AssetName = "Abort";

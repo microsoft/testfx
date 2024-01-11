@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-// [TestGroup]
+[TestGroup]
 public class IgnoreExitCodeTests : AcceptanceTestBase
 {
     private readonly AcceptanceFixture _acceptanceFixture;
