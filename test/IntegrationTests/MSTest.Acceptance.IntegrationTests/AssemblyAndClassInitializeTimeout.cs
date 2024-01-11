@@ -1,12 +1,13 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
-namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+namespace MSTest.Acceptance.IntegrationTests;
 
 [TestGroup]
-internal class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
+public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
 {
     private readonly string _assetName = "AssemblyAndClassInitializeTimeout";
     private readonly AcceptanceFixture _acceptanceFixture;
@@ -24,7 +25,7 @@ internal class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
             .PatchCodeWithReplace("$TargetFramework$", tfm)
             .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion), addPublicFeeds: true);
         DotnetMuxerResult result = await DotnetCli.RunAsync($"build -nodeReuse:false {testAsset.TargetAssetPath} -c {buildConfiguration}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(testAsset.TargetAssetPath, _assetName, tfm, buildConfiguration: buildConfiguration);
+        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, _assetName, tfm, buildConfiguration: buildConfiguration);
 
         foreach (string initMethodToTimeout in new[] { "TIMEOUT_CLASSINIT", "TIMEOUT_ASSEMBLYINIT", "TIMEOUT_BASE_CLASSINIT" })
         {
