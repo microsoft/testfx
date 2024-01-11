@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Framework.Configurations;
 using Microsoft.Testing.Platform.CommandLine;
 #if ENABLE_CODECOVERAGE
@@ -18,8 +19,8 @@ builder.AddTestFramework(new TestFrameworkConfiguration(Debugger.IsAttached ? 1 
 #if ENABLE_CODECOVERAGE
 builder.AddCodeCoverage();
 #endif
-builder.AddCrashDumpGenerator();
-builder.AddTrxReportGenerator();
+builder.AddCrashDumpProvider();
+builder.AddTrxReportProvider();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
