@@ -53,7 +53,6 @@ public class IgnoreExitCodeTests : AcceptanceTestBase
 
     private const string SourceCode = """
 #file TestProject.csproj
-
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>$TargetFramework$</TargetFramework>
@@ -69,22 +68,14 @@ public class IgnoreExitCodeTests : AcceptanceTestBase
 
 </Project>
 
-
 #file Program.cs
-
 using System;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Globalization;
 
-using Microsoft.Testing.Platform;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Requests;
-using Microsoft.Testing.Platform.Services;
 
 public class Startup
 {
@@ -111,15 +102,19 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
 
     public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
 
-    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context) => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
-    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+        => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode()
         {
             Uid = "Test1",
             DisplayName = "Test1",
-            Properties = new PropertyBag(new FailedTestNodeStateProperty())
+            Properties = new PropertyBag(new FailedTestNodeStateProperty()),
         }));
 
         context.Complete();
