@@ -42,7 +42,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
 
     [ArgumentsProvider(nameof(ModeProvider))]
     public async Task UnhandledExceptionPolicy_ConfigFile_UnobservedTaskException_ShouldCrashProcessIfEnabled(Mode mode, string tfm)
-        => await RetryHelper.Retry(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);
@@ -102,7 +102,7 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
 
     [ArgumentsProvider(nameof(ModeProvider))]
     public async Task UnhandledExceptionPolicy_EnvironmentVariable_UnhandledException_ShouldCrashProcessIfEnabled(Mode mode, string tfm)
-        => await RetryHelper.Retry(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, "UnhandledExceptionPolicyTests", tfm);

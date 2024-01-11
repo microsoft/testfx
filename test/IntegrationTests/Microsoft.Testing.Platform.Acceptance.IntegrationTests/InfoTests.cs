@@ -246,7 +246,7 @@ global using Microsoft.Testing.Extensions;
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="MSTest" Version="$MSTestVersion$" />
         <!-- Required for internal build -->
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
@@ -273,7 +273,6 @@ public class UnitTest1
 
 #file Usings.cs
 global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Extensions;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 """;
     }
