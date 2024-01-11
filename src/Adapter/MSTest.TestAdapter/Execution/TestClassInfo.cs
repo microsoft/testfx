@@ -336,6 +336,8 @@ public class TestClassInfo
         CancellationTokenSource? timeout = null;
         try
         {
+            // TestContext is public and the CancellationTokenSource property has got protected set accessor.
+            // So we don't substitute the curre CTS instance but we signal the current one.
             if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int timeoutMilliseconds))
             {
                 timeout = new(timeoutMilliseconds);
