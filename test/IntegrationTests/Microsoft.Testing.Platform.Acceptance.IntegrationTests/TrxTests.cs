@@ -242,6 +242,8 @@ In process file artifacts produced:
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.Trx" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Framework" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
@@ -251,8 +253,8 @@ In process file artifacts produced:
 using TrxTest;
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
-builder.AddCrashDumpGenerator();
-builder.AddTrxReportGenerator();
+builder.AddCrashDumpProvider();
+builder.AddTrxReportProvider();
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 
@@ -277,7 +279,7 @@ public class UnitTest1
 global using System;
 global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.Testing.Framework;
-global using Microsoft.Testing.Platform.Extensions;
+global using Microsoft.Testing.Extensions;
 """;
 
         private const string MSTestCode = """
@@ -293,12 +295,12 @@ global using Microsoft.Testing.Platform.Extensions;
         <EnableMSTestRunner>true</EnableMSTestRunner>
     </PropertyGroup>
     <ItemGroup>
+        <PackageReference Include="Microsoft.Testing.Extensions.Trx" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="MSTest" Version="$MSTestVersion$" />
         <!-- Required for internal build -->
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.Telemetry" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.Telemetry" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
@@ -308,7 +310,7 @@ using TrxTestUsingMSTest;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.AddMSTest(() => new[] { typeof(Program).Assembly });
-builder.AddTrxReportGenerator();
+builder.AddTrxReportProvider();
 using ITestApplication app = await builder.BuildAsync();
 return await app.RunAsync();
 
@@ -329,7 +331,7 @@ public class UnitTest1
 
 #file Usings.cs
 global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Platform.Extensions;
+global using Microsoft.Testing.Extensions;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 """;
     }

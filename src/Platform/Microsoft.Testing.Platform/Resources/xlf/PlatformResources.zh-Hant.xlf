@@ -466,12 +466,12 @@ Microsoft Testing Platform collects usage data in order to help us improve your 
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
 Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
-        <target state="new">Telemetry
+        <target state="translated">遙測
 ---------
-Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
-You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
+Microsoft 測試平台會收集使用量資料，以協助我們改善您的體驗。資料由 Microsoft 收集，且不會與任何人共用。
+您可以使用您喜愛的殼層，將 TESTINGPLATFORM_TELEMETRY_OPTOUT 或 DOTNET_CLI_TELEMETRY_OPTOUT 環境變數設定為 '1' 或 'true'，以選擇退出遙測。
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</target>
+閱讀更多關於 Microsoft 測試平台遙測: https://aka.ms/testingplatform/telemetry</target>
         <note />
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">

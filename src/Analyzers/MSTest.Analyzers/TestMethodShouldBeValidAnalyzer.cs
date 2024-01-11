@@ -20,13 +20,13 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestMethodShouldBeValidMessageFormat_Public), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor PublicRule = DiagnosticDescriptorHelper.Create(
-            DiagnosticIds.TestMethodShouldBeValidRuleId,
-            Title,
-            MessageFormat,
-            Description,
-            Category.Usage,
-            DiagnosticSeverity.Warning,
-            isEnabledByDefault: true);
+        DiagnosticIds.TestMethodShouldBeValidRuleId,
+        Title,
+        MessageFormat,
+        Description,
+        Category.Usage,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
 
     internal static readonly DiagnosticDescriptor PublicOrInternalRule = PublicRule.WithMessage(new(nameof(Resources.TestMethodShouldBeValidMessageFormat_PublicOrInternal), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor NotStaticRule = PublicRule.WithMessage(new(nameof(Resources.TestMethodShouldBeValidMessageFormat_NotStatic), Resources.ResourceManager, typeof(Resources)));

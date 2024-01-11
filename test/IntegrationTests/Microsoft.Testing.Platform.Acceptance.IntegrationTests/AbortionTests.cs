@@ -23,7 +23,7 @@ public class AbortionTests : AcceptanceTestBase
     // We retry because sometime the Cancelling the session message is not showing up.
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_TestHost_Succeeded(string tfm)
-        => await RetryHelper.Retry(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 // We expect the same semantic for Linux, the test setup is not cross and we're using specific
