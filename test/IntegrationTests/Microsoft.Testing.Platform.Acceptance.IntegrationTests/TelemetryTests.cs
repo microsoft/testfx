@@ -192,14 +192,9 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 </Project>
 
 #file Program.cs
-using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.Requests;
-using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 
 public class Program
 {

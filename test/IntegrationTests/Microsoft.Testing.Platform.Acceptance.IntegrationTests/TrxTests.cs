@@ -277,7 +277,7 @@ public class UnitTest1
 global using System;
 global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.Testing.Framework;
-global using Microsoft.Testing.Platform.Extensions;
+global using Microsoft.Testing.Extensions;
 """;
 
         private const string MSTestCode = """
@@ -294,11 +294,11 @@ global using Microsoft.Testing.Platform.Extensions;
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.Trx" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="MSTest" Version="$MSTestVersion$" />
         <!-- Required for internal build -->
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.Telemetry" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.Telemetry" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
@@ -329,7 +329,7 @@ public class UnitTest1
 
 #file Usings.cs
 global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Platform.Extensions;
+global using Microsoft.Testing.Extensions;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 """;
     }

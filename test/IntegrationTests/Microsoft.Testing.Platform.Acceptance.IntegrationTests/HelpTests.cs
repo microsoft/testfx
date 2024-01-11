@@ -184,7 +184,7 @@ public class UnitTest1
 #file Usings.cs
 global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.Testing.Framework;
-global using Microsoft.Testing.Platform.Extensions;
+global using Microsoft.Testing.Extensions;
 """;
 
         private const string MSTestCode = """
@@ -230,7 +230,7 @@ public class UnitTest1
 
 #file Usings.cs
 global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Platform.Extensions;
+global using Microsoft.Testing.Extensions;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 """;
     }
