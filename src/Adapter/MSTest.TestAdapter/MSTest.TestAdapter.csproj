@@ -49,7 +49,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" Version="$(MicrosoftTestingPlatformVersion)" />
   </ItemGroup>
 
   <ItemGroup>
