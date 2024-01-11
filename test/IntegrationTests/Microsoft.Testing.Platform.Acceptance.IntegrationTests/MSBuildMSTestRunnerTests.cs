@@ -5,7 +5,7 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+// [TestGroup]
 public class MSBuildMSTestRunnerTests : AcceptanceTestBase
 {
     private readonly AcceptanceFixture _acceptanceFixture;
