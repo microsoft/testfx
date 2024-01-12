@@ -45,13 +45,13 @@
   <Target Name="CopyNuGetPackagesForTestAssets" BeforeTargets="BeforeBuild">
     <ItemGroup>
       <MicrosoftTestingExtensionsCrashDumpPackage Include="$(PkgMicrosoft_Testing_Extensions_CrashDump)\microsoft.testing.extensions.crashdump.*.nupkg" />
-      <MicrosoftTestingExtensionsTrxPackage Include="$(PkgMicrosoft_Testing_Extensions_Trx)\microsoft.testing.extensions.trxreport.*.nupkg" />
+      <MicrosoftTestingExtensionsTrxReportPackage Include="$(PkgMicrosoft_Testing_Extensions_TrxReport)\microsoft.testing.extensions.trxreport.*.nupkg" />
       <MicrosoftTestingFrameworkPackage Include="$(PkgMicrosoft_Testing_Framework)\microsoft.testing.framework.*.nupkg" />
       <MicrosoftTestingFrameworkSourceGenerationPackage Include="$(PkgMicrosoft_Testing_Framework_SourceGeneration)\microsoft.testing.framework.sourcegeneration.*.nupkg" />
     </ItemGroup>
 
     <Copy SourceFiles="@(MicrosoftTestingExtensionsCrashDumpPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
-    <Copy SourceFiles="@(MicrosoftTestingExtensionsTrxPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+    <Copy SourceFiles="@(MicrosoftTestingExtensionsTrxReportPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
     <Copy SourceFiles="@(MicrosoftTestingFrameworkPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
     <Copy SourceFiles="@(MicrosoftTestingFrameworkSourceGenerationPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
 
