@@ -582,9 +582,16 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
         StringBuilder stringBuilder = new();
         bool hasParentValue = false;
-        if (time.Hours > 0)
+
+        if (time.Days > 0)
         {
-            stringBuilder.Append(CultureInfo.InvariantCulture, $"{time.Hours}h");
+            stringBuilder.Append(CultureInfo.InvariantCulture, $"{time.Days}d");
+            hasParentValue = true;
+        }
+
+        if (time.Hours > 0 || hasParentValue)
+        {
+            stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Hours.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : time.Hours.ToString(CultureInfo.InvariantCulture))}h");
             hasParentValue = true;
         }
 
@@ -602,7 +609,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
         if (time.Milliseconds >= 0 || hasParentValue)
         {
-            stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Milliseconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : time.Milliseconds.ToString(CultureInfo.InvariantCulture))}ms");
+            stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Milliseconds.ToString(CultureInfo.InvariantCulture).PadLeft(3, '0') : time.Milliseconds.ToString(CultureInfo.InvariantCulture))}ms");
         }
 
         return stringBuilder.ToString();

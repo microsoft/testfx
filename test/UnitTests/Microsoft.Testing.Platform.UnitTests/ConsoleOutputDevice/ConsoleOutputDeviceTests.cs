@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
+
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.TestInfrastructure;
 
@@ -14,17 +16,28 @@ public sealed class ConsoleOutputDeviceTests : TestBase
     {
     }
 
-    [Arguments("1h 19m 51s 600ms", 4791600)]
-    [Arguments("1s 330ms", 1330)]
-    [Arguments("1m 19s 800ms", 79800)]
-    [Arguments("130ms", 130)]
-    [Arguments("20ms", 20)]
-    [Arguments("1s 300ms", 1300)]
-    [Arguments("1s 310ms", 1310)]
-    [Arguments("1ms", 1)]
-    [Arguments("0ms", 0)]
-    public void ToHumanReadableDurationFormatTests(string expectedString, double timeSpan)
+    [Arguments("2d 01h 00m 00s 000ms", "49 00 00 000")]
+    [Arguments("1d 01h 00m 00s 000ms", "25 00 00 000")]
+    [Arguments("10h 00m 00s 000ms", "10 00 00 000")]
+    [Arguments("1m 00s 000ms", "00 01 00 000")]
+    [Arguments("11m 00s 000ms", "00 11 00 000")]
+    [Arguments("11m 01s 100ms", "00 11 01 100")]
+    [Arguments("59m 01s 100ms", "00 59 01 100")]
+    [Arguments("1s 100ms", "00 00 01 100")]
+    [Arguments("1s 000ms", "00 00 01 000")]
+    [Arguments("11s 100ms", "00 00 11 100")]
+    [Arguments("100ms", "00 00 00 100")]
+    [Arguments("10ms", "00 00 00 010")]
+    [Arguments("1ms", "00 00 00 001")]
+    public void ToHumanReadableDurationFormatTests(string expectedString, string time)
     {
-        Assert.AreEqual(expectedString, OutputDevice.ConsoleOutputDevice.ToHumanReadableDuration(timeSpan));
+        string[] timePart = time.Split(' ');
+        Assert.AreEqual(expectedString, OutputDevice.ConsoleOutputDevice.ToHumanReadableDuration(
+            new TimeSpan(
+                0,
+                int.Parse(timePart[0], CultureInfo.InvariantCulture),
+                int.Parse(timePart[1], CultureInfo.InvariantCulture),
+                int.Parse(timePart[2], CultureInfo.InvariantCulture),
+                int.Parse(timePart[3], CultureInfo.InvariantCulture)).TotalMilliseconds));
     }
 }
