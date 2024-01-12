@@ -67,20 +67,20 @@ internal sealed class ToolsTestHost(
             {
                 if (UnknownOptions(out string? unknownOptionsError, tool))
                 {
-                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(unknownOptionsError));
+                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(unknownOptionsError));
                     console.WriteLine();
                     return ExitCodes.InvalidCommandLine;
                 }
 
                 if (ExtensionArgumentArityAreInvalid(out string? arityErrors, tool))
                 {
-                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(arityErrors));
+                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(arityErrors));
                     return ExitCodes.InvalidCommandLine;
                 }
 
                 if (InvalidOptionsArguments(out string? invalidOptionsArguments, tool))
                 {
-                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(invalidOptionsArguments));
+                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(invalidOptionsArguments));
                     return ExitCodes.InvalidCommandLine;
                 }
 
@@ -88,7 +88,7 @@ internal sealed class ToolsTestHost(
             }
         }
 
-        await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText($"Tool '{toolNameToRun}' not found in the list of registered tools."));
+        await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText($"Tool '{toolNameToRun}' not found in the list of registered tools."));
         await _commandLineHandler.PrintHelpAsync();
         return ExitCodes.InvalidCommandLine;
     }

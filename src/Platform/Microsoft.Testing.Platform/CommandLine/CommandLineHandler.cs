@@ -62,31 +62,31 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
                 stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t- {error}");
             }
 
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(stringBuilder.ToString()));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(stringBuilder.ToString()));
             return false;
         }
 
         if (ExtensionOptionsContainReservedPrefix(out string? reservedPrefixError))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(reservedPrefixError));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(reservedPrefixError));
             return false;
         }
 
         if (ExtensionOptionsContainReservedOptions(out string? reservedOptionError))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(reservedOptionError));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(reservedOptionError));
             return false;
         }
 
         if (ExtensionOptionAreDuplicated(out string? duplicationError))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(duplicationError));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(duplicationError));
             return false;
         }
 
         if (UnknownOptions(out string? unknownOptionsError))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(unknownOptionsError));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(unknownOptionsError));
             await _platformOutputDevice.DisplayAsync(this, EmptyText);
             await PrintHelpAsync();
             return false;
@@ -94,19 +94,19 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
         if (ExtensionArgumentArityAreInvalid(out string? arityErrors))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(arityErrors));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(arityErrors));
             return false;
         }
 
         if (InvalidOptionsArguments(out string? invalidOptionsArguments))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(invalidOptionsArguments));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(invalidOptionsArguments));
             return false;
         }
 
         if (IsInvalidValidConfiguration(out string? configurationError))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(configurationError));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(configurationError));
             return false;
         }
 

@@ -95,7 +95,7 @@ internal sealed class TestApplicationResult(
         foreach ((string categoryName, string error) in _testApplicationResultLoggers.SelectMany(logger => logger.Errors.Select(error => (logger.CategoryName, error))))
         {
             anyError = true;
-            await _outputService.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText($"[{categoryName}] {error}"));
+            await _outputService.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText($"[{categoryName}] {error}"));
         }
 
         int exitCode = ExitCodes.Success;
@@ -140,7 +140,7 @@ internal sealed class TestApplicationResult(
     {
         TestAdapterTestSessionFailureErrorMessage = errorMessage;
         _testAdapterTestSessionFailure = true;
-        await _outputService.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(errorMessage));
+        await _outputService.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(errorMessage));
     }
 
     public Statistics GetStatistics()
