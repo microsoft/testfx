@@ -73,6 +73,14 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.Config
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [8]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [9]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.InvalidJson_Fail()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "130ms", timeSpan: 130)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "1h 19m 51s 600ms", timeSpan: 4791600)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "1m 19s 800ms", timeSpan: 79800)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "1ms", timeSpan: 1)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "1s 300ms", timeSpan: 1300)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "1s 310ms", timeSpan: 1310)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "1s 330ms", timeSpan: 1330)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "20ms", timeSpan: 20)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CountDownEventTests.CountDownEvent_WaitAsync_Succeeded()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CountDownEventTests.CountDownEvent_WaitAsyncCancelled_Succeeded()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CountDownEventTests.CountDownEvent_WaitAsyncCancelledByTimeout_Succeeded()
