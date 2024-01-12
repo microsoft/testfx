@@ -5,7 +5,7 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-// [TestGroup]
+[TestGroup]
 public class DotnetTestCliTests : AcceptanceTestBase
 {
     private const string AssetName = "MSTestProject";

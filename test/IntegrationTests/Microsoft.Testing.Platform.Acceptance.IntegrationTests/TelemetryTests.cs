@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-// [TestGroup]
+[TestGroup]
 public class TelemetryTests : AcceptanceTestBase
 {
     private const string AssetName = "TelemetryTest";
