@@ -8,7 +8,6 @@ using Microsoft.Testing.Extensions.VSTestBridge.Capabilities;
 using Microsoft.Testing.Extensions.VSTestBridge.Helpers;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions.MSTest;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
