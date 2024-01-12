@@ -7,6 +7,8 @@ namespace Microsoft.Testing.Platform.Extensions.TestHost;
 
 public interface IDataConsumer : ITestHostExtension
 {
+    // We don't use IReadOnlyCollection because we don't have cross api(like Contains) that are good in every tfm.
+    // Internally we use Array.IndexOf to verify if the data type is supported, it's a hot path.
     Type[] DataTypesConsumed { get; }
 
     Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken);
