@@ -39,10 +39,6 @@ EndGlobal
     private readonly StringBuilder _globals = new();
     private readonly string _solutionFileName;
 
-    public ICollection<Project> Projects { get; private set; } = new List<Project>();
-
-    public string SolutionFile { get; private set; }
-
     public VSSolution(string? solutionFolder, string? solutionName)
         : base(solutionFolder)
     {
@@ -60,6 +56,10 @@ EndGlobal
         SolutionFile = Path.Combine(FolderPath, _solutionFileName);
         AddOrUpdateFileContent(_solutionFileName, MergeSolutionContent());
     }
+
+    public ICollection<Project> Projects { get; private set; } = new List<Project>();
+
+    public string SolutionFile { get; private set; }
 
     public CSharpProject CreateCSharpProject(string projectName, params string[] tfm)
     {
@@ -86,8 +86,6 @@ public class CSharpProject : Project
 {
     private readonly string _projectFileName;
     private XElement _projectContent = new("Project", new XAttribute("Sdk", "Microsoft.NET.Sdk"), new XElement("PropertyGroup"), new XElement("ItemGroup"));
-
-    public string ProjectFile { get; private set; }
 
     public CSharpProject(string solutionFolder, string projectName, params string[]? tfms)
        : base(Path.Combine(solutionFolder, projectName))
@@ -122,6 +120,8 @@ public class CSharpProject : Project
         AddOrUpdateFileContent(_projectFileName, _projectContent.ToString());
     }
 
+    public string ProjectFile { get; private set; }
+
     public void AddPackageReference(string name, string version)
     {
         _projectContent.Element("ItemGroup")?.Add(new XElement("PackageReference", new XAttribute("Include", name), new XAttribute("version", version)));
@@ -146,8 +146,6 @@ public abstract class Project : Folder
 
 public abstract class Folder
 {
-    public string FolderPath { get; private set; }
-
     public Folder(string? folderPath)
     {
         if (string.IsNullOrEmpty(folderPath))
@@ -157,6 +155,8 @@ public abstract class Folder
 
         FolderPath = Path.GetFullPath(folderPath);
     }
+
+    public string FolderPath { get; private set; }
 
     public string AddOrUpdateFileContent(string relativePath, string fileContent)
     {

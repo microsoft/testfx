@@ -186,6 +186,11 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         }
     }
 
+    public void Dispose()
+    {
+        _service.Dispose();
+    }
+
     private sealed class DataProducer : IDataProducer
     {
         public string Uid => nameof(DataProducer);
@@ -199,10 +204,5 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         public Type[] DataTypesProduced => new[] { typeof(SessionFileArtifact) };
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
-    }
-
-    public void Dispose()
-    {
-        _service.Dispose();
     }
 }
