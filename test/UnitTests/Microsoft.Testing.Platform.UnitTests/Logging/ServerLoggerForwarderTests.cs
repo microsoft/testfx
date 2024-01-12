@@ -88,6 +88,64 @@ public class ServerLoggerForwarderTests : TestBase
         _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<IData>()), shouldLog ? Times.Once : Times.Never);
     }
 
+    [Arguments(LogLevel.Trace, LogLevel.Trace)]
+    [Arguments(LogLevel.Trace, LogLevel.Debug)]
+    [Arguments(LogLevel.Trace, LogLevel.Information)]
+    [Arguments(LogLevel.Trace, LogLevel.Warning)]
+    [Arguments(LogLevel.Trace, LogLevel.Error)]
+    [Arguments(LogLevel.Trace, LogLevel.Critical)]
+    [Arguments(LogLevel.Debug, LogLevel.Trace)]
+    [Arguments(LogLevel.Debug, LogLevel.Debug)]
+    [Arguments(LogLevel.Debug, LogLevel.Information)]
+    [Arguments(LogLevel.Debug, LogLevel.Warning)]
+    [Arguments(LogLevel.Debug, LogLevel.Error)]
+    [Arguments(LogLevel.Debug, LogLevel.Critical)]
+    [Arguments(LogLevel.Information, LogLevel.Trace)]
+    [Arguments(LogLevel.Information, LogLevel.Debug)]
+    [Arguments(LogLevel.Information, LogLevel.Information)]
+    [Arguments(LogLevel.Information, LogLevel.Warning)]
+    [Arguments(LogLevel.Information, LogLevel.Error)]
+    [Arguments(LogLevel.Information, LogLevel.Critical)]
+    [Arguments(LogLevel.Warning, LogLevel.Trace)]
+    [Arguments(LogLevel.Warning, LogLevel.Debug)]
+    [Arguments(LogLevel.Warning, LogLevel.Information)]
+    [Arguments(LogLevel.Warning, LogLevel.Warning)]
+    [Arguments(LogLevel.Warning, LogLevel.Error)]
+    [Arguments(LogLevel.Warning, LogLevel.Critical)]
+    [Arguments(LogLevel.Error, LogLevel.Trace)]
+    [Arguments(LogLevel.Error, LogLevel.Debug)]
+    [Arguments(LogLevel.Error, LogLevel.Information)]
+    [Arguments(LogLevel.Error, LogLevel.Warning)]
+    [Arguments(LogLevel.Error, LogLevel.Error)]
+    [Arguments(LogLevel.Error, LogLevel.Critical)]
+    [Arguments(LogLevel.Critical, LogLevel.Trace)]
+    [Arguments(LogLevel.Critical, LogLevel.Debug)]
+    [Arguments(LogLevel.Critical, LogLevel.Information)]
+    [Arguments(LogLevel.Critical, LogLevel.Warning)]
+    [Arguments(LogLevel.Critical, LogLevel.Error)]
+    [Arguments(LogLevel.Critical, LogLevel.Critical)]
+    [Arguments(LogLevel.None, LogLevel.Trace)]
+    [Arguments(LogLevel.None, LogLevel.Debug)]
+    [Arguments(LogLevel.None, LogLevel.Information)]
+    [Arguments(LogLevel.None, LogLevel.Warning)]
+    [Arguments(LogLevel.None, LogLevel.Error)]
+    [Arguments(LogLevel.None, LogLevel.Critical)]
+    public void ServerLoggerForwarder_ServerLogNotInitialized_NoLogForwarded(LogLevel defaultLevel, LogLevel currentLevel)
+    {
+        _mockServerTestHost.Setup(x => x.IsInitialized).Returns(false);
+
+        using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
+                defaultLevel,
+                new SystemTask(),
+                _mockServerTestHost.Object)
+            .CreateLogger("Test") as ServerLoggerForwarder)!)
+        {
+            serverLoggerForwarder.Log(currentLevel, Message, null, Formatter);
+        }
+
+        _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<IData>()), Times.Never);
+    }
+
     [Arguments(LogLevel.Trace, LogLevel.Trace, true)]
     [Arguments(LogLevel.Trace, LogLevel.Debug, true)]
     [Arguments(LogLevel.Trace, LogLevel.Information, true)]
@@ -142,5 +200,63 @@ public class ServerLoggerForwarderTests : TestBase
         }
 
         _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<ServerLogMessage>()), shouldLog ? Times.Once : Times.Never);
+    }
+
+    [Arguments(LogLevel.Trace, LogLevel.Trace)]
+    [Arguments(LogLevel.Trace, LogLevel.Debug)]
+    [Arguments(LogLevel.Trace, LogLevel.Information)]
+    [Arguments(LogLevel.Trace, LogLevel.Warning)]
+    [Arguments(LogLevel.Trace, LogLevel.Error)]
+    [Arguments(LogLevel.Trace, LogLevel.Critical)]
+    [Arguments(LogLevel.Debug, LogLevel.Trace)]
+    [Arguments(LogLevel.Debug, LogLevel.Debug)]
+    [Arguments(LogLevel.Debug, LogLevel.Information)]
+    [Arguments(LogLevel.Debug, LogLevel.Warning)]
+    [Arguments(LogLevel.Debug, LogLevel.Error)]
+    [Arguments(LogLevel.Debug, LogLevel.Critical)]
+    [Arguments(LogLevel.Information, LogLevel.Trace)]
+    [Arguments(LogLevel.Information, LogLevel.Debug)]
+    [Arguments(LogLevel.Information, LogLevel.Information)]
+    [Arguments(LogLevel.Information, LogLevel.Warning)]
+    [Arguments(LogLevel.Information, LogLevel.Error)]
+    [Arguments(LogLevel.Information, LogLevel.Critical)]
+    [Arguments(LogLevel.Warning, LogLevel.Trace)]
+    [Arguments(LogLevel.Warning, LogLevel.Debug)]
+    [Arguments(LogLevel.Warning, LogLevel.Information)]
+    [Arguments(LogLevel.Warning, LogLevel.Warning)]
+    [Arguments(LogLevel.Warning, LogLevel.Error)]
+    [Arguments(LogLevel.Warning, LogLevel.Critical)]
+    [Arguments(LogLevel.Error, LogLevel.Trace)]
+    [Arguments(LogLevel.Error, LogLevel.Debug)]
+    [Arguments(LogLevel.Error, LogLevel.Information)]
+    [Arguments(LogLevel.Error, LogLevel.Warning)]
+    [Arguments(LogLevel.Error, LogLevel.Error)]
+    [Arguments(LogLevel.Error, LogLevel.Critical)]
+    [Arguments(LogLevel.Critical, LogLevel.Trace)]
+    [Arguments(LogLevel.Critical, LogLevel.Debug)]
+    [Arguments(LogLevel.Critical, LogLevel.Information)]
+    [Arguments(LogLevel.Critical, LogLevel.Warning)]
+    [Arguments(LogLevel.Critical, LogLevel.Error)]
+    [Arguments(LogLevel.Critical, LogLevel.Critical)]
+    [Arguments(LogLevel.None, LogLevel.Trace)]
+    [Arguments(LogLevel.None, LogLevel.Debug)]
+    [Arguments(LogLevel.None, LogLevel.Information)]
+    [Arguments(LogLevel.None, LogLevel.Warning)]
+    [Arguments(LogLevel.None, LogLevel.Error)]
+    [Arguments(LogLevel.None, LogLevel.Critical)]
+    public async Task ServerLoggerForwarder_ServerLogNotInitialized_NoLogAsyncForwarded(LogLevel defaultLevel, LogLevel currentLevel)
+    {
+        _mockServerTestHost.Setup(x => x.IsInitialized).Returns(false);
+
+        using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
+                defaultLevel,
+                new SystemTask(),
+                _mockServerTestHost.Object)
+            .CreateLogger("Test") as ServerLoggerForwarder)!)
+        {
+            await serverLoggerForwarder.LogAsync(currentLevel, Message, null, Formatter);
+        }
+
+        _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<ServerLogMessage>()), Times.Never);
     }
 }
