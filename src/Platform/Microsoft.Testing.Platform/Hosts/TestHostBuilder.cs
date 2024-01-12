@@ -216,8 +216,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             Logging.AddProvider((logLevel, services) => new ServerLoggerForwarderProvider(
                 logLevel,
                 services.GetTask(),
-                services.GetService<ServerTestHost>(),
-                new SystemProducerConsumerFactory<ServerLogMessage>()));
+                services.GetService<ServerTestHost>()));
         }
 
         // Build the logger factory.

@@ -9,10 +9,9 @@ namespace Microsoft.Testing.Platform.Logging;
 internal sealed class ServerLoggerForwarderProvider(
     LogLevel logLevel,
     ITask task,
-    IServerTestHost? serverTestHost,
-    IProducerConsumerFactory<ServerLogMessage> producerConsumerFactory) : ILoggerProvider
+    IServerTestHost? serverTestHost) : ILoggerProvider
 {
     private readonly LogLevel _logLevel = logLevel;
 
-    public ILogger CreateLogger(string categoryName) => new ServerLoggerForwarder(_logLevel, task, serverTestHost, producerConsumerFactory);
+    public ILogger CreateLogger(string categoryName) => new ServerLoggerForwarder(_logLevel, task, serverTestHost);
 }

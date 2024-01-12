@@ -3,10 +3,6 @@
 
 using System.Globalization;
 
-#if NETCOREAPP
-using System.Threading.Channels;
-#endif
-
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
@@ -21,92 +17,130 @@ namespace Microsoft.Testing.Platform.UnitTests;
 [TestGroup]
 public class ServerLoggerForwarderTests : TestBase
 {
-    private const string Result1 = "Result1";
-    private const string Result2 = "Result2";
+    private const string Message = "Dummy";
 
     private static readonly Func<string, Exception?, string> Formatter =
         (state, exception) =>
             string.Format(CultureInfo.InvariantCulture, "{0}{1}", state, exception is not null ? $" -- {exception}" : string.Empty);
 
-#if NETCOREAPP
-    private readonly Mock<IChannel<ServerLogMessage>> _mockProducerConsumer = new();
-#else
-    private readonly Mock<IBlockingCollection<ServerLogMessage>> _mockProducerConsumer = new();
-#endif
     private readonly Mock<IServerTestHost> _mockServerTestHost = new();
-    private readonly Mock<IProducerConsumerFactory<ServerLogMessage>> _mockProducerConsumerFactory = new();
 
     public ServerLoggerForwarderTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-#if NETCOREAPP
-        _mockProducerConsumerFactory.Setup(x => x.Create(It.IsAny<UnboundedChannelOptions>())).Returns(_mockProducerConsumer.Object);
-        _mockProducerConsumer.SetupSequence(x => x.WaitToReadAsync(It.IsAny<CancellationToken>()))
-            .Returns(new ValueTask<bool>(true))
-            .Returns(new ValueTask<bool>(true))
-            .Returns(new ValueTask<bool>(false));
-        _mockProducerConsumer.SetupSequence(x => x.ReadAsync(It.IsAny<CancellationToken>()))
-            .Returns(new ValueTask<ServerLogMessage>(new ServerLogMessage(LogLevel.Information, Result1)))
-            .Returns(new ValueTask<ServerLogMessage>(new ServerLogMessage(LogLevel.Information, Result2)));
-        _mockProducerConsumer.SetupSequence(x => x.TryWrite(It.IsAny<ServerLogMessage>()))
-            .Returns(true)
-            .Returns(false);
-#else
-        _mockProducerConsumerFactory.Setup(x => x.Create()).Returns(_mockProducerConsumer.Object);
-        _mockProducerConsumer.Setup(x => x.GetConsumingEnumerable())
-            .Returns(new List<ServerLogMessage>()
-            {
-                new(LogLevel.Information, Result1),
-                new(LogLevel.Information, Result2),
-            });
-        _mockProducerConsumer.Setup(x => x.Add(It.IsAny<ServerLogMessage>()));
-#endif
-
         _mockServerTestHost.Setup(x => x.IsInitialized).Returns(true);
         _mockServerTestHost.Setup(x => x.PushDataAsync(It.IsAny<IData>()));
     }
 
-    public void ServerLoggerForwarder_Log()
-    {
-        using ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
-                LogLevel.Information,
-                new SystemTask(),
-                _mockServerTestHost.Object,
-                _mockProducerConsumerFactory.Object)
-            .CreateLogger("Test") as ServerLoggerForwarder)!;
-
-        serverLoggerForwarder.Log(LogLevel.Trace, Result1, null, Formatter);
-#if NETCOREAPP
-        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<ServerLogMessage>()), Times.Never);
-#else
-        _mockProducerConsumer.Verify(x => x.Add(It.IsAny<ServerLogMessage>()), Times.Never);
-#endif
-
-        serverLoggerForwarder.Log(LogLevel.Information, Result1, null, Formatter);
-#if NETCOREAPP
-        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<ServerLogMessage>()), Times.Once);
-
-        Assert.Throws<InvalidOperationException>(() =>
-            serverLoggerForwarder.Log(LogLevel.Information, Result2, null, Formatter));
-        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<ServerLogMessage>()), Times.Exactly(2));
-#else
-        _mockProducerConsumer.Verify(x => x.Add(It.IsAny<ServerLogMessage>()), Times.Once);
-#endif
-    }
-
-    public async Task ServerLoggerForwarder_LogAsync()
+    [Arguments(LogLevel.Trace, LogLevel.Trace, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Debug, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Information, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Error, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Debug, LogLevel.Debug, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Information, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Error, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Information, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Information, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Information, LogLevel.Information, true)]
+    [Arguments(LogLevel.Information, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Information, LogLevel.Error, true)]
+    [Arguments(LogLevel.Information, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Information, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Error, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Error, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Error, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Error, LogLevel.Information, false)]
+    [Arguments(LogLevel.Error, LogLevel.Warning, false)]
+    [Arguments(LogLevel.Error, LogLevel.Error, true)]
+    [Arguments(LogLevel.Error, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Critical, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Information, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Warning, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Error, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Critical, true)]
+    [Arguments(LogLevel.None, LogLevel.Trace, false)]
+    [Arguments(LogLevel.None, LogLevel.Debug, false)]
+    [Arguments(LogLevel.None, LogLevel.Information, false)]
+    [Arguments(LogLevel.None, LogLevel.Warning, false)]
+    [Arguments(LogLevel.None, LogLevel.Error, false)]
+    [Arguments(LogLevel.None, LogLevel.Critical, false)]
+    public void ServerLoggerForwarder_Log(LogLevel defaultLevel, LogLevel currentLevel, bool shouldLog)
     {
         using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
-                LogLevel.Information,
+                defaultLevel,
                 new SystemTask(),
-                _mockServerTestHost.Object,
-                _mockProducerConsumerFactory.Object)
+                _mockServerTestHost.Object)
             .CreateLogger("Test") as ServerLoggerForwarder)!)
         {
-            await serverLoggerForwarder.LogAsync(LogLevel.Trace, Result1, null, Formatter);
-            await serverLoggerForwarder.LogAsync(LogLevel.Information, Result1, null, Formatter);
+            serverLoggerForwarder.Log(currentLevel, Message, null, Formatter);
         }
 
-        _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<ServerLogMessage>()), Times.Exactly(2 + 1));
+        _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<IData>()), shouldLog ? Times.Once : Times.Never);
+    }
+
+    [Arguments(LogLevel.Trace, LogLevel.Trace, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Debug, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Information, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Error, true)]
+    [Arguments(LogLevel.Trace, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Debug, LogLevel.Debug, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Information, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Error, true)]
+    [Arguments(LogLevel.Debug, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Information, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Information, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Information, LogLevel.Information, true)]
+    [Arguments(LogLevel.Information, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Information, LogLevel.Error, true)]
+    [Arguments(LogLevel.Information, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Information, false)]
+    [Arguments(LogLevel.Warning, LogLevel.Warning, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Error, true)]
+    [Arguments(LogLevel.Warning, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Error, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Error, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Error, LogLevel.Information, false)]
+    [Arguments(LogLevel.Error, LogLevel.Warning, false)]
+    [Arguments(LogLevel.Error, LogLevel.Error, true)]
+    [Arguments(LogLevel.Error, LogLevel.Critical, true)]
+    [Arguments(LogLevel.Critical, LogLevel.Trace, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Debug, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Information, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Warning, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Error, false)]
+    [Arguments(LogLevel.Critical, LogLevel.Critical, true)]
+    [Arguments(LogLevel.None, LogLevel.Trace, false)]
+    [Arguments(LogLevel.None, LogLevel.Debug, false)]
+    [Arguments(LogLevel.None, LogLevel.Information, false)]
+    [Arguments(LogLevel.None, LogLevel.Warning, false)]
+    [Arguments(LogLevel.None, LogLevel.Error, false)]
+    [Arguments(LogLevel.None, LogLevel.Critical, false)]
+    public async Task ServerLoggerForwarder_LogAsync(LogLevel defaultLevel, LogLevel currentLevel, bool shouldLog)
+    {
+        using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
+                defaultLevel,
+                new SystemTask(),
+                _mockServerTestHost.Object)
+            .CreateLogger("Test") as ServerLoggerForwarder)!)
+        {
+            await serverLoggerForwarder.LogAsync(currentLevel, Message, null, Formatter);
+        }
+
+        _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<ServerLogMessage>()), shouldLog ? Times.Once : Times.Never);
     }
 }

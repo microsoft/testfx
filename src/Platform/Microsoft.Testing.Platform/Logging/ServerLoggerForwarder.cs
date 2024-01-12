@@ -4,8 +4,8 @@
 #if NETCOREAPP
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Channels;
-
 #else
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 #endif
 using System.Globalization;
@@ -30,11 +30,10 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
     private readonly LogLevel _logLevel;
     private readonly Task _logLoop;
     private readonly IServerTestHost? _serverTestHost;
-    private readonly IProducerConsumerFactory<ServerLogMessage> _producerConsumerFactory;
 #if NETCOREAPP
-    private readonly IChannel<ServerLogMessage>? _channel;
+    private readonly Channel<ServerLogMessage>? _channel;
 #else
-    private readonly IBlockingCollection<ServerLogMessage>? _asyncLogs;
+    private readonly BlockingCollection<ServerLogMessage>? _asyncLogs;
 #endif
 
     private bool _isDisposed;
@@ -42,14 +41,12 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
     public ServerLoggerForwarder(
         LogLevel logLevel,
         ITask task,
-        IServerTestHost? serverTestHost,
-        IProducerConsumerFactory<ServerLogMessage> producerConsumerFactory)
+        IServerTestHost? serverTestHost)
     {
         _logLevel = logLevel;
         _serverTestHost = serverTestHost;
-        _producerConsumerFactory = producerConsumerFactory;
 #if NETCOREAPP
-        _channel = _producerConsumerFactory.Create(new UnboundedChannelOptions()
+        _channel = Channel.CreateUnbounded<ServerLogMessage>(new UnboundedChannelOptions()
         {
             // We process only 1 data at a time
             SingleReader = true,
@@ -61,7 +58,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
             AllowSynchronousContinuations = false,
         });
 #else
-        _asyncLogs = _producerConsumerFactory.Create();
+        _asyncLogs = [];
 #endif
         _logLoop = task.Run(WriteLogMessageAsync, CancellationToken.None);
     }
@@ -73,9 +70,9 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
         ApplicationStateGuard.Ensure(_channel is not null);
 
         // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
-        while (await _channel.WaitToReadAsync())
+        while (await _channel.Reader.WaitToReadAsync())
         {
-            await PushServerLogMessageToTheMessageBusAsync(await _channel.ReadAsync());
+            await PushServerLogMessageToTheMessageBusAsync(await _channel.Reader.ReadAsync());
         }
 #else
         ApplicationStateGuard.Ensure(_asyncLogs is not null);
@@ -102,7 +99,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
         var logMessage = new ServerLogMessage(logLevel, message);
         EnsureAsyncLogObjectsAreNotNull();
 #if NETCOREAPP
-        if (!_channel.TryWrite(logMessage))
+        if (!_channel.Writer.TryWrite(logMessage))
         {
             throw new InvalidOperationException("Failed to write the log to the channel");
         }
@@ -154,7 +151,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
             EnsureAsyncLogObjectsAreNotNull();
 #if NETCOREAPP
             // Wait for all logs to be written
-            _channel.TryComplete();
+            _channel.Writer.TryComplete();
             if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
@@ -179,7 +176,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
             EnsureAsyncLogObjectsAreNotNull();
 
             // Wait for all logs to be written
-            _channel.TryComplete();
+            _channel.Writer.TryComplete();
             await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
             _isDisposed = true;
         }
