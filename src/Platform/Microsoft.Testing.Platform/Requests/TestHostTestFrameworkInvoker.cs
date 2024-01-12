@@ -79,7 +79,7 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         if (warningMessage is not null)
         {
             IOutputDevice outputDisplay = ServiceProvider.GetOutputDevice();
-            await outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateYellowConsoleColorText(warningMessage));
+            await outputDisplay.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateYellowConsoleColorText(warningMessage));
         }
 
         if (!isSuccess)
