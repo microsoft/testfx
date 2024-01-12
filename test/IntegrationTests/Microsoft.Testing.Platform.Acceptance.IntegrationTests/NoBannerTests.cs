@@ -77,7 +77,6 @@ public class NoBannerTests : AcceptanceTestBase
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-
         private const string NoBannerTestCode = """
 #file NoBannerTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">

@@ -65,7 +65,6 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture)
         : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-
         private const string Sources = """
 #file EnvironmentVariablesConfigurationProvider.csproj
 
@@ -199,6 +198,7 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
     }
 }
 """;
+
         public string TargetAssetPath => GetAssetPath(AssetName);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
