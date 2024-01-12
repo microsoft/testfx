@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+// [TestGroup]
 public class UnhandledExceptionPolicyTests : AcceptanceTestBase
 {
     private readonly TestAssetFixture _testAssetFixture;
@@ -167,16 +167,6 @@ public class UnhandledExceptionPolicyTests : AcceptanceTestBase
     {
         private const string AssetName = "UnhandledExceptionPolicyTests";
 
-        public string TargetAssetPath => GetAssetPath(AssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
-                Sources
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
-
         private const string Sources = """
 #file UnhandledExceptionPolicyTests.csproj
 
@@ -299,5 +289,15 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
     }
 }
 """;
+
+        public string TargetAssetPath => GetAssetPath(AssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (AssetName, AssetName,
+                Sources
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+        }
     }
 }

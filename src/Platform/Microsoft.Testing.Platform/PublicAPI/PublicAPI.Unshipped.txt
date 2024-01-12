@@ -52,7 +52,7 @@ Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.Equals(Micro
 Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.IsHidden.get -> bool
 Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.Name.get -> string!
 Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider
-Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.GetCommandLineOptions() -> Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption![]!
+Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
 Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.IsValidConfiguration(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, out string? errorMessage) -> bool
 Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.OptionArgumentsAreValid(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments, out string? errorMessage) -> bool
 Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<TExtension>

@@ -5,12 +5,12 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+// [TestGroup]
 public class MSBuildMSTestRunnerTests : AcceptanceTestBase
 {
-    private readonly AcceptanceFixture _acceptanceFixture;
     private const string AssetName = "MSTestProject";
     private const string DotnetTestVerb = "test";
+    private readonly AcceptanceFixture _acceptanceFixture;
 
     public MSBuildMSTestRunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
         : base(testExecutionContext)

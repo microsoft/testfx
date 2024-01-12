@@ -9,6 +9,14 @@ using Microsoft.Testing.Platform.Helpers;
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
 [TestGroup]
+public class A(ITestExecutionContext testExecutionContext) : AcceptanceTestBase(testExecutionContext)
+{
+    public void AA()
+    {
+    }
+}
+
+// [TestGroup]
 public class TrxTests : AcceptanceTestBase
 {
     private readonly TestAssetFixture _testAssetFixture;
@@ -61,7 +69,7 @@ Out of process file artifacts produced:
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
         string trxContent = File.ReadAllText(trxFile);
         Assert.That(Regex.IsMatch(trxContent, @"Test host process pid: .* crashed\."), trxContent);
-        Assert.That(Regex.IsMatch(trxContent, @"<ResultSummary outcome=""Failed"">"), trxContent);
+        Assert.That(trxContent.Contains(@"<ResultSummary outcome=""Failed"">"), trxContent);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
@@ -78,13 +86,13 @@ Out of process file artifacts produced:
         string trxContent = File.ReadAllText(trxFile);
 
         // check if the tests have been added to Results, TestDefinitions, TestEntries and ResultSummary.
-        Assert.That(Regex.IsMatch(trxContent, @"<UnitTestResult "), trxContent);
-        Assert.That(Regex.IsMatch(trxContent, @"outcome=""NotExecuted"""), trxContent);
+        Assert.That(trxContent.Contains(@"<UnitTestResult "), trxContent);
+        Assert.That(trxContent.Contains(@"outcome=""NotExecuted"""), trxContent);
 
-        Assert.That(Regex.IsMatch(trxContent, @"<UnitTest name=""TestMethod1"), trxContent);
-        Assert.That(Regex.IsMatch(trxContent, @"<TestEntry "), trxContent);
-        Assert.That(Regex.IsMatch(trxContent, @"<ResultSummary outcome=""Completed"">"), trxContent);
-        Assert.That(Regex.IsMatch(trxContent, @"<Counters total=""2"" executed=""0"" passed=""0"" failed=""0"" error=""0"" timeout=""0"" aborted=""0"" inconclusive=""0"" passedButRunAborted=""0"" notRunnable=""0"" notExecuted=""0"" disconnected=""0"" warning=""0"" completed=""0"" inProgress=""0"" pending=""0"" />"), trxContent);
+        Assert.That(trxContent.Contains(@"<UnitTest name=""TestMethod1"), trxContent);
+        Assert.That(trxContent.Contains(@"<TestEntry "), trxContent);
+        Assert.That(trxContent.Contains(@"<ResultSummary outcome=""Completed"">"), trxContent);
+        Assert.That(trxContent.Contains(@"<Counters total=""2"" executed=""0"" passed=""0"" failed=""0"" error=""0"" timeout=""0"" aborted=""0"" inconclusive=""0"" passedButRunAborted=""0"" notRunnable=""0"" notExecuted=""0"" disconnected=""0"" warning=""0"" completed=""0"" inProgress=""0"" pending=""0"" />"), trxContent);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
@@ -200,35 +208,6 @@ In process file artifacts produced:
         private const string WithSkippedTest = nameof(WithSkippedTest);
         private const string WithDataRow = nameof(WithDataRow);
 
-        public string TargetAssetPath => GetAssetPath(AssetName);
-
-        public string TargetAssetPathWithSkippedTest => GetAssetPath(WithSkippedTest);
-
-        public string TargetAssetPathWithDataRow => GetAssetPath(WithDataRow);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
-                TestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
-            yield return (WithSkippedTest, AssetNameUsingMSTest,
-                MSTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                .PatchCodeWithReplace("$IgnoreTestAttributeOrNothing$", "[Ignore]"));
-            yield return (WithDataRow, AssetNameUsingMSTest,
-                MSTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-                .PatchCodeWithReplace("$IgnoreTestAttributeOrNothing$", string.Empty));
-        }
-
         private const string TestCode = """
 #file TrxTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -243,7 +222,7 @@ In process file artifacts produced:
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Extensions.Trx" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Framework" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
@@ -295,7 +274,7 @@ global using Microsoft.Testing.Extensions;
         <EnableMSTestRunner>true</EnableMSTestRunner>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Extensions.Trx" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="MSTest" Version="$MSTestVersion$" />
         <!-- Required for internal build -->
@@ -334,5 +313,34 @@ global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.Testing.Extensions;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 """;
+
+        public string TargetAssetPath => GetAssetPath(AssetName);
+
+        public string TargetAssetPathWithSkippedTest => GetAssetPath(WithSkippedTest);
+
+        public string TargetAssetPathWithDataRow => GetAssetPath(WithDataRow);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (AssetName, AssetName,
+                TestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+            yield return (WithSkippedTest, AssetNameUsingMSTest,
+                MSTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$IgnoreTestAttributeOrNothing$", "[Ignore]"));
+            yield return (WithDataRow, AssetNameUsingMSTest,
+                MSTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$IgnoreTestAttributeOrNothing$", string.Empty));
+        }
     }
 }

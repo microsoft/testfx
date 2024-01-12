@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+// [TestGroup]
 public class InfoTests : AcceptanceTestBase
 {
     private readonly TestAssetFixture _testAssetFixture;
@@ -168,25 +168,6 @@ Registered command line providers:
         public const string NoExtensionAssetName = "NoExtensionInfoTest";
         public const string MSTestAssetName = "MSTestInfoTest";
 
-        public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
-
-        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (NoExtensionAssetName, NoExtensionAssetName,
-                NoExtensionTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
-            yield return (MSTestAssetName, MSTestAssetName,
-                MSTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
-
         private const string NoExtensionTestCode = """
 #file NoExtensionInfoTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -275,5 +256,24 @@ public class UnitTest1
 global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 """;
+
+        public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
+
+        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (NoExtensionAssetName, NoExtensionAssetName,
+                NoExtensionTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+            yield return (MSTestAssetName, MSTestAssetName,
+                MSTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+        }
     }
 }

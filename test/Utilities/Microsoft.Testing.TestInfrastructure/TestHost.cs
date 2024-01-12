@@ -16,6 +16,13 @@ public sealed class TestHost
     private static int s_maxOutstandingExecutions = Environment.ProcessorCount;
     private static SemaphoreSlim s_maxOutstandingExecutions_semaphore = new(s_maxOutstandingExecutions, s_maxOutstandingExecutions);
 
+    private TestHost(string testHostFullName, string testHostModuleName)
+    {
+        FullName = testHostFullName;
+        DirectoryName = Path.GetDirectoryName(testHostFullName)!;
+        _testHostModuleName = testHostModuleName;
+    }
+
     public static int MaxOutstandingExecutions
     {
         get
@@ -29,13 +36,6 @@ public sealed class TestHost
             s_maxOutstandingExecutions_semaphore.Dispose();
             s_maxOutstandingExecutions_semaphore = new SemaphoreSlim(s_maxOutstandingExecutions, s_maxOutstandingExecutions);
         }
-    }
-
-    private TestHost(string testHostFullName, string testHostModuleName)
-    {
-        FullName = testHostFullName;
-        DirectoryName = Path.GetDirectoryName(testHostFullName)!;
-        _testHostModuleName = testHostModuleName;
     }
 
     public string FullName { get; }
