@@ -600,7 +600,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
             hasParentValue = true;
         }
 
-        if (time.Milliseconds > 0 || hasParentValue)
+        if (time.Milliseconds >= 0 || hasParentValue)
         {
             stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Milliseconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : time.Milliseconds.ToString(CultureInfo.InvariantCulture))}ms");
         }

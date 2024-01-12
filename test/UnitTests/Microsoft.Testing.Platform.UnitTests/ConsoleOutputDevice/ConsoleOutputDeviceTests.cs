@@ -22,6 +22,7 @@ public sealed class ConsoleOutputDeviceTests : TestBase
     [Arguments("1s 300ms", 1300)]
     [Arguments("1s 310ms", 1310)]
     [Arguments("1ms", 1)]
+    [Arguments("0ms", 0)]
     public void ToHumanReadableDurationFormatTests(string expectedString, double timeSpan)
     {
         Assert.AreEqual(expectedString, OutputDevice.ConsoleOutputDevice.ToHumanReadableDuration(timeSpan));
