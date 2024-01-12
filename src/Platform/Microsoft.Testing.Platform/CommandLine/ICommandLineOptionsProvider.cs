@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.Extensions.CommandLine;
 
 public interface ICommandLineOptionsProvider : IExtension
 {
-    CommandLineOption[] GetCommandLineOptions();
+    IReadOnlyCollection<CommandLineOption> GetCommandLineOptions();
 
     bool OptionArgumentsAreValid(CommandLineOption commandOption, string[] arguments, out string? errorMessage);
 
