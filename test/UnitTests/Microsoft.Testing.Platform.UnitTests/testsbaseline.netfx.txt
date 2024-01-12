@@ -73,6 +73,7 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.Config
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [8]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.GetConfigurationValueFromJsonWithFileLoggerProvider(string, string, string?) [9]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConfigurationManagerTests.InvalidJson_Fail()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "0ms", timeSpan: 0)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "130ms", timeSpan: 130)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "1h 19m 51s 600ms", timeSpan: 4791600)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice.ConsoleOutputDeviceTests.ToHumanReadableDurationFormatTests(string, double) (expectedString: "1m 19s 800ms", timeSpan: 79800)
