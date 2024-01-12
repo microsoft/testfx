@@ -117,7 +117,7 @@ internal sealed class TestApplicationResult(
 
         // If the user has specified the IgnoreExitCode, then we don't want to return a non-zero exit code if the exit code matches the one specified.
         string? exitCodeToIgnore = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE);
-        if (TAString.IsNullOrEmpty(exitCodeToIgnore))
+        if (RoslynString.IsNullOrEmpty(exitCodeToIgnore))
         {
             if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string[]? commandLineExitCodes) && commandLineExitCodes.Length > 0)
             {

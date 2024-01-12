@@ -130,9 +130,9 @@ internal static class CommandLineParser
                 (arg.IndexOf(" ", StringComparison.InvariantCultureIgnoreCase), " "),
             }.Where(x => x.Item1 != -1).OrderBy(x => x.Item1).FirstOrDefault();
 
-            currentOption = arg[..(TAString.IsNullOrEmpty(delimiterFound) ? arg.Length : arg.IndexOf(delimiterFound, StringComparison.InvariantCultureIgnoreCase))].TrimStart('-');
+            currentOption = arg[..(RoslynString.IsNullOrEmpty(delimiterFound) ? arg.Length : arg.IndexOf(delimiterFound, StringComparison.InvariantCultureIgnoreCase))].TrimStart('-');
 
-            if (!TAString.IsNullOrEmpty(delimiterFound))
+            if (!RoslynString.IsNullOrEmpty(delimiterFound))
             {
                 currentArg = arg[(arg.IndexOf(delimiterFound, StringComparison.InvariantCultureIgnoreCase) + 1)..];
             }

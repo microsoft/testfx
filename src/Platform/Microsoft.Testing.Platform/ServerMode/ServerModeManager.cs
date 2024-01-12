@@ -53,7 +53,7 @@ internal sealed partial class ServerModeManager : IServerModeManager
                             clientPort = tcpServerToSingleClientCommunicationProtocol.ClientPort;
                         }
 
-                        if (TAString.IsNullOrEmpty(clientHostName))
+                        if (RoslynString.IsNullOrEmpty(clientHostName))
                         {
                             clientHostName = tcpServerToSingleClientCommunicationProtocol.ClientHostName;
                         }

@@ -145,7 +145,7 @@ internal static class TypeNameHelper
                 ProcessGenericType(builder, type.DeclaringType!, genericArguments, offset, options);
                 builder.Append(options.NestedTypeDelimiter);
             }
-            else if (!TAString.IsNullOrEmpty(type.Namespace))
+            else if (!RoslynString.IsNullOrEmpty(type.Namespace))
             {
                 builder.Append(type.Namespace);
                 builder.Append('.');

@@ -24,7 +24,7 @@ public sealed class UseParallelizeAttributeAnalyzer : DiagnosticAnalyzer
         MessageFormat,
         Description,
         Category.Performance,
-        DiagnosticSeverity.Warning,
+        DiagnosticSeverity.Info,
         isEnabledByDefault: true,
         isReportedAtCompilationEnd: true);
 
