@@ -5,9 +5,8 @@
 using System.Reflection;
 
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Microsoft.Testing.Platform.Extensions.MSTest;
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 public static class TestingPlatformBuilderHook
 {
