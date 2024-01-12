@@ -77,15 +77,6 @@ public class NoBannerTests : AcceptanceTestBase
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public string TargetAssetPath => GetAssetPath(AssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
-                NoBannerTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
 
         private const string NoBannerTestCode = """
 #file NoBannerTest.csproj
@@ -139,5 +130,15 @@ public class DummyTestAdapter : ITestFramework
     public Task ExecuteRequestAsync(ExecuteRequestContext context) => Task.CompletedTask;
 }
 """;
+
+        public string TargetAssetPath => GetAssetPath(AssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (AssetName, AssetName,
+                NoBannerTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+        }
     }
 }
