@@ -573,7 +573,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     /// </summary>
     internal /* for testing */ static string? ToHumanReadableDuration(double? durationInMs)
     {
-        if (durationInMs is null)
+        if (durationInMs is null or < 0)
         {
             return null;
         }
