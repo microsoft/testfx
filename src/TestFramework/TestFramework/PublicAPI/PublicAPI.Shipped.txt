@@ -8,17 +8,17 @@ Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeAttribute.Assembl
 Microsoft.VisualStudio.TestTools.UnitTesting.Assert
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException() -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException(string! msg) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException(string! msg, System.Exception! ex) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException.AssertFailedException(string! msg) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException() -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(string! msg) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(string! msg, System.Exception! ex) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.AssertInconclusiveException.AssertInconclusiveException(string! msg) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior cleanupBehavior) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior inheritanceBehavior) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior inheritanceBehavior, Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior cleanupBehavior) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.ClassCleanupAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior inheritanceBehavior) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.CleanupBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior?
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute.InheritanceBehavior.get -> Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior
 Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
@@ -45,6 +45,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod.Sequential = 0 -> 
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.Data.get -> object?[]!
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(params object?[]? data) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(string?[]? stringArrayData) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DisplayName.get -> string?
@@ -87,8 +88,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute.AllowDerivedTypes.get -> bool
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute.AllowDerivedTypes.set -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute.ExceptionType.get -> System.Type!
-Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute.ExpectedExceptionAttribute(System.Type! exceptionType) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute.ExpectedExceptionAttribute(System.Type! exceptionType, string! noExceptionMessage) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute.ExpectedExceptionAttribute(System.Type! exceptionType) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionBaseAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionBaseAttribute.ExpectedExceptionBaseAttribute() -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionBaseAttribute.ExpectedExceptionBaseAttribute(string? noExceptionMessage) -> void
@@ -111,8 +112,8 @@ Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior.BeforeEachDeriv
 Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior.None = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.InheritanceBehavior
 Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException
 Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException() -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException(string! msg) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException(string! msg, System.Exception! ex) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.InternalTestFailureException.InternalTestFailureException(string! msg) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource.GetData(System.Reflection.MethodInfo! methodInfo) -> System.Collections.Generic.IEnumerable<object?[]!>!
 Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
@@ -211,14 +212,15 @@ Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.TimeoutAttribute(i
 Microsoft.VisualStudio.TestTools.UnitTesting.TimeoutAttribute.TimeoutAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.TestTimeout timeout) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException() -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException(string! msg) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException(string! msg, System.Exception! ex) -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestAssertException.UnitTestAssertException(string! msg) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Aborted = 6 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Error = 4 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Failed = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Inconclusive = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.InProgress = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
+Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.NotFound = 9 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.NotRunnable = 8 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Passed = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Timeout = 5 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
@@ -229,179 +231,180 @@ Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute.WorkItemAttribute
 override Microsoft.VisualStudio.TestTools.UnitTesting.GenericParameterHelper.Equals(object? obj) -> bool
 override Microsoft.VisualStudio.TestTools.UnitTesting.GenericParameterHelper.GetHashCode() -> int
 override Microsoft.VisualStudio.TestTools.UnitTesting.TestCategoryAttribute.TestCategories.get -> System.Collections.Generic.IList<string!>!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(decimal expected, decimal actual, decimal delta) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(decimal expected, decimal actual, decimal delta, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(decimal expected, decimal actual, decimal delta, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(double expected, double actual, double delta) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(double expected, double actual, double delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(decimal expected, decimal actual, decimal delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(decimal expected, decimal actual, decimal delta) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(double expected, double actual, double delta, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(float expected, float actual, float delta) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(float expected, float actual, float delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(double expected, double actual, double delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(double expected, double actual, double delta) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(float expected, float actual, float delta, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(long expected, long actual, long delta) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(long expected, long actual, long delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(float expected, float actual, float delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(float expected, float actual, float delta) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(long expected, long actual, long delta, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(long expected, long actual, long delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(long expected, long actual, long delta) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(decimal notExpected, decimal actual, decimal delta) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(decimal notExpected, decimal actual, decimal delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(decimal notExpected, decimal actual, decimal delta, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(double notExpected, double actual, double delta) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(double notExpected, double actual, double delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(decimal notExpected, decimal actual, decimal delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(decimal notExpected, decimal actual, decimal delta) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(double notExpected, double actual, double delta, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(float notExpected, float actual, float delta) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(float notExpected, float actual, float delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(double notExpected, double actual, double delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(double notExpected, double actual, double delta) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(float notExpected, float actual, float delta, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(long notExpected, long actual, long delta) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(long notExpected, long actual, long delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(float notExpected, float actual, float delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(float notExpected, float actual, float delta) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(long notExpected, long actual, long delta, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(long notExpected, long actual, long delta, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(long notExpected, long actual, long delta) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual(string? notExpected, string? actual, bool ignoreCase) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notExpected, T? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notExpected, T? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual, System.Collections.Generic.IEqualityComparer<T>? comparer) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual<T>(T? notExpected, T? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notExpected, T? actual, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notExpected, T? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotSame<T>(T? notExpected, T? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame<T>(T? expected, T? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Equals(object? objA, object? objB) -> bool
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail() -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail(string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail(string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail(string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Inconclusive() -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Inconclusive(string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Inconclusive(string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool condition) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool condition, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Inconclusive(string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool condition, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool? condition) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool? condition, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool condition, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool condition) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool? condition, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType(object? value, System.Type? expectedType) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType(object? value, System.Type? expectedType, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool? condition, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsFalse(bool? condition) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType(object? value, System.Type? expectedType, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType(object? value, System.Type? expectedType, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType(object? value, System.Type? expectedType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType(object? value, System.Type? wrongType) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType(object? value, System.Type? wrongType, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsInstanceOfType<T>(object? value) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType(object? value, System.Type? wrongType, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType<T>(object? value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType<T>(object? value, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType(object? value, System.Type? wrongType, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType(object? value, System.Type? wrongType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType<T>(object? value, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull(object? value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull(object? value, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType<T>(object? value, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotInstanceOfType<T>(object? value) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull(object? value, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNull(object? value) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNull(object? value, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull(object? value, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNotNull(object? value) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNull(object? value, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(bool condition) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(bool condition, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNull(object? value, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsNull(object? value) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(bool condition, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(bool? condition) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(bool? condition, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(bool condition, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(bool condition) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(bool? condition, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(bool? condition, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(bool? condition) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ReplaceNullChars(string? input) -> string?
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.That.get -> Microsoft.VisualStudio.TestTools.UnitTesting.Assert!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Action! action) -> T!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Action! action, string! message) -> T!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Action! action, string! message, params object?[]? parameters) -> T!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Func<object?>! action) -> T!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Func<object?>! action, string! message) -> T!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Action! action, string! message) -> T!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Action! action) -> T!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Func<object?>! action, string! message, params object?[]? parameters) -> T!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExceptionAsync<T>(System.Func<System.Threading.Tasks.Task!>! action) -> System.Threading.Tasks.Task<T!>!
-static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExceptionAsync<T>(System.Func<System.Threading.Tasks.Task!>! action, string! message) -> System.Threading.Tasks.Task<T!>!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Func<object?>! action, string! message) -> T!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsException<T>(System.Func<object?>! action) -> T!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExceptionAsync<T>(System.Func<System.Threading.Tasks.Task!>! action, string! message, params object?[]? parameters) -> System.Threading.Tasks.Task<T!>!
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType(System.Collections.ICollection? collection, System.Type? expectedType) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType(System.Collections.ICollection? collection, System.Type? expectedType, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExceptionAsync<T>(System.Func<System.Threading.Tasks.Task!>! action, string! message) -> System.Threading.Tasks.Task<T!>!
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.ThrowsExceptionAsync<T>(System.Func<System.Threading.Tasks.Task!>! action) -> System.Threading.Tasks.Task<T!>!
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType(System.Collections.ICollection? collection, System.Type? expectedType, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreNotNull(System.Collections.ICollection? collection) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreNotNull(System.Collections.ICollection? collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType(System.Collections.ICollection? collection, System.Type? expectedType, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreInstancesOfType(System.Collections.ICollection? collection, System.Type? expectedType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreNotNull(System.Collections.ICollection? collection, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreUnique(System.Collections.ICollection? collection) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreUnique(System.Collections.ICollection? collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreNotNull(System.Collections.ICollection? collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreNotNull(System.Collections.ICollection? collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreUnique(System.Collections.ICollection? collection, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreUnique(System.Collections.ICollection? collection, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AllItemsAreUnique(System.Collections.ICollection? collection) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEqual(System.Collections.ICollection? expected, System.Collections.ICollection? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual, System.Collections.IComparer? comparer) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEqual(System.Collections.ICollection? notExpected, System.Collections.ICollection? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(System.Collections.ICollection? collection, object? element) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(System.Collections.ICollection? collection, object? element, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.AreNotEquivalent(System.Collections.ICollection? expected, System.Collections.ICollection? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(System.Collections.ICollection? collection, object? element, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain(System.Collections.ICollection? collection, object? element) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain(System.Collections.ICollection? collection, object? element, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(System.Collections.ICollection? collection, object? element, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.Contains(System.Collections.ICollection? collection, object? element) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain(System.Collections.ICollection? collection, object? element, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain(System.Collections.ICollection? collection, object? element, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.DoesNotContain(System.Collections.ICollection? collection, object? element) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsNotSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.IsSubsetOf(System.Collections.ICollection? subset, System.Collections.ICollection? superset) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert.That.get -> Microsoft.VisualStudio.TestTools.UnitTesting.CollectionAssert!
 static Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessage(string! format, params object?[]! args) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.OnLogMessage -> Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessageHandler?
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring, string? message, System.StringComparison comparisonType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring, string? message, System.StringComparison comparisonType, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring, string? message, System.StringComparison comparisonType) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring, System.StringComparison comparisonType) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.DoesNotMatch(string? value, System.Text.RegularExpressions.Regex? pattern) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.DoesNotMatch(string? value, System.Text.RegularExpressions.Regex? pattern, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Contains(string? value, string? substring) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.DoesNotMatch(string? value, System.Text.RegularExpressions.Regex? pattern, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.DoesNotMatch(string? value, System.Text.RegularExpressions.Regex? pattern, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.DoesNotMatch(string? value, System.Text.RegularExpressions.Regex? pattern) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring, string? message, System.StringComparison comparisonType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring, string? message, System.StringComparison comparisonType, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring, string? message, System.StringComparison comparisonType) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring, System.StringComparison comparisonType) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Matches(string? value, System.Text.RegularExpressions.Regex? pattern) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Matches(string? value, System.Text.RegularExpressions.Regex? pattern, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.EndsWith(string? value, string? substring) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Matches(string? value, System.Text.RegularExpressions.Regex? pattern, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Matches(string? value, System.Text.RegularExpressions.Regex? pattern, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.Matches(string? value, System.Text.RegularExpressions.Regex? pattern) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring, string? message, params object?[]? parameters) -> void
-static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring, string? message, System.StringComparison comparisonType) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring, string? message, System.StringComparison comparisonType, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring, string? message, System.StringComparison comparisonType) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring, System.StringComparison comparisonType) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.StartsWith(string? value, string? substring) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert.That.get -> Microsoft.VisualStudio.TestTools.UnitTesting.StringAssert!
 static readonly Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupExecutionAttribute.DefaultClassCleanupLifecycle -> Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupBehavior
 static readonly Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute.DefaultDataAccessMethod -> Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod
 static readonly Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute.DefaultProviderName -> string!
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionBaseAttribute.NoExceptionMessage.get -> string!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessageHandler.Invoke(string! message) -> void
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.GetTestMethodAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute? testMethodAttribute) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.Execute(Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod! testMethod) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!

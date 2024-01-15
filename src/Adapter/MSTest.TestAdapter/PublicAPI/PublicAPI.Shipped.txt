@@ -138,6 +138,8 @@ Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestRunCancellationToken.
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestRunCancellationToken.Register(System.Action! callback) -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestRunCancellationToken.TestRunCancellationToken() -> void
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.TestRunCancellationToken.Unregister() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions
+Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions.TestResultExtensions.ToUnitTestResults(this Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]! testResults) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestResult![]!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions.UnitTestOutcomeExtensions.ToUnitTestOutcome(this Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome frameworkTestOutcome) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.CurrentSettings.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings!
@@ -146,4 +148,6 @@ static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.Pop
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.PopulateSettings(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context) -> void
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.RunConfigurationSettings.get -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings!
 static Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings.PopulateSettings(Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter.IDiscoveryContext? context) -> Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.RunConfigurationSettings!
+static Microsoft.VisualStudio.TestTools.UnitTesting.TestApplicationBuilderExtensions.AddMSTest(this Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, System.Func<System.Collections.Generic.IEnumerable<System.Reflection.Assembly!>!>! getTestAssemblies) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook.AddExtensions(Microsoft.Testing.Platform.Builder.ITestApplicationBuilder! testApplicationBuilder, string![]! arguments) -> void
 virtual Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestMethodInfo.Invoke(object?[]? arguments) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult!
