@@ -5,10 +5,9 @@ using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
-
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-// [TestGroup]
+[TestGroup]
 public class AbortionTests : AcceptanceTestBase
 {
     private const string AssetName = "Abort";
