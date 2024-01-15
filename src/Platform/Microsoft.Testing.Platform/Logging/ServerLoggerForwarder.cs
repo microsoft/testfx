@@ -146,40 +146,44 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 
     public void Dispose()
     {
-        if (!_isDisposed)
+        if (_isDisposed)
         {
-            EnsureAsyncLogObjectsAreNotNull();
-#if NETCOREAPP
-            // Wait for all logs to be written
-            _channel.Writer.TryComplete();
-            if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
-            {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
-            }
-#else
-            // Wait for all logs to be written
-            _asyncLogs.CompleteAdding();
-            if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
-            {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
-            }
-#endif
-            _isDisposed = true;
+            return;
         }
+
+        EnsureAsyncLogObjectsAreNotNull();
+#if NETCOREAPP
+        // Wait for all logs to be written
+        var result = _channel.Writer.TryComplete();
+        if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        {
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
+        }
+#else
+        // Wait for all logs to be written
+        _asyncLogs.CompleteAdding();
+        if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        {
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
+        }
+#endif
+        _isDisposed = true;
     }
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        if (!_isDisposed)
+        if (_isDisposed)
         {
-            EnsureAsyncLogObjectsAreNotNull();
-
-            // Wait for all logs to be written
-            _channel.Writer.TryComplete();
-            await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
-            _isDisposed = true;
+            return;
         }
+
+        EnsureAsyncLogObjectsAreNotNull();
+
+        // Wait for all logs to be written
+        _channel.Writer.TryComplete();
+        await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        _isDisposed = true;
     }
 #endif
 }

@@ -87,7 +87,8 @@ public class FileLoggerTests : TestBase
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
             .Returns(_mockStreamWriter.Object);
 
-        using FileLogger fileLogger = new(
+        string fileLoggerName = string.Empty;
+        using (FileLogger fileLogger = new(
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
@@ -95,7 +96,10 @@ public class FileLoggerTests : TestBase
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockFileStreamFactory.Object,
-            _mockStreamWriterFactory.Object);
+            _mockStreamWriterFactory.Object))
+        {
+            fileLoggerName = fileLogger.FileName;
+        }
 
         _mockFileStreamFactory.Verify(
             x => x.Create(Path.Combine(LogFolder, expectedFileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read),
@@ -103,7 +107,7 @@ public class FileLoggerTests : TestBase
         _mockStreamWriterFactory.Verify(
             x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
             Times.Once);
-        Assert.AreEqual(expectedFileName, fileLogger.FileName);
+        Assert.AreEqual(expectedFileName, fileLoggerName);
     }
 
     public void FileLogger_NullFileSyncFlush_FileStreamCreationThrows()
@@ -144,7 +148,8 @@ public class FileLoggerTests : TestBase
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
             .Returns(_mockStreamWriter.Object);
 
-        using FileLogger fileLogger = new(
+        string fileLoggerName = string.Empty;
+        using (FileLogger fileLogger = new(
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
@@ -152,7 +157,10 @@ public class FileLoggerTests : TestBase
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockFileStreamFactory.Object,
-            _mockStreamWriterFactory.Object);
+            _mockStreamWriterFactory.Object))
+        {
+            fileLoggerName = fileLogger.FileName;
+        }
 
         _mockFileStreamFactory.Verify(
             x => x.Create(expectedPath, fileExists ? FileMode.Append : FileMode.CreateNew, FileAccess.Write, FileShare.Read),
@@ -160,7 +168,7 @@ public class FileLoggerTests : TestBase
         _mockStreamWriterFactory.Verify(
             x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
             Times.Once);
-        Assert.AreEqual(FileName, fileLogger.FileName);
+        Assert.AreEqual(FileName, fileLoggerName);
     }
 
     public void FileLogger_ValidFileNameAsyncFlush_FileStreamCreatedSuccessfully()
@@ -175,7 +183,8 @@ public class FileLoggerTests : TestBase
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
             .Returns(_mockStreamWriter.Object);
 
-        using FileLogger fileLogger = new(
+        string fileLoggerName = string.Empty;
+        using (FileLogger fileLogger = new(
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
             LogLevel.Trace,
             _mockClock.Object,
@@ -183,7 +192,10 @@ public class FileLoggerTests : TestBase
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockFileStreamFactory.Object,
-            _mockStreamWriterFactory.Object);
+            _mockStreamWriterFactory.Object))
+        {
+            fileLoggerName = fileLogger.FileName;
+        }
 
         _mockFileStreamFactory.Verify(
             x => x.Create(expectedPath, FileMode.Append, FileAccess.Write, FileShare.Read),
@@ -191,7 +203,7 @@ public class FileLoggerTests : TestBase
         _mockStreamWriterFactory.Verify(
             x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
             Times.Once);
-        Assert.AreEqual(FileName, fileLogger.FileName);
+        Assert.AreEqual(FileName, fileLoggerName);
     }
 
     public void FileLogger_ValidFileNameSyncFlush_FileStreamWrite()

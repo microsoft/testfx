@@ -28,8 +28,6 @@ public class ServerLoggerForwarderTests : TestBase
     public ServerLoggerForwarderTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        _mockServerTestHost.Setup(x => x.IsInitialized).Returns(true);
-        _mockServerTestHost.Setup(x => x.PushDataAsync(It.IsAny<IData>()));
     }
 
     [Arguments(LogLevel.Trace, LogLevel.Trace, true)]
@@ -76,6 +74,9 @@ public class ServerLoggerForwarderTests : TestBase
     [Arguments(LogLevel.None, LogLevel.Critical, false)]
     public void ServerLoggerForwarder_Log(LogLevel defaultLevel, LogLevel currentLevel, bool shouldLog)
     {
+        _mockServerTestHost.Setup(x => x.IsInitialized).Returns(true);
+        _mockServerTestHost.Setup(x => x.PushDataAsync(It.IsAny<IData>())).Returns(Task.CompletedTask);
+
         using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
                 defaultLevel,
                 new SystemTask(),
@@ -133,6 +134,7 @@ public class ServerLoggerForwarderTests : TestBase
     public void ServerLoggerForwarder_ServerLogNotInitialized_NoLogForwarded(LogLevel defaultLevel, LogLevel currentLevel)
     {
         _mockServerTestHost.Setup(x => x.IsInitialized).Returns(false);
+        _mockServerTestHost.Setup(x => x.PushDataAsync(It.IsAny<IData>())).Returns(Task.CompletedTask);
 
         using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
                 defaultLevel,
@@ -190,6 +192,9 @@ public class ServerLoggerForwarderTests : TestBase
     [Arguments(LogLevel.None, LogLevel.Critical, false)]
     public async Task ServerLoggerForwarder_LogAsync(LogLevel defaultLevel, LogLevel currentLevel, bool shouldLog)
     {
+        _mockServerTestHost.Setup(x => x.IsInitialized).Returns(true);
+        _mockServerTestHost.Setup(x => x.PushDataAsync(It.IsAny<IData>())).Returns(Task.CompletedTask);
+
         using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
                 defaultLevel,
                 new SystemTask(),
@@ -247,6 +252,7 @@ public class ServerLoggerForwarderTests : TestBase
     public async Task ServerLoggerForwarder_ServerLogNotInitialized_NoLogAsyncForwarded(LogLevel defaultLevel, LogLevel currentLevel)
     {
         _mockServerTestHost.Setup(x => x.IsInitialized).Returns(false);
+        _mockServerTestHost.Setup(x => x.PushDataAsync(It.IsAny<IData>())).Returns(Task.CompletedTask);
 
         using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
                 defaultLevel,

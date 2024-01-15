@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Framework;
+using Microsoft.Testing.Framework.Configurations;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
@@ -13,7 +14,7 @@ using Microsoft.Testing.TestInfrastructure;
 // DebuggerUtility.AttachVSToCurrentProcess();
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.GetCommandLineOptions()));
-builder.AddTestFramework(new Microsoft.Testing.Platform.UnitTests.SourceGeneratedTestNodesBuilder());
+builder.AddTestFramework(new TestFrameworkConfiguration(Environment.ProcessorCount), new Microsoft.Testing.Platform.UnitTests.SourceGeneratedTestNodesBuilder());
 
 var commandLine = new FakeTrxReportGeneratorCommandLine();
 builder.CommandLine.AddProvider(() => commandLine);
