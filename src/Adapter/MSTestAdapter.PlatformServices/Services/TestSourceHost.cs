@@ -344,7 +344,7 @@ public class TestSourceHost : ITestSourceHost
         [
 
             // Add path of test assembly in resolution path. Mostly will be used for resolving winmd.
-            Path.GetDirectoryName(sourceFileName),
+            Path.GetDirectoryName(sourceFileName)!,
         ];
 
         if (!isPortableMode)
