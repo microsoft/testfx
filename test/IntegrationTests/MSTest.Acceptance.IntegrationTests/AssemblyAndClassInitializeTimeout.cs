@@ -23,7 +23,9 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
     {
         using TestAsset testAsset = await TestAsset.GenerateAssetAsync(_assetName, SourceCode
             .PatchCodeWithReplace("$TargetFramework$", tfm)
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion), addPublicFeeds: true);
+            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+
         DotnetMuxerResult result = await DotnetCli.RunAsync($"build -nodeReuse:false {testAsset.TargetAssetPath} -c {buildConfiguration}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, _assetName, tfm, buildConfiguration: buildConfiguration);
 
@@ -58,13 +60,13 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
-    <PlatformTarget>x64</PlatformTarget>
     <TargetFramework>$TargetFramework$</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
     <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
   </ItemGroup>
 
 </Project>
