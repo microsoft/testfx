@@ -51,23 +51,6 @@ public class AbortionTests : AcceptanceTestBase
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public string TargetAssetPath => GetAssetPath(AssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            // We expect the same semantic for Linux, the test setup is not cross and we're using specific
-            // Windows API because this gesture is not easy xplat.
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                yield break;
-            }
-
-            yield return (AssetName, AssetName,
-                Sources
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
-
         private const string Sources = """
 #file Abort.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -173,5 +156,22 @@ internal class Capabilities : ITestFrameworkCapabilities
     ITestFrameworkCapability[] ICapabilities<ITestFrameworkCapability>.Capabilities => Array.Empty<ITestFrameworkCapability>();
 }
 """;
+
+        public string TargetAssetPath => GetAssetPath(AssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            // We expect the same semantic for Linux, the test setup is not cross and we're using specific
+            // Windows API because this gesture is not easy xplat.
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                yield break;
+            }
+
+            yield return (AssetName, AssetName,
+                Sources
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+        }
     }
 }

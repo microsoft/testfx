@@ -25,6 +25,8 @@ public class TempDirectory : IDisposable
         _cleanup = cleanup;
     }
 
+    ~TempDirectory() => Clean();
+
     public string Path { get; }
 
     public void Dispose()
@@ -289,6 +291,4 @@ public class TempDirectory : IDisposable
             return files;
         }
     }
-
-    ~TempDirectory() => Clean();
 }

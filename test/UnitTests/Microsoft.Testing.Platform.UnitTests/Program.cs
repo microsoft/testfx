@@ -71,7 +71,7 @@ internal sealed class FakeTrxReportGeneratorCommandLine : ICommandLineOptionsPro
 
     public string Description => "Fake trx";
 
-    public CommandLineOption[] GetCommandLineOptions()
+    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
        => new CommandLineOption[]
         {
             new(IsTrxReportEnabled, $"Generate the TRX report.", ArgumentArity.ZeroOrOne, false),
