@@ -29,15 +29,24 @@ public sealed class ConsoleOutputDeviceTests : TestBase
     [Arguments("100ms", "00 00 00 100")]
     [Arguments("10ms", "00 00 00 010")]
     [Arguments("1ms", "00 00 00 001")]
+    [Arguments("0ms", "00 00 00 000")]
+    [Arguments(null, "negative")]
     public void ToHumanReadableDurationFormatTests(string expectedString, string time)
     {
         string[] timePart = time.Split(' ');
-        Assert.AreEqual(expectedString, OutputDevice.ConsoleOutputDevice.ToHumanReadableDuration(
-            new TimeSpan(
-                0,
-                int.Parse(timePart[0], CultureInfo.InvariantCulture),
-                int.Parse(timePart[1], CultureInfo.InvariantCulture),
-                int.Parse(timePart[2], CultureInfo.InvariantCulture),
-                int.Parse(timePart[3], CultureInfo.InvariantCulture)).TotalMilliseconds));
+        if (timePart.Length == 1 && timePart[0] == "negative")
+        {
+            Assert.IsNull(OutputDevice.ConsoleOutputDevice.ToHumanReadableDuration(-1));
+        }
+        else
+        {
+            Assert.AreEqual(expectedString, OutputDevice.ConsoleOutputDevice.ToHumanReadableDuration(
+                new TimeSpan(
+                    0,
+                    int.Parse(timePart[0], CultureInfo.InvariantCulture),
+                    int.Parse(timePart[1], CultureInfo.InvariantCulture),
+                    int.Parse(timePart[2], CultureInfo.InvariantCulture),
+                    int.Parse(timePart[3], CultureInfo.InvariantCulture)).TotalMilliseconds));
+        }
     }
 }
