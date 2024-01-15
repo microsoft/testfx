@@ -45,6 +45,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DataAccessMethod.Sequential = 0 -> 
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.Data.get -> object?[]!
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(params object?[]? data) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(string?[]? stringArrayData) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DisplayName.get -> string?
@@ -61,6 +62,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute.ProviderInvaria
 Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute.TableName.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute.DataTestMethodAttribute() -> void
+Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute.DataTestMethodAttribute(string? displayName) -> void
 Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute
 Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute.Description.get -> string?
 Microsoft.VisualStudio.TestTools.UnitTesting.DescriptionAttribute.DescriptionAttribute(string? description) -> void
@@ -219,6 +221,7 @@ Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Error = 4 -> Micros
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Failed = 0 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Inconclusive = 1 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.InProgress = 3 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
+Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.NotFound = 9 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.NotRunnable = 8 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Passed = 2 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
 Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.Timeout = 5 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
@@ -403,5 +406,6 @@ static readonly Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute
 static readonly Microsoft.VisualStudio.TestTools.UnitTesting.DataSourceAttribute.DefaultProviderName -> string!
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.GetDisplayName(System.Reflection.MethodInfo! methodInfo, object?[]? data) -> string?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionBaseAttribute.NoExceptionMessage.get -> string!
+virtual Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessageHandler.Invoke(string! message) -> void
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestClassAttribute.GetTestMethodAttribute(Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute? testMethodAttribute) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute?
 virtual Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute.Execute(Microsoft.VisualStudio.TestTools.UnitTesting.ITestMethod! testMethod) -> Microsoft.VisualStudio.TestTools.UnitTesting.TestResult![]!
