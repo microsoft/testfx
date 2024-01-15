@@ -1,16 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NET
 
+#if NETFRAMEWORK || NETCOREAPP3_1
 using System.Diagnostics;
+#endif
 using System.Runtime.InteropServices;
 
 using static System.String;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
-public static class VSInstallationUtilities
+#if NETFRAMEWORK
+public
+#else
+internal
+#endif
+    static class VSInstallationUtilities
 {
     /// <summary>
     /// Public assemblies directory name.
@@ -88,16 +95,18 @@ public static class VSInstallationUtilities
     /// </summary>
     /// <returns>True, if portable mode; false, otherwise.</returns>
     public static bool IsCurrentProcessRunningInPortableMode()
-    {
-        return IsProcessRunningInPortableMode(Process.GetCurrentProcess().MainModule.FileName);
-    }
+#if NET6_0_OR_GREATER
+        => IsProcessRunningInPortableMode(Environment.ProcessPath);
+#else
+        => IsProcessRunningInPortableMode(Process.GetCurrentProcess().MainModule.FileName);
+#endif
 
     /// <summary>
     /// Is the EXE specified running in Portable Mode.
     /// </summary>
     /// <param name="exeName">EXE name.</param>
     /// <returns>True, if portable mode; false, otherwise.</returns>
-    public static bool IsProcessRunningInPortableMode(string exeName)
+    public static bool IsProcessRunningInPortableMode(string? exeName)
     {
         // Get the directory of the exe
         var exeDir = Path.GetDirectoryName(exeName);

@@ -2,14 +2,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NET
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
 #if !WINDOWS_UWP
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 #endif
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NET
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
 #endif
 #if !WINDOWS_UWP
@@ -30,8 +30,14 @@ public class TestSourceHost : ITestSourceHost
     private string? _currentDirectory;
 #endif
 
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NET
+    /// <summary>
+    /// Assembly resolver used in the current app-domain.
+    /// </summary>
+    private AssemblyResolver? _parentDomainAssemblyResolver;
+#endif
 
+#if NETFRAMEWORK
     /// <summary>
     /// Determines whether child-appdomain needs to be created based on DisableAppDomain Flag set in runsettings.
     /// </summary>
@@ -43,17 +49,12 @@ public class TestSourceHost : ITestSourceHost
     private readonly IFrameworkHandle? _frameworkHandle;
     private readonly IAppDomain _appDomain;
 
-    /// <summary>
-    /// Assembly resolver used in the current app-domain.
-    /// </summary>
-    private AssemblyResolver? _parentDomainAssemblyResolver;
+    private string? _targetFrameworkVersion;
 
     /// <summary>
     /// Assembly resolver used in the new child app-domain created for discovery/execution.
     /// </summary>
     private AssemblyResolver? _childDomainAssemblyResolver;
-
-    private string? _targetFrameworkVersion;
 #endif
 
     /// <summary>
@@ -101,7 +102,7 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     public void SetupHost()
     {
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NET
         List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
 
         if (EqtTrace.IsInfoEnabled)
@@ -110,8 +111,10 @@ public class TestSourceHost : ITestSourceHost
         }
 
         _parentDomainAssemblyResolver = new AssemblyResolver(resolutionPaths);
-        AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_parentDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName));
+        AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_parentDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName)!);
+#endif
 
+#if NETFRAMEWORK
         // Case when DisableAppDomain setting is present in runsettings and no child-appdomain needs to be created
         if (!_isAppDomainCreationDisabled)
         {
@@ -311,6 +314,18 @@ public class TestSourceHost : ITestSourceHost
             : Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location);
     }
 
+    internal virtual string GetTargetFrameworkVersionString(string sourceFileName)
+    {
+        return AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
+    }
+
+    private static string? GetConfigFileForTestSource(string sourceFileName)
+    {
+        return new DeploymentUtility().GetConfigFile(sourceFileName);
+    }
+#endif
+
+#if NETFRAMEWORK || NET
     /// <summary>
     /// Gets the probing paths to load the test assembly dependencies.
     /// </summary>
@@ -337,43 +352,31 @@ public class TestSourceHost : ITestSourceHost
             EqtTrace.Info("DesktopTestSourceHost.GetResolutionPaths(): Not running in portable mode");
 
             string? pathToPublicAssemblies = VSInstallationUtilities.PathToPublicAssemblies;
-            if (!StringEx.IsNullOrWhiteSpace(pathToPublicAssemblies)
-                && !StringUtilities.IsNullOrWhiteSpace(pathToPublicAssemblies))
+            if (!StringEx.IsNullOrWhiteSpace(pathToPublicAssemblies))
             {
                 resolutionPaths.Add(pathToPublicAssemblies);
             }
 
             string? pathToPrivateAssemblies = VSInstallationUtilities.PathToPrivateAssemblies;
-            if (!StringEx.IsNullOrWhiteSpace(pathToPrivateAssemblies)
-                && !StringUtilities.IsNullOrWhiteSpace(pathToPrivateAssemblies))
+            if (!StringEx.IsNullOrWhiteSpace(pathToPrivateAssemblies))
             {
                 resolutionPaths.Add(pathToPrivateAssemblies);
             }
         }
 
         // Adding adapter folder to resolution paths
-        if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)))
+        if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!))
         {
-            resolutionPaths.Add(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location));
+            resolutionPaths.Add(Path.GetDirectoryName(typeof(TestSourceHost).Assembly.Location)!);
         }
 
         // Adding TestPlatform folder to resolution paths
-        if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)))
+        if (!resolutionPaths.Contains(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)!))
         {
-            resolutionPaths.Add(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location));
+            resolutionPaths.Add(Path.GetDirectoryName(typeof(AssemblyHelper).Assembly.Location)!);
         }
 
         return resolutionPaths;
-    }
-
-    internal virtual string GetTargetFrameworkVersionString(string sourceFileName)
-    {
-        return AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
-    }
-
-    private static string? GetConfigFileForTestSource(string sourceFileName)
-    {
-        return new DeploymentUtility().GetConfigFile(sourceFileName);
     }
 
     private static void AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(AssemblyResolver assemblyResolver, string baseDirectory)
