@@ -15,6 +15,7 @@ pr:
     include:
     - main
     - rel/*
+    - dev/3.3.X
   paths:
     exclude:
       - .github/*
