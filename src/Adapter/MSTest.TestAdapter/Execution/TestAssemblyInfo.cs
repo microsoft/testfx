@@ -143,7 +143,7 @@ public class TestAssemblyInfo
                         try
                         {
                             // TestContext is public and the CancellationTokenSource property has got protected set accessor.
-                            // So we don't substitute the curre CTS instance but we signal the current one.
+                            // So we don't substitute the current CTS instance but instead we signal the current one.
                             if (AssemblyInitializeMethodTimeoutMilliseconds is not null)
                             {
                                 timeoutTokenSource = new(AssemblyInitializeMethodTimeoutMilliseconds.Value);
