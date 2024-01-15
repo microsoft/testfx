@@ -44,7 +44,7 @@ public sealed class ConsoleOutputDeviceTests : TestBase
 
     [Arguments(null)]
     [Arguments(-1)]
-    public void ToHumanReadableDuration_ShouldReturnNull(double? durationInMs)
+    public void ToHumanReadableDuration_InvalidInput_ShouldReturnNull(double? durationInMs)
     {
         Assert.IsNull(OutputDevice.ConsoleOutputDevice.ToHumanReadableDuration(durationInMs));
     }
