@@ -13,8 +13,6 @@ internal sealed class FileLoggerProvider(
     ITask task,
     IConsole console,
     IFileSystem fileSystem,
-    ISemaphoreFactory semaphoreFactory,
-    IProducerConsumerFactory<string> producerConsumerFactory,
     IFileStreamFactory fileStreamFactory,
     IStreamWriterFactory streamWriterFactory) : IFileLoggerProvider, IDisposable
 #if NETCOREAPP
@@ -29,8 +27,6 @@ internal sealed class FileLoggerProvider(
     private readonly IConsole _console = console;
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly bool _customDirectory = customDirectory;
-    private readonly ISemaphoreFactory _semaphoreFactory = semaphoreFactory;
-    private readonly IProducerConsumerFactory<string> _producerConsumerFactory = producerConsumerFactory;
     private readonly IFileStreamFactory _fileStreamFactory = fileStreamFactory;
     private readonly IStreamWriterFactory _streamWriterFactory = streamWriterFactory;
 
@@ -43,8 +39,6 @@ internal sealed class FileLoggerProvider(
         task,
         console,
         fileSystem,
-        semaphoreFactory,
-        producerConsumerFactory,
         fileStreamFactory,
         streamWriterFactory);
 
@@ -74,8 +68,6 @@ internal sealed class FileLoggerProvider(
             _task,
             _console,
             _fileSystem,
-            _semaphoreFactory,
-            _producerConsumerFactory,
             _fileStreamFactory,
             _streamWriterFactory);
     }

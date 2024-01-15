@@ -355,8 +355,6 @@ public sealed class TestApplication : ITestApplication
                 task,
                 console,
                 new SystemFileSystem(),
-                new SystemSemaphoreFactory(),
-                new SystemProducerConsumerFactory<string>(),
                 new SystemFileStreamFactory(),
                 new SystemStreamWriterFactory()),
             synchronousWrite);

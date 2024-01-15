@@ -3,6 +3,8 @@
 
 #if NETCOREAPP
 using System.Threading.Channels;
+#else
+using System.Collections.Concurrent;
 #endif
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -20,8 +22,7 @@ internal sealed class FileLogger : IDisposable
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
-    private readonly ISemaphore _semaphore;
-    private readonly ISemaphoreFactory _semaphoreFactory;
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly FileLoggerOptions _options;
     private readonly LogLevel _logLevel;
     private readonly IClock _clock;
@@ -33,11 +34,10 @@ internal sealed class FileLogger : IDisposable
     private readonly IStreamWriterFactory _writerFactory;
     private readonly Task? _logLoop;
 
-    private readonly IProducerConsumerFactory<string> _producerConsumerFactory;
 #if NETCOREAPP
-    private readonly IChannel<string>? _channel;
+    private readonly Channel<string>? _channel;
 #else
-    private readonly IBlockingCollection<string>? _asyncLogs;
+    private readonly BlockingCollection<string>? _asyncLogs;
 #endif
     private bool _disposed;
 
@@ -48,8 +48,6 @@ internal sealed class FileLogger : IDisposable
         ITask task,
         IConsole console,
         IFileSystem fileSystem,
-        ISemaphoreFactory semaphoreFactory,
-        IProducerConsumerFactory<string> producerConsumerFactory,
         IFileStreamFactory fileStreamFactory,
         IStreamWriterFactory streamWriterFactory)
     {
@@ -58,17 +56,13 @@ internal sealed class FileLogger : IDisposable
         _logLevel = logLevel;
         _console = console;
         _fileSystem = fileSystem;
-        _semaphoreFactory = semaphoreFactory;
-        _producerConsumerFactory = producerConsumerFactory;
         _fileStreamFactory = fileStreamFactory;
         _writerFactory = streamWriterFactory;
-
-        _semaphore = _semaphoreFactory.Create(1, 1);
 
         if (!_options.SyncFlush)
         {
 #if NETCOREAPP
-            _channel = _producerConsumerFactory.Create(new UnboundedChannelOptions()
+            _channel = Channel.CreateUnbounded<string>(new UnboundedChannelOptions()
             {
                 // We process only 1 data at a time
                 SingleReader = true,
@@ -80,7 +74,7 @@ internal sealed class FileLogger : IDisposable
                 AllowSynchronousContinuations = false,
             });
 #else
-            _asyncLogs = _producerConsumerFactory.Create();
+            _asyncLogs = [];
 #endif
 
             _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
@@ -220,7 +214,7 @@ internal sealed class FileLogger : IDisposable
 
         string log = $"[{_clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)} {category} - {logLevel}] {formatter(state, exception)}";
 #if NETCOREAPP
-        if (!_channel.TryWrite(log))
+        if (!_channel.Writer.TryWrite(log))
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.FailedToWriteLogToChannelErrorMessage, log));
         }
@@ -243,9 +237,9 @@ internal sealed class FileLogger : IDisposable
         {
 #if NETCOREAPP
             // We don't need cancellation token because the task will be stopped when the Channel is completed thanks to the call to Complete() inside the Dispose method.
-            while (await _channel.WaitToReadAsync())
+            while (await _channel.Reader.WaitToReadAsync())
             {
-                await _writer.WriteLineAsync(await _channel.ReadAsync());
+                await _writer.WriteLineAsync(await _channel.Reader.ReadAsync());
             }
 #else
             // We don't need cancellation token because the task will be stopped when the BlockingCollection is completed thanks to the call to CompleteAdding()
@@ -290,7 +284,7 @@ internal sealed class FileLogger : IDisposable
 
 #if NETCOREAPP
             // Wait for all logs to be written
-            _channel.TryComplete();
+            _channel.Writer.TryComplete();
 #else
             // Wait for all logs to be written
             _asyncLogs.CompleteAdding();
@@ -322,7 +316,7 @@ internal sealed class FileLogger : IDisposable
             EnsureAsyncLogObjectsAreNotNull();
 
             // Wait for all logs to be written
-            _channel.TryComplete();
+            _channel.Writer.TryComplete();
             await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
         }
 

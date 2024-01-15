@@ -4,10 +4,6 @@
 using System.Globalization;
 using System.Text;
 
-#if NETCOREAPP
-using System.Threading.Channels;
-#endif
-
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
@@ -35,14 +31,6 @@ public class FileLoggerTests : TestBase
     private readonly Mock<IClock> _mockClock = new();
     private readonly Mock<IConsole> _mockConsole = new();
     private readonly Mock<IFileSystem> _mockFileSystem = new();
-#if NETCOREAPP
-    private readonly Mock<IChannel<string>> _mockProducerConsumer = new();
-#else
-    private readonly Mock<IBlockingCollection<string>> _mockProducerConsumer = new();
-#endif
-    private readonly Mock<ISemaphore> _mockSemaphore = new();
-    private readonly Mock<ISemaphoreFactory> _mockSemaphoreFactory = new();
-    private readonly Mock<IProducerConsumerFactory<string>> _mockProducerConsumerFactory = new();
     private readonly Mock<IFileStream> _mockStream = new();
     private readonly Mock<IFileStreamFactory> _mockFileStreamFactory = new();
     private readonly Mock<IStreamWriter> _mockStreamWriter = new();
@@ -51,10 +39,6 @@ public class FileLoggerTests : TestBase
     public FileLoggerTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        _mockSemaphore.Setup(x => x.Release());
-        _mockSemaphore.Setup(x => x.Dispose());
-        _mockSemaphoreFactory.Setup(x => x.Create(It.IsAny<int>(), It.IsAny<int>()))
-            .Returns(_mockSemaphore.Object);
         _mockStream.Setup(x => x.Dispose());
         _mockStreamWriter.Setup(x => x.Flush());
         _mockStreamWriter.Setup(x => x.Dispose());
@@ -63,18 +47,6 @@ public class FileLoggerTests : TestBase
 #if NETCOREAPP
         _mockStream.Setup(x => x.DisposeAsync());
         _mockStreamWriter.Setup(x => x.DisposeAsync());
-        _mockProducerConsumerFactory.Setup(x => x.Create(It.IsAny<UnboundedChannelOptions>())).Returns(_mockProducerConsumer.Object);
-        _mockProducerConsumer.SetupSequence(x => x.WaitToReadAsync(It.IsAny<CancellationToken>()))
-            .Returns(new ValueTask<bool>(true))
-            .Returns(new ValueTask<bool>(true))
-            .Returns(new ValueTask<bool>(false));
-        _mockProducerConsumer.SetupSequence(x => x.ReadAsync(It.IsAny<CancellationToken>()))
-            .Returns(new ValueTask<string>(Result1))
-            .Returns(new ValueTask<string>(Result2));
-#else
-        _mockProducerConsumerFactory.Setup(x => x.Create()).Returns(_mockProducerConsumer.Object);
-        _mockProducerConsumer.Setup(x => x.GetConsumingEnumerable())
-            .Returns(new List<string>() { Result1, Result2 });
 #endif
     }
 
@@ -88,8 +60,6 @@ public class FileLoggerTests : TestBase
             new SystemTask(),
             new SystemConsole(),
             new SystemFileSystem(),
-            new SystemSemaphoreFactory(),
-            new SystemProducerConsumerFactory<string>(),
             new SystemFileStreamFactory(),
             new SystemStreamWriterFactory());
         fileLogger.Log(LogLevel.Trace, "\uD886", null, LoggingExtensions.Formatter, "Category");
@@ -124,8 +94,6 @@ public class FileLoggerTests : TestBase
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockSemaphoreFactory.Object,
-            _mockProducerConsumerFactory.Object,
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
 
@@ -158,8 +126,6 @@ public class FileLoggerTests : TestBase
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockSemaphoreFactory.Object,
-            _mockProducerConsumerFactory.Object,
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object));
     }
@@ -185,8 +151,6 @@ public class FileLoggerTests : TestBase
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockSemaphoreFactory.Object,
-            _mockProducerConsumerFactory.Object,
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
 
@@ -218,8 +182,6 @@ public class FileLoggerTests : TestBase
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockSemaphoreFactory.Object,
-            _mockProducerConsumerFactory.Object,
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
 
@@ -243,9 +205,6 @@ public class FileLoggerTests : TestBase
         _mockStreamWriterFactory
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
             .Returns(_mockStreamWriter.Object);
-        _mockSemaphore.SetupSequence(x => x.Wait(It.IsAny<TimeSpan>()))
-            .Returns(true)
-            .Returns(false);
 
         using FileLoggerProvider fileLoggerProvider = new(
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
@@ -255,8 +214,6 @@ public class FileLoggerTests : TestBase
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockSemaphoreFactory.Object,
-            _mockProducerConsumerFactory.Object,
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
 
@@ -275,16 +232,12 @@ public class FileLoggerTests : TestBase
         Assert.IsFalse(fileLoggerCategory.IsEnabled(LogLevel.Trace));
 
         fileLoggerCategory.Log(LogLevel.Trace, Message, null, Formatter);
-        _mockSemaphore.Verify(x => x.Wait(It.IsAny<TimeSpan>()), Times.Never);
 
         fileLoggerCategory.Log(LogLevel.Information, Message, null, Formatter);
         _mockStreamWriter.Verify(x => x.WriteLine(It.IsAny<string>()), Times.Once);
-        _mockSemaphore.Verify(x => x.Wait(It.IsAny<TimeSpan>()), Times.Once);
-        _mockSemaphore.Verify(x => x.Release(), Times.Once);
 
         Assert.Throws<InvalidOperationException>(() =>
             fileLoggerCategory.Log(LogLevel.Information, Message, null, Formatter));
-        _mockSemaphore.Verify(x => x.Wait(It.IsAny<TimeSpan>()), Times.Exactly(2));
     }
 
     public void FileLogger_ValidFileNameAsyncFlush_FileStreamWrite()
@@ -298,13 +251,6 @@ public class FileLoggerTests : TestBase
         _mockStreamWriterFactory
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
             .Returns(_mockStreamWriter.Object);
-#if NETCOREAPP
-        _mockProducerConsumer.SetupSequence(x => x.TryWrite(It.IsAny<string>()))
-            .Returns(true)
-            .Returns(false);
-#else
-        _mockProducerConsumer.Setup(x => x.Add(It.IsAny<string>()));
-#endif
 
         using FileLoggerProvider fileLoggerProvider = new(
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
@@ -314,8 +260,6 @@ public class FileLoggerTests : TestBase
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockSemaphoreFactory.Object,
-            _mockProducerConsumerFactory.Object,
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
 
@@ -334,23 +278,12 @@ public class FileLoggerTests : TestBase
         Assert.IsFalse(fileLoggerCategory.IsEnabled(LogLevel.Trace));
 
         fileLoggerCategory.Log(LogLevel.Trace, Message, null, Formatter);
-#if NETCOREAPP
-        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Never);
-#else
-        _mockProducerConsumer.Verify(x => x.Add(It.IsAny<string>()), Times.Never);
-#endif
 
         fileLoggerCategory.Log(LogLevel.Information, Message, null, Formatter);
-#if NETCOREAPP
-        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Once);
-#else
-        _mockProducerConsumer.Verify(x => x.Add(It.IsAny<string>()), Times.Once);
-#endif
 
 #if NETCOREAPP
         Assert.Throws<InvalidOperationException>(() =>
             fileLoggerCategory.Log(LogLevel.Information, Message, null, Formatter));
-        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Exactly(2));
 #endif
     }
 
@@ -366,9 +299,6 @@ public class FileLoggerTests : TestBase
         _mockStreamWriterFactory
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
             .Returns(_mockStreamWriter.Object);
-        _mockSemaphore.SetupSequence(x => x.WaitAsync(It.IsAny<TimeSpan>()))
-            .Returns(Task.FromResult(true))
-            .Returns(Task.FromResult(false));
 
         using FileLoggerProvider fileLoggerProvider = new(
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
@@ -378,8 +308,6 @@ public class FileLoggerTests : TestBase
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockSemaphoreFactory.Object,
-            _mockProducerConsumerFactory.Object,
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
 
@@ -401,16 +329,12 @@ public class FileLoggerTests : TestBase
         Assert.IsFalse(fileLoggerCategory.IsEnabled(LogLevel.Trace));
 
         await fileLoggerCategory.LogAsync(LogLevel.Trace, Message, null, Formatter);
-        _mockSemaphore.Verify(x => x.WaitAsync(It.IsAny<TimeSpan>()), Times.Never);
 
         await fileLoggerCategory.LogAsync(LogLevel.Information, Message, null, Formatter);
         _mockStreamWriter.Verify(x => x.WriteLineAsync(It.IsAny<string>()), Times.Once);
-        _mockSemaphore.Verify(x => x.WaitAsync(It.IsAny<TimeSpan>()), Times.Once);
-        _mockSemaphore.Verify(x => x.Release(), Times.Once);
 
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await fileLoggerCategory.LogAsync(LogLevel.Information, Message, null, Formatter));
-        _mockSemaphore.Verify(x => x.WaitAsync(It.IsAny<TimeSpan>()), Times.Exactly(2));
     }
 
     public async ValueTask FileLogger_ValidFileNameAsyncFlush_FileStreamWriteAsync()
@@ -425,13 +349,6 @@ public class FileLoggerTests : TestBase
         _mockStreamWriterFactory
             .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
             .Returns(_mockStreamWriter.Object);
-#if NETCOREAPP
-        _mockProducerConsumer.SetupSequence(x => x.TryWrite(It.IsAny<string>()))
-            .Returns(true)
-            .Returns(false);
-#else
-        _mockProducerConsumer.Setup(x => x.Add(It.IsAny<string>()));
-#endif
 
         using FileLoggerProvider fileLoggerProvider = new(
             new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
@@ -441,8 +358,6 @@ public class FileLoggerTests : TestBase
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockSemaphoreFactory.Object,
-            _mockProducerConsumerFactory.Object,
             _mockFileStreamFactory.Object,
             _mockStreamWriterFactory.Object);
 
@@ -464,23 +379,12 @@ public class FileLoggerTests : TestBase
         Assert.IsFalse(fileLoggerCategory.IsEnabled(LogLevel.Trace));
 
         await fileLoggerCategory.LogAsync(LogLevel.Trace, Message, null, Formatter);
-#if NETCOREAPP
-        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Never);
-#else
-        _mockProducerConsumer.Verify(x => x.Add(It.IsAny<string>()), Times.Never);
-#endif
 
         await fileLoggerCategory.LogAsync(LogLevel.Information, Message, null, Formatter);
-#if NETCOREAPP
-        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Once);
-#else
-        _mockProducerConsumer.Verify(x => x.Add(It.IsAny<string>()), Times.Once);
-#endif
 
 #if NETCOREAPP
         await Assert.ThrowsAsync<InvalidOperationException>(async () =>
             await fileLoggerCategory.LogAsync(LogLevel.Information, Message, null, Formatter));
-        _mockProducerConsumer.Verify(x => x.TryWrite(It.IsAny<string>()), Times.Exactly(2));
 #endif
     }
 }
