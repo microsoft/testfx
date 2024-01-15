@@ -9,7 +9,7 @@ using Microsoft.Testing.Framework.Configurations;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.CommandLine;
 #if ENABLE_CODECOVERAGE
-using Microsoft.Testing.Platform.Extensions.CodeCoverage;
+using Microsoft.Testing.Extensions.CodeCoverage;
 #endif
 using Microsoft.Testing.Platform.Extensions.TestHost;
 

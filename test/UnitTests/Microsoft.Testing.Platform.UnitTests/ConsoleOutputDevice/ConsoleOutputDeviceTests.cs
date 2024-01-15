@@ -29,7 +29,8 @@ public sealed class ConsoleOutputDeviceTests : TestBase
     [Arguments("100ms", "00 00 00 100")]
     [Arguments("10ms", "00 00 00 010")]
     [Arguments("1ms", "00 00 00 001")]
-    public void ToHumanReadableDurationFormatTests(string expectedString, string time)
+    [Arguments("0ms", "00 00 00 000")]
+    public void ToHumanReadableDurationTests(string expectedString, string time)
     {
         string[] timePart = time.Split(' ');
         Assert.AreEqual(expectedString, OutputDevice.ConsoleOutputDevice.ToHumanReadableDuration(
@@ -39,5 +40,12 @@ public sealed class ConsoleOutputDeviceTests : TestBase
                 int.Parse(timePart[1], CultureInfo.InvariantCulture),
                 int.Parse(timePart[2], CultureInfo.InvariantCulture),
                 int.Parse(timePart[3], CultureInfo.InvariantCulture)).TotalMilliseconds));
+    }
+
+    [Arguments(null)]
+    [Arguments(-1)]
+    public void ToHumanReadableDuration_InvalidInput_ShouldReturnNull(double? durationInMs)
+    {
+        Assert.IsNull(OutputDevice.ConsoleOutputDevice.ToHumanReadableDuration(durationInMs));
     }
 }
