@@ -227,17 +227,6 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public string TargetAssetPath => GetAssetPath(AssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
-                TestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
-        }
-
         private const string TestCode = """
 #file DiagnosticTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -280,5 +269,16 @@ global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.Testing.Framework;
 global using Microsoft.Testing.Extensions;
 """;
+
+        public string TargetAssetPath => GetAssetPath(AssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (AssetName, AssetName,
+                TestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+        }
     }
 }

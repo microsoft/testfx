@@ -8,8 +8,8 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestGroup]
 public class DotnetTestCliTests : AcceptanceTestBase
 {
-    private readonly AcceptanceFixture _acceptanceFixture;
     private const string AssetName = "MSTestProject";
+    private readonly AcceptanceFixture _acceptanceFixture;
 
     public DotnetTestCliTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
         : base(testExecutionContext)

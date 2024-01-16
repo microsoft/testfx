@@ -125,25 +125,6 @@ Extension options:
         public const string NoExtensionAssetName = "NoExtensionHelpTest";
         public const string MSTestAssetName = "MSTestHelpTest";
 
-        public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
-
-        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (NoExtensionAssetName, NoExtensionAssetName,
-                NoExtensionHelpTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
-            yield return (MSTestAssetName, MSTestAssetName,
-                MSTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
-
         private const string NoExtensionHelpTestCode = """
 #file NoExtensionHelpTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -233,5 +214,24 @@ global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.Testing.Extensions;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 """;
+
+        public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
+
+        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (NoExtensionAssetName, NoExtensionAssetName,
+                NoExtensionHelpTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+            yield return (MSTestAssetName, MSTestAssetName,
+                MSTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+        }
     }
 }

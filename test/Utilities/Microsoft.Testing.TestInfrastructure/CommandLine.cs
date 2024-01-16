@@ -9,11 +9,11 @@ public sealed class CommandLine : IDisposable
 {
     private static int s_totalProcessesAttempt;
 
-    public static int TotalProcessesAttempt => s_totalProcessesAttempt;
-
     private readonly List<string> _errorOutputLines = new();
     private readonly List<string> _standardOutputLines = new();
     private IProcessHandle? _process;
+
+    public static int TotalProcessesAttempt => s_totalProcessesAttempt;
 
     public ReadOnlyCollection<string> StandardOutputLines => _standardOutputLines.AsReadOnly();
 

@@ -27,7 +27,7 @@ internal sealed class TreeNodeFilterCommandLineOptionsProvider(IExtension extens
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public CommandLineOption[] GetCommandLineOptions()
+    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
         => new CommandLineOption[]
         {
             new(TreenodeFilter, PlatformResources.TreeNodeFilterDescription, ArgumentArity.ZeroOrOne, false),

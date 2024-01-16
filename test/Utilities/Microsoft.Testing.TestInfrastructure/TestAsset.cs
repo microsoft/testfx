@@ -17,6 +17,10 @@ public class TestAsset : IDisposable
         _tempDirectory = new(targetPath, arcadeConvention: true, cleanup);
     }
 
+    public string TargetAssetPath => _tempDirectory.Path;
+
+    public DotnetMuxerResult? DotnetResult { get; internal set; }
+
     public void Dispose()
     {
         Dispose(true);
@@ -40,10 +44,6 @@ public class TestAsset : IDisposable
 
         _isDisposed = true;
     }
-
-    public string TargetAssetPath => _tempDirectory.Path;
-
-    public DotnetMuxerResult? DotnetResult { get; internal set; }
 
     private static (string Name, string Content) ParseFile(string fileContent)
     {

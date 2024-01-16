@@ -48,7 +48,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public CommandLineOption[] GetCommandLineOptions()
+    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
         => new CommandLineOption[]
         {
             // Visible options

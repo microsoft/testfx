@@ -12,7 +12,7 @@ using Microsoft.Testing.Platform.Messages;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
-namespace Microsoft.Testing.Platform.Extensions.MSTest;
+namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
 internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTestBridgedTestFramework
 {

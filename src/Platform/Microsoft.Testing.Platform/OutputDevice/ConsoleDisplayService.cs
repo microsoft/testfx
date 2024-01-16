@@ -152,11 +152,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                         int index = informationalVersion.LastIndexOfAny(PlusSign);
                         if (index != -1)
                         {
-#if NETCOREAPP
                             stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {informationalVersion[..(index + 10)]}");
-#else
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {informationalVersion.Substring(0, index + 10)}");
-#endif
                         }
                         else
                         {
@@ -573,20 +569,50 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     }
 
     /// <summary>
-    /// Convert duration property text to human readable duration, e.g. 10ms, 1.2s.
+    /// Convert duration property text to human readable duration.
     /// </summary>
-    private static string? ToHumanReadableDuration(double? durationInMs)
+    internal /* for testing */ static string? ToHumanReadableDuration(double? durationInMs)
     {
-        if (durationInMs is null)
+        if (durationInMs is null or < 0)
         {
             return null;
         }
 
-        double duration = durationInMs.Value;
+        TimeSpan time = TimeSpan.FromMilliseconds(durationInMs.Value);
 
-        return duration < 1000
-            ? $"{Math.Round(duration, 0)}ms"
-            : duration < 10_000 ? $"{Math.Round(duration / 1000, 2)}s" : $"{Math.Round(duration / 1000, 0)}s";
+        StringBuilder stringBuilder = new();
+        bool hasParentValue = false;
+
+        if (time.Days > 0)
+        {
+            stringBuilder.Append(CultureInfo.InvariantCulture, $"{time.Days}d");
+            hasParentValue = true;
+        }
+
+        if (time.Hours > 0 || hasParentValue)
+        {
+            stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Hours.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : time.Hours.ToString(CultureInfo.InvariantCulture))}h");
+            hasParentValue = true;
+        }
+
+        if (time.Minutes > 0 || hasParentValue)
+        {
+            stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Minutes.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : time.Minutes.ToString(CultureInfo.InvariantCulture))}m");
+            hasParentValue = true;
+        }
+
+        if (time.Seconds > 0 || hasParentValue)
+        {
+            stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Seconds.ToString(CultureInfo.InvariantCulture).PadLeft(2, '0') : time.Seconds.ToString(CultureInfo.InvariantCulture))}s");
+            hasParentValue = true;
+        }
+
+        if (time.Milliseconds >= 0 || hasParentValue)
+        {
+            stringBuilder.Append(CultureInfo.InvariantCulture, $"{(hasParentValue ? " " : string.Empty)}{(hasParentValue ? time.Milliseconds.ToString(CultureInfo.InvariantCulture).PadLeft(3, '0') : time.Milliseconds.ToString(CultureInfo.InvariantCulture))}ms");
+        }
+
+        return stringBuilder.ToString();
     }
 }
 

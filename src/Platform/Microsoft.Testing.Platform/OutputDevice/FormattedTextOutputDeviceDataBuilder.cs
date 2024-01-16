@@ -3,7 +3,7 @@
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
-internal static class FormattedTextOutputDeviceDataHelper
+internal static class FormattedTextOutputDeviceDataBuilder
 {
     public static FormattedTextOutputDeviceData CreateGreenConsoleColorText(string text)
            => new(text) { ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green } };

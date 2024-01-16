@@ -168,7 +168,7 @@ public class ArgumentArityTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public CommandLineOption[] GetCommandLineOptions()
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
             => new CommandLineOption[]
             {
                 new("zeroArgumentsOption", "Show command line zeroArgumentsOption.", ArgumentArity.Zero, false),

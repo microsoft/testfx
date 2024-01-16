@@ -4,6 +4,7 @@ trigger:
     include:
     - main
     - rel/*
+    - dev/3.3.X
     exclude:
     - rel/2.*
     - rel/3.0.*
@@ -14,6 +15,7 @@ pr:
     include:
     - main
     - rel/*
+    - dev/3.3.X
   paths:
     exclude:
       - .github/*
