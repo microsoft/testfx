@@ -9,58 +9,65 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestGroup]
 public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
 {
-    private readonly string _assetName = "AssemblyAndClassInitializeTimeout";
-    private readonly AcceptanceFixture _acceptanceFixture;
+    private readonly TestAssetFixture _testAssetFixture;
 
-    public AssemblyAndClassInitializeTimeout(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
+    // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
+    public AssemblyAndClassInitializeTimeout(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
+        AcceptanceFixture globalFixture)
         : base(testExecutionContext)
     {
-        _acceptanceFixture = acceptanceFixture;
+        _testAssetFixture = testAssetFixture;
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildConfiguration))]
-    public async Task AssemblyInitialize_Timeout_Should_Stop_Execution(string tfm, BuildConfiguration buildConfiguration)
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task AssemblyInitialize_Timeout_For_ClassInitialize_Should_Fail(string tfm)
     {
-        using TestAsset testAsset = await TestAsset.GenerateAssetAsync(_assetName, SourceCode
-            .PatchCodeWithReplace("$TargetFramework$", tfm)
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-
-        DotnetMuxerResult result = await DotnetCli.RunAsync($"build -nodeReuse:false {testAsset.TargetAssetPath} -c {buildConfiguration}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        var testHost = TestHost.LocateFrom(testAsset.TargetAssetPath, _assetName, tfm, buildConfiguration: buildConfiguration);
-
-        foreach (string initMethodToTimeout in new[] { "TIMEOUT_CLASSINIT", "TIMEOUT_ASSEMBLYINIT", "TIMEOUT_BASE_CLASSINIT" })
-        {
-            var testhostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { initMethodToTimeout, "1" } });
-
-            if (initMethodToTimeout == "TIMEOUT_CLASSINIT")
-            {
-                testhostResult.AssertOutputContains("Class Initialization method TestClass.ClassInit threw exception. System.Threading.Tasks.TaskCanceledException: A task was canceled..");
-                continue;
-            }
-
-            if (initMethodToTimeout == "TIMEOUT_ASSEMBLYINIT")
-            {
-                testhostResult.AssertOutputContains("Assembly Initialization method TestClass.AssemblyInit threw exception. System.Threading.Tasks.TaskCanceledException: A task was canceled.. Aborting test execution.");
-                continue;
-            }
-
-            if (initMethodToTimeout == "TIMEOUT_BASE_CLASSINIT")
-            {
-                testhostResult.AssertOutputContains("Class Initialization method TestClass.ClassInitBase threw exception. System.Threading.Tasks.TaskCanceledException: A task was canceled..");
-                continue;
-            }
-        }
+        var testHost = TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm, buildConfiguration: BuildConfiguration.Release);
+        var testhostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_CLASSINIT", "1" } });
+        testhostResult.AssertOutputContains("Class Initialization method TestClass.ClassInit threw exception. System.Threading.Tasks.TaskCanceledException: A task was canceled..");
     }
 
-    protected const string SourceCode = """
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task AssemblyInitialize_Timeout_For_ClassInitialize_With_BaseClass_Should_Fail(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm, buildConfiguration: BuildConfiguration.Release);
+        var testhostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_BASE_CLASSINIT", "1" } });
+        testhostResult.AssertOutputContains("Class Initialization method TestClass.ClassInitBase threw exception. System.Threading.Tasks.TaskCanceledException: A task was canceled..");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task AssemblyInitialize_Timeout_For_AssemblyInitialize_With_BaseClass_Should_Fail(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm, buildConfiguration: BuildConfiguration.Release);
+        var testhostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_ASSEMBLYINIT", "1" } });
+        testhostResult.AssertOutputContains("Assembly Initialization method TestClass.AssemblyInit threw exception. System.Threading.Tasks.TaskCanceledException: A task was canceled.. Aborting test execution.");
+    }
+
+    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
+    public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
+    {
+        public const string MSTestAssetName = "AssemblyAndClassInitializeTimeout";
+
+        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (MSTestAssetName, MSTestAssetName,
+                SourceCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+        }
+
+        private const string SourceCode = """
 #file AssemblyAndClassInitializeTimeout.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
-    <TargetFramework>$TargetFramework$</TargetFramework>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -130,4 +137,5 @@ public class TestClass : TestClassBase
     public Task Test1() => Task.CompletedTask;
 }
 """;
+    }
 }
