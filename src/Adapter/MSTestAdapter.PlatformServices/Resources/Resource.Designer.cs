@@ -63,15 +63,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The runsettings &apos;AssemblyResolution&apos; entries are only supported in .NET Framework. If your tests are working consider removing this entry otherwise you will need to make sure all dependent assemblies are found in the ouput directory of your test..
-        /// </summary>
-        internal static string AssemblyResolutionIsOnlyWorkingWithNetFramework {
-            get {
-                return ResourceManager.GetString("AssemblyResolutionIsOnlyWorkingWithNetFramework", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Could not find file &apos;{0}&apos;..
         /// </summary>
         internal static string CannotFindFile {

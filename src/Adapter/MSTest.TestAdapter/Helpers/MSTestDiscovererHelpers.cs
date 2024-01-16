@@ -20,8 +20,7 @@ internal static class MSTestDiscovererHelpers
             PlatformServiceProvider.Instance.TestSource.ValidSourceExtensions.Any(extension =>
                 string.Equals(Path.GetExtension(source), extension, StringComparison.OrdinalIgnoreCase)));
 
-    internal static bool InitializeDiscovery(IEnumerable<string> sources, IDiscoveryContext? discoveryContext, IMessageLogger messageLogger,
-        bool validateSettings)
+    internal static bool InitializeDiscovery(IEnumerable<string> sources, IDiscoveryContext? discoveryContext, IMessageLogger messageLogger)
     {
         if (!AreValidSources(sources))
         {
@@ -32,10 +31,6 @@ internal static class MSTestDiscovererHelpers
         try
         {
             MSTestSettings.PopulateSettings(discoveryContext);
-            if (validateSettings)
-            {
-                MSTestSettings.ValidateSettings(messageLogger);
-            }
         }
         catch (AdapterSettingsException ex)
         {
