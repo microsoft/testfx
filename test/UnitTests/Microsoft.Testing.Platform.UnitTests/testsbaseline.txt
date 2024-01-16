@@ -264,7 +264,7 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TreeNo
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TreeNodeFilterTests.TestNodeFilterNeedsUrlEncodingOfSlashes(string, string, bool) (filter: "/A/B", nodePath: "/A%2FB", isMatched: false)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TreeNodeFilterTests.TestNodeFilterNeedsUrlEncodingOfSlashes(string, string, bool) (filter: "/A%2FB", nodePath: "/A/B", isMatched: false)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.TreeNodeFilterTests.TestNodeFilterNeedsUrlEncodingOfSlashes(string, string, bool) (filter: "/A%2FB", nodePath: "/A%2FB", isMatched: true)
-Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerFactoryTests.LoggerFactory_WriteLogFromFactory()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerFactoryTests.LoggerFactory_LoggerCreatedOnlyOnce()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_NullFileSyncFlush_FileStreamCreated()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_NullFileSyncFlush_FileStreamCreationThrows()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_LogTest(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel, bool, bool) (defaultLogLevel: Microsoft.Testing.Platform.Logging.LogLevel.Information, currentLogLevel: Microsoft.Testing.Platform.Logging.LogLevel.Trace, shouldLog: false, syncFlush: true)

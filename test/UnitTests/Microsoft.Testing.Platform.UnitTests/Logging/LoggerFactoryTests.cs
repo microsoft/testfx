@@ -21,8 +21,6 @@ public class LoggerFactoryTests : TestBase
     public LoggerFactoryTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        _mockLogger.Setup(x => x.Log(It.IsAny<LogLevel>(), It.IsAny<string>(), It.IsAny<Exception?>(), It.IsAny<Func<string, Exception?, string>>()));
-        _mockLogger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
         _mockMonitor.Setup(x => x.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object);
         _mockLoggerProvider.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_mockLogger.Object);
 
@@ -32,16 +30,15 @@ public class LoggerFactoryTests : TestBase
         };
     }
 
-    public void LoggerFactory_WriteLogFromFactory()
+    public void LoggerFactory_LoggerCreatedOnlyOnce()
     {
-        const string message = "hello";
-        Func<string, Exception?, string> formatter = (state, ex) => state;
-
         using LoggerFactory loggerFactory = new(_loggerProviders, LogLevel.Information, _mockMonitor.Object);
-        ILogger logger = loggerFactory.CreateLogger("test");
-        logger.Log(LogLevel.Information, message, null, formatter);
 
-        _mockLogger.Verify(x => x.Log(LogLevel.Information, message, null, formatter), Times.Once);
+        ILogger logger = loggerFactory.CreateLogger("test");
+        _mockLoggerProvider.Verify(x => x.CreateLogger("test"), Times.Once);
+
+        logger = loggerFactory.CreateLogger("test");
+        _mockLoggerProvider.Verify(x => x.CreateLogger("test"), Times.Once);
     }
 }
 
