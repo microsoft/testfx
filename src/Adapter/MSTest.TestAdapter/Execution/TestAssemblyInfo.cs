@@ -54,6 +54,11 @@ public class TestAssemblyInfo
     }
 
     /// <summary>
+    /// Gets or sets the AssemblyInitializeMethod timeout.
+    /// </summary>
+    internal int? AssemblyInitializeMethodTimeoutMilliseconds { get; set; }
+
+    /// <summary>
     /// Gets <c>AssemblyCleanup</c> method for the assembly.
     /// </summary>
     public MethodInfo? AssemblyCleanupMethod
@@ -134,7 +139,23 @@ public class TestAssemblyInfo
                 {
                     try
                     {
-                        AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                        CancellationTokenSource? timeoutTokenSource = null;
+                        try
+                        {
+                            // TestContext is public and the CancellationTokenSource property has got protected set accessor.
+                            // So we don't substitute the current CTS instance but instead we signal the current one.
+                            if (AssemblyInitializeMethodTimeoutMilliseconds is not null)
+                            {
+                                timeoutTokenSource = new(AssemblyInitializeMethodTimeoutMilliseconds.Value);
+                                timeoutTokenSource.Token.Register(() => testContext.CancellationTokenSource.Cancel());
+                            }
+
+                            AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
+                        }
+                        finally
+                        {
+                            timeoutTokenSource?.Dispose();
+                        }
                     }
                     catch (Exception ex)
                     {
