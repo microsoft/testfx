@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MSTest.Acceptance.IntegrationTests": {
+      "commandName": "Project",
+      "commandLineArgs": "--treenode-filter /*/*/*/**"
+    }
+  }
+}
