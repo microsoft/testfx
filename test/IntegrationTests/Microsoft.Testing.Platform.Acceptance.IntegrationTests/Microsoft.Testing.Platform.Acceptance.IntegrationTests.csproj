@@ -6,8 +6,9 @@
     <ImplicitUsings>true</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateProgramFile>false</GenerateProgramFile>
-    <DefineConstants>$(DefineConstants);ENABLE_CODECOVERAGE</DefineConstants>
   </PropertyGroup>
+
+  <Import Project="$(RepoRoot)eng\CodeCoverage.props"/>
 
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" Version="$(MSBuildStructuredLogger)" />

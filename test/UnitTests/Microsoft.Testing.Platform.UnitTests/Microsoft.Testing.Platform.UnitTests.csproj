@@ -16,6 +16,8 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
 
+  <Import Project="$(RepoRoot)eng\CodeCoverage.props"/>
+  
   <!-- start netstandard2.0 polyfill -->
   <ItemGroup Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETCoreApp'">
     <Compile Remove="ServerMode/JsonTests.cs" />
@@ -23,6 +25,7 @@
   <!-- end netstandard2.0 polyfill -->
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
