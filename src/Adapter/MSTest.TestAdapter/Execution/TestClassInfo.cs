@@ -49,6 +49,7 @@ public class TestClassInfo
         TestContextProperty = testContextProperty;
         BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
         BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo?, MethodInfo?>>();
+        ClassInitializeMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
         BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
         BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
         Parent = parent;
@@ -99,6 +100,12 @@ public class TestClassInfo
             _classInitializeMethod = value;
         }
     }
+
+    /// <summary>
+    /// Gets the timeout for the class initialize methods.
+    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
+    /// </summary>
+    internal Dictionary<MethodInfo, int> ClassInitializeMethodTimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets a value indicating whether class initialize has executed.
@@ -260,7 +267,8 @@ public class TestClassInfo
                         {
                             var baseInitCleanupMethods = baseClassInitializeStack.Pop();
                             initializeMethod = baseInitCleanupMethods.Item1;
-                            initializeMethod?.InvokeAsSynchronousTask(null, testContext);
+
+                            InvokeInitializeMethod(initializeMethod, testContext);
 
                             if (baseInitCleanupMethods.Item2 != null)
                             {
@@ -270,7 +278,7 @@ public class TestClassInfo
 
                         initializeMethod = null;
 
-                        ClassInitializeMethod?.InvokeAsSynchronousTask(null, testContext);
+                        InvokeInitializeMethod(ClassInitializeMethod, testContext);
                     }
                     catch (Exception ex)
                     {
@@ -316,6 +324,32 @@ public class TestClassInfo
         ClassInitializationException = testFailedException;
 
         throw testFailedException;
+    }
+
+    private void InvokeInitializeMethod(MethodInfo? methodInfo, TestContext testContext)
+    {
+        if (methodInfo is null)
+        {
+            return;
+        }
+
+        CancellationTokenSource? timeout = null;
+        try
+        {
+            // TestContext is public and the CancellationTokenSource property has got protected set accessor.
+            // So we don't substitute the current CTS instance but instead, we signal the current one.
+            if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int timeoutMilliseconds))
+            {
+                timeout = new(timeoutMilliseconds);
+                timeout.Token.Register(() => testContext.CancellationTokenSource.Cancel());
+            }
+
+            methodInfo?.InvokeAsSynchronousTask(null, testContext);
+        }
+        finally
+        {
+            timeout?.Dispose();
+        }
     }
 
     /// <summary>
