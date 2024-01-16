@@ -10,7 +10,6 @@
     <ProjectToBuild Include="$(RepoRoot)test/UnitTests/Microsoft.Testing.Platform.UnitTests/Microsoft.Testing.Platform.UnitTests.csproj" />
     <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
     <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests/Microsoft.Testing.Platform.Acceptance.IntegrationTests.csproj" />
-    <ProjectToBuild Include="$(RepoRoot)test/IntegrationTests/MSTest.Acceptance.IntegrationTests/MSTest.Acceptance.IntegrationTests.csproj" />
   </ItemGroup>
 
 </Project>
