@@ -32,7 +32,7 @@ public class MSTestDiscoverer : ITestDiscoverer
         ValidateArg.NotNull(logger, "logger");
         ValidateArg.NotNull(discoverySink, "discoverySink");
 
-        if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger, true))
+        if (MSTestDiscovererHelpers.InitializeDiscovery(sources, discoveryContext, logger))
         {
             new UnitTestDiscoverer().DiscoverTests(sources, logger, discoverySink, discoveryContext);
         }

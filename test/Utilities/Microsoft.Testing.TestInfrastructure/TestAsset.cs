@@ -71,17 +71,16 @@ public class TestAsset : IDisposable
         return testAsset;
     }
 
-    public static string GetNuGetConfig(bool addPublicFeeds = false)
+    public static string GetNuGetConfig(bool addPublicFeeds = false, bool addHashFileHeader = true)
     {
-        string publicFeedsFragment = addPublicFeeds ? """
-        <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-        <add key="test-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
-""" : string.Empty;
+        string publicFeedsFragment = addPublicFeeds
+            ? """
+                    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+                    <add key="test-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
+            """
+            : string.Empty;
 
         string defaultNuGetConfig = $"""
-
-#file NuGet.config
-
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
     <packageSources>
@@ -99,6 +98,8 @@ public class TestAsset : IDisposable
 
 """;
 
-        return defaultNuGetConfig;
+        return addHashFileHeader
+            ? "#file NuGet.config\n" + defaultNuGetConfig
+            : defaultNuGetConfig;
     }
 }

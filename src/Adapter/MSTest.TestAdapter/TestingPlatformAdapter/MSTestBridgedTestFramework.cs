@@ -32,7 +32,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        if (MSTestDiscovererHelpers.InitializeDiscovery(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, true))
+        if (MSTestDiscovererHelpers.InitializeDiscovery(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger))
         {
             new UnitTestDiscoverer().DiscoverTests(request.AssemblyPaths, request.MessageLogger, request.DiscoverySink, request.DiscoveryContext);
         }
@@ -50,9 +50,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        bool isRunTestCases = request.VSTestFilter.TestCases is not null;
-
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(request.AssemblyPaths, request.RunContext, request.FrameworkHandle, !isRunTestCases))
+        if (!MSTestDiscovererHelpers.InitializeDiscovery(request.AssemblyPaths, request.RunContext, request.FrameworkHandle))
         {
             return Task.CompletedTask;
         }
