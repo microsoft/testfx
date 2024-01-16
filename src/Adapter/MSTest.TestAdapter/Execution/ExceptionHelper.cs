@@ -100,7 +100,10 @@ internal static class ExceptionHelper
     /// </returns>
     internal static string TrimStackTrace(string stackTrace)
     {
-        DebugEx.Assert(!StringEx.IsNullOrEmpty(stackTrace), "stack trace should be non-empty.");
+        if (stackTrace.Length == 0)
+        {
+            return stackTrace;
+        }
 
         StringBuilder result = new(stackTrace.Length);
         string[] stackFrames = Regex.Split(stackTrace, Environment.NewLine);
