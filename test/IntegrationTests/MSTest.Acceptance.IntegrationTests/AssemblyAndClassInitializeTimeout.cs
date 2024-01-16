@@ -20,7 +20,7 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInitialize_Timeout_For_ClassInitialize_Should_Fail(string tfm)
+    public async Task ClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled(string tfm)
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         var testhostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_CLASSINIT", "1" } });
@@ -28,7 +28,7 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInitialize_Timeout_For_ClassInitialize_With_BaseClass_Should_Fail(string tfm)
+    public async Task BaseClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled(string tfm)
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         var testhostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_BASE_CLASSINIT", "1" } });
@@ -36,7 +36,7 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInitialize_Timeout_For_AssemblyInitialize_With_BaseClass_Should_Fail(string tfm)
+    public async Task AssemblyInitialize_WhenTimeoutExpires_AssemblyInitializeIsCancelled(string tfm)
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm, buildConfiguration: BuildConfiguration.Release);
         var testhostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_ASSEMBLYINIT", "1" } });
