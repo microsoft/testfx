@@ -75,6 +75,9 @@ EndProject{4}", projectGuid, projectName, newProject.ProjectFile, configGuid, En
         _globals.AppendFormat(CultureInfo.InvariantCulture, @"{{{0}}}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{{{0}}}.Debug|Any CPU.Build.0 = Debug|Any CPU{1}", configGuid, Environment.NewLine);
 
+        _globals.AppendFormat(CultureInfo.InvariantCulture, @"{{{0}}}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{{{0}}}.Release|Any CPU.Build.0 = Release|Any CPU{1}", configGuid, Environment.NewLine);
+
         AddOrUpdateFileContent(_solutionFileName, MergeSolutionContent());
         return newProject;
     }

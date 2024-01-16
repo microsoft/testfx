@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NET
 using System.Diagnostics;
 using System.Reflection;
+#if NETFRAMEWORK
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security;
 using System.Security.Permissions;
+#endif
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -18,7 +20,16 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// The idea is that Unit Test Adapter creates App Domain for running tests and sets AppBase to tests dir.
 /// Since we don't want to put our assemblies to GAC and they are not in tests dir, we use custom way to resolve them.
 /// </summary>
-public class AssemblyResolver : MarshalByRefObject, IDisposable
+#if NETFRAMEWORK
+public
+#else
+internal sealed
+#endif
+class AssemblyResolver :
+#if NETFRAMEWORK
+        MarshalByRefObject,
+#endif
+    IDisposable
 {
     /// <summary>
     /// The assembly name of the dll containing logger APIs(EqtTrace) from the TestPlatform.
@@ -98,10 +109,12 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         _directoryList = new Queue<RecursiveDirectoryPath>();
 
         AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(OnResolve);
+#if NETFRAMEWORK
         AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += new ResolveEventHandler(ReflectionOnlyOnResolve);
 
         // This is required for winmd resolution for arm built sources discovery on desktop.
         WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve += new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
+#endif
     }
 
     /// <summary>
@@ -121,6 +134,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         GC.SuppressFinalize(this);
     }
 
+#if NETFRAMEWORK
     /// <summary>
     /// Returns object to be used for controlling lifetime, null means infinite lifetime.
     /// </summary>
@@ -136,6 +150,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     {
         return null;
     }
+#endif
 
     /// <summary>
     /// It will add a list of search directories path with property recursive/non-recursive in assembly resolver .
@@ -143,7 +158,12 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="recursiveDirectoryPath">
     /// The recursive Directory Path.
     /// </param>
-    public void AddSearchDirectoriesFromRunSetting(List<RecursiveDirectoryPath> recursiveDirectoryPath)
+#if NETFRAMEWORK
+    public
+#else
+    internal
+#endif
+    void AddSearchDirectoriesFromRunSetting(List<RecursiveDirectoryPath> recursiveDirectoryPath)
     {
         // Enqueue elements from the list in Queue
         if (recursiveDirectoryPath == null)
@@ -157,6 +177,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         }
     }
 
+#if NETFRAMEWORK
     /// <summary>
     /// Assembly Resolve event handler for App Domain - called when CLR loader cannot resolve assembly.
     /// </summary>
@@ -167,6 +188,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     {
         return OnResolveInternal(sender, args, true);
     }
+#endif
 
     /// <summary>
     /// Assembly Resolve event handler for App Domain - called when CLR loader cannot resolve assembly.
@@ -174,17 +196,19 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="sender"> The sender App Domain. </param>
     /// <param name="args"> The args. </param>
     /// <returns> The <see cref="Assembly"/>.  </returns>
-    internal Assembly? OnResolve(object sender, ResolveEventArgs args)
-    {
-        return OnResolveInternal(sender, args, false);
-    }
+    internal Assembly? OnResolve(object? sender, ResolveEventArgs args)
+        => OnResolveInternal(sender, args, false);
 
     /// <summary>
     /// Adds the subdirectories of the provided path to the collection.
     /// </summary>
     /// <param name="path"> Path go get subdirectories for. </param>
     /// <param name="searchDirectories"> The search Directories. </param>
-    internal void AddSubdirectories(string path, List<string> searchDirectories)
+    internal
+#if NET
+    static
+#endif
+    void AddSubdirectories(string path, List<string> searchDirectories)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(path), "'path' cannot be null or empty.");
         DebugEx.Assert(searchDirectories != null, "'searchDirectories' cannot be null.");
@@ -211,7 +235,12 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="disposing">
     /// The disposing.
     /// </param>
-    protected virtual void Dispose(bool disposing)
+#if NETFRAMEWORK
+    protected virtual
+#else
+    private
+#endif
+    void Dispose(bool disposing)
     {
         if (!_disposed)
         {
@@ -219,9 +248,11 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             {
                 // cleanup Managed resources like calling dispose on other managed object created.
                 AppDomain.CurrentDomain.AssemblyResolve -= new ResolveEventHandler(OnResolve);
-                AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= new ResolveEventHandler(ReflectionOnlyOnResolve);
 
+#if NETFRAMEWORK
+                AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= new ResolveEventHandler(ReflectionOnlyOnResolve);
                 WindowsRuntimeMetadata.ReflectionOnlyNamespaceResolve -= new EventHandler<NamespaceResolveEventArgs>(WindowsRuntimeMetadataReflectionOnlyNamespaceResolve);
+#endif
             }
 
             // cleanup native resources
@@ -235,7 +266,12 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="path">The path to the directory.</param>
     /// <returns>True if the directory exists.</returns>
     /// <remarks>Only present for unit testing scenarios.</remarks>
-    protected virtual bool DoesDirectoryExist(string path)
+#if NETFRAMEWORK
+    protected virtual
+#else
+    private static
+#endif
+    bool DoesDirectoryExist(string path)
     {
         return Directory.Exists(path);
     }
@@ -246,25 +282,42 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="path">The path to the directory.</param>
     /// <returns>A list of directories in path.</returns>
     /// <remarks>Only present for unit testing scenarios.</remarks>
-    protected virtual string[] GetDirectories(string path)
+#if NETFRAMEWORK
+    protected virtual
+#else
+    private static
+#endif
+    string[] GetDirectories(string path)
     {
         return Directory.GetDirectories(path);
     }
 
-    protected virtual bool DoesFileExist(string filePath)
+#if NETFRAMEWORK
+    protected virtual
+#else
+    private static
+#endif
+    bool DoesFileExist(string filePath)
     {
         return File.Exists(filePath);
     }
 
-    protected virtual Assembly LoadAssemblyFrom(string path)
+#if NETFRAMEWORK
+    protected virtual
+#else
+    private static
+#endif
+    Assembly LoadAssemblyFrom(string path)
     {
         return Assembly.LoadFrom(path);
     }
 
+#if NETFRAMEWORK
     protected virtual Assembly ReflectionOnlyLoadAssemblyFrom(string path)
     {
         return Assembly.ReflectionOnlyLoadFrom(path);
     }
+#endif
 
     /// <summary>
     /// It will search for a particular assembly in the given list of directory.
@@ -273,7 +326,12 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     /// <param name="name"> The name. </param>
     /// <param name="isReflectionOnly"> Indicates whether this is called under a Reflection Only Load context. </param>
     /// <returns> The <see cref="Assembly"/>. </returns>
-    protected virtual Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
+#if NETFRAMEWORK
+    protected virtual
+#else
+    private
+#endif
+    Assembly? SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
     {
         if (searchDirectorypaths == null || searchDirectorypaths.Count == 0)
         {
@@ -373,6 +431,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
         return requestedName.Version == null || requestedName.Version.Equals(foundName.Version);
     }
 
+#if NETFRAMEWORK
     /// <summary>
     /// Event handler for windows winmd resolution.
     /// </summary>
@@ -391,6 +450,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             args.ResolvedAssemblies.Add(Assembly.ReflectionOnlyLoadFrom(fileName));
         }
     }
+#endif
 
     /// <summary>
     /// Assembly Resolve event handler for App Domain - called when CLR loader cannot resolve assembly.
@@ -402,10 +462,10 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", MessageId = "senderAppDomain", Justification = "This is an event handler.")]
 #pragma warning disable IDE0060 // Remove unused parameter
-    private Assembly? OnResolveInternal(object senderAppDomain, ResolveEventArgs args, bool isReflectionOnly)
+    private Assembly? OnResolveInternal(object? senderAppDomain, ResolveEventArgs args, bool isReflectionOnly)
 #pragma warning restore IDE0060 // Remove unused parameter
     {
-        if (StringEx.IsNullOrEmpty(args?.Name))
+        if (StringEx.IsNullOrEmpty(args.Name))
         {
             Debug.Fail("AssemblyResolver.OnResolve: args.Name is null or empty.");
             return null;
@@ -501,6 +561,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
             // Try for default load for System dlls that can't be found in search paths. Needs to loaded just by name.
             try
             {
+#if NETFRAMEWORK
                 if (isReflectionOnly)
                 {
                     // Put it in the resolved assembly cache so that if the Load call below
@@ -513,19 +574,20 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
                     {
                         _reflectionOnlyResolvedAssemblies[assemblyNameToLoad] = assembly;
                     }
+
+                    return assembly;
                 }
-                else
+#endif
+
+                // Put it in the resolved assembly cache so that if the Load call below
+                // triggers another assembly resolution, then we don't end up in stack overflow.
+                _resolvedAssemblies[assemblyNameToLoad] = null;
+
+                assembly = Assembly.Load(assemblyNameToLoad);
+
+                if (assembly != null)
                 {
-                    // Put it in the resolved assembly cache so that if the Load call below
-                    // triggers another assembly resolution, then we don't end up in stack overflow.
-                    _resolvedAssemblies[assemblyNameToLoad] = null;
-
-                    assembly = Assembly.Load(assemblyNameToLoad);
-
-                    if (assembly != null)
-                    {
-                        _resolvedAssemblies[assemblyNameToLoad] = assembly;
-                    }
+                    _resolvedAssemblies[assemblyNameToLoad] = assembly;
                 }
 
                 return assembly;
@@ -624,12 +686,14 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
 
             Assembly assembly;
 
+#if NETFRAMEWORK
             if (isReflectionOnly)
             {
                 assembly = ReflectionOnlyLoadAssemblyFrom(assemblyPath);
                 _reflectionOnlyResolvedAssemblies[assemblyName] = assembly;
             }
             else
+#endif
             {
                 assembly = LoadAssemblyFrom(assemblyPath);
                 _resolvedAssemblies[assemblyName] = assembly;
@@ -644,6 +708,7 @@ public class AssemblyResolver : MarshalByRefObject, IDisposable
                             EqtTrace.Info("AssemblyResolver: Resolved assembly: {0}. ", assemblyName);
                         }
                     });
+
             return assembly;
         }
         catch (FileLoadException ex)

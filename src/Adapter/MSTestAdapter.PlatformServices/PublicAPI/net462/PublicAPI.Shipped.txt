@@ -66,7 +66,7 @@ static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTest
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider.Reset() -> void
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestSettingsProvider.Settings.get -> Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.MSTestAdapterSettings!
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IsCurrentProcessRunningInPortableMode() -> bool
-static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IsProcessRunningInPortableMode(string! exeName) -> bool
+static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.IsProcessRunningInPortableMode(string? exeName) -> bool
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.PathToPrivateAssemblies.get -> string?
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.PathToPublicAssemblies.get -> string?
 static Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities.VSInstallationUtilities.VSInstallPath.get -> string?
