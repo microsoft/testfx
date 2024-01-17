@@ -10,7 +10,7 @@ using Moq;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestGroup]
-public class LoggingExtensionsTests : TestBase
+public class LoggingExtensionsTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
     private const string Message = "Test";
     private readonly Exception _exception = new("TestException");
