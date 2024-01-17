@@ -19,6 +19,7 @@
   <PropertyGroup Condition=" $(UseVSTestRunner) == 'false' ">
     <EnableCodeCoverage Condition=" '$(EnableCodeCoverage)' == '' ">true</EnableCodeCoverage>
     <DefineConstants Condition=" '$(EnableCodeCoverage)' == 'true' " >$(DefineConstants);ENABLE_CODECOVERAGE</DefineConstants>
+    <Architecture Condition=" '$(Architecture)' == '' ">$(PlatformTarget)</Architecture>
     <Architecture Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</Architecture>
     <ModuleName>$(MSBuildProjectName)_$(TargetFramework)_$(Configuration)_$(Architecture)</ModuleName>
     <!-- Arcade runner settings -->
