@@ -23,35 +23,30 @@ public class NopLoggerTests(ITestExecutionContext testExecutionContext) : TestBa
 
     private static int s_formatterCalls;
 
-    [Arguments(LogLevel.Trace)]
-    [Arguments(LogLevel.Debug)]
-    [Arguments(LogLevel.Information)]
-    [Arguments(LogLevel.Warning)]
-    [Arguments(LogLevel.Error)]
-    [Arguments(LogLevel.Critical)]
+    internal static IEnumerable<LogLevel> GetLogLevels()
+    {
+        yield return LogLevel.Trace;
+        yield return LogLevel.Debug;
+        yield return LogLevel.Information;
+        yield return LogLevel.Warning;
+        yield return LogLevel.Error;
+        yield return LogLevel.Critical;
+    }
+
+    [ArgumentsProvider(nameof(GetLogLevels))]
     public void NopLogger_CheckDisabled(LogLevel logLevel)
     {
         Assert.IsFalse(_nopLogger.IsEnabled(logLevel));
     }
 
-    [Arguments(LogLevel.Trace)]
-    [Arguments(LogLevel.Debug)]
-    [Arguments(LogLevel.Information)]
-    [Arguments(LogLevel.Warning)]
-    [Arguments(LogLevel.Error)]
-    [Arguments(LogLevel.Critical)]
+    [ArgumentsProvider(nameof(GetLogLevels))]
     public void NopLogger_Log_NoFormatterCalls(LogLevel logLevel)
     {
         _nopLogger.Log(logLevel, Message, _exception, Formatter);
         Assert.AreEqual(0, s_formatterCalls);
     }
 
-    [Arguments(LogLevel.Trace)]
-    [Arguments(LogLevel.Debug)]
-    [Arguments(LogLevel.Information)]
-    [Arguments(LogLevel.Warning)]
-    [Arguments(LogLevel.Error)]
-    [Arguments(LogLevel.Critical)]
+    [ArgumentsProvider(nameof(GetLogLevels))]
     public async ValueTask NopLogger_LogAsync_NoFormatterCalls(LogLevel logLevel)
     {
         await _nopLogger.LogAsync(logLevel, Message, _exception, Formatter);

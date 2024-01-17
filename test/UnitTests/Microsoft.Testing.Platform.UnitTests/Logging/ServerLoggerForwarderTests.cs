@@ -32,48 +32,99 @@ public class ServerLoggerForwarderTests : TestBase
         _mockServerTestHost.Setup(x => x.PushDataAsync(It.IsAny<IData>())).Returns(Task.CompletedTask);
     }
 
-    [Arguments(LogLevel.Trace, LogLevel.Trace, true)]
-    [Arguments(LogLevel.Trace, LogLevel.Debug, true)]
-    [Arguments(LogLevel.Trace, LogLevel.Information, true)]
-    [Arguments(LogLevel.Trace, LogLevel.Warning, true)]
-    [Arguments(LogLevel.Trace, LogLevel.Error, true)]
-    [Arguments(LogLevel.Trace, LogLevel.Critical, true)]
-    [Arguments(LogLevel.Debug, LogLevel.Trace, false)]
-    [Arguments(LogLevel.Debug, LogLevel.Debug, true)]
-    [Arguments(LogLevel.Debug, LogLevel.Information, true)]
-    [Arguments(LogLevel.Debug, LogLevel.Warning, true)]
-    [Arguments(LogLevel.Debug, LogLevel.Error, true)]
-    [Arguments(LogLevel.Debug, LogLevel.Critical, true)]
-    [Arguments(LogLevel.Information, LogLevel.Trace, false)]
-    [Arguments(LogLevel.Information, LogLevel.Debug, false)]
-    [Arguments(LogLevel.Information, LogLevel.Information, true)]
-    [Arguments(LogLevel.Information, LogLevel.Warning, true)]
-    [Arguments(LogLevel.Information, LogLevel.Error, true)]
-    [Arguments(LogLevel.Information, LogLevel.Critical, true)]
-    [Arguments(LogLevel.Warning, LogLevel.Trace, false)]
-    [Arguments(LogLevel.Warning, LogLevel.Debug, false)]
-    [Arguments(LogLevel.Warning, LogLevel.Information, false)]
-    [Arguments(LogLevel.Warning, LogLevel.Warning, true)]
-    [Arguments(LogLevel.Warning, LogLevel.Error, true)]
-    [Arguments(LogLevel.Warning, LogLevel.Critical, true)]
-    [Arguments(LogLevel.Error, LogLevel.Trace, false)]
-    [Arguments(LogLevel.Error, LogLevel.Debug, false)]
-    [Arguments(LogLevel.Error, LogLevel.Information, false)]
-    [Arguments(LogLevel.Error, LogLevel.Warning, false)]
-    [Arguments(LogLevel.Error, LogLevel.Error, true)]
-    [Arguments(LogLevel.Error, LogLevel.Critical, true)]
-    [Arguments(LogLevel.Critical, LogLevel.Trace, false)]
-    [Arguments(LogLevel.Critical, LogLevel.Debug, false)]
-    [Arguments(LogLevel.Critical, LogLevel.Information, false)]
-    [Arguments(LogLevel.Critical, LogLevel.Warning, false)]
-    [Arguments(LogLevel.Critical, LogLevel.Error, false)]
-    [Arguments(LogLevel.Critical, LogLevel.Critical, true)]
-    [Arguments(LogLevel.None, LogLevel.Trace, false)]
-    [Arguments(LogLevel.None, LogLevel.Debug, false)]
-    [Arguments(LogLevel.None, LogLevel.Information, false)]
-    [Arguments(LogLevel.None, LogLevel.Warning, false)]
-    [Arguments(LogLevel.None, LogLevel.Error, false)]
-    [Arguments(LogLevel.None, LogLevel.Critical, false)]
+    internal static IEnumerable<(LogLevel DefaultLevel, LogLevel CurrentLevel)> GetLogLevelCombinations()
+    {
+        yield return (LogLevel.Trace, LogLevel.Trace);
+        yield return (LogLevel.Trace, LogLevel.Debug);
+        yield return (LogLevel.Trace, LogLevel.Information);
+        yield return (LogLevel.Trace, LogLevel.Warning);
+        yield return (LogLevel.Trace, LogLevel.Error);
+        yield return (LogLevel.Trace, LogLevel.Critical);
+        yield return (LogLevel.Debug, LogLevel.Trace);
+        yield return (LogLevel.Debug, LogLevel.Debug);
+        yield return (LogLevel.Debug, LogLevel.Information);
+        yield return (LogLevel.Debug, LogLevel.Warning);
+        yield return (LogLevel.Debug, LogLevel.Error);
+        yield return (LogLevel.Debug, LogLevel.Critical);
+        yield return (LogLevel.Information, LogLevel.Trace);
+        yield return (LogLevel.Information, LogLevel.Debug);
+        yield return (LogLevel.Information, LogLevel.Information);
+        yield return (LogLevel.Information, LogLevel.Warning);
+        yield return (LogLevel.Information, LogLevel.Error);
+        yield return (LogLevel.Information, LogLevel.Critical);
+        yield return (LogLevel.Warning, LogLevel.Trace);
+        yield return (LogLevel.Warning, LogLevel.Debug);
+        yield return (LogLevel.Warning, LogLevel.Information);
+        yield return (LogLevel.Warning, LogLevel.Warning);
+        yield return (LogLevel.Warning, LogLevel.Error);
+        yield return (LogLevel.Warning, LogLevel.Critical);
+        yield return (LogLevel.Error, LogLevel.Trace);
+        yield return (LogLevel.Error, LogLevel.Debug);
+        yield return (LogLevel.Error, LogLevel.Information);
+        yield return (LogLevel.Error, LogLevel.Warning);
+        yield return (LogLevel.Error, LogLevel.Error);
+        yield return (LogLevel.Error, LogLevel.Critical);
+        yield return (LogLevel.Critical, LogLevel.Trace);
+        yield return (LogLevel.Critical, LogLevel.Debug);
+        yield return (LogLevel.Critical, LogLevel.Information);
+        yield return (LogLevel.Critical, LogLevel.Warning);
+        yield return (LogLevel.Critical, LogLevel.Error);
+        yield return (LogLevel.Critical, LogLevel.Critical);
+        yield return (LogLevel.None, LogLevel.Trace);
+        yield return (LogLevel.None, LogLevel.Debug);
+        yield return (LogLevel.None, LogLevel.Information);
+        yield return (LogLevel.None, LogLevel.Warning);
+        yield return (LogLevel.None, LogLevel.Error);
+        yield return (LogLevel.None, LogLevel.Critical);
+    }
+
+    internal static IEnumerable<(LogLevel DefaultLevel, LogLevel CurrentLevel, bool ShouldLog)> GetLogLevelCombinationsWithShouldLog()
+    {
+        yield return (LogLevel.Trace, LogLevel.Trace, true);
+        yield return (LogLevel.Trace, LogLevel.Debug, true);
+        yield return (LogLevel.Trace, LogLevel.Information, true);
+        yield return (LogLevel.Trace, LogLevel.Warning, true);
+        yield return (LogLevel.Trace, LogLevel.Error, true);
+        yield return (LogLevel.Trace, LogLevel.Critical, true);
+        yield return (LogLevel.Debug, LogLevel.Trace, false);
+        yield return (LogLevel.Debug, LogLevel.Debug, true);
+        yield return (LogLevel.Debug, LogLevel.Information, true);
+        yield return (LogLevel.Debug, LogLevel.Warning, true);
+        yield return (LogLevel.Debug, LogLevel.Error, true);
+        yield return (LogLevel.Debug, LogLevel.Critical, true);
+        yield return (LogLevel.Information, LogLevel.Trace, false);
+        yield return (LogLevel.Information, LogLevel.Debug, false);
+        yield return (LogLevel.Information, LogLevel.Information, true);
+        yield return (LogLevel.Information, LogLevel.Warning, true);
+        yield return (LogLevel.Information, LogLevel.Error, true);
+        yield return (LogLevel.Information, LogLevel.Critical, true);
+        yield return (LogLevel.Warning, LogLevel.Trace, false);
+        yield return (LogLevel.Warning, LogLevel.Debug, false);
+        yield return (LogLevel.Warning, LogLevel.Information, false);
+        yield return (LogLevel.Warning, LogLevel.Warning, true);
+        yield return (LogLevel.Warning, LogLevel.Error, true);
+        yield return (LogLevel.Warning, LogLevel.Critical, true);
+        yield return (LogLevel.Error, LogLevel.Trace, false);
+        yield return (LogLevel.Error, LogLevel.Debug, false);
+        yield return (LogLevel.Error, LogLevel.Information, false);
+        yield return (LogLevel.Error, LogLevel.Warning, false);
+        yield return (LogLevel.Error, LogLevel.Error, true);
+        yield return (LogLevel.Error, LogLevel.Critical, true);
+        yield return (LogLevel.Critical, LogLevel.Trace, false);
+        yield return (LogLevel.Critical, LogLevel.Debug, false);
+        yield return (LogLevel.Critical, LogLevel.Information, false);
+        yield return (LogLevel.Critical, LogLevel.Warning, false);
+        yield return (LogLevel.Critical, LogLevel.Error, false);
+        yield return (LogLevel.Critical, LogLevel.Critical, true);
+        yield return (LogLevel.None, LogLevel.Trace, false);
+        yield return (LogLevel.None, LogLevel.Debug, false);
+        yield return (LogLevel.None, LogLevel.Information, false);
+        yield return (LogLevel.None, LogLevel.Warning, false);
+        yield return (LogLevel.None, LogLevel.Error, false);
+        yield return (LogLevel.None, LogLevel.Critical, false);
+    }
+
+    [ArgumentsProvider(nameof(GetLogLevelCombinationsWithShouldLog))]
     public void ServerLoggerForwarder_Log(LogLevel defaultLevel, LogLevel currentLevel, bool shouldLog)
     {
         using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
@@ -88,48 +139,7 @@ public class ServerLoggerForwarderTests : TestBase
         _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<IData>()), shouldLog ? Times.Once : Times.Never);
     }
 
-    [Arguments(LogLevel.Trace, LogLevel.Trace)]
-    [Arguments(LogLevel.Trace, LogLevel.Debug)]
-    [Arguments(LogLevel.Trace, LogLevel.Information)]
-    [Arguments(LogLevel.Trace, LogLevel.Warning)]
-    [Arguments(LogLevel.Trace, LogLevel.Error)]
-    [Arguments(LogLevel.Trace, LogLevel.Critical)]
-    [Arguments(LogLevel.Debug, LogLevel.Trace)]
-    [Arguments(LogLevel.Debug, LogLevel.Debug)]
-    [Arguments(LogLevel.Debug, LogLevel.Information)]
-    [Arguments(LogLevel.Debug, LogLevel.Warning)]
-    [Arguments(LogLevel.Debug, LogLevel.Error)]
-    [Arguments(LogLevel.Debug, LogLevel.Critical)]
-    [Arguments(LogLevel.Information, LogLevel.Trace)]
-    [Arguments(LogLevel.Information, LogLevel.Debug)]
-    [Arguments(LogLevel.Information, LogLevel.Information)]
-    [Arguments(LogLevel.Information, LogLevel.Warning)]
-    [Arguments(LogLevel.Information, LogLevel.Error)]
-    [Arguments(LogLevel.Information, LogLevel.Critical)]
-    [Arguments(LogLevel.Warning, LogLevel.Trace)]
-    [Arguments(LogLevel.Warning, LogLevel.Debug)]
-    [Arguments(LogLevel.Warning, LogLevel.Information)]
-    [Arguments(LogLevel.Warning, LogLevel.Warning)]
-    [Arguments(LogLevel.Warning, LogLevel.Error)]
-    [Arguments(LogLevel.Warning, LogLevel.Critical)]
-    [Arguments(LogLevel.Error, LogLevel.Trace)]
-    [Arguments(LogLevel.Error, LogLevel.Debug)]
-    [Arguments(LogLevel.Error, LogLevel.Information)]
-    [Arguments(LogLevel.Error, LogLevel.Warning)]
-    [Arguments(LogLevel.Error, LogLevel.Error)]
-    [Arguments(LogLevel.Error, LogLevel.Critical)]
-    [Arguments(LogLevel.Critical, LogLevel.Trace)]
-    [Arguments(LogLevel.Critical, LogLevel.Debug)]
-    [Arguments(LogLevel.Critical, LogLevel.Information)]
-    [Arguments(LogLevel.Critical, LogLevel.Warning)]
-    [Arguments(LogLevel.Critical, LogLevel.Error)]
-    [Arguments(LogLevel.Critical, LogLevel.Critical)]
-    [Arguments(LogLevel.None, LogLevel.Trace)]
-    [Arguments(LogLevel.None, LogLevel.Debug)]
-    [Arguments(LogLevel.None, LogLevel.Information)]
-    [Arguments(LogLevel.None, LogLevel.Warning)]
-    [Arguments(LogLevel.None, LogLevel.Error)]
-    [Arguments(LogLevel.None, LogLevel.Critical)]
+    [ArgumentsProvider(nameof(GetLogLevelCombinations))]
     public void ServerLoggerForwarder_ServerLogNotInitialized_NoLogForwarded(LogLevel defaultLevel, LogLevel currentLevel)
     {
         _mockServerTestHost.Setup(x => x.IsInitialized).Returns(false);
@@ -146,48 +156,7 @@ public class ServerLoggerForwarderTests : TestBase
         _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<IData>()), Times.Never);
     }
 
-    [Arguments(LogLevel.Trace, LogLevel.Trace, true)]
-    [Arguments(LogLevel.Trace, LogLevel.Debug, true)]
-    [Arguments(LogLevel.Trace, LogLevel.Information, true)]
-    [Arguments(LogLevel.Trace, LogLevel.Warning, true)]
-    [Arguments(LogLevel.Trace, LogLevel.Error, true)]
-    [Arguments(LogLevel.Trace, LogLevel.Critical, true)]
-    [Arguments(LogLevel.Debug, LogLevel.Trace, false)]
-    [Arguments(LogLevel.Debug, LogLevel.Debug, true)]
-    [Arguments(LogLevel.Debug, LogLevel.Information, true)]
-    [Arguments(LogLevel.Debug, LogLevel.Warning, true)]
-    [Arguments(LogLevel.Debug, LogLevel.Error, true)]
-    [Arguments(LogLevel.Debug, LogLevel.Critical, true)]
-    [Arguments(LogLevel.Information, LogLevel.Trace, false)]
-    [Arguments(LogLevel.Information, LogLevel.Debug, false)]
-    [Arguments(LogLevel.Information, LogLevel.Information, true)]
-    [Arguments(LogLevel.Information, LogLevel.Warning, true)]
-    [Arguments(LogLevel.Information, LogLevel.Error, true)]
-    [Arguments(LogLevel.Information, LogLevel.Critical, true)]
-    [Arguments(LogLevel.Warning, LogLevel.Trace, false)]
-    [Arguments(LogLevel.Warning, LogLevel.Debug, false)]
-    [Arguments(LogLevel.Warning, LogLevel.Information, false)]
-    [Arguments(LogLevel.Warning, LogLevel.Warning, true)]
-    [Arguments(LogLevel.Warning, LogLevel.Error, true)]
-    [Arguments(LogLevel.Warning, LogLevel.Critical, true)]
-    [Arguments(LogLevel.Error, LogLevel.Trace, false)]
-    [Arguments(LogLevel.Error, LogLevel.Debug, false)]
-    [Arguments(LogLevel.Error, LogLevel.Information, false)]
-    [Arguments(LogLevel.Error, LogLevel.Warning, false)]
-    [Arguments(LogLevel.Error, LogLevel.Error, true)]
-    [Arguments(LogLevel.Error, LogLevel.Critical, true)]
-    [Arguments(LogLevel.Critical, LogLevel.Trace, false)]
-    [Arguments(LogLevel.Critical, LogLevel.Debug, false)]
-    [Arguments(LogLevel.Critical, LogLevel.Information, false)]
-    [Arguments(LogLevel.Critical, LogLevel.Warning, false)]
-    [Arguments(LogLevel.Critical, LogLevel.Error, false)]
-    [Arguments(LogLevel.Critical, LogLevel.Critical, true)]
-    [Arguments(LogLevel.None, LogLevel.Trace, false)]
-    [Arguments(LogLevel.None, LogLevel.Debug, false)]
-    [Arguments(LogLevel.None, LogLevel.Information, false)]
-    [Arguments(LogLevel.None, LogLevel.Warning, false)]
-    [Arguments(LogLevel.None, LogLevel.Error, false)]
-    [Arguments(LogLevel.None, LogLevel.Critical, false)]
+    [ArgumentsProvider(nameof(GetLogLevelCombinationsWithShouldLog))]
     public async Task ServerLoggerForwarder_LogAsync(LogLevel defaultLevel, LogLevel currentLevel, bool shouldLog)
     {
         using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
@@ -202,48 +171,7 @@ public class ServerLoggerForwarderTests : TestBase
         _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<ServerLogMessage>()), shouldLog ? Times.Once : Times.Never);
     }
 
-    [Arguments(LogLevel.Trace, LogLevel.Trace)]
-    [Arguments(LogLevel.Trace, LogLevel.Debug)]
-    [Arguments(LogLevel.Trace, LogLevel.Information)]
-    [Arguments(LogLevel.Trace, LogLevel.Warning)]
-    [Arguments(LogLevel.Trace, LogLevel.Error)]
-    [Arguments(LogLevel.Trace, LogLevel.Critical)]
-    [Arguments(LogLevel.Debug, LogLevel.Trace)]
-    [Arguments(LogLevel.Debug, LogLevel.Debug)]
-    [Arguments(LogLevel.Debug, LogLevel.Information)]
-    [Arguments(LogLevel.Debug, LogLevel.Warning)]
-    [Arguments(LogLevel.Debug, LogLevel.Error)]
-    [Arguments(LogLevel.Debug, LogLevel.Critical)]
-    [Arguments(LogLevel.Information, LogLevel.Trace)]
-    [Arguments(LogLevel.Information, LogLevel.Debug)]
-    [Arguments(LogLevel.Information, LogLevel.Information)]
-    [Arguments(LogLevel.Information, LogLevel.Warning)]
-    [Arguments(LogLevel.Information, LogLevel.Error)]
-    [Arguments(LogLevel.Information, LogLevel.Critical)]
-    [Arguments(LogLevel.Warning, LogLevel.Trace)]
-    [Arguments(LogLevel.Warning, LogLevel.Debug)]
-    [Arguments(LogLevel.Warning, LogLevel.Information)]
-    [Arguments(LogLevel.Warning, LogLevel.Warning)]
-    [Arguments(LogLevel.Warning, LogLevel.Error)]
-    [Arguments(LogLevel.Warning, LogLevel.Critical)]
-    [Arguments(LogLevel.Error, LogLevel.Trace)]
-    [Arguments(LogLevel.Error, LogLevel.Debug)]
-    [Arguments(LogLevel.Error, LogLevel.Information)]
-    [Arguments(LogLevel.Error, LogLevel.Warning)]
-    [Arguments(LogLevel.Error, LogLevel.Error)]
-    [Arguments(LogLevel.Error, LogLevel.Critical)]
-    [Arguments(LogLevel.Critical, LogLevel.Trace)]
-    [Arguments(LogLevel.Critical, LogLevel.Debug)]
-    [Arguments(LogLevel.Critical, LogLevel.Information)]
-    [Arguments(LogLevel.Critical, LogLevel.Warning)]
-    [Arguments(LogLevel.Critical, LogLevel.Error)]
-    [Arguments(LogLevel.Critical, LogLevel.Critical)]
-    [Arguments(LogLevel.None, LogLevel.Trace)]
-    [Arguments(LogLevel.None, LogLevel.Debug)]
-    [Arguments(LogLevel.None, LogLevel.Information)]
-    [Arguments(LogLevel.None, LogLevel.Warning)]
-    [Arguments(LogLevel.None, LogLevel.Error)]
-    [Arguments(LogLevel.None, LogLevel.Critical)]
+    [ArgumentsProvider(nameof(GetLogLevelCombinations))]
     public async Task ServerLoggerForwarder_ServerLogNotInitialized_NoLogAsyncForwarded(LogLevel defaultLevel, LogLevel currentLevel)
     {
         _mockServerTestHost.Setup(x => x.IsInitialized).Returns(false);

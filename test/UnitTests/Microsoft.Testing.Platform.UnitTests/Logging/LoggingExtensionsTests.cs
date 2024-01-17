@@ -15,7 +15,7 @@ public class LoggingExtensionsTests(ITestExecutionContext testExecutionContext) 
     private const string Message = "Test";
     private readonly Exception _exception = new("TestException");
 
-    private readonly Mock<ILogger> _mockLogger = new();
+    private readonly Mock<ILogger> _mockLogger = new(MockBehavior.Strict);
 
     public void LoggerExtensions_LogTrace_CallsLogWithLogLevelTrace()
     {
@@ -75,56 +75,56 @@ public class LoggingExtensionsTests(ITestExecutionContext testExecutionContext) 
 
     public async ValueTask LoggerExtensions_LogTraceAsync_CallsLogAsyncWithLogLevelTrace()
     {
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Trace, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Trace, Message, null, LoggingExtensions.Formatter)).Returns(Task.CompletedTask);
         await _mockLogger.Object.LogTraceAsync(Message);
         _mockLogger.Verify(x => x.LogAsync(LogLevel.Trace, Message, null, LoggingExtensions.Formatter), Times.Once);
     }
 
     public async ValueTask LoggerExtensions_LogDebugAsync_CallsLogAsyncWithLogLevelDebug()
     {
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Debug, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Debug, Message, null, LoggingExtensions.Formatter)).Returns(Task.CompletedTask);
         await _mockLogger.Object.LogDebugAsync(Message);
         _mockLogger.Verify(x => x.LogAsync(LogLevel.Debug, Message, null, LoggingExtensions.Formatter), Times.Once);
     }
 
     public async ValueTask LoggerExtensions_LogInformationAsync_CallsLogAsyncWithLogLevelInformation()
     {
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Information, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Information, Message, null, LoggingExtensions.Formatter)).Returns(Task.CompletedTask);
         await _mockLogger.Object.LogInformationAsync(Message);
         _mockLogger.Verify(x => x.LogAsync(LogLevel.Information, Message, null, LoggingExtensions.Formatter), Times.Once);
     }
 
     public async ValueTask LoggerExtensions_LogWarningAsync_CallsLogAsyncWithLogLevelWarning()
     {
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Warning, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Warning, Message, null, LoggingExtensions.Formatter)).Returns(Task.CompletedTask);
         await _mockLogger.Object.LogWarningAsync(Message);
         _mockLogger.Verify(x => x.LogAsync(LogLevel.Warning, Message, null, LoggingExtensions.Formatter), Times.Once);
     }
 
     public async ValueTask LoggerExtensions_LogErrorAsync_CallsLogAsyncWithLogLevelError()
     {
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, Message, null, LoggingExtensions.Formatter)).Returns(Task.CompletedTask);
         await _mockLogger.Object.LogErrorAsync(Message);
         _mockLogger.Verify(x => x.LogAsync(LogLevel.Error, Message, null, LoggingExtensions.Formatter), Times.Once);
     }
 
     public async ValueTask LoggerExtensions_LogErrorAsync_CallsLogAsyncWithLogLevelErrorAndMessageAndException()
     {
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, Message, _exception, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, Message, _exception, LoggingExtensions.Formatter)).Returns(Task.CompletedTask);
         await _mockLogger.Object.LogErrorAsync(Message, _exception);
         _mockLogger.Verify(x => x.LogAsync(LogLevel.Error, Message, _exception, LoggingExtensions.Formatter), Times.Once);
     }
 
     public async ValueTask LoggerExtensions_LogErrorAsync_CallsLogAsyncWithLogLevelErrorAndException()
     {
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, _exception.ToString(), null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Error, _exception.ToString(), null, LoggingExtensions.Formatter)).Returns(Task.CompletedTask);
         await _mockLogger.Object.LogErrorAsync(_exception);
         _mockLogger.Verify(x => x.LogAsync(LogLevel.Error, _exception.ToString(), null, LoggingExtensions.Formatter), Times.Once);
     }
 
     public async ValueTask LoggerExtensions_LogCriticalAsync_CallsLogAsyncWithLogLevelCritical()
     {
-        _mockLogger.Setup(x => x.LogAsync(LogLevel.Critical, Message, null, LoggingExtensions.Formatter));
+        _mockLogger.Setup(x => x.LogAsync(LogLevel.Critical, Message, null, LoggingExtensions.Formatter)).Returns(Task.CompletedTask);
         await _mockLogger.Object.LogCriticalAsync(Message);
         _mockLogger.Verify(x => x.LogAsync(LogLevel.Critical, Message, null, LoggingExtensions.Formatter), Times.Once);
     }
