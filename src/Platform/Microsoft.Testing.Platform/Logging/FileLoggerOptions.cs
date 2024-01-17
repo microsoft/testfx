@@ -9,11 +9,11 @@ internal sealed class FileLoggerOptions(
     string? fileName = null,
     bool syncFlush = true)
 {
-    public string LogFolder { get; private set; } = logFolder;
+    public string LogFolder { get; } = logFolder;
 
-    public string LogPrefixName { get; private set; } = logPrefixName;
+    public string LogPrefixName { get; } = logPrefixName;
 
-    public string? FileName { get; private set; } = fileName;
+    public string? FileName { get; } = fileName;
 
-    public bool SyncFlush { get; private set; } = syncFlush;
+    public bool SyncFlush { get; } = syncFlush;
 }
