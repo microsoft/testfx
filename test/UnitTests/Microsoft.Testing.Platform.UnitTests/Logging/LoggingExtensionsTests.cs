@@ -17,11 +17,6 @@ public class LoggingExtensionsTests : TestBase
 
     private readonly Mock<ILogger> _mockLogger = new();
 
-    public LoggingExtensionsTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     public void LoggerExtensions_LogTrace_CallsLogWithLogLevelTrace()
     {
         _mockLogger.Setup(x => x.Log(LogLevel.Trace, Message, null, LoggingExtensions.Formatter));
