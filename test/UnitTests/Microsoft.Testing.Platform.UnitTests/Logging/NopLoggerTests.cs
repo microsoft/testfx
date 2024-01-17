@@ -8,7 +8,7 @@ using Microsoft.Testing.TestInfrastructure;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestGroup]
-public class NopLoggerTests : TestBase
+public class NopLoggerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
     private static readonly Func<string, Exception?, string> Formatter =
         (state, exception) =>
