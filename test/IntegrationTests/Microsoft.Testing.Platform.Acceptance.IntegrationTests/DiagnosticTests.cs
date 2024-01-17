@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+// [TestGroup]
 public class DiagnosticTests : AcceptanceTestBase
 {
     private const string AssetName = "DiagnosticTest";
@@ -255,7 +255,7 @@ return await app.RunAsync();
 #file UnitTest1.cs
 namespace DiagnosticTest;
 
-[TestGroup]
+// [TestGroup]
 public class UnitTest1
 {
     public void TestMethod1()

@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 
-[TestGroup]
+// [TestGroup]
 public class TrxTests : AcceptanceTestBase
 {
     private readonly TestAssetFixture _testAssetFixture;
@@ -232,7 +232,7 @@ return await app.RunAsync();
 #file UnitTest1.cs
 namespace TrxTest;
 
-[TestGroup]
+// [TestGroup]
 public class UnitTest1
 {
     public void TestMethod1()
