@@ -18,6 +18,7 @@
     <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
   </ItemGroup>
 
   <ItemGroup>

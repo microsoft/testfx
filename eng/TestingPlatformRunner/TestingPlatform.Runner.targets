@@ -24,7 +24,7 @@
       <_TestRunner Condition="'%(TestToRun.Architecture)'=='x86' And Exists('$(DotNetRoot)x86\dotnet.exe')">$(DotNetRoot)x86\dotnet.exe</_TestRunner>
       <_TestRunner Condition="'$(_TestRunner)'==''">$(DotNetTool)</_TestRunner>
 
-      <_TestRunnerArgs>exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" $(TestRuntimeAdditionalArguments) "$(_TestAssembly)" --results-directory "$(_TestResultDirectory)" $(_TestRunnerAdditionalArguments)</_TestRunnerArgs>
+      <_TestRunnerArgs>exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" $(TestRuntimeAdditionalArguments) "$(_TestAssembly)" --report-trx --report-trx-filename "$(_TestResultTrxFileName)" --results-directory "$(_TestResultDirectory)" $(_TestRunnerAdditionalArguments)</_TestRunnerArgs>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_TestRuntime)' != 'Core'">
