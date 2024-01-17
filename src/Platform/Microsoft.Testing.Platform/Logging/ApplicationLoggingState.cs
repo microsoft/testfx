@@ -8,14 +8,14 @@ namespace Microsoft.Testing.Platform.Logging;
 internal sealed class ApplicationLoggingState
 {
     public ApplicationLoggingState(LogLevel logLevel, CommandLineParseResult commandLineParseResult)
-        : this(logLevel, commandLineParseResult, null, false)
-    {
-    }
-
-    public ApplicationLoggingState(LogLevel logLevel, CommandLineParseResult commandLineParseResult, FileLoggerProvider? fileLoggerProvider, bool isSynchronousWrite)
     {
         LogLevel = logLevel;
         CommandLineParseResult = commandLineParseResult;
+    }
+
+    public ApplicationLoggingState(LogLevel logLevel, CommandLineParseResult commandLineParseResult, FileLoggerProvider fileLoggerProvider, bool isSynchronousWrite)
+        : this(logLevel, commandLineParseResult)
+    {
         FileLoggerProvider = fileLoggerProvider;
         IsSynchronousWrite = isSynchronousWrite;
     }

@@ -127,11 +127,11 @@ public class ServerLoggerForwarderTests : TestBase
     [ArgumentsProvider(nameof(GetLogLevelCombinationsWithShouldLog))]
     public void ServerLoggerForwarder_Log(LogLevel defaultLevel, LogLevel currentLevel, bool shouldLog)
     {
-        using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
+        using (ServerLoggerForwarder serverLoggerForwarder = (ServerLoggerForwarder)new ServerLoggerForwarderProvider(
                 defaultLevel,
                 new SystemTask(),
                 _mockServerTestHost.Object)
-            .CreateLogger("Test") as ServerLoggerForwarder)!)
+            .CreateLogger("Test"))
         {
             serverLoggerForwarder.Log(currentLevel, Message, null, Formatter);
         }
@@ -144,11 +144,11 @@ public class ServerLoggerForwarderTests : TestBase
     {
         _mockServerTestHost.Setup(x => x.IsInitialized).Returns(false);
 
-        using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
+        using (ServerLoggerForwarder serverLoggerForwarder = (ServerLoggerForwarder)new ServerLoggerForwarderProvider(
                 defaultLevel,
                 new SystemTask(),
                 _mockServerTestHost.Object)
-            .CreateLogger("Test") as ServerLoggerForwarder)!)
+            .CreateLogger("Test"))
         {
             serverLoggerForwarder.Log(currentLevel, Message, null, Formatter);
         }
@@ -159,11 +159,11 @@ public class ServerLoggerForwarderTests : TestBase
     [ArgumentsProvider(nameof(GetLogLevelCombinationsWithShouldLog))]
     public async Task ServerLoggerForwarder_LogAsync(LogLevel defaultLevel, LogLevel currentLevel, bool shouldLog)
     {
-        using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
+        using (ServerLoggerForwarder serverLoggerForwarder = (ServerLoggerForwarder)new ServerLoggerForwarderProvider(
                 defaultLevel,
                 new SystemTask(),
                 _mockServerTestHost.Object)
-            .CreateLogger("Test") as ServerLoggerForwarder)!)
+            .CreateLogger("Test"))
         {
             await serverLoggerForwarder.LogAsync(currentLevel, Message, null, Formatter);
         }
@@ -176,11 +176,11 @@ public class ServerLoggerForwarderTests : TestBase
     {
         _mockServerTestHost.Setup(x => x.IsInitialized).Returns(false);
 
-        using (ServerLoggerForwarder serverLoggerForwarder = (new ServerLoggerForwarderProvider(
+        using (ServerLoggerForwarder serverLoggerForwarder = (ServerLoggerForwarder)new ServerLoggerForwarderProvider(
                 defaultLevel,
                 new SystemTask(),
                 _mockServerTestHost.Object)
-            .CreateLogger("Test") as ServerLoggerForwarder)!)
+            .CreateLogger("Test"))
         {
             await serverLoggerForwarder.LogAsync(currentLevel, Message, null, Formatter);
         }
