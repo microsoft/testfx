@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
@@ -13,6 +14,10 @@ using Microsoft.Testing.TestInfrastructure;
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.GetCommandLineOptions()));
 builder.AddTestFramework(new MSTest.Analyzers.UnitTests.SourceGeneratedTestNodesBuilder());
+
+#if ENABLE_CODECOVERAGE
+builder.AddCodeCoverageProvider();
+#endif
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory = new(_ => new SlowestTestsConsumer());

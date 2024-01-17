@@ -8,8 +8,6 @@
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
 
-  <Import Project="$(RepoRoot)eng\CodeCoverage.props"/>
-
   <ItemGroup>
     <PackageReference Include="MSBuild.StructuredLogger" Version="$(MSBuildStructuredLogger)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />

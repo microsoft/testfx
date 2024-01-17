@@ -66,7 +66,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eng", "eng", "{FE0DF239-0D8
 	ProjectSection(SolutionItems) = preProject
 		eng\AfterSolutionBuild.targets = eng\AfterSolutionBuild.targets
 		eng\Analyzers.props = eng\Analyzers.props
-		eng\CodeCoverage.props = eng\CodeCoverage.props
 		eng\coverage.config = eng\coverage.config
 		eng\Install-WindowsSDK.ps1 = eng\Install-WindowsSDK.ps1
 		eng\stylecop.json = eng\stylecop.json
