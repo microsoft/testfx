@@ -23,12 +23,6 @@ public class NopLoggerTests : TestBase
 
     private static int s_formatterCalls;
 
-    public NopLoggerTests(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-        _nopLogger = new NopLogger();
-    }
-
     [Arguments(LogLevel.Trace)]
     [Arguments(LogLevel.Debug)]
     [Arguments(LogLevel.Information)]
