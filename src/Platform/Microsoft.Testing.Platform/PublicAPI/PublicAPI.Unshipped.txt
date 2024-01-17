@@ -23,13 +23,14 @@ Microsoft.Testing.Platform.Builder.TestApplicationOptions.EnableTelemetry.get ->
 Microsoft.Testing.Platform.Builder.TestApplicationOptions.EnableTelemetry.set -> void
 Microsoft.Testing.Platform.Builder.TestApplicationOptions.TestApplicationOptions() -> void
 Microsoft.Testing.Platform.Capabilities.ICapabilities<TCapability>
-Microsoft.Testing.Platform.Capabilities.ICapabilities<TCapability>.Capabilities.get -> TCapability[]!
+Microsoft.Testing.Platform.Capabilities.ICapabilities<TCapability>.Capabilities.get -> System.Collections.Generic.IReadOnlyCollection<TCapability>!
 Microsoft.Testing.Platform.Capabilities.ICapability
 Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapabilities
 Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapability
 Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilities
-Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilities.Capabilities.get -> Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapability![]!
+Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilities.Capabilities.get -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapability!>!
 Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilities.TestFrameworkCapabilities(params Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapability![]! capabilities) -> void
+Microsoft.Testing.Platform.Capabilities.TestFramework.TestFrameworkCapabilities.TestFrameworkCapabilities(System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Capabilities.TestFramework.ITestFrameworkCapability!>! capabilities) -> void
 Microsoft.Testing.Platform.CommandLine.ICommandLineManager
 Microsoft.Testing.Platform.CommandLine.ICommandLineManager.AddProvider(System.Func<Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider!>! commandLineProviderFactory) -> void
 Microsoft.Testing.Platform.CommandLine.ICommandLineOptions
@@ -53,8 +54,8 @@ Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.IsHidden.get
 Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.Name.get -> string!
 Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider
 Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
-Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.IsValidConfiguration(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, out string? errorMessage) -> bool
-Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.OptionArgumentsAreValid(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments, out string? errorMessage) -> bool
+Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.ValidateCommandLineOptionsAsync(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.ValidateOptionArgumentsAsync(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<TExtension>
 Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<TExtension>.CompositeExtensionFactory(System.Func<System.IServiceProvider!, TExtension!>! factory) -> void
 Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<TExtension>.CompositeExtensionFactory(System.Func<TExtension!>! factory) -> void
@@ -277,8 +278,8 @@ Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVa
 Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables.TryGetVariable(string! variable, out Microsoft.Testing.Platform.Extensions.TestHostControllers.OwnedEnvironmentVariable? environmentVariable) -> bool
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostControllersExtension
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider
-Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider.AreValid(Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables! environmentVariables, out string? errorMessage) -> bool
-Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider.Update(Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> void
+Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider.UpdateAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task!
+Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider.ValidateTestHostEnvironmentVariablesAsync(Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables! environmentVariables) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation.ExitCode.get -> int
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation.HasExitedGracefully.get -> bool
@@ -290,6 +291,10 @@ Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessLifeti
 Microsoft.Testing.Platform.Extensions.TestHostControllers.OwnedEnvironmentVariable
 Microsoft.Testing.Platform.Extensions.TestHostControllers.OwnedEnvironmentVariable.OwnedEnvironmentVariable(Microsoft.Testing.Platform.Extensions.IExtension! owner, string! variable, string? value, bool isSecret, bool isLocked) -> void
 Microsoft.Testing.Platform.Extensions.TestHostControllers.OwnedEnvironmentVariable.Owner.get -> Microsoft.Testing.Platform.Extensions.IExtension!
+Microsoft.Testing.Platform.Extensions.ValidationResult
+Microsoft.Testing.Platform.Extensions.ValidationResult.ErrorMessage.get -> string?
+Microsoft.Testing.Platform.Extensions.ValidationResult.IsValid.get -> bool
+Microsoft.Testing.Platform.Extensions.ValidationResult.ValidationResult() -> void
 Microsoft.Testing.Platform.Logging.ILogger
 Microsoft.Testing.Platform.Logging.ILogger.IsEnabled(Microsoft.Testing.Platform.Logging.LogLevel logLevel) -> bool
 Microsoft.Testing.Platform.Logging.ILogger.Log<TState>(Microsoft.Testing.Platform.Logging.LogLevel logLevel, TState state, System.Exception? exception, System.Func<TState, System.Exception?, string!>! formatter) -> void
@@ -345,7 +350,6 @@ Microsoft.Testing.Platform.Requests.TestExecutionRequest.TestExecutionRequest(Mi
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.TestNodeUidListFilter(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid![]! testNodeUids) -> void
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.TestNodeUids.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid![]!
-Microsoft.Testing.Platform.ServerMode.IServerModeManager
 Microsoft.Testing.Platform.Services.ServiceProviderExtensions
 Microsoft.Testing.Platform.TestHost.ClientInfo
 Microsoft.Testing.Platform.TestHost.ClientInfo.Id.get -> string!
@@ -391,6 +395,10 @@ static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.implicit opera
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.implicit operator string!(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! testNode) -> string!
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.operator !=(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! left, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! right) -> bool
 static Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.operator ==(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! left, Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid! right) -> bool
+static Microsoft.Testing.Platform.Extensions.ValidationResult.Invalid(string! errorMessage) -> Microsoft.Testing.Platform.Extensions.ValidationResult
+static Microsoft.Testing.Platform.Extensions.ValidationResult.InvalidTask(string! errorMessage) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
+static Microsoft.Testing.Platform.Extensions.ValidationResult.Valid() -> Microsoft.Testing.Platform.Extensions.ValidationResult
+static Microsoft.Testing.Platform.Extensions.ValidationResult.ValidTask.get -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Extensions.ValidationResult>!
 static Microsoft.Testing.Platform.Logging.LoggerFactoryExtensions.CreateLogger<TCategoryName>(this Microsoft.Testing.Platform.Logging.ILoggerFactory! factory) -> Microsoft.Testing.Platform.Logging.ILogger<TCategoryName>!
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogCritical(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> void
 static Microsoft.Testing.Platform.Logging.LoggingExtensions.LogCriticalAsync(this Microsoft.Testing.Platform.Logging.ILogger! logger, string! message) -> System.Threading.Tasks.Task!

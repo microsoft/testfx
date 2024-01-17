@@ -226,7 +226,7 @@ public sealed class TestApplicationBuilderTests : TestBase
 
         public string Description => nameof(TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider);
 
-        public bool AreValid(IReadOnlyEnvironmentVariables environmentVariables, out string? errorMessage) => throw new NotImplementedException();
+        public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables) => throw new NotImplementedException();
 
         public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
 
@@ -236,7 +236,7 @@ public sealed class TestApplicationBuilderTests : TestBase
 
         public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
 
-        public void Update(IEnvironmentVariables environmentVariables) => throw new NotImplementedException();
+        public Task UpdateAsync(IEnvironmentVariables environmentVariables) => throw new NotImplementedException();
     }
 
     private sealed class TestHostProcessLifetimeHandler : ITestHostProcessLifetimeHandler
@@ -280,9 +280,9 @@ public sealed class TestApplicationBuilderTests : TestBase
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public void Update(IEnvironmentVariables environmentVariables) => throw new NotImplementedException();
+        public Task UpdateAsync(IEnvironmentVariables environmentVariables) => throw new NotImplementedException();
 
-        public bool AreValid(IReadOnlyEnvironmentVariables environmentVariables, out string? errorMessage) => throw new NotImplementedException();
+        public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables) => throw new NotImplementedException();
     }
 
     public sealed class TestSessionLifetimeHandlerPlusConsumer : ITestSessionLifetimeHandler, IDataConsumer

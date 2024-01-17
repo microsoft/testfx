@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Capabilities;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
@@ -241,11 +242,11 @@ public sealed class ServiceProviderTests : TestBase
 
         public string Description => throw new NotImplementedException();
 
-        public bool AreValid(IReadOnlyEnvironmentVariables environmentVariables, out string? errorMessage) => throw new NotImplementedException();
+        public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables) => throw new NotImplementedException();
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 
-        public void Update(IEnvironmentVariables environmentVariables) => throw new NotImplementedException();
+        public Task UpdateAsync(IEnvironmentVariables environmentVariables) => throw new NotImplementedException();
     }
 
     private sealed class TestSessionLifetimeHandler : ITestSessionLifetimeHandler

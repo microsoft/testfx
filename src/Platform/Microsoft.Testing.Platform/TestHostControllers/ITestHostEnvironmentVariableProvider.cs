@@ -5,7 +5,7 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
 public interface ITestHostEnvironmentVariableProvider : ITestHostControllersExtension
 {
-    void Update(IEnvironmentVariables environmentVariables);
+    Task UpdateAsync(IEnvironmentVariables environmentVariables);
 
-    bool AreValid(IReadOnlyEnvironmentVariables environmentVariables, out string? errorMessage);
+    Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables);
 }
