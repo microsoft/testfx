@@ -9,7 +9,7 @@ internal interface IFileSystem
 
     string CreateDirectory(string path);
 
-    void Move(string src, string dst);
+    void Move(string sourceFileName, string destFileName);
 
     Stream NewFileStream(string path, FileMode mode);
 
