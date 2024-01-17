@@ -68,6 +68,7 @@ public class AbortionTests : AcceptanceTestBase
 
 #file Program.cs
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.Testing.Platform.Builder;
@@ -153,7 +154,7 @@ internal class DummyAdapter : ITestFramework, IDataProducer
 
 internal class Capabilities : ITestFrameworkCapabilities
 {
-    ITestFrameworkCapability[] ICapabilities<ITestFrameworkCapability>.Capabilities => Array.Empty<ITestFrameworkCapability>();
+    IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities => Array.Empty<ITestFrameworkCapability>();
 }
 """;
 
