@@ -19,7 +19,7 @@ public class NopLoggerTests : TestBase
 
     private const string Message = "DummyMessage";
     private readonly Exception _exception = new("TestException");
-    private readonly NopLogger _nopLogger;
+    private readonly NopLogger _nopLogger = new();
 
     private static int s_formatterCalls;
 
