@@ -66,6 +66,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eng", "eng", "{FE0DF239-0D8
 	ProjectSection(SolutionItems) = preProject
 		eng\AfterSolutionBuild.targets = eng\AfterSolutionBuild.targets
 		eng\Analyzers.props = eng\Analyzers.props
+		eng\coverage.config = eng\coverage.config
 		eng\Install-WindowsSDK.ps1 = eng\Install-WindowsSDK.ps1
 		eng\stylecop.json = eng\stylecop.json
 		eng\verify-nupkgs.ps1 = eng\verify-nupkgs.ps1
@@ -195,7 +196,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Performance", "Performance"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Performance.Runner", "test\Performance\MSTest.Performance.Runner\MSTest.Performance.Runner.csproj", "{7E9D98E7-733C-4D6B-A5AC-087D588A40ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Playground", "samples\Playground\Playground.csproj", "{8A41B37E-0732-4F28-B214-A44233B447FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Playground", "samples\Playground\Playground.csproj", "{8A41B37E-0732-4F28-B214-A44233B447FE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
