@@ -53,8 +53,6 @@ Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.IsHidden.get
 Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.Name.get -> string!
 Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider
 Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.GetCommandLineOptions() -> System.Collections.Generic.IReadOnlyCollection<Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption!>!
-Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.IsValidConfiguration(Microsoft.Testing.Platform.CommandLine.ICommandLineOptions! commandLineOptions, out string? errorMessage) -> bool
-Microsoft.Testing.Platform.Extensions.CommandLine.ICommandLineOptionsProvider.OptionArgumentsAreValid(Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption! commandOption, string![]! arguments, out string? errorMessage) -> bool
 Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<TExtension>
 Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<TExtension>.CompositeExtensionFactory(System.Func<System.IServiceProvider!, TExtension!>! factory) -> void
 Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<TExtension>.CompositeExtensionFactory(System.Func<TExtension!>! factory) -> void
@@ -277,8 +275,6 @@ Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVa
 Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables.TryGetVariable(string! variable, out Microsoft.Testing.Platform.Extensions.TestHostControllers.OwnedEnvironmentVariable? environmentVariable) -> bool
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostControllersExtension
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider
-Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider.AreValid(Microsoft.Testing.Platform.Extensions.TestHostControllers.IReadOnlyEnvironmentVariables! environmentVariables, out string? errorMessage) -> bool
-Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostEnvironmentVariableProvider.Update(Microsoft.Testing.Platform.Extensions.TestHostControllers.IEnvironmentVariables! environmentVariables) -> void
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation.ExitCode.get -> int
 Microsoft.Testing.Platform.Extensions.TestHostControllers.ITestHostProcessInformation.HasExitedGracefully.get -> bool
@@ -345,7 +341,6 @@ Microsoft.Testing.Platform.Requests.TestExecutionRequest.TestExecutionRequest(Mi
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.TestNodeUidListFilter(Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid![]! testNodeUids) -> void
 Microsoft.Testing.Platform.Requests.TestNodeUidListFilter.TestNodeUids.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid![]!
-Microsoft.Testing.Platform.ServerMode.IServerModeManager
 Microsoft.Testing.Platform.Services.ServiceProviderExtensions
 Microsoft.Testing.Platform.TestHost.ClientInfo
 Microsoft.Testing.Platform.TestHost.ClientInfo.Id.get -> string!

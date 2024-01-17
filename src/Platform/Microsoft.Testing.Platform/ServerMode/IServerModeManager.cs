@@ -3,6 +3,6 @@
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-public interface IServerModeManager
+internal interface IServerModeManager
 {
 }

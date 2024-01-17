@@ -6,5 +6,5 @@ namespace Microsoft.Testing.Platform.Capabilities;
 public interface ICapabilities<TCapability>
     where TCapability : ICapability
 {
-    TCapability[] Capabilities { get; }
+    IReadOnlyCollection<TCapability> Capabilities { get; }
 }
