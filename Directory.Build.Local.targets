@@ -17,7 +17,7 @@
 
   <!-- Code coverage-->
   <PropertyGroup Condition=" $(UseVSTestRunner) == 'false' ">
-    <EnableCodeCoverage Condition=" '$(EnableCodeCoverage)' == '' ">false</EnableCodeCoverage>
+    <EnableCodeCoverage Condition=" '$(EnableCodeCoverage)' == '' ">true</EnableCodeCoverage>
     <DefineConstants Condition=" '$(EnableCodeCoverage)' == 'true' " >$(DefineConstants);ENABLE_CODECOVERAGE</DefineConstants>
     <Architecture Condition=" '$(Architecture)' == '' ">$(PlatformTarget)</Architecture>
     <Architecture Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</Architecture>
