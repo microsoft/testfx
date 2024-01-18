@@ -26,9 +26,9 @@
   <!-- NuGet properties -->
   <PropertyGroup>
     <PackageDescription>
-      Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
+Microsoft Testing is a set of platform, framework and protocol intended to make it possible to run any test on any target or device.
 
-      This package provides the core platform and the .NET implementation of the protocol.
+This package provides the core platform and the .NET implementation of the protocol.
     </PackageDescription>
   </PropertyGroup>
 
