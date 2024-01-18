@@ -440,6 +440,10 @@ internal class TypeCache : MarshalByRefObject
                         DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
                         assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = timeoutAttribute.Timeout;
                     }
+                    else if (MSTestSettings.CurrentSettings.AssemblyInitializeTimeout > 0)
+                    {
+                        assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = MSTestSettings.CurrentSettings.AssemblyInitializeTimeout;
+                    }
                 }
                 else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
                 {
@@ -550,6 +554,10 @@ internal class TypeCache : MarshalByRefObject
                 var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
                 DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
                 classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+            }
+            else if (MSTestSettings.CurrentSettings.ClassInitializeTimeout > 0)
+            {
+                classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.ClassInitializeTimeout);
             }
 
             if (isBase)
