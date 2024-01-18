@@ -517,7 +517,7 @@ public class TypeEnumeratorTests : TestContainer
         Verify(testElement.DisplayName == "MethodWithVoidReturnType");
     }
 
-    public void GetTestFromMethodShouldSetDisplayNameFromAttribute()
+    public void GetTestFromMethodShouldSetDisplayNameFromTestMethodAttribute()
     {
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
@@ -526,6 +526,22 @@ public class TypeEnumeratorTests : TestContainer
         // Setup mocks to behave like we have [TestMethod("Test method display name.")] attribute on the method
         _mockReflectHelper.Setup(
             rh => rh.GetCustomAttribute<TestMethodAttribute>(methodInfo)).Returns(new TestMethodAttribute("Test method display name."));
+
+        var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
+
+        Verify(testElement is not null);
+        Verify(testElement.DisplayName == "Test method display name.");
+    }
+
+    public void GetTestFromMethodShouldSetDisplayNameFromDataTestMethodAttribute()
+    {
+        SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
+        TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
+        var methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.MethodWithVoidReturnType));
+
+        // Setup mocks to behave like we have [TestMethod("Test method display name.")] attribute on the method
+        _mockReflectHelper.Setup(
+            rh => rh.GetCustomAttribute<DataTestMethodAttribute>(methodInfo)).Returns(new DataTestMethodAttribute("Test method display name."));
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
