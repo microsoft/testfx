@@ -13,8 +13,8 @@ internal sealed class FileLoggerProvider(
     ITask task,
     IConsole console,
     IFileSystem fileSystem,
-    IFileStreamFactory fileStreamFactory,
-    IStreamWriterFactory streamWriterFactory) : IFileLoggerProvider, IDisposable
+    IFileStreamFactory fileStreamFactory)
+    : IFileLoggerProvider, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable
@@ -28,7 +28,6 @@ internal sealed class FileLoggerProvider(
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly bool _customDirectory = customDirectory;
     private readonly IFileStreamFactory _fileStreamFactory = fileStreamFactory;
-    private readonly IStreamWriterFactory _streamWriterFactory = streamWriterFactory;
 
     public LogLevel LogLevel { get; } = logLevel;
 
@@ -39,8 +38,7 @@ internal sealed class FileLoggerProvider(
         task,
         console,
         fileSystem,
-        fileStreamFactory,
-        streamWriterFactory);
+        fileStreamFactory);
 
     public bool SyncFlush => _options.SyncFlush;
 
@@ -68,8 +66,7 @@ internal sealed class FileLoggerProvider(
             _task,
             _console,
             _fileSystem,
-            _fileStreamFactory,
-            _streamWriterFactory);
+            _fileStreamFactory);
     }
 
     public ILogger CreateLogger(string categoryName)

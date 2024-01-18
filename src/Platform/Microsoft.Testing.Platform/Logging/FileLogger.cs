@@ -27,11 +27,8 @@ internal sealed class FileLogger : IDisposable
     private readonly LogLevel _logLevel;
     private readonly IClock _clock;
     private readonly IConsole _console;
-    private readonly IFileSystem _fileSystem;
     private readonly IFileStream _fileStream;
-    private readonly IFileStreamFactory _fileStreamFactory;
-    private readonly IStreamWriter _writer;
-    private readonly IStreamWriterFactory _writerFactory;
+    private readonly StreamWriter _writer;
     private readonly Task? _logLoop;
 
 #if NETCOREAPP
@@ -48,16 +45,12 @@ internal sealed class FileLogger : IDisposable
         ITask task,
         IConsole console,
         IFileSystem fileSystem,
-        IFileStreamFactory fileStreamFactory,
-        IStreamWriterFactory streamWriterFactory)
+        IFileStreamFactory fileStreamFactory)
     {
         _options = options;
         _clock = clock;
         _logLevel = logLevel;
         _console = console;
-        _fileSystem = fileSystem;
-        _fileStreamFactory = fileStreamFactory;
-        _writerFactory = streamWriterFactory;
 
         if (!_options.SyncFlush)
         {
@@ -83,34 +76,36 @@ internal sealed class FileLogger : IDisposable
         if (_options.FileName is not null)
         {
             string fileNameFullPath = Path.Combine(_options.LogFolder, _options.FileName);
-            _fileStream = _fileSystem.Exists(fileNameFullPath)
-                ? OpenFileStreamForAppend(fileNameFullPath)
-                : CreateFileStream(fileNameFullPath);
+            _fileStream = fileSystem.Exists(fileNameFullPath)
+                ? OpenFileStreamForAppend(fileStreamFactory, fileNameFullPath)
+                : CreateFileStream(fileStreamFactory, fileNameFullPath);
         }
         else
         {
-            _fileStream = CreateFileStream();
+            _fileStream = CreateFileStream(fileStreamFactory);
         }
 
         FileName = _fileStream.Name;
 
         // In case of malformed UTF8 characters we don't want to throw.
-        _writer = _writerFactory.CreateStreamWriter(
-            _fileStream,
-            new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false),
-            autoFlush: true);
+        _writer = new StreamWriter(
+            _fileStream.Stream,
+            new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: false))
+        {
+            AutoFlush = true,
+        };
     }
 
     public string FileName { get; private set; }
 
-    private IFileStream OpenFileStreamForAppend(string fileName)
-        => _fileStreamFactory.Create(fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
+    private static IFileStream OpenFileStreamForAppend(IFileStreamFactory fileStreamFactory, string fileName)
+        => fileStreamFactory.Create(fileName, FileMode.Append, FileAccess.Write, FileShare.Read);
 
-    private IFileStream CreateFileStream(string? fileName = null)
+    private IFileStream CreateFileStream(IFileStreamFactory fileStreamFactory, string? fileName = null)
     {
         if (fileName is not null)
         {
-            return _fileStreamFactory.Create(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
+            return fileStreamFactory.Create(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
         }
 
         DateTimeOffset firstTryTime = _clock.UtcNow;
@@ -124,7 +119,7 @@ internal sealed class FileLogger : IDisposable
             try
             {
                 fileName = $"{_options.LogPrefixName}_{_clock.UtcNow.ToString("MMddHHssfff", CultureInfo.InvariantCulture)}.diag";
-                return _fileStreamFactory.Create(Path.Combine(_options.LogFolder, fileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
+                return fileStreamFactory.Create(Path.Combine(_options.LogFolder, fileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
             }
             catch (IOException)
             {

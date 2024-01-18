@@ -15,6 +15,7 @@ public class LoggingExtensionsTests(ITestExecutionContext testExecutionContext) 
     private const string Message = "Test";
     private readonly Exception _exception = new("TestException");
 
+    // Use strict mock to ensure that only the expected methods are called
     private readonly Mock<ILogger> _mockLogger = new(MockBehavior.Strict);
 
     public void LoggerExtensions_LogTrace_CallsLogWithLogLevelTrace()

@@ -23,30 +23,20 @@ public class NopLoggerTests(ITestExecutionContext testExecutionContext) : TestBa
 
     private static int s_formatterCalls;
 
-    internal static IEnumerable<LogLevel> GetLogLevels()
-    {
-        yield return LogLevel.Trace;
-        yield return LogLevel.Debug;
-        yield return LogLevel.Information;
-        yield return LogLevel.Warning;
-        yield return LogLevel.Error;
-        yield return LogLevel.Critical;
-    }
-
-    [ArgumentsProvider(nameof(GetLogLevels))]
+    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevels), typeof(LogTestHelpers))]
     public void NopLogger_CheckDisabled(LogLevel logLevel)
     {
         Assert.IsFalse(_nopLogger.IsEnabled(logLevel));
     }
 
-    [ArgumentsProvider(nameof(GetLogLevels))]
+    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevels), typeof(LogTestHelpers))]
     public void NopLogger_Log_NoFormatterCalls(LogLevel logLevel)
     {
         _nopLogger.Log(logLevel, Message, _exception, Formatter);
         Assert.AreEqual(0, s_formatterCalls);
     }
 
-    [ArgumentsProvider(nameof(GetLogLevels))]
+    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevels), typeof(LogTestHelpers))]
     public async ValueTask NopLogger_LogAsync_NoFormatterCalls(LogLevel logLevel)
     {
         await _nopLogger.LogAsync(logLevel, Message, _exception, Formatter);

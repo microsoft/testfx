@@ -14,7 +14,7 @@ using Moq;
 namespace Microsoft.Testing.Platform.UnitTests;
 
 [TestGroup]
-public class FileLoggerTests : TestBase
+public class FileLoggerTests : TestBase, IDisposable
 {
     private const string LogFolder = "aaa";
     private const string LogPrefix = "bbb";
@@ -33,114 +33,19 @@ public class FileLoggerTests : TestBase
     private readonly Mock<IFileSystem> _mockFileSystem = new();
     private readonly Mock<IFileStream> _mockStream = new();
     private readonly Mock<IFileStreamFactory> _mockFileStreamFactory = new();
-    private readonly Mock<IStreamWriter> _mockStreamWriter = new();
-    private readonly Mock<IStreamWriterFactory> _mockStreamWriterFactory = new();
+    private readonly MemoryStream _memoryStream;
 
     public FileLoggerTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
         _mockStream.Setup(x => x.Dispose());
-        _mockStreamWriter.Setup(x => x.Flush());
-        _mockStreamWriter.Setup(x => x.Dispose());
-        _mockStreamWriter.Setup(x => x.WriteLine(It.IsAny<string>()));
-        _mockStreamWriter.Setup(x => x.WriteLineAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
 #if NETCOREAPP
         _mockStream.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
-        _mockStreamWriter.Setup(x => x.DisposeAsync()).Returns(ValueTask.CompletedTask);
 #endif
 
         _mockStream.Setup(x => x.Name).Returns(FileName);
-        _mockStreamWriterFactory
-            .Setup(x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true))
-            .Returns(_mockStreamWriter.Object);
-    }
-
-    internal static IEnumerable<(LogLevel DefaultLevel, LogLevel CurrentLevel, bool ShouldLog, bool SyncFlush)> GetLogLevelCombinations()
-    {
-        yield return (LogLevel.Trace, LogLevel.Trace, true, true);
-        yield return (LogLevel.Trace, LogLevel.Debug, true, true);
-        yield return (LogLevel.Trace, LogLevel.Information, true, true);
-        yield return (LogLevel.Trace, LogLevel.Warning, true, true);
-        yield return (LogLevel.Trace, LogLevel.Error, true, true);
-        yield return (LogLevel.Trace, LogLevel.Critical, true, true);
-        yield return (LogLevel.Debug, LogLevel.Trace, false, true);
-        yield return (LogLevel.Debug, LogLevel.Debug, true, true);
-        yield return (LogLevel.Debug, LogLevel.Information, true, true);
-        yield return (LogLevel.Debug, LogLevel.Warning, true, true);
-        yield return (LogLevel.Debug, LogLevel.Error, true, true);
-        yield return (LogLevel.Debug, LogLevel.Critical, true, true);
-        yield return (LogLevel.Information, LogLevel.Trace, false, true);
-        yield return (LogLevel.Information, LogLevel.Debug, false, true);
-        yield return (LogLevel.Information, LogLevel.Information, true, true);
-        yield return (LogLevel.Information, LogLevel.Warning, true, true);
-        yield return (LogLevel.Information, LogLevel.Error, true, true);
-        yield return (LogLevel.Information, LogLevel.Critical, true, true);
-        yield return (LogLevel.Warning, LogLevel.Trace, false, true);
-        yield return (LogLevel.Warning, LogLevel.Debug, false, true);
-        yield return (LogLevel.Warning, LogLevel.Information, false, true);
-        yield return (LogLevel.Warning, LogLevel.Warning, true, true);
-        yield return (LogLevel.Warning, LogLevel.Error, true, true);
-        yield return (LogLevel.Warning, LogLevel.Critical, true, true);
-        yield return (LogLevel.Error, LogLevel.Trace, false, true);
-        yield return (LogLevel.Error, LogLevel.Debug, false, true);
-        yield return (LogLevel.Error, LogLevel.Information, false, true);
-        yield return (LogLevel.Error, LogLevel.Warning, false, true);
-        yield return (LogLevel.Error, LogLevel.Error, true, true);
-        yield return (LogLevel.Error, LogLevel.Critical, true, true);
-        yield return (LogLevel.Critical, LogLevel.Trace, false, true);
-        yield return (LogLevel.Critical, LogLevel.Debug, false, true);
-        yield return (LogLevel.Critical, LogLevel.Information, false, true);
-        yield return (LogLevel.Critical, LogLevel.Warning, false, true);
-        yield return (LogLevel.Critical, LogLevel.Error, false, true);
-        yield return (LogLevel.Critical, LogLevel.Critical, true, true);
-        yield return (LogLevel.None, LogLevel.Trace, false, true);
-        yield return (LogLevel.None, LogLevel.Debug, false, true);
-        yield return (LogLevel.None, LogLevel.Information, false, true);
-        yield return (LogLevel.None, LogLevel.Warning, false, true);
-        yield return (LogLevel.None, LogLevel.Error, false, true);
-        yield return (LogLevel.None, LogLevel.Critical, false, true);
-        yield return (LogLevel.Trace, LogLevel.Trace, true, false);
-        yield return (LogLevel.Trace, LogLevel.Debug, true, false);
-        yield return (LogLevel.Trace, LogLevel.Information, true, false);
-        yield return (LogLevel.Trace, LogLevel.Warning, true, false);
-        yield return (LogLevel.Trace, LogLevel.Error, true, false);
-        yield return (LogLevel.Trace, LogLevel.Critical, true, false);
-        yield return (LogLevel.Debug, LogLevel.Trace, false, false);
-        yield return (LogLevel.Debug, LogLevel.Debug, true, false);
-        yield return (LogLevel.Debug, LogLevel.Information, true, false);
-        yield return (LogLevel.Debug, LogLevel.Warning, true, false);
-        yield return (LogLevel.Debug, LogLevel.Error, true, false);
-        yield return (LogLevel.Debug, LogLevel.Critical, true, false);
-        yield return (LogLevel.Information, LogLevel.Trace, false, false);
-        yield return (LogLevel.Information, LogLevel.Debug, false, false);
-        yield return (LogLevel.Information, LogLevel.Information, true, false);
-        yield return (LogLevel.Information, LogLevel.Warning, true, false);
-        yield return (LogLevel.Information, LogLevel.Error, true, false);
-        yield return (LogLevel.Information, LogLevel.Critical, true, false);
-        yield return (LogLevel.Warning, LogLevel.Trace, false, false);
-        yield return (LogLevel.Warning, LogLevel.Debug, false, false);
-        yield return (LogLevel.Warning, LogLevel.Information, false, false);
-        yield return (LogLevel.Warning, LogLevel.Warning, true, false);
-        yield return (LogLevel.Warning, LogLevel.Error, true, false);
-        yield return (LogLevel.Warning, LogLevel.Critical, true, false);
-        yield return (LogLevel.Error, LogLevel.Trace, false, false);
-        yield return (LogLevel.Error, LogLevel.Debug, false, false);
-        yield return (LogLevel.Error, LogLevel.Information, false, false);
-        yield return (LogLevel.Error, LogLevel.Warning, false, false);
-        yield return (LogLevel.Error, LogLevel.Error, true, false);
-        yield return (LogLevel.Error, LogLevel.Critical, true, false);
-        yield return (LogLevel.Critical, LogLevel.Trace, false, false);
-        yield return (LogLevel.Critical, LogLevel.Debug, false, false);
-        yield return (LogLevel.Critical, LogLevel.Information, false, false);
-        yield return (LogLevel.Critical, LogLevel.Warning, false, false);
-        yield return (LogLevel.Critical, LogLevel.Error, false, false);
-        yield return (LogLevel.Critical, LogLevel.Critical, true, false);
-        yield return (LogLevel.None, LogLevel.Trace, false, false);
-        yield return (LogLevel.None, LogLevel.Debug, false, false);
-        yield return (LogLevel.None, LogLevel.Information, false, false);
-        yield return (LogLevel.None, LogLevel.Warning, false, false);
-        yield return (LogLevel.None, LogLevel.Error, false, false);
-        yield return (LogLevel.None, LogLevel.Critical, false, false);
+        _memoryStream = new MemoryStream();
+        _mockStream.Setup(x => x.Stream).Returns(_memoryStream);
     }
 
     public void Write_IfMalformedUTF8_ShouldNotCrash()
@@ -153,8 +58,7 @@ public class FileLoggerTests : TestBase
             new SystemTask(),
             new SystemConsole(),
             new SystemFileSystem(),
-            new SystemFileStreamFactory(),
-            new SystemStreamWriterFactory());
+            new SystemFileStreamFactory());
         fileLogger.Log(LogLevel.Trace, "\uD886", null, LoggingExtensions.Formatter, "Category");
     }
 
@@ -179,23 +83,19 @@ public class FileLoggerTests : TestBase
 
         string fileLoggerName = string.Empty;
         using (FileLogger fileLogger = new(
-            new FileLoggerOptions(LogFolder, LogPrefix, fileName: null, syncFlush: true),
+            new(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockFileStreamFactory.Object,
-            _mockStreamWriterFactory.Object))
+            _mockFileStreamFactory.Object))
         {
             fileLoggerName = fileLogger.FileName;
         }
 
         _mockFileStreamFactory.Verify(
             x => x.Create(Path.Combine(LogFolder, expectedFileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read),
-            Times.Once);
-        _mockStreamWriterFactory.Verify(
-            x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
             Times.Once);
         Assert.AreEqual(expectedFileName, fileLoggerName);
     }
@@ -214,14 +114,13 @@ public class FileLoggerTests : TestBase
             .Returns(_mockStream.Object);
 
         Assert.Throws<InvalidOperationException>(() => _ = new FileLogger(
-            new FileLoggerOptions(LogFolder, LogPrefix, fileName: null, syncFlush: true),
+            new(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockFileStreamFactory.Object,
-            _mockStreamWriterFactory.Object));
+            _mockFileStreamFactory.Object));
     }
 
     [Arguments(true, true)]
@@ -238,14 +137,13 @@ public class FileLoggerTests : TestBase
 
         string fileLoggerName = string.Empty;
         using (FileLogger fileLogger = new(
-            new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: syncFlush),
+            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: syncFlush),
             LogLevel.Trace,
             _mockClock.Object,
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockFileStreamFactory.Object,
-            _mockStreamWriterFactory.Object))
+            _mockFileStreamFactory.Object))
         {
             fileLoggerName = fileLogger.FileName;
         }
@@ -253,14 +151,11 @@ public class FileLoggerTests : TestBase
         _mockFileStreamFactory.Verify(
             x => x.Create(expectedPath, fileExists ? FileMode.Append : FileMode.CreateNew, FileAccess.Write, FileShare.Read),
             Times.Once);
-        _mockStreamWriterFactory.Verify(
-            x => x.CreateStreamWriter(_mockStream.Object, It.IsAny<UTF8Encoding>(), true),
-            Times.Once);
         Assert.AreEqual(FileName, fileLoggerName);
     }
 
-    [ArgumentsProvider(nameof(GetLogLevelCombinations))]
-    public void FileLogger_LogTest(LogLevel defaultLogLevel, LogLevel currentLogLevel, bool shouldLog, bool syncFlush)
+    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
+    public async Task Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
         _mockFileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
         _mockFileStreamFactory
@@ -268,31 +163,33 @@ public class FileLoggerTests : TestBase
             .Returns(_mockStream.Object);
 
         string fileLoggerName = string.Empty;
-        using (FileLogger fileLogger = new(
-            new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: syncFlush),
+        using FileLogger fileLogger = new(
+            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
             defaultLogLevel,
             _mockClock.Object,
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockFileStreamFactory.Object,
-            _mockStreamWriterFactory.Object))
-        {
-            fileLogger.Log(currentLogLevel, Message, null, Formatter, Category);
-        }
+            _mockFileStreamFactory.Object);
+        fileLogger.Log(currentLogLevel, Message, null, Formatter, Category);
 
-        if (syncFlush)
+        if (LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel))
         {
-            _mockStreamWriter.Verify(x => x.WriteLine(It.IsAny<string>()), shouldLog ? Times.Once : Times.Never);
+            if (_memoryStream.Length == 0)
+            {
+                await Task.Delay(100);
+            }
+
+            Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel}] Message\r\n", Encoding.Default.GetString(_memoryStream.ToArray()));
         }
         else
         {
-            _mockStreamWriter.Verify(x => x.WriteLineAsync(It.IsAny<string>()), shouldLog ? Times.Once : Times.Never);
+            Assert.AreEqual(0, _memoryStream.Length);
         }
     }
 
-    [ArgumentsProvider(nameof(GetLogLevelCombinations))]
-    public async Task FileLogger_LogAsyncTest(LogLevel defaultLogLevel, LogLevel currentLogLevel, bool shouldLog, bool syncFlush)
+    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
+    public async Task Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(LogLevel defaultLogLevel, LogLevel currentLogLevel)
     {
         _mockFileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
         _mockFileStreamFactory
@@ -300,19 +197,33 @@ public class FileLoggerTests : TestBase
             .Returns(_mockStream.Object);
 
         string fileLoggerName = string.Empty;
-        using (FileLogger fileLogger = new(
-            new FileLoggerOptions(LogFolder, LogPrefix, fileName: FileName, syncFlush: syncFlush),
+        using FileLogger fileLogger = new(
+            new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
             defaultLogLevel,
             _mockClock.Object,
             new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
-            _mockFileStreamFactory.Object,
-            _mockStreamWriterFactory.Object))
-        {
-            await fileLogger.LogAsync(currentLogLevel, Message, null, Formatter, Category);
-        }
+            _mockFileStreamFactory.Object);
+        fileLogger.Log(currentLogLevel, Message, null, Formatter, Category);
 
-        _mockStreamWriter.Verify(x => x.WriteLineAsync(It.IsAny<string>()), shouldLog ? Times.Once : Times.Never);
+        if (LogTestHelpers.IsLogEnabled(defaultLogLevel, currentLogLevel))
+        {
+            if (_memoryStream.Length == 0)
+            {
+                await Task.Delay(100);
+            }
+
+            Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel}] Message\r\n", Encoding.Default.GetString(_memoryStream.ToArray()));
+        }
+        else
+        {
+            Assert.AreEqual(0, _memoryStream.Length);
+        }
+    }
+
+    public void Dispose()
+    {
+        _memoryStream.Dispose();
     }
 }

@@ -355,8 +355,7 @@ public sealed class TestApplication : ITestApplication
                 task,
                 console,
                 new SystemFileSystem(),
-                new SystemFileStreamFactory(),
-                new SystemStreamWriterFactory()),
+                new SystemFileStreamFactory()),
             synchronousWrite);
     }
 }

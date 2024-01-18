@@ -34,10 +34,9 @@ public class LoggerFactoryTests : TestBase
     {
         using LoggerFactory loggerFactory = new(_loggerProviders, LogLevel.Information, _mockMonitor.Object);
 
-        ILogger logger = loggerFactory.CreateLogger("test");
-        _mockLoggerProvider.Verify(x => x.CreateLogger("test"), Times.Once);
-
-        logger = loggerFactory.CreateLogger("test");
+        _ = loggerFactory.CreateLogger("test");
+        _ = loggerFactory.CreateLogger("test");
+        _ = loggerFactory.CreateLogger("test");
         _mockLoggerProvider.Verify(x => x.CreateLogger("test"), Times.Once);
     }
 }
