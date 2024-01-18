@@ -3,6 +3,7 @@
 
 using System.Collections;
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.TestHostControllers;
 using Microsoft.Testing.Platform.Helpers;
 
@@ -23,17 +24,16 @@ internal sealed class SystemEnvironmentVariableProvider(IEnvironment environment
 
     public async Task<bool> IsEnabledAsync() => await _systemExtension.IsEnabledAsync();
 
-    public void Update(IEnvironmentVariables environmentVariables)
+    public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
         foreach (DictionaryEntry entry in _environment.GetEnvironmentVariables())
         {
             environmentVariables.SetVariable(new(entry.Key!.ToString()!, entry.Value!.ToString(), false, false));
         }
+
+        return Task.CompletedTask;
     }
 
-    public bool AreValid(IReadOnlyEnvironmentVariables environmentVariables, out string? errorMessage)
-    {
-        errorMessage = null;
-        return true;
-    }
+    public Task<ValidationResult> ValidateTestHostEnvironmentVariablesAsync(IReadOnlyEnvironmentVariables environmentVariables)
+        => ValidationResult.ValidTask;
 }

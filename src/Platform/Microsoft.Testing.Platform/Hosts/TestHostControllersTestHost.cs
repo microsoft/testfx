@@ -109,12 +109,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             {
                 CurrentProvider = systemEnvironmentVariableProvider,
             };
-            systemEnvironmentVariableProvider.Update(environmentVariables);
+            await systemEnvironmentVariableProvider.UpdateAsync(environmentVariables);
 
             foreach (ITestHostEnvironmentVariableProvider environmentVariableProvider in _testHostsInformation.EnvironmentVariableProviders)
             {
                 environmentVariables.CurrentProvider = environmentVariableProvider;
-                environmentVariableProvider.Update(environmentVariables);
+                await environmentVariableProvider.UpdateAsync(environmentVariables);
             }
 
             environmentVariables.CurrentProvider = null;
@@ -122,10 +122,10 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             List<(IExtension, string)> failedValidations = [];
             foreach (ITestHostEnvironmentVariableProvider hostEnvironmentVariableProvider in _testHostsInformation.EnvironmentVariableProviders)
             {
-                if (!hostEnvironmentVariableProvider.AreValid(environmentVariables, out string? errorMessage)
-                    && errorMessage is not null)
+                var variableResult = await hostEnvironmentVariableProvider.ValidateTestHostEnvironmentVariablesAsync(environmentVariables);
+                if (!variableResult.IsValid)
                 {
-                    failedValidations.Add((hostEnvironmentVariableProvider, errorMessage));
+                    failedValidations.Add((hostEnvironmentVariableProvider, variableResult.ErrorMessage));
                 }
             }
 

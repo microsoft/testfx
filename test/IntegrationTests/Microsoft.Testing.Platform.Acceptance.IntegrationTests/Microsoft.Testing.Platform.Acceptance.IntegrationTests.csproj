@@ -6,7 +6,6 @@
     <ImplicitUsings>true</ImplicitUsings>
     <Nullable>enable</Nullable>
     <GenerateProgramFile>false</GenerateProgramFile>
-    <DefineConstants>$(DefineConstants);ENABLE_CODECOVERAGE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
