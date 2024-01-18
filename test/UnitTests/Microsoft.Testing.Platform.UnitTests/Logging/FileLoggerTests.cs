@@ -180,7 +180,7 @@ public class FileLoggerTests : TestBase, IDisposable
                 await Task.Delay(100);
             }
 
-            Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel}] Message\r\n", Encoding.Default.GetString(_memoryStream.ToArray()));
+            Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel}] Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));
         }
         else
         {
@@ -214,7 +214,7 @@ public class FileLoggerTests : TestBase, IDisposable
                 await Task.Delay(100);
             }
 
-            Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel}] Message\r\n", Encoding.Default.GetString(_memoryStream.ToArray()));
+            Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel}] Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));
         }
         else
         {
