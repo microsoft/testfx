@@ -57,6 +57,8 @@ public class MSTestSettings
         TestSettingsFile = null;
         DisableParallelization = false;
         TestTimeout = 0;
+        AssemblyInitializeTimeout = 0;
+        ClassInitializeTimeout = 0;
         TreatClassAndAssemblyCleanupWarningsAsErrors = false;
     }
 
@@ -143,6 +145,16 @@ public class MSTestSettings
     ///  Gets specified global test case timeout.
     /// </summary>
     public int TestTimeout { get; private set; }
+
+    /// <summary>
+    ///  Gets specified global AssemblyInitialize timeout.
+    /// </summary>
+    internal int AssemblyInitializeTimeout { get; private set; }
+
+    /// <summary>
+    ///  Gets specified global ClassInitializeTimeout timeout.
+    /// </summary>
+    internal int ClassInitializeTimeout { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether failures in class cleanups should be treated as errors.
@@ -417,6 +429,26 @@ public class MSTestSettings
                             if (int.TryParse(reader.ReadInnerXml(), out int testTimeout) && testTimeout > 0)
                             {
                                 settings.TestTimeout = testTimeout;
+                            }
+
+                            break;
+                        }
+
+                    case "ASSEMBLYINITIALIZETIMEOUT":
+                        {
+                            if (int.TryParse(reader.ReadInnerXml(), out int assemblyInitializeTimeout) && assemblyInitializeTimeout > 0)
+                            {
+                                settings.AssemblyInitializeTimeout = assemblyInitializeTimeout;
+                            }
+
+                            break;
+                        }
+
+                    case "CLASSINITIALIZETIMEOUT":
+                        {
+                            if (int.TryParse(reader.ReadInnerXml(), out int classInitializeTimeout) && classInitializeTimeout > 0)
+                            {
+                                settings.ClassInitializeTimeout = classInitializeTimeout;
                             }
 
                             break;
