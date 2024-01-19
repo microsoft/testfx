@@ -4,6 +4,61 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [3.2.0-preview.24069.3] - 2024-01-19
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0-preview.23623.1...v3.2.0-preview.24069.3)
+
+### Added
+
+* Add readme to MSTest.Analyzer package by @Evangelink in [#2006](https://github.com/microsoft/testfx/pull/2006)
+* Add `--ignore-exit-code` and `TESTINGPLATFORM_EXITCODE_IGNORE` by @MarcoRossignoli in [#2057](https://github.com/microsoft/testfx/pull/2057)
+* Add samples of runner vs dotnet test by @Evangelink in [#2063](https://github.com/microsoft/testfx/pull/2063)
+* Add mstest runner samples by @nohwnd in [#2068](https://github.com/microsoft/testfx/pull/2068)
+* Add comparison stats by @MarcoRossignoli in [#2069](https://github.com/microsoft/testfx/pull/2069)
+* Performance measurements by @jakubch1 in [#2071](https://github.com/microsoft/testfx/pull/2071)
+* Add protocol documentation by @drognanar in [#2073](https://github.com/microsoft/testfx/pull/2073)
+* Cache platform command line options by @MarcoRossignoli in [#2127](https://github.com/microsoft/testfx/pull/2127)
+
+### Housekeeping
+
+### Fixed
+
+* MSTEST0005: TestContext should be valid by @Evangelink in [#2019](https://github.com/microsoft/testfx/pull/2019)
+* MSTEST0006: Avoid '[ExpectedException]' by @Evangelink in [#2025](https://github.com/microsoft/testfx/pull/2025)
+* Hide MissingMethodException when in hot reload mode by @Evangelink in [#2028](https://github.com/microsoft/testfx/pull/2028)
+* Fix running tests with UWP by @Evangelink in [#2047](https://github.com/microsoft/testfx/pull/2047)
+* Fix rules help link URL by @Evangelink in [#2048](https://github.com/microsoft/testfx/pull/2048)
+* Fix short link to telemetry doc by @Evangelink in [#2064](https://github.com/microsoft/testfx/pull/2064)
+* Avoid some allocations by @MarcoRossignoli in [#2079](https://github.com/microsoft/testfx/pull/2079)
+* MSTEST0001: Set default severity to Info by @Evangelink in [#2077](https://github.com/microsoft/testfx/pull/2077)
+* Remove `IEnumerable` extensions by @MarcoRossignoli in [#2090](https://github.com/microsoft/testfx/pull/2090)
+* Simplify substring by @Evangelink in [#2092](https://github.com/microsoft/testfx/pull/2092)
+* Fix mstest runner namespace by @Evangelink in [#2078](https://github.com/microsoft/testfx/pull/2078)
+* Cleanup `ICommandLineOptionsProvider` api by @MarcoRossignoli in [#2093](https://github.com/microsoft/testfx/pull/2093)
+* Update ToHumanReadableDuration by @MarcoRossignoli in [#2094](https://github.com/microsoft/testfx/pull/2094)
+* [bug] Do not wait timeout duration in case of user cancellation by @Evangelink in [#2104](https://github.com/microsoft/testfx/pull/2104)
+* TrimStackTrace should handle empty stacktrace by @Evangelink in [#2113](https://github.com/microsoft/testfx/pull/2113)
+* Update Public API by @Evangelink in [#2116](https://github.com/microsoft/testfx/pull/2116)
+* Fix issue #2121 DataTestMethodAttribute is missing a constructor by @HannoZ in [#2125](https://github.com/microsoft/testfx/pull/2125)
+
+### New Contributors
+
+* @jakubch1 made their first contribution in [#2071](https://github.com/microsoft/testfx/pull/2071)
+* @drognanar made their first contribution in [#2073](https://github.com/microsoft/testfx/pull/2073)
+* @HannoZ made their first contribution in [#2125](https://github.com/microsoft/testfx/pull/2125)
+
+### Artifacts
+
+* MSTest: [3.2.0-preview.24069.3](https://www.nuget.org/packages/MSTest/3.2.0-preview.24069.3)
+* MSTest.TestFramework: [3.2.0-preview.24069.3](https://www.nuget.org/packages/MSTest.TestFramework/3.2.0-preview.24069.3)
+* MSTest.TestAdapter: [3.2.0-preview.24069.3](https://www.nuget.org/packages/MSTest.TestAdapter/3.2.0-preview.24069.3)
+* MSTest.Analyzers: [3.2.0-preview.24069.3](https://www.nuget.org/packages/MSTest.Analyzers/3.2.0-preview.24069.3)
+* Microsoft.Testing.Extensions.CrashDump: [1.0.0-preview.24068.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.0.0-preview.24068.6)
+* Microsoft.Testing.Extensions.HangDump: [1.0.0-preview.24068.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.0.0-preview.24068.6)
+* Microsoft.Testing.Extensions.HotReload: [1.0.0-preview.24068.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.0.0-preview.24068.6)
+* Microsoft.Testing.Extensions.Retry: [1.0.0-preview.24068.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.0.0-preview.24068.6)
+* Microsoft.Testing.Extensions.TrxReport: [1.0.0-preview.24068.6](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.0.0-preview.24068.6)
+
 ## [3.2.0-preview.23623.1] - 2023-12-23
 
 See full log [here](https://github.com/Microsoft/testfx/compare/v3.2.0-preview.23622.1...3.2.0-preview.23623.1)
