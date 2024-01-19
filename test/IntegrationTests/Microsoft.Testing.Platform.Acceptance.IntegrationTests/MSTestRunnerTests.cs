@@ -11,7 +11,6 @@ public class MSTestRunnerTests : AcceptanceTestBase
     private static readonly SemaphoreSlim Lock = new(1);
     private readonly AcceptanceFixture _acceptanceFixture;
     private const string AssetName = "MSTestProject";
-    private readonly AcceptanceFixture _acceptanceFixture;
 
     public MSTestRunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
         : base(testExecutionContext)
