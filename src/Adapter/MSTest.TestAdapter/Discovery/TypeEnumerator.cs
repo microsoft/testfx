@@ -195,16 +195,9 @@ internal class TypeEnumerator
             testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture)).ToArray();
         }
 
-        // get DisplayName from TestMethodAttribute
+        // get DisplayName from TestMethodAttribute (or any inherited attribute)
         var testMethodAttribute = _reflectHelper.GetCustomAttribute<TestMethodAttribute>(method);
         testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
-
-        // OR get DisplayName from DataTestMethodAttribute
-        if (testMethodAttribute == null)
-        {
-            var dataTestMethodAttribute = _reflectHelper.GetCustomAttribute<DataTestMethodAttribute>(method);
-            testElement.DisplayName = dataTestMethodAttribute?.DisplayName ?? method.Name;
-        }
 
         return testElement;
     }

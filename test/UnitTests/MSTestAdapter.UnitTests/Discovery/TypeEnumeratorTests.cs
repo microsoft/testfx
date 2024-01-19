@@ -539,9 +539,9 @@ public class TypeEnumeratorTests : TestContainer
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyTestClass), "DummyAssemblyName");
         var methodInfo = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.MethodWithVoidReturnType));
 
-        // Setup mocks to behave like we have [TestMethod("Test method display name.")] attribute on the method
+        // Setup mocks to behave like we have [DataTestMethod("Test method display name.")] attribute on the method
         _mockReflectHelper.Setup(
-            rh => rh.GetCustomAttribute<DataTestMethodAttribute>(methodInfo)).Returns(new DataTestMethodAttribute("Test method display name."));
+            rh => rh.GetCustomAttribute<TestMethodAttribute>(methodInfo)).Returns(new DataTestMethodAttribute("Test method display name."));
 
         var testElement = typeEnumerator.GetTestFromMethod(methodInfo, true, _warnings);
 
