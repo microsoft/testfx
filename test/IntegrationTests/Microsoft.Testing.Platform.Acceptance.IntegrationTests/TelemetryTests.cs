@@ -155,25 +155,6 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
         private const string WithTelemetry = nameof(WithTelemetry);
         private const string WithoutTelemetry = nameof(WithoutTelemetry);
 
-        public string TargetAssetPath => GetAssetPath(WithTelemetry);
-
-        public string TargetAssetPathWithDisableTelemetry => GetAssetPath(WithoutTelemetry);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (WithTelemetry, AssetName,
-                TestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$TelemetryArg$", string.Empty));
-
-            yield return (WithoutTelemetry, AssetName,
-                TestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$TelemetryArg$", ", new TestApplicationOptions() { EnableTelemetry = false }"));
-        }
-
         private const string TestCode = """
 #file TelemetryTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -192,14 +173,9 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 </Project>
 
 #file Program.cs
-using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.Requests;
-using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 
 public class Program
 {
@@ -229,5 +205,24 @@ public class DummyTestAdapter : ITestFramework
     public Task ExecuteRequestAsync(ExecuteRequestContext context) => Task.CompletedTask;
 }
 """;
+
+        public string TargetAssetPath => GetAssetPath(WithTelemetry);
+
+        public string TargetAssetPathWithDisableTelemetry => GetAssetPath(WithoutTelemetry);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (WithTelemetry, AssetName,
+                TestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$TelemetryArg$", string.Empty));
+
+            yield return (WithoutTelemetry, AssetName,
+                TestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$TelemetryArg$", ", new TestApplicationOptions() { EnableTelemetry = false }"));
+        }
     }
 }

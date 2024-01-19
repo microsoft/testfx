@@ -11,9 +11,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="${MicrosoftNETTestSdkVersion}" />
-    <PackageReference Include="MSTest.TestAdapter" Version="${MSTestVersion}" />
-    <PackageReference Include="MSTest.TestFramework" Version="${MSTestVersion}" />
-    <PackageReference Include="MSTest.Analyzers" Version="${MSTestVersion}" />
-    <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="${MicrosoftTestingPlatformVersion}" />
+    <PackageReference Include="MSTest.TestAdapter" Version="${Version}" />
+    <PackageReference Include="MSTest.TestFramework" Version="${Version}" />
+    <PackageReference Include="MSTest.Analyzers" Version="${Version}" />
+    <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" Version="${MicrosoftTestingPlatformVersion}" />
   </ItemGroup>
 </Project>

@@ -31,16 +31,30 @@ public class ThreadOperations : IThreadOperations
             Name = "MSTest Test Execution Thread",
         };
 
-        var isUserCancelled = false;
-        cancelToken.Register(() => isUserCancelled = true);
-
         // This is not ideal and should be replaced with a mechanism that use STA thread only for tests that need it
         // (based on user configuration). We are currently relying on testhost to be STA or MTA and will run ALL tests
         // in this mode which is not ideal for different hosting mechanism not for performance.
         executionThread.SetApartmentState(Thread.CurrentThread.GetApartmentState());
         executionThread.Start();
 
-        return executionThread.Join(timeout) && !isUserCancelled;
+        try
+        {
+            var executionTask = Task.Run(() => executionThread.Join(timeout), cancelToken);
+            if (executionTask.Wait(timeout, cancelToken))
+            {
+                return executionTask.Result;
+            }
+            else
+            {
+                // Timed out.
+                return false;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Task execution canceled.
+            return false;
+        }
 #else
         try
         {

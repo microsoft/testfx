@@ -77,16 +77,6 @@ public class NoBannerTests : AcceptanceTestBase
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public string TargetAssetPath => GetAssetPath(AssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
-                NoBannerTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
-
         private const string NoBannerTestCode = """
 #file NoBannerTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -105,14 +95,9 @@ public class NoBannerTests : AcceptanceTestBase
 </Project>
 
 #file Program.cs
-using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions;
-using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.Requests;
-using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 
 public class Program
 {
@@ -137,10 +122,22 @@ public class DummyTestAdapter : ITestFramework
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context) => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
-    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+        => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
     public Task ExecuteRequestAsync(ExecuteRequestContext context) => Task.CompletedTask;
 }
 """;
+
+        public string TargetAssetPath => GetAssetPath(AssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (AssetName, AssetName,
+                NoBannerTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+        }
     }
 }

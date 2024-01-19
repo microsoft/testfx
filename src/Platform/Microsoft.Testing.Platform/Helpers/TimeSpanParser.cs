@@ -20,7 +20,7 @@ internal static partial class TimeSpanParser
 
     public static bool TryParse(string? time, out TimeSpan result)
     {
-        if (TAString.IsNullOrWhiteSpace(time))
+        if (RoslynString.IsNullOrWhiteSpace(time))
         {
             result = TimeSpan.Zero;
             return true;

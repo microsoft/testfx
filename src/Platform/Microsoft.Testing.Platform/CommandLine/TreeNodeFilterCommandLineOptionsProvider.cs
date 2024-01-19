@@ -27,28 +27,23 @@ internal sealed class TreeNodeFilterCommandLineOptionsProvider(IExtension extens
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public CommandLineOption[] GetCommandLineOptions()
+    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
         => new CommandLineOption[]
         {
             new(TreenodeFilter, PlatformResources.TreeNodeFilterDescription, ArgumentArity.ZeroOrOne, false),
         };
 
-    public bool OptionArgumentsAreValid(CommandLineOption option, string[] arguments, out string error)
+    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
-        error = string.Empty;
-
-        if (option.Name == TreenodeFilter && arguments.Length != 1)
+        if (commandOption.Name == TreenodeFilter && arguments.Length != 1)
         {
-            error = PlatformResources.TreeNodeFilterInvalidArgumentCount;
-            return false;
+            return ValidationResult.InvalidTask(PlatformResources.TreeNodeFilterInvalidArgumentCount);
         }
 
-        return true;
+        // No problem found
+        return ValidationResult.ValidTask;
     }
 
-    public bool IsValidConfiguration(ICommandLineOptions commandLineOptions, out string? errorMessage)
-    {
-        errorMessage = null;
-        return true;
-    }
+    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+        => ValidationResult.ValidTask;
 }

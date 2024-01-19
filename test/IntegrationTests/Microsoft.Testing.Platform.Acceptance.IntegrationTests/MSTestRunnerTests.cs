@@ -8,9 +8,10 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestGroup]
 public class MSTestRunnerTests : AcceptanceTestBase
 {
-    private readonly AcceptanceFixture _acceptanceFixture;
     private static readonly SemaphoreSlim Lock = new(1);
+    private readonly AcceptanceFixture _acceptanceFixture;
     private const string AssetName = "MSTestProject";
+    private readonly AcceptanceFixture _acceptanceFixture;
 
     public MSTestRunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
         : base(testExecutionContext)
@@ -61,7 +62,6 @@ public class MSTestRunnerTests : AcceptanceTestBase
 #file Program.cs
 
 using Microsoft.Testing.Platform.Builder;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);

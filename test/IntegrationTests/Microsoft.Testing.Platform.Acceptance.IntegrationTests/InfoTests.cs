@@ -73,6 +73,10 @@ Built-in command line providers:
         Arity: 0
         Hidden: False
         Description: Show the command line help\.
+      --ignore-exit-code
+        Arity: 1
+        Hidden: False
+        Description: Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
       --info
         Arity: 0
         Hidden: False
@@ -164,25 +168,6 @@ Registered command line providers:
         public const string NoExtensionAssetName = "NoExtensionInfoTest";
         public const string MSTestAssetName = "MSTestInfoTest";
 
-        public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
-
-        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (NoExtensionAssetName, NoExtensionAssetName,
-                NoExtensionTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
-            yield return (MSTestAssetName, MSTestAssetName,
-                MSTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
-
         private const string NoExtensionTestCode = """
 #file NoExtensionInfoTest.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -223,7 +208,7 @@ public class UnitTest1
 #file Usings.cs
 global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.Testing.Framework;
-global using Microsoft.Testing.Platform.Extensions;
+global using Microsoft.Testing.Extensions;
 """;
 
         private const string MSTestCode = """
@@ -242,7 +227,7 @@ global using Microsoft.Testing.Platform.Extensions;
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="MSTest" Version="$MSTestVersion$" />
         <!-- Required for internal build -->
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
@@ -269,8 +254,26 @@ public class UnitTest1
 
 #file Usings.cs
 global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Platform.Extensions;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 """;
+
+        public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
+
+        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (NoExtensionAssetName, NoExtensionAssetName,
+                NoExtensionTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+            yield return (MSTestAssetName, MSTestAssetName,
+                MSTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+        }
     }
 }

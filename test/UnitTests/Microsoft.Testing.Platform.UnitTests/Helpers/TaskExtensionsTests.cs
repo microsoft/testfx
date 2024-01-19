@@ -66,7 +66,7 @@ public sealed class TaskExtensionsTests : TestBase
     }
 
     public async Task CancellationAsync_ObserveException_Succeeds()
-        => await RetryHelper.Retry(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 ManualResetEvent waitException = new(false);
@@ -83,7 +83,7 @@ public sealed class TaskExtensionsTests : TestBase
             }, 3, TimeSpan.FromSeconds(3), _ => true);
 
     public async Task CancellationAsyncWithReturnValue_ObserveException_Succeeds()
-        => await RetryHelper.Retry(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 ManualResetEvent waitException = new(false);

@@ -61,7 +61,7 @@ Out of process file artifacts produced:
         string trxFile = Directory.GetFiles(testHost.DirectoryName, $"{fileName}.trx", SearchOption.AllDirectories).Single();
         string trxContent = File.ReadAllText(trxFile);
         Assert.That(Regex.IsMatch(trxContent, @"Test host process pid: .* crashed\."), trxContent);
-        Assert.That(Regex.IsMatch(trxContent, @"<ResultSummary outcome=""Failed"">"), trxContent);
+        Assert.That(trxContent.Contains(@"<ResultSummary outcome=""Failed"">"), trxContent);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
@@ -78,13 +78,13 @@ Out of process file artifacts produced:
         string trxContent = File.ReadAllText(trxFile);
 
         // check if the tests have been added to Results, TestDefinitions, TestEntries and ResultSummary.
-        Assert.That(Regex.IsMatch(trxContent, @"<UnitTestResult "), trxContent);
-        Assert.That(Regex.IsMatch(trxContent, @"outcome=""NotExecuted"""), trxContent);
+        Assert.That(trxContent.Contains(@"<UnitTestResult "), trxContent);
+        Assert.That(trxContent.Contains(@"outcome=""NotExecuted"""), trxContent);
 
-        Assert.That(Regex.IsMatch(trxContent, @"<UnitTest name=""TestMethod1"), trxContent);
-        Assert.That(Regex.IsMatch(trxContent, @"<TestEntry "), trxContent);
-        Assert.That(Regex.IsMatch(trxContent, @"<ResultSummary outcome=""Completed"">"), trxContent);
-        Assert.That(Regex.IsMatch(trxContent, @"<Counters total=""2"" executed=""0"" passed=""0"" failed=""0"" error=""0"" timeout=""0"" aborted=""0"" inconclusive=""0"" passedButRunAborted=""0"" notRunnable=""0"" notExecuted=""0"" disconnected=""0"" warning=""0"" completed=""0"" inProgress=""0"" pending=""0"" />"), trxContent);
+        Assert.That(trxContent.Contains(@"<UnitTest name=""TestMethod1"), trxContent);
+        Assert.That(trxContent.Contains(@"<TestEntry "), trxContent);
+        Assert.That(trxContent.Contains(@"<ResultSummary outcome=""Completed"">"), trxContent);
+        Assert.That(trxContent.Contains(@"<Counters total=""2"" executed=""0"" passed=""0"" failed=""0"" error=""0"" timeout=""0"" aborted=""0"" inconclusive=""0"" passedButRunAborted=""0"" notRunnable=""0"" notExecuted=""0"" disconnected=""0"" warning=""0"" completed=""0"" inProgress=""0"" pending=""0"" />"), trxContent);
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
@@ -200,6 +200,112 @@ In process file artifacts produced:
         private const string WithSkippedTest = nameof(WithSkippedTest);
         private const string WithDataRow = nameof(WithDataRow);
 
+        private const string TestCode = """
+#file TrxTest.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <OutputType>Exe</OutputType>
+        <UseAppHost>true</UseAppHost>
+        <LangVersion>preview</LangVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Framework" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+    </ItemGroup>
+</Project>
+
+#file Program.cs
+using TrxTest;
+ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
+builder.AddCrashDumpProvider();
+builder.AddTrxReportProvider();
+using ITestApplication app = await builder.BuildAsync();
+return await app.RunAsync();
+
+#file UnitTest1.cs
+namespace TrxTest;
+
+[TestGroup]
+public class UnitTest1
+{
+    public void TestMethod1()
+    {
+        if (Environment.GetEnvironmentVariable("CRASHPROCESS") == "1")
+        {
+            Environment.FailFast("CRASHPROCESS");
+        }
+
+        Assert.IsTrue(true);
+    }
+}
+
+#file Usings.cs
+global using System;
+global using Microsoft.Testing.Platform.Builder;
+global using Microsoft.Testing.Framework;
+global using Microsoft.Testing.Extensions;
+""";
+
+        private const string MSTestCode = """
+#file TrxTestUsingMSTest.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <OutputType>Exe</OutputType>
+        <UseAppHost>true</UseAppHost>
+        <LangVersion>preview</LangVersion>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+        <PackageReference Include="MSTest" Version="$MSTestVersion$" />
+        <!-- Required for internal build -->
+        <PackageReference Include="Microsoft.Testing.Extensions.Telemetry" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+    </ItemGroup>
+</Project>
+
+#file Program.cs
+using TrxTestUsingMSTest;
+
+ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.AddMSTest(() => new[] { typeof(Program).Assembly });
+builder.AddTrxReportProvider();
+using ITestApplication app = await builder.BuildAsync();
+return await app.RunAsync();
+
+#file UnitTest1.cs
+namespace TrxTestUsingMSTest;
+
+[TestClass]
+public class UnitTest1
+{
+    $IgnoreTestAttributeOrNothing$
+    [TestMethod]
+    [DataRow("data\0")]
+    [DataRow("data")]
+    public void TestMethod1(string s)
+    {
+    }
+}
+
+#file Usings.cs
+global using Microsoft.Testing.Platform.Builder;
+global using Microsoft.Testing.Extensions;
+global using Microsoft.VisualStudio.TestTools.UnitTesting;
+""";
+
         public string TargetAssetPath => GetAssetPath(AssetName);
 
         public string TargetAssetPathWithSkippedTest => GetAssetPath(WithSkippedTest);
@@ -228,109 +334,5 @@ In process file artifacts produced:
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                 .PatchCodeWithReplace("$IgnoreTestAttributeOrNothing$", string.Empty));
         }
-
-        private const string TestCode = """
-#file TrxTest.csproj
-<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
-        <LangVersion>preview</LangVersion>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Framework" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
-    </ItemGroup>
-</Project>
-
-#file Program.cs
-using TrxTest;
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddTestFramework(new SourceGeneratedTestNodesBuilder());
-builder.AddCrashDumpGenerator();
-builder.AddTrxReportGenerator();
-using ITestApplication app = await builder.BuildAsync();
-return await app.RunAsync();
-
-#file UnitTest1.cs
-namespace TrxTest;
-
-[TestGroup]
-public class UnitTest1
-{
-    public void TestMethod1()
-    {
-        if (Environment.GetEnvironmentVariable("CRASHPROCESS") == "1")
-        {
-            Environment.FailFast("CRASHPROCESS");
-        }
-
-        Assert.IsTrue(true);
-    }
-}
-
-#file Usings.cs
-global using System;
-global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Framework;
-global using Microsoft.Testing.Platform.Extensions;
-""";
-
-        private const string MSTestCode = """
-#file TrxTestUsingMSTest.csproj
-<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <OutputType>Exe</OutputType>
-        <UseAppHost>true</UseAppHost>
-        <LangVersion>preview</LangVersion>
-        <EnableMSTestRunner>true</EnableMSTestRunner>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
-        <PackageReference Include="MSTest" Version="$MSTestVersion$" />
-        <!-- Required for internal build -->
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.Telemetry" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
-    </ItemGroup>
-</Project>
-
-#file Program.cs
-using TrxTestUsingMSTest;
-
-ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-builder.AddMSTest(() => new[] { typeof(Program).Assembly });
-builder.AddTrxReportGenerator();
-using ITestApplication app = await builder.BuildAsync();
-return await app.RunAsync();
-
-#file UnitTest1.cs
-namespace TrxTestUsingMSTest;
-
-[TestClass]
-public class UnitTest1
-{
-    $IgnoreTestAttributeOrNothing$
-    [TestMethod]
-    [DataRow("data\0")]
-    [DataRow("data")]
-    public void TestMethod1(string s)
-    {
-    }
-}
-
-#file Usings.cs
-global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Platform.Extensions;
-global using Microsoft.VisualStudio.TestTools.UnitTesting;
-""";
     }
 }

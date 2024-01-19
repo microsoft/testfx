@@ -3,6 +3,7 @@
 
 using System.Globalization;
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
@@ -27,10 +28,37 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string SkipBuildersNumberCheckOptionKey = "internal-testingplatform-skipbuildercheck";
     public const string DiscoverTestsOptionKey = "list-tests";
     public const string ResultDirectoryOptionKey = "results-directory";
+    public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
 
     private static readonly CommandLineOption MinimumExpectedTests = new(MinimumExpectedTestsOptionKey, "Specifies the minimum number of tests that are expected to run.", ArgumentArity.ZeroOrOne, false, isBuiltIn: true);
+
+    private static readonly IReadOnlyCollection<CommandLineOption> PlatformCommandLineProviderCache = new[]
+    {
+        // Visible options
+        new(HelpOptionKey, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+        new(InfoOptionKey, PlatformResources.PlatformCommandLineInfoOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+        new(ResultDirectoryOptionKey, PlatformResources.PlatformCommandLineResultDirectoryOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(DiagnosticOptionKey, PlatformResources.PlatformCommandLineDiagnosticOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+        new(DiagnosticOutputFilePrefixOptionKey, PlatformResources.PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(DiagnosticOutputDirectoryOptionKey, PlatformResources.PlatformCommandLineDiagnosticOutputDirectoryOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(DiagnosticVerbosityOptionKey, PlatformResources.PlatformCommandLineDiagnosticVerbosityOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(DiagnosticFileLoggerSynchronousWriteOptionKey, PlatformResources.PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+        MinimumExpectedTests,
+        new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+        new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+
+        // Hidden options
+        new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
+        new(PortOptionKey, PlatformResources.PlatformCommandLinePortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(ClientPortOptionKey, PlatformResources.PlatformCommandLineClientPortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(ClientHostOptionKey, PlatformResources.PlatformCommandLineClientHostOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
+        new(SkipBuildersNumberCheckOptionKey, PlatformResources.PlatformCommandLineSkipBuildersNumberCheckOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
+        new(VSTestAdapterModeOptionKey, PlatformResources.PlatformCommandLineVSTestAdapterModeOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
+        new(NoBannerOptionKey, PlatformResources.PlatformCommandLineNoBannerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
+        new(TestHostControllerPIDOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
+    };
 
     /// <inheritdoc />
     public string Uid { get; } = nameof(PlatformCommandLineProvider);
@@ -47,47 +75,22 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public CommandLineOption[] GetCommandLineOptions()
-        => new CommandLineOption[]
-        {
-            // Visible options
-            new(HelpOptionKey, PlatformResources.PlatformCommandLineHelpOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
-            new(InfoOptionKey, PlatformResources.PlatformCommandLineInfoOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
-            new(ResultDirectoryOptionKey, PlatformResources.PlatformCommandLineResultDirectoryOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
-            new(DiagnosticOptionKey, PlatformResources.PlatformCommandLineDiagnosticOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
-            new(DiagnosticOutputFilePrefixOptionKey, PlatformResources.PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
-            new(DiagnosticOutputDirectoryOptionKey, PlatformResources.PlatformCommandLineDiagnosticOutputDirectoryOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
-            new(DiagnosticVerbosityOptionKey, PlatformResources.PlatformCommandLineDiagnosticVerbosityOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
-            new(DiagnosticFileLoggerSynchronousWriteOptionKey, PlatformResources.PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
-            MinimumExpectedTests,
-            new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
+    public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
+        => PlatformCommandLineProviderCache;
 
-            // Hidden options
-            new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
-            new(PortOptionKey, PlatformResources.PlatformCommandLinePortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
-            new(ClientPortOptionKey, PlatformResources.PlatformCommandLineClientPortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
-            new(ClientHostOptionKey, PlatformResources.PlatformCommandLineClientHostOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
-            new(SkipBuildersNumberCheckOptionKey, PlatformResources.PlatformCommandLineSkipBuildersNumberCheckOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
-            new(VSTestAdapterModeOptionKey, PlatformResources.PlatformCommandLineVSTestAdapterModeOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
-            new(NoBannerOptionKey, PlatformResources.PlatformCommandLineNoBannerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
-            new(TestHostControllerPIDOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
-        };
-
-    public bool OptionArgumentsAreValid(CommandLineOption option, string[] arguments, out string error)
+    public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
-        if (option.Name == HelpOptionKey && arguments.Length > 0)
+        if (commandOption.Name == HelpOptionKey && arguments.Length > 0)
         {
-            error = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineOptionExpectsNoArgumentErrorMessage, HelpOptionKey);
-            return false;
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineOptionExpectsNoArgumentErrorMessage, HelpOptionKey));
         }
 
-        if (option.Name == InfoOptionKey && arguments.Length > 0)
+        if (commandOption.Name == InfoOptionKey && arguments.Length > 0)
         {
-            error = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineOptionExpectsNoArgumentErrorMessage, InfoOptionKey);
-            return false;
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineOptionExpectsNoArgumentErrorMessage, InfoOptionKey));
         }
 
-        if (option.Name == DiagnosticVerbosityOptionKey)
+        if (commandOption.Name == DiagnosticVerbosityOptionKey)
         {
             if (arguments.Length != 1
                 || (!arguments[0].Equals("Trace", StringComparison.OrdinalIgnoreCase)
@@ -97,54 +100,47 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
                     && !arguments[0].Equals("Error", StringComparison.OrdinalIgnoreCase)
                     && !arguments[0].Equals("Critical", StringComparison.OrdinalIgnoreCase)))
             {
-                error = PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage;
-                return false;
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage);
             }
         }
 
-        if (option.Name == DiagnosticOutputDirectoryOptionKey && arguments.Length != 1)
+        if (commandOption.Name == DiagnosticOutputDirectoryOptionKey && arguments.Length != 1)
         {
-            error = PlatformResources.PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument;
-            return false;
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument);
         }
 
-        if (option.Name == DiagnosticOutputFilePrefixOptionKey && arguments.Length != 1)
+        if (commandOption.Name == DiagnosticOutputFilePrefixOptionKey && arguments.Length != 1)
         {
-            error = PlatformResources.PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument;
-            return false;
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument);
         }
 
-        if (option.Name == ResultDirectoryOptionKey && arguments.Length != 1)
+        if (commandOption.Name == ResultDirectoryOptionKey && arguments.Length != 1)
         {
-            error = $"Invalid arguments for --{ResultDirectoryOptionKey}, expected usage: --results-directory ./CustomTestResultsFolder";
-            return false;
+            return ValidationResult.InvalidTask($"Invalid arguments for --{ResultDirectoryOptionKey}, expected usage: --results-directory ./CustomTestResultsFolder");
         }
 
-        if (option.Name == PortOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
+        if (commandOption.Name == PortOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
         {
-            error = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, PortOptionKey);
-            return false;
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, PortOptionKey));
         }
 
-        if (option.Name == ClientPortOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
+        if (commandOption.Name == ClientPortOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
         {
-            error = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, ClientPortOptionKey);
-            return false;
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, ClientPortOptionKey));
         }
 
-        if (option.Name == ClientHostOptionKey && arguments.Length != 1)
+        if (commandOption.Name == ClientHostOptionKey && arguments.Length != 1)
         {
-            error = PlatformResources.PlatformCommandLineClientHostOptionSingleArgument;
-            return false;
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineClientHostOptionSingleArgument);
         }
 
-        return IsMinimumExpectedTestsOptionValid(option, arguments, out error);
+        return IsMinimumExpectedTestsOptionValidAsync(commandOption, arguments);
     }
 
     public static int GetMinimumExpectedTests(CommandLineParseResult parseResult)
     {
         OptionRecord? minimumExpectedTests = parseResult.Options.SingleOrDefault(o => o.Option == MinimumExpectedTestsOptionKey);
-        if (minimumExpectedTests is null || !IsMinimumExpectedTestsOptionValid(MinimumExpectedTests, minimumExpectedTests.Arguments, out string _))
+        if (minimumExpectedTests is null || !IsMinimumExpectedTestsOptionValidAsync(MinimumExpectedTests, minimumExpectedTests.Arguments).Result.IsValid)
         {
             return 0;
         }
@@ -153,45 +149,38 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         return int.Parse(arguments[0], CultureInfo.InvariantCulture);
     }
 
-    private static bool IsMinimumExpectedTestsOptionValid(CommandLineOption option, string[] arguments, out string error)
+    private static Task<ValidationResult> IsMinimumExpectedTestsOptionValidAsync(CommandLineOption option, string[] arguments)
     {
         if (option.Name == MinimumExpectedTestsOptionKey
             && (arguments.Length != 1 || !int.TryParse(arguments[0], out int value) || value == 0))
         {
-            error = PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument;
-            return false;
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument);
         }
 
-        error = string.Empty;
-        return true;
+        return ValidationResult.ValidTask;
     }
 
-    public bool IsValidConfiguration(ICommandLineOptions commandLineOptions, out string? errorMessage)
+    public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {
-        errorMessage = string.Empty;
-
         if (!commandLineOptions.IsOptionSet(DiagnosticOptionKey))
         {
             if (commandLineOptions.IsOptionSet(DiagnosticOutputDirectoryOptionKey))
             {
-                errorMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDiagnosticOptionIsMissing, DiagnosticOutputDirectoryOptionKey);
-                return false;
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDiagnosticOptionIsMissing, DiagnosticOutputDirectoryOptionKey));
             }
 
             if (commandLineOptions.IsOptionSet(DiagnosticOutputFilePrefixOptionKey))
             {
-                errorMessage = string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDiagnosticOptionIsMissing, DiagnosticOutputFilePrefixOptionKey);
-                return false;
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineDiagnosticOptionIsMissing, DiagnosticOutputFilePrefixOptionKey));
             }
         }
 
         if (commandLineOptions.IsOptionSet(DiscoverTestsOptionKey)
             && commandLineOptions.IsOptionSet(MinimumExpectedTestsOptionKey))
         {
-            errorMessage = PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests;
-            return false;
+            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
         }
 
-        return true;
+        return ValidationResult.ValidTask;
     }
 }

@@ -7,10 +7,6 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class ProcessHandle : IProcessHandle, IDisposable
 {
-    public string ProcessName => _processHandleInfo.ProcessName ?? "<unknown>";
-
-    public int Id => _processHandleInfo.Id;
-
     private readonly ProcessHandleInfo _processHandleInfo;
     private readonly Process _process;
     private bool _disposed;
@@ -21,6 +17,10 @@ public sealed class ProcessHandle : IProcessHandle, IDisposable
         _processHandleInfo = processHandleInfo;
         _process = process;
     }
+
+    public string ProcessName => _processHandleInfo.ProcessName ?? "<unknown>";
+
+    public int Id => _processHandleInfo.Id;
 
     public TextWriter StandardInput => _process.StandardInput;
 

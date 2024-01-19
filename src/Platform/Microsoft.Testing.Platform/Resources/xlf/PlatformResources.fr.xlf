@@ -329,6 +329,11 @@
         <target state="translated">Afficher l’aide de la ligne de commande.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
+        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="translated">Ne signalez pas les valeurs de sortie non réussies pour des codes de sortie spécifiques (par exemple, « --ignore-exit-code 8;9 » ignore les codes de sortie 8 et 9 et renverra 0 dans ce cas)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
         <target state="translated">Afficher les informations de l’application de test .NET.</target>
@@ -460,13 +465,13 @@
 Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</source>
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
         <target state="translated">Télémétrie
 ---------
-Microsoft Testing Platform collecte des données d’utilisation afin de nous aider à améliorer votre expérience. Les données sont collectées par Microsoft et ne sont partagées avec personne.
+La plateforme de tests Microsoft collecte des données d’utilisation afin de nous aider à améliorer votre expérience. Les données sont collectées par Microsoft et ne sont partagées avec personne.
 Vous pouvez refuser la télémétrie en fixant la variable d’environnement TESTINGPLATFORM_TELEMETRY_OPTOUT ou DOTNET_CLI_TELEMETRY_OPTOUT à « 1 » ou « true » à l’aide de votre interpréteur de commandes préféré.
 
-En savoir plus sur la télémétrie de la plateforme de test Microsoft : https://aka.ms/testingplatform/guides/telemetry</target>
+En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https://aka.ms/testingplatform/telemetry</target>
         <note />
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">

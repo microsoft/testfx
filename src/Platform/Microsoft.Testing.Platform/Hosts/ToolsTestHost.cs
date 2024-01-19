@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Text;
 
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
@@ -67,20 +68,21 @@ internal sealed class ToolsTestHost(
             {
                 if (UnknownOptions(out string? unknownOptionsError, tool))
                 {
-                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(unknownOptionsError));
+                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(unknownOptionsError));
                     console.WriteLine();
                     return ExitCodes.InvalidCommandLine;
                 }
 
                 if (ExtensionArgumentArityAreInvalid(out string? arityErrors, tool))
                 {
-                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(arityErrors));
+                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(arityErrors));
                     return ExitCodes.InvalidCommandLine;
                 }
 
-                if (InvalidOptionsArguments(out string? invalidOptionsArguments, tool))
+                ValidationResult optionsArgumentsValidationResult = await ValidateOptionsArgumentsAsync(tool);
+                if (!optionsArgumentsValidationResult.IsValid)
                 {
-                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(invalidOptionsArguments));
+                    await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(optionsArgumentsValidationResult.ErrorMessage));
                     return ExitCodes.InvalidCommandLine;
                 }
 
@@ -88,7 +90,7 @@ internal sealed class ToolsTestHost(
             }
         }
 
-        await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText($"Tool '{toolNameToRun}' not found in the list of registered tools."));
+        await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText($"Tool '{toolNameToRun}' not found in the list of registered tools."));
         await _commandLineHandler.PrintHelpAsync();
         return ExitCodes.InvalidCommandLine;
     }
@@ -170,33 +172,28 @@ internal sealed class ToolsTestHost(
         return false;
     }
 
-    private bool InvalidOptionsArguments([NotNullWhen(true)] out string? error, ITool tool)
+    private async Task<ValidationResult> ValidateOptionsArgumentsAsync(ITool tool)
     {
-        error = null;
-
         // This is unexpected
         if (_parseResult is null)
         {
-            return false;
+            return ValidationResult.Invalid("Parse result should not be null");
         }
 
         StringBuilder stringBuilder = new();
         foreach (OptionRecord optionRecord in _parseResult.Options)
         {
             ICommandLineOptionsProvider extension = GetAllCommandLineOptionsProviderByOptionName(optionRecord.Option).Single();
-            if (!extension.OptionArgumentsAreValid(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments, out string? argumentsError))
+            var result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments);
+            if (!result.IsValid)
             {
-                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid arguments for option '--{optionRecord.Option}': {argumentsError}, tool {tool.DisplayName}");
+                stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid arguments for option '--{optionRecord.Option}': {result.ErrorMessage}, tool {tool.DisplayName}");
             }
         }
 
-        if (stringBuilder.Length > 0)
-        {
-            error = stringBuilder.ToString();
-            return true;
-        }
-
-        return false;
+        return stringBuilder.Length > 0
+            ? ValidationResult.Invalid(stringBuilder.ToString())
+            : ValidationResult.Valid();
     }
 
     private IEnumerable<ICommandLineOptionsProvider> GetAllCommandLineOptionsProviderByOptionName(string optionName)

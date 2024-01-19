@@ -57,7 +57,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFe
 #pragma warning restore IL3000
         }
 
-        moduleName = TAString.IsNullOrEmpty(moduleName)
+        moduleName = RoslynString.IsNullOrEmpty(moduleName)
             ? GetProcessPath(_environment, _process)
             : moduleName;
 
@@ -111,6 +111,6 @@ internal sealed class CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFe
                 ? MuxerExec.Concat(commandLineArguments)
                 : commandLineArguments;
 
-        return new(fileName, arguments.ToArray(), Path.GetDirectoryName(currentTestApplicationFullPath)!);
+        return new(fileName, arguments, Path.GetDirectoryName(currentTestApplicationFullPath)!);
     }
 }

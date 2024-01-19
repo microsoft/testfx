@@ -19,37 +19,6 @@ public abstract class AcceptanceTestBase : TestBase
     private const string MSTestTestFrameworkPackageNamePrefix = "MSTest.TestFramework.";
 #endif
 
-    static AcceptanceTestBase()
-    {
-        XDocument versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
-        MicrosoftNETTestSdkVersion = versionsPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
-
-#if MSTEST_DOWNLOADED
-        MSTestVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
-        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MicrosoftTestingPlatformNamePrefix);
-        MicrosoftTestingPlatformExtensionsVersion = MicrosoftTestingPlatformVersion;
-#else
-        MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MSTestTestFrameworkPackageNamePrefix);
-        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsTmpPackages, MicrosoftTestingPlatformNamePrefix);
-        MicrosoftTestingPlatformExtensionsVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MicrosoftTestingPlatformVersion");
-#endif
-    }
-
-    internal static string RID { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
-
-    public static string MSTestVersion { get; private set; }
-
-    public static string MicrosoftNETTestSdkVersion { get; private set; }
-
-    public static string MicrosoftTestingPlatformVersion { get; private set; }
-
-    public static string MicrosoftTestingPlatformExtensionsVersion { get; private set; }
-
-    protected AcceptanceTestBase(ITestExecutionContext testExecutionContext)
-        : base(testExecutionContext)
-    {
-    }
-
     protected const string CurrentMSTestSourceCode = """
 #file MSTestProject.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -85,6 +54,37 @@ public class UnitTest1
     }
 }
 """;
+
+    static AcceptanceTestBase()
+    {
+        XDocument versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
+        MicrosoftNETTestSdkVersion = versionsPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
+
+#if MSTEST_DOWNLOADED
+        MSTestVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
+        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MicrosoftTestingPlatformNamePrefix);
+        MicrosoftTestingPlatformExtensionsVersion = MicrosoftTestingPlatformVersion;
+#else
+        MSTestVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MSTestTestFrameworkPackageNamePrefix);
+        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsTmpPackages, MicrosoftTestingPlatformNamePrefix);
+        MicrosoftTestingPlatformExtensionsVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MicrosoftTestingPlatformVersion");
+#endif
+    }
+
+    protected AcceptanceTestBase(ITestExecutionContext testExecutionContext)
+        : base(testExecutionContext)
+    {
+    }
+
+    internal static string RID { get; private set; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "win-x64" : "linux-x64";
+
+    public static string MSTestVersion { get; private set; }
+
+    public static string MicrosoftNETTestSdkVersion { get; private set; }
+
+    public static string MicrosoftTestingPlatformVersion { get; private set; }
+
+    public static string MicrosoftTestingPlatformExtensionsVersion { get; private set; }
 
     internal static IEnumerable<TestArgumentsEntry<(string Tfm, BuildConfiguration BuildConfiguration, Verb Verb)>> GetBuildMatrixTfmBuildVerbConfiguration()
     {

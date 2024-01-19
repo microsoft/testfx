@@ -329,6 +329,11 @@
         <target state="translated">顯示命令列說明。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineIgnoreExitCodeOptionDescription">
+        <source>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</source>
+        <target state="translated">不要報告特定結束代碼的未成功結束值 (例如 '--ignore-exit-code 8;9' 會忽略結束代碼 8 和 9，而在這些情況下會傳回 0)</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineInfoOptionDescription">
         <source>Display .NET test application information.</source>
         <target state="translated">顯示 .NET 測試應用程式資訊。</target>
@@ -460,13 +465,13 @@
 Microsoft Testing Platform collects usage data in order to help us improve your experience. The data is collected by Microsoft and are not shared with anyone.
 You can opt-out of telemetry by setting the TESTINGPLATFORM_TELEMETRY_OPTOUT or DOTNET_CLI_TELEMETRY_OPTOUT environment variable to '1' or 'true' using your favorite shell.
 
-Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/guides/telemetry</source>
+Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplatform/telemetry</source>
         <target state="translated">遙測
 ---------
 Microsoft 測試平台會收集使用量資料，以協助我們改善您的體驗。資料由 Microsoft 收集，且不會與任何人共用。
 您可以使用您喜愛的殼層，將 TESTINGPLATFORM_TELEMETRY_OPTOUT 或 DOTNET_CLI_TELEMETRY_OPTOUT 環境變數設定為 '1' 或 'true'，以選擇退出遙測。
 
-進一步了解關於 Microsoft 測試平台遙測: https://aka.ms/testingplatform/guides/telemetry</target>
+閱讀更多關於 Microsoft 測試平台遙測: https://aka.ms/testingplatform/telemetry</target>
         <note />
       </trans-unit>
       <trans-unit id="TelemetryProviderAlreadySetErrorMessage">

@@ -3,11 +3,11 @@
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
-internal sealed class CommandLineInfo(string fileName, string[] arguments, string testApplicationFullPath)
+internal sealed class CommandLineInfo(string fileName, IEnumerable<string> arguments, string testApplicationFullPath)
 {
     public string FileName { get; } = fileName;
 
-    public string[] Arguments { get; } = arguments;
+    public IEnumerable<string> Arguments { get; } = arguments;
 
     public string TestApplicationFullPath { get; } = testApplicationFullPath;
 }

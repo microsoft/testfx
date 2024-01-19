@@ -14,7 +14,7 @@
     -->
     <TestingPlatformBuilderHook Include="031F8871-2660-4208-8F6B-FC142B40ABFF" Condition=" $(GenerateTestingPlatformEntryPoint) == 'true' " >
       <DisplayName>MSTest</DisplayName>
-      <TypeFullName>Microsoft.Testing.Platform.Extensions.MSTest.TestingPlatformBuilderHook</TypeFullName>
+      <TypeFullName>Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook</TypeFullName>
     </TestingPlatformBuilderHook>
   </ItemGroup>
   

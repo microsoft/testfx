@@ -4,7 +4,7 @@ P:System.DateTime.UtcNow; Use 'IClock' instead
 T:System.Environment; Use 'IEnvironment' instead
 M:System.Diagnostics.Process.GetCurrentProcess(); Use 'IProcess' instead
 M:System.Diagnostics.Process.Start(System.Diagnostics.ProcessStartInfo); Use 'IProcess' instead
-M:System.String.IsNullOrEmpty(System.String); Use 'TAString.IsNullOrEmpty' instead
-M:System.String.IsNullOrWhiteSpace(System.String); Use 'TAString.IsNullOrWhiteSpace' instead
+M:System.String.IsNullOrEmpty(System.String); Use 'RoslynString.IsNullOrEmpty' instead
+M:System.String.IsNullOrWhiteSpace(System.String); Use 'RoslynString.IsNullOrWhiteSpace' instead
 ﻿﻿M:System.Diagnostics.Debug.Assert(System.Boolean); Use 'RoslynDebug.Assert' instead
 M:System.Diagnostics.Debug.Assert(System.Boolean,System.String); Use 'RoslynDebug.Assert' instead

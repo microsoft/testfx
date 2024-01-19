@@ -7,7 +7,12 @@ public interface ITestFrameworkCapabilities : ICapabilities<ITestFrameworkCapabi
 {
 }
 
-public sealed class TestFrameworkCapabilities(params ITestFrameworkCapability[] capabilities) : ITestFrameworkCapabilities
+public sealed class TestFrameworkCapabilities(IReadOnlyCollection<ITestFrameworkCapability> capabilities) : ITestFrameworkCapabilities
 {
-    public ITestFrameworkCapability[] Capabilities => capabilities;
+    public TestFrameworkCapabilities(params ITestFrameworkCapability[] capabilities)
+        : this((IReadOnlyCollection<ITestFrameworkCapability>)capabilities)
+    {
+    }
+
+    public IReadOnlyCollection<ITestFrameworkCapability> Capabilities => capabilities;
 }

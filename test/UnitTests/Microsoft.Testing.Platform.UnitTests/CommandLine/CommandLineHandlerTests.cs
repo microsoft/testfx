@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
@@ -302,7 +303,7 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result);
-        Assert.IsTrue(messages.Count is 22);
+        Assert.IsTrue(messages.Count is 23);
         Assert.IsTrue(messages[0].Equals($"Unknown option '--x'{Environment.NewLine}", StringComparison.Ordinal));
     }
 
@@ -349,19 +350,17 @@ public class CommandLineHandlerTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public CommandLineOption[] GetCommandLineOptions()
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
         => new CommandLineOption[]
         {
             new(HelpOption, "Show command line help.", ArgumentArity.ZeroOrOne, false),
         };
 
-        public bool IsValidConfiguration(ICommandLineOptions commandLineOptions, out string? errorMessage) => throw new NotImplementedException();
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+            => throw new NotImplementedException();
 
-        public bool OptionArgumentsAreValid(CommandLineOption commandOption, string[] arguments, out string? errorMessage)
-        {
-            errorMessage = null;
-            return true;
-        }
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+            => ValidationResult.ValidTask;
     }
 
     private sealed class ExtensionCommandLineProviderMockUnknownOption : ICommandLineOptionsProvider
@@ -382,19 +381,17 @@ public class CommandLineHandlerTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public CommandLineOption[] GetCommandLineOptions()
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
         => new CommandLineOption[]
         {
             new(Option, "Show command line option.", ArgumentArity.ZeroOrOne, false),
         };
 
-        public bool IsValidConfiguration(ICommandLineOptions commandLineOptions, out string? errorMessage) => throw new NotImplementedException();
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+            => throw new NotImplementedException();
 
-        public bool OptionArgumentsAreValid(CommandLineOption commandOption, string[] arguments, out string? errorMessage)
-        {
-            errorMessage = null;
-            return true;
-        }
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+            => ValidationResult.ValidTask;
     }
 
     private sealed class ExtensionCommandLineProviderMockInvalidConfiguration : ICommandLineOptionsProvider
@@ -420,22 +417,16 @@ public class CommandLineHandlerTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public CommandLineOption[] GetCommandLineOptions()
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
         => new CommandLineOption[]
         {
             new(_option, "Show command line option.", ArgumentArity.ZeroOrOne, false),
         };
 
-        public bool IsValidConfiguration(ICommandLineOptions commandLineOptions, out string? errorMessage)
-        {
-            errorMessage = "Invalid configuration errorMessage";
-            return false;
-        }
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+            => ValidationResult.InvalidTask("Invalid configuration errorMessage");
 
-        public bool OptionArgumentsAreValid(CommandLineOption commandOption, string[] arguments, out string? errorMessage)
-        {
-            errorMessage = null;
-            return true;
-        }
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+            => ValidationResult.ValidTask;
     }
 }

@@ -7,9 +7,20 @@ namespace Microsoft.Testing.Platform.Extensions.CommandLine;
 
 public interface ICommandLineOptionsProvider : IExtension
 {
-    CommandLineOption[] GetCommandLineOptions();
+    IReadOnlyCollection<CommandLineOption> GetCommandLineOptions();
 
-    bool OptionArgumentsAreValid(CommandLineOption commandOption, string[] arguments, out string? errorMessage);
+    /// <summary>
+    /// Validate the arguments for the given command option.
+    /// </summary>
+    /// <param name="commandOption">The command option.</param>
+    /// <param name="arguments">The arguments provided for the command option.</param>
+    /// <returns>The result of the validation.</returns>
+    Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments);
 
-    bool IsValidConfiguration(ICommandLineOptions commandLineOptions, out string? errorMessage);
+    /// <summary>
+    /// Validate that the command line options are valid in the context of each other.
+    /// </summary>
+    /// <param name="commandLineOptions">All command line options (including the ones provided by other extensions) are provided.</param>
+    /// <returns>The result of the validation.</returns>
+    Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions);
 }

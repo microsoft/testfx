@@ -4,12 +4,10 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
+using Microsoft.Testing.Extensions;
 using Microsoft.Testing.Framework.Configurations;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.CommandLine;
-#if ENABLE_CODECOVERAGE
-using Microsoft.Testing.Platform.Extensions.CodeCoverage;
-#endif
 using Microsoft.Testing.Platform.Extensions.TestHost;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
@@ -17,10 +15,10 @@ builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.G
 
 builder.AddTestFramework(new TestFrameworkConfiguration(Debugger.IsAttached ? 1 : Environment.ProcessorCount), new SourceGeneratedTestNodesBuilder());
 #if ENABLE_CODECOVERAGE
-builder.AddCodeCoverage();
+builder.AddCodeCoverageProvider();
 #endif
-builder.AddCrashDumpGenerator();
-builder.AddTrxReportGenerator();
+builder.AddCrashDumpProvider();
+builder.AddTrxReportProvider();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory

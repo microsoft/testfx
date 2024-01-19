@@ -3,6 +3,7 @@
 
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
@@ -168,7 +169,7 @@ public class ArgumentArityTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public CommandLineOption[] GetCommandLineOptions()
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
             => new CommandLineOption[]
             {
                 new("zeroArgumentsOption", "Show command line zeroArgumentsOption.", ArgumentArity.Zero, false),
@@ -178,16 +179,10 @@ public class ArgumentArityTests : TestBase
                 new("oneOrMoreArgumentsOption", "Show command line oneOrMoreArgumentsOption.", ArgumentArity.OneOrMore, false),
             };
 
-        public bool IsValidConfiguration(ICommandLineOptions commandLineOptions, out string? errorMessage)
-        {
-            errorMessage = null;
-            return true;
-        }
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
+            => ValidationResult.ValidTask;
 
-        public bool OptionArgumentsAreValid(CommandLineOption commandOption, string[] arguments, out string? errorMessage)
-        {
-            errorMessage = null;
-            return true;
-        }
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
+            => ValidationResult.ValidTask;
     }
 }

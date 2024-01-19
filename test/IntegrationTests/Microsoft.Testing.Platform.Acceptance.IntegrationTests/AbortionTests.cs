@@ -23,7 +23,7 @@ public class AbortionTests : AcceptanceTestBase
     // We retry because sometime the Cancelling the session message is not showing up.
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task AbortWithCTRLPlusC_TestHost_Succeeded(string tfm)
-        => await RetryHelper.Retry(
+        => await RetryHelper.RetryAsync(
             async () =>
             {
                 // We expect the same semantic for Linux, the test setup is not cross and we're using specific
@@ -51,23 +51,6 @@ public class AbortionTests : AcceptanceTestBase
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public string TargetAssetPath => GetAssetPath(AssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            // We expect the same semantic for Linux, the test setup is not cross and we're using specific
-            // Windows API because this gesture is not easy xplat.
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                yield break;
-            }
-
-            yield return (AssetName, AssetName,
-                Sources
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
-
         private const string Sources = """
 #file Abort.csproj
 <Project Sdk="Microsoft.NET.Sdk">
@@ -85,6 +68,7 @@ public class AbortionTests : AcceptanceTestBase
 
 #file Program.cs
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.Testing.Platform.Builder;
@@ -170,8 +154,25 @@ internal class DummyAdapter : ITestFramework, IDataProducer
 
 internal class Capabilities : ITestFrameworkCapabilities
 {
-    ITestFrameworkCapability[] ICapabilities<ITestFrameworkCapability>.Capabilities => Array.Empty<ITestFrameworkCapability>();
+    IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities => Array.Empty<ITestFrameworkCapability>();
 }
 """;
+
+        public string TargetAssetPath => GetAssetPath(AssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            // We expect the same semantic for Linux, the test setup is not cross and we're using specific
+            // Windows API because this gesture is not easy xplat.
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                yield break;
+            }
+
+            yield return (AssetName, AssetName,
+                Sources
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+        }
     }
 }

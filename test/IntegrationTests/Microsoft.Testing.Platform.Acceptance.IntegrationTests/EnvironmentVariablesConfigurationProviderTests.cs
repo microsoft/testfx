@@ -9,6 +9,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 [TestGroup]
 public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceTestBase
 {
+    private const string AssetName = "EnvironmentVariablesConfigurationProvider";
     private readonly TestAssetFixture _testAssetFixture;
 
     public EnvironmentVariablesConfigurationProviderTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
@@ -16,8 +17,6 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
     {
         _testAssetFixture = testAssetFixture;
     }
-
-    private const string AssetName = "EnvironmentVariablesConfigurationProvider";
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task DefaultEnabledEnvironmentVariablesConfiguration_SetEnvironmentVariable_ShouldSucceed(string currentTfm)
@@ -66,16 +65,6 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture)
         : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        public string TargetAssetPath => GetAssetPath(AssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (AssetName, AssetName,
-                Sources
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
-        }
-
         private const string Sources = """
 #file EnvironmentVariablesConfigurationProvider.csproj
 
@@ -97,16 +86,12 @@ public sealed class EnvironmentVariablesConfigurationProviderTests : AcceptanceT
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Globalization;
 
-using Microsoft.Testing.Platform;
-using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
-using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
-using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.Services;
 
 public class Startup
@@ -194,20 +179,34 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
 
     public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
 
-    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context) => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
-    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
+        => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
+        => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(context.Request.Session.SessionUid, new TestNode() 
         {
             Uid = "Test1",
             DisplayName = "Test1",
-            Properties = new PropertyBag(new PassedTestNodeStateProperty())
+            Properties = new PropertyBag(new PassedTestNodeStateProperty()),
         }));
 
         context.Complete();
     }
 }
 """;
+
+        public string TargetAssetPath => GetAssetPath(AssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (AssetName, AssetName,
+                Sources
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+        }
     }
 }

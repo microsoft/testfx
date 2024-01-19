@@ -39,6 +39,7 @@ Options:
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
   --help                                   Show the command line help\.
+  --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
   --list-tests                             List available tests\.
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run\.
@@ -71,6 +72,7 @@ Options:
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
   --help                                   Show the command line help\.
+  --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
   --list-tests                             List available tests\.
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run\.
@@ -104,6 +106,7 @@ Options:
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
   --help                                   Show the command line help\.
+  --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
   --list-tests                             List available tests\.
   --minimum-expected-tests                 Specifies the minimum number of tests that are expected to run\.
@@ -121,25 +124,6 @@ Extension options:
     {
         public const string NoExtensionAssetName = "NoExtensionHelpTest";
         public const string MSTestAssetName = "MSTestHelpTest";
-
-        public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
-
-        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
-
-        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
-        {
-            yield return (NoExtensionAssetName, NoExtensionAssetName,
-                NoExtensionHelpTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
-            yield return (MSTestAssetName, MSTestAssetName,
-                MSTestCode
-                .PatchTargetFrameworks(TargetFrameworks.All)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
-                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-        }
 
         private const string NoExtensionHelpTestCode = """
 #file NoExtensionHelpTest.csproj
@@ -181,7 +165,7 @@ public class UnitTest1
 #file Usings.cs
 global using Microsoft.Testing.Platform.Builder;
 global using Microsoft.Testing.Framework;
-global using Microsoft.Testing.Platform.Extensions;
+global using Microsoft.Testing.Extensions;
 """;
 
         private const string MSTestCode = """
@@ -200,7 +184,7 @@ global using Microsoft.Testing.Platform.Extensions;
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
         <PackageReference Include="MSTest" Version="$MSTestVersion$" />
         <!-- Required for internal build -->
-        <PackageReference Include="Microsoft.Testing.Platform.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
         <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
@@ -227,8 +211,27 @@ public class UnitTest1
 
 #file Usings.cs
 global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Platform.Extensions;
+global using Microsoft.Testing.Extensions;
 global using Microsoft.VisualStudio.TestTools.UnitTesting;
 """;
+
+        public string NoExtensionTargetAssetPath => GetAssetPath(NoExtensionAssetName);
+
+        public string MSTestTargetAssetPath => GetAssetPath(MSTestAssetName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (NoExtensionAssetName, NoExtensionAssetName,
+                NoExtensionHelpTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+            yield return (MSTestAssetName, MSTestAssetName,
+                MSTestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+        }
     }
 }

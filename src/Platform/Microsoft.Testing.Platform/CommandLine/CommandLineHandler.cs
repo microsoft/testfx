@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using Microsoft.Testing.Platform.Extensions;
 using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Helpers;
@@ -62,31 +63,31 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
                 stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t- {error}");
             }
 
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(stringBuilder.ToString()));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(stringBuilder.ToString()));
             return false;
         }
 
         if (ExtensionOptionsContainReservedPrefix(out string? reservedPrefixError))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(reservedPrefixError));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(reservedPrefixError));
             return false;
         }
 
         if (ExtensionOptionsContainReservedOptions(out string? reservedOptionError))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(reservedOptionError));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(reservedOptionError));
             return false;
         }
 
         if (ExtensionOptionAreDuplicated(out string? duplicationError))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(duplicationError));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(duplicationError));
             return false;
         }
 
         if (UnknownOptions(out string? unknownOptionsError))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(unknownOptionsError));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(unknownOptionsError));
             await _platformOutputDevice.DisplayAsync(this, EmptyText);
             await PrintHelpAsync();
             return false;
@@ -94,19 +95,21 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
         if (ExtensionArgumentArityAreInvalid(out string? arityErrors))
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(arityErrors));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(arityErrors));
             return false;
         }
 
-        if (InvalidOptionsArguments(out string? invalidOptionsArguments))
+        var optionsResult = await ValidateOptionsArgumentsAsync();
+        if (!optionsResult.IsValid)
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(invalidOptionsArguments));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(optionsResult.ErrorMessage));
             return false;
         }
 
-        if (IsInvalidValidConfiguration(out string? configurationError))
+        var configurationResult = await ValidateConfigurationAsync();
+        if (!configurationResult.IsValid)
         {
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataHelper.CreateRedConsoleColorText(configurationError));
+            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(configurationResult.ErrorMessage));
             return false;
         }
 
@@ -139,47 +142,47 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         return stringBuilder?.Length > 0;
     }
 
-    private bool IsInvalidValidConfiguration([NotNullWhen(true)] out string? error)
+    private async Task<ValidationResult> ValidateConfigurationAsync()
     {
         StringBuilder? stringBuilder = null;
         foreach (ICommandLineOptionsProvider commandLineOptionsProvider in _systemCommandLineOptionsProviders.Union(ExtensionsCommandLineOptionsProviders))
         {
-            if (!commandLineOptionsProvider.IsValidConfiguration(this, out string? providerError))
+            var result = await commandLineOptionsProvider.ValidateCommandLineOptionsAsync(this);
+            if (!result.IsValid)
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidConfiguration, commandLineOptionsProvider.DisplayName, commandLineOptionsProvider.Uid, providerError));
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidConfiguration, commandLineOptionsProvider.DisplayName, commandLineOptionsProvider.Uid, result.ErrorMessage));
                 stringBuilder.AppendLine();
             }
         }
 
-        error = stringBuilder?.ToString();
-        return stringBuilder?.Length > 0;
+        return stringBuilder?.Length > 0
+            ? ValidationResult.Invalid(stringBuilder.ToString())
+            : ValidationResult.Valid();
     }
 
-    private bool InvalidOptionsArguments([NotNullWhen(true)] out string? error)
+    private async Task<ValidationResult> ValidateOptionsArgumentsAsync()
     {
-        error = null;
-
         ArgumentGuard.IsNotNull(_parseResult);
 
         StringBuilder? stringBuilder = null;
         foreach (OptionRecord optionRecord in _parseResult.Options)
         {
             ICommandLineOptionsProvider extension = GetAllCommandLineOptionsProviderByOptionName(optionRecord.Option).Single();
-            if (!extension.OptionArgumentsAreValid(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments, out string? argumentsError))
+            var result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments);
+            if (!result.IsValid)
             {
                 stringBuilder ??= new();
-                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecord.Option, argumentsError));
+                stringBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.CommandLineInvalidArgumentsForOption, optionRecord.Option, result.ErrorMessage));
             }
         }
 
         if (stringBuilder?.Length > 0)
         {
-            error = stringBuilder.ToString();
-            return true;
+            return ValidationResult.Invalid(stringBuilder.ToString());
         }
 
-        return false;
+        return ValidationResult.Valid();
     }
 
     private bool UnknownOptions([NotNullWhen(true)] out string? error)
@@ -478,7 +481,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 #endif
 
             string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
-            moduleName = TAString.IsNullOrEmpty(moduleName)
+            moduleName = RoslynString.IsNullOrEmpty(moduleName)
 #if NETCOREAPP
                 ? _environment.ProcessPath
 #else
