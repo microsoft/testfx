@@ -9,6 +9,7 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public class MSTestRunnerTests : AcceptanceTestBase
 {
     private readonly AcceptanceFixture _acceptanceFixture;
+    private static readonly SemaphoreSlim Lock = new(1);
     private const string AssetName = "MSTestProject";
 
     public MSTestRunnerTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
@@ -20,30 +21,41 @@ public class MSTestRunnerTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
     public async Task EnableMSTestRunner_True_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
-        using TestAsset generator = await TestAsset.GenerateAssetAsync(
-            AssetName,
-            CurrentMSTestSourceCode
-            .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{tfm}</TargetFramework>")
-            .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
-            .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
-            .PatchCodeWithReplace("$Extra$", string.Empty),
-            addPublicFeeds: true);
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        compilationResult = await DotnetCli.RunAsync(
-            $"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
-            _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
-        var testHostResult = await testHost.ExecuteAsync();
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        await Lock.WaitAsync();
+        try
+        {
+            using TestAsset generator = await TestAsset.GenerateAssetAsync(
+                AssetName,
+                CurrentMSTestSourceCode
+                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{tfm}</TargetFramework>")
+                .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+                .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
+                .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
+                .PatchCodeWithReplace("$Extra$", string.Empty),
+                addPublicFeeds: true);
+            string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
+            var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            compilationResult = await DotnetCli.RunAsync(
+                $"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
+                _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
+            var testHostResult = await testHost.ExecuteAsync();
+            testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        }
+        finally
+        {
+            Lock.Release();
+        }
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
     public async Task EnableMSTestRunner_True_WithCustomEntryPoint_Will_Run_Standalone(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
-        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+        await Lock.WaitAsync();
+        try
+        {
+            using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
             (CurrentMSTestSourceCode + """
 #file Program.cs
@@ -67,47 +79,60 @@ return await app.RunAsync();
 <LangVersion>preview</LangVersion>
 """),
             addPublicFeeds: true);
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        compilationResult = await DotnetCli.RunAsync(
-            $"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
-            _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
-        var testHostResult = await testHost.ExecuteAsync();
-        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+            string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
+            var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            compilationResult = await DotnetCli.RunAsync(
+                $"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
+                _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
+            var testHostResult = await testHost.ExecuteAsync();
+            testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        }
+        finally
+        {
+            Lock.Release();
+        }
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixTfmBuildVerbConfiguration))]
     public async Task EnableMSTestRunner_False_Will_Run_Empty_Program_EntryPoint_From_Tpv2_SDK(string tfm, BuildConfiguration buildConfiguration, Verb verb)
     {
-        using TestAsset generator = await TestAsset.GenerateAssetAsync(
-            AssetName,
-            CurrentMSTestSourceCode
-            .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{tfm}</TargetFramework>")
-            .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
-            .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-            .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>false</EnableMSTestRunner>")
-            .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
-            .PatchCodeWithReplace("$Extra$", string.Empty),
-            addPublicFeeds: true);
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        await Lock.WaitAsync();
         try
         {
-            compilationResult = await DotnetCli.RunAsync($"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-            var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
-            var testHostResult = await testHost.ExecuteAsync();
-            Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
-        }
-        catch (Exception ex)
-        {
-            if (TargetFrameworks.NetFramework.Any(x => x.Arguments == tfm))
+            using TestAsset generator = await TestAsset.GenerateAssetAsync(
+        AssetName,
+        CurrentMSTestSourceCode
+        .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{tfm}</TargetFramework>")
+        .PatchCodeWithReplace("$MicrosoftNETTestSdkVersion$", MicrosoftNETTestSdkVersion)
+        .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+        .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>false</EnableMSTestRunner>")
+        .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
+        .PatchCodeWithReplace("$Extra$", string.Empty),
+        addPublicFeeds: true);
+            string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
+            var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            try
             {
-                Assert.IsTrue(ex.Message.Contains("Program does not contain a static 'Main' method suitable for an entry point"), ex.Message);
-
-                // .NET Framework does not insert the entry point for empty program.
-                return;
+                compilationResult = await DotnetCli.RunAsync($"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
+                var testHostResult = await testHost.ExecuteAsync();
+                Assert.AreEqual(string.Empty, testHostResult.StandardOutput);
             }
+            catch (Exception ex)
+            {
+                if (TargetFrameworks.NetFramework.Any(x => x.Arguments == tfm))
+                {
+                    Assert.IsTrue(ex.Message.Contains("Program does not contain a static 'Main' method suitable for an entry point"), ex.Message);
+
+                    // .NET Framework does not insert the entry point for empty program.
+                    return;
+                }
+            }
+        }
+        finally
+        {
+            Lock.Release();
         }
     }
 }
