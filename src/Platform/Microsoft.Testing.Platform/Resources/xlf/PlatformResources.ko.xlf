@@ -285,8 +285,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">진단 로깅을 사용하도록 설정합니다. 기본 로그 수준은 'Information'입니다. 파일은 log_[MMddHHssfff].diag라는 이름의 출력 디렉터리에 기록됩니다.</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="needs-review-translation">진단 로깅을 사용하도록 설정합니다. 기본 로그 수준은 'Information'입니다. 파일은 log_[MMddHHssfff].diag라는 이름의 출력 디렉터리에 기록됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">

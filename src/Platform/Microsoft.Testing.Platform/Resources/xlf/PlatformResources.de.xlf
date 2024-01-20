@@ -285,8 +285,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">Aktivieren Sie die Diagnoseprotokollierung. Die Standardprotokollebene ist "Information". Die Datei wird mit dem Namen log_[MMddHHssfff].diag ins Ausgabeverzeichnis geschrieben.</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="needs-review-translation">Aktivieren Sie die Diagnoseprotokollierung. Die Standardprotokollebene ist "Information". Die Datei wird mit dem Namen log_[MMddHHssfff].diag ins Ausgabeverzeichnis geschrieben.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">
