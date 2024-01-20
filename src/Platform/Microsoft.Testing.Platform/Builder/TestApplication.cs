@@ -251,7 +251,7 @@ public sealed class TestApplication : ITestApplication
     */
     private static ApplicationLoggingState CreateFileLoggerIfDiagnosticIsEnabled(CommandLineParseResult result, CurrentTestApplicationModuleInfo testApplicationModuleInfo, SystemClock clock, SystemEnvironment environment, SystemTask task, SystemConsole console)
     {
-        LogLevel logLevel = LogLevel.Information;
+        LogLevel logLevel = LogLevel.Trace;
 
         if (result.HasError)
         {
