@@ -194,7 +194,7 @@ public class DiagnosticTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Diagnostic file");
     }
 
-    private async Task<string> AssertDiagnosticReportWasGeneratedAsync(TestHostResult testHostResult, string diagPathPattern, string level = "Information", string flushType = "async")
+    private async Task<string> AssertDiagnosticReportWasGeneratedAsync(TestHostResult testHostResult, string diagPathPattern, string level = "Trace", string flushType = "async")
     {
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 

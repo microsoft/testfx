@@ -285,8 +285,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">Tanılama günlük kaydını etkinleştirir. Varsayılan günlük düzeyi: 'Information'. Dosya, çıkış dizinine log_[MMddHHssfff].diag adıyla yazılır</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="needs-review-translation">Tanılama günlük kaydını etkinleştirir. Varsayılan günlük düzeyi: 'Information'. Dosya, çıkış dizinine log_[MMddHHssfff].diag adıyla yazılır</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">

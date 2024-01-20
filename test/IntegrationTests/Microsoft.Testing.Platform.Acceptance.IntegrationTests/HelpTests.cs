@@ -33,7 +33,7 @@ Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
 Usage {TestAssetFixture.NoExtensionAssetName}.* \[option providers\] \[extension option providers\]
 Execute a .NET Test Application\.
 Options:
-  --diagnostic                             Enable the diagnostic logging\. The default log level is 'Information'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
+  --diagnostic                             Enable the diagnostic logging\. The default log level is 'Trace'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
   --diagnostic-filelogger-synchronouswrite Force the built-in file logger to write the log synchronously\. Useful for scenario where you don't want to lose any log \(i\.e\. in case of crash\)\. Note that this is slowing down the test execution\.
   --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory\.
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
@@ -66,7 +66,7 @@ Unknown option '--{UnknownOption}'
 Usage {TestAssetFixture.NoExtensionAssetName}.* \[option providers\] \[extension option providers\]
 Execute a \.NET Test Application\.
 Options:
-  --diagnostic                             Enable the diagnostic logging\. The default log level is 'Information'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
+  --diagnostic                             Enable the diagnostic logging\. The default log level is 'Trace'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
   --diagnostic-filelogger-synchronouswrite Force the built-in file logger to write the log synchronously\. Useful for scenario where you don't want to lose any log \(i\.e\. in case of crash\)\. Note that this is slowing down the test execution\.
   --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory\.
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
@@ -100,7 +100,7 @@ Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
 Usage {TestAssetFixture.MSTestAssetName}.* \[option providers\] \[extension option providers\]
 Execute a .NET Test Application\.
 Options:
-  --diagnostic                             Enable the diagnostic logging\. The default log level is 'Information'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
+  --diagnostic                             Enable the diagnostic logging\. The default log level is 'Trace'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
   --diagnostic-filelogger-synchronouswrite Force the built-in file logger to write the log synchronously\. Useful for scenario where you don't want to lose any log \(i\.e\. in case of crash\)\. Note that this is slowing down the test execution\.
   --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory\.
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'

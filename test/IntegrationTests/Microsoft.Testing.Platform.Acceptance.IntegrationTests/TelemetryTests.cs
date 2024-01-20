@@ -126,7 +126,7 @@ public class TelemetryTests : AcceptanceTestBase
         await AssertDiagnosticReportAsync(testHostResult, diagPathPattern, diagContentsPattern);
     }
 
-    private async Task<string> AssertDiagnosticReportAsync(TestHostResult testHostResult, string diagPathPattern, string diagContentsPattern, string level = "Information", string flushType = "async")
+    private async Task<string> AssertDiagnosticReportAsync(TestHostResult testHostResult, string diagPathPattern, string diagContentsPattern, string level = "Trace", string flushType = "async")
     {
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
 

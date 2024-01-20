@@ -285,8 +285,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
-        <source>Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
-        <target state="translated">診断ログを有効にします。既定のログ レベルは 'Information' です。ファイルは、出力ディレクトリに log_[MMddHHssfff].diag という名前で書き込まれます。</target>
+        <source>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</source>
+        <target state="needs-review-translation">診断ログを有効にします。既定のログ レベルは 'Information' です。ファイルは、出力ディレクトリに log_[MMddHHssfff].diag という名前で書き込まれます。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage">

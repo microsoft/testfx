@@ -368,7 +368,7 @@
     <value>'--diagnostic-output-fileprefix' expects a single file name prefix argument</value>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionDescription" xml:space="preserve">
-    <value>Enable the diagnostic logging. The default log level is 'Information'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</value>
+    <value>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</value>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage" xml:space="preserve">
     <value>'--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical')</value>

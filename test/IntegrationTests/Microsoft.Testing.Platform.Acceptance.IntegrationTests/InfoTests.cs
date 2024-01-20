@@ -52,7 +52,7 @@ Built-in command line providers:
       --diagnostic
         Arity: 0
         Hidden: False
-        Description: Enable the diagnostic logging\. The default log level is 'Information'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
+        Description: Enable the diagnostic logging\. The default log level is 'Trace'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
       --diagnostic-filelogger-synchronouswrite
         Arity: 0
         Hidden: False
