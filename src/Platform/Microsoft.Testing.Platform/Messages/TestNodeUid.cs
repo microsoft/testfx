@@ -31,4 +31,6 @@ public sealed class TestNodeUid(string value) : IEquatable<TestNodeUid>
 
     public override int GetHashCode()
         => Value.GetHashCode();
+
+    public override string ToString() => Value;
 }
