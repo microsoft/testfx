@@ -6,4 +6,6 @@ namespace Microsoft.Testing.Platform.TestHost;
 public readonly struct SessionUid(string uid)
 {
     public string Uid { get; } = uid;
+
+    public override string ToString() => Uid;
 }

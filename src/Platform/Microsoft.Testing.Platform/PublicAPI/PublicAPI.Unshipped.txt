@@ -380,6 +380,8 @@ override Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.Get
 override Microsoft.Testing.Platform.Extensions.Messages.TestNode.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.ToString() -> string!
+override Microsoft.Testing.Platform.TestHost.SessionUid.ToString() -> string!
 static Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>!
 static Microsoft.Testing.Platform.Builder.TestApplication.CreateServerModeBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>!
 static Microsoft.Testing.Platform.Configurations.ConfigurationExtensions.GetCurrentWorkingDirectory(this Microsoft.Testing.Platform.Configurations.IConfiguration! configuration) -> string!
