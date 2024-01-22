@@ -10,7 +10,11 @@ namespace Microsoft.Testing.Platform.UnitTests;
 internal static class LogTestHelpers
 {
     public static IEnumerable<LogLevel> GetLogLevels()
+#if NET
+        => Enum.GetValues<LogLevel>();
+#else
         => typeof(LogLevel).GetEnumValues().Cast<LogLevel>();
+#endif
 
     public static IEnumerable<(LogLevel DefaultLevel, LogLevel CurrentLevel)> GetLogLevelCombinations()
     {
