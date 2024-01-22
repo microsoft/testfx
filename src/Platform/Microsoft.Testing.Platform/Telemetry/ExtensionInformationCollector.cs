@@ -48,7 +48,7 @@ internal static class ExtensionInformationCollector
         foreach (ExtensionInformation extension in extensionsInformation)
         {
             writer.WriteStartObject();
-            writer.WriteString("Uid", extension.Id);
+            writer.WriteString("Value", extension.Id);
             writer.WriteString("Version", extension.Version);
             writer.WriteBoolean("Enabled", extension.Enabled);
             writer.WriteEndObject();
@@ -64,7 +64,7 @@ internal static class ExtensionInformationCollector
         {
             JsonObject jsonObject = new()
             {
-                { "Uid", extension.Id },
+                { "Value", extension.Id },
                 { "Version", extension.Version },
                 { "Enabled", extension.Enabled },
             };

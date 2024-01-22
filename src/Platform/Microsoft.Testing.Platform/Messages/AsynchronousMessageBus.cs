@@ -125,36 +125,8 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
         StringBuilder messageBuilder = new();
         messageBuilder.AppendLine(
             CultureInfo.InvariantCulture,
-            $"The producer '{dataProducer.DisplayName}' (ID: {dataProducer.Uid}) pushed data '{data.GetType().FullName}'");
-        messageBuilder.AppendLine(CultureInfo.InvariantCulture, $"  Display name: {data.DisplayName}");
-        messageBuilder.AppendLine(CultureInfo.InvariantCulture, $"  Description: {data.Description}");
-
-        switch (data)
-        {
-            case TestNodeUpdateMessage message:
-                messageBuilder.AppendLine(CultureInfo.InvariantCulture, $"  Session UID: {message.SessionUid}");
-                messageBuilder.AppendLine(CultureInfo.InvariantCulture, $"  Parent Node UID: {message.ParentTestNodeUid}");
-                messageBuilder.AppendLine(CultureInfo.InvariantCulture, $"  Node: {message.TestNode}");
-                break;
-
-            case FileArtifact message:
-                messageBuilder.AppendLine(CultureInfo.InvariantCulture, $"  File path: {message.FileInfo.FullName}");
-                break;
-
-            case TestNodeFileArtifact message:
-                messageBuilder.AppendLine(CultureInfo.InvariantCulture, $"  File path: {message.FileInfo.FullName}");
-                messageBuilder.AppendLine(CultureInfo.InvariantCulture, $"  Session UID: {message.SessionUid}");
-                messageBuilder.AppendLine(CultureInfo.InvariantCulture, $"  Node UID: {message.Node.Uid}");
-                break;
-
-            case SessionFileArtifact message:
-                messageBuilder.AppendLine(CultureInfo.InvariantCulture, $"  File path: {message.FileInfo.FullName}");
-                messageBuilder.AppendLine(CultureInfo.InvariantCulture, $"  Session UID: {message.SessionUid}");
-                break;
-
-            default:
-                break;
-        }
+            $"The producer '{dataProducer.DisplayName}' (ID: {dataProducer.Uid}) pushed data:");
+        messageBuilder.AppendLine(data.ToString());
 
         await _logger.LogTraceAsync(messageBuilder.ToString());
     }

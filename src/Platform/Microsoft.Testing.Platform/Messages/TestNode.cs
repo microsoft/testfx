@@ -16,7 +16,7 @@ public class TestNode
     public override string ToString()
     {
         StringBuilder sb = new();
-        sb.Append("Uid: ");
+        sb.Append("Value: ");
         sb.AppendLine(Uid.ToString());
         sb.Append("DisplayName: ");
         sb.AppendLine(DisplayName);

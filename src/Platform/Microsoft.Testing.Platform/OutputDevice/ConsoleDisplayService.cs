@@ -273,7 +273,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
             artifacts.AppendLine(CultureInfo.InvariantCulture, $"{(_firstCallTo_OnSessionStartingAsync ? "Out of process" : "In process")} file artifacts produced:");
             foreach (TestNodeFileArtifact testNodeFileArtifact in _sessionFilesArtifact.OfType<TestNodeFileArtifact>())
             {
-                artifacts.AppendLine(CultureInfo.InvariantCulture, $"- For test {testNodeFileArtifact.Node.DisplayName}: {testNodeFileArtifact.FileInfo.FullName}");
+                artifacts.AppendLine(CultureInfo.InvariantCulture, $"- For test {testNodeFileArtifact.TestNode.DisplayName}: {testNodeFileArtifact.FileInfo.FullName}");
             }
 
             foreach (SessionFileArtifact sessionFileArtifact in _sessionFilesArtifact.Except(_sessionFilesArtifact.OfType<TestNodeFileArtifact>()))

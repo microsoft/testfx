@@ -11,7 +11,7 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Messages;
 
-[DebuggerDisplay("DataConsumer = {DataConsumer.Uid}")]
+[DebuggerDisplay("DataConsumer = {DataConsumer.Value}")]
 internal class AsyncConsumerDataProcessor : IDisposable
 {
     private readonly ITask _task;
