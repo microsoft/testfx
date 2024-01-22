@@ -9,6 +9,8 @@ internal sealed class SystemFileSystem : IFileSystem
 
     public string CreateDirectory(string path) => Directory.CreateDirectory(path).FullName;
 
+    public void Move(string sourceFileName, string destFileName) => File.Move(sourceFileName, destFileName);
+
     public Stream NewFileStream(string path, FileMode mode) => new FileStream(path, mode);
 
     public Stream NewFileStream(string path, FileMode mode, FileAccess access) => new FileStream(path, mode, access);

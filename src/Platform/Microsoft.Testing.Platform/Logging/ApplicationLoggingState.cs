@@ -14,9 +14,8 @@ internal sealed class ApplicationLoggingState
     }
 
     public ApplicationLoggingState(LogLevel logLevel, CommandLineParseResult commandLineParseResult, FileLoggerProvider fileLoggerProvider, bool isSynchronousWrite)
+        : this(logLevel, commandLineParseResult)
     {
-        LogLevel = logLevel;
-        CommandLineParseResult = commandLineParseResult;
         FileLoggerProvider = fileLoggerProvider;
         IsSynchronousWrite = isSynchronousWrite;
     }

@@ -5,25 +5,42 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class FileLoggerProvider(string logFolder, LogLevel logLevel, string logPrefixName, bool customDirectory, bool syncFlush,
-    IClock clock, ITask task, IConsole console) : IFileLoggerProvider, IDisposable
+internal sealed class FileLoggerProvider(
+    FileLoggerOptions options,
+    LogLevel logLevel,
+    bool customDirectory,
+    IClock clock,
+    ITask task,
+    IConsole console,
+    IFileSystem fileSystem,
+    IFileStreamFactory fileStreamFactory)
+    : IFileLoggerProvider, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
+    private readonly FileLoggerOptions _options = options;
     private readonly IClock _clock = clock;
     private readonly ITask _task = task;
     private readonly IConsole _console = console;
-    private readonly string _logPrefixName = logPrefixName;
+    private readonly IFileSystem _fileSystem = fileSystem;
     private readonly bool _customDirectory = customDirectory;
+    private readonly IFileStreamFactory _fileStreamFactory = fileStreamFactory;
 
     public LogLevel LogLevel { get; } = logLevel;
 
-    public FileLogger FileLogger { get; private set; } = new FileLogger(logFolder, fileName: null, logLevel, logPrefixName, syncFlush, clock, task, console);
+    public FileLogger FileLogger { get; private set; } = new(
+        options,
+        logLevel,
+        clock,
+        task,
+        console,
+        fileSystem,
+        fileStreamFactory);
 
-    public bool SyncFlush { get; } = syncFlush;
+    public bool SyncFlush => _options.SyncFlush;
 
     public async Task CheckLogFolderAndMoveToTheNewIfNeededAsync(string testResultDirectory)
     {
@@ -40,9 +57,16 @@ internal sealed class FileLoggerProvider(string logFolder, LogLevel logLevel, st
         await DisposeHelper.DisposeAsync(FileLogger);
 
         // Move the log file to the new directory
-        File.Move(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
+        _fileSystem.Move(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
 
-        FileLogger = new FileLogger(testResultDirectory, fileName, LogLevel, _logPrefixName, SyncFlush, _clock, _task, _console);
+        FileLogger = new FileLogger(
+            new FileLoggerOptions(testResultDirectory, _options.LogPrefixName, fileName, _options.SyncFlush),
+            LogLevel,
+            _clock,
+            _task,
+            _console,
+            _fileSystem,
+            _fileStreamFactory);
     }
 
     public ILogger CreateLogger(string categoryName)

@@ -11,9 +11,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 using Microsoft.Testing.Platform.Helpers;
-using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Resources;
-using Microsoft.Testing.Platform.Services;
+using Microsoft.Testing.Platform.ServerMode;
 
 namespace Microsoft.Testing.Platform.Logging;
 
@@ -28,9 +27,9 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
-    private readonly IServiceProvider _services;
     private readonly LogLevel _logLevel;
     private readonly Task _logLoop;
+    private readonly IServerTestHost? _serverTestHost;
 #if NETCOREAPP
     private readonly Channel<ServerLogMessage>? _channel;
 #else
@@ -39,10 +38,13 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 
     private bool _isDisposed;
 
-    public ServerLoggerForwarder(IServiceProvider services, LogLevel logLevel)
+    public ServerLoggerForwarder(
+        LogLevel logLevel,
+        ITask task,
+        IServerTestHost? serverTestHost)
     {
-        _services = services;
         _logLevel = logLevel;
+        _serverTestHost = serverTestHost;
 #if NETCOREAPP
         _channel = Channel.CreateUnbounded<ServerLogMessage>(new UnboundedChannelOptions()
         {
@@ -58,7 +60,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 #else
         _asyncLogs = [];
 #endif
-        _logLoop = services.GetTask().Run(WriteLogMessageAsync, CancellationToken.None);
+        _logLoop = task.Run(WriteLogMessageAsync, CancellationToken.None);
     }
 
     private async Task WriteLogMessageAsync()
@@ -88,6 +90,11 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 
     public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
+        if (!IsEnabled(logLevel))
+        {
+            return;
+        }
+
         string message = formatter(state, exception);
         var logMessage = new ServerLogMessage(logLevel, message);
         EnsureAsyncLogObjectsAreNotNull();
@@ -115,10 +122,9 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 
     private async Task PushServerLogMessageToTheMessageBusAsync(ServerLogMessage logMessage)
     {
-        ServerTestHost? server = _services.GetService<ServerTestHost>();
-        if (server?.IsInitialized == true)
+        if (_serverTestHost?.IsInitialized == true)
         {
-            await server.PushDataAsync(logMessage);
+            await _serverTestHost.PushDataAsync(logMessage);
         }
     }
 
@@ -140,40 +146,44 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 
     public void Dispose()
     {
-        if (!_isDisposed)
+        if (_isDisposed)
         {
-            EnsureAsyncLogObjectsAreNotNull();
-#if NETCOREAPP
-            // Wait for all logs to be written
-            _channel.Writer.TryComplete();
-            if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
-            {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
-            }
-#else
-            // Wait for all logs to be written
-            _asyncLogs.CompleteAdding();
-            if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
-            {
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
-            }
-#endif
-            _isDisposed = true;
+            return;
         }
+
+        EnsureAsyncLogObjectsAreNotNull();
+#if NETCOREAPP
+        // Wait for all logs to be written
+        var result = _channel.Writer.TryComplete();
+        if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        {
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
+        }
+#else
+        // Wait for all logs to be written
+        _asyncLogs.CompleteAdding();
+        if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
+        {
+            throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));
+        }
+#endif
+        _isDisposed = true;
     }
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        if (!_isDisposed)
+        if (_isDisposed)
         {
-            EnsureAsyncLogObjectsAreNotNull();
-
-            // Wait for all logs to be written
-            _channel.Writer.TryComplete();
-            await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
-            _isDisposed = true;
+            return;
         }
+
+        EnsureAsyncLogObjectsAreNotNull();
+
+        // Wait for all logs to be written
+        _channel.Writer.TryComplete();
+        await _logLoop.TimeoutAfterAsync(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        _isDisposed = true;
     }
 #endif
 }

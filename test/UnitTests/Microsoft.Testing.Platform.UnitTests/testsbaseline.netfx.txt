@@ -92,6 +92,26 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.Consol
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CountDownEventTests.CountDownEvent_WaitAsync_Succeeded()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CountDownEventTests.CountDownEvent_WaitAsyncCancelled_Succeeded()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CountDownEventTests.CountDownEvent_WaitAsyncCancelledByTimeout_Succeeded()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_NullFileSyncFlush_FileStreamCreated()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_NullFileSyncFlush_FileStreamCreationThrows()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_ValidFileName_FileStreamCreatedSuccessfully(bool, bool) (syncFlush: false, fileExists: false)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_ValidFileName_FileStreamCreatedSuccessfully(bool, bool) (syncFlush: false, fileExists: true)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_ValidFileName_FileStreamCreatedSuccessfully(bool, bool) (syncFlush: true, fileExists: false)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.FileLogger_ValidFileName_FileStreamCreatedSuccessfully(bool, bool) (syncFlush: true, fileExists: true)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenAsyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [6]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [6]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Write_IfMalformedUTF8_ShouldNotCrash()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FormatterUtilitiesTests.CanDeserializeTaskResponse()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FormatterUtilitiesTests.SerializeDeserialize_Succeed(System.Type) (Artifact)
@@ -119,6 +139,65 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.IPCTes
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.IPCTests.SingleConnectionNamedPipeServer_MultipleConnection_Fails()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.IPCTests.SingleConnectionNamedPipeServer_RequestReplySerialization_Succeeded()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.JsoniteTests.Serialize_DateTimeOffset()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerFactoryTests.LoggerFactory_LoggerCreatedOnlyOnce()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_CheckEnabled(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_CheckEnabled(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_CheckEnabled(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_CheckEnabled(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_CheckEnabled(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_CheckEnabled(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_CheckEnabled(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [6]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_Log_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_Log_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_Log_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_Log_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_Log_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_Log_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_Log_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [6]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_LogAsync_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_LogAsync_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_LogAsync_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_LogAsync_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_LogAsync_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_LogAsync_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggerTests.Logger_LogAsync_FormattedStringIsCorrect(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [6]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogCritical_CallsLogWithLogLevelCritical()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogCriticalAsync_CallsLogAsyncWithLogLevelCritical()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogDebug_CallsLogWithLogLevelDebug()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogDebugAsync_CallsLogAsyncWithLogLevelDebug()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogError_CallsLogWithLogLevelError()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogError_CallsLogWithLogLevelErrorAndException()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogError_CallsLogWithLogLevelErrorAndMessageAndException()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogErrorAsync_CallsLogAsyncWithLogLevelError()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogErrorAsync_CallsLogAsyncWithLogLevelErrorAndException()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogErrorAsync_CallsLogAsyncWithLogLevelErrorAndMessageAndException()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogInformation_CallsLogWithLogLevelInformation()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogInformationAsync_CallsLogAsyncWithLogLevelInformation()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogTrace_CallsLogWithLogLevelTrace()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogTraceAsync_CallsLogAsyncWithLogLevelTrace()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogWarning_CallsLogWithLogLevelWarning()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.LoggingExtensionsTests.LoggerExtensions_LogWarningAsync_CallsLogAsyncWithLogLevelWarning()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_CheckDisabled(Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_CheckDisabled(Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_CheckDisabled(Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_CheckDisabled(Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_CheckDisabled(Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_CheckDisabled(Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_CheckDisabled(Microsoft.Testing.Platform.Logging.LogLevel) [6]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_Log_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_Log_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_Log_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_Log_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_Log_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_Log_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_Log_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [6]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_LogAsync_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_LogAsync_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_LogAsync_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_LogAsync_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_LogAsync_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_LogAsync_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.NopLoggerTests.NopLogger_LogAsync_NoFormatterCalls(Microsoft.Testing.Platform.Logging.LogLevel) [6]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.PropertyBagTests.Add_Of_TestNodeStateProperty_More_Than_One_Time_Fail()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.PropertyBagTests.Add_Same_Instance_More_Times_Fail()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.PropertyBagTests.AddGet_Of_TestNodeStateProperty_Succed()
@@ -139,6 +218,34 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.Server
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerDataConsumerServiceTests.PopulateTestNodeStatistics_WithEventsForDifferentUids()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerDataConsumerServiceTests.PopulateTestNodeStatistics_WithEventsForSameUid()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerDataConsumerServiceTests.PopulateTestNodeStatistics_WithMissingNodeType()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_Log(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_Log(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_Log(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_Log(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_Log(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_Log(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_Log(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [6]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_LogAsync(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_LogAsync(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_LogAsync(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_LogAsync(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_LogAsync(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_LogAsync(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_LogAsync(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [6]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogAsyncForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogAsyncForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogAsyncForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogAsyncForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogAsyncForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogAsyncForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogAsyncForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [6]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [0]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [1]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [2]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [3]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [4]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [5]
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerLoggerForwarderTests.ServerLoggerForwarder_ServerLogNotInitialized_NoLogForwarded(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [6]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerTelemetryTests.LogEvent_ForDiscovery()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerTelemetryTests.LogEvent_ForRun()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.ServerTests.DiscoveryRequestCanBeCanceled()
