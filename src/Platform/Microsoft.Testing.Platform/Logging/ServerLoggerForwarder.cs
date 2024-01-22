@@ -11,8 +11,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Resources;
-using Microsoft.Testing.Platform.ServerMode;
+using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Logging;
 
@@ -28,8 +29,8 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 #endif
 {
     private readonly LogLevel _logLevel;
+    private readonly IServiceProvider _serviceProvider;
     private readonly Task _logLoop;
-    private readonly IServerTestHost? _serverTestHost;
 #if NETCOREAPP
     private readonly Channel<ServerLogMessage>? _channel;
 #else
@@ -38,13 +39,11 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 
     private bool _isDisposed;
 
-    public ServerLoggerForwarder(
-        LogLevel logLevel,
-        ITask task,
-        IServerTestHost? serverTestHost)
+    // NOTE: We have to take the service provider because when the logger is created, the ServerTestHost is not yet registered.
+    public ServerLoggerForwarder(LogLevel logLevel, IServiceProvider serviceProvider)
     {
         _logLevel = logLevel;
-        _serverTestHost = serverTestHost;
+        _serviceProvider = serviceProvider;
 #if NETCOREAPP
         _channel = Channel.CreateUnbounded<ServerLogMessage>(new UnboundedChannelOptions()
         {
@@ -60,7 +59,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 #else
         _asyncLogs = [];
 #endif
-        _logLoop = task.Run(WriteLogMessageAsync, CancellationToken.None);
+        _logLoop = serviceProvider.GetTask().Run(WriteLogMessageAsync, CancellationToken.None);
     }
 
     private async Task WriteLogMessageAsync()
@@ -122,9 +121,13 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 
     private async Task PushServerLogMessageToTheMessageBusAsync(ServerLogMessage logMessage)
     {
-        if (_serverTestHost?.IsInitialized == true)
+        // Most of the time the server testhost should be registered and available but it's possible to have
+        // some race conditions where the server testhost is not yet registered.
+        // For safety, we check if the server testhost is available before pushing the data.
+        var serverTestHost = _serviceProvider.GetService<IServerTestHost>();
+        if (serverTestHost?.IsInitialized == true)
         {
-            await _serverTestHost.PushDataAsync(logMessage);
+            await serverTestHost.PushDataAsync(logMessage);
         }
     }
 
