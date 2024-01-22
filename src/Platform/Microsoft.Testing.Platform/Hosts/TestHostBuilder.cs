@@ -213,10 +213,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
         {
-            Logging.AddProvider((logLevel, services) => new ServerLoggerForwarderProvider(
-                logLevel,
-                services.GetTask(),
-                services.GetService<ServerTestHost>()));
+            Logging.AddProvider((logLevel, services) => new ServerLoggerForwarderProvider(logLevel, services));
         }
 
         // Build the logger factory.
