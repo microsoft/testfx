@@ -15,19 +15,35 @@ public class TestNode
 
     public override string ToString()
     {
-        StringBuilder sb = new();
-        sb.Append("UID: ");
-        sb.AppendLine(Uid.ToString());
-        sb.Append("DisplayName: ");
-        sb.AppendLine(DisplayName);
-        sb.AppendLine("Properties: [");
+        StringBuilder builder = new StringBuilder("TestNode { ")
+            .Append("Uid = ")
+            .Append(Uid.ToString())
+            .Append(", DisplayName = ")
+            .Append(DisplayName)
+            .Append(", Properties = [");
+
+        bool hasAnyProperty = false;
         foreach (IProperty property in Properties)
         {
-            sb.AppendLine(property.ToString());
+            if (!hasAnyProperty)
+            {
+                hasAnyProperty = true;
+            }
+            else
+            {
+                builder.Append(',');
+            }
+
+            builder.Append(' ').Append(property.ToString());
         }
 
-        sb.AppendLine("]");
+        if (hasAnyProperty)
+        {
+            builder.Append(' ');
+        }
 
-        return sb.ToString();
+        builder.Append("] }");
+
+        return builder.ToString();
     }
 }

@@ -7,5 +7,5 @@ public readonly struct SessionUid(string value)
 {
     public string Value { get; } = value;
 
-    public override string ToString() => Value;
+    public override string ToString() => $"SessionUid {{ Value = {Value} }}";
 }

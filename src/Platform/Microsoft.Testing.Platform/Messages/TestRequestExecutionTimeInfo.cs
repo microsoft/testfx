@@ -15,11 +15,13 @@ internal readonly struct TestRequestExecutionTimeInfo(TimingInfo timingInfo) : I
 
     public override string ToString()
     {
-        StringBuilder builder = new();
-        builder.AppendLine("Test node update:");
-        builder.Append("Display name: ").AppendLine(DisplayName);
-        builder.Append("Description: ").AppendLine(Description);
-        builder.AppendLine(TimingInfo.ToString());
+        StringBuilder builder = new StringBuilder("TestRequestExecutionTimeInfo { DisplayName = ")
+            .Append(DisplayName)
+            .Append(", Description = ")
+            .Append(Description)
+            .Append(", TimingInfo = ")
+            .Append(TimingInfo.ToString())
+            .Append(" }");
 
         return builder.ToString();
     }

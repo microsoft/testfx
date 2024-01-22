@@ -14,18 +14,33 @@ public abstract class DataWithSessionUid(string displayName, string? description
 
     public override string ToString()
     {
-        StringBuilder builder = new();
-        builder.AppendLine("Generic session data:");
-        builder.Append("Display name: ").AppendLine(DisplayName);
-        builder.Append("Description: ").AppendLine(Description);
-        builder.Append("Session UID: ").AppendLine(SessionUid.Value);
-        builder.AppendLine("Properties: [");
+        StringBuilder builder = new StringBuilder("DataWithSessionUid { DisplayName = ")
+            .Append(DisplayName)
+            .Append(", Description = ")
+            .Append(Description)
+            .Append(", Properties = [");
+
+        bool hasAnyProperty = false;
         foreach (IProperty property in Properties)
         {
-            builder.AppendLine(property.ToString());
+            if (!hasAnyProperty)
+            {
+                hasAnyProperty = true;
+            }
+            else
+            {
+                builder.Append(',');
+            }
+
+            builder.Append(' ').Append(property.ToString());
         }
 
-        builder.AppendLine("]");
+        if (hasAnyProperty)
+        {
+            builder.Append(' ');
+        }
+
+        builder.Append("] }");
 
         return builder.ToString();
     }

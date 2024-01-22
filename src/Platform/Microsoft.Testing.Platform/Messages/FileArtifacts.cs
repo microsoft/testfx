@@ -14,18 +14,35 @@ public class FileArtifact(FileInfo fileInfo, string displayName, string? descrip
 
     public override string ToString()
     {
-        StringBuilder builder = new();
-        builder.AppendLine("Test node file artifact:");
-        builder.Append("Display name: ").AppendLine(DisplayName);
-        builder.Append("Description: ").AppendLine(Description);
-        builder.Append("File path: ").AppendLine(FileInfo.FullName);
-        builder.AppendLine("Properties: [");
+        StringBuilder builder = new StringBuilder("FileArtifact { DisplayName = ")
+            .Append(DisplayName)
+            .Append(", Description = ")
+            .Append(Description)
+            .Append(", FilePath = ")
+            .Append(FileInfo.FullName)
+            .Append(", Properties = [");
+
+        bool hasAnyProperty = false;
         foreach (IProperty property in Properties)
         {
-            builder.AppendLine(property.ToString());
+            if (!hasAnyProperty)
+            {
+                hasAnyProperty = true;
+            }
+            else
+            {
+                builder.Append(',');
+            }
+
+            builder.Append(' ').Append(property.ToString());
         }
 
-        builder.AppendLine("]");
+        if (hasAnyProperty)
+        {
+            builder.Append(' ');
+        }
+
+        builder.Append("] }");
 
         return builder.ToString();
     }
@@ -38,19 +55,39 @@ public class SessionFileArtifact(SessionUid sessionUid, FileInfo fileInfo, strin
 
     public override string ToString()
     {
-        StringBuilder builder = new();
-        builder.AppendLine("Session file artifact:");
-        builder.Append("Display name: ").AppendLine(DisplayName);
-        builder.Append("Description: ").AppendLine(Description);
-        builder.AppendLine("Properties: [");
+        StringBuilder builder = new StringBuilder("SessionFileArtifact { DisplayName = ")
+            .Append(DisplayName)
+            .Append(", Description = ")
+            .Append(Description)
+            .Append(", FilePath = ")
+            .Append(FileInfo.FullName)
+            .Append(", Properties = [");
+
+        bool hasAnyProperty = false;
         foreach (IProperty property in Properties)
         {
-            builder.AppendLine(property.ToString());
+            if (!hasAnyProperty)
+            {
+                hasAnyProperty = true;
+            }
+            else
+            {
+                builder.Append(',');
+            }
+
+            builder.Append(' ').Append(property.ToString());
         }
 
-        builder.AppendLine("]");
-        builder.Append("Session UID: ").AppendLine(SessionUid.Value);
-        builder.Append("File path: ").AppendLine(FileInfo.FullName);
+        if (hasAnyProperty)
+        {
+            builder.Append(' ');
+        }
+
+        builder.Append("], SessionUid =")
+            .Append(SessionUid.Value)
+            .Append(", FilePath = ")
+            .Append(FileInfo.FullName)
+            .Append(" }");
 
         return builder.ToString();
     }
@@ -63,20 +100,41 @@ public class TestNodeFileArtifact(SessionUid sessionUid, TestNode testNode, File
 
     public override string ToString()
     {
-        StringBuilder builder = new();
-        builder.AppendLine("Session test node file artifact:");
-        builder.Append("Display name: ").AppendLine(DisplayName);
-        builder.Append("Description: ").AppendLine(Description);
-        builder.AppendLine("Properties: [");
+        StringBuilder builder = new StringBuilder("TestNodeFileArtifact { DisplayName = ")
+            .Append(DisplayName)
+            .Append(", Description = ")
+            .Append(Description)
+            .Append(", FilePath = ")
+            .Append(FileInfo.FullName)
+            .Append(", Properties = [");
+
+        bool hasAnyProperty = false;
         foreach (IProperty property in Properties)
         {
-            builder.AppendLine(property.ToString());
+            if (!hasAnyProperty)
+            {
+                hasAnyProperty = true;
+            }
+            else
+            {
+                builder.Append(',');
+            }
+
+            builder.Append(' ').Append(property.ToString());
         }
 
-        builder.AppendLine("]");
-        builder.Append("Session UID: ").AppendLine(SessionUid.Value);
-        builder.Append("File path: ").AppendLine(FileInfo.FullName);
-        builder.AppendLine("Test node: ").AppendLine("{").AppendLine(TestNode.ToString()).AppendLine("}");
+        if (hasAnyProperty)
+        {
+            builder.Append(' ');
+        }
+
+        builder.Append("], SessionUid =")
+            .Append(SessionUid.Value)
+            .Append(", FilePath = ")
+            .Append(FileInfo.FullName)
+            .Append(", TestNode = ")
+            .Append(TestNode.ToString())
+            .Append(" }");
 
         return builder.ToString();
     }
