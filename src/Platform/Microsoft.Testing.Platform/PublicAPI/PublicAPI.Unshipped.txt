@@ -189,8 +189,8 @@ Microsoft.Testing.Platform.Extensions.Messages.TestNode.TestNode() -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestNode.Uid.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid!
 Microsoft.Testing.Platform.Extensions.Messages.TestNode.Uid.init -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeFileArtifact
-Microsoft.Testing.Platform.Extensions.Messages.TestNodeFileArtifact.Node.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNode!
-Microsoft.Testing.Platform.Extensions.Messages.TestNodeFileArtifact.TestNodeFileArtifact(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, Microsoft.Testing.Platform.Extensions.Messages.TestNode! node, System.IO.FileInfo! fileInfo, string! displayName, string? description = null) -> void
+Microsoft.Testing.Platform.Extensions.Messages.TestNodeFileArtifact.TestNode.get -> Microsoft.Testing.Platform.Extensions.Messages.TestNode!
+Microsoft.Testing.Platform.Extensions.Messages.TestNodeFileArtifact.TestNodeFileArtifact(Microsoft.Testing.Platform.TestHost.SessionUid sessionUid, Microsoft.Testing.Platform.Extensions.Messages.TestNode! testNode, System.IO.FileInfo! fileInfo, string! displayName, string? description = null) -> void
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty.Explanation.get -> string?
 Microsoft.Testing.Platform.Extensions.Messages.TestNodeStateProperty.Explanation.init -> void
@@ -362,8 +362,8 @@ Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandl
 Microsoft.Testing.Platform.TestHost.ITestHostManager.AddTestSessionLifetimeHandle<T>(Microsoft.Testing.Platform.Extensions.CompositeExtensionFactory<T!>! compositeServiceFactory) -> void
 Microsoft.Testing.Platform.TestHost.SessionUid
 Microsoft.Testing.Platform.TestHost.SessionUid.SessionUid() -> void
-Microsoft.Testing.Platform.TestHost.SessionUid.SessionUid(string! uid) -> void
-Microsoft.Testing.Platform.TestHost.SessionUid.Uid.get -> string!
+Microsoft.Testing.Platform.TestHost.SessionUid.SessionUid(string! value) -> void
+Microsoft.Testing.Platform.TestHost.SessionUid.Value.get -> string!
 Microsoft.Testing.Platform.TestHost.TestSessionContext
 Microsoft.Testing.Platform.TestHost.TestSessionContext.Client.get -> Microsoft.Testing.Platform.TestHost.ClientInfo!
 Microsoft.Testing.Platform.TestHost.TestSessionContext.SessionUid.get -> Microsoft.Testing.Platform.TestHost.SessionUid
@@ -377,10 +377,16 @@ override Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.Equals(
 override Microsoft.Testing.Platform.Extensions.CommandLine.ArgumentArity.GetHashCode() -> int
 override Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.CommandLine.CommandLineOption.GetHashCode() -> int
+override Microsoft.Testing.Platform.Extensions.Messages.DataWithSessionUid.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.FileArtifact.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.PropertyBagData.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.SessionFileArtifact.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.TestNode.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.TestNodeFileArtifact.ToString() -> string!
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.Equals(object? obj) -> bool
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.GetHashCode() -> int
 override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid.ToString() -> string!
+override Microsoft.Testing.Platform.Extensions.Messages.TestNodeUpdateMessage.ToString() -> string!
 override Microsoft.Testing.Platform.TestHost.SessionUid.ToString() -> string!
 static Microsoft.Testing.Platform.Builder.TestApplication.CreateBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>!
 static Microsoft.Testing.Platform.Builder.TestApplication.CreateServerModeBuilderAsync(string![]! args, Microsoft.Testing.Platform.Builder.TestApplicationOptions? testApplicationOptions = null) -> System.Threading.Tasks.Task<Microsoft.Testing.Platform.Builder.ITestApplicationBuilder!>!

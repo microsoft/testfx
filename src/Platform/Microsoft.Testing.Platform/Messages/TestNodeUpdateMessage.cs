@@ -21,6 +21,12 @@ public sealed class TestNodeUpdateMessage(SessionUid sessionUid, TestNode testNo
         builder.Append("Display name: ").AppendLine(DisplayName);
         builder.Append("Description: ").AppendLine(Description);
         builder.Append("Session UID: ").AppendLine(SessionUid.Value);
+        foreach (IProperty property in Properties)
+        {
+            builder.AppendLine(property.ToString());
+        }
+
+        builder.AppendLine("]");
         builder.Append("Parent test node UID: ").AppendLine(ParentTestNodeUid?.Value ?? "null");
         builder.AppendLine("Test node: ").AppendLine("{").AppendLine(TestNode.ToString()).AppendLine("}");
 
