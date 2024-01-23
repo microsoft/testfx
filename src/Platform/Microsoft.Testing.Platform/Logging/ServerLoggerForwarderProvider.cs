@@ -10,11 +10,7 @@ internal sealed class ServerLoggerForwarderProvider(LogLevel logLevel, IServiceP
     : ILoggerProvider
 {
     private readonly LogLevel _logLevel = logLevel;
-    private
-#if NETCOREAPP
-    readonly
-#endif
-    ServerLogMessageInMemoryStore _serverLogMessageInMemoryStore = new(logLevel);
+    private readonly ServerLogMessageInMemoryStore _serverLogMessageInMemoryStore = new(logLevel);
 
     private ServerTestHost? _serverTestHost;
 
@@ -28,15 +24,11 @@ internal sealed class ServerLoggerForwarderProvider(LogLevel logLevel, IServiceP
     {
         _serverTestHost = serverTestHost;
 
-        foreach (ServerLogMessage serverLogMessage in _serverLogMessageInMemoryStore.Values)
+        foreach (ServerLogMessage serverLogMessage in _serverLogMessageInMemoryStore)
         {
             await _serverTestHost.PushDataAsync(serverLogMessage);
         }
 
-#if NETCOREAPP
-        _serverLogMessageInMemoryStore.Values.Clear();
-#else
-        _serverLogMessageInMemoryStore = new(_logLevel);
-#endif
+        _serverLogMessageInMemoryStore.Clean();
     }
 }
