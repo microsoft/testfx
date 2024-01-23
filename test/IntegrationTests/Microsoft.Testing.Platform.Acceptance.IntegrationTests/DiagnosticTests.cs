@@ -207,10 +207,11 @@ Diagnostic file \(level '{level}' with {flushType} flush\): {diagPathPattern}
 
         string diagContentsPattern =
 """
-\[.* - Information\] Version: .*
-\[.* - Information] Logging level: .*
-\[.* - Information\] CreateBuilderAsync entry time: .*
-\[.* - Information\] PID: .*
+\[.+ - Information\] Version: .+
+\[.+ - Information\] Logging mode: .+
+\[.+ - Information] Logging level: .+
+\[.+ - Information\] CreateBuilderAsync entry time: .+
+\[.+ - Information\] PID: .+
 """;
         (bool isMatch, string content) = await CheckDiagnosticContentsMatchAsync(match.Value, diagContentsPattern);
         Assert.IsTrue(isMatch, $"{content}\n{diagContentsPattern}");
