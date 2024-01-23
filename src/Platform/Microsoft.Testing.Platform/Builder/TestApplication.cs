@@ -117,13 +117,14 @@ public sealed class TestApplication : ITestApplication
         var version = (AssemblyInformationalVersionAttribute?)Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
         if (version is not null)
         {
-            await logger.LogInformationAsync($"Version: {version.InformationalVersion} ({(syncWrite ? "synchronous log write" : "asynchronous log write")})");
+            await logger.LogInformationAsync($"Version: {version.InformationalVersion}");
         }
         else
         {
             await logger.LogInformationAsync($"Version attribute not found");
         }
 
+        await logger.LogInformationAsync("Logging mode: " + (syncWrite ? "synchronous" : "asynchronous"));
         await logger.LogInformationAsync($"Logging level: {loggerLevel}");
         await logger.LogInformationAsync($"CreateBuilderAsync entry time: {createBuilderEntryTime}");
         await logger.LogInformationAsync($"PID: {processHandler.GetCurrentProcess().Id}");
@@ -148,7 +149,7 @@ public sealed class TestApplication : ITestApplication
             }
             else
             {
-                await logger.LogInformationAsync($"Runtime location not found.");
+                await logger.LogInformationAsync("Runtime location not found.");
             }
         }
 #else
@@ -191,27 +192,28 @@ public sealed class TestApplication : ITestApplication
 #pragma warning restore RS0030 // Do not use banned APIs
 #if NETCOREAPP
         machineInfo.AppendLine(CultureInfo.InvariantCulture, $"TotalAvailableMemoryBytes(GB): {GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1_000_000_000}");
-        await logger.LogDebugAsync($"Machine info:\n{machineInfo}");
 #endif
+        await logger.LogDebugAsync($"Machine info:\n{machineInfo}");
 
         if (testHostControllerInfo.HasTestHostController)
         {
             string? processCorrelationId;
-            if ((processCorrelationId = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerInfo.GetTestHostControllerPID()}")) is not null)
+            int? testHostControllerPID = testHostControllerInfo.GetTestHostControllerPID();
+            if ((processCorrelationId = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerPID}")) is not null)
             {
-                await logger.LogDebugAsync($"{$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerInfo.GetTestHostControllerPID()}"} '{processCorrelationId}'");
+                await logger.LogDebugAsync($"{$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerPID}"} '{processCorrelationId}'");
             }
 
             string? parentPid;
-            if ((parentPid = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{testHostControllerInfo.GetTestHostControllerPID()}")) is not null)
+            if ((parentPid = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{testHostControllerPID}")) is not null)
             {
-                await logger.LogDebugAsync($"{$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{testHostControllerInfo.GetTestHostControllerPID()}"} '{parentPid}'");
+                await logger.LogDebugAsync($"{$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{testHostControllerPID}"} '{parentPid}'");
             }
 
             string? testHostProcessStartTime;
-            if ((testHostProcessStartTime = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{testHostControllerInfo.GetTestHostControllerPID()}")) is not null)
+            if ((testHostProcessStartTime = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{testHostControllerPID}")) is not null)
             {
-                await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{testHostControllerInfo.GetTestHostControllerPID()} '{testHostProcessStartTime}'");
+                await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{testHostControllerPID} '{testHostProcessStartTime}'");
             }
         }
 
@@ -249,7 +251,9 @@ public sealed class TestApplication : ITestApplication
      3 TA settings(json)
      4 Default(TestResults in the current working folder)
     */
-    private static ApplicationLoggingState CreateFileLoggerIfDiagnosticIsEnabled(CommandLineParseResult result, CurrentTestApplicationModuleInfo testApplicationModuleInfo, SystemClock clock, SystemEnvironment environment, SystemTask task, SystemConsole console)
+    private static ApplicationLoggingState CreateFileLoggerIfDiagnosticIsEnabled(
+        CommandLineParseResult result, CurrentTestApplicationModuleInfo testApplicationModuleInfo, SystemClock clock,
+        SystemEnvironment environment, SystemTask task, SystemConsole console)
     {
         LogLevel logLevel = LogLevel.Trace;
 
@@ -285,7 +289,7 @@ public sealed class TestApplication : ITestApplication
         {
             if (!Enum.TryParse(environmentLogLevel, out LogLevel parsedLogLevel))
             {
-                throw new ArgumentException("Invalid environment value 'TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY', Expected Trace, Debug, Information, Warning, Error, Critical.");
+                throw new NotSupportedException($"Invalid environment value '{nameof(EnvironmentVariableConstants.TESTINGPLATFORM_DIAGNOSTIC_VERBOSITY)}', was expecting 'Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical' but got '{environmentLogLevel}'.");
             }
 
             logLevel = parsedLogLevel;
