@@ -15,7 +15,7 @@ internal abstract class InMemoryStoreLogger<T> : ILogger
         _logLevel = logLevel;
     }
 
-    public ConcurrentBag<T> Values { get; private set; } = new();
+    public ConcurrentBag<T> Values { get; } = new();
 
     public bool IsEnabled(LogLevel logLevel) => logLevel >= _logLevel;
 

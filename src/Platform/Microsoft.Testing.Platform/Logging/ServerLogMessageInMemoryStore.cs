@@ -3,13 +3,8 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class ServerLogMessageInMemoryStore : InMemoryStoreLogger<ServerLogMessage>
+internal sealed class ServerLogMessageInMemoryStore(LogLevel logLevel) : InMemoryStoreLogger<ServerLogMessage>(logLevel)
 {
-    public ServerLogMessageInMemoryStore(LogLevel logLevel)
-        : base(logLevel)
-    {
-    }
-
     public override void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
         if (!IsEnabled(logLevel))
