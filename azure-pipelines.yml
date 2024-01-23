@@ -33,6 +33,11 @@ parameters:
   displayName: "Produce RTM version?"
   type: boolean
   default: False
+# This option should be used with caution. This is useful for unblocking circular deps issue with testanywhere
+- name: SkipTests
+  displayName: "Skip tests"
+  type: boolean
+  default: False
 
 variables:
   # Cannot use key:value syntax in root defined variables
@@ -135,21 +140,22 @@ stages:
           name: Build
           displayName: Build
 
-        # -ci is allowing to import some environment variables and some required configurations
-        - script: Test.cmd
-            -configuration $(_BuildConfig)
-            -ci
-          name: Test
-          displayName: Test
+        - ${{ if eq(parameters.SkipTests, False) }}:
+          # -ci is allowing to import some environment variables and some required configurations
+          - script: Test.cmd
+              -configuration $(_BuildConfig)
+              -ci
+            name: Test
+            displayName: Test
 
-        # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-        # through the console or trx
-        - task: PublishBuildArtifacts@1
-          displayName: 'Publish Test Results folders'
-          inputs:
-            PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-            ArtifactName: TestResults
-          condition: failed()
+          # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
+          # through the console or trx
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Test Results folders'
+            inputs:
+              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+              ArtifactName: TestResults
+            condition: failed()
 
         - ${{ if eq(variables._RunAsInternal, True) }}:
           - task: NuGetAuthenticate@1
@@ -187,12 +193,13 @@ stages:
             /p:NonWindowsBuild=true
           displayName: Build
 
-        # -ci is allowing to import some environment variables and some required configurations
-        - script: |
-            chmod +x ./test.sh
-            ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest
-          name: Test
-          displayName: Tests
+        - ${{ if eq(parameters.SkipTests, False) }}:
+          # -ci is allowing to import some environment variables and some required configurations
+          - script: |
+              chmod +x ./test.sh
+              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest
+            name: Test
+            displayName: Tests
 
   - ${{ if eq(variables._RunAsInternal, True) }}:
     - template: /eng/common/templates/job/onelocbuild.yml
