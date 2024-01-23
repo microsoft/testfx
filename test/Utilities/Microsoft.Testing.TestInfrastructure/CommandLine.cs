@@ -90,7 +90,7 @@ public sealed class CommandLine : IDisposable
             if (await Task.WhenAny(exited, timedOut) == exited)
             {
 #if NET8_0_OR_GREATER
-            await stopTheTimer.CancelAsync();
+                await stopTheTimer.CancelAsync();
 #else
                 stopTheTimer.Cancel();
 #endif
