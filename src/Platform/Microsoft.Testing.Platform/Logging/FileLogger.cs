@@ -190,7 +190,7 @@ internal sealed class FileLogger : IDisposable
 
         try
         {
-            await _writer.WriteLineAsync($"[{_clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)} {category} - {logLevel}] {formatter(state, exception)}");
+            await _writer.WriteLineAsync(BuildLogEntry(logLevel, state, exception, formatter, category));
         }
         finally
         {
@@ -207,7 +207,7 @@ internal sealed class FileLogger : IDisposable
 
         EnsureAsyncLogObjectsAreNotNull();
 
-        string log = $"[{_clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)} {category} - {logLevel}] {formatter(state, exception)}";
+        string log = BuildLogEntry(logLevel, state, exception, formatter, category);
 #if NETCOREAPP
         if (!_channel.Writer.TryWrite(log))
         {
@@ -217,6 +217,9 @@ internal sealed class FileLogger : IDisposable
         _asyncLogs.Add(log);
 #endif
     }
+
+    private string BuildLogEntry<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
+        => $"{_clock.UtcNow:O} {category} {logLevel.ToString().ToUpper(CultureInfo.InvariantCulture)} {formatter(state, exception)}";
 
     private async Task WriteLogToFileAsync()
     {
