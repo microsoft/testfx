@@ -32,7 +32,7 @@ public class DotnetTestCliTests : AcceptanceTestBase
             addPublicFeeds: true);
 
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-        var compilationResult = await DotnetCli.RunAsync($"test -nodeReuse:false {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        var compilationResult = await DotnetCli.RunAsync($"test -m:1 -nodeReuse:false {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
     }
 }
