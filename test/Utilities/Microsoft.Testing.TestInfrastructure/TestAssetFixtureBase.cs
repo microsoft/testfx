@@ -28,7 +28,7 @@ public abstract class TestAssetFixtureBase : IDisposable, IAsyncInitializable
         => await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
         {
             var testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
-            var result = await DotnetCli.RunAsync($"build -nodeReuse:false {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path);
+            var result = await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         });
@@ -36,7 +36,7 @@ public abstract class TestAssetFixtureBase : IDisposable, IAsyncInitializable
         => await Task.WhenAll(GetAssetsToGenerate().Select(async asset =>
         {
             var testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
-            var result = await DotnetCli.RunAsync($"build -nodeReuse:false {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path);
+            var result = await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         }));

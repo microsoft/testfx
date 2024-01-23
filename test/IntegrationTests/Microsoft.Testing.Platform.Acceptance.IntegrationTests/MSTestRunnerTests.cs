@@ -35,9 +35,9 @@ public class MSTestRunnerTests : AcceptanceTestBase
                 .PatchCodeWithReplace("$Extra$", string.Empty),
                 addPublicFeeds: true);
             string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-            var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            var compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
             compilationResult = await DotnetCli.RunAsync(
-                $"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
+                $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
                 _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
             var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
             var testHostResult = await testHost.ExecuteAsync();
@@ -79,9 +79,9 @@ return await app.RunAsync();
 """),
             addPublicFeeds: true);
             string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-            var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            var compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
             compilationResult = await DotnetCli.RunAsync(
-                $"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
+                $"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}",
                 _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
             var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
             var testHostResult = await testHost.ExecuteAsync();
@@ -110,10 +110,10 @@ return await app.RunAsync();
         .PatchCodeWithReplace("$Extra$", string.Empty),
         addPublicFeeds: true);
             string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
-            var compilationResult = await DotnetCli.RunAsync($"restore -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            var compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
             try
             {
-                compilationResult = await DotnetCli.RunAsync($"{verb} -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+                compilationResult = await DotnetCli.RunAsync($"{verb} -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -bl:{binlogFile} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
                 var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration, verb: verb);
                 var testHostResult = await testHost.ExecuteAsync();
                 Assert.AreEqual(string.Empty, testHostResult.StandardOutput);

@@ -23,6 +23,24 @@ public sealed class CommandLine : IDisposable
 
     public string ErrorOutput => string.Join(Environment.NewLine, _errorOutputLines);
 
+    private static int s_maxOutstandingCommand = Environment.ProcessorCount;
+    private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
+
+    public static int MaxOutstandingCommands
+    {
+        get
+        {
+            return s_maxOutstandingCommand;
+        }
+
+        set
+        {
+            s_maxOutstandingCommand = value;
+            s_maxOutstandingCommands_semaphore.Dispose();
+            s_maxOutstandingCommands_semaphore = new SemaphoreSlim(s_maxOutstandingCommand, s_maxOutstandingCommand);
+        }
+    }
+
     public async Task RunAsync(
         string commandLine,
         IDictionary<string, string>? environmentVariables = null)
@@ -46,44 +64,52 @@ public sealed class CommandLine : IDisposable
         bool cleanDefaultEnvironmentVariableIfCustomAreProvided = false,
         int timeoutInSeconds = 60)
     {
-        Interlocked.Increment(ref s_totalProcessesAttempt);
-        string[] tokens = commandLine.Split(' ');
-        string command = tokens[0];
-        string arguments = string.Join(" ", tokens.Skip(1));
-        _errorOutputLines.Clear();
-        _standardOutputLines.Clear();
-        var startInfo = new ProcessConfiguration(command)
+        await s_maxOutstandingCommands_semaphore.WaitAsync();
+        try
         {
-            Arguments = arguments,
-            EnvironmentVariables = environmentVariables,
-            OnErrorOutput = (_, o) => _errorOutputLines.Add(o),
-            OnStandardOutput = (_, o) => _standardOutputLines.Add(o),
-            WorkingDirectory = workingDirectory,
-        };
-        _process = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided);
+            Interlocked.Increment(ref s_totalProcessesAttempt);
+            string[] tokens = commandLine.Split(' ');
+            string command = tokens[0];
+            string arguments = string.Join(" ", tokens.Skip(1));
+            _errorOutputLines.Clear();
+            _standardOutputLines.Clear();
+            var startInfo = new ProcessConfiguration(command)
+            {
+                Arguments = arguments,
+                EnvironmentVariables = environmentVariables,
+                OnErrorOutput = (_, o) => _errorOutputLines.Add(o),
+                OnStandardOutput = (_, o) => _standardOutputLines.Add(o),
+                WorkingDirectory = workingDirectory,
+            };
+            _process = ProcessFactory.Start(startInfo, cleanDefaultEnvironmentVariableIfCustomAreProvided);
 
-        Task<int> exited = _process.WaitForExitAsync();
-        int seconds = timeoutInSeconds;
-        var stopTheTimer = new CancellationTokenSource();
-        var timedOut = Task.Delay(TimeSpan.FromSeconds(seconds), stopTheTimer.Token);
-        if (await Task.WhenAny(exited, timedOut) == exited)
-        {
+            Task<int> exited = _process.WaitForExitAsync();
+            int seconds = timeoutInSeconds;
+            var stopTheTimer = new CancellationTokenSource();
+            var timedOut = Task.Delay(TimeSpan.FromSeconds(seconds), stopTheTimer.Token);
+            if (await Task.WhenAny(exited, timedOut) == exited)
+            {
 #if NET8_0_OR_GREATER
-            await stopTheTimer.CancelAsync();
+                await stopTheTimer.CancelAsync();
 #else
-            stopTheTimer.Cancel();
+                stopTheTimer.Cancel();
 #endif
-            return await exited;
-        }
-        else
-        {
-            _process.Kill();
-            throw new TimeoutException(
-                $"""
+                return await exited;
+            }
+            else
+            {
+                _process.Kill();
+                throw new TimeoutException(
+                    $"""
                 Timeout after {seconds}s on command line: '{commandLine}'
                 STD: {StandardOutput}
                 ERR: {ErrorOutput}
                 """);
+            }
+        }
+        finally
+        {
+            s_maxOutstandingCommands_semaphore.Release();
         }
     }
 
