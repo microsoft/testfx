@@ -38,7 +38,7 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
     {
         ILogger<TestHostTestFrameworkInvoker> logger = ServiceProvider.GetLoggerFactory().CreateLogger<TestHostTestFrameworkInvoker>();
 
-        await logger.LogInformationAsync($"TestFrameworkAdapter Uid: '{testFrameworkAdapter.Uid}' Version: '{testFrameworkAdapter.Version}' DisplayName: '{testFrameworkAdapter.DisplayName}' Description: '{testFrameworkAdapter.Description}'");
+        await logger.LogInformationAsync($"TestFrameworkAdapter UID: '{testFrameworkAdapter.Uid}' Version: '{testFrameworkAdapter.Version}' DisplayName: '{testFrameworkAdapter.DisplayName}' Description: '{testFrameworkAdapter.Description}'");
 
         foreach (ICapability capability in ServiceProvider.GetTestFrameworkCapabilities().Capabilities)
         {

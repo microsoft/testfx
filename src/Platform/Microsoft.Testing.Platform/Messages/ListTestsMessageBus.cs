@@ -12,7 +12,7 @@ using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Messages;
 
-internal class ListTestsMessageBus(
+internal sealed class ListTestsMessageBus(
     ITestFramework testFrameworkAdapter,
     ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
     ILoggerFactory loggerFactory,

@@ -3,9 +3,9 @@
 
 namespace Microsoft.Testing.Platform.TestHost;
 
-public readonly struct SessionUid(string uid)
+public readonly struct SessionUid(string value)
 {
-    public string Uid { get; } = uid;
+    public string Value { get; } = value;
 
-    public override string ToString() => Uid;
+    public override string ToString() => $"SessionUid {{ Value = {Value} }}";
 }
