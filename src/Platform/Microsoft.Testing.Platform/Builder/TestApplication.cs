@@ -128,10 +128,10 @@ public sealed class TestApplication : ITestApplication
         await logger.LogInformationAsync($"CreateBuilderAsync entry time: {createBuilderEntryTime}");
         await logger.LogInformationAsync($"PID: {processHandler.GetCurrentProcess().Id}");
 
-#if !NETCOREAPP
-        string runtimeInformation = $"{RuntimeInformation.FrameworkDescription}";
-#else
+#if NETCOREAPP
         string runtimeInformation = $"{RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}";
+#else
+        string runtimeInformation = $"{RuntimeInformation.ProcessArchitecture} - {RuntimeInformation.FrameworkDescription}";
 #endif
         await logger.LogInformationAsync($"Runtime information: {runtimeInformation}");
 
