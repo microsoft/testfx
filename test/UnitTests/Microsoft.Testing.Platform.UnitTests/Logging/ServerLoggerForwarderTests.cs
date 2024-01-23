@@ -39,7 +39,7 @@ public class ServerLoggerForwarderTests : TestBase
     [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     public void ServerLoggerForwarder_Log(LogLevel defaultLevel, LogLevel currentLevel)
     {
-        using (ServerLoggerForwarder serverLoggerForwarder = new(defaultLevel, _serviceProvider))
+        using (ServerLoggerForwarder serverLoggerForwarder = new(defaultLevel, new SystemTask(), _mockServerTestHost.Object))
         {
             serverLoggerForwarder.Log(currentLevel, Message, null, Formatter);
         }
@@ -48,39 +48,13 @@ public class ServerLoggerForwarderTests : TestBase
     }
 
     [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
-    public void ServerLoggerForwarder_ServerLogNotInitialized_NoLogForwarded(LogLevel defaultLevel, LogLevel currentLevel)
-    {
-        _mockServerTestHost.Setup(x => x.IsInitialized).Returns(false);
-
-        using (ServerLoggerForwarder serverLoggerForwarder = new(defaultLevel, _serviceProvider))
-        {
-            serverLoggerForwarder.Log(currentLevel, Message, null, Formatter);
-        }
-
-        _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<IData>()), Times.Never);
-    }
-
-    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     public async Task ServerLoggerForwarder_LogAsync(LogLevel defaultLevel, LogLevel currentLevel)
     {
-        using (ServerLoggerForwarder serverLoggerForwarder = new(defaultLevel, _serviceProvider))
+        using (ServerLoggerForwarder serverLoggerForwarder = new(defaultLevel, new SystemTask(), _mockServerTestHost.Object))
         {
             await serverLoggerForwarder.LogAsync(currentLevel, Message, null, Formatter);
         }
 
         _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<ServerLogMessage>()), LogTestHelpers.GetExpectedLogCallTimes(defaultLevel, currentLevel));
-    }
-
-    [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
-    public async Task ServerLoggerForwarder_ServerLogNotInitialized_NoLogAsyncForwarded(LogLevel defaultLevel, LogLevel currentLevel)
-    {
-        _mockServerTestHost.Setup(x => x.IsInitialized).Returns(false);
-
-        using (ServerLoggerForwarder serverLoggerForwarder = new(defaultLevel, _serviceProvider))
-        {
-            await serverLoggerForwarder.LogAsync(currentLevel, Message, null, Formatter);
-        }
-
-        _mockServerTestHost.Verify(x => x.PushDataAsync(It.IsAny<ServerLogMessage>()), Times.Never);
     }
 }

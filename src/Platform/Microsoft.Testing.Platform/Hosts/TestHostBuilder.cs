@@ -209,11 +209,13 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             Logging.AddProvider((_, _) => loggingState.FileLoggerProvider);
         }
 
-        // Build the command like service.
+        // Register the server mode log forwarder if needed. We follow the console --diagnostic behavior.
         ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
-        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey))
+        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && loggingState.FileLoggerProvider is not null)
         {
-            Logging.AddProvider((logLevel, services) => new ServerLoggerForwarderProvider(logLevel, services));
+            var serverLoggerProxy = new ServerLoggerForwarderProvider(loggingState.LogLevel, serviceProvider);
+            serviceProvider.AddService(serverLoggerProxy);
+            Logging.AddProvider((logLevel, services) => serverLoggerProxy);
         }
 
         // Build the logger factory.
