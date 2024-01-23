@@ -13,7 +13,6 @@ using System.Globalization;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Resources;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Logging;
 
@@ -29,7 +28,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 #endif
 {
     private readonly LogLevel _logLevel;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServerTestHost _serverTestHost;
     private readonly Task _logLoop;
 #if NETCOREAPP
     private readonly Channel<ServerLogMessage>? _channel;
@@ -40,10 +39,10 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
     private bool _isDisposed;
 
     // NOTE: We have to take the service provider because when the logger is created, the ServerTestHost is not yet registered.
-    public ServerLoggerForwarder(LogLevel logLevel, IServiceProvider serviceProvider)
+    public ServerLoggerForwarder(LogLevel logLevel, ITask task, IServerTestHost serverTestHost)
     {
         _logLevel = logLevel;
-        _serviceProvider = serviceProvider;
+        _serverTestHost = serverTestHost;
 #if NETCOREAPP
         _channel = Channel.CreateUnbounded<ServerLogMessage>(new UnboundedChannelOptions()
         {
@@ -59,7 +58,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 #else
         _asyncLogs = [];
 #endif
-        _logLoop = serviceProvider.GetTask().Run(WriteLogMessageAsync, CancellationToken.None);
+        _logLoop = task.Run(WriteLogMessageAsync, CancellationToken.None);
     }
 
     private async Task WriteLogMessageAsync()
@@ -120,16 +119,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
     }
 
     private async Task PushServerLogMessageToTheMessageBusAsync(ServerLogMessage logMessage)
-    {
-        // Most of the time the server testhost should be registered and available but it's possible to have
-        // some race conditions where the server testhost is not yet registered.
-        // For safety, we check if the server testhost is available before pushing the data.
-        var serverTestHost = _serviceProvider.GetService<IServerTestHost>();
-        if (serverTestHost?.IsInitialized == true)
-        {
-            await serverTestHost.PushDataAsync(logMessage);
-        }
-    }
+        => await _serverTestHost.PushDataAsync(logMessage);
 
 #if NETCOREAPP
     [MemberNotNull(nameof(_channel), nameof(_logLoop))]
