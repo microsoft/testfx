@@ -19,6 +19,7 @@ builder.AddTestFramework(
    new SourceGeneratedTestNodesBuilder());
 builder.AddCrashDumpProvider();
 builder.AddTrxReportProvider();
+builder.AddCodeCoverageProvider();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
