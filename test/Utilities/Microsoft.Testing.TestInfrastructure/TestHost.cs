@@ -80,10 +80,7 @@ public sealed class TestHost
 
             string finalArguments = command ?? string.Empty;
 
-            // Retry up to 5 times with exponential backoff.
-            // 3 seconds, 6 seconds, 9 seconds, 12 seconds, 15 seconds
-            // total wait time: 45 seconds
-            var delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 2);
+            var delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 1.5);
             return await Policy
                 .Handle<Exception>()
                 .WaitAndRetryAsync(delay)

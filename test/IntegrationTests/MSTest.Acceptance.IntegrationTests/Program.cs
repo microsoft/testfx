@@ -11,6 +11,8 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 
 using MSTest.Acceptance.IntegrationTests;
 
+CommandLine.MaxOutstandingCommands = Environment.ProcessorCount;
+
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.GetCommandLineOptions()));
 
@@ -19,6 +21,7 @@ builder.AddTestFramework(
    new SourceGeneratedTestNodesBuilder());
 builder.AddCrashDumpProvider();
 builder.AddTrxReportProvider();
+builder.AddCodeCoverageProvider();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory
