@@ -11,6 +11,8 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 
 using MSTest.Acceptance.IntegrationTests;
 
+CommandLine.MaxOutstandingCommands = Environment.ProcessorCount;
+
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.GetCommandLineOptions()));
 
