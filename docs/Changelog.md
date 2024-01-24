@@ -4,6 +4,87 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [3.2.0] - 2024-01-24
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.1.1...v.3.2.0)
+
+### Added
+
+* MSTest runner by @Evangelink in [#1775](https://github.com/microsoft/testfx/pull/1775)
+* Add analyzers by @Evangelink in [#1870](https://github.com/microsoft/testfx/pull/1870)
+* Add more analyzers by @Evangelink in [#1974](https://github.com/microsoft/testfx/pull/1974)
+* Rework MSTEST0002 and MSTEST0003 by @Evangelink in [#1985](https://github.com/microsoft/testfx/pull/1985)
+* Update description of MSTEST0001 by @Evangelink in [#1988](https://github.com/microsoft/testfx/pull/1988)
+* MSTEST0004: Public types should be test classes by @Evangelink in [#1989](https://github.com/microsoft/testfx/pull/1989)
+* Add readme to MSTest.Analyzer package by @Evangelink in [#2006](https://github.com/microsoft/testfx/pull/2006)
+* Add `--ignore-exit-code` and `TESTINGPLATFORM_EXITCODE_IGNORE` by @MarcoRossignoli in [#2057](https://github.com/microsoft/testfx/pull/2057)
+* Add samples of runner vs dotnet test by @Evangelink in [#2063](https://github.com/microsoft/testfx/pull/2063)
+* Add mstest runner samples by @nohwnd in [#2068](https://github.com/microsoft/testfx/pull/2068)
+* Add comparison stats by @MarcoRossignoli in [#2069](https://github.com/microsoft/testfx/pull/2069)
+* Performance measurements by @jakubch1 in [#2071](https://github.com/microsoft/testfx/pull/2071)
+* Add protocol documentation by @drognanar in [#2073](https://github.com/microsoft/testfx/pull/2073)
+* Cache platform command line options by @MarcoRossignoli in [#2127](https://github.com/microsoft/testfx/pull/2127)
+
+### Fixed
+
+* Don't stop by @nohwnd in [#1737](https://github.com/microsoft/testfx/pull/1737)
+* Fix DataRowAttribute to be cls compliant by @Evangelink in [#1878](https://github.com/microsoft/testfx/pull/1878)
+* Workaround issue with managed type name utility by @Evangelink in [#1876](https://github.com/microsoft/testfx/pull/1876)
+* Fix path normalization by @Evangelink in [#1880](https://github.com/microsoft/testfx/pull/1880)
+* MSTEST0005: TestContext should be valid by @Evangelink in [#2019](https://github.com/microsoft/testfx/pull/2019)
+* MSTEST0006: Avoid '[ExpectedException]' by @Evangelink in [#2025](https://github.com/microsoft/testfx/pull/2025)
+* Hide MissingMethodException when in hot reload mode by @Evangelink in [#2028](https://github.com/microsoft/testfx/pull/2028)
+* Fix running tests with UWP by @Evangelink in [#2047](https://github.com/microsoft/testfx/pull/2047)
+* Fix rules help link URL by @Evangelink in [#2048](https://github.com/microsoft/testfx/pull/2048)
+* Fix short link to telemetry doc by @Evangelink in [#2064](https://github.com/microsoft/testfx/pull/2064)
+* Avoid some allocations by @MarcoRossignoli in [#2079](https://github.com/microsoft/testfx/pull/2079)
+* MSTEST0001: Set default severity to Info by @Evangelink in [#2077](https://github.com/microsoft/testfx/pull/2077)
+* Remove `IEnumerable` extensions by @MarcoRossignoli in [#2090](https://github.com/microsoft/testfx/pull/2090)
+* Simplify substring by @Evangelink in [#2092](https://github.com/microsoft/testfx/pull/2092)
+* Fix mstest runner namespace by @Evangelink in [#2078](https://github.com/microsoft/testfx/pull/2078)
+* Cleanup `ICommandLineOptionsProvider` api by @MarcoRossignoli in [#2093](https://github.com/microsoft/testfx/pull/2093)
+* Update ToHumanReadableDuration by @MarcoRossignoli in [#2094](https://github.com/microsoft/testfx/pull/2094)
+* [bug] Do not wait timeout duration in case of user cancellation by @Evangelink in [#2104](https://github.com/microsoft/testfx/pull/2104)
+* TrimStackTrace should handle empty stacktrace by @Evangelink in [#2113](https://github.com/microsoft/testfx/pull/2113)
+* Update Public API by @Evangelink in [#2116](https://github.com/microsoft/testfx/pull/2116)
+* Fix issue #2121 DataTestMethodAttribute is missing a constructor by @HannoZ in [#2125](https://github.com/microsoft/testfx/pull/2125)
+
+### Chores
+
+* Bump and cleanup global versions by @Evangelink in [#1754](https://github.com/microsoft/testfx/pull/1754)
+* Eng and global.json housekeeping by @Evangelink in [#1756](https://github.com/microsoft/testfx/pull/1756)
+* Code clean-up  by @ViktorHofer in [#1757](https://github.com/microsoft/testfx/pull/1757)
+* Bump StyleCop analyzers version by @Evangelink in [#1761](https://github.com/microsoft/testfx/pull/1761)
+* Bump version of test dependencies by @Evangelink in [#1762](https://github.com/microsoft/testfx/pull/1762)
+* Bump VSTest deps to 17.7.2 by @Evangelink in [#1769](https://github.com/microsoft/testfx/pull/1769)
+* Pin Moq to 4.18.4 for security by @Evangelink in [#1770](https://github.com/microsoft/testfx/pull/1770)
+* Clean nuget.config by @Evangelink in [#1772](https://github.com/microsoft/testfx/pull/1772)
+* Fix warnings and cleanup infra by @Evangelink in [#1773](https://github.com/microsoft/testfx/pull/1773)
+* Drop ruleset in favor of editorconfig by @Evangelink in [#1780](https://github.com/microsoft/testfx/pull/1780)
+* Enable CA1001 by @Evangelink in [#1811](https://github.com/microsoft/testfx/pull/1811)
+* Set analysis level to latest-recommended by @Evangelink in [#1816](https://github.com/microsoft/testfx/pull/1816)
+* Use modern styles and rules by @Evangelink in [#1852](https://github.com/microsoft/testfx/pull/1852)
+* Add third-parties licenses by @Evangelink in [#1955](https://github.com/microsoft/testfx/pull/1955)
+
+### New Contributors
+
+* @ViktorHofer made their first contribution in [#1757](https://github.com/microsoft/testfx/pull/1757)
+* @jakubch1 made their first contribution in [#2071](https://github.com/microsoft/testfx/pull/2071)
+* @drognanar made their first contribution in [#2073](https://github.com/microsoft/testfx/pull/2073)
+* @HannoZ made their first contribution in [#2125](https://github.com/microsoft/testfx/pull/2125)
+
+### Artifacts
+
+* MSTest: [3.2.0](https://www.nuget.org/packages/MSTest/3.2.0)
+* MSTest.TestFramework: [3.2.0](https://www.nuget.org/packages/MSTest.TestFramework/3.2.0)
+* MSTest.TestAdapter: [3.2.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.2.0)
+* MSTest.Analyzers: [3.2.0](https://www.nuget.org/packages/MSTest.Analyzers/3.2.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.0.0)
+* Microsoft.Testing.Extensions.HangDump: [1.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.0.0)
+* Microsoft.Testing.Extensions.HotReload: [1.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.0.0)
+* Microsoft.Testing.Extensions.Retry: [1.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.0.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.0.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.0.0)
+
 ## [3.2.0-preview.24069.3] - 2024-01-19
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0-preview.23623.1...v3.2.0-preview.24069.3)
@@ -18,8 +99,6 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0-preview.2
 * Performance measurements by @jakubch1 in [#2071](https://github.com/microsoft/testfx/pull/2071)
 * Add protocol documentation by @drognanar in [#2073](https://github.com/microsoft/testfx/pull/2073)
 * Cache platform command line options by @MarcoRossignoli in [#2127](https://github.com/microsoft/testfx/pull/2127)
-
-### Housekeeping
 
 ### Fixed
 
