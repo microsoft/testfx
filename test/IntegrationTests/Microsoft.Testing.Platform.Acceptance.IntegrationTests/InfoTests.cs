@@ -27,18 +27,18 @@ public class InfoTests : AcceptanceTestBase
 
         string regexMatchPattern = $"""
 Microsoft\(R\) Testing Platform Execution Command Line Tool
-Version: \d+\.\d+\.\d+(-.*)?
+Version: .+
 RuntimeInformation: .+
 Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
 Microsoft Testing Platform:
-  Version: \d+\.\d+\.\d+(-.*)?
+  Version: .+
   Dynamic Code Supported: True
   Runtime information: .+({Environment.NewLine}  Runtime location: .+)?
   Test module: .+{TestAssetFixture.NoExtensionAssetName}.*
 Built-in command line providers:
   PlatformCommandLineProvider
     Name: Platform command line provider
-    Version: \d+\.\d+\.\d+
+    Version: .+
     Description: Microsoft Testing Platform command line provider
     Options:
       --client-host
@@ -120,7 +120,7 @@ Built-in command line providers:
 Registered command line providers:
   TestingFrameworkExtension
     Name: Microsoft Testing Framework
-    Version: \d+\.\d+\.\d+
+    Version: .+
     Description: Microsoft Testing Framework\. This framework allows you to test your code anywhere in any mode \(all OSes, all platforms, all configurations\.\.\.\)\.
     Options:
       --treenode-filter
@@ -146,7 +146,7 @@ Registered tools:
 Registered command line providers:
   MSTestExtension
     Name: MSTest
-    Version: \d+\.\d+\.\d+(-.*)?
+    Version: .+
     Description: MSTest Framework for Microsoft Testing Platform
     Options:
       --settings

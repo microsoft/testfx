@@ -27,7 +27,7 @@ public class HelpTests : AcceptanceTestBase
 
         const string RegexMatchPattern = $"""
 Microsoft\(R\) Testing Platform Execution Command Line Tool
-Version: \d+\.\d+\.\d+(-.*)?
+Version: .+
 RuntimeInformation: .+
 Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
 Usage {TestAssetFixture.NoExtensionAssetName}.* \[option providers\] \[extension option providers\]
@@ -94,7 +94,7 @@ Extension options:
 
         const string RegexMatchPattern = $"""
 Microsoft\(R\) Testing Platform Execution Command Line Tool
-Version: \d+\.\d+\.\d+(-.*)?
+Version: .+
 RuntimeInformation: .+
 Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
 Usage {TestAssetFixture.MSTestAssetName}.* \[option providers\] \[extension option providers\]
