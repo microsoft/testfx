@@ -15,11 +15,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
   </ItemGroup>
 
   <ItemGroup>
