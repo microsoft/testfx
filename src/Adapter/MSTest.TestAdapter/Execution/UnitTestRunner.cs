@@ -54,12 +54,12 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <param name="reflectHelper"> The reflect Helper. </param>
     internal UnitTestRunner(MSTestSettings settings, ReflectHelper reflectHelper)
     {
-        _reflectHelper = reflectHelper;
-        _typeCache = new TypeCache(reflectHelper);
-
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
+
+        _reflectHelper = reflectHelper;
+        _typeCache = new TypeCache(reflectHelper);
     }
 
     /// <summary>

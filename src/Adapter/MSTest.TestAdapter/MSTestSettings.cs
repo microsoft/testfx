@@ -185,6 +185,8 @@ public class MSTestSettings
         CurrentSettings.DisableParallelization = settings.DisableParallelization;
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors = settings.TreatClassAndAssemblyCleanupWarningsAsErrors;
+        CurrentSettings.AssemblyInitializeTimeout = settings.AssemblyInitializeTimeout;
+        CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
     }
 
     /// <summary>
