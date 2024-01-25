@@ -18,13 +18,14 @@ namespace Microsoft.Testing.Platform.ServerMode;
 /// <summary>
 /// This class converts the events send to the message bus and sends these back to the client.
 /// </summary>
-internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvider, Guid runId, ITask task) : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
+internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvider, IServerTestHost serverTestHost, Guid runId, ITask task) : IDataConsumer, ITestSessionLifetimeHandler, IDisposable
 {
     private const int TestNodeUpdateDelayInMs = 200;
 
     private readonly ConcurrentDictionary<TestNodeUid, TestNodeStateStatistics> _testNodeUidToStateStatistics = new();
     private readonly ConcurrentDictionary<TestNodeUid, byte> _discoveredTestNodeUids = new();
     private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly IServerTestHost _serverTestHost = serverTestHost;
     private readonly ITask _task = task;
     private readonly SemaphoreSlim _nodeAggregatorSemaphore = new(1);
     private readonly SemaphoreSlim _nodeUpdateSemaphore = new(1);
@@ -184,10 +185,9 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
                 _nodeAggregatorSemaphore.Release();
             }
 
-            ServerTestHost? server = _serviceProvider.GetService<ServerTestHost>();
-            if (change is not null && (server?.IsInitialized == true))
+            if (change is not null)
             {
-                await server.SendTestUpdateAsync(change);
+                await _serverTestHost.SendTestUpdateAsync(change);
             }
         }
         finally

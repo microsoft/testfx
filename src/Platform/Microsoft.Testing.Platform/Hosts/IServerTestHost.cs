@@ -12,5 +12,7 @@ internal interface IServerTestHost
 
     Task SendTelemetryEventUpdateAsync(TelemetryEventArgs args);
 
+    Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update);
+
     Task PushDataAsync(IData data);
 }
