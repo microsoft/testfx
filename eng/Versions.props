@@ -40,5 +40,6 @@
     <PollyVersion>8.2.0</PollyVersion>
     <PollyContribWaitAndRetryVersion>1.1.1</PollyContribWaitAndRetryVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
+    <StreamJsonRpcVersion>2.16.36</StreamJsonRpcVersion>
   </PropertyGroup>
 </Project>
