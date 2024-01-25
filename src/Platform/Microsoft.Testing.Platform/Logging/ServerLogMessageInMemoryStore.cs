@@ -4,6 +4,8 @@
 using System.Collections;
 using System.Collections.Concurrent;
 
+using Microsoft.Testing.Platform.Hosts;
+
 namespace Microsoft.Testing.Platform.Logging;
 
 internal sealed class ServerLogMessageInMemoryStore(LogLevel logLevel) : ILogger, IEnumerable<ServerLogMessage>
@@ -14,6 +16,10 @@ internal sealed class ServerLogMessageInMemoryStore(LogLevel logLevel) : ILogger
     readonly
 #endif
     ConcurrentBag<ServerLogMessage> _values = new();
+
+    private ServerTestHost? _serverTestHost;
+
+    public void Initialize(ServerTestHost serverTestHost) => _serverTestHost = serverTestHost;
 
     public IEnumerator<ServerLogMessage> GetEnumerator() => _values.GetEnumerator();
 
@@ -31,22 +37,35 @@ internal sealed class ServerLogMessageInMemoryStore(LogLevel logLevel) : ILogger
         string message = formatter(state, exception);
         var logMessage = new ServerLogMessage(logLevel, message);
 
-        _values.Add(logMessage);
+        if (_serverTestHost is not null)
+        {
+            // Server channel is async only.
+            _serverTestHost.PushDataAsync(logMessage).GetAwaiter().GetResult();
+        }
+        else
+        {
+            _values.Add(logMessage);
+        }
     }
 
-    public Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    public async Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
         if (!IsEnabled(logLevel))
         {
-            return Task.CompletedTask;
+            return;
         }
 
         string message = formatter(state, exception);
         var logMessage = new ServerLogMessage(logLevel, message);
 
-        _values.Add(logMessage);
-
-        return Task.CompletedTask;
+        if (_serverTestHost is not null)
+        {
+            await _serverTestHost.PushDataAsync(logMessage);
+        }
+        else
+        {
+            _values.Add(logMessage);
+        }
     }
 
     public void Clean()
