@@ -4,6 +4,7 @@
 using Microsoft.Testing.Framework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
@@ -22,6 +23,7 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
     private readonly PerRequestServerDataConsumer _service;
     private readonly ServiceProvider _serviceProvider = new();
     private readonly Mock<ITask> _task = new();
+    private readonly Mock<IServerTestHost> _serverTestHost = new();
 
     private readonly Guid _runId = Guid.NewGuid();
 
@@ -29,7 +31,7 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         : base(testExecutionContext)
     {
         _serviceProvider.TryAddService(new PerRequestTestSessionContext(CancellationToken.None, CancellationToken.None));
-        _service = new PerRequestServerDataConsumer(_serviceProvider, _runId, _task.Object);
+        _service = new PerRequestServerDataConsumer(_serviceProvider, _serverTestHost.Object, _runId, _task.Object);
     }
 
     public async Task ConsumeAsync_WithSessionFileArtifact()

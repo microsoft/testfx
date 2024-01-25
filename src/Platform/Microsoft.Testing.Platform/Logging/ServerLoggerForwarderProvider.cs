@@ -23,6 +23,7 @@ internal sealed class ServerLoggerForwarderProvider(LogLevel logLevel, IServiceP
     public async Task InitializeAsync(ServerTestHost serverTestHost)
     {
         _serverTestHost = serverTestHost;
+        _serverLogMessageInMemoryStore.Initialize(serverTestHost);
 
         foreach (ServerLogMessage serverLogMessage in _serverLogMessageInMemoryStore)
         {
