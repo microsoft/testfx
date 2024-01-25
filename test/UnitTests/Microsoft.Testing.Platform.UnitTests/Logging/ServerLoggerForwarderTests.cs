@@ -30,7 +30,6 @@ public class ServerLoggerForwarderTests : TestBase
     public ServerLoggerForwarderTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        _mockServerTestHost.Setup(x => x.IsInitialized).Returns(true);
         _mockServerTestHost.Setup(x => x.PushDataAsync(It.IsAny<IData>())).Returns(Task.CompletedTask);
         _serviceProvider.AddService(new SystemTask());
         _serviceProvider.AddService(_mockServerTestHost.Object);

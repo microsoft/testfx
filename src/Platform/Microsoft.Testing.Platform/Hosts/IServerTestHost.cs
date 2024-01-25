@@ -8,8 +8,6 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal interface IServerTestHost
 {
-    bool IsInitialized { get; }
-
     Task SendTelemetryEventUpdateAsync(TelemetryEventArgs args);
 
     Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update);

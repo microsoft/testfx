@@ -28,9 +28,9 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     private readonly SemaphoreSlim _nodeUpdateSemaphore = new(1);
     private readonly ITestSessionContext _testSessionContext = serviceProvider.GetTestSessionContext();
     private readonly TaskCompletionSource<bool> _testSessionEnd = new();
-    private IServiceProvider? _serviceProvider = serviceProvider;
-    private IServerTestHost? _serverTestHost = serverTestHost;
-    private ITask? _task = task;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly IServerTestHost _serverTestHost = serverTestHost;
+    private readonly ITask _task = task;
     private Task? _idleUpdateTask;
     private TestNodeStateChangeAggregator _nodeUpdatesAggregator = new(runId);
     private bool _isDisposed;
@@ -188,7 +188,6 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             if (change is not null)
             {
-                ArgumentGuard.IsNotNull(_serverTestHost);
                 await _serverTestHost.SendTestUpdateAsync(change);
             }
         }
@@ -294,11 +293,6 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     {
         if (!_isDisposed)
         {
-            // These 3 objects keep this instance alive
-            _serviceProvider = null;
-            _serverTestHost = null;
-            _task = null;
-
             _nodeAggregatorSemaphore.Dispose();
             _nodeUpdateSemaphore.Dispose();
             _isDisposed = true;
