@@ -191,6 +191,21 @@
         <target state="translated">테스트 병렬 처리를 명시적으로 사용하거나 사용하지 않도록 설정</target>
         <note />
       </trans-unit>
+      <trans-unit id="WorkItemAttributeOnTestMethodAnalyzerDescription">
+        <source>[WorkItem] can only be set on methods marked with [TestMethod].</source>
+        <target state="new">[WorkItem] can only be set on methods marked with [TestMethod].</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WorkItemAttributeOnTestMethodAnalyzerMessageFormat">
+        <source>[WorkItem] can only be set on methods marked with [TestMethod]</source>
+        <target state="new">[WorkItem] can only be set on methods marked with [TestMethod]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WorkItemAttributeOnTestMethodAnalyzerTitle">
+        <source>WorkItemAttribute should be set on TestMethod</source>
+        <target state="new">WorkItemAttribute should be set on TestMethod</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

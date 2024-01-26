@@ -190,6 +190,21 @@
         <target state="translated">显式启用或禁用测试并行化</target>
         <note />
       </trans-unit>
+      <trans-unit id="WorkItemAttributeOnTestMethodAnalyzerDescription">
+        <source>[WorkItem] can only be set on methods marked with [TestMethod].</source>
+        <target state="new">[WorkItem] can only be set on methods marked with [TestMethod].</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WorkItemAttributeOnTestMethodAnalyzerMessageFormat">
+        <source>[WorkItem] can only be set on methods marked with [TestMethod]</source>
+        <target state="new">[WorkItem] can only be set on methods marked with [TestMethod]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="WorkItemAttributeOnTestMethodAnalyzerTitle">
+        <source>WorkItemAttribute should be set on TestMethod</source>
+        <target state="new">WorkItemAttribute should be set on TestMethod</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>

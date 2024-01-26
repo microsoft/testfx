@@ -361,5 +361,32 @@ namespace MSTest.Analyzers {
                 return ResourceManager.GetString("UseParallelizeAttributeAnalyzerTitle", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [WorkItem] can only be set on methods marked with [TestMethod]..
+        /// </summary>
+        internal static string WorkItemAttributeOnTestMethodAnalyzerDescription {
+            get {
+                return ResourceManager.GetString("WorkItemAttributeOnTestMethodAnalyzerDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [WorkItem] can only be set on methods marked with [TestMethod].
+        /// </summary>
+        internal static string WorkItemAttributeOnTestMethodAnalyzerMessageFormat {
+            get {
+                return ResourceManager.GetString("WorkItemAttributeOnTestMethodAnalyzerMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WorkItemAttribute should be set on TestMethod.
+        /// </summary>
+        internal static string WorkItemAttributeOnTestMethodAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("WorkItemAttributeOnTestMethodAnalyzerTitle", resourceCulture);
+            }
+        }
     }
 }

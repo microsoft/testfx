@@ -227,4 +227,13 @@
   <data name="UseParallelizeAttributeAnalyzerTitle" xml:space="preserve">
     <value>Explicitly enable or disable tests parallelization</value>
   </data>
+  <data name="WorkItemAttributeOnTestMethodAnalyzerDescription" xml:space="preserve">
+    <value>[WorkItem] can only be set on methods marked with [TestMethod].</value>
+  </data>
+  <data name="WorkItemAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
+    <value>[WorkItem] can only be set on methods marked with [TestMethod]</value>
+  </data>
+  <data name="WorkItemAttributeOnTestMethodAnalyzerTitle" xml:space="preserve">
+    <value>WorkItemAttribute should be set on TestMethod</value>
+  </data>
 </root>

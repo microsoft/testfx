@@ -13,6 +13,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestContext = "Microsoft.VisualStudio.TestTools.UnitTesting.TestContext";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute";
 
     public const string SystemThreadingTasksTask = "System.Threading.Tasks.Task";
     public const string SystemThreadingTasksTask1 = "System.Threading.Tasks.Task`1";
