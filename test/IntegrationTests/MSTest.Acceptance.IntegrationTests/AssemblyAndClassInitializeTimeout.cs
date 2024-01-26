@@ -87,7 +87,7 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled_AttributeTakesPrecendence(string tfm)
+    public async Task ClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
     {
         string runSettings = """
 <?xml version="1.0" encoding="utf-8" ?>
@@ -111,7 +111,7 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task BaseClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled_AttributeTakesPrecendence(string tfm)
+    public async Task BaseClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
     {
         string runSettings = """
 <?xml version="1.0" encoding="utf-8" ?>
@@ -135,7 +135,7 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInitialize_WhenTimeoutExpires_AssemblyInitializeIsCancelled_AttributeTakesPrecendence(string tfm)
+    public async Task AssemblyInitialize_WhenTimeoutExpires_AssemblyInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
     {
         string runSettings = """
 <?xml version="1.0" encoding="utf-8" ?>
