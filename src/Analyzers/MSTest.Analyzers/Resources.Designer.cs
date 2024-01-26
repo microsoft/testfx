@@ -117,7 +117,7 @@ namespace MSTest.Analyzers {
         /// <summary>
         ///   Looks up a localized string similar to Test classes, classes marked with the &apos;[TestClass]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
-        ///- it should not be &apos;static&apos;
+        ///- it should not be &apos;static&apos; (except if it contains only &apos;AssemblyInitialize&apos; and/or &apos;AssemblyCleanup&apos; methods)
         ///- it should not be generic..
         /// </summary>
         internal static string TestClassShouldBeValidDescription {
