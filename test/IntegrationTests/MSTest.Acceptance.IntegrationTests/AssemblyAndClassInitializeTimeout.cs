@@ -59,7 +59,7 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
 </RunSettings>
 """;
         var testHost = TestHost.LocateFrom(_testAssetFixture.MSTestAssetNameRunSettingsTargetAssetPath, TestAssetFixture.MSTestAssetNameRunSettings, tfm, buildConfiguration: BuildConfiguration.Release);
-        string runsettingsFilePath = Path.Combine(testHost.DirectoryName, "config.runsettings");
+        string runsettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
         File.WriteAllText(runsettingsFilePath, runSettings);
         var testHostResult = await testHost.ExecuteAsync(command: $"--settings {runsettingsFilePath}", environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_CLASSINIT", "1" } });
         testHostResult.AssertOutputContains("Class Initialization method TestClass.ClassInit threw exception. System.Threading.Tasks.TaskCanceledException: A task was canceled..");
@@ -80,7 +80,7 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
 """;
 
         var testHost = TestHost.LocateFrom(_testAssetFixture.MSTestAssetNameRunSettingsTargetAssetPath, TestAssetFixture.MSTestAssetNameRunSettings, tfm, buildConfiguration: BuildConfiguration.Release);
-        string runsettingsFilePath = Path.Combine(testHost.DirectoryName, "config.runsettings");
+        string runsettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
         File.WriteAllText(runsettingsFilePath, runSettings);
         var testHostResult = await testHost.ExecuteAsync(command: $"--settings {runsettingsFilePath}", environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_ASSEMBLYINIT", "1" } });
         testHostResult.AssertOutputContains("Assembly Initialization method TestClass.AssemblyInit threw exception. System.Threading.Tasks.TaskCanceledException: A task was canceled.. Aborting test execution.");
@@ -101,7 +101,7 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
 """;
 
         var testHost = TestHost.LocateFrom(_testAssetFixture.MSTestAssetNameAttributeTargetAssetPath, TestAssetFixture.MSTestAssetNameAttribute, tfm, buildConfiguration: BuildConfiguration.Release);
-        string runsettingsFilePath = Path.Combine(testHost.DirectoryName, "config.runsettings");
+        string runsettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
         File.WriteAllText(runsettingsFilePath, runSettings);
         Stopwatch stopwatch = Stopwatch.StartNew();
         var testHostResult = await testHost.ExecuteAsync(command: $"--settings {runsettingsFilePath}", environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_CLASSINIT", "1" } });
@@ -125,10 +125,10 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
 """;
 
         var testHost = TestHost.LocateFrom(_testAssetFixture.MSTestAssetNameAttributeTargetAssetPath, TestAssetFixture.MSTestAssetNameAttribute, tfm, buildConfiguration: BuildConfiguration.Release);
-        string runsettingsFilePath = Path.Combine(testHost.DirectoryName, "config.runsettings");
+        string runsettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
         File.WriteAllText(runsettingsFilePath, runSettings);
         Stopwatch stopwatch = Stopwatch.StartNew();
-        var testHostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_BASE_CLASSINIT", "1" } });
+        var testHostResult = await testHost.ExecuteAsync($"--settings {runsettingsFilePath}", environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_BASE_CLASSINIT", "1" } });
         stopwatch.Stop();
         Assert.IsTrue(stopwatch.Elapsed.TotalSeconds < 25);
         testHostResult.AssertOutputContains("Class Initialization method TestClass.ClassInitBase threw exception. System.Threading.Tasks.TaskCanceledException: A task was canceled..");
@@ -149,10 +149,10 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
 """;
 
         var testHost = TestHost.LocateFrom(_testAssetFixture.MSTestAssetNameAttributeTargetAssetPath, TestAssetFixture.MSTestAssetNameAttribute, tfm, buildConfiguration: BuildConfiguration.Release);
-        string runsettingsFilePath = Path.Combine(testHost.DirectoryName, "config.runsettings");
+        string runsettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
         File.WriteAllText(runsettingsFilePath, runSettings);
         Stopwatch stopwatch = Stopwatch.StartNew();
-        var testHostResult = await testHost.ExecuteAsync(environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_ASSEMBLYINIT", "1" } });
+        var testHostResult = await testHost.ExecuteAsync($"--settings {runsettingsFilePath}", environmentVariables: new Dictionary<string, string>() { { "TIMEOUT_ASSEMBLYINIT", "1" } });
         stopwatch.Stop();
         Assert.IsTrue(stopwatch.Elapsed.TotalSeconds < 25);
         testHostResult.AssertOutputContains("Assembly Initialization method TestClass.AssemblyInit threw exception. System.Threading.Tasks.TaskCanceledException: A task was canceled.. Aborting test execution.");
