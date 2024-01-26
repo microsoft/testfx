@@ -17,6 +17,21 @@
         <target state="translated">Избегать "[ExpectedException]"</target>
         <note />
       </trans-unit>
+      <trans-unit id="OwnerAttributeOnTestMethodAnalyzerDescription">
+        <source>[Owner] can only be set on methods marked with [TestMethod].</source>
+        <target state="new">[Owner] can only be set on methods marked with [TestMethod].</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OwnerAttributeOnTestMethodAnalyzerMessageFormat">
+        <source>[Owner] can only be set on methods marked with [TestMethod]</source>
+        <target state="new">[Owner] can only be set on methods marked with [TestMethod]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="OwnerAttributeOnTestMethodAnalyzerTitle">
+        <source>OwnerAttribute should be set on TestMethod</source>
+        <target state="new">OwnerAttribute should be set on TestMethod</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">Рекомендуется использовать только тестовые классы, помеченные как общедоступные в тестовом проекте.</target>

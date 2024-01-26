@@ -126,6 +126,15 @@
   <data name="AvoidExpectedExceptionAttributeTitle" xml:space="preserve">
     <value>Avoid '[ExpectedException]'</value>
   </data>
+  <data name="OwnerAttributeOnTestMethodAnalyzerDescription" xml:space="preserve">
+    <value>[Owner] can only be set on methods marked with [TestMethod].</value>
+  </data>
+  <data name="OwnerAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
+    <value>[Owner] can only be set on methods marked with [TestMethod]</value>
+  </data>
+  <data name="OwnerAttributeOnTestMethodAnalyzerTitle" xml:space="preserve">
+    <value>OwnerAttribute should be set on TestMethod</value>
+  </data>
   <data name="PublicTypeShouldBeTestClassDescription" xml:space="preserve">
     <value>It's considered a good practice to have only test classes marked public in a test project.</value>
   </data>
