@@ -97,39 +97,14 @@
         <target state="translated">인덱스 {1}에 있는 요소가 필요한 형식이 아닙니다. 필요한 형식: &lt;{2}&gt;, 실제 형식: &lt;{3}&gt;.{0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="ElementTypesAtIndexDontMatch2">
-        <source>Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</source>
-        <target state="translated">인덱스 {1}에 있는 요소가 (null)입니다. 필요한 형식: &lt;{2}&gt;.{0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}.</source>
         <target state="translated">'{0}' 문자열이 '{1}' 문자열로 끝나지 않습니다. {2}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="EqualsTesterInvalidArgs">
-        <source>Invalid argument- EqualsTester can't use nulls.</source>
-        <target state="translated">잘못된 인수 - EqualsTester에는 null을 사용할 수 없습니다.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ErrorInvalidCast">
-        <source>Cannot convert object of type {0} to {1}.</source>
-        <target state="translated">{0} 형식의 개체를 {1}(으)로 변환할 수 없습니다.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
         <target state="translated">{0}이(가) 실패했습니다. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InternalObjectNotValid">
-        <source>The internal object referenced is no longer valid.</source>
-        <target state="translated">참조된 내부 개체가 더 이상 유효하지 않습니다.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InvalidParameterToAssert">
-        <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">'{0}' 매개 변수가 잘못되었습니다. {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -255,11 +230,6 @@ Stack Trace: {4}</source>
         <target state="translated">{1} 예외를 예상했지만 {2} 예외를 throw했습니다. {0}
 예외 메시지: {3}
 스택 추적: {4}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="NoDataRow">
-        <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
-        <target state="translated">테스트 데이터 소스가 지정되지 않았습니다. DataTestMethodAttribute에는 하나 이상의 TestDataSource가 필요합니다.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">

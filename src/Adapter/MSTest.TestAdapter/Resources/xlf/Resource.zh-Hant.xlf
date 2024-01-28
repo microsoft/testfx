@@ -104,21 +104,6 @@ Error: {1}</source>
         <target state="translated">UTA015: 泛型方法不可為測試方法。{0}.{1} 具有無效的簽章</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="Common_CannotBeNullOrEmpty">
-        <source>The parameter should not be null or empty.</source>
-        <target state="translated">參數不可為 null 或空白。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="Common_MustBeGreaterThanZero">
-        <source>The parameter must be greater than zero.</source>
-        <target state="translated">參數必須大於零。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="CouldNotInspectTypeDuringDiscovery1">
-        <source>MSTestAdapter failed to discover tests in class '{0}' of assembly '{1}'. Reason {2}.</source>
-        <target state="translated">MSTestAdapter 無法在組件 '{1}' 的類別 '{0}' 中探索測試。原因 {2}。</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
         <source>File does not exist: {0}</source>
         <target state="translated">檔案不存在: {0}</target>
@@ -182,11 +167,6 @@ Error: {1}</source>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">
         <source>UTA023: {0}: Cannot define predefined property {2} on method {1}.</source>
         <target state="translated">UTA023: {0}: 不可在方法 {1} 上定義預先定義的屬性 {2}。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_ErrorTestPropertyAlreadyDefined">
-        <source>UTA022: {0}.{1}: The custom property "{2}" is already defined. Using "{3}" as value.</source>
-        <target state="translated">UTA022: {0}.{1}: 自訂屬性 "{2}" 已經定義過了。請使用 "{3}" 為值。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorTestPropertyNullOrEmpty">
@@ -342,20 +322,6 @@ Error: {1}</source>
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
         <target state="translated">為 'ClassCleanupLifecycle' 指定的值 '{0}' 無效。支援的範圍為 {1}。</target>
         <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
-      </trans-unit>
-      <trans-unit id="CannotEnumerateDataSourceAttribute">
-        <source>Exception occurred while enumerating DataSourceAttribute on "{0}.{1}": {2}</source>
-        <target state="translated">列舉「{0}.{1}」上的 DataSourceAttribute 時發生例外狀況: {2}</target>
-        <note>{0}: TypeName with namespace,
-{1}: Method name,
-{2}: Exception details</note>
-      </trans-unit>
-      <trans-unit id="CannotEnumerateDataSourceAttribute_MoreThenOneDefined">
-        <source>A test method can only contain one DataSourceAttribute, but found {2} on "{0}.{1}".</source>
-        <target state="translated">測試方法只能包含一個 DataSourceAttribute，但在「{0}.{1}」中發現 {2}。</target>
-        <note>{0}: TypeName with namespace, 
-{1}: Method name,
-{2}: Number of attributed defined.</note>
       </trans-unit>
       <trans-unit id="CannotEnumerateIDataSourceAttribute">
         <source>Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</source>

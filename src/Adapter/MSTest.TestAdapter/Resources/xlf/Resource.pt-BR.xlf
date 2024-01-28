@@ -104,21 +104,6 @@ Erro: {1}</target>
         <target state="translated">UTA015: um método genérico não pode ser um método de teste. {0}.{1} tem assinatura inválida</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="Common_CannotBeNullOrEmpty">
-        <source>The parameter should not be null or empty.</source>
-        <target state="translated">O parâmetro não deve ser nulo ou vazio.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="Common_MustBeGreaterThanZero">
-        <source>The parameter must be greater than zero.</source>
-        <target state="translated">O parâmetro deve ser maior que zero.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="CouldNotInspectTypeDuringDiscovery1">
-        <source>MSTestAdapter failed to discover tests in class '{0}' of assembly '{1}'. Reason {2}.</source>
-        <target state="translated">MSTestAdapter não conseguiu descobrir testes na classe '{0}' do assembly '{1}'. Motivo {2}.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="TestAssembly_FileDoesNotExist">
         <source>File does not exist: {0}</source>
         <target state="translated">O arquivo não existe: {0}</target>
@@ -182,11 +167,6 @@ Erro: {1}</target>
       <trans-unit id="UTA_ErrorPredefinedTestProperty">
         <source>UTA023: {0}: Cannot define predefined property {2} on method {1}.</source>
         <target state="translated">UTA023: {0}: não é possível definir a propriedade predefinida {2} no método {1}.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_ErrorTestPropertyAlreadyDefined">
-        <source>UTA022: {0}.{1}: The custom property "{2}" is already defined. Using "{3}" as value.</source>
-        <target state="translated">UTA022: {0}.{1}: A propriedade personalizada "{2}" já está definida. Usando "{3}" como valor.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorTestPropertyNullOrEmpty">
@@ -342,20 +322,6 @@ Erro: {1}</target>
         <source>Invalid value '{0}' specified for 'ClassCleanupLifecycle'. Supported scopes are {1}.</source>
         <target state="translated">Valor inválido '{0}' especificado para 'ClassCleanupLifecycle'. Os escopos suportados são {1}.</target>
         <note>'ClassCleanupLifecycle' is a setting name that shouldn't be localized.</note>
-      </trans-unit>
-      <trans-unit id="CannotEnumerateDataSourceAttribute">
-        <source>Exception occurred while enumerating DataSourceAttribute on "{0}.{1}": {2}</source>
-        <target state="translated">Ocorreu uma exceção ao enumerar DataSourceAttribute em "{0}.{1}": {2}</target>
-        <note>{0}: TypeName with namespace,
-{1}: Method name,
-{2}: Exception details</note>
-      </trans-unit>
-      <trans-unit id="CannotEnumerateDataSourceAttribute_MoreThenOneDefined">
-        <source>A test method can only contain one DataSourceAttribute, but found {2} on "{0}.{1}".</source>
-        <target state="translated">Um método de teste pode conter apenas um DataSourceAttribute, mas encontrado {2} no "{0}.{1}".</target>
-        <note>{0}: TypeName with namespace, 
-{1}: Method name,
-{2}: Number of attributed defined.</note>
       </trans-unit>
       <trans-unit id="CannotEnumerateIDataSourceAttribute">
         <source>Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</source>
