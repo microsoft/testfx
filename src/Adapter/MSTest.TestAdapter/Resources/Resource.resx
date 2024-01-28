@@ -178,15 +178,6 @@ Error: {1}</value>
   <data name="UTA_ErrorGenericTestMethod" xml:space="preserve">
     <value>UTA015: A generic method cannot be a test method. {0}.{1} has invalid signature</value>
   </data>
-  <data name="Common_CannotBeNullOrEmpty" xml:space="preserve">
-    <value>The parameter should not be null or empty.</value>
-  </data>
-  <data name="Common_MustBeGreaterThanZero" xml:space="preserve">
-    <value>The parameter must be greater than zero.</value>
-  </data>
-  <data name="CouldNotInspectTypeDuringDiscovery1" xml:space="preserve">
-    <value>MSTestAdapter failed to discover tests in class '{0}' of assembly '{1}'. Reason {2}.</value>
-  </data>
   <data name="TestAssembly_FileDoesNotExist" xml:space="preserve">
     <value>File does not exist: {0}</value>
   </data>
@@ -225,9 +216,6 @@ Error: {1}</value>
   </data>
   <data name="UTA_ErrorPredefinedTestProperty" xml:space="preserve">
     <value>UTA023: {0}: Cannot define predefined property {2} on method {1}.</value>
-  </data>
-  <data name="UTA_ErrorTestPropertyAlreadyDefined" xml:space="preserve">
-    <value>UTA022: {0}.{1}: The custom property "{2}" is already defined. Using "{3}" as value.</value>
   </data>
   <data name="UTA_ErrorTestPropertyNullOrEmpty" xml:space="preserve">
     <value>UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name.</value>
@@ -323,18 +311,6 @@ Error: {1}</value>
   </data>
   <data name="Execution_Test_Cancelled" xml:space="preserve">
     <value>Test '{0}' execution has been aborted.</value>
-  </data>
-  <data name="CannotEnumerateDataSourceAttribute" xml:space="preserve">
-    <value>Exception occurred while enumerating DataSourceAttribute on "{0}.{1}": {2}</value>
-    <comment>{0}: TypeName with namespace,
-{1}: Method name,
-{2}: Exception details</comment>
-  </data>
-  <data name="CannotEnumerateDataSourceAttribute_MoreThenOneDefined" xml:space="preserve">
-    <value>A test method can only contain one DataSourceAttribute, but found {2} on "{0}.{1}".</value>
-    <comment>{0}: TypeName with namespace, 
-{1}: Method name,
-{2}: Number of attributed defined.</comment>
   </data>
   <data name="CannotEnumerateIDataSourceAttribute" xml:space="preserve">
     <value>Exception occurred while enumerating IDataSource attribute on "{0}.{1}": {2}</value>

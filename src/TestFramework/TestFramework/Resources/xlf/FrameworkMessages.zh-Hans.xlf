@@ -97,39 +97,14 @@
         <target state="translated">索引 {1} 处的元素不是所需类型。所需类型为: &lt;{2}&gt;，实际类型为: &lt;{3}&gt;。{0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="ElementTypesAtIndexDontMatch2">
-        <source>Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</source>
-        <target state="translated">索引 {1} 处的元素为(null)。所需类型为: &lt;{2}&gt;。{0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}.</source>
         <target state="translated">字符串“{0}”不以字符串“{1}”结尾。{2}。</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="EqualsTesterInvalidArgs">
-        <source>Invalid argument- EqualsTester can't use nulls.</source>
-        <target state="translated">参数无效 - EqualsTester 不能使用 NULL。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ErrorInvalidCast">
-        <source>Cannot convert object of type {0} to {1}.</source>
-        <target state="translated">无法将类型为 {0} 的对象转换为 {1}。</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
         <target state="translated">{0} 失败。{1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InternalObjectNotValid">
-        <source>The internal object referenced is no longer valid.</source>
-        <target state="translated">所引用的内部对象不再有效。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InvalidParameterToAssert">
-        <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">参数“{0}”无效。{1}。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -255,11 +230,6 @@ Stack Trace: {4}</source>
         <target state="translated">原来预计会引发异常 {1}，但引发了异常 {2}。{0}
 异常消息: {3}
 堆栈跟踪: {4}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="NoDataRow">
-        <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
-        <target state="translated">未指定测试数据源。使用 DataTestMethodAttribute 至少需要一个 TestDataSource。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
