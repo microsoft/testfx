@@ -97,39 +97,14 @@
         <target state="translated">Тип элемента по индексу {1} не соответствует ожидаемому. Ожидаемый тип: &lt;{2}&gt;. Фактический тип: &lt;{3}&gt;.{0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="ElementTypesAtIndexDontMatch2">
-        <source>Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</source>
-        <target state="translated">Элемент по индексу {1} имеет значение (null). Ожидаемый тип: &lt;{2}&gt;.{0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}.</source>
         <target state="translated">Строка "{0}" не оканчивается строкой "{1}". {2}.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="EqualsTesterInvalidArgs">
-        <source>Invalid argument- EqualsTester can't use nulls.</source>
-        <target state="translated">Недопустимый аргумент — EqualsTester не может использовать значения NULL.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ErrorInvalidCast">
-        <source>Cannot convert object of type {0} to {1}.</source>
-        <target state="translated">Невозможно преобразовать объект типа {0} в {1}.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
         <target state="translated">Сбой {0}. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InternalObjectNotValid">
-        <source>The internal object referenced is no longer valid.</source>
-        <target state="translated">Внутренний объект, на который есть ссылка, больше не является допустимым.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InvalidParameterToAssert">
-        <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">Параметр "{0}" является недопустимым. {1}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -255,11 +230,6 @@ Stack Trace: {4}</source>
         <target state="translated">Создано исключение {2}, хотя ожидалось исключение {1}. {0}
 Сообщение исключения: {3}
 Трассировка стека: {4}.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="NoDataRow">
-        <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
-        <target state="translated">Не указан источник данных теста. Требуется по меньшей мере один элемент TestDataSource для DataTestMethodAttribute.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
