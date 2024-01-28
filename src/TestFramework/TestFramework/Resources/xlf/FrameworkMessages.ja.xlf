@@ -97,39 +97,14 @@
         <target state="translated">インデックス {1} の要素は、必要な型ではありません。&lt;{2}&gt; が必要ですが、&lt;{3}&gt; が指定されています。{0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="ElementTypesAtIndexDontMatch2">
-        <source>Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</source>
-        <target state="translated">インデックス {1} の要素は null です。必要な型:&lt;{2}&gt;.{0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}.</source>
         <target state="translated">文字列 '{0}' は文字列 '{1}' で終わりません。{2}。</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="EqualsTesterInvalidArgs">
-        <source>Invalid argument- EqualsTester can't use nulls.</source>
-        <target state="translated">無効な引数 - EqualsTester は null を使用することはできません。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ErrorInvalidCast">
-        <source>Cannot convert object of type {0} to {1}.</source>
-        <target state="translated">型 {0} のオブジェクトを {1} に変換できません。</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
         <target state="translated">{0} に失敗しました。{1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InternalObjectNotValid">
-        <source>The internal object referenced is no longer valid.</source>
-        <target state="translated">参照された内部オブジェクトは、現在有効ではありません。</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InvalidParameterToAssert">
-        <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">パラメーター '{0}' は無効です。{1}。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -255,11 +230,6 @@ Stack Trace: {4}</source>
         <target state="translated">例外 {2} がスローされましたが、例外 {1} は予期されていました。{0}
 例外メッセージ: {3}
 スタック トレース: {4}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="NoDataRow">
-        <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
-        <target state="translated">テスト データ ソースが指定されていません。DataTestMethodAttribute では少なくとも 1 つの TestDataSource が必要です。</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">

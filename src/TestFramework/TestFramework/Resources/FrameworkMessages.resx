@@ -174,26 +174,11 @@
   <data name="ElementTypesAtIndexDontMatch" xml:space="preserve">
     <value>Element at index {1} is not of expected type. Expected type:&lt;{2}&gt;. Actual type:&lt;{3}&gt;.{0}</value>
   </data>
-  <data name="ElementTypesAtIndexDontMatch2" xml:space="preserve">
-    <value>Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</value>
-  </data>
   <data name="EndsWithFail" xml:space="preserve">
     <value>String '{0}' does not end with string '{1}'. {2}.</value>
   </data>
-  <data name="EqualsTesterInvalidArgs" xml:space="preserve">
-    <value>Invalid argument- EqualsTester can't use nulls.</value>
-  </data>
-  <data name="ErrorInvalidCast" xml:space="preserve">
-    <value>Cannot convert object of type {0} to {1}.</value>
-  </data>
   <data name="AssertionFailed" xml:space="preserve">
     <value>{0} failed. {1}</value>
-  </data>
-  <data name="InternalObjectNotValid" xml:space="preserve">
-    <value>The internal object referenced is no longer valid.</value>
-  </data>
-  <data name="InvalidParameterToAssert" xml:space="preserve">
-    <value>The parameter '{0}' is invalid. {1}.</value>
   </data>
   <data name="IsInstanceOfFailMsg" xml:space="preserve">
     <value>{0} Expected type:&lt;{1}&gt;. Actual type:&lt;{2}&gt;.</value>
@@ -267,9 +252,6 @@
     <value>Threw exception {2}, but exception {1} was expected. {0}
 Exception Message: {3}
 Stack Trace: {4}</value>
-  </data>
-  <data name="NoDataRow" xml:space="preserve">
-    <value>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</value>
   </data>
   <data name="DataDrivenResultDisplayName" xml:space="preserve">
     <value>{0} ({1})</value>
