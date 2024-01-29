@@ -35,9 +35,9 @@
       <trans-unit id="TestClassShouldBeValidDescription">
         <source>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
-- it should not be 'static'
+- it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</source>
-        <target state="translated">Тестовые классы (классы, помеченные атрибутом "[TestClass]") должны соблюдать следующую структуру, чтобы считаться допустимыми в MSTest:
+        <target state="needs-review-translation">Тестовые классы (классы, помеченные атрибутом "[TestClass]") должны соблюдать следующую структуру, чтобы считаться допустимыми в MSTest:
 – должно быть присвоено значение "public" (или "internal", если задан атрибут "[assembly: DiscoverInternals]")
 – не следует присваивать значение "static"
 – они не должны быть универсальными.</target>
