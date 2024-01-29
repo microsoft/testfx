@@ -97,7 +97,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [Priority]  can only be set on methods marked with [TestMethod].
+        ///   Looks up a localized string similar to [Priority] can only be set on methods marked with [TestMethod].
         /// </summary>
         internal static string PriorityAttributeOnTestMethodAnalyzerMessageFormat {
             get {

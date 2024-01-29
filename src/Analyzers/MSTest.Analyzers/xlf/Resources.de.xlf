@@ -23,8 +23,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PriorityAttributeOnTestMethodAnalyzerMessageFormat">
-        <source>[Priority]  can only be set on methods marked with [TestMethod]</source>
-        <target state="new">[Priority]  can only be set on methods marked with [TestMethod]</target>
+        <source>[Priority] can only be set on methods marked with [TestMethod]</source>
+        <target state="new">[Priority] can only be set on methods marked with [TestMethod]</target>
         <note />
       </trans-unit>
       <trans-unit id="PriorityAttributeOnTestMethodAnalyzerTitle">

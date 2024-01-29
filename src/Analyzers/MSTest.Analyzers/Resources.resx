@@ -130,7 +130,7 @@
     <value>[Priority] can only be set on methods marked with [TestMethod].</value>
   </data>
   <data name="PriorityAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
-    <value>[Priority]  can only be set on methods marked with [TestMethod]</value>
+    <value>[Priority] can only be set on methods marked with [TestMethod]</value>
   </data>
   <data name="PriorityAttributeOnTestMethodAnalyzerTitle" xml:space="preserve">
     <value>PriorityAttribute should be set on TestMethod</value>
