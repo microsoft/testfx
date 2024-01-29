@@ -37,11 +37,10 @@
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</source>
-        <target state="needs-review-translation">'[TestClass]' özniteliğiyle işaretlenen test sınıfları, MSTest:
- tarafından geçerli kabul edilmesi için aşağıdaki düzene göre düzenlenmelidir.
-- 'public' (veya '[assembly: DiscoverInternals]' özniteliği ayarlanmışsa 'internal') olmalıdır
-- 'static' olmalıdır
-- genel olmalıdır.</target>
+        <target state="new">Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
+- it should not be generic.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
