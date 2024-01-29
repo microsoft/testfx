@@ -4,4 +4,4 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST00011 | `<Usage>` | Info | PriorityAttributeOnTestMethodAnalyzer
+MSTEST0008 | `<Usage>` | Info | PriorityAttributeOnTestMethodAnalyzer

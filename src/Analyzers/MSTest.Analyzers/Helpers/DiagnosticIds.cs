@@ -11,5 +11,5 @@ internal static class DiagnosticIds
     public const string PublicTypeShouldBeTestClassRuleId = "MSTEST0004";
     public const string TestContextShouldBeValidRuleId = "MSTEST0005";
     public const string AvoidExpectedExceptionAttributeRuleId = "MSTEST0006";
-    public const string PriorityAttributeOnTestMethodRuleId = "MSTEST00011";
+    public const string PriorityAttributeOnTestMethodRuleId = "MSTEST0008";
 }
