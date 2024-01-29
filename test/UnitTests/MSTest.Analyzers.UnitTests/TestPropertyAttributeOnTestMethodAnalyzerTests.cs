@@ -8,7 +8,7 @@ using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.TestPropertyAttributeOnTestMethodAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
-namespace MSTest.Analyzers.UnitTests;
+namespace MSTest.Analyzers.Test;
 
 [TestGroup]
 public sealed class TestPropertyAttributeOnTestMethodAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
