@@ -16,7 +16,7 @@ internal sealed class SystemProcessHandler : IProcessHandler
     public IProcess? Start(ProcessStartInfo startInfo)
     {
         var process = Process.Start(startInfo);
-        ArgumentGuard.IsNotNull(process);
+        ApplicationStateGuard.Ensure(process is not null);
         process.EnableRaisingEvents = true;
         return process is null ? null : (IProcess)new SystemProcess(process);
     }

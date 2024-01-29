@@ -163,7 +163,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
     private async Task<ValidationResult> ValidateOptionsArgumentsAsync()
     {
-        ArgumentGuard.IsNotNull(_parseResult);
+        ApplicationStateGuard.Ensure(_parseResult is not null);
 
         StringBuilder? stringBuilder = null;
         foreach (OptionRecord optionRecord in _parseResult.Options)
@@ -189,7 +189,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
     {
         error = null;
 
-        ArgumentGuard.IsNotNull(_parseResult);
+        ApplicationStateGuard.Ensure(_parseResult is not null);
 
         StringBuilder? stringBuilder = null;
         foreach (OptionRecord optionRecord in _parseResult.Options)
@@ -214,7 +214,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
     {
         error = null;
 
-        ArgumentGuard.IsNotNull(_parseResult);
+        ApplicationStateGuard.Ensure(_parseResult is not null);
 
         StringBuilder stringBuilder = new();
         foreach (IGrouping<string, OptionRecord> groupedOptions in _parseResult.Options.GroupBy(x => x.Option))

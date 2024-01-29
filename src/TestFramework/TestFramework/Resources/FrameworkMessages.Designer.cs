@@ -10,7 +10,6 @@
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -40,7 +39,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkMessages", typeof(FrameworkMessages).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestTools.UnitTesting.Resources.FrameworkMessages", typeof(FrameworkMessages).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -341,56 +340,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}.
-        /// </summary>
-        internal static string ElementTypesAtIndexDontMatch2 {
-            get {
-                return ResourceManager.GetString("ElementTypesAtIndexDontMatch2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to String &apos;{0}&apos; does not end with string &apos;{1}&apos;. {2}..
         /// </summary>
         internal static string EndsWithFail {
             get {
                 return ResourceManager.GetString("EndsWithFail", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid argument- EqualsTester can&apos;t use nulls..
-        /// </summary>
-        internal static string EqualsTesterInvalidArgs {
-            get {
-                return ResourceManager.GetString("EqualsTesterInvalidArgs", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot convert object of type {0} to {1}..
-        /// </summary>
-        internal static string ErrorInvalidCast {
-            get {
-                return ResourceManager.GetString("ErrorInvalidCast", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The internal object referenced is no longer valid..
-        /// </summary>
-        internal static string InternalObjectNotValid {
-            get {
-                return ResourceManager.GetString("InternalObjectNotValid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The parameter &apos;{0}&apos; is invalid. {1}..
-        /// </summary>
-        internal static string InvalidParameterToAssert {
-            get {
-                return ResourceManager.GetString("InvalidParameterToAssert", resourceCulture);
             }
         }
         
@@ -436,15 +390,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         internal static string IsNotMatchFail {
             get {
                 return ResourceManager.GetString("IsNotMatchFail", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute..
-        /// </summary>
-        internal static string NoDataRow {
-            get {
-                return ResourceManager.GetString("NoDataRow", resourceCulture);
             }
         }
         

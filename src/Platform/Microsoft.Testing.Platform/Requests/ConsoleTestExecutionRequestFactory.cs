@@ -21,7 +21,7 @@ internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions com
             throw new InvalidOperationException(PlatformResources.CannotCreateTestExecutionFilterErrorMessage);
         }
 
-        ArgumentGuard.IsNotNull(testExecutionFilter);
+        ApplicationStateGuard.Ensure(testExecutionFilter is not null);
 
         TestExecutionRequest testExecutionRequest = _commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
             ? new DiscoverTestExecutionRequest(session, testExecutionFilter)
