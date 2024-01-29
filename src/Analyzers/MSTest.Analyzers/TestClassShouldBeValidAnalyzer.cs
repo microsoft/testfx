@@ -45,12 +45,22 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out var testClassAttributeSymbol))
             {
                 bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
-                context.RegisterSymbolAction(context => AnalyzeSymbol(context, testClassAttributeSymbol, canDiscoverInternals), SymbolKind.NamedType);
+                var testMethodAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute);
+                var testInitializeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute);
+                var testCleanupAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute);
+                var classInitializeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute);
+                var classCleanupAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute);
+                context.RegisterSymbolAction(
+                    context => AnalyzeSymbol(context, testClassAttributeSymbol, canDiscoverInternals, testMethodAttributeSymbol,
+                        testInitializeAttributeSymbol, testCleanupAttributeSymbol, classInitializeAttributeSymbol, classCleanupAttributeSymbol),
+                    SymbolKind.NamedType);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, bool canDiscoverInternals)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, bool canDiscoverInternals,
+        INamedTypeSymbol? testMethodAttributeSymbol, INamedTypeSymbol? testInitializeAttributeSymbol, INamedTypeSymbol? testCleanupAttributeSymbol,
+        INamedTypeSymbol? classInitializeAttributeSymbol, INamedTypeSymbol? classCleanupAttributeSymbol)
     {
         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
         if (namedTypeSymbol.TypeKind != TypeKind.Class
@@ -78,7 +88,34 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         if (namedTypeSymbol.IsStatic)
         {
-            context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(NotStaticRule, namedTypeSymbol.Name));
+            foreach (var member in namedTypeSymbol.GetMembers())
+            {
+                if (member.Kind != SymbolKind.Method)
+                {
+                    continue;
+                }
+
+                var method = (IMethodSymbol)member;
+                if (method.MethodKind != MethodKind.Ordinary)
+                {
+                    continue;
+                }
+
+                foreach (var attribute in method.GetAttributes())
+                {
+                    if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, testInitializeAttributeSymbol)
+                        || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, testCleanupAttributeSymbol)
+                        || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, classInitializeAttributeSymbol)
+                        || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, classCleanupAttributeSymbol)
+                        || attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
+                    {
+                        context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(NotStaticRule, namedTypeSymbol.Name));
+
+                        // We only need to report once per class.
+                        break;
+                    }
+                }
+            }
         }
     }
 }

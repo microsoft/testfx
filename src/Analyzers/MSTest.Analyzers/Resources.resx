@@ -138,7 +138,7 @@
   <data name="TestClassShouldBeValidDescription" xml:space="preserve">
     <value>Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
-- it should not be 'static'
+- it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</value>
   </data>
   <data name="TestClassShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
