@@ -175,6 +175,21 @@
         <target state="translated">Los métodos de prueba deben tener un diseño válido</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestPropertyAttributeOnTestMethodAnalyzerDescription">
+        <source>[TestProperty] can only be set on methods marked with [TestMethod].</source>
+        <target state="new">[TestProperty] can only be set on methods marked with [TestMethod].</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestPropertyAttributeOnTestMethodAnalyzerMessageFormat">
+        <source>[TestProperty] can only be set on methods marked with [TestMethod]</source>
+        <target state="new">[TestProperty] can only be set on methods marked with [TestMethod]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestPropertyAttributeOnTestMethodAnalyzerTitle">
+        <source>TestPropertyAttribute should be set on TestMethod</source>
+        <target state="new">TestPropertyAttribute should be set on TestMethod</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
         <source>By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute '[Parallelize]' to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute '[DoNotParallelize]'.</source>
         <target state="translated">De forma predeterminada, MSTest ejecuta pruebas en el mismo ensamblado secuencialmente, lo que puede provocar limitaciones de rendimiento graves. Se recomienda habilitar el atributo de ensamblado ''[Parallelize]'' o, si se sabe que el ensamblado no se puede paralelizar, usar explícitamente el atributo de nivel de ensamblado ''[DoNotParallelize]''.</target>

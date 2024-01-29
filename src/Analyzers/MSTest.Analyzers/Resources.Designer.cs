@@ -336,6 +336,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [TestProperty] can only be set on methods marked with [TestMethod]..
+        /// </summary>
+        internal static string TestPropertyAttributeOnTestMethodAnalyzerDescription {
+            get {
+                return ResourceManager.GetString("TestPropertyAttributeOnTestMethodAnalyzerDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [TestProperty] can only be set on methods marked with [TestMethod].
+        /// </summary>
+        internal static string TestPropertyAttributeOnTestMethodAnalyzerMessageFormat {
+            get {
+                return ResourceManager.GetString("TestPropertyAttributeOnTestMethodAnalyzerMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to TestPropertyAttribute should be set on TestMethod.
+        /// </summary>
+        internal static string TestPropertyAttributeOnTestMethodAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("TestPropertyAttributeOnTestMethodAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to By default, MSTest runs tests within the same assembly sequentially, which can lead to severe performance limitations. It is recommended to enable assembly attribute &apos;[Parallelize]&apos; to run tests in parallel, or if the assembly is known to not be parallelizable, to use explicitly the assembly level attribute &apos;[DoNotParallelize]&apos;..
         /// </summary>
         internal static string UseParallelizeAttributeAnalyzerDescription {
