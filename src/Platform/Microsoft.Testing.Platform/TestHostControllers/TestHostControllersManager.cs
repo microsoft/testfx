@@ -70,7 +70,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
         // the need to rewrite binary files. If we don't move files are locked by ourself.
         var aggregatedConfiguration = (AggregatedConfiguration)serviceProvider.GetConfiguration();
         string? currentWorkingDirectory = aggregatedConfiguration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
-        ArgumentGuard.IsNotNull(currentWorkingDirectory);
+        ApplicationStateGuard.Ensure(currentWorkingDirectory is not null);
         aggregatedConfiguration.SetTestHostWorkingDirectory(currentWorkingDirectory);
 
         List<(ITestHostEnvironmentVariableProvider TestHostEnvironmentVariableProvider, int RegistrationOrder)> environmentVariableProviders = [];

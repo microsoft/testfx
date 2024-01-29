@@ -78,7 +78,7 @@ public sealed class TestApplication : ITestApplication
 
         // Create the UnhandledExceptionHandler that will be set inside the TestHostBuilder.
         LazyInitializer.EnsureInitialized(ref s_unhandledExceptionHandler, () => new UnhandledExceptionHandler(systemEnvironment, new SystemConsole(), parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)));
-        ArgumentGuard.IsNotNull(s_unhandledExceptionHandler);
+        ApplicationStateGuard.Ensure(s_unhandledExceptionHandler is not null);
 
         // First task is to setup the logger if enabled and we take the info from the command line or env vars.
         ApplicationLoggingState loggingState = CreateFileLoggerIfDiagnosticIsEnabled(parseResult, testApplicationModuleInfo, systemClock, systemEnvironment, new SystemTask(), new SystemConsole());

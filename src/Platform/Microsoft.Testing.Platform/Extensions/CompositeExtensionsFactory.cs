@@ -25,13 +25,13 @@ TestHost: IDataConsumer, ITestApplicationLifetime
 
     public CompositeExtensionFactory(Func<IServiceProvider, TExtension> factory)
     {
-        ArgumentGuard.IsNotNull(factory, nameof(factory));
+        ArgumentGuard.IsNotNull(factory);
         _factoryWithServiceProvider = factory;
     }
 
     public CompositeExtensionFactory(Func<TExtension> factory)
     {
-        ArgumentGuard.IsNotNull(factory, nameof(factory));
+        ArgumentGuard.IsNotNull(factory);
         _factory = factory;
     }
 
