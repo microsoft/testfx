@@ -88,6 +88,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [Priority] can only be set on methods marked with [TestMethod]..
+        /// </summary>
+        internal static string PriorityAttributeOnTestMethodAnalyzerDescription {
+            get {
+                return ResourceManager.GetString("PriorityAttributeOnTestMethodAnalyzerDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Priority]  can only be set on methods marked with [TestMethod].
+        /// </summary>
+        internal static string PriorityAttributeOnTestMethodAnalyzerMessageFormat {
+            get {
+                return ResourceManager.GetString("PriorityAttributeOnTestMethodAnalyzerMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to PriorityAttribute should be set on TestMethod.
+        /// </summary>
+        internal static string PriorityAttributeOnTestMethodAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("PriorityAttributeOnTestMethodAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
         /// </summary>
         internal static string PublicTypeShouldBeTestClassDescription {

@@ -17,6 +17,21 @@
         <target state="translated">Evita '[ExpectedException]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="PriorityAttributeOnTestMethodAnalyzerDescription">
+        <source>[Priority] can only be set on methods marked with [TestMethod].</source>
+        <target state="new">[Priority] can only be set on methods marked with [TestMethod].</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PriorityAttributeOnTestMethodAnalyzerMessageFormat">
+        <source>[Priority]  can only be set on methods marked with [TestMethod]</source>
+        <target state="new">[Priority]  can only be set on methods marked with [TestMethod]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PriorityAttributeOnTestMethodAnalyzerTitle">
+        <source>PriorityAttribute should be set on TestMethod</source>
+        <target state="new">PriorityAttribute should be set on TestMethod</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">È consigliabile che solo le classi di test siano contrassegnate come pubbliche in un progetto di test.</target>

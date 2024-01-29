@@ -126,6 +126,15 @@
   <data name="AvoidExpectedExceptionAttributeTitle" xml:space="preserve">
     <value>Avoid '[ExpectedException]'</value>
   </data>
+  <data name="PriorityAttributeOnTestMethodAnalyzerDescription" xml:space="preserve">
+    <value>[Priority] can only be set on methods marked with [TestMethod].</value>
+  </data>
+  <data name="PriorityAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
+    <value>[Priority]  can only be set on methods marked with [TestMethod]</value>
+  </data>
+  <data name="PriorityAttributeOnTestMethodAnalyzerTitle" xml:space="preserve">
+    <value>PriorityAttribute should be set on TestMethod</value>
+  </data>
   <data name="PublicTypeShouldBeTestClassDescription" xml:space="preserve">
     <value>It's considered a good practice to have only test classes marked public in a test project.</value>
   </data>
