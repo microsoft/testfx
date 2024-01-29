@@ -97,39 +97,14 @@
         <target state="translated">Element o indeksie {1} jest innego typu niż oczekiwano. Oczekiwany typ:&lt;{2}&gt;. Rzeczywisty typ:&lt;{3}&gt;.{0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="ElementTypesAtIndexDontMatch2">
-        <source>Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</source>
-        <target state="translated">Element o indeksie {1} jest zerowy (null). Oczekiwany typ: &lt;{2}&gt;.{0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}.</source>
         <target state="translated">Ciąg „{0}” nie kończy się ciągiem „{1}”. {2}.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="EqualsTesterInvalidArgs">
-        <source>Invalid argument- EqualsTester can't use nulls.</source>
-        <target state="translated">Nieprawidłowy argument. Element EqualsTester nie może używać wartości null.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ErrorInvalidCast">
-        <source>Cannot convert object of type {0} to {1}.</source>
-        <target state="translated">Nie można przekonwertować obiektu typu {0} na typ {1}.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
         <target state="translated">{0} — niepowodzenie. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InternalObjectNotValid">
-        <source>The internal object referenced is no longer valid.</source>
-        <target state="translated">Przywoływany obiekt wewnętrzny nie jest już prawidłowy.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InvalidParameterToAssert">
-        <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">Parametr „{0}” jest nieprawidłowy. {1}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -255,11 +230,6 @@ Stack Trace: {4}</source>
         <target state="translated">Zgłoszono wyjątek {2}, ale oczekiwano wyjątku {1}. {0}
 Komunikat o wyjątku: {3}
 Ślad stosu: {4}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="NoDataRow">
-        <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
-        <target state="translated">Nie określono testowego źródła danych. Atrybut DataTestMethodAttribute wymaga co najmniej jednego atrybutu TestDataSource.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">

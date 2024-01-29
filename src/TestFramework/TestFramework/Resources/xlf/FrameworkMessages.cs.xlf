@@ -97,39 +97,14 @@
         <target state="translated">Element na indexu {1} není očekávaného typu. Očekávaný typ:&lt;{2}&gt;. Aktuální typ:&lt;{3}&gt;.{0}</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="ElementTypesAtIndexDontMatch2">
-        <source>Element at index {1} is (null). Expected type:&lt;{2}&gt;.{0}</source>
-        <target state="translated">Element na indexu {1} je (null). Předpokládaný typ:&lt;{2}&gt;.{0}</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="EndsWithFail">
         <source>String '{0}' does not end with string '{1}'. {2}.</source>
         <target state="translated">Řetězec '{0}' nekončí řetězcem '{1}'. {2}.</target>
         <note></note>
       </trans-unit>
-      <trans-unit id="EqualsTesterInvalidArgs">
-        <source>Invalid argument- EqualsTester can't use nulls.</source>
-        <target state="translated">Neplatný argument- v EqualsTester nelze použít hodnotu null.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="ErrorInvalidCast">
-        <source>Cannot convert object of type {0} to {1}.</source>
-        <target state="translated">Nelze převést objekt typu {0} na {1}.</target>
-        <note></note>
-      </trans-unit>
       <trans-unit id="AssertionFailed">
         <source>{0} failed. {1}</source>
         <target state="translated">{0} selhalo. {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InternalObjectNotValid">
-        <source>The internal object referenced is no longer valid.</source>
-        <target state="translated">Odkaz na vnitřní objekt už není platný.</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="InvalidParameterToAssert">
-        <source>The parameter '{0}' is invalid. {1}.</source>
-        <target state="translated">Parametr '{0}' je neplatný. {1}.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="IsInstanceOfFailMsg">
@@ -255,11 +230,6 @@ Stack Trace: {4}</source>
         <target state="translated">Způsobil výjimku {2}, ale výjimka {1} byla očekávaná. {0}
 Zpráva výjimky: {3}
 Trasování zásobníku: {4}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="NoDataRow">
-        <source>No test data source specified. Atleast one TestDataSource is required with DataTestMethodAttribute.</source>
-        <target state="translated">Nebyl zadán žádný zdroj testovacích dat. Při použití atributu DataTestMethodAttribute je požadován alespoň jeden atribut TestDataSource.</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DataDrivenResultDisplayName">
