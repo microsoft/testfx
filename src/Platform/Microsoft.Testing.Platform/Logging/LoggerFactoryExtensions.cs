@@ -9,7 +9,7 @@ public static class LoggerFactoryExtensions
 {
     public static ILogger<TCategoryName> CreateLogger<TCategoryName>(this ILoggerFactory factory)
     {
-        ArgumentGuard.IsNotNull(factory, nameof(factory));
+        ArgumentGuard.IsNotNull(factory);
         return new Logger<TCategoryName>(factory);
     }
 }
