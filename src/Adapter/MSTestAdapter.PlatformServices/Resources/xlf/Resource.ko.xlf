@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AssemblyResolutionIsOnlyWorkingWithNetFramework">
         <source>The runsettings 'AssemblyResolution' entries are only supported in .NET Framework. If your tests are working consider removing this entry otherwise you will need to make sure all dependent assemblies are found in the ouput directory of your test.</source>
-        <target state="translated">runsettings 'AssemblyResolution' 항목은 .NET Framework에서만 지원됩니다. 테스트가 작동한다면 이 항목을 제거하는 것이 좋습니다. 제거하지 않으려면 테스트의 출력 디렉터리에 모든 종속 어셈블리가 있어야 합니다.</target>
+        <target state="new">The runsettings 'AssemblyResolution' entries are only supported in .NET Framework. If your tests are working consider removing this entry otherwise you will need to make sure all dependent assemblies are found in the ouput directory of your test.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotFindFile">

@@ -10,6 +10,7 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
     using System;
+    using System.Reflection;
     
     
     /// <summary>
@@ -39,7 +40,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.Resource", typeof(Resource).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Resources.Resource", typeof(Resource).GetTypeInfo().Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -66,24 +67,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string AttachmentSetDisplayName {
             get {
                 return ResourceManager.GetString("AttachmentSetDisplayName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Exception occurred while enumerating DataSourceAttribute on &quot;{0}.{1}&quot;: {2}.
-        /// </summary>
-        internal static string CannotEnumerateDataSourceAttribute {
-            get {
-                return ResourceManager.GetString("CannotEnumerateDataSourceAttribute", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to A test method can only contain one DataSourceAttribute, but found {2} on &quot;{0}.{1}&quot;..
-        /// </summary>
-        internal static string CannotEnumerateDataSourceAttribute_MoreThenOneDefined {
-            get {
-                return ResourceManager.GetString("CannotEnumerateDataSourceAttribute_MoreThenOneDefined", resourceCulture);
             }
         }
         
@@ -124,38 +107,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The parameter should not be null or empty..
-        /// </summary>
-        internal static string Common_CannotBeNullOrEmpty {
-            get {
-                return ResourceManager.GetString("Common_CannotBeNullOrEmpty", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The parameter must be greater than zero..
-        /// </summary>
-        internal static string Common_MustBeGreaterThanZero {
-            get {
-                return ResourceManager.GetString("Common_MustBeGreaterThanZero", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to MSTestAdapter failed to discover tests in class &apos;{0}&apos; of assembly &apos;{1}&apos; because {2}..
         /// </summary>
         internal static string CouldNotInspectTypeDuringDiscovery {
             get {
                 return ResourceManager.GetString("CouldNotInspectTypeDuringDiscovery", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to MSTestAdapter failed to discover tests in class &apos;{0}&apos; of assembly &apos;{1}&apos;. Reason {2}..
-        /// </summary>
-        internal static string CouldNotInspectTypeDuringDiscovery1 {
-            get {
-                return ResourceManager.GetString("CouldNotInspectTypeDuringDiscovery1", resourceCulture);
             }
         }
         
@@ -589,15 +545,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string UTA_ErrorPredefinedTestProperty {
             get {
                 return ResourceManager.GetString("UTA_ErrorPredefinedTestProperty", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to UTA022: {0}.{1}: The custom property &quot;{2}&quot; is already defined. Using &quot;{3}&quot; as value..
-        /// </summary>
-        internal static string UTA_ErrorTestPropertyAlreadyDefined {
-            get {
-                return ResourceManager.GetString("UTA_ErrorTestPropertyAlreadyDefined", resourceCulture);
             }
         }
         
