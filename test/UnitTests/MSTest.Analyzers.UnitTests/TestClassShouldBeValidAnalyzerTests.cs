@@ -102,24 +102,6 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
                 .WithArguments("MyTestClass"));
     }
 
-    public async Task WhenClassIsStatic_Diagnostic()
-    {
-        var code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public static class {|#0:MyTestClass|}
-            {
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
-                .WithLocation(0)
-                .WithArguments("MyTestClass"));
-    }
-
     public async Task WhenClassIsGeneric_Diagnostic()
     {
         var code = """
@@ -159,30 +141,6 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
                 .WithArguments("MyTestClass"));
     }
 
-    public async Task WhenMultipleViolations_MultipleDiagnostics()
-    {
-        var code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            internal static class {|#0:{|#1:{|#2:MyTestClass|}|}|}<T>
-            {
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.PublicRule)
-                .WithLocation(0)
-                .WithArguments("MyTestClass"),
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
-                .WithLocation(1)
-                .WithArguments("MyTestClass"),
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(2)
-                .WithArguments("MyTestClass"));
-    }
-
     public async Task WhenDiscoverInternalsAndTypeIsInternal_NoDiagnostic()
     {
         var code = """
@@ -218,6 +176,166 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
         await VerifyCS.VerifyAnalyzerAsync(
             code,
             VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.PublicOrInternalRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"));
+    }
+
+    public async Task WhenClassIsStaticAndEmpty_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class MyTestClass
+            {
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassIsStaticAndContainsAssemblyInitialize_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInit(TestContext context)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassIsStaticAndContainsAssemblyCleanup_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class MyTestClass
+            {
+                [AssemblyCleanup]
+                public static void AssemblyCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassIsStaticAndContainsClassInitialize_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class {|#0:MyTestClass|}
+            {
+                [ClassInitialize]
+                public static void ClassInit(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"));
+    }
+
+    public async Task WhenClassIsStaticAndContainsClassCleanup_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class {|#0:MyTestClass|}
+            {
+                [ClassCleanup]
+                public static void ClassCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"));
+    }
+
+    public async Task WhenClassIsStaticAndContainsTestInitialize_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class {|#0:MyTestClass|}
+            {
+                [TestInitialize]
+                public static void TestInit()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"));
+    }
+
+    public async Task WhenClassIsStaticAndContainsTestCleanup_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class {|#0:MyTestClass|}
+            {
+                [TestCleanup]
+                public static void TestCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
+                .WithLocation(0)
+                .WithArguments("MyTestClass"));
+    }
+
+    public async Task WhenClassIsStaticAndContainsTestMethod_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public static class {|#0:MyTestClass|}
+            {
+                [TestMethod]
+                public static void TestMethod()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotStaticRule)
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }

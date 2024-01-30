@@ -29,7 +29,7 @@ public sealed partial class PropertyBag
 
     public PropertyBag(params IProperty[] properties)
     {
-        ArgumentGuard.IsNotNull(properties, nameof(properties));
+        ArgumentGuard.IsNotNull(properties);
 
         if (properties.Length == 0)
         {
@@ -68,7 +68,7 @@ public sealed partial class PropertyBag
 
     public PropertyBag(IEnumerable<IProperty> properties)
     {
-        ArgumentGuard.IsNotNull(properties, nameof(properties));
+        ArgumentGuard.IsNotNull(properties);
 
         if (!properties.Any())
         {
@@ -111,7 +111,7 @@ public sealed partial class PropertyBag
 
     public void Add(IProperty property)
     {
-        ArgumentGuard.IsNotNull(property, nameof(property));
+        ArgumentGuard.IsNotNull(property);
 
         // Optimized access to the TestNodeStateProperty, it's one of the most used property.
         if (property is TestNodeStateProperty testNodeStateProperty)

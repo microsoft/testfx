@@ -15,7 +15,7 @@ internal class TestHostOrchestratorManager : ITestHostOrchestratorManager
 
     public void AddTestHostOrchestrator(Func<IServiceProvider, ITestHostOrchestrator> factory)
     {
-        ArgumentGuard.IsNotNull(factory, nameof(factory));
+        ArgumentGuard.IsNotNull(factory);
         _factories ??= [];
         _factories.Add(factory);
     }

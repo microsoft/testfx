@@ -592,11 +592,11 @@ internal static class SerializerUtilities
                     {
                         if (properties.TryGetValue("location.file", out object? location_file))
                         {
-                            ArgumentGuard.IsNotNull(location_file);
+                            ApplicationStateGuard.Ensure(location_file is not null);
                             if (properties.TryGetValue("location.line-start", out object? location_lineStart) && properties.TryGetValue("location.line-end", out object? location_lineEnd))
                             {
-                                ArgumentGuard.IsNotNull(location_lineStart);
-                                ArgumentGuard.IsNotNull(location_lineEnd);
+                                ApplicationStateGuard.Ensure(location_lineStart is not null);
+                                ApplicationStateGuard.Ensure(location_lineEnd is not null);
                                 var testFileLocationProperty = new TestFileLocationProperty(
                                     (string)location_file,
                                     new LinePositionSpan(new LinePosition((int)location_lineStart, 0), new LinePosition((int)location_lineEnd, 0)));

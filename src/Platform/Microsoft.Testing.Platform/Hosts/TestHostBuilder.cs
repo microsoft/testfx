@@ -67,7 +67,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         DateTimeOffset createBuilderStart)
     {
         // ============= SETUP COMMON SERVICE USED IN ALL MODES ===============//
-        ArgumentGuard.IsNotNull(TestFramework);
+        ApplicationStateGuard.Ensure(TestFramework is not null);
 
         var systemClock = new SystemClock();
         DateTimeOffset buildBuilderStart = systemClock.UtcNow;
@@ -330,7 +330,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Setup the test host working folder.
         // Out of the test host controller extension the current working directory is the test host working directory.
         string? currentWorkingDirectory = configuration[PlatformConfigurationConstants.PlatformCurrentWorkingDirectory];
-        ArgumentGuard.IsNotNull(currentWorkingDirectory);
+        ApplicationStateGuard.Ensure(currentWorkingDirectory is not null);
         configuration.SetTestHostWorkingDirectory(currentWorkingDirectory);
 
         // If we're under test controllers and currently we're inside the started test host we connect to the out of process
