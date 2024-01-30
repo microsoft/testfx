@@ -88,33 +88,6 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [Owner] can only be set on methods marked with [TestMethod]..
-        /// </summary>
-        internal static string OwnerAttributeOnTestMethodAnalyzerDescription {
-            get {
-                return ResourceManager.GetString("OwnerAttributeOnTestMethodAnalyzerDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to [Owner] can only be set on methods marked with [TestMethod].
-        /// </summary>
-        internal static string OwnerAttributeOnTestMethodAnalyzerMessageFormat {
-            get {
-                return ResourceManager.GetString("OwnerAttributeOnTestMethodAnalyzerMessageFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to OwnerAttribute should be set on TestMethod.
-        /// </summary>
-        internal static string OwnerAttributeOnTestMethodAnalyzerTitle {
-            get {
-                return ResourceManager.GetString("OwnerAttributeOnTestMethodAnalyzerTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
         /// </summary>
         internal static string PublicTypeShouldBeTestClassDescription {
@@ -359,6 +332,24 @@ namespace MSTest.Analyzers {
         internal static string TestMethodShouldBeValidTitle {
             get {
                 return ResourceManager.GetString("TestMethodShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Owner] should be set on test method.
+        /// </summary>
+        internal static string UseOwnerAttributeOnTestMethodAnalyzerMessageFormat {
+            get {
+                return ResourceManager.GetString("UseOwnerAttributeOnTestMethodAnalyzerMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Owner] should be set on test method.
+        /// </summary>
+        internal static string UseOwnerAttributeOnTestMethodAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("UseOwnerAttributeOnTestMethodAnalyzerTitle", resourceCulture);
             }
         }
         

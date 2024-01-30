@@ -5,13 +5,13 @@ using Microsoft.Testing.Framework;
 using Microsoft.Testing.TestInfrastructure;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
-    MSTest.Analyzers.OwnerAttributeOnTestMethodAnalyzer,
+    MSTest.Analyzers.UseOwnerAttributeOnTestMethodAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
 [TestGroup]
-public sealed class OwnerAttributeOnTestMethodAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+public sealed class UseOwnerAttributeOnTestMethodAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
     public async Task WhenMethodIsMarkedWithTestMethodAndOwnerAttributes_NoDiagnostic()
     {

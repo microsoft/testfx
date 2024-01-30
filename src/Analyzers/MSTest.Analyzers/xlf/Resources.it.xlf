@@ -17,21 +17,6 @@
         <target state="translated">Evita '[ExpectedException]'</target>
         <note />
       </trans-unit>
-      <trans-unit id="OwnerAttributeOnTestMethodAnalyzerDescription">
-        <source>[Owner] can only be set on methods marked with [TestMethod].</source>
-        <target state="new">[Owner] can only be set on methods marked with [TestMethod].</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="OwnerAttributeOnTestMethodAnalyzerMessageFormat">
-        <source>[Owner] can only be set on methods marked with [TestMethod]</source>
-        <target state="new">[Owner] can only be set on methods marked with [TestMethod]</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="OwnerAttributeOnTestMethodAnalyzerTitle">
-        <source>OwnerAttribute should be set on TestMethod</source>
-        <target state="new">OwnerAttribute should be set on TestMethod</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">È consigliabile che solo le classi di test siano contrassegnate come pubbliche in un progetto di test.</target>
@@ -188,6 +173,16 @@
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
         <target state="translated">I metodi di test dovrebbero avere un layout valido</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOwnerAttributeOnTestMethodAnalyzerMessageFormat">
+        <source>[Owner] should be set on test method</source>
+        <target state="new">[Owner] should be set on test method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseOwnerAttributeOnTestMethodAnalyzerTitle">
+        <source>[Owner] should be set on test method</source>
+        <target state="new">[Owner] should be set on test method</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

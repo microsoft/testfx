@@ -13,7 +13,7 @@ internal static class DiagnosticDescriptorHelper
         string id,
         LocalizableString title,
         LocalizableString messageFormat,
-        LocalizableString description,
+        LocalizableString? description,
         Category category,
         DiagnosticSeverity defaultSeverity,
         bool isEnabledByDefault,
