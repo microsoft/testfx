@@ -4,4 +4,4 @@
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
-MSTEST0007 | Usage | Info | OwnerAttributeShouldBeSetOnlyOnTestMethodAnalyzer
+MSTEST0007 | Usage | Info | OwnerAttributeShouldBeSetOnlyOnTestMethodAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-analyzers-MSTEST0007)
