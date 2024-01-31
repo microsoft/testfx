@@ -31,7 +31,7 @@
       (i.e. `<None Remove="@(TestAdapterContent)" />`)
       -->
     <None Include="@(TestAdapterContent)" />
-    <Reference Include="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" Condition=" '$(EnableMSTestRunner)' == 'true' " />
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter" HintPath="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" Condition=" '$(EnableMSTestRunner)' == 'true' " />
   </ItemGroup>
 
   <Target Name="GetMSTestV2CultureHierarchy">
