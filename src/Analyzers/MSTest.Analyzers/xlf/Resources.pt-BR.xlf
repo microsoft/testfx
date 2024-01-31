@@ -175,14 +175,14 @@
         <target state="translated">Os métodos de teste devem ter um layout válido</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseOwnerAttributeOnTestMethodAnalyzerMessageFormat">
-        <source>[Owner] should be set on test method</source>
-        <target state="new">[Owner] should be set on test method</target>
+      <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
+        <source>[{0}] should be set on test method</source>
+        <target state="new">[{0}] should be set on test method</target>
         <note />
       </trans-unit>
-      <trans-unit id="UseOwnerAttributeOnTestMethodAnalyzerTitle">
-        <source>[Owner] should be set on test method</source>
-        <target state="new">[Owner] should be set on test method</target>
+      <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
+        <source>[{0}] should be set on test method</source>
+        <target state="new">[{0}] should be set on test method</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">

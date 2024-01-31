@@ -336,20 +336,20 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [Owner] should be set on test method.
+        ///   Looks up a localized string similar to [{0}] should be set on test method.
         /// </summary>
-        internal static string UseOwnerAttributeOnTestMethodAnalyzerMessageFormat {
+        internal static string UseAttributeOnTestMethodAnalyzerMessageFormat {
             get {
-                return ResourceManager.GetString("UseOwnerAttributeOnTestMethodAnalyzerMessageFormat", resourceCulture);
+                return ResourceManager.GetString("UseAttributeOnTestMethodAnalyzerMessageFormat", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [Owner] should be set on test method.
+        ///   Looks up a localized string similar to [{0}] should be set on test method.
         /// </summary>
-        internal static string UseOwnerAttributeOnTestMethodAnalyzerTitle {
+        internal static string UseAttributeOnTestMethodAnalyzerTitle {
             get {
-                return ResourceManager.GetString("UseOwnerAttributeOnTestMethodAnalyzerTitle", resourceCulture);
+                return ResourceManager.GetString("UseAttributeOnTestMethodAnalyzerTitle", resourceCulture);
             }
         }
         
