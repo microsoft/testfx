@@ -37,10 +37,10 @@
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</source>
-        <target state="new">Test classes, classes marked with the '[TestClass]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
-- it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
-- it should not be generic.</target>
+        <target state="translated">测试类(标记有“[TestClass]”属性的类)应遵循以下布局，才能被 MSTest 视为有效:
+- 它应为 "public" (如果设置了“[assembly: DiscoverInternals]”属性，则应为 "internal")
+- 它不应为 "static" (除非它只包含 "AssemblyInitialize" 和/或 "AssemblyCleanup" 方法)
+- 它不应是泛型的。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
@@ -167,7 +167,7 @@
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
         <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="needs-review-translation">测试方法“{0}”应返回“void”或“Task”</target>
+        <target state="new">Test method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
