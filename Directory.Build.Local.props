@@ -41,7 +41,6 @@
 
   <!-- Build config -->
   <PropertyGroup>
-    <FixupTestingPlatformVersion>true</FixupTestingPlatformVersion>
     <!-- Prevent warning about deprecated target frameworks -->
     <CheckEolTargetFramework>false</CheckEolTargetFramework>
     <!-- PDB -->
