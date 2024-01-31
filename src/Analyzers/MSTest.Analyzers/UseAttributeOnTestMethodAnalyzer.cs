@@ -15,83 +15,147 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly DiagnosticDescriptor OwnerRule = CreateRule(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute);
+    internal static readonly DiagnosticDescriptor OwnerRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.AttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute)),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute)),
+        description: null,
+        Category.Usage,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
 
-    private static readonly Tuple<string, DiagnosticDescriptor>[] RuleTuples = new[]
+    internal static readonly DiagnosticDescriptor PriorityRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.AttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute)),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute)),
+        description: null,
+        Category.Usage,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
+    internal static readonly DiagnosticDescriptor TestPropertyRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.AttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute)),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute)),
+        description: null,
+        Category.Usage,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
+    internal static readonly DiagnosticDescriptor WorkItemRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.AttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute)),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute)),
+        description: null,
+        Category.Usage,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
+    internal static readonly DiagnosticDescriptor DescriptionRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.AttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute)),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute)),
+        description: null,
+        Category.Usage,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
+    internal static readonly DiagnosticDescriptor ExpectedExceptionRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.AttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute)),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute)),
+        description: null,
+        Category.Usage,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
+    // IMPORTANT: Remember to add any new rule to the rule tuple.
+    private static readonly List<(string AttributeFullyQualifiedName, DiagnosticDescriptor Rule)> RuleTuples = new()
     {
-        new Tuple<string, DiagnosticDescriptor>(
-            WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute,
-            OwnerRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute, OwnerRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute, PriorityRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute, TestPropertyRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute, WorkItemRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute, DescriptionRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute, ExpectedExceptionRule),
     };
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(OwnerRule);
+        = RuleTuples.Select(tuple => tuple.Rule).ToImmutableArray();
 
-    private static DiagnosticDescriptor CreateRule(string attributeName)
-    {
-        string shortAttributeName = attributeName.Split('.').Last();
-
-        return DiagnosticDescriptorHelper.Create(
-                DiagnosticIds.AttributeOnTestMethodRuleId,
-                title: new LocalizableResourceString(
-                    nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), shortAttributeName),
-                messageFormat: new LocalizableResourceString(
-                    nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), shortAttributeName),
-                description: null,
-                Category.Usage,
-                DiagnosticSeverity.Info,
-                isEnabledByDefault: true);
-    }
+    private static string GetShortAttributeName(string attributeName) => attributeName.Split('.').Last();
 
     public override void Initialize(AnalysisContext context)
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
 
-        foreach (var ruleTuple in RuleTuples)
+        context.RegisterCompilationStartAction(context =>
         {
-            context.RegisterCompilationStartAction(context =>
+            if (!context.Compilation.TryGetOrCreateTypeByMetadataName(
+                WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute,
+                out var testMethodAttributeSymbol))
             {
-                if (context.Compilation.TryGetOrCreateTypeByMetadataName(
-                        WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute,
-                        out var testMethodAttributeSymbol)
-                    && context.Compilation.TryGetOrCreateTypeByMetadataName(ruleTuple.Item1, out var attributeSymbol))
+                return;
+            }
+
+            List<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> attributeRuleTuples = new();
+            foreach (var ruleTuple in RuleTuples)
+            {
+                if (context.Compilation.TryGetOrCreateTypeByMetadataName(ruleTuple.AttributeFullyQualifiedName, out var attributeSymbol))
                 {
-                    context.RegisterSymbolAction(context => AnalyzeSymbol(context, testMethodAttributeSymbol, attributeSymbol, ruleTuple.Item2), SymbolKind.Method);
+                    attributeRuleTuples.Add((attributeSymbol, ruleTuple.Rule));
                 }
-            });
-        }
+            }
+
+            if (attributeRuleTuples.Count > 0)
+            {
+                context.RegisterSymbolAction(context => AnalyzeSymbol(context, testMethodAttributeSymbol, attributeRuleTuples), SymbolKind.Method);
+            }
+        });
     }
 
     private static void AnalyzeSymbol(
         SymbolAnalysisContext context,
         INamedTypeSymbol testMethodAttributeSymbol,
-        INamedTypeSymbol attributeSymbol,
-        DiagnosticDescriptor rule)
+        IEnumerable<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> attributeRuleTuples)
     {
         IMethodSymbol methodSymbol = (IMethodSymbol)context.Symbol;
 
-        AttributeData? attribute = null;
-        bool hasTestMethodAttribute = false;
+        List<(AttributeData AttributeData, DiagnosticDescriptor Rule)> attributes = new();
         foreach (var methodAttribute in methodSymbol.GetAttributes())
         {
-            if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, attributeSymbol))
-            {
-                attribute = methodAttribute;
-                continue;
-            }
-
             if (methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol))
             {
-                hasTestMethodAttribute = true;
+                return;
+            }
+
+            foreach (var tuple in attributeRuleTuples)
+            {
+                if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, tuple.AttributeSymbol))
+                {
+                    attributes.Add((methodAttribute, tuple.Rule));
+                }
             }
         }
 
-        if (attribute is not null && !hasTestMethodAttribute)
+        foreach (var attribute in attributes)
         {
-            if (attribute.ApplicationSyntaxReference?.GetSyntax() is { } syntax)
+            if (attribute.AttributeData.ApplicationSyntaxReference?.GetSyntax() is { } syntax)
             {
-                context.ReportDiagnostic(syntax.CreateDiagnostic(rule));
+                context.ReportDiagnostic(syntax.CreateDiagnostic(attribute.Rule));
             }
         }
     }
