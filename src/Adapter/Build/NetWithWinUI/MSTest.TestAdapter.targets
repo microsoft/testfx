@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(UseWinUI)' == 'true' ">
-    <__TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)winui/</__TestAdapterPlatformServicesRoot>
+    <__TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)../net6.0/winui/</__TestAdapterPlatformServicesRoot>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(UseWinUI)' != 'true' ">
     <__TestAdapterPlatformServicesRoot>$(MSBuildThisFileDirectory)</__TestAdapterPlatformServicesRoot>
