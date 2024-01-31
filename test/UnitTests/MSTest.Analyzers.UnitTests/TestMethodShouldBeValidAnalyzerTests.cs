@@ -242,6 +242,12 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
                 {
                     return Task.CompletedTask;
                 }
+
+                [TestMethod]
+                public ValueTask MyTestMethod2()
+                {
+                    return ValueTask.CompletedTask;
+                }
             }
             """;
 

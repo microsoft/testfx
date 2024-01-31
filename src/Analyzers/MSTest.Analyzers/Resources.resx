@@ -213,7 +213,7 @@
     <value>Test method '{0}' should be 'public' or 'internal'</value>
   </data>
   <data name="TestMethodShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
-    <value>Test method '{0}' should return 'void' or 'Task'</value>
+    <value>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
   </data>
   <data name="TestMethodShouldBeValidTitle" xml:space="preserve">
     <value>Test methods should have valid layout</value>
