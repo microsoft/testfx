@@ -8,17 +8,6 @@
     <SuppressLicenseValidation>true</SuppressLicenseValidation>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(FixupTestingPlatformVersion)' == 'true' ">
-    <VersionPrefix>1.0.0</VersionPrefix>
-    <!--
-      To avoid some version conflicting in unit testing of this platform, we hardcode the version to match the one
-      brought by the deps of the test framework on the test projects.
-      TODO: Find a way to automate this versioning from the $(MicrosoftTestingPlatformVersion) property.
-      -->
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <AssemblyFileVersion>1.0.0.0</AssemblyFileVersion>
-  </PropertyGroup>
-
   <ItemGroup>
     <AssemblyMetadata Include="Microsoft.Testing.Platform.Application.BuildTimeUTC" Value="$([System.DateTime]::UtcNow.ToString('yyyy/MM/dd'))" />
   </ItemGroup>
