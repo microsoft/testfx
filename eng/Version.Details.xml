@@ -13,9 +13,9 @@
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
       <Sha>f576f4ac8e17198d95e477adc11e860d1d883ca2</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="1.1.0-preview.24079.5">
+    <Dependency Name="Microsoft.Testing.Platform" Version="1.1.0-preview.24080.2">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>c0958e59e77c3c17b4c14ddf8667dca87be1800a</Sha>
+      <Sha>880132cd8fcafed5f9a6ca8d975d04f6b53fc9c3</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="9.0.0-beta.24080.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
