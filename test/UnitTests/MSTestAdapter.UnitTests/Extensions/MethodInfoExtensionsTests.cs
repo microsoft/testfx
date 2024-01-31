@@ -270,31 +270,31 @@ public class MethodInfoExtensionsTests : TestContainer
     public void IsVoidOrTaskReturnTypeShouldReturnTrueForVoidMethods()
     {
         var methodInfo = typeof(DummyTestClass).GetMethod("PublicMethod");
-        Verify(methodInfo.IsVoidOrTaskReturnType());
+        Verify(methodInfo.IsValidReturnType());
     }
 
     public void IsVoidOrTaskReturnTypeShouldReturnTrueForAsyncTaskMethods()
     {
         var methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncTaskMethod");
-        Verify(methodInfo.IsVoidOrTaskReturnType());
+        Verify(methodInfo.IsValidReturnType());
     }
 
     public void IsVoidOrTaskReturnTypeShouldReturnTrueForTaskMethodsWithoutAsync()
     {
         var methodInfo = typeof(DummyTestClass).GetMethod("PublicNonAsyncTaskMethod");
-        Verify(methodInfo.IsVoidOrTaskReturnType());
+        Verify(methodInfo.IsValidReturnType());
     }
 
     public void IsVoidOrTaskReturnTypeShouldReturnFalseForNonVoidMethods()
     {
         var methodInfo = typeof(DummyTestClass).GetMethod("PublicMethodReturningInt");
-        Verify(!methodInfo.IsVoidOrTaskReturnType());
+        Verify(!methodInfo.IsValidReturnType());
     }
 
     public void IsVoidOrTaskReturnTypeShouldReturnTrueForAsyncNonTaskMethods()
     {
         var methodInfo = typeof(DummyTestClass).GetMethod("PublicAsyncVoidMethod");
-        Verify(!methodInfo.IsVoidOrTaskReturnType());
+        Verify(!methodInfo.IsValidReturnType());
     }
 
     #endregion

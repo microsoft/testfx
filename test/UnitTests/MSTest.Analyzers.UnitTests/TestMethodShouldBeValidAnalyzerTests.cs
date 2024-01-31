@@ -200,9 +200,9 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
                 }
 
                 [TestMethod]
-                public ValueTask {|#3:MyTestMethod3|}()
+                public ValueTask<int> {|#3:MyTestMethod3|}()
                 {
-                    return ValueTask.CompletedTask;
+                    return ValueTask.FromResult(42);
                 }
             }
             """;
@@ -241,6 +241,12 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
                 public Task MyTestMethod1()
                 {
                     return Task.CompletedTask;
+                }
+
+                [TestMethod]
+                public ValueTask MyTestMethod2()
+                {
+                    return ValueTask.CompletedTask;
                 }
             }
             """;

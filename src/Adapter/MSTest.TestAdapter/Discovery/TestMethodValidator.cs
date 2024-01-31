@@ -70,7 +70,7 @@ internal class TestMethodValidator
         // Closed generic methods being GenericMethod<int> and open being GenericMethod<TAttribute>.
         var isValidTestMethod = isAccessible && !testMethodInfo.IsAbstract && !testMethodInfo.IsStatic
                                 && !testMethodInfo.IsGenericMethod
-                                && testMethodInfo.IsVoidOrTaskReturnType();
+                                && testMethodInfo.IsValidReturnType();
 
         if (!isValidTestMethod)
         {

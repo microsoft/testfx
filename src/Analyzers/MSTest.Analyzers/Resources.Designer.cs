@@ -318,7 +318,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should return &apos;void&apos; or &apos;Task&apos;.
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
         /// </summary>
         internal static string TestMethodShouldBeValidMessageFormat_ReturnType {
             get {

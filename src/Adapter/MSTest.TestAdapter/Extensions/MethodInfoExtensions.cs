@@ -28,7 +28,7 @@ internal static class MethodInfoExtensions
             method.IsPublic &&
             (parameters.Length == 1) &&
             parameters[0].ParameterType == typeof(TestContext) &&
-            method.IsVoidOrTaskReturnType();
+            method.IsValidReturnType();
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ internal static class MethodInfoExtensions
             method.IsStatic &&
             method.IsPublic &&
             (method.GetParameters().Length == 0) &&
-            method.IsVoidOrTaskReturnType();
+            method.IsValidReturnType();
     }
 
     /// <summary>
@@ -60,7 +60,7 @@ internal static class MethodInfoExtensions
             !method.IsStatic &&
             method.IsPublic &&
             (method.GetParameters().Length == 0) &&
-            method.IsVoidOrTaskReturnType();
+            method.IsValidReturnType();
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ internal static class MethodInfoExtensions
             !method.IsGenericMethod &&
             (method.IsPublic || (discoverInternals && method.IsAssembly)) &&
             (method.GetParameters().Length == 0 || ignoreParameterLength) &&
-            method.IsVoidOrTaskReturnType(); // Match return type Task for async methods only. Else return type void.
+            method.IsValidReturnType(); // Match return type Task for async methods only. Else return type void.
     }
 
     /// <summary>
@@ -109,9 +109,12 @@ internal static class MethodInfoExtensions
     /// </summary>
     /// <param name="method">The method to verify.</param>
     /// <returns>True if the method has a void/task return type..</returns>
-    internal static bool IsVoidOrTaskReturnType(this MethodInfo method)
+    internal static bool IsValidReturnType(this MethodInfo method)
     {
         return ReflectHelper.MatchReturnType(method, typeof(Task))
+#if NETCOREAPP
+            || ReflectHelper.MatchReturnType(method, typeof(ValueTask))
+#endif
             || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName() == null);
     }
 

@@ -166,8 +166,8 @@
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
-        <source>Test method '{0}' should return 'void' or 'Task'</source>
-        <target state="translated">Die Testmethode "{0}" sollte "void" oder "Task" zurückgeben.</target>
+        <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="needs-review-translation">Die Testmethode "{0}" sollte "void" oder "Task" zurückgeben.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
