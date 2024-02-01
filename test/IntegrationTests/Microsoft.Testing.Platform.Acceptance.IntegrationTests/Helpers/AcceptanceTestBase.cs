@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 
@@ -143,8 +144,13 @@ public class UnitTest1
             // For some packages the find pattern will match multiple packages, for example:
             // Microsoft.Testing.Platform.1.0.0.nupkg
             // Microsoft.Testing.Platform.Extensions.1.0.0.nupkg
-            // Let's take shortest name which should be closest to the package we are looking for.
-            matches = [matches.OrderBy(x => x.Length).First()];
+            // So we need to find the first package that contains a number after the prefix.
+            // Ideally, we would want to do a full validation to check this is a nuget version number, but that's too much work for now.
+            matches =
+            [
+                matches.Select(path => (path, fileName: Path.GetFileName(path)[packagePrefixName.Length..]))
+                    .First(tuple => int.TryParse(tuple.fileName[0].ToString(), CultureInfo.InvariantCulture, out _)).path
+            ];
         }
 
         if (matches.Length != 1)
