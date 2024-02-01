@@ -32,6 +32,9 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
     internal static IEnumerable<string> GetAttributeUsageExamples()
         => RuleUsageExamples.Select(tuple => tuple.AttributeUsageExample);
 
+    // This generates all possible combinations of any two tuples (Rule, AttributeUsageExample) with the exception of the
+    // combaination where the two tuples are equal. The result is flattened in a new tuple created from the elements of the
+    // previous two tuples.
     internal static IEnumerable<(DiagnosticDescriptor Rule1, string AttributeUsageExample1, DiagnosticDescriptor Rule2, string AttributeUsageExample2)> GetAttributeUsageExampleAndRuleTuplesForTwoAttributes()
         => RuleUsageExamples
             .SelectMany(tuple => RuleUsageExamples, (tuple1, tuple2) => (tuple1, tuple2))

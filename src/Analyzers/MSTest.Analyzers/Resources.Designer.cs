@@ -336,7 +336,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [{0}] should be set on test method.
+        ///   Looks up a localized string similar to [{0}] can only be set on methods marked with [TestMethod].
         /// </summary>
         internal static string UseAttributeOnTestMethodAnalyzerMessageFormat {
             get {
@@ -345,7 +345,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to [{0}] should be set on test method.
+        ///   Looks up a localized string similar to [{0}] can only be set on methods marked with [TestMethod].
         /// </summary>
         internal static string UseAttributeOnTestMethodAnalyzerTitle {
             get {
