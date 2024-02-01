@@ -167,13 +167,23 @@
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
-        <source>Test method '{0}' should return 'void' or 'Task'</source>
-        <target state="translated">テスト メソッド '{0}' は 'void' または 'Task' を返す必要があります</target>
+        <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="needs-review-translation">テスト メソッド '{0}' は 'void' または 'Task' を返す必要があります</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
         <target state="translated">テスト メソッドには有効なレイアウトが必要です</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
+        <source>[{0}] can only be set on methods marked with [TestMethod]</source>
+        <target state="new">[{0}] can only be set on methods marked with [TestMethod]</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
+        <source>[{0}] can only be set on methods marked with [TestMethod]</source>
+        <target state="new">[{0}] can only be set on methods marked with [TestMethod]</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
