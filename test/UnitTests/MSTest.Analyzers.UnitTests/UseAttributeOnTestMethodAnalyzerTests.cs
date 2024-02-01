@@ -22,6 +22,8 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
         (UseAttributeOnTestMethodAnalyzer.WorkItemRule, "WorkItem(100)"),
         (UseAttributeOnTestMethodAnalyzer.DescriptionRule, """Description("description")"""),
         (UseAttributeOnTestMethodAnalyzer.ExpectedExceptionRule, "ExpectedException(null)"),
+        (UseAttributeOnTestMethodAnalyzer.CssIterationRule, "CssIteration(null)"),
+        (UseAttributeOnTestMethodAnalyzer.CssProjectStructureRule, "CssProjectStructure(null)"),
     };
 
     internal static IEnumerable<(DiagnosticDescriptor Rule, string AttributeUsageExample)> GetAttributeUsageExampleAndRuleTuples()

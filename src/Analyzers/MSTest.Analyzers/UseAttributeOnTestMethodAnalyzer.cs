@@ -16,7 +16,7 @@ namespace MSTest.Analyzers;
 public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
 {
     internal static readonly DiagnosticDescriptor OwnerRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.AttributeOnTestMethodRuleId,
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute)),
         messageFormat: new LocalizableResourceString(
@@ -27,7 +27,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     internal static readonly DiagnosticDescriptor PriorityRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.AttributeOnTestMethodRuleId,
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute)),
         messageFormat: new LocalizableResourceString(
@@ -38,7 +38,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     internal static readonly DiagnosticDescriptor TestPropertyRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.AttributeOnTestMethodRuleId,
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute)),
         messageFormat: new LocalizableResourceString(
@@ -49,7 +49,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     internal static readonly DiagnosticDescriptor WorkItemRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.AttributeOnTestMethodRuleId,
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute)),
         messageFormat: new LocalizableResourceString(
@@ -60,7 +60,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     internal static readonly DiagnosticDescriptor DescriptionRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.AttributeOnTestMethodRuleId,
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute)),
         messageFormat: new LocalizableResourceString(
@@ -71,11 +71,33 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     internal static readonly DiagnosticDescriptor ExpectedExceptionRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.AttributeOnTestMethodRuleId,
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
         title: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute)),
         messageFormat: new LocalizableResourceString(
             nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute)),
+        description: null,
+        Category.Usage,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
+    internal static readonly DiagnosticDescriptor CssIterationRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute)),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute)),
+        description: null,
+        Category.Usage,
+        DiagnosticSeverity.Info,
+        isEnabledByDefault: true);
+
+    internal static readonly DiagnosticDescriptor CssProjectStructureRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.UseAttributeOnTestMethodRuleId,
+        title: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerTitle), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute)),
+        messageFormat: new LocalizableResourceString(
+            nameof(Resources.UseAttributeOnTestMethodAnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources), GetShortAttributeName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute)),
         description: null,
         Category.Usage,
         DiagnosticSeverity.Info,
@@ -90,6 +112,8 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute, WorkItemRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute, DescriptionRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute, ExpectedExceptionRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute, CssIterationRule),
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute, CssProjectStructureRule),
     };
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
