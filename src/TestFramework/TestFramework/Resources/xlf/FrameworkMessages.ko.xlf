@@ -244,7 +244,7 @@ Stack Trace: {4}</source>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</source>
-        <target state="needs-review-translation">{1}의 속성 또는 메서드 {0}이(가) IEnumerable&lt;object[]&gt;를 반환하지 않습니다.</target>
+        <target state="new">Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
