@@ -117,7 +117,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
     };
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = RuleTuples.Select(tuple => tuple.Rule).ToImmutableArray();
+        = ImmutableArray.Create(OwnerRule);
 
     private static string GetShortAttributeName(string attributeName) => attributeName.Split('.').Last();
 
