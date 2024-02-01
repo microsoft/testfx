@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -256,6 +257,75 @@ public class DynamicDataAttributeTests : TestContainer
         displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data2);
         Verify(displayName == "TestMethod1 (value1,,value2)");
     }
+
+#if NETCOREAPP
+    public void DynamicDataSource_WithTuple_Works()
+    {
+        var testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
+        var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Property);
+        var data = dynamicDataAttribute.GetData(testMethodInfo);
+
+        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
+        data = dynamicDataAttribute.GetData(testMethodInfo);
+    }
+
+    public void DynamicDataSource_WithValueTuple_Works()
+    {
+        var testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
+        var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Property);
+        var data = dynamicDataAttribute.GetData(testMethodInfo);
+
+        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
+        data = dynamicDataAttribute.GetData(testMethodInfo);
+    }
+
+    public void DynamicDataSource_WithValueTupleWithTupleSyntax_Works()
+    {
+        var testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
+        var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Property);
+        var data = dynamicDataAttribute.GetData(testMethodInfo);
+
+        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Method);
+        data = dynamicDataAttribute.GetData(testMethodInfo);
+    }
+#else
+    public void DynamicDataSource_WithTuple_Throws()
+    {
+        var testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
+        var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Property);
+
+        var ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
+        Verify(ex is ArgumentNullException);
+
+        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
+        ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
+        Verify(ex is ArgumentNullException);
+    }
+
+    public void DynamicDataSource_WithValueTuple_Throws()
+    {
+        var testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
+        var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Property);
+        var ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
+        Verify(ex is ArgumentNullException);
+
+        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTuple), typeof(TestClassTupleData), DynamicDataSourceType.Method);
+        ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
+        Verify(ex is ArgumentNullException);
+    }
+
+    public void DynamicDataSource_WithValueTupleWithTupleSyntax_Throws()
+    {
+        var testMethodInfo = new TestClassTupleData().GetType().GetTypeInfo().GetDeclaredMethod(nameof(TestClassTupleData.DynamicDataTestWithTuple));
+        var dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.DataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Property);
+        var ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
+        Verify(ex is ArgumentNullException);
+
+        dynamicDataAttribute = new DynamicDataAttribute(nameof(TestClassTupleData.GetDataWithValueTupleWithTupleSyntax), typeof(TestClassTupleData), DynamicDataSourceType.Method);
+        ex = VerifyThrows(() => dynamicDataAttribute.GetData(testMethodInfo));
+        Verify(ex is ArgumentNullException);
+    }
+#endif
 }
 
 /// <summary>
@@ -519,4 +589,60 @@ public class DummyTestClass2
     /// </returns>
     public static string GetCustomDynamicDataDisplayName2(MethodInfo methodInfo, object[] data)
         => $"DynamicDataTestWithDisplayName {methodInfo.Name} with {data.Length} parameters";
+}
+
+[TestClass]
+public class TestClassTupleData
+{
+    public static IEnumerable<Tuple<int, string>> GetDataWithTuple()
+    {
+        yield return new(0, "0");
+        yield return new(1, "1");
+    }
+
+    public static IEnumerable<Tuple<int, string>> DataWithTuple
+    {
+        get
+        {
+            yield return new(0, "0");
+            yield return new(1, "1");
+        }
+    }
+
+    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1141:Use tuple syntax", Justification = "We want to explicitly test this syntax")]
+    public static IEnumerable<ValueTuple<int, string>> GetDataWithValueTuple()
+    {
+        yield return new(0, "0");
+        yield return new(1, "1");
+    }
+
+    [SuppressMessage("StyleCop.CSharp.ReadabilityRules", "SA1141:Use tuple syntax", Justification = "We want to explicitly test this syntax")]
+    public static IEnumerable<ValueTuple<int, string>> DataWithValueTuple
+    {
+        get
+        {
+            yield return new(0, "0");
+            yield return new(1, "1");
+        }
+    }
+
+    public static IEnumerable<(int Integer, string AsString)> GetDataWithValueTupleWithTupleSyntax()
+    {
+        yield return (0, "0");
+        yield return (1, "1");
+    }
+
+    public static IEnumerable<(int Integer, string AsString)> DataWithValueTupleWithTupleSyntax
+    {
+        get
+        {
+            yield return (0, "0");
+            yield return (1, "1");
+        }
+    }
+
+    [DataTestMethod]
+    public void DynamicDataTestWithTuple(int value, string integerAsString)
+    {
+    }
 }

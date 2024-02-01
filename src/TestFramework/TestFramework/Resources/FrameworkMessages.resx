@@ -263,7 +263,7 @@ Stack Trace: {4}</value>
     <value>UITestMethodAttribute.DispatcherQueue should not be null. To use UITestMethodAttribute within a WinUI Desktop App, remember to set the static UITestMethodAttribute.DispatcherQueue during the test initialization.</value>
   </data>
   <data name="DynamicDataIEnumerableNull" xml:space="preserve">
-    <value>Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</value>
+    <value>Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</value>
   </data>
   <data name="DynamicDataValueNull" xml:space="preserve">
     <value>Value returned by property or method {0} shouldn't be null.</value>

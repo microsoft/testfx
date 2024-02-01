@@ -1,6 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if NET471_OR_GREATER || NETCOREAPP
+using System.Collections;
+using System.Runtime.CompilerServices;
+#endif
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -114,7 +119,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                     _dynamicDataDeclaringType.FullName));
         }
 
-        if (obj is not IEnumerable<object[]> enumerable)
+        if (!TryGetData(obj, out IEnumerable<object[]>? data))
         {
             throw new ArgumentNullException(
                 string.Format(
@@ -123,7 +128,8 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                     _dynamicDataSourceName,
                     _dynamicDataDeclaringType.FullName));
         }
-        else if (!enumerable.Any())
+
+        if (!data.Any())
         {
             throw new ArgumentException(
                 string.Format(
@@ -133,7 +139,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                     _dynamicDataDeclaringType.FullName));
         }
 
-        return enumerable;
+        return data;
     }
 
     /// <inheritdoc />
@@ -173,5 +179,44 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
         }
 
         return null;
+    }
+
+    private static bool TryGetData(object dataSource, [NotNullWhen(true)] out IEnumerable<object[]>? data)
+    {
+        if (dataSource is IEnumerable<object[]> enumerableObjectArray)
+        {
+            data = enumerableObjectArray;
+            return true;
+        }
+
+#if NETCOREAPP || NET471_OR_GREATER
+        if (dataSource is IEnumerable enumerable)
+        {
+            List<object[]> objects = new();
+            foreach (var entry in enumerable)
+            {
+                if (entry is not ITuple tuple
+                    || (objects.Count > 0 && objects[^1].Length != tuple.Length))
+                {
+                    data = null;
+                    return false;
+                }
+
+                object[] array = new object[tuple.Length];
+                for (int i = 0; i < tuple.Length; i++)
+                {
+                    array[i] = tuple[i]!;
+                }
+
+                objects.Add(array);
+            }
+
+            data = objects;
+            return true;
+        }
+#endif
+
+        data = null;
+        return false;
     }
 }
