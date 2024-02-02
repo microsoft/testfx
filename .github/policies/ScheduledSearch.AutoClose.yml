@@ -74,10 +74,7 @@ configuration:
               days: 1
         actions:
           - addReply:
-            reply: >-
-              Hello @${issueAuthor},
-
-              This issue has been marked as "Won't fix" and has not had any activity for **1 day**. It will be closed for housekeeping purposes.
+            reply: This issue has been marked as "Won't fix" and has not had any activity for **1 day**. It will be closed for housekeeping purposes.
           - closeIssue
       - description: >-
           Search for Issues where -
@@ -99,10 +96,7 @@ configuration:
               days: 1
         actions:
           - addReply:
-            reply: >-
-              Hello @${issueAuthor},
-
-              This issue has been marked as duplicate and has not had any activity for **1 day**. It will be closed for housekeeping purposes.
+            reply: This issue has been marked as duplicate and has not had any activity for **1 day**. It will be closed for housekeeping purposes.
           - closeIssue
 onFailure:
 onSuccess:
