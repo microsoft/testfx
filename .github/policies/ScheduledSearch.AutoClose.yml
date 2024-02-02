@@ -93,8 +93,8 @@ configuration:
           - noActivitySince:
               days: 1
         actions:
-          - addReply:
+        - addReply:
             reply: This issue has been marked as duplicate and has not had any activity for **1 day**. It will be closed for housekeeping purposes.
-          - closeIssue
+        - closeIssue
 onFailure:
 onSuccess:
