@@ -73,8 +73,6 @@ configuration:
           - noActivitySince:
               days: 1
         actions:
-          - addReply:
-            reply: This issue has been marked as wont fix and has not had any activity for **1 day**. It will be closed for housekeeping purposes.
           - closeIssue
       - description: >-
           Search for Issues where -
