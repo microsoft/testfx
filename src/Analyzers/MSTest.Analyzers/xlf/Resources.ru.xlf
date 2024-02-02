@@ -167,7 +167,7 @@
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
         <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">Test method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">Метод теста "{0}" должен возвращать значение "void", "Task" или "ValueTask"</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
