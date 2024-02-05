@@ -255,7 +255,7 @@ public sealed class TestApplication : ITestApplication
         CommandLineParseResult result, CurrentTestApplicationModuleInfo testApplicationModuleInfo, SystemClock clock,
         SystemEnvironment environment, SystemTask task, SystemConsole console)
     {
-        LogLevel logLevel = LogLevel.Trace;
+        LogLevel logLevel = LogLevel.None;
 
         if (result.HasError)
         {
@@ -277,6 +277,8 @@ public sealed class TestApplication : ITestApplication
         {
             return new(logLevel, result);
         }
+
+        logLevel = LogLevel.Trace;
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, out string[]? verbosity))
         {
