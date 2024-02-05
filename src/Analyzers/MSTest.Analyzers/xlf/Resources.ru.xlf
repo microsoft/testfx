@@ -177,12 +177,12 @@
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="new">[{0}] can only be set on methods marked with [TestMethod]</target>
+        <target state="translated">[{0}] можно задать только для методов с пометкой [TestMethod]</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="new">[{0}] can only be set on methods marked with [TestMethod]</target>
+        <target state="translated">[{0}] можно задать только для методов с пометкой [TestMethod]</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
