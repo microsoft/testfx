@@ -139,6 +139,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                     _dynamicDataDeclaringType.FullName));
         }
 
+        // Data is valid, return it.
         return data;
     }
 

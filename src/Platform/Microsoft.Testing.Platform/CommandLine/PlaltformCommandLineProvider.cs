@@ -134,6 +134,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineClientHostOptionSingleArgument);
         }
 
+        // Now validate the minimum expected tests option
         return IsMinimumExpectedTestsOptionValidAsync(commandOption, arguments);
     }
 
@@ -150,15 +151,10 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     }
 
     private static Task<ValidationResult> IsMinimumExpectedTestsOptionValidAsync(CommandLineOption option, string[] arguments)
-    {
-        if (option.Name == MinimumExpectedTestsOptionKey
-            && (arguments.Length != 1 || !int.TryParse(arguments[0], out int value) || value == 0))
-        {
-            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument);
-        }
-
-        return ValidationResult.ValidTask;
-    }
+        => option.Name == MinimumExpectedTestsOptionKey
+            && (arguments.Length != 1 || !int.TryParse(arguments[0], out int value) || value == 0)
+            ? ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsOptionSingleArgument)
+            : ValidationResult.ValidTask;
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
     {
@@ -181,6 +177,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
         }
 
+        // Validation succeeded
         return ValidationResult.ValidTask;
     }
 }

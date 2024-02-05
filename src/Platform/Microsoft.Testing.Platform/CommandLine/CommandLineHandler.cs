@@ -177,12 +177,9 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
             }
         }
 
-        if (stringBuilder?.Length > 0)
-        {
-            return ValidationResult.Invalid(stringBuilder.ToString());
-        }
-
-        return ValidationResult.Valid();
+        return stringBuilder?.Length > 0
+            ? ValidationResult.Invalid(stringBuilder.ToString())
+            : ValidationResult.Valid();
     }
 
     private bool UnknownOptions([NotNullWhen(true)] out string? error)

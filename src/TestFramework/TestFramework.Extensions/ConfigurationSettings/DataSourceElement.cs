@@ -17,13 +17,13 @@ public sealed class DataSourceElement : ConfigurationElement
     private static readonly ConfigurationProperty DataTableNameValue = new(ConfigurationNames.DataTableAttributeName, typeof(string), string.Empty, ConfigurationPropertyOptions.IsRequired);
     private static readonly ConfigurationProperty DataAccessMethodValue = new(ConfigurationNames.DataAccessMethodAttributeName, typeof(string), string.Empty);
 
-    private static readonly ConfigurationPropertyCollection SharedProperties =
-    [
+    private static readonly ConfigurationPropertyCollection SharedProperties = new()
+    {
         NameValue,
         ConnectionStringValue,
         DataAccessMethodValue,
         DataTableNameValue,
-    ];
+    };
 
     /// <summary>
     /// Gets or sets the name of this configuration.

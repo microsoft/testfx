@@ -33,11 +33,8 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
         }
 
         string vsProgramFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Visual Studio");
-        string? cVCollectionCmd = Directory.GetFiles(vsProgramFile, "CVCollectionCmd.exe", SearchOption.AllDirectories).SingleOrDefault();
-        if (cVCollectionCmd is null)
-        {
-            throw new Exception("CVCollectionCmd.exe not found, https://learn.microsoft.com/visualstudio/profiling/concurrency-visualizer-command-line-utility-cvcollectioncmd");
-        }
+        string? cVCollectionCmd = Directory.GetFiles(vsProgramFile, "CVCollectionCmd.exe", SearchOption.AllDirectories).SingleOrDefault()
+            ?? throw new InvalidOperationException("CVCollectionCmd.exe not found, https://learn.microsoft.com/visualstudio/profiling/concurrency-visualizer-command-line-utility-cvcollectioncmd");
 
         // https://learn.microsoft.com/visualstudio/profiling/concurrency-visualizer-command-line-utility-cvcollectioncmd for options and markers
         string config = $"""
