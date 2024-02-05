@@ -31,16 +31,12 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
         }
 
         string vsProgramFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Visual Studio");
-        string? vSDiagnostics = Directory.GetFiles(vsProgramFile, "VSDiagnostics.exe", SearchOption.AllDirectories).SingleOrDefault();
-        if (vSDiagnostics is null)
-        {
-            throw new Exception("VSDiagnostics.exe not found");
-        }
-
+        string? vSDiagnostics = Directory.GetFiles(vsProgramFile, "VSDiagnostics.exe", SearchOption.AllDirectories).SingleOrDefault()
+            ?? throw new InvalidOperationException("VSDiagnostics.exe not found");
         string agentConfig = Path.Combine(Path.GetDirectoryName(vSDiagnostics)!, "AgentConfigs", _agentConfigName);
         if (!File.Exists(agentConfig))
         {
-            throw new Exception($"'{_agentConfigName}' not found");
+            throw new InvalidOperationException($"'{_agentConfigName}' not found");
         }
 
         string sessionID = Guid.NewGuid().ToString();
