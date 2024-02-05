@@ -169,7 +169,7 @@
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
         <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">Test method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">'{0}' test metodu 'void', 'Task' veya 'ValueTask' döndürmelidir</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
@@ -179,12 +179,12 @@
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="new">[{0}] can only be set on methods marked with [TestMethod]</target>
+        <target state="translated">[{0}] yalnızca [TestMethod] ile işaretli yöntemlerde ayarlanabilir</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="new">[{0}] can only be set on methods marked with [TestMethod]</target>
+        <target state="translated">[{0}] yalnızca [TestMethod] ile işaretli yöntemlerde ayarlanabilir</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
