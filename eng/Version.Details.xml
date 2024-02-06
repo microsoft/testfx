@@ -7,11 +7,11 @@
     </Dependency>
     <Dependency Name="Microsoft.DotNet.XliffTasks" Version="9.0.0-beta.24102.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
-       <Sha>2fb543a45580400a559b5ae41c96a815ea14dac5</Sha>
+      <Sha>2fb543a45580400a559b5ae41c96a815ea14dac5</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.10.3-preview.24105.3">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.10.3-preview.24106.2">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>3220ae788824285f06dfc80667f657429c55ff2c</Sha>
+      <Sha>b389e52a9836d4f73ff664f5327a59c73d71b7e0</Sha>
     </Dependency>
     <Dependency Name="Microsoft.Testing.Platform" Version="1.1.0-preview.24080.2">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
