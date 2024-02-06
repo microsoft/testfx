@@ -58,7 +58,8 @@ if ($vs) {
 }
 
 if ($installWindowsSdk) {
-    if (Test-Path "C:\PROGRA~2\Windows Kits\10\UnionMetadata\10.0.16299.0") {
+    $windowsSdkPath = [Environment]::GetEnvironmentVariable("ProgramFiles(x86)") + "\Windows Kits\10\UnionMetadata\10.0.16299.0"
+    if (Test-Path $windowsSdkPath) {
         Write-Host "Windows SDK 10.0.16299 is already installed, skipping..."
     } else {
         Write-Host "Downloading Windows SDK 10.0.16299..." -ForegroundColor Green
