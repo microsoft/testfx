@@ -120,17 +120,10 @@ stages:
           displayName: 'Install Windows SDK'
           inputs:
             targetType: filePath
-            filePath: './eng/Install-WindowsSDK.ps1'
+            filePath: './eng/build.ps1'
+            arguments: '-installWindowsSdk'
             failOnStderr: true
             showWarnings: true
-
-        # This steps help to understand versions of .NET runtime installed on the machine,
-        # which is useful to diagnose some governance issues.
-        - task: DotNetCoreCLI@2
-          displayName: 'dotnet --info'
-          inputs:
-            command: custom
-            custom: '--info'
 
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
