@@ -120,8 +120,7 @@ stages:
           displayName: 'Install Windows SDK'
           inputs:
             targetType: filePath
-            filePath: './eng/build.ps1'
-            arguments: '-installWindowsSdk'
+            filePath: './eng/install-windows-sdk.ps1'
             failOnStderr: true
             showWarnings: true
 
