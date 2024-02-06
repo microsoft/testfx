@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -268,7 +269,11 @@ public class TestClassInfo
                             var baseInitCleanupMethods = baseClassInitializeStack.Pop();
                             initializeMethod = baseInitCleanupMethods.Item1;
 
-                            InvokeInitializeMethod(initializeMethod, testContext);
+                            ClassInitializationException = InvokeInitializeMethod(initializeMethod, testContext);
+                            if (ClassInitializationException is not null)
+                            {
+                                break;
+                            }
 
                             if (baseInitCleanupMethods.Item2 != null)
                             {
@@ -276,9 +281,11 @@ public class TestClassInfo
                             }
                         }
 
-                        initializeMethod = null;
-
-                        InvokeInitializeMethod(ClassInitializeMethod, testContext);
+                        if (ClassInitializationException is not null)
+                        {
+                            initializeMethod = null;
+                            ClassInitializationException = InvokeInitializeMethod(ClassInitializeMethod, testContext);
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -326,30 +333,26 @@ public class TestClassInfo
         throw testFailedException;
     }
 
-    private void InvokeInitializeMethod(MethodInfo? methodInfo, TestContext testContext)
+    private TestFailedException? InvokeInitializeMethod(MethodInfo? methodInfo, TestContext testContext)
     {
         if (methodInfo is null)
         {
-            return;
+            return null;
         }
 
-        CancellationTokenSource? timeout = null;
-        try
+        int? timeout = null;
+        if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
         {
-            // TestContext is public and the CancellationTokenSource property has got protected set accessor.
-            // So we don't substitute the current CTS instance but instead, we signal the current one.
-            if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int timeoutMilliseconds))
-            {
-                timeout = new(timeoutMilliseconds);
-                timeout.Token.Register(() => testContext.CancellationTokenSource.Cancel());
-            }
+            timeout = localTimeout;
+        }
 
-            methodInfo?.InvokeAsSynchronousTask(null, testContext);
-        }
-        finally
-        {
-            timeout?.Dispose();
-        }
+        return MethodRunner.RunWithTimeoutAndCancellation(
+            () => methodInfo.InvokeAsSynchronousTask(null, testContext),
+            testContext.CancellationTokenSource,
+            timeout,
+            methodInfo,
+            Resource.ClassInitializeWasCancelled,
+            Resource.ClassInitializeTimedOut);
     }
 
     /// <summary>

@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -139,23 +140,13 @@ public class TestAssemblyInfo
                 {
                     try
                     {
-                        CancellationTokenSource? timeoutTokenSource = null;
-                        try
-                        {
-                            // TestContext is public and the CancellationTokenSource property has got protected set accessor.
-                            // So we don't substitute the current CTS instance but instead we signal the current one.
-                            if (AssemblyInitializeMethodTimeoutMilliseconds is not null)
-                            {
-                                timeoutTokenSource = new(AssemblyInitializeMethodTimeoutMilliseconds.Value);
-                                timeoutTokenSource.Token.Register(() => testContext.CancellationTokenSource.Cancel());
-                            }
-
-                            AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext);
-                        }
-                        finally
-                        {
-                            timeoutTokenSource?.Dispose();
-                        }
+                        AssemblyInitializationException = MethodRunner.RunWithTimeoutAndCancellation(
+                            () => AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext),
+                            testContext.CancellationTokenSource,
+                            AssemblyInitializeMethodTimeoutMilliseconds,
+                            AssemblyInitializeMethod,
+                            Resource.AssemblyInitializeWasCancelled,
+                            Resource.AssemblyInitializeTimedOut);
                     }
                     catch (Exception ex)
                     {
