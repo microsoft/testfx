@@ -8,26 +8,16 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 
-using Microsoft.Testing.Platform.Helpers;
+using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
+using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
 using StreamJsonRpc;
 
-namespace Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
+namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
 
-public partial /* for codegen regx */ class ServerModeTestsBase : TestBase
+public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTestBase
 {
-    private const string MicrosoftTestingPlatformNamePrefix = "Microsoft.Testing.Platform.";
     private const string NuGetPackageExtensionName = ".nupkg";
-
-    static ServerModeTestsBase()
-    {
-        MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MicrosoftTestingPlatformNamePrefix);
-        MicrosoftTestingPlatformExtensionsVersion = MicrosoftTestingPlatformVersion;
-    }
-
-    public static string MicrosoftTestingPlatformVersion { get; private set; }
-
-    public static string MicrosoftTestingPlatformExtensionsVersion { get; private set; }
 
     private static readonly string Root = RootFinder.Find();
     private static readonly Dictionary<string, string> DefaultEnvironmentVariables = new()
@@ -41,11 +31,9 @@ public partial /* for codegen regx */ class ServerModeTestsBase : TestBase
     protected ServerModeTestsBase(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        // Do not remove pls
-        // NotepadWindow.WriteLine("", cleanBuffer: true);
     }
 
-    protected async Task<TestingPlatformClient> StartAsServerAndConnectToTheClientAsync(TestInfrastructure.TestHost testHost)
+    protected async Task<TestingPlatformClient> StartAsServerAndConnectToTheClientAsync(TestHost testHost)
     {
         var environmentVariables = new Dictionary<string, string>(DefaultEnvironmentVariables);
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
@@ -60,7 +48,7 @@ public partial /* for codegen regx */ class ServerModeTestsBase : TestBase
         }
 
         // We expect to not fail for unhandled exception in server mode for IDE needs.
-        environmentVariables.Add(EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION, "0");
+        environmentVariables.Add("TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION", "0");
 
         // To attach to the server on startup
         // environmentVariables.Add(EnvironmentVariableConstants.TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER, "1");
@@ -90,11 +78,10 @@ public partial /* for codegen regx */ class ServerModeTestsBase : TestBase
             throw new OperationCanceledException($"Timeout on connection for command line '{processConfig.FileName} {processConfig.Arguments}'\n{builder}", ex, cancellationTokenSource.Token);
         }
 
-        ArgumentGuard.IsNotNull(tcpClient);
         return new TestingPlatformClient(new(tcpClient.GetStream()), tcpClient, processHandler);
     }
 
-    protected async Task<TestingPlatformClient> StartAsServerAndConnectAsync(TestInfrastructure.TestHost testHost, bool enableDiagnostic = false)
+    protected async Task<TestingPlatformClient> StartAsServerAndConnectAsync(TestHost testHost, bool enableDiagnostic = false)
     {
         var environmentVariables = new Dictionary<string, string>(DefaultEnvironmentVariables);
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
@@ -109,7 +96,7 @@ public partial /* for codegen regx */ class ServerModeTestsBase : TestBase
         }
 
         // We expect to not fail for unhandled exception in server mode for IDE needs.
-        environmentVariables.Add(EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION, "0");
+        environmentVariables.Add("TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION", "0");
 
         // To attach to the server on startup
         // environmentVariables.Add(EnvironmentVariableConstants.TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER, "1");
@@ -166,7 +153,7 @@ public partial /* for codegen regx */ class ServerModeTestsBase : TestBase
         await portFound.Task;
 
         var tcpClient = new TcpClient();
-        using CancellationTokenSource cancellationTokenSource = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromSeconds(90));
 #pragma warning disable VSTHRD103 // Call async methods when in an async method
         await tcpClient.ConnectAsync(new IPEndPoint(IPAddress.Loopback, portFound.Task.Result), cancellationTokenSource.Token);
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
