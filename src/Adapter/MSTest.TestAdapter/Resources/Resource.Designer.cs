@@ -62,6 +62,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assembly initialize method &apos;{0}.{1}&apos; timed out.
+        /// </summary>
+        internal static string AssemblyInitializeTimedOut {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assembly initialize method &apos;{0}.{1}&apos; was cancelled.
+        /// </summary>
+        internal static string AssemblyInitializeWasCancelled {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeWasCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to MSTestAdapterV2.
         /// </summary>
         internal static string AttachmentSetDisplayName {
@@ -103,6 +121,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string CannotExpandIDataSourceAttribute_DuplicateDisplayName {
             get {
                 return ResourceManager.GetString("CannotExpandIDataSourceAttribute_DuplicateDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class initialize method &apos;{0}.{1}&apos; timed out.
+        /// </summary>
+        internal static string ClassInitializeTimedOut {
+            get {
+                return ResourceManager.GetString("ClassInitializeTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class initialize method &apos;{0}.{1}&apos; was cancelled.
+        /// </summary>
+        internal static string ClassInitializeWasCancelled {
+            get {
+                return ResourceManager.GetString("ClassInitializeWasCancelled", resourceCulture);
             }
         }
         
