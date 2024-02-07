@@ -281,7 +281,7 @@ public class TestClassInfo
                             }
                         }
 
-                        if (ClassInitializationException is not null)
+                        if (ClassInitializationException is null)
                         {
                             initializeMethod = null;
                             ClassInitializationException = InvokeInitializeMethod(ClassInitializeMethod, testContext);
