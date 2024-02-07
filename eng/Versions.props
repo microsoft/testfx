@@ -26,7 +26,7 @@
     <!-- MSBuild Sdk versions updates -->
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24081.5</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
     <!-- Testing platform (this comment is here to avoid conflict on darc PRs) -->
-    <MicrosoftTestingPlatformVersion>1.1.0-preview.24080.2</MicrosoftTestingPlatformVersion>
+    <MicrosoftTestingPlatformVersion>1.1.0-preview.24106.7</MicrosoftTestingPlatformVersion>
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
   </PropertyGroup>
