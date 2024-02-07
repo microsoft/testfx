@@ -20,6 +20,7 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageReference Include="StreamJsonRpc" Version="$(StreamJsonRpcVersion)" />
   </ItemGroup>
 
   <ItemGroup>

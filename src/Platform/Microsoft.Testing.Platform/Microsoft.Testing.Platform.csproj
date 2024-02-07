@@ -52,10 +52,10 @@ This package provides the core platform and the .NET implementation of the proto
     <InternalsVisibleTo Include="Microsoft.Testing.Framework" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Framework.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.MSBuild" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Platform.ServerMode.IntegrationTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.TestInfrastructure" Key="$(VsPublicKey)" />
   </ItemGroup>
