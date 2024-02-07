@@ -30,5 +30,5 @@ Packages from test-tools feed are considered experimental, might not have the us
 
 ## Dependency confusion attack
 
-Adding additional nuget feeds might lead to warnings or errors from build systems that check compliance. This is because using multiple public and private sources might lead to possible dependency confusion attacks. We guard against this type of attack by reserving our package prefixes on Nuget.org, but compliance systems might just check if count of feeds is more than 1. If this is a concern to you, please discuss with your internal security department.
+Adding additional nuget feeds might lead to warnings or errors from build systems that check compliance. This is because using multiple public and private sources might lead to possible dependency confusion attacks. All the packages we publish to nuget.org are using a reserved prefix. But this might not mitigate the risk in your setup. If this is a concern to you, please discuss with your internal security department.
 
