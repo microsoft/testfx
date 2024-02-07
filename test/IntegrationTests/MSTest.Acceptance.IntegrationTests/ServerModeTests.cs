@@ -50,31 +50,28 @@ public sealed class ServerModeTests : ServerModeTestsBase
         Assert.AreEqual(0, jsonClient.ExitCode);
     }
 
-    //[ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    //public async Task WhenClientDies_Server_ShouldClose_Gracefully(string tfm)
-    //{
-    //    foreach (string path in _fixture.AssetsPath)
-    //    {
-    //        using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(TestHost.LocateFrom(path, "ServerMode", tfm));
-    //        LogsCollector logs = new();
-    //        jsonClient.RegisterLogListener(logs);
-    //        TelemetryCollector telemetry = new();
-    //        jsonClient.RegisterTelemetryListener(telemetry);
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task WhenClientDies_Server_ShouldClose_Gracefully(string tfm)
+    {
+        using TestingPlatformClient jsonClient = await StartAsServerAndConnectToTheClientAsync(TestHost.LocateFrom(_fixture.ProjectPath, "MSTestProject", tfm, buildConfiguration: BuildConfiguration.Release));
+        LogsCollector logs = new();
+        jsonClient.RegisterLogListener(logs);
+        TelemetryCollector telemetry = new();
+        jsonClient.RegisterTelemetryListener(telemetry);
 
-    //        InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
-    //        Assert.IsTrue(initializeResponseArgs.Capabilities.Testing.MultiRequestSupport);
+        InitializeResponse initializeResponseArgs = await jsonClient.Initialize();
+        Assert.IsTrue(initializeResponseArgs.Capabilities.Testing.MultiRequestSupport);
 
-    //        TestNodeUpdateCollector discoveryCollector = new();
+        TestNodeUpdateCollector discoveryCollector = new();
 
-    //        // We're not interested we want to start some activity at adapter level
-    //        // We know that it's possible that we're fast enough to not start the discovery at all in all cases.
-    //        _ = jsonClient.DiscoverTests(Guid.NewGuid(), discoveryCollector.CollectNodeUpdates, @checked: false);
+        // We're not interested we want to start some activity at adapter level
+        // We know that it's possible that we're fast enough to not start the discovery at all in all cases.
+        _ = jsonClient.DiscoverTests(Guid.NewGuid(), discoveryCollector.CollectNodeUpdates, @checked: false);
 
-    //        await jsonClient.Exit(gracefully: false);
-    //        int exitCode = await jsonClient.WaitServerProcessExit();
-    //        Assert.AreEqual(ExitCodes.TestSessionAborted, exitCode);
-    //    }
-    //}
+        await jsonClient.Exit(gracefully: false);
+        int exitCode = await jsonClient.WaitServerProcessExit();
+        Assert.AreEqual(3, exitCode);
+    }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
