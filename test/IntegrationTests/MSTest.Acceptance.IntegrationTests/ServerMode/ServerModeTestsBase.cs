@@ -17,8 +17,6 @@ namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTestBase
 {
-    private const string NuGetPackageExtensionName = ".nupkg";
-
     private static readonly string Root = RootFinder.Find();
     private static readonly Dictionary<string, string> DefaultEnvironmentVariables = new()
     {
