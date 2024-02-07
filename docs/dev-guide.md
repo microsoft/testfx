@@ -1,10 +1,10 @@
 # Development Guide
 
-This article will help you build, test and consume local builds of the MSTest Framework and Adapter.
+This document contains all the required information to build, test and consume MSTest.
 
 ## Prerequisites
 
-Please install [Visual Studio 2017](https://www.microsoft.com/net/core#windowsvs2017) with the following workloads:
+In order to build and test all functionalities of MSTest, we recommend installing [Visual Studio 2022](https://visualstudio.microsoft.com/) with the following workloads:
 
 - `.NET desktop development`
 - `Universal Windows Platform development`
@@ -50,142 +50,119 @@ This will update your fork with the latest from `microsoft/testfx` on your machi
 
 ## Building
 
-Lets assume `/src/testfx` as the location of the cloned repository for the rest of this article.
+The easiest and recommended solution is to build the repository with the provided scripts at the repo root.
 
-### Building with Visual Studio (windows only)
-
-You can open `/src/testfx/TestFx.sln` in VS and trigger a build of the entire code base using `Build Solution (Ctrl+Shift+B)` from the `Solution Explorer` or the `Build` menu.
-
-The artifacts get dropped at `/src/testfx/artifacts/<Configuration>/` (e.g., `/src/testfx/artifacts/Debug/` for `Debug` mode - default).
-
-### Building with command line (CLI)
-
-To build the repository, run the following command:
+For Windows:
 
 ```shell
-cd /src/testfx
-./build.cmd
+build.cmd
 ```
 
-This would use the msbuild that Visual Studio installation brings in to build the following components:
-
-- The Framework and its inbox extensions.
-- The Adapter and its platform specific components.
-- Unit, Component and E2E tests related to the above components.
-- Generates a NuGet package for local consumption of the Framework and Adapter.
-
-All these components get dropped at `/src/testfx/artifacts/<Configuration>/` and the NuGet packages would be at `/src/testfx/artifacts/<Configuration>/MSTestPackages`.
-
-You can configure the build using build flags.
-
-To build a particular configuration, use the `-c` option. E.g. to trigger a
-release build use
+For Linux and macOS:
 
 ```shell
-./build.cmd -c Release
+./build.sh
 ```
 
-To change the version suffix of the nuget packages generated, a `-vs` parameter can be passed through as follows (By default this is **dev**)
+### Common building options
+
+By default, the script generates a *Debug* build type, which is not optimized code and includes asserts. As its name suggests, this makes it easier and friendlier to debug the code. If you want to make performance measurements, you ought to build the *Release* version instead, which doesn't have any asserts and has all code optimizations enabled. Likewise, if you plan on running tests, the *Release* configuration is more suitable since it's considerably faster than the *Debug* one. For this, you add the flag `-configuration release` (or `-c release`). For example:
+
+For Windows:
 
 ```shell
-./build.cmd -vs dev-01
+build.cmd -configuration release
 ```
 
-For more options, you can use
+For Linux and macOS:
 
 ```shell
-./build.cmd -h
+./build.sh --configuration release
 ```
+
+Another common flag is `-pack` that will produce the NuGet packages of MSTest. These packages are required for the acceptance tests (see [testing section](#testing)).
+
+For more information about all the different options available, supply the argument `-help|-h` when invoking the build script. On Unix-like systems, non-abbreviated arguments can be passed in with a single `-` or double hyphen `--`.
+
+### Build layout
+
+MSTest uses Microsoft common infrastructure called [arcade](https://github.com/dotnet/arcade) as such all outputs are following this structure:
+
+```text
+artifacts
+  bin
+    $(MSBuildProjectName)
+      $(Configuration)
+  packages
+    $(Configuration)
+      Shipping
+        $(MSBuildProjectName).$(PackageVersion).nupkg
+      NonShipping
+        $(MSBuildProjectName).$(PackageVersion).nupkg
+      Release
+      PreRelease
+  TestResults
+    $(Configuration)
+      $(MSBuildProjectName)_$(TargetFramework)_$(TestArchitecture).(xml|html|log|error.log)
+  SymStore
+    $(Configuration)
+      $(MSBuildProjectName)
+  log
+    $(Configuration)
+      Build.binlog
+  tmp
+    $(Configuration)
+  obj
+    $(MSBuildProjectName)
+      $(Configuration)
+  toolset
+```
+
+with
+
+| directory         | description |
+|-------------------|-------------|
+| bin               | Build output of each project. |
+| obj               | Intermediate directory for each project. |
+| packages          | NuGet packages produced by all projects in the repo. |
+| SymStore          | Storage for converted Windows PDBs |
+| log               | Build binary log and other logs. |
+| tmp               | Temp files generated during build. |
+| toolset           | Files generated during toolset restore. |
 
 ## Testing
 
-The following are the set of tests that `testfx` contains:
+MSTest uses the following 3 kinds of tests:
 
 - Unit tests
   - Very fast tests primarily validating individual units.
-  - Named as `<ProjectUnderTest>.UnitTests` where ProjectUnderTest is the project under test.
-- Component tests
+  - Named as `<ProjectUnderTest>.UnitTests` where `<ProjectUnderTest>` is the project under test.
+- Integration tests
   - Slightly slower tests with File system interactions.
-  - Named as `<ProjectUnderTest>.ComponentTests` where ProjectUnderTest is the project under test.
-- Smoke tests
-  - End to end tests covering P0 workflows which most users would use. if these are broken, PR will not be merged.
-  - Run using the Framework and adapter bits generated by the build.
-  - Named as `MSTestAdapter.Smoke.E2ETests`
+  - Named either as `<ProjectUnderTest>.IntegrationTests` or as `<PackageUnderTest>.Acceptance.IntegrationTests` where
+    `<ProjectUnderTest>` is the project under test
+    `<PackageUnderTest>` is the package under test
+- Performance tests
+  - Focused tests that ensure the performance of specific workflows of the application
 
-As a principle, the test bed would consist mostly of unit tests (~70-80%), followed by a few component tests addressing real world interactions (~15-20%) and a few end to end tests (~5-10%).
+The easiest way to run the tests is to call
 
-### Testing with Visual Studio (windows only)
-
-All the tests in the testfx repo can be run via the `Visual Studio Test Explorer`. Building `/src/testfx/TestFx.sln` as described in the build section above should populate all the tests in the Test Explorer.
-
-A specific type of tests can be run by providing a search filter in the Test Explorer window.
-For instance to run unit tests use `project:"Unit"`. For running smoke tests, use the `project:"Smoke"` filter.
-
-![image](https://user-images.githubusercontent.com/11340282/194912284-88718bb6-ce20-492a-adab-15d032f6bb45.png)
-
-### Running tests with command line (CLI)
-
-To execute tests via command line, run the following command:
+For Windows:
 
 ```shell
-cd /src/testfx
-test.cmd
+build.cmd -pack -test -integrationTest
 ```
 
-By default, only unit tests are run. To run smoke tests, one can provide the `-p` option to `test.cmd` that sets the test assembly pattern:
+For Linux and macOS:
 
 ```shell
-test.cmd -p smoke
+./build.sh -pack -test -integrationTest
 ```
 
-The `-p` option can also be used to run tests from a specific assembly. For instance to run *TestFramework* tests the following command can be used:
+Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kind of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
 
-```shell
-test.cmd -p TestFramework
-```
+## Working with Visual Studio
 
-Tests can also be run for a specific build configuration (`Debug` being the default)
+If you are working with Visual Studio, we recommend opening it through the `open-vs.cmd` script at the repo root. This script will set all the required environment variables required so that Visual Studio picks up the locally downloaded version of the .NET SDK. If you prefer to use your machine wide configuration, you can open Visual Studio directly.
 
-```shell
-test.cmd -c release
-```
-
-## Deploying
-
-This section will discuss the steps to consume the locally built Framework and adapter bits that the sections above detail.
-
-On running `build.cmd`, language neutral NuGet packages for the Framework and Adapter with a version of `99.99.99-dev` are generated at `src\testfx\artifacts\MSTestPackages`.
-
-### Deploying in Visual Studio
-
-A test project can be updated to consume these NuGet packages by:
-
-1. Adding `src\testfx\artifacts\MSTestPackages` to the list of Package sources in VS via `Tools-> Options -> Nuget Package Manager -> Package Sources`.
-2. Updating the versions of these nuget packages to point to `99.99.99-dev` for the test project/solution via the `Manage Nuget Package` workflow at a project/solution level.
-
-**Note:** Owing to a caching issue in VS Test Explorer, please restart VS to ensure that these packages are actually consumed.
-
-### Deploying through CLI/non-VS IDEs
-
-These packages can be consumed from a non-VS IDE/editor by:
-
-1. Updating their versions to point to `99.99.99-dev` for the test project/solution using:
-
-```shell
-nuget.exe update -id MSTest.TestFramework -id MSTest.TestAdapter -version 99.99.99-dev -source "<Root>\src\testfx\artifacts\Debug\MSTestPackages" -prerelease packages.config
-```
-
-Documentation for nuget.exe command line reference is [here](https://docs.microsoft.com/nuget/tools/nuget-exe-cli-reference)
-
-## Diagnostics
-
-The first level of diagnosis for adapter failures can start with enabling verbose logging in the Visual studio Test Platform itself. Here is how to turn that on:
-
-- **TP V1** : [This](https://blogs.msdn.microsoft.com/aseemb/2012/03/01/how-to-enable-ute-logs/) blog helps detail setting up diagnostic logging.
-- **TP V2**(The open-source cross-plat Test Platform): [This](https://github.com/Microsoft/vstest-docs/blob/main/docs/diagnose.md#collect-traces-using-command-line) section helps detail the process to enable diagnostic logging.
-
-One can always add a `Debugger.Launch` at the main entry points:
-
-- [MSTestDiscoverer.DiscoverTests](https://github.com/Microsoft/testfx/blob/main/src/Adapter/MSTest.CoreAdapter/MSTestDiscoverer.cs) for discovery.
-- [MSTestExecutor.RunTests](https://github.com/Microsoft/testfx/blob/main/src/Adapter/MSTest.CoreAdapter/MSTestExecutor.cs) - both the overloads that take sources and tests for execution.
- Select the appropriate debugger and step through the code.
+Inside of Visual Studio, all projects can be built normally. All but acceptance tests can be tested directly from Visual Studio. The acceptance tests will always use the version of the NuGet packages produced in the `artifacts/packages/shipping` folder so if you have made some changes and run these tests, it's likely that the changes will not be applied.

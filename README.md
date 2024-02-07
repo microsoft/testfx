@@ -10,19 +10,21 @@
 [![Commit Activity](https://img.shields.io/github/commit-activity/m/microsoft/testfx)](.)
 [![Build Status](https://dev.azure.com/dnceng-public/public/_apis/build/status/Microsoft/testfx/microsoft.testfx?branchName=main)](https://dev.azure.com/dnceng-public/public/_build/latest?definitionId=209&branchName=main)
 
-Welcome to the MSTest repository (starting from v2), home of the Microsoft Test Framework and Adapter. MSTest is currently in use in a variety of scenarios including:
+MSTest, Microsoft Testing Framework, is a unit testing framework for .NET applications. It allows you to write tests, use Test Explorer, create test suites, and apply the red, green, refactor pattern to write code.
 
-- in the relevant in-box unit test project templates (Visual Studio 2017 Preview 4 onwards)
-- in the Create Unit Tests wizard (Visual Studio 2017 Preview 4 onwards)
-- in the Create IntelliTest wizard (Visual Studio 2017 Preview 4 onwards)
+This is a fully supported, open source and cross-platform test framework with which to write tests targeting .NET Framework, .NET Core, .NET, UWP and WinUI on Windows, Linux, and Mac.
 
-This is a fully supported, open source and cross-platform implementation of the MSTest test framework with which to write tests targeting .NET Framework, .NET Core and ASP.NET Core on Windows, Linux, and Mac.
+## How can I contribute?
 
-## Documentation
+We welcome any kind of contribution!
 
-See [Documentation](docs/README.md) for full documentation about how to contribute, build, test MSTest. This documentation also contains information about history, context and supported or unsupported features.
+- [Contributing](./CONTRIBUTING.md) provides guidance on how to best contribute
+- [Dev Guide](./docs/dev-guide.md) explains how to build and test
+- [Documentation](docs/README.md) contains information about history, context and supported or unsupported features. It also gather the various official documentation pages on learn.microsoft.com about MSTest.
 
-## NuGet packages
+## How to consume MSTest?
+
+MSTest is shipped as NuGet packages that can be added to your projects. The following table lists all available packages.
 
 | Name | Description | Stable version | Preview version | Dogfood version |
 |--------------|---------|:--------------:|:---------------:|:---------------:|
