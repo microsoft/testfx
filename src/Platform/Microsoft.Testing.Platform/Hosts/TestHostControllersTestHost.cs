@@ -227,6 +227,9 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                     throw ApplicationStateGuard.Unreachable();
                 }
 
+                // We don't block the host during the 'OnTestHostProcessStartedAsync' by-design, if 'ITestHostProcessLifetimeHandler' extensions needs
+                // to block the execution of the test host should add an in-process extension like an 'ITestApplicationLifecycleCallbacks' and
+                // wait for a connection/signal to return.
                 var testHostProcessInformation = new TestHostProcessInformation(_testHostPID.Value);
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
