@@ -162,28 +162,4 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
 
     [GeneratedRegex(@"Starting server. Listening on port '(\d+)'")]
     private static partial Regex ParsePort();
-
-    private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
-    {
-        string[] matches = Directory.GetFiles(rootFolder, packagePrefixName + "*" + NuGetPackageExtensionName, SearchOption.TopDirectoryOnly);
-
-        if (matches.Length > 1)
-        {
-            // For some packages the find pattern will match multiple packages, for example:
-            // Microsoft.Testing.Platform.1.0.0.nupkg
-            // Microsoft.Testing.Platform.Extensions.1.0.0.nupkg
-            // Let's take shortest name which should be closest to the package we are looking for.
-#pragma warning disable SA1010 // Opening square brackets should be spaced correctly
-            matches = [matches.OrderBy(x => x.Length).First()];
-#pragma warning restore SA1010 // Opening square brackets should be spaced correctly
-        }
-
-        if (matches.Length != 1)
-        {
-            throw new InvalidOperationException($"Was expecting to find a single NuGet package named '{packagePrefixName}' in '{rootFolder}' but found {matches.Length}.");
-        }
-
-        string packageFullName = Path.GetFileName(matches[0]);
-        return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
-    }
 }
