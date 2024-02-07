@@ -27,7 +27,7 @@ Test-tools feed can be [browsed interactively](https://dev.azure.com/dnceng/publ
 
 ## Warranty
 
-Packages from test-tools feed are considered experimental, might not have the usual quality, and come without warranty.
+Packages from `test-tools` feed are considered experimental. They might not have the usual quality, may contain experimental and breaking changes, and come without warranty.
 
 ## Dependency confusion attack
 
@@ -50,4 +50,4 @@ Solutions that use central package management through `Directory.Packages.props`
 </packageSourceMapping>
 ```
 
-Full documentation of package source mapping can be [found here](https://learn.microsoft.com/en-us/nuget/consume-packages/package-source-mapping#enable-by-manually-editing-nugetconfig).
+Full documentation of package source mapping can be [found here](https://learn.microsoft.com/nuget/consume-packages/package-source-mapping#enable-by-manually-editing-nugetconfig).
