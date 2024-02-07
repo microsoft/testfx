@@ -33,3 +33,21 @@ Packages from test-tools feed are considered experimental, might not have the us
 
 Adding additional nuget feeds might lead to warnings or errors from build systems that check compliance. This is because using multiple public and private sources might lead to possible dependency confusion attacks. All the packages we publish to nuget.org are using a reserved prefix. But this might not mitigate the risk in your setup. If this is a concern to you, please discuss with your internal security department.
 
+### Usage with central package management
+
+Solutions that use central package management through `Directory.Packages.props` will see `NU1507` warnings about multiple package sources. To solve this add this section to your NuGet.Config file:
+
+```xml
+<packageSourceMapping>
+  <!-- key value for <packageSource> should match key values from <packageSources> element -->
+  <packageSource key="nuget.org">
+    <package pattern="*" />
+  </packageSource>
+  <packageSource key="test-tools">
+    <package pattern="MSTest.*" />
+    <package pattern="Microsoft.Testing.*" />
+  </packageSource>
+</packageSourceMapping>
+```
+
+Full documentation of package source mapping can be [found here](https://learn.microsoft.com/en-us/nuget/consume-packages/package-source-mapping#enable-by-manually-editing-nugetconfig).
