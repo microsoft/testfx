@@ -35,7 +35,7 @@ Adding additional NuGet feeds might lead to warnings or errors from build system
 
 ### Usage with central package management
 
-Solutions that use central package management through `Directory.Packages.props` will see `NU1507` warnings about multiple package sources. To solve this add this section to your NuGet.Config file:
+Solutions that use central package management through `Directory.Packages.props` will see `NU1507` warnings about multiple package sources. To solve this add this section to your `NuGet.Config` file:
 
 ```xml
 <packageSourceMapping>
