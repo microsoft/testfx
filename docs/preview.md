@@ -1,6 +1,6 @@
-# Early access to MSTest runner packages
+# Early access to MSTest packages
 
-Stable versions (and selected previews) of MSTest runner, and related packages, are distributed through [nuget.org](https://www.nuget.org/packages/MSTest)
+Stable versions (and selected previews) of MSTest, and related packages, are distributed through [nuget.org](https://www.nuget.org/packages/MSTest)
 
 We also publish every successful merge to main and release branches to our preview nuget channel test-tools.
 
@@ -10,6 +10,7 @@ To use this channel it needs to be added to your configuration, typically by cre
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
+    <!-- MSTest early access packages. See: aka.ms/mstest/preview -->
     <add key="test-tools"
         value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
   </packageSources>
