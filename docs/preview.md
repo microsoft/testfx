@@ -4,7 +4,7 @@ Stable versions (and selected previews) of MSTest, and related packages, are dis
 
 We also publish every successful merge to main and release branches to our preview nuget channel test-tools.
 
-To use this channel it needs to be added to your configuration, typically by creating [NuGet.Config](https://learn.microsoft.com/en-us/nuget/reference/nuget-config-file) file with the following content. And placing it next to your solution file:
+To use this channel it needs to be added to your configuration, typically by creating [NuGet.Config](https://learn.microsoft.com/nuget/reference/nuget-config-file) file with the following content. And placing it next to your solution file:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
