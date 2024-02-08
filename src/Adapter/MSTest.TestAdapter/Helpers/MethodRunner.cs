@@ -22,17 +22,17 @@ internal static class MethodRunner
         {
             executionTask = Task.Run(
                 () =>
-            {
-                try
                 {
-                    action();
-                }
-                catch (Exception ex)
-                {
-                    realException = ex;
-                    throw;
-                }
-            }, cancellationTokenSource.Token);
+                    try
+                    {
+                        action();
+                    }
+                    catch (Exception ex)
+                    {
+                        realException = ex;
+                        throw;
+                    }
+                }, cancellationTokenSource.Token);
         }
         catch (TaskCanceledException)
         {
