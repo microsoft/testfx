@@ -28,7 +28,10 @@ public class TestAssemblyInfoTests : TestContainer
     {
         _testAssemblyInfo = new TestAssemblyInfo(typeof(TestAssemblyInfoTests).Assembly);
         _dummyMethodInfo = typeof(TestAssemblyInfoTests).GetMethods().First();
-        _testContext = new Mock<UTFExtension.TestContext>().Object;
+
+        var testContext = new Mock<UTFExtension.TestContext>();
+        testContext.SetupGet(x => x.CancellationTokenSource).Returns(new CancellationTokenSource());
+        _testContext = testContext.Object;
     }
 
     public void TestAssemblyInfoAssemblyInitializeMethodThrowsForMultipleAssemblyInitializeMethods()
@@ -204,6 +207,7 @@ public class TestAssemblyInfoTests : TestContainer
     public void RunAssemblyInitializeShouldThrowForAlreadyExecutedTestAssemblyInitWithException()
     {
         DummyTestClass.AssemblyInitializeMethodBody = (tc) => { };
+        _testAssemblyInfo.IsAssemblyInitializeExecuted = true;
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
         _testAssemblyInfo.AssemblyInitializationException = new TestFailedException(UnitTestOutcome.Failed, "Cached Test failure");
 

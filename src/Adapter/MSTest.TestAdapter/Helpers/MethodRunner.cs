@@ -16,10 +16,23 @@ internal static class MethodRunner
         Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
         string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
     {
+        Exception? realException = null;
         Task? executionTask = null;
         try
         {
-            executionTask = Task.Run(action, cancellationTokenSource.Token);
+            executionTask = Task.Run(
+                () =>
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    realException = ex;
+                    throw;
+                }
+            }, cancellationTokenSource.Token);
         }
         catch (TaskCanceledException)
         {
@@ -61,6 +74,16 @@ internal static class MethodRunner
             return new(
                 UnitTestOutcome.Timeout,
                 string.Format(CultureInfo.InvariantCulture, methodCancelledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
+        }
+        catch (Exception)
+        {
+            // We throw the real exception to have the original stack trace to elaborate up the chain.
+            if (realException is not null)
+            {
+                throw realException;
+            }
+
+            throw;
         }
     }
 }

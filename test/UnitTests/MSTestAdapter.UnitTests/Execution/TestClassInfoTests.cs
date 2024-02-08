@@ -47,7 +47,9 @@ public class TestClassInfoTests : TestContainer
             _testClassAttribute,
             _testAssemblyInfo);
 
-        _testContext = new Mock<UTFExtension.TestContext>().Object;
+        var testContext = new Mock<UTFExtension.TestContext>();
+        testContext.SetupGet(x => x.CancellationTokenSource).Returns(new CancellationTokenSource());
+        _testContext = testContext.Object;
 
         // Prevent leaking init/cleanup methods between classes
         DummyGrandParentTestClass.ClassInitMethodBody = null;
