@@ -32,7 +32,7 @@ public class ThreadOperationsTests : TestContainer
 
     public void ExecuteShouldReturnFalseIfTheActionTimesOut()
     {
-        static void Action() => Task.Delay(100).Wait();
+        static void Action() => Task.Delay(1000).Wait();
 
         CancellationTokenSource tokenSource = new();
         Verify(!_asyncOperations.Execute(Action, 1, tokenSource.Token));
