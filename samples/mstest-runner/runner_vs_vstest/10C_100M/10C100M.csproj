@@ -12,9 +12,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MSTest" Version="3.2.0-preview.24055.6" />
-		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.0.0-preview.24052.7" />
-		<PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="17.10.1-preview.24065.1" />
+		<PackageReference Include="MSTest" Version="3.2.0" />
+		<PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.0.0" />
+		<PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="17.10.1" />
 	</ItemGroup>
 
 </Project>
