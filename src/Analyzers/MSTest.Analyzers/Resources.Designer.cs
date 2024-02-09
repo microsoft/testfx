@@ -245,7 +245,7 @@ namespace MSTest.Analyzers {
         ///- it should not be generic
         ///- it should not be &apos;abstract&apos;
         ///- it should not take any parameter
-        ///- return type should be &apos;void&apos; or &apos;Task&apos;
+        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- it should not be &apos;async void&apos;
         ///- it should not be a special method (finalizer, operator...)..
         /// </summary>
@@ -342,9 +342,9 @@ namespace MSTest.Analyzers {
         ///- it should not be &apos;static&apos;
         ///- it should not be generic
         ///- it should not be &apos;abstract&apos;
-        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///- return type should be &apos;void&apos; or &apos;Task&apos;
         ///- it should not be &apos;async void&apos;
-        ///- it should not be a special method (finalizer, operator...)..
+        ///- it should be a special method (finalizer, operator...)..
         /// </summary>
         internal static string TestMethodShouldBeValidDescription {
             get {

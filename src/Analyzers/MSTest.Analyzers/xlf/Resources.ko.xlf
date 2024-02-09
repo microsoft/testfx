@@ -119,7 +119,7 @@
 - it should not be generic
 - it should not be 'abstract'
 - it should not take any parameter
-- return type should be 'void' or 'Task'
+- return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
         <target state="new">TestInitialize attribute should follow the following layout to be valid:
@@ -128,7 +128,7 @@
 - it should not be generic
 - it should not be 'abstract'
 - it should not take any parameter
-- return type should be 'void' or 'Task'
+- return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</target>
         <note />
@@ -184,9 +184,9 @@
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
-- return type should be 'void', 'Task' or 'ValueTask'
+- return type should be 'void' or 'Task'
 - it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
+- it should be a special method (finalizer, operator...).</source>
         <target state="needs-review-translation">'[TestMethod]' 특성으로 표시된 메서드인 테스트 메서드는 MSTest에서 유효한 것으로 간주되도록 다음 레이아웃을 준수해야 합니다.
 - 'public'(혹은 '[assembly: DiscoverInternals]' 특성이 설정된 경우 'internal')이어야 합니다.
 - 'static'이 아니어야 합니다.

@@ -118,7 +118,7 @@
 - it should not be generic
 - it should not be 'abstract'
 - it should not take any parameter
-- return type should be 'void' or 'Task'
+- return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
         <target state="new">TestInitialize attribute should follow the following layout to be valid:
@@ -127,7 +127,7 @@
 - it should not be generic
 - it should not be 'abstract'
 - it should not take any parameter
-- return type should be 'void' or 'Task'
+- return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</target>
         <note />
@@ -183,9 +183,9 @@
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
-- return type should be 'void', 'Task' or 'ValueTask'
+- return type should be 'void' or 'Task'
 - it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
+- it should be a special method (finalizer, operator...).</source>
         <target state="needs-review-translation">Metody testowe, czyli metody oznaczone atrybutem „[TestMethod]”, powinny uwzględniać następujący układ, aby platforma MSTest uznała je za prawidłowe:
 — powinna to być wartość „public” (lub „internal”, jeśli ustawiono atrybut „[assembly: DiscoverInternals]”)
 — nie powinna to być wartość „static”
