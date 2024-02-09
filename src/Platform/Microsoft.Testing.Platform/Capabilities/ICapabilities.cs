@@ -3,8 +3,15 @@
 
 namespace Microsoft.Testing.Platform.Capabilities;
 
+/// <summary>
+/// Represents the interface for capabilities.
+/// </summary>
+/// <typeparam name="TCapability">The type of capability.</typeparam>
 public interface ICapabilities<TCapability>
     where TCapability : ICapability
 {
+    /// <summary>
+    /// Gets the collection of capabilities.
+    /// </summary>
     IReadOnlyCollection<TCapability> Capabilities { get; }
 }
