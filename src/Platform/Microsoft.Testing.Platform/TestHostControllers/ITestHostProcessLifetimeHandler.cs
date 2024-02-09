@@ -19,7 +19,7 @@ public interface ITestHostProcessLifetimeHandler : ITestHostControllersExtension
     /// Executes when the test host process has started.
     /// </summary>
     /// <param name="testHostProcessInformation">Information about the test host process.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <param name="cancellation">The cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation);
 
@@ -27,7 +27,7 @@ public interface ITestHostProcessLifetimeHandler : ITestHostControllersExtension
     /// Executes when the test host process has exited.
     /// </summary>
     /// <param name="testHostProcessInformation">Information about the test host process.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
+    /// <param name="cancellation">The cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation);
 }
