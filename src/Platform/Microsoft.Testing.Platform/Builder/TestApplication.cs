@@ -20,6 +20,9 @@ using Microsoft.Testing.Platform.TestHostControllers;
 
 namespace Microsoft.Testing.Platform.Builder;
 
+/// <summary>
+/// Represents a test application.
+/// </summary>
 public sealed class TestApplication : ITestApplication
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
@@ -47,6 +50,12 @@ public sealed class TestApplication : ITestApplication
 
     internal static int MaxNumberOfBuilders { get; set; } = int.MaxValue;
 
+    /// <summary>
+    /// Creates a server mode builder asynchronously.
+    /// </summary>
+    /// <param name="args">The command line arguments.</param>
+    /// <param name="testApplicationOptions">The test application options.</param>
+    /// <returns>The task representing the asynchronous operation.</returns>
     public static Task<ITestApplicationBuilder> CreateServerModeBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
     {
         if (args.Contains($"--{PlatformCommandLineProvider.ServerOptionKey}") || args.Contains($"-{PlatformCommandLineProvider.ServerOptionKey}"))
@@ -58,6 +67,12 @@ public sealed class TestApplication : ITestApplication
         return CreateBuilderAsync(args.Append($"--{PlatformCommandLineProvider.ServerOptionKey}").ToArray(), testApplicationOptions);
     }
 
+    /// <summary>
+    /// Creates a builder asynchronously.
+    /// </summary>
+    /// <param name="args">The command line arguments.</param>
+    /// <param name="testApplicationOptions">The test application options.</param>
+    /// <returns>The task representing the asynchronous operation.</returns>
     public static async Task<ITestApplicationBuilder> CreateBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
     {
         // We get the time to save it in the logs for testcontrollers troubleshooting.
@@ -223,6 +238,7 @@ public sealed class TestApplication : ITestApplication
     internal static void ReleaseBuilder()
         => Interlocked.Decrement(ref s_numberOfBuilders);
 
+    /// <inheritdoc />
     public void Dispose()
         => (_testHost as IDisposable)?.Dispose();
 
@@ -233,6 +249,10 @@ public sealed class TestApplication : ITestApplication
             : ValueTask.CompletedTask;
 #endif
 
+    /// <summary>
+    /// Runs the test application asynchronously.
+    /// </summary>
+    /// <returns>The task representing the asynchronous operation.</returns>
     public async Task<int> RunAsync()
         => await _testHost.RunAsync();
 
