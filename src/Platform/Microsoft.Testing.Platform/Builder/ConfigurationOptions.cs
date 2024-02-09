@@ -3,7 +3,13 @@
 
 namespace Microsoft.Testing.Platform.Builder;
 
+/// <summary>
+/// Represents the configuration options for the builder.
+/// </summary>
 public sealed class ConfigurationOptions
 {
+    /// <summary>
+    /// Gets the configuration sources options.
+    /// </summary>
     public ConfigurationSourcesOptions ConfigurationSources { get; } = new();
 }
