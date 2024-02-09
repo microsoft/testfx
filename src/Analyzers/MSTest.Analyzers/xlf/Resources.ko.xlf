@@ -112,6 +112,49 @@
         <target state="translated">테스트 컨텍스트 속성에 유효한 레이아웃이 있어야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestInitializeShouldBeValidDescription">
+        <source>TestInitialize attribute should follow the following layout to be valid:
+- it should be 'public' 
+- it should not be 'static'
+- it should not take any parameter
+- it should not return a value (if you are using async-await in method then return-type must be Task).</source>
+        <target state="new">TestInitialize attribute should follow the following layout to be valid:
+- it should be 'public' 
+- it should not be 'static'
+- it should not take any parameter
+- it should not return a value (if you are using async-await in method then return-type must be Task).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NoParameters">
+        <source>Test Initialize '{0}' should not take any parameter</source>
+        <target state="new">Test Initialize '{0}' should not take any parameter</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAsyncVoid">
+        <source>Test Initialize '{0}' should not be 'async void'</source>
+        <target state="new">Test Initialize '{0}' should not be 'async void'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotStatic">
+        <source>Test Initialize '{0}' should not be 'static'</source>
+        <target state="new">Test Initialize '{0}' should not be 'static'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeShouldBeValidMessageFormat_Public">
+        <source>Test Initialize '{0}' should be 'public'</source>
+        <target state="new">Test Initialize '{0}' should be 'public'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeShouldBeValidMessageFormat_ReturnType">
+        <source>Test Initialize '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">Test Initialize '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeShouldBeValidTitle">
+        <source>Test methods should have valid layout</source>
+        <target state="new">Test methods should have valid layout</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">
         <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)

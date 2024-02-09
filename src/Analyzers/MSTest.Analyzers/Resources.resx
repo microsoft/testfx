@@ -181,6 +181,31 @@
   <data name="TestContextShouldBeValidTitle" xml:space="preserve">
     <value>Test context property should have valid layout</value>
   </data>
+  <data name="TestInitializeShouldBeValidDescription" xml:space="preserve">
+    <value>TestInitialize attribute should follow the following layout to be valid:
+- it should be 'public' 
+- it should not be 'static'
+- it should not take any parameter
+- it should not return a value (if you are using async-await in method then return-type must be Task).</value>
+  </data>
+  <data name="TestInitializeShouldBeValidMessageFormat_NoParameters" xml:space="preserve">
+    <value>Test Initialize '{0}' should not take any parameter</value>
+  </data>
+  <data name="TestInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
+    <value>Test Initialize '{0}' should not be 'async void'</value>
+  </data>
+  <data name="TestInitializeShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
+    <value>Test Initialize '{0}' should not be 'static'</value>
+  </data>
+  <data name="TestInitializeShouldBeValidMessageFormat_Public" xml:space="preserve">
+    <value>Test Initialize '{0}' should be 'public'</value>
+  </data>
+  <data name="TestInitializeShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
+    <value>Test Initialize '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+  </data>
+  <data name="TestInitializeShouldBeValidTitle" xml:space="preserve">
+    <value>Test methods should have valid layout</value>
+  </data>
   <data name="TestMethodShouldBeValidDescription" xml:space="preserve">
     <value>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)

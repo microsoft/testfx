@@ -239,6 +239,73 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to TestInitialize attribute should follow the following layout to be valid:
+        ///- it should be &apos;public&apos; 
+        ///- it should not be &apos;static&apos;
+        ///- it should not take any parameter
+        ///- it should not return a value (if you are using async-await in method then return-type must be Task)..
+        /// </summary>
+        internal static string TestInitializeShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("TestInitializeShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should not take any parameter.
+        /// </summary>
+        internal static string TestInitializeShouldBeValidMessageFormat_NoParameters {
+            get {
+                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_NoParameters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should not be &apos;async void&apos;.
+        /// </summary>
+        internal static string TestInitializeShouldBeValidMessageFormat_NotAsyncVoid {
+            get {
+                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should not be &apos;static&apos;.
+        /// </summary>
+        internal static string TestInitializeShouldBeValidMessageFormat_NotStatic {
+            get {
+                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_NotStatic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should be &apos;public&apos;.
+        /// </summary>
+        internal static string TestInitializeShouldBeValidMessageFormat_Public {
+            get {
+                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_Public", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        /// </summary>
+        internal static string TestInitializeShouldBeValidMessageFormat_ReturnType {
+            get {
+                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_ReturnType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test methods should have valid layout.
+        /// </summary>
+        internal static string TestInitializeShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("TestInitializeShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test methods, methods marked with the &apos;[TestMethod]&apos; attribute, should respect the following layout to be considered valid by MSTest:
         ///- it should be &apos;public&apos; (or &apos;internal&apos; if &apos;[assembly: DiscoverInternals]&apos; attribute is set)
         ///- it should not be &apos;static&apos;
