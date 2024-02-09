@@ -20,7 +20,7 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_Public), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor PublicRule = DiagnosticDescriptorHelper.Create(
-        DiagnosticIds.TestClassShouldBeValidRuleId,
+        DiagnosticIds.TestInitializeShouldBeValidRuleId,
         Title,
         MessageFormat,
         Description,
@@ -99,7 +99,7 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAsyncVoidRule, methodSymbol.Name));
         }
 
-        if (methodSymbol.GetResultantVisibility() != SymbolVisibility.Public || methodSymbol.DeclaredAccessibility != Accessibility.Public)
+        if (methodSymbol.DeclaredAccessibility != Accessibility.Public)
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicRule, methodSymbol.Name));
         }

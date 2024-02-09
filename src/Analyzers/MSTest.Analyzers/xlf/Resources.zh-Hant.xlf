@@ -183,7 +183,7 @@
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
-- return type should be 'void' or 'Task'
+- return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
         <target state="needs-review-translation">測試方法 (標示為 '[TestMethod]' 屬性的方法) 應該遵循下列配置，讓 MSTest 視為有效:

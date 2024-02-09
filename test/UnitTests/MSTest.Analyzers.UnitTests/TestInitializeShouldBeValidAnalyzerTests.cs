@@ -152,7 +152,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
             public class MyTestClass
             {
                 [TestInitialize]
-                public void {|#0:TestInitialize|}(int x)
+                public void {|#0:TestInitialize|}(TestContext testContext)
                 {
                 }
             }
