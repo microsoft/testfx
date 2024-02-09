@@ -6,7 +6,7 @@
   </PropertyGroup>
   <PropertyGroup Label="MSTest dependencies">
     <!-- Test Platform, .NET Test SDK and Object Model  -->
-    <MicrosoftNETTestSdkVersion>17.8.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>17.9.0</MicrosoftNETTestSdkVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <MicrosoftWindowsAppSDKVersion>1.0.0</MicrosoftWindowsAppSDKVersion>
@@ -19,15 +19,15 @@
     <SystemDiagnosticsTextWriterTraceListenerVersion>4.3.0</SystemDiagnosticsTextWriterTraceListenerVersion>
     <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
-    <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.23525.2</MicrosoftCodeAnalysisAnalyzersVersion>
+    <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.23614.1</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
-    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>3.11.0-beta1.23525.2</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
+    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>3.11.0-beta1.23614.1</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24081.5</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
     <!-- Testing platform (this comment is here to avoid conflict on darc PRs) -->
     <MicrosoftTestingPlatformVersion>1.1.0-preview.24109.4</MicrosoftTestingPlatformVersion>
-    <MicrosoftVisualStudioThreadingAnalyzersVersion>17.7.30</MicrosoftVisualStudioThreadingAnalyzersVersion>
+    <MicrosoftVisualStudioThreadingAnalyzersVersion>17.9.28</MicrosoftVisualStudioThreadingAnalyzersVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.507</StyleCopAnalyzersVersion>
   </PropertyGroup>
   <PropertyGroup Label="MSTest test dependencies">
@@ -36,10 +36,10 @@
     <MicrosoftTestingExtensionsCodeCoverageVersion>17.10.3-preview.24109.1</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- Pinned to 4.18.4 for security -->
     <MoqVersion>4.18.4</MoqVersion>
-    <MSBuildStructuredLogger>2.1.858</MSBuildStructuredLogger>
-    <PollyVersion>8.2.0</PollyVersion>
+    <MSBuildStructuredLogger>2.2.169</MSBuildStructuredLogger>
+    <PollyVersion>8.3.0</PollyVersion>
     <PollyContribWaitAndRetryVersion>1.1.1</PollyContribWaitAndRetryVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
-    <StreamJsonRpcVersion>2.16.36</StreamJsonRpcVersion>
+    <StreamJsonRpcVersion>2.17.11</StreamJsonRpcVersion>
   </PropertyGroup>
 </Project>
