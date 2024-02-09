@@ -32,6 +32,9 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor NoParametersRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_NoParameters), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor ReturnTypeRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_ReturnType), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor NotAsyncVoidRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_NotAsyncVoid), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor NotAbstractRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_NotAbstract), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor NotGenericRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_NotGeneric), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor OrdinaryRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_Ordinary), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
        = ImmutableArray.Create(PublicRule);
@@ -61,6 +64,24 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
         if (!methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testInitializeAttributeSymbol)))
         {
             return;
+        }
+
+        if (methodSymbol.MethodKind != MethodKind.Ordinary)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(OrdinaryRule, methodSymbol.Name));
+
+            // Do not check the other criteria, users should fix the method kind first.
+            return;
+        }
+
+        if (methodSymbol.IsAbstract)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAbstractRule, methodSymbol.Name));
+        }
+
+        if (methodSymbol.IsGenericMethod)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotGenericRule, methodSymbol.Name));
         }
 
         if (methodSymbol.Parameters.Length > 0)

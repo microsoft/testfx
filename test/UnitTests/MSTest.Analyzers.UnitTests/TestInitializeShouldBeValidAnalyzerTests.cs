@@ -31,6 +31,70 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenTestInitializeIsNotOrdinary_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                ~{|#0:MyTestClass|}()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.OrdinaryRule)
+                .WithLocation(0)
+                .WithArguments("Finalize"));
+    }
+
+    public async Task WhenTestInitializeIsAbstract_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public abstract class MyTestClass
+            {
+                [TestInitialize]
+                public abstract void {|#0:TestInitialize|}();
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.NotAbstractRule)
+                .WithLocation(0)
+                .WithArguments("TestInitialize"));
+    }
+
+    public async Task WhenTestInitializeIsGeneric_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public void {|#0:TestInitialize|}<T>()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.NotGenericRule)
+                .WithLocation(0)
+                .WithArguments("TestInitialize"));
+    }
+
     [Arguments("protected")]
     [Arguments("internal")]
     [Arguments("internal protected")]

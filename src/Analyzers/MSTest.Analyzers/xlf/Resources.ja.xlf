@@ -116,13 +116,21 @@
         <source>TestInitialize attribute should follow the following layout to be valid:
 - it should be 'public' 
 - it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
 - it should not take any parameter
-- it should not return a value (if you are using async-await in method then return-type must be Task).</source>
+- return type should be 'void' or 'Task'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</source>
         <target state="new">TestInitialize attribute should follow the following layout to be valid:
 - it should be 'public' 
 - it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
 - it should not take any parameter
-- it should not return a value (if you are using async-await in method then return-type must be Task).</target>
+- return type should be 'void' or 'Task'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_NoParameters">
@@ -130,14 +138,29 @@
         <target state="new">Test Initialize '{0}' should not take any parameter</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAbstract">
+        <source>Test initialize '{0}' should not be 'abstract'</source>
+        <target state="new">Test initialize '{0}' should not be 'abstract'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>Test Initialize '{0}' should not be 'async void'</source>
         <target state="new">Test Initialize '{0}' should not be 'async void'</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotGeneric">
+        <source>Test initialize '{0}' should not be generic</source>
+        <target state="new">Test initialize '{0}' should not be generic</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotStatic">
         <source>Test Initialize '{0}' should not be 'static'</source>
         <target state="new">Test Initialize '{0}' should not be 'static'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeShouldBeValidMessageFormat_Ordinary">
+        <source>Test initialize '{0}' should be an 'ordinary' method</source>
+        <target state="new">Test initialize '{0}' should be an 'ordinary' method</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_Public">
@@ -163,8 +186,8 @@
 - it should not be 'abstract'
 - return type should be 'void' or 'Task'
 - it should not be 'async void'
-- it should be a special method (finalizer, operator...).</source>
-        <target state="translated">'[TestMethod]' 属性でマークされたテスト メソッドは、MSTest によって有効と見なされるように、次のレイアウトを考慮する必要があります:
+- it should not be a special method (finalizer, operator...).</source>
+        <target state="needs-review-translation">'[TestMethod]' 属性でマークされたテスト メソッドは、MSTest によって有効と見なされるように、次のレイアウトを考慮する必要があります:
 - 'public' ('[assembly: DiscoverInternals]' 属性が設定されている場合は 'internal' である必要があります)
 - 'static' にすることはできません
 - ジェネリックにすることはできません

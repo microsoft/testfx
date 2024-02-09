@@ -185,17 +185,30 @@
     <value>TestInitialize attribute should follow the following layout to be valid:
 - it should be 'public' 
 - it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
 - it should not take any parameter
-- it should not return a value (if you are using async-await in method then return-type must be Task).</value>
+- return type should be 'void' or 'Task'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</value>
   </data>
   <data name="TestInitializeShouldBeValidMessageFormat_NoParameters" xml:space="preserve">
     <value>Test Initialize '{0}' should not take any parameter</value>
   </data>
+  <data name="TestInitializeShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
+    <value>Test initialize '{0}' should not be 'abstract'</value>
+  </data>
   <data name="TestInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>Test Initialize '{0}' should not be 'async void'</value>
   </data>
+  <data name="TestInitializeShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
+    <value>Test initialize '{0}' should not be generic</value>
+  </data>
   <data name="TestInitializeShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
     <value>Test Initialize '{0}' should not be 'static'</value>
+  </data>
+  <data name="TestInitializeShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
+    <value>Test initialize '{0}' should be an 'ordinary' method</value>
   </data>
   <data name="TestInitializeShouldBeValidMessageFormat_Public" xml:space="preserve">
     <value>Test Initialize '{0}' should be 'public'</value>
@@ -214,7 +227,7 @@
 - it should not be 'abstract'
 - return type should be 'void' or 'Task'
 - it should not be 'async void'
-- it should be a special method (finalizer, operator...).</value>
+- it should not be a special method (finalizer, operator...).</value>
   </data>
   <data name="TestMethodShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
     <value>Test method '{0}' should not be 'abstract'</value>
