@@ -49,7 +49,7 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
                 var valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
                 context.RegisterSymbolAction(
                     context => AnalyzeSymbol(context, testInitializeAttributeSymbol, taskSymbol, valueTaskSymbol),
-                    SymbolKind.NamedType);
+                    SymbolKind.Method);
             }
         });
     }
