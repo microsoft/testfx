@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Requests;
 
+/// <summary>
+/// Represents a filter for test execution.
+/// </summary>
 public interface ITestExecutionFilter
 {
 }
