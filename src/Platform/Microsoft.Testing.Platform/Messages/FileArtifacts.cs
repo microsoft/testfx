@@ -7,11 +7,29 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
-public class FileArtifact(FileInfo fileInfo, string displayName, string? description = null)
-    : PropertyBagData(displayName, description)
+/// <summary>
+/// Represents a file artifact.
+/// </summary>
+public class FileArtifact : PropertyBagData
 {
-    public FileInfo FileInfo { get; } = fileInfo;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileArtifact"/> class.
+    /// </summary>
+    /// <param name="fileInfo">The file information.</param>
+    /// <param name="displayName">The display name.</param>
+    /// <param name="description">The description.</param>
+    public FileArtifact(FileInfo fileInfo, string displayName, string? description = null)
+        : base(displayName, description)
+    {
+        FileInfo = fileInfo;
+    }
 
+    /// <summary>
+    /// Gets the file information.
+    /// </summary>
+    public FileInfo FileInfo { get; }
+
+    /// <inheritdoc/>
     public override string ToString()
     {
         StringBuilder builder = new StringBuilder("FileArtifact { DisplayName = ")
@@ -48,11 +66,30 @@ public class FileArtifact(FileInfo fileInfo, string displayName, string? descrip
     }
 }
 
-public class SessionFileArtifact(SessionUid sessionUid, FileInfo fileInfo, string displayName, string? description = null)
-    : DataWithSessionUid(displayName, description, sessionUid)
+/// <summary>
+/// Represents a session file artifact.
+/// </summary>
+public class SessionFileArtifact : DataWithSessionUid
 {
-    public FileInfo FileInfo { get; } = fileInfo;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SessionFileArtifact"/> class.
+    /// </summary>
+    /// <param name="sessionUid">The session UID.</param>
+    /// <param name="fileInfo">The file information.</param>
+    /// <param name="displayName">The display name.</param>
+    /// <param name="description">The description.</param>
+    public SessionFileArtifact(SessionUid sessionUid, FileInfo fileInfo, string displayName, string? description = null)
+        : base(displayName, description, sessionUid)
+    {
+        FileInfo = fileInfo;
+    }
 
+    /// <summary>
+    /// Gets the file information.
+    /// </summary>
+    public FileInfo FileInfo { get; }
+
+    /// <inheritdoc/>
     public override string ToString()
     {
         StringBuilder builder = new StringBuilder("SessionFileArtifact { DisplayName = ")
@@ -93,11 +130,31 @@ public class SessionFileArtifact(SessionUid sessionUid, FileInfo fileInfo, strin
     }
 }
 
-public class TestNodeFileArtifact(SessionUid sessionUid, TestNode testNode, FileInfo fileInfo, string displayName, string? description = null)
-    : SessionFileArtifact(sessionUid, fileInfo, displayName, description)
+/// <summary>
+/// Represents a test node file artifact.
+/// </summary>
+public class TestNodeFileArtifact : SessionFileArtifact
 {
-    public TestNode TestNode { get; } = testNode;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestNodeFileArtifact"/> class.
+    /// </summary>
+    /// <param name="sessionUid">The session UID.</param>
+    /// <param name="testNode">The test node.</param>
+    /// <param name="fileInfo">The file information.</param>
+    /// <param name="displayName">The display name.</param>
+    /// <param name="description">The description.</param>
+    public TestNodeFileArtifact(SessionUid sessionUid, TestNode testNode, FileInfo fileInfo, string displayName, string? description = null)
+        : base(sessionUid, fileInfo, displayName, description)
+    {
+        TestNode = testNode;
+    }
 
+    /// <summary>
+    /// Gets the test node.
+    /// </summary>
+    public TestNode TestNode { get; }
+
+    /// <inheritdoc/>
     public override string ToString()
     {
         StringBuilder builder = new StringBuilder("TestNodeFileArtifact { DisplayName = ")

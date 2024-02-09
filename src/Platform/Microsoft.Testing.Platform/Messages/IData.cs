@@ -3,9 +3,18 @@
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
+/// <summary>
+/// Represents the data interface.
+/// </summary>
 public interface IData
 {
+    /// <summary>
+    /// Gets the display name.
+    /// </summary>
     string DisplayName { get; }
 
+    /// <summary>
+    /// Gets the description.
+    /// </summary>
     string? Description { get; }
 }
