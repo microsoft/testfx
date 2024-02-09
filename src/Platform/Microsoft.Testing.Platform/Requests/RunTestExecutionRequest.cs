@@ -5,8 +5,16 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-public class RunTestExecutionRequest(TestSessionContext session, ITestExecutionFilter executionFilter) : TestExecutionRequest(session, executionFilter)
+/// <summary>
+/// Represents a request to run test execution.
+/// </summary>
+public class RunTestExecutionRequest(TestSessionContext session, ITestExecutionFilter executionFilter)
+    : TestExecutionRequest(session, executionFilter)
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RunTestExecutionRequest"/> class.
+    /// </summary>
+    /// <param name="session">The test session context.</param>
     public RunTestExecutionRequest(TestSessionContext session)
         : this(session, new NopFilter())
     {

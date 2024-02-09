@@ -5,7 +5,22 @@ using Microsoft.Testing.Platform.Extensions.Messages;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-public sealed class TestNodeUidListFilter(TestNodeUid[] testNodeUids) : ITestExecutionFilter
+/// <summary>
+/// Represents a filter based on test node UIDs.
+/// </summary>
+public sealed class TestNodeUidListFilter : ITestExecutionFilter
 {
-    public TestNodeUid[] TestNodeUids { get; } = testNodeUids;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestNodeUidListFilter"/> class.
+    /// </summary>
+    /// <param name="testNodeUids">The test node UIDs to filter.</param>
+    public TestNodeUidListFilter(TestNodeUid[] testNodeUids)
+    {
+        TestNodeUids = testNodeUids;
+    }
+
+    /// <summary>
+    /// Gets the test node UIDs to filter.
+    /// </summary>
+    public TestNodeUid[] TestNodeUids { get; }
 }
