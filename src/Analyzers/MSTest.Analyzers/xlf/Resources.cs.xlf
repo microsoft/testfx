@@ -166,23 +166,13 @@
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
-        <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Testovací metoda {0} by měla vrátit void, Task nebo ValueTask.</target>
+        <source>Test method '{0}' should return 'void' or 'Task'</source>
+        <target state="new">Test method '{0}' should return 'void' or 'Task'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
         <target state="translated">Testovací metody by měly mít platné rozložení.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
-        <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="translated">[{0}] lze nastavit pouze u metod označených pomocí metody [TestMethod].</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
-        <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="translated">[{0}] lze nastavit pouze u metod označených pomocí metody [TestMethod].</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
