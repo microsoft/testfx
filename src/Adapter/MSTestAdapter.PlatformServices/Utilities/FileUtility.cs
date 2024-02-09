@@ -24,10 +24,33 @@ internal class FileUtility
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(directory), "directory");
 
-        if (!Directory.Exists(directory))
+        if (Directory.Exists(directory))
         {
-            Directory.CreateDirectory(directory);    // Creates subdir chain if necessary.
+            return;
         }
+
+        int attempt = 0;
+        do
+        {
+            try
+            {
+                // Creates subdir chain if necessary.
+                Directory.CreateDirectory(directory);
+            }
+            catch (DirectoryNotFoundException ex)
+            {
+                attempt++;
+                if (attempt == 5)
+                {
+                    throw new AggregateException($"Could not create directory '{directory}' after 5 attempts", ex);
+                }
+                else
+                {
+                    Thread.Sleep(1000);
+                }
+            }
+        }
+        while (attempt < 5);
     }
 
     /// <summary>
