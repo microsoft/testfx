@@ -37,16 +37,16 @@ internal class FileUtility
                 // Creates subdir chain if necessary.
                 Directory.CreateDirectory(directory);
             }
-            catch (DirectoryNotFoundException ex)
+            catch (DirectoryNotFoundException)
             {
                 attempt++;
                 if (attempt == 5)
                 {
-                    throw new AggregateException($"Could not create directory '{directory}' after 5 attempts", ex);
+                    throw;
                 }
                 else
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(attempt * 200);
                 }
             }
         }
