@@ -3,6 +3,13 @@
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
+/// <summary>
+/// Represents an environment variable.
+/// </summary>
+/// <param name="variable">The name of the environment variable.</param>
+/// <param name="value">The value of the environment variable.</param>
+/// <param name="isSecret">Indicates whether the environment variable is a secret.</param>
+/// <param name="isLocked">Indicates whether the environment variable is locked.</param>
 public class EnvironmentVariable(string variable, string? value, bool isSecret, bool isLocked)
 {
     public string Variable { get; } = variable;
