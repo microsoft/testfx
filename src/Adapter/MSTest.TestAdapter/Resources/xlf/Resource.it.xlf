@@ -4,22 +4,22 @@
     <body>
       <trans-unit id="AssemblyInitializeTimedOut">
         <source>Assembly initialize method '{0}.{1}' timed out</source>
-        <target state="new">Assembly initialize method '{0}.{1}' timed out</target>
+        <target state="translated">Timeout del metodo di inizializzazione dell'assembly "{0}.{1}"</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
         <source>Assembly initialize method '{0}.{1}' was cancelled</source>
-        <target state="new">Assembly initialize method '{0}.{1}' was cancelled</target>
+        <target state="translated">Il metodo di inizializzazione dell'assembly "{0}.{1}" è stato annullato</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
         <source>Class initialize method '{0}.{1}' timed out</source>
-        <target state="new">Class initialize method '{0}.{1}' timed out</target>
+        <target state="translated">Timeout del metodo di inizializzazione della classe "{0}.{1}"</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
         <source>Class initialize method '{0}.{1}' was cancelled</source>
-        <target state="new">Class initialize method '{0}.{1}' was cancelled</target>
+        <target state="translated">Il metodo di inizializzazione della classe "{0}.{1}" è stato annullato</target>
         <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
