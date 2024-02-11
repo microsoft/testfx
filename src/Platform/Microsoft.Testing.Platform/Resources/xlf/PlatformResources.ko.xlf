@@ -500,8 +500,8 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
-        <source>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</source>
-        <target state="translated">테스트 프레임워크 어댑터가 등록되지 않았습니다. 'RegisterTestFrameworkAdapter'를 사용하여 등록</target>
+        <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
+        <target state="needs-review-translation">테스트 프레임워크 어댑터가 등록되지 않았습니다. 'RegisterTestFrameworkAdapter'를 사용하여 등록</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
