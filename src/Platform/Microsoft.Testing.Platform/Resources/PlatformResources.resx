@@ -175,7 +175,7 @@
     <value>The test framework capabilities factory has already been registered</value>
   </data>
   <data name="TestApplicationBuilderTestFrameworkNotRegistered" xml:space="preserve">
-    <value>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</value>
+    <value>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</value>
   </data>
   <data name="TestApplicationResultDescription" xml:space="preserve">
     <value>Determine the result of the test application execution</value>

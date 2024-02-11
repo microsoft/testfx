@@ -931,7 +931,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The test framework adapter has not been registered. Use &apos;RegisterTestFrameworkAdapter&apos; to register it.
+        ///   Looks up a localized string similar to The test framework adapter has not been registered. Use &apos;ITestApplicationBuilder.RegisterTestFramework&apos; to register it.
         /// </summary>
         internal static string TestApplicationBuilderTestFrameworkNotRegistered {
             get {

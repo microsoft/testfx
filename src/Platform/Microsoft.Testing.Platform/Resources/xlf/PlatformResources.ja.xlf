@@ -500,8 +500,8 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
-        <source>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</source>
-        <target state="translated">テスト フレームワーク アダプターが登録されていません。'RegisterTestFrameworkAdapter' を使用して登録する</target>
+        <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
+        <target state="needs-review-translation">テスト フレームワーク アダプターが登録されていません。'RegisterTestFrameworkAdapter' を使用して登録する</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
