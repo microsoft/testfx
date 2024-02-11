@@ -501,7 +501,7 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
-        <target state="needs-review-translation">Der Testframework-Adapter wurde nicht registriert. Verwenden Sie "RegisterTestFrameworkAdapter", um ihn zu registrieren.</target>
+        <target state="new">The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">

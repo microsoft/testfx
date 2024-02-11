@@ -501,7 +501,7 @@ Microsoft 测试平台会收集使用数据，帮助我们改善体验。该数�
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
-        <target state="needs-review-translation">尚未注册测试框架适配器。使用“RegisterTestFrameworkAdapter”进行注册</target>
+        <target state="new">The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">

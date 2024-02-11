@@ -501,7 +501,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
-        <target state="needs-review-translation">Адаптер платформы для тестирования не зарегистрирован. Для регистрации используйте "RegisterTestFrameworkAdapter"</target>
+        <target state="new">The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
