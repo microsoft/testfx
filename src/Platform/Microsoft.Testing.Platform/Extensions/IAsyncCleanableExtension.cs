@@ -3,7 +3,13 @@
 
 namespace Microsoft.Testing.Platform.Extensions;
 
+/// <summary>
+/// Represents an interface for asynchronously cleaning up resources.
+/// </summary>
 public interface IAsyncCleanableExtension
 {
+    /// <summary>
+    /// Asynchronously cleans up the resources.
+    /// </summary>
     Task CleanupAsync();
 }

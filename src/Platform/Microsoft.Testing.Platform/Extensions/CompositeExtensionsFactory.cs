@@ -7,6 +7,14 @@ using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Extensions;
 
+/// <summary>
+/// Represents a factory for creating composite extensions.
+/// </summary>
+/// <typeparam name="TExtension">The type of the extension.</typeparam>
+/// <remarks>
+/// This helper type is used to create a composite extension that is composed of multiple extensions without having to
+/// handle either the communication between the extensions or the lifetime of the extensions instances.
+/// </remarks>
 public class CompositeExtensionFactory<TExtension> : ICompositeExtensionFactory, ICloneable
     where TExtension : class, IExtension
 {
@@ -23,23 +31,33 @@ TestHostControllers: ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariab
 TestHost: IDataConsumer, ITestApplicationLifetime
 """;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CompositeExtensionFactory{TExtension}"/> class.
+    /// </summary>
+    /// <param name="factory">The factory function that creates the extension with a service provider.</param>
     public CompositeExtensionFactory(Func<IServiceProvider, TExtension> factory)
     {
         ArgumentGuard.IsNotNull(factory);
         _factoryWithServiceProvider = factory;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CompositeExtensionFactory{TExtension}"/> class.
+    /// </summary>
+    /// <param name="factory">The factory function that creates the extension.</param>
     public CompositeExtensionFactory(Func<TExtension> factory)
     {
         ArgumentGuard.IsNotNull(factory);
         _factory = factory;
     }
 
+    /// <inheritdoc/>
     object ICloneable.Clone()
         => _factory is not null
             ? new CompositeExtensionFactory<TExtension>(_factory)
             : new CompositeExtensionFactory<TExtension>(_factoryWithServiceProvider!);
 
+    /// <inheritdoc/>
     object ICompositeExtensionFactory.GetInstance(IServiceProvider? serviceProvider)
     {
         lock (_syncLock)
