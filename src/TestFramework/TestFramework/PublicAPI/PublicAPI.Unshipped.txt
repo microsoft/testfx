@@ -1,5 +1,1 @@
 ﻿#nullable enable
-Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.DataRowAttribute(object? data) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.DataTestMethodAttribute.DataTestMethodAttribute(string? displayName) -> void
-Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome.NotFound = 9 -> Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome
-virtual Microsoft.VisualStudio.TestTools.UnitTesting.Logging.Logger.LogMessageHandler.Invoke(string! message) -> void
