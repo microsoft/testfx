@@ -112,89 +112,23 @@
         <target state="translated">테스트 컨텍스트 속성에 유효한 레이아웃이 있어야 합니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidDescription">
-        <source>TestInitialize attribute should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="new">TestInitialize attribute should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NoParameters">
-        <source>Test Initialize '{0}' should not take any parameter</source>
-        <target state="new">Test Initialize '{0}' should not take any parameter</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAbstract">
-        <source>Test initialize '{0}' should not be 'abstract'</source>
-        <target state="new">Test initialize '{0}' should not be 'abstract'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>Test Initialize '{0}' should not be 'async void'</source>
-        <target state="new">Test Initialize '{0}' should not be 'async void'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotGeneric">
-        <source>Test initialize '{0}' should not be generic</source>
-        <target state="new">Test initialize '{0}' should not be generic</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotStatic">
-        <source>Test Initialize '{0}' should not be 'static'</source>
-        <target state="new">Test Initialize '{0}' should not be 'static'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_Ordinary">
-        <source>Test initialize '{0}' should be an 'ordinary' method</source>
-        <target state="new">Test initialize '{0}' should be an 'ordinary' method</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_Public">
-        <source>Test Initialize '{0}' should be 'public'</source>
-        <target state="new">Test Initialize '{0}' should be 'public'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_ReturnType">
-        <source>Test Initialize '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">Test Initialize '{0}' should return 'void', 'Task' or 'ValueTask'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidTitle">
-        <source>Test methods should have valid layout</source>
-        <target state="new">Test methods should have valid layout</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">
         <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
-- return type should be 'void', 'Task' or 'ValueTask'
+- return type should be 'void' or 'Task'
 - it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
-- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+- it should be a special method (finalizer, operator...).</source>
+        <target state="translated">'[TestMethod]' 특성으로 표시된 메서드인 테스트 메서드는 MSTest에서 유효한 것으로 간주되도록 다음 레이아웃을 준수해야 합니다.
+- 'public'(혹은 '[assembly: DiscoverInternals]' 특성이 설정된 경우 'internal')이어야 합니다.
+- 'static'이 아니어야 합니다.
+- 제네릭이 아니어야 합니다.
+- 'abstract'가 아니어야 합니다.
+- 반환 형식은 'void' 또는 'Task'여야 합니다.
+- 'async void'가 아니어야 합니다.
+- 특수 메서드(종료자, 연산자...)여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
@@ -233,23 +167,13 @@
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
-        <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">테스트 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
+        <source>Test method '{0}' should return 'void' or 'Task'</source>
+        <target state="new">Test method '{0}' should return 'void' or 'Task'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
         <target state="translated">테스트 메서드에는 유효한 레이아웃이 있어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
-        <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="translated">[{0}]은(는) [TestMethod] 표시된 메서드에만 설정할 수 있습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
-        <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="translated">[{0}]은(는) [TestMethod] 표시된 메서드에만 설정할 수 있습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
