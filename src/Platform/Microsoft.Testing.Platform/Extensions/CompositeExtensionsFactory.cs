@@ -13,7 +13,7 @@ namespace Microsoft.Testing.Platform.Extensions;
 /// <typeparam name="TExtension">The type of the extension.</typeparam>
 /// <remarks>
 /// This helper type is used to create a composite extension that is composed of multiple extensions without having to
-/// handle either the communication between the extensions or the lifetime of the extensions.
+/// handle either the communication between the extensions or the lifetime of the extensions instances.
 /// </remarks>
 public class CompositeExtensionFactory<TExtension> : ICompositeExtensionFactory, ICloneable
     where TExtension : class, IExtension
