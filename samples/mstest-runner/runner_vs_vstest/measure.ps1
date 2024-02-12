@@ -10,7 +10,7 @@ foreach ($project in $projects) {
     $exe = $name + ".exe"
     
     $sw = [Diagnostics.Stopwatch]::StartNew()
-    & "$PSScriptRoot\..\..\artifacts\bin\$name\Debug\net8.0\$exe" --report-trx # --coverage
+    & "$project\..\bin\Debug\net8.0\$exe" --report-trx # --coverage
     $runner = $sw.ElapsedMilliseconds; 
     
     $sw.Restart()

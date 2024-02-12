@@ -184,18 +184,17 @@
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
-- return type should be 'void' or 'Task'
+- return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
-- it should be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">'[TestMethod]' özniteliğiyle işaretlenen test yöntemleri, MSTest:
- tarafından geçerli kabul edilmesi için aşağıdaki düzene göre düzenlenmelidir.
-- 'public' (veya '[assembly: DiscoverInternals]' özniteliği ayarlanmışsa 'internal') olmalıdır
-- 'static' olmalıdır
-- genel olmamalıdır
-- 'abstract' olmamalıdır
-- dönüş türü 'void' veya 'Task' olmalıdır
-- 'async void' olmamalıdır
-- özel bir yöntem (sonlandırıcı, işleç...) olması gerekir.</target>
+- it should not be a special method (finalizer, operator...).</source>
+        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">

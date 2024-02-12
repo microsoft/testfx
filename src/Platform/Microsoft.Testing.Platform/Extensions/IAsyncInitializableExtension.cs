@@ -3,7 +3,13 @@
 
 namespace Microsoft.Testing.Platform.Extensions;
 
+/// <summary>
+/// Represents an interface for asynchronously initializing an extension.
+/// </summary>
 public interface IAsyncInitializableExtension
 {
+    /// <summary>
+    /// Asynchronously initializes the extension.
+    /// </summary>
     Task InitializeAsync();
 }

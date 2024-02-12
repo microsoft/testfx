@@ -16,5 +16,8 @@ public sealed class CloseTestSessionContext : TestSessionContext
         CancellationToken = cancellationToken;
     }
 
+    /// <summary>
+    /// Gets the cancellation token used to cancel the operation.
+    /// </summary>
     public CancellationToken CancellationToken { get; }
 }

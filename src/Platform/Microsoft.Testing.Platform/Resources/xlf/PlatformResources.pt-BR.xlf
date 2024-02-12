@@ -500,8 +500,8 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
-        <source>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</source>
-        <target state="translated">O adaptador de estrutura de teste não foi registrado. Use "RegisterTestFrameworkAdapter" para registrá-lo</target>
+        <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
+        <target state="new">The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">

@@ -3,9 +3,15 @@
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
+/// <summary>
+/// Represents a data producer extension.
+/// </summary>
 public interface IDataProducer : IExtension
 {
-    // We don't use IReadOnlyCollection because we don't have cross api(like Contains) that are good in every tfm.
+    /// <summary>
+    /// Gets the types of data produced by the data producer.
+    /// </summary>
+    // NOTE: We don't use IReadOnlyCollection because we don't have cross api(like Contains) that are good in every tfm.
     // Internally we use Array.IndexOf to verify if the data type is supported, it's a hot path.
     Type[] DataTypesProduced { get; }
 }

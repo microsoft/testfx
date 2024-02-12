@@ -500,8 +500,8 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
-        <source>The test framework adapter has not been registered. Use 'RegisterTestFrameworkAdapter' to register it</source>
-        <target state="translated">Test çerçevesi bağdaştırıcısı kaydedilmedi. Kaydetmek için 'RegisterTestFrameworkAdapter' kullanın</target>
+        <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
+        <target state="new">The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">

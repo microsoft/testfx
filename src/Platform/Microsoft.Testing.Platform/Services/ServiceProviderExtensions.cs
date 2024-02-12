@@ -23,6 +23,14 @@ namespace Microsoft.Testing.Platform.Services;
 /// </summary>
 public static class ServiceProviderExtensions
 {
+    /// <summary>
+    /// Gets the required service of type <typeparamref name="TService"/> from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <typeparam name="TService">The type of the service.</typeparam>
+    /// <param name="provider">The service provider.</param>
+    /// <returns>The required service of type <typeparamref name="TService"/>.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the <paramref name="provider"/> is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the required service is not found.</exception>
     public static TService GetRequiredService<TService>(this IServiceProvider provider)
         where TService : notnull
     {
@@ -34,6 +42,13 @@ public static class ServiceProviderExtensions
         return (TService)service;
     }
 
+    /// <summary>
+    /// Gets the service of type <typeparamref name="TService"/> from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <typeparam name="TService">The type of the service.</typeparam>
+    /// <param name="provider">The service provider.</param>
+    /// <returns>The service of type <typeparamref name="TService"/> or null if not found.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when the <paramref name="provider"/> is null.</exception>
     public static TService? GetService<TService>(this IServiceProvider provider)
         where TService : class
     {
@@ -42,18 +57,43 @@ public static class ServiceProviderExtensions
         return ((ServiceProvider)provider).GetService(typeof(TService)) as TService;
     }
 
+    /// <summary>
+    /// Gets the message bus from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The message bus.</returns>
     public static IMessageBus GetMessageBus(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredService<IMessageBus>();
 
+    /// <summary>
+    /// Gets the configuration from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The configuration.</returns>
     public static IConfiguration GetConfiguration(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredService<IConfiguration>();
 
+    /// <summary>
+    /// Gets the command line options from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The command line options.</returns>
     public static ICommandLineOptions GetCommandLineOptions(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredService<ICommandLineOptions>();
 
+    /// <summary>
+    /// Gets the logger factory from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The logger factory.</returns>
     public static ILoggerFactory GetLoggerFactory(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredService<ILoggerFactory>();
 
+    /// <summary>
+    /// Gets the output device from the <see cref="IServiceProvider"/>.
+    /// </summary>
+    /// <param name="serviceProvider">The service provider.</param>
+    /// <returns>The output device.</returns>
     public static IOutputDevice GetOutputDevice(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IOutputDevice>();
 

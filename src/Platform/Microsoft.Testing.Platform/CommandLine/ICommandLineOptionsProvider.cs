@@ -5,8 +5,15 @@ using Microsoft.Testing.Platform.CommandLine;
 
 namespace Microsoft.Testing.Platform.Extensions.CommandLine;
 
+/// <summary>
+/// Represents an interface for providing command line options.
+/// </summary>
 public interface ICommandLineOptionsProvider : IExtension
 {
+    /// <summary>
+    /// Gets the command line options provided by this extension.
+    /// </summary>
+    /// <returns>The collection of command line options.</returns>
     IReadOnlyCollection<CommandLineOption> GetCommandLineOptions();
 
     /// <summary>

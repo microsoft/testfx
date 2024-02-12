@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Extensions.TestHost;
 
+/// <summary>
+/// Represents a test host specialized extension.
+/// </summary>
 public interface ITestHostExtension : IExtension
 {
 }

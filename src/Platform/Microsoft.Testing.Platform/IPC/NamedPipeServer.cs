@@ -273,7 +273,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
                     PlatformResources.CouldNotFindDirectoryErrorMessage,
 #endif
                     directoryId))
-                : Path.Combine(directoryId, ".pipe"), true);
+                : Path.Combine(directoryId, ".p"), true);
     }
 
     public void Dispose()

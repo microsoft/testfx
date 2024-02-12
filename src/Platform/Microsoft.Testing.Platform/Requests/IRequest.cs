@@ -5,7 +5,13 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Requests;
 
+/// <summary>
+/// Represents a request interface.
+/// </summary>
 public interface IRequest
 {
+    /// <summary>
+    /// Gets the test session context.
+    /// </summary>
     TestSessionContext Session { get; }
 }

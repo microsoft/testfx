@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 
+/// <summary>
+/// Represents an extension for test host controllers.
+/// </summary>
 public interface ITestHostControllersExtension : IExtension
 {
 }

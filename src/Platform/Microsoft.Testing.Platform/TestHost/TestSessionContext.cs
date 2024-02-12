@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.TestHost;
 
+/// <summary>
+/// Represents the context of a test session.
+/// </summary>
 public class TestSessionContext
 {
     internal TestSessionContext(SessionUid sessionUid, ClientInfo client)
@@ -11,7 +14,13 @@ public class TestSessionContext
         Client = client;
     }
 
+    /// <summary>
+    /// Gets the unique identifier of the test session.
+    /// </summary>
     public SessionUid SessionUid { get; }
 
+    /// <summary>
+    /// Gets the client information associated with the test session.
+    /// </summary>
     public ClientInfo Client { get; }
 }

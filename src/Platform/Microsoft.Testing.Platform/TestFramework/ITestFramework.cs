@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.Extensions.TestFramework;
 
+/// <summary>
+/// A specialized extension that represents a test framework.
+/// </summary>
 public interface ITestFramework : IExtension
 {
     /// <summary>

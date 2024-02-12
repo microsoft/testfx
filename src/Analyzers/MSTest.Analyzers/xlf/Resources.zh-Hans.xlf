@@ -183,9 +183,9 @@
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
-- return type should be 'void' or 'Task'
+- return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
-- it should be a special method (finalizer, operator...).</source>
+- it should not be a special method (finalizer, operator...).</source>
         <target state="needs-review-translation">测试方法(标记有“[TestMethod]”属性的方法)应遵循以下布局，以供 MSTest 将其视为有效:
 - 它应为“public”(如果设置了“[assembly: DiscoverInternals]”属性，则应为“internal”)
 - 它不应为“static”

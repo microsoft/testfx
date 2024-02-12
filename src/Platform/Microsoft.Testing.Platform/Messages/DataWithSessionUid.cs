@@ -7,11 +7,29 @@ using Microsoft.Testing.Platform.TestHost;
 
 namespace Microsoft.Testing.Platform.Extensions.Messages;
 
-public abstract class DataWithSessionUid(string displayName, string? description, SessionUid sessionUid)
-    : PropertyBagData(displayName, description)
+/// <summary>
+/// Represents data with a session UID.
+/// </summary>
+public abstract class DataWithSessionUid : PropertyBagData
 {
-    public SessionUid SessionUid { get; } = sessionUid;
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DataWithSessionUid"/> class.
+    /// </summary>
+    /// <param name="displayName">The display name of the data.</param>
+    /// <param name="description">The description of the data.</param>
+    /// <param name="sessionUid">The session UID.</param>
+    protected DataWithSessionUid(string displayName, string? description, SessionUid sessionUid)
+        : base(displayName, description)
+    {
+        SessionUid = sessionUid;
+    }
 
+    /// <summary>
+    /// Gets the session UID.
+    /// </summary>
+    public SessionUid SessionUid { get; }
+
+    /// <inheritdoc/>
     public override string ToString()
     {
         StringBuilder builder = new StringBuilder("DataWithSessionUid { DisplayName = ")

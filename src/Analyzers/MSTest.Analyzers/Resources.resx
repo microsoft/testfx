@@ -225,9 +225,9 @@
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
-- return type should be 'void' or 'Task'
+- return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
-- it should be a special method (finalizer, operator...).</value>
+- it should not be a special method (finalizer, operator...).</value>
   </data>
   <data name="TestMethodShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
     <value>Test method '{0}' should not be 'abstract'</value>
