@@ -118,10 +118,10 @@
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
-- return type should be 'void', 'Task' or 'ValueTask'
+- return type should be 'void' or 'Task'
 - it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">'[TestMethod]' özniteliğiyle işaretlenen test yöntemleri, MSTest:
+- it should be a special method (finalizer, operator...).</source>
+        <target state="translated">'[TestMethod]' özniteliğiyle işaretlenen test yöntemleri, MSTest:
  tarafından geçerli kabul edilmesi için aşağıdaki düzene göre düzenlenmelidir.
 - 'public' (veya '[assembly: DiscoverInternals]' özniteliği ayarlanmışsa 'internal') olmalıdır
 - 'static' olmalıdır
