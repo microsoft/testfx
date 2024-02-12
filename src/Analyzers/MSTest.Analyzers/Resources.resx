@@ -156,6 +156,44 @@
   <data name="TestClassShouldBeValidTitle" xml:space="preserve">
     <value>Test classes should have valid layout</value>
   </data>
+  <data name="TestCleanupShouldBeValidDescription" xml:space="preserve">
+    <value>TestCleanup attribute should follow the following layout to be valid:
+- it should be 'public' 
+- it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
+- it should not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</value>
+  </data>
+  <data name="TestCleanupShouldBeValidMessageFormat_NoParameters" xml:space="preserve">
+    <value>TestCleanup '{0}' should not take any parameter</value>
+  </data>
+  <data name="TestCleanupShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
+    <value>TestCleanup '{0}' should not be 'abstract'</value>
+  </data>
+  <data name="TestCleanupShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
+    <value>TestCleanup '{0}' should not be 'async void'</value>
+  </data>
+  <data name="TestCleanupShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
+    <value>TestCleanup '{0}' should not be generic</value>
+  </data>
+  <data name="TestCleanupShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
+    <value>TestCleanup '{0}' should not be 'static'</value>
+  </data>
+  <data name="TestCleanupShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
+    <value>TestCleanup '{0}' should be an 'ordinary' method</value>
+  </data>
+  <data name="TestCleanupShouldBeValidMessageFormat_Public" xml:space="preserve">
+    <value>TestCleanup '{0}' should be 'public'</value>
+  </data>
+  <data name="TestCleanupShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
+    <value>TestCleanup '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+  </data>
+  <data name="TestCleanupShouldBeValidTitle" xml:space="preserve">
+    <value>TestCleanup method should have valid layout</value>
+  </data>
   <data name="TestContextShouldBeValidDescription" xml:space="preserve">
     <value>TestContext property should follow the following layout to be valid:
 - it should be a property
@@ -196,19 +234,19 @@
     <value>Test Initialize '{0}' should not take any parameter</value>
   </data>
   <data name="TestInitializeShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
-    <value>Test initialize '{0}' should not be 'abstract'</value>
+    <value>Test Initialize '{0}' should not be 'abstract'</value>
   </data>
   <data name="TestInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>Test Initialize '{0}' should not be 'async void'</value>
   </data>
   <data name="TestInitializeShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
-    <value>Test initialize '{0}' should not be generic</value>
+    <value>Test Initialize '{0}' should not be generic</value>
   </data>
   <data name="TestInitializeShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
     <value>Test Initialize '{0}' should not be 'static'</value>
   </data>
   <data name="TestInitializeShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
-    <value>Test initialize '{0}' should be an 'ordinary' method</value>
+    <value>Test Initialize '{0}' should be an 'ordinary' method</value>
   </data>
   <data name="TestInitializeShouldBeValidMessageFormat_Public" xml:space="preserve">
     <value>Test Initialize '{0}' should be 'public'</value>
