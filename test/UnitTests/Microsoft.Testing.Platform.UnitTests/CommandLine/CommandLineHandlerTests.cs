@@ -51,7 +51,7 @@ public class CommandLineHandlerTests : TestBase
             });
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -67,7 +67,7 @@ public class CommandLineHandlerTests : TestBase
              _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsTrue(result);
@@ -186,7 +186,7 @@ public class CommandLineHandlerTests : TestBase
            extensionCommandLineOptionsProviders, [], _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -206,7 +206,7 @@ public class CommandLineHandlerTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -226,7 +226,7 @@ public class CommandLineHandlerTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -250,7 +250,7 @@ public class CommandLineHandlerTests : TestBase
             _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -274,7 +274,7 @@ public class CommandLineHandlerTests : TestBase
             _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -299,7 +299,7 @@ public class CommandLineHandlerTests : TestBase
             _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -325,7 +325,7 @@ public class CommandLineHandlerTests : TestBase
             _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);

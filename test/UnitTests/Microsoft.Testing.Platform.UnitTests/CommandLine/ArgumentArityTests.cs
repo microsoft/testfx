@@ -51,7 +51,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -71,7 +71,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -91,7 +91,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -111,7 +111,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -131,7 +131,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsFalse(result);
@@ -147,7 +147,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync();
+        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
 
         // Assert
         Assert.IsTrue(result);

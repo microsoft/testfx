@@ -195,7 +195,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(args, platformOutputDevice, loggingState.CommandLineParseResult);
 
         // If command line is not valid we return immediately.
-        if (!loggingState.CommandLineParseResult.HasTool && !await commandLineHandler.ParseAndValidateAsync())
+        if (!loggingState.CommandLineParseResult.HasTool && !await commandLineHandler.ParseAndValidateAsync(async () => await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice)))
         {
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine);
         }
@@ -230,13 +230,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Display banner now because we need capture the output in case of MSBuild integration and we want to forward
         // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
-        bool isNoBannerSet = loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
-        string? noBannerEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
-        string? dotnetNoLogoEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
-        if (!isNoBannerSet && !(noBannerEnvironmentVar is "1" or "true") && !(dotnetNoLogoEnvironmentVar is "1" or "true"))
-        {
-            await platformOutputDevice.DisplayBannerAsync();
-        }
+        await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice);
 
         // Add global telemetry service.
         // Add at this point or the telemetry banner appearance order will be wrong, we want the testing app banner before the telemetry banner.
@@ -717,5 +711,16 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         }
 
         await AddServiceIfNotSkippedAsync(service, serviceProvider);
+    }
+
+    private async Task DisplayBannerIfEnabledAsync(ApplicationLoggingState loggingState, IPlatformOutputDevice platformOutputDevice)
+    {
+        bool isNoBannerSet = loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
+        string? noBannerEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
+        string? dotnetNoLogoEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
+        if (!isNoBannerSet && !(noBannerEnvironmentVar is "1" or "true") && !(dotnetNoLogoEnvironmentVar is "1" or "true"))
+        {
+            await platformOutputDevice.DisplayBannerAsync();
+        }
     }
 }
