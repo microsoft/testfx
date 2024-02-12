@@ -1,0 +1,104 @@
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+using System.Collections.Immutable;
+
+using Analyzer.Utilities.Extensions;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
+
+using MSTest.Analyzers.Helpers;
+
+namespace MSTest.Analyzers;
+
+[DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
+public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
+{
+    private static readonly LocalizableResourceString Title = new(nameof(Resources.AssemblyInitializeShouldBeValidTitle), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString Description = new(nameof(Resources.AssemblyInitializeShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
+    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_Public), Resources.ResourceManager, typeof(Resources));
+
+    internal static readonly DiagnosticDescriptor PublicRule = DiagnosticDescriptorHelper.Create(
+        DiagnosticIds.AssemblyInitializeShouldBeValidRuleId,
+        Title,
+        MessageFormat,
+        Description,
+        Category.Usage,
+        DiagnosticSeverity.Warning,
+        isEnabledByDefault: true);
+
+    internal static readonly DiagnosticDescriptor StaticRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_Static), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor SingleContextParameterRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameterRule), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor ReturnTypeRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_ReturnType), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor NotAsyncVoidRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor NotAbstractRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_NotAbstract), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor NotGenericRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_NotGeneric), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor OrdinaryRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_Ordinary), Resources.ResourceManager, typeof(Resources)));
+
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
+       = ImmutableArray.Create(PublicRule);
+
+    public override void Initialize(AnalysisContext context)
+    {
+        context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+        context.EnableConcurrentExecution();
+
+        context.RegisterCompilationStartAction(context =>
+        {
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute, out var assemblyInitializeAttributeSymbol))
+            {
+                var taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
+                var valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+                context.RegisterSymbolAction(
+                    context => AnalyzeSymbol(context, assemblyInitializeAttributeSymbol, taskSymbol, valueTaskSymbol),
+                    SymbolKind.Method);
+            }
+        });
+    }
+
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol assemblyInitializeAttributeSymbol, INamedTypeSymbol? taskSymbol,
+        INamedTypeSymbol? valueTaskSymbol)
+    {
+        var methodSymbol = (IMethodSymbol)context.Symbol;
+        if (!methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, assemblyInitializeAttributeSymbol)))
+        {
+            return;
+        }
+
+        if (methodSymbol.MethodKind != MethodKind.Ordinary)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(OrdinaryRule, methodSymbol.Name));
+
+            // Do not check the other criteria, users should fix the method kind first.
+            return;
+        }
+
+        if (methodSymbol.IsAbstract)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAbstractRule, methodSymbol.Name));
+        }
+
+        if (methodSymbol.IsGenericMethod)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotGenericRule, methodSymbol.Name));
+        }
+
+        if (methodSymbol.ReturnsVoid && methodSymbol.IsAsync)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAsyncVoidRule, methodSymbol.Name));
+        }
+
+        if (methodSymbol.DeclaredAccessibility != Accessibility.Public || methodSymbol.GetResultantVisibility() != SymbolVisibility.Public)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicRule, methodSymbol.Name));
+        }
+
+        if (!methodSymbol.ReturnsVoid
+            && (taskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol))
+            && (valueTaskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol)))
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ReturnTypeRule, methodSymbol.Name));
+        }
+    }
+}

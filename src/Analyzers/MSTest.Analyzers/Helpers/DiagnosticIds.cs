@@ -14,4 +14,5 @@ internal static class DiagnosticIds
     public const string UseAttributeOnTestMethodRuleId = "MSTEST0007";
     public const string TestInitializeShouldBeValidRuleId = "MSTEST0008";
     public const string TestCleanupShouldBeValidRuleId = "MSTEST0009";
+    public const string AssemblyInitializeShouldBeValidRuleId = "MSTEST0010";
 }
