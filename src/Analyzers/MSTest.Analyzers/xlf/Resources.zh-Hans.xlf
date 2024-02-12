@@ -117,17 +117,17 @@
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
-- return type should be 'void' or 'Task'
+- return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
-- it should be a special method (finalizer, operator...).</source>
-        <target state="translated">测试方法(标记有“[TestMethod]”属性的方法)应遵循以下布局，以供 MSTest 将其视为有效:
-- 它应为“public”(如果设置了“[assembly: DiscoverInternals]”属性，则应为“internal”)
-- 它不应为“static”
-- 它不应是泛型的
-- 它不应为“abstract”
-- 返回类型应为“void”或“Task”
-- 它不应为“async void”
-- 它应为一种特殊方法(终结器、运算符...)。</target>
+- it should not be a special method (finalizer, operator...).</source>
+        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
