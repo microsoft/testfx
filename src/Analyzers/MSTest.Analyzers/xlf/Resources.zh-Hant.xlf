@@ -120,14 +120,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">測試方法 (標示為 '[TestMethod]' 屬性的方法) 應該遵循下列配置，讓 MSTest 視為有效:
-- 它應該是 'public' (如果設定 '[assembly: DiscoverInternals]' 屬性，則為 'internal')
-- 它應該是 'static'
-- 它不能是泛型
-- 它不能是 'abstract'
-- 傳回類型應為 'void' 或 'Task'
-- 它不能是 'async void'
-- 它應該是特殊方法 (完成項、運算子...)。</target>
+        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
