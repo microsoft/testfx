@@ -52,7 +52,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
     public string Description => string.Empty;
 
-    public async Task<bool> ParseAndValidateAsync()
+    public async Task<bool> ParseAndValidateAsync(Func<Task> printBanner)
     {
         if (_parseResult.HasError)
         {
@@ -63,30 +63,35 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
                 stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t- {error}");
             }
 
+            await printBanner();
             await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(stringBuilder.ToString()));
             return false;
         }
 
         if (ExtensionOptionsContainReservedPrefix(out string? reservedPrefixError))
         {
+            await printBanner();
             await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(reservedPrefixError));
             return false;
         }
 
         if (ExtensionOptionsContainReservedOptions(out string? reservedOptionError))
         {
+            await printBanner();
             await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(reservedOptionError));
             return false;
         }
 
         if (ExtensionOptionAreDuplicated(out string? duplicationError))
         {
+            await printBanner();
             await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(duplicationError));
             return false;
         }
 
         if (UnknownOptions(out string? unknownOptionsError))
         {
+            await printBanner();
             await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(unknownOptionsError));
             await _platformOutputDevice.DisplayAsync(this, EmptyText);
             await PrintHelpAsync();
@@ -95,6 +100,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
         if (ExtensionArgumentArityAreInvalid(out string? arityErrors))
         {
+            await printBanner();
             await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(arityErrors));
             return false;
         }
@@ -102,6 +108,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         var optionsResult = await ValidateOptionsArgumentsAsync();
         if (!optionsResult.IsValid)
         {
+            await printBanner();
             await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(optionsResult.ErrorMessage));
             return false;
         }
@@ -109,6 +116,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         var configurationResult = await ValidateConfigurationAsync();
         if (!configurationResult.IsValid)
         {
+            await printBanner();
             await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(configurationResult.ErrorMessage));
             return false;
         }
