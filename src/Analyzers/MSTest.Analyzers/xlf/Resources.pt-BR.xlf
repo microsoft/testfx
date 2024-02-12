@@ -117,10 +117,10 @@
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
-- return type should be 'void' or 'Task'
+- return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
-- it should be a special method (finalizer, operator...).</source>
-        <target state="translated">Métodos de teste, métodos marcados com o atributo ''[TestMethod]'', devem respeitar o layout a seguir para serem considerados válidos pelo MSTest:
+- it should not be a special method (finalizer, operator...).</source>
+        <target state="needs-review-translation">Métodos de teste, métodos marcados com o atributo ''[TestMethod]'', devem respeitar o layout a seguir para serem considerados válidos pelo MSTest:
 - deve ser "público" (ou "interno" se o atributo "[assembly: DiscoverInternals]" estiver definido) 
 - não deve ser ''estático''
 - não deve ser genérico
