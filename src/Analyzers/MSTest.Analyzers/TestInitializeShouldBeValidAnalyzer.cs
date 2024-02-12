@@ -99,7 +99,7 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAsyncVoidRule, methodSymbol.Name));
         }
 
-        if (methodSymbol.GetResultantVisibility() != SymbolVisibility.Public || methodSymbol.DeclaredAccessibility != Accessibility.Public)
+        if (methodSymbol.DeclaredAccessibility != Accessibility.Public || methodSymbol.GetResultantVisibility() != SymbolVisibility.Public)
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicRule, methodSymbol.Name));
         }
