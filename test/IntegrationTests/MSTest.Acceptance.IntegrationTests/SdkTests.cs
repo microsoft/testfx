@@ -20,7 +20,7 @@ public sealed class SdkTests : AcceptanceTestBase
         _acceptanceFixture = acceptanceFixture;
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmBuildConfiguration))]
+    [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task RunTests_With_VSTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -47,7 +47,7 @@ public sealed class SdkTests : AcceptanceTestBase
         }
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmBuildConfiguration))]
+    [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task RunTests_With_MSTestRunner_DotnetTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -74,7 +74,7 @@ public sealed class SdkTests : AcceptanceTestBase
         }
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmBuildConfiguration))]
+    [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task RunTests_With_MSTestRunner_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
@@ -100,42 +100,42 @@ public sealed class SdkTests : AcceptanceTestBase
 
     public static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration, string MSBuildExtensionEnableFragment, string EnableCommandLineArg, string InvalidCommandLineArg)>> RunTests_With_MSTestRunner_Standalone_Plus_Extensions_Data()
     {
-        foreach (TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)> buildConfig in GetBuildMatrixMultiTfmBuildConfiguration())
+        foreach (TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)> buildConfig in GetBuildMatrixMultiTfmFoldedBuildConfiguration())
         {
             yield return new TestArgumentsEntry<(string, BuildConfiguration, string, string, string)>(
                 (buildConfig.Arguments.MultiTfm, buildConfig.Arguments.BuildConfiguration,
                 "<EnableMicrosoftTestingExtensionsCodeCoverage>true</EnableMicrosoftTestingExtensionsCodeCoverage>",
                 "--coverage",
                 "--crashdump"),
-                $"(multitfm,{buildConfig.Arguments.BuildConfiguration},CodeCoverage)");
+                $"multitfm,{buildConfig.Arguments.BuildConfiguration},CodeCoverage");
 
             yield return new TestArgumentsEntry<(string, BuildConfiguration, string, string, string)>(
               (buildConfig.Arguments.MultiTfm, buildConfig.Arguments.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsRetry>true</EnableMicrosoftTestingExtensionsRetry>",
               "--retry-failed-tests 3",
               "--crashdump"),
-              $"(multitfm,{buildConfig.Arguments.BuildConfiguration},Retry)");
+              $"multitfm,{buildConfig.Arguments.BuildConfiguration},Retry");
 
             yield return new TestArgumentsEntry<(string, BuildConfiguration, string, string, string)>(
               (buildConfig.Arguments.MultiTfm, buildConfig.Arguments.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsTrxReport>true</EnableMicrosoftTestingExtensionsTrxReport>",
               "--report-trx",
               "--crashdump"),
-              $"(multitfm,{buildConfig.Arguments.BuildConfiguration},TrxReport)");
+              $"multitfm,{buildConfig.Arguments.BuildConfiguration},TrxReport");
 
             yield return new TestArgumentsEntry<(string, BuildConfiguration, string, string, string)>(
               (buildConfig.Arguments.MultiTfm, buildConfig.Arguments.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsCrashDump>true</EnableMicrosoftTestingExtensionsCrashDump>",
               "--crashdump",
               "--report-trx"),
-              $"(multitfm,{buildConfig.Arguments.BuildConfiguration},CrashDump)");
+              $"multitfm,{buildConfig.Arguments.BuildConfiguration},CrashDump");
 
             yield return new TestArgumentsEntry<(string, BuildConfiguration, string, string, string)>(
               (buildConfig.Arguments.MultiTfm, buildConfig.Arguments.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsHangDump>true</EnableMicrosoftTestingExtensionsHangDump>",
               "--hangdump",
               "--report-trx"),
-              $"(multitfm,{buildConfig.Arguments.BuildConfiguration},HangDump)");
+              $"multitfm,{buildConfig.Arguments.BuildConfiguration},HangDump");
         }
     }
 
@@ -169,7 +169,7 @@ public sealed class SdkTests : AcceptanceTestBase
         }
     }
 
-    [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmBuildConfiguration))]
+    [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
     public async Task RunTests_With_MSTestRunner_Standalone_EnableAll_Extensions(string multiTfm, BuildConfiguration buildConfiguration)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
