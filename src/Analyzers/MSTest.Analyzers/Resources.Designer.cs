@@ -65,7 +65,6 @@ namespace MSTest.Analyzers {
         ///- it should be &apos;public&apos; 
         ///- it should be &apos;static&apos;
         ///- it should not be generic
-        ///- it should not be &apos;abstract&apos;
         ///- it should take one parameter of type TestContext
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- it should not be &apos;async void&apos;
@@ -74,15 +73,6 @@ namespace MSTest.Analyzers {
         internal static string AssemblyInitializeShouldBeValidDescription {
             get {
                 return ResourceManager.GetString("AssemblyInitializeShouldBeValidDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Assembly Initialize &apos;{0}&apos; should not be &apos;abstract&apos;.
-        /// </summary>
-        internal static string AssemblyInitializeShouldBeValidMessageFormat_NotAbstract {
-            get {
-                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_NotAbstract", resourceCulture);
             }
         }
         

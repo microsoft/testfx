@@ -122,14 +122,10 @@
 - it should be 'public' 
 - it should be 'static'
 - it should not be generic
-- it should not be 'abstract'
 - it should take one parameter of type TestContext
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</value>
-  </data>
-  <data name="AssemblyInitializeShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
-    <value>Assembly Initialize '{0}' should not be 'abstract'</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>Assembly Initialize '{0}' should return 'void', 'Task' or 'ValueTask'</value>

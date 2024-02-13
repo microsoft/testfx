@@ -7,7 +7,6 @@
 - it should be 'public' 
 - it should be 'static'
 - it should not be generic
-- it should not be 'abstract'
 - it should take one parameter of type TestContext
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
@@ -16,16 +15,10 @@
 - it should be 'public' 
 - it should be 'static'
 - it should not be generic
-- it should not be 'abstract'
 - it should take one parameter of type TestContext
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAbstract">
-        <source>Assembly Initialize '{0}' should not be 'abstract'</source>
-        <target state="new">Assembly Initialize '{0}' should not be 'abstract'</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
