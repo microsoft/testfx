@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup Label="Version settings">
     <!-- This repo version -->
-    <VersionPrefix>3.2.1</VersionPrefix>
+    <VersionPrefix>3.2.2</VersionPrefix>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Label="MSTest dependencies">
