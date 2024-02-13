@@ -1,39 +1,23 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="_SetupEntryPoint" BeforeTargets="GenerateProgramFile" Condition=" '$(EnableMSTestRunner)' == 'false' " >
-    <PropertyGroup>
-      <!-- Disable testing platform entry point generation -->
-      <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
-    </PropertyGroup>
-    <!--
-          We need to re-enable the VSTest sdk program.* generation by it's by default disabled when we reference Microsoft.Testing.Platform.MSBuild.
-          We cannot use the GenerateProgramFile property as Microsoft.NET.Test.Sdk.targets it's an 'InitialTargets' and we cannot plug any target before it.
-    -->
-    <CallTarget Targets="_GenerateProgramFileTakenFromVSTest" />
-  </Target>
 
-  <!--
-    ============================================================
-    GenerateProgramFile taken from Microsoft.NET.Test.Sdk.targets 
-    Generates Program file which contains the Main entry point
-    ============================================================
-  -->
-  <Target Name="_GenerateProgramFileTakenFromVSTest" >
+  <!-- Core -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
+  </ItemGroup>
 
-    <ItemGroup Condition="'$(Language)' == 'VB' or '$(Language)' == 'C#'">
-      <RemoveExistingMicrosoftNETTestSdkProgram Include="@(Compile)" Condition="'%(FileName)' == 'Microsoft.NET.Test.Sdk.Program'" />
-      <Compile Remove="@(RemoveExistingMicrosoftNETTestSdkProgram)" />
-      <Compile Include="$(GeneratedProgramFile)"/>
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(Language)' == 'F#'">
-      <ProgramCompiles Include="@(Compile)" Condition="'%(Identity)' == 'Program.fs'" />
-      <CompileAfter Include="$(GeneratedProgramFile)" Condition="@(ProgramCompiles-&gt;Count()) == 0" />
-    </ItemGroup>
-
-    <Warning Condition="@(ProgramCompiles-&gt;Count()) != 0" Text="A 'Program.fs' file can be automatically generated for F# .NET Core test projects. To fix this warning, either delete the file from the project, or set the &lt;GenerateProgramFile&gt; property to 'false'." />
-
-  </Target>
+  <!-- Extensions -->
+  <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' ">
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingExtensionsCrashDumpVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$(MicrosoftTestingExtensionsHangDumpVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$(MicrosoftTestingExtensionsHotReloadVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingExtensionsRetryVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
+  </ItemGroup>
 
   <!-- Implicit bottom import -->
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />

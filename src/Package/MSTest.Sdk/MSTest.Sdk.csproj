@@ -36,7 +36,7 @@
   
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
-      <_TemplateProperties>Version=$(Version);MicrosoftTestingPlatformVersion=$(MicrosoftTestingPlatformVersion);MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion)</_TemplateProperties>
+      <_TemplateProperties>MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(MicrosoftTestingPlatformVersion);MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--
