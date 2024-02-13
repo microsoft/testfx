@@ -47,7 +47,6 @@ public sealed class SdkTests : AcceptanceTestBase
         }
     }
 
-
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmBuildConfiguration))]
     public async Task RunTests_With_MSTestRunner_DotnetTest(string multiTfm, BuildConfiguration buildConfiguration)
     {
