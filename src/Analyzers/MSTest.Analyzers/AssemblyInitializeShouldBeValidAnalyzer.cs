@@ -29,7 +29,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     internal static readonly DiagnosticDescriptor StaticRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_Static), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor SingleContextParameterRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameterRule), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor SingleContextParameterRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor ReturnTypeRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_ReturnType), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor NotAsyncVoidRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor NotAbstractRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyInitializeShouldBeValidMessageFormat_NotAbstract), Resources.ResourceManager, typeof(Resources)));
@@ -50,15 +50,16 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             {
                 var taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
                 var valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+                var testContextSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext);
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, assemblyInitializeAttributeSymbol, taskSymbol, valueTaskSymbol),
+                    context => AnalyzeSymbol(context, assemblyInitializeAttributeSymbol, taskSymbol, valueTaskSymbol, testContextSymbol),
                     SymbolKind.Method);
             }
         });
     }
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol assemblyInitializeAttributeSymbol, INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol)
+        INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol? testContextSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         if (!methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, assemblyInitializeAttributeSymbol)))
@@ -79,9 +80,20 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAbstractRule, methodSymbol.Name));
         }
 
+        if (methodSymbol.Parameters.Length != 1 || testContextSymbol is null ||
+            !SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[0].Type, testContextSymbol))
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(SingleContextParameterRule, methodSymbol.Name));
+        }
+
         if (methodSymbol.IsGenericMethod)
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotGenericRule, methodSymbol.Name));
+        }
+
+        if (!methodSymbol.IsStatic)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(StaticRule, methodSymbol.Name));
         }
 
         if (methodSymbol.ReturnsVoid && methodSymbol.IsAsync)
