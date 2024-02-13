@@ -239,8 +239,8 @@
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
-        <source>Test methods should have valid layout</source>
-        <target state="new">Test methods should have valid layout</target>
+        <source>Test Initialize should have valid layout</source>
+        <target state="new">Test Initialize should have valid layout</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">
