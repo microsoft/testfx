@@ -2,18 +2,42 @@
 <Project>
   <!-- Implicit top import -->
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
-  
+
+  <!-- Core -->
   <PropertyGroup>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-    <TestingPlatformDonetTestSupport>false</TestingPlatformDonetTestSupport>
     <IsPackable>false</IsPackable>
+    <MSTestVersion Condition=" '$(MSTestVersion)' == '' ">${MSTestVersion}</MSTestVersion>
+    <MicrosoftNETTestSdkVersion Condition=" '$(MicrosoftNETTestSdkVersion)' == '' ">${MicrosoftNETTestSdkVersion}</MicrosoftNETTestSdkVersion>
+    <MicrosoftTestingExtensionsCommonVersion Condition=" '$(MicrosoftTestingExtensionsCommonVersion)' == '' " >${MicrosoftTestingPlatformVersion}</MicrosoftTestingExtensionsCommonVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="${MicrosoftNETTestSdkVersion}" />
-    <PackageReference Include="MSTest.TestAdapter" Version="${Version}" />
-    <PackageReference Include="MSTest.TestFramework" Version="${Version}" />
-    <PackageReference Include="MSTest.Analyzers" Version="${Version}" />
-    <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" Version="${MicrosoftTestingPlatformVersion}" />
-  </ItemGroup>
+  <!-- Extensions -->
+  <PropertyGroup>
+    <EnableAllTestingExtensions Condition=" '$(EnableAllExtensions)' == '' " >false</EnableAllTestingExtensions>
+
+    <!-- MS Code Coverage -->
+    <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == '' " >false</EnableMicrosoftTestingExtensionsCodeCoverage>
+    <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >${MicrosoftTestingExtensionsCodeCoverageVersion}</MicrosoftTestingExtensionsCodeCoverageVersion>
+
+    <!-- Hot Reload -->
+    <EnableMicrosoftTestingExtensionsHotReload Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == '' " >false</EnableMicrosoftTestingExtensionsHotReload>
+    <MicrosoftTestingExtensionsHotReloadVersion Condition=" '$(MicrosoftTestingExtensionsHotReloadVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHotReloadVersion>
+
+    <!-- Retry -->
+    <EnableMicrosoftTestingExtensionsRetry Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == '' " >false</EnableMicrosoftTestingExtensionsRetry>
+    <MicrosoftTestingExtensionsRetryVersion Condition=" '$(MicrosoftTestingExtensionsRetryVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsRetryVersion>
+
+    <!-- TrxReport -->
+    <EnableMicrosoftTestingExtensionsTrxReport Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == '' " >false</EnableMicrosoftTestingExtensionsTrxReport>
+    <MicrosoftTestingExtensionsTrxReportVersion Condition=" '$(MicrosoftTestingExtensionsTrxReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsTrxReportVersion>
+
+    <!-- Crash dump -->
+    <EnableMicrosoftTestingExtensionsCrashDump Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == '' " >false</EnableMicrosoftTestingExtensionsCrashDump>
+    <MicrosoftTestingExtensionsCrashDumpVersion Condition=" '$(MicrosoftTestingExtensionsCrashDumpVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsCrashDumpVersion>
+
+    <!-- Hang dump -->
+    <EnableMicrosoftTestingExtensionsHangDump Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == '' " >false</EnableMicrosoftTestingExtensionsHangDump>
+    <MicrosoftTestingExtensionsHangDumpVersion Condition=" '$(MicrosoftTestingExtensionsHangDumpVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHangDumpVersion>
+
+  </PropertyGroup>
 </Project>
