@@ -501,7 +501,7 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
-        <target state="new">The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</target>
+        <target state="translated">Adaptér testovací architektury nebyl zaregistrován. Zaregistrujte ho pomocí ITestApplicationBuilder.RegisterTestFramework.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
