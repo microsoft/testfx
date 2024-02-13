@@ -22,6 +22,18 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0...v.3.2.1
 * Remove unused localization entries by @Evangelink in [#2192](https://github.com/microsoft/testfx/pull/2192)
 * Remove version fixup workaround (#2209) by @Evangelink in [#2212](https://github.com/microsoft/testfx/pull/2212)
 
+### Artifacts
+
+* MSTest: [3.2.1](https://www.nuget.org/packages/MSTest/3.2.1)
+* MSTest.TestFramework: [3.2.1](https://www.nuget.org/packages/MSTest.TestFramework/3.2.1)
+* MSTest.TestAdapter: [3.2.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.2.1)
+* MSTest.Analyzers: [3.2.1](https://www.nuget.org/packages/MSTest.Analyzers/3.2.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.0.1)
+* Microsoft.Testing.Extensions.HangDump: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.0.1)
+* Microsoft.Testing.Extensions.HotReload: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.0.1)
+* Microsoft.Testing.Extensions.Retry: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.0.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.0.1)
+
 ## [3.2.0] - 2024-01-24
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.1.1...v.3.2.0)
