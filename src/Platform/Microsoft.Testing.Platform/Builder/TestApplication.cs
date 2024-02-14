@@ -249,10 +249,7 @@ public sealed class TestApplication : ITestApplication
             : ValueTask.CompletedTask;
 #endif
 
-    /// <summary>
-    /// Runs the test application asynchronously.
-    /// </summary>
-    /// <returns>The task representing the asynchronous operation.</returns>
+    /// <inheritdoc />
     public async Task<int> RunAsync()
         => await _testHost.RunAsync();
 
