@@ -2,10 +2,10 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!-- Import Runner.targets -->
-  <Import Project="$(MSBuildProjectDirectory)/Runner/Runner.targets" Condition=" '$(EnableMSTestRunner)' == 'true' " />
+  <Import Project="$(MSBuildThisFileDirectory)Runner/Runner.targets" Condition=" '$(UseVSTest)' == 'false' " />
 
   <!-- Import VSTest.targets -->
-  <Import Project="$(MSBuildProjectDirectory)/VSTest/VSTest.targets" Condition=" '$(EnableMSTestRunner)' != 'true' " />
+  <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
 
   <!-- Implicit bottom import -->
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />

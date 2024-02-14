@@ -5,7 +5,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
-    <EnableMSTestRunner Condition=" '$(EnableMSTestRunner)' == '' " >true</EnableMSTestRunner>
+    <UseVSTest Condition=" '$(UseVSTest)' == '' " >false</UseVSTest>
     <MSTestVersion Condition=" '$(MSTestVersion)' == '' ">${MSTestVersion}</MSTestVersion>
     <MicrosoftNETTestSdkVersion Condition=" '$(MicrosoftNETTestSdkVersion)' == '' ">${MicrosoftNETTestSdkVersion}</MicrosoftNETTestSdkVersion>
   </PropertyGroup>

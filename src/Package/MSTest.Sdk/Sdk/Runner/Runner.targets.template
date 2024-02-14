@@ -3,6 +3,7 @@
 
     <PropertyGroup>
         <IsPackable>false</IsPackable>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
         <OutputType>Exe</OutputType>
         <MicrosoftTestingExtensionsCommonVersion Condition=" '$(MicrosoftTestingExtensionsCommonVersion)' == '' " >${MicrosoftTestingPlatformVersion}</MicrosoftTestingExtensionsCommonVersion>
         <TestingPlatformDotnetTestSupport Condition=" $(TestingPlatformDotnetTestSupport) == '' ">true</TestingPlatformDotnetTestSupport>
