@@ -207,7 +207,6 @@ public sealed class SdkTests : AcceptanceTestBase
         }
     }
 
-
     [ArgumentsProvider(nameof(RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data))]
     public async Task RunTests_With_MSTestRunner_Standalone_Enable_Default_Extensions(string multiTfm, BuildConfiguration buildConfiguration, bool enableDefaultExtensions)
     {
