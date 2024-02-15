@@ -29,7 +29,7 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
-               .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
+               .PatchCodeWithReplace("$EnableMSTestRunner$", "<UseVSTest>true</UseVSTest>")
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", string.Empty),
                addPublicFeeds: true);
@@ -54,10 +54,10 @@ public sealed class SdkTests : AcceptanceTestBase
                AssetName,
                SourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-               .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
+               .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
-               .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
-               .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", "<TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>")
+               .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
+               .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", string.Empty),
                addPublicFeeds: true);
 
@@ -81,9 +81,9 @@ public sealed class SdkTests : AcceptanceTestBase
                AssetName,
                SourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-               .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
+               .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
-               .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
+               .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", string.Empty),
                addPublicFeeds: true);
@@ -127,14 +127,14 @@ public sealed class SdkTests : AcceptanceTestBase
               (buildConfig.Arguments.MultiTfm, buildConfig.Arguments.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsCrashDump>true</EnableMicrosoftTestingExtensionsCrashDump>",
               "--crashdump",
-              "--report-trx"),
+              "--hangdump"),
               $"multitfm,{buildConfig.Arguments.BuildConfiguration},CrashDump");
 
             yield return new TestArgumentsEntry<(string, BuildConfiguration, string, string, string)>(
               (buildConfig.Arguments.MultiTfm, buildConfig.Arguments.BuildConfiguration,
               "<EnableMicrosoftTestingExtensionsHangDump>true</EnableMicrosoftTestingExtensionsHangDump>",
               "--hangdump",
-              "--report-trx"),
+              "--crashdump"),
               $"multitfm,{buildConfig.Arguments.BuildConfiguration},HangDump");
         }
     }
@@ -149,9 +149,9 @@ public sealed class SdkTests : AcceptanceTestBase
                AssetName,
                SourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-               .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
+               .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
-               .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
+               .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", msbuildExtensionEnableFragment),
                addPublicFeeds: true);
@@ -176,11 +176,11 @@ public sealed class SdkTests : AcceptanceTestBase
                AssetName,
                SourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
-               .PatchCodeWithReplace("$OutputType$", "<OutputType>Exe</OutputType>")
+               .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
-               .PatchCodeWithReplace("$EnableMSTestRunner$", "<EnableMSTestRunner>true</EnableMSTestRunner>")
+               .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
-               .PatchCodeWithReplace("$Extensions$", "<EnableAllTestingExtensions>true</EnableAllTestingExtensions>"),
+               .PatchCodeWithReplace("$Extensions$", "<EnableAllMicrosoftTestingExtensions>true</EnableAllMicrosoftTestingExtensions>"),
                addPublicFeeds: true);
 
         var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
@@ -190,6 +190,51 @@ public sealed class SdkTests : AcceptanceTestBase
             var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
             var testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump");
             testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        }
+    }
+
+    public static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration, bool EnableDefaultExtensions)>> RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data()
+    {
+        foreach (TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)> buildConfig in GetBuildMatrixMultiTfmFoldedBuildConfiguration())
+        {
+            yield return new TestArgumentsEntry<(string, BuildConfiguration, bool)>(
+                (buildConfig.Arguments.MultiTfm, buildConfig.Arguments.BuildConfiguration, true),
+                $"enabled,{buildConfig.Arguments.BuildConfiguration},CodeCoverage");
+
+            yield return new TestArgumentsEntry<(string, BuildConfiguration, bool)>(
+                (buildConfig.Arguments.MultiTfm, buildConfig.Arguments.BuildConfiguration, false),
+                $"disabled,{buildConfig.Arguments.BuildConfiguration},CodeCoverage");
+        }
+    }
+
+    [ArgumentsProvider(nameof(RunTests_With_MSTestRunner_Standalone_Default_Extensions_Data))]
+    public async Task RunTests_With_MSTestRunner_Standalone_Enable_Default_Extensions(string multiTfm, BuildConfiguration buildConfiguration, bool enableDefaultExtensions)
+    {
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+               AssetName,
+               SourceCode
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+               .PatchCodeWithReplace("$OutputType$", string.Empty)
+               .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
+               .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
+               .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$Extensions$", enableDefaultExtensions ? string.Empty : "<EnableDefaultMicrosoftTestingExtensions>false</EnableDefaultMicrosoftTestingExtensions>"),
+               addPublicFeeds: true);
+
+        var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        Assert.AreEqual(0, compilationResult.ExitCode);
+        foreach (var tfm in multiTfm.Split(";"))
+        {
+            var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+            var testHostResult = await testHost.ExecuteAsync(command: "--coverage --report-trx");
+            if (enableDefaultExtensions)
+            {
+                testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+            }
+            else
+            {
+                Assert.AreEqual(ExitCodes.InvalidCommandLine, testHostResult.ExitCode);
+            }
         }
     }
 
