@@ -53,6 +53,26 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
                 .WithArguments("Finalize"));
     }
 
+    public async Task WhenTestInitializeIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            internal class MyTestClass
+            {
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     public async Task WhenTestInitializeIsAbstract_Diagnostic()
     {
         var code = """

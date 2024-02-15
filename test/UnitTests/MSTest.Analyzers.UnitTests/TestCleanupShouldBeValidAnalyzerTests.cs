@@ -31,6 +31,25 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenTestCleanupIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            internal class MyTestClass
+            {
+                [TestCleanup]
+                public void TestCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
     public async Task WhenTestCleanupIsNotOrdinary_Diagnostic()
     {
         var code = """
