@@ -180,7 +180,7 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
-               .PatchCodeWithReplace("$Extensions$", "<EnableAllMicrosoftTestingExtensions>true</EnableAllMicrosoftTestingExtensions>"),
+               .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"),
                addPublicFeeds: true);
 
         var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
@@ -218,7 +218,7 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
-               .PatchCodeWithReplace("$Extensions$", enableDefaultExtensions ? string.Empty : "<EnableDefaultMicrosoftTestingExtensions>false</EnableDefaultMicrosoftTestingExtensions>"),
+               .PatchCodeWithReplace("$Extensions$", enableDefaultExtensions ? string.Empty : "<TestingExtensionsProfile>None</TestingExtensionsProfile>"),
                addPublicFeeds: true);
 
         var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
