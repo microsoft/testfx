@@ -65,7 +65,7 @@ namespace MSTest.Analyzers {
         ///- it should be &apos;public&apos; 
         ///- it should be &apos;static&apos;
         ///- it should not be generic
-        ///- it should take one parameter of type TestContext
+        ///- it should take one parameter of type &apos;TestContext&apos;
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- it should not be &apos;async void&apos;
         ///- it should not be a special method (finalizer, operator...)..
@@ -122,7 +122,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize Method &apos;{0}&apos; should take a single parameter of type TestContext.
+        ///   Looks up a localized string similar to AssemblyInitialize Method &apos;{0}&apos; should take a single parameter of type &apos;TestContext&apos;.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter {
             get {
@@ -140,7 +140,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize Method should have valid layout.
+        ///   Looks up a localized string similar to AssemblyInitialize Methods should have valid layout.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidTitle {
             get {

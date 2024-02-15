@@ -7,7 +7,7 @@
 - it should be 'public' 
 - it should be 'static'
 - it should not be generic
-- it should take one parameter of type TestContext
+- it should take one parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
@@ -15,7 +15,7 @@
 - it should be 'public' 
 - it should be 'static'
 - it should not be generic
-- it should take one parameter of type TestContext
+- it should take one parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</target>
@@ -47,8 +47,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter">
-        <source>AssemblyInitialize Method '{0}' should take a single parameter of type TestContext</source>
-        <target state="new">AssemblyInitialize Method '{0}' should take a single parameter of type TestContext</target>
+        <source>AssemblyInitialize Method '{0}' should take a single parameter of type 'TestContext'</source>
+        <target state="new">AssemblyInitialize Method '{0}' should take a single parameter of type 'TestContext'</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Static">
@@ -57,8 +57,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
-        <source>AssemblyInitialize Method should have valid layout</source>
-        <target state="new">AssemblyInitialize Method should have valid layout</target>
+        <source>AssemblyInitialize Methods should have valid layout</source>
+        <target state="new">AssemblyInitialize Methods should have valid layout</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
