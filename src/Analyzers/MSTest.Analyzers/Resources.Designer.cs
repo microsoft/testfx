@@ -61,6 +61,94 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
+        ///- it should be &apos;public&apos; 
+        ///- it should be &apos;static&apos;
+        ///- it should not be generic
+        ///- it should take one parameter of type &apos;TestContext&apos;
+        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///- it should not be &apos;async void&apos;
+        ///- it should not be a special method (finalizer, operator...)..
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should not be generic.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_NotGeneric {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_NotGeneric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_Ordinary {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_Ordinary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be &apos;public&apos;.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_Public {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_Public", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_ReturnType {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_ReturnType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should take a single parameter of type &apos;TestContext&apos;.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be &apos;static&apos;.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_Static {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_Static", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize methods should have valid layout.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsException&apos; or &apos;Assert.ThrowsExceptionAsync&apos; over &apos;[ExpectedException]&apos; as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption..
         /// </summary>
         internal static string AvoidExpectedExceptionAttributeDescription {
