@@ -6,6 +6,7 @@ namespace MSTest.Analyzers;
 // IMPORTANT: Keep this file sorted alphabetically.
 internal static class WellKnownTypeNames
 {
+    public const string MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.CssIterationAttribute";
@@ -21,7 +22,6 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestCleanupAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestContext = "Microsoft.VisualStudio.TestTools.UnitTesting.TestContext";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestInitializeAttribute";
-    public const string MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestMethodAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.TestPropertyAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingWorkItemAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.WorkItemAttribute";
