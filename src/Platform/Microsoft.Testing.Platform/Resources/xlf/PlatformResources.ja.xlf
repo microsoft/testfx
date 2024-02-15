@@ -501,7 +501,7 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
-        <target state="new">The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</target>
+        <target state="translated">テスト フレームワーク アダプターが登録されていません。'ITestApplicationBuilder.RegisterTestFramework' を使用して登録してください</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
