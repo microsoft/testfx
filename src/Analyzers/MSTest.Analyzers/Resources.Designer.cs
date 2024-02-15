@@ -514,7 +514,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test method method should have valid layout.
+        ///   Looks up a localized string similar to Test methods should have valid layout.
         /// </summary>
         internal static string TestInitializeShouldBeValidTitle {
             get {

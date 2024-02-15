@@ -289,7 +289,7 @@
     <value>Test Initialize '{0}' should return 'void', 'Task' or 'ValueTask'</value>
   </data>
   <data name="TestInitializeShouldBeValidTitle" xml:space="preserve">
-    <value>Test method method should have valid layout</value>
+    <value>Test methods should have valid layout</value>
   </data>
   <data name="TestMethodShouldBeValidDescription" xml:space="preserve">
     <value>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
