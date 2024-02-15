@@ -157,7 +157,7 @@
     <value>Test classes should have valid layout</value>
   </data>
   <data name="TestCleanupShouldBeValidDescription" xml:space="preserve">
-    <value>TestCleanup method should follow the following layout to be valid:
+    <value>Methods marked with [TestCleanup] should follow the following layout to be valid:
 - it should be 'public' 
 - it should not be 'static'
 - it should not be generic
@@ -220,7 +220,7 @@
     <value>Test context property should have valid layout</value>
   </data>
   <data name="TestInitializeShouldBeValidDescription" xml:space="preserve">
-    <value>TestInitialize method should follow the following layout to be valid:
+    <value>Methods marked with [TestInitialize] should follow the following layout to be valid:
 - it should be 'public' 
 - it should not be 'static'
 - it should not be generic

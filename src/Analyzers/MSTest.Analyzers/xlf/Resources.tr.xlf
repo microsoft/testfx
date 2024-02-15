@@ -70,7 +70,7 @@
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
-        <source>TestCleanup method should follow the following layout to be valid:
+        <source>Methods marked with [TestCleanup] should follow the following layout to be valid:
 - it should be 'public' 
 - it should not be 'static'
 - it should not be generic
@@ -79,7 +79,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="new">TestCleanup method should follow the following layout to be valid:
+        <target state="new">Methods marked with [TestCleanup] should follow the following layout to be valid:
 - it should be 'public' 
 - it should not be 'static'
 - it should not be generic
@@ -179,7 +179,7 @@
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidDescription">
-        <source>TestInitialize method should follow the following layout to be valid:
+        <source>Methods marked with [TestInitialize] should follow the following layout to be valid:
 - it should be 'public' 
 - it should not be 'static'
 - it should not be generic
@@ -188,7 +188,7 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="new">TestInitialize method should follow the following layout to be valid:
+        <target state="new">Methods marked with [TestInitialize] should follow the following layout to be valid:
 - it should be 'public' 
 - it should not be 'static'
 - it should not be generic

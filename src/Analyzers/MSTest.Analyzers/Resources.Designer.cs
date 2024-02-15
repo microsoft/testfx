@@ -172,7 +172,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup method should follow the following layout to be valid:
+        ///   Looks up a localized string similar to Methods marked with [TestCleanup] should follow the following layout to be valid:
         ///- it should be &apos;public&apos; 
         ///- it should not be &apos;static&apos;
         ///- it should not be generic
@@ -337,7 +337,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestInitialize method should follow the following layout to be valid:
+        ///   Looks up a localized string similar to Methods marked with [TestInitialize] should follow the following layout to be valid:
         ///- it should be &apos;public&apos; 
         ///- it should not be &apos;static&apos;
         ///- it should not be generic
