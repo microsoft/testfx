@@ -131,7 +131,7 @@
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidTitle">
         <source>TestCleanup method should have valid layout</source>
-        <target state="new">TestCleanup method should have valid layout</target>
+        <target state="translated">TestCleanup 方法應具有有效的配置</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
@@ -240,7 +240,7 @@
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
         <source>TestInitialize method should have valid layout</source>
-        <target state="needs-review-translation">測試方法應具備有效的配置</target>
+        <target state="new">TestInitialize method should have valid layout</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">
