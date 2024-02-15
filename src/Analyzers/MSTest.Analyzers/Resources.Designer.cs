@@ -77,7 +77,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize Method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid {
             get {
@@ -86,7 +86,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize Method &apos;{0}&apos; should not be generic.
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should not be generic.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidMessageFormat_NotGeneric {
             get {
@@ -95,7 +95,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize Method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidMessageFormat_Ordinary {
             get {
@@ -104,7 +104,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize Method &apos;{0}&apos; should be &apos;public&apos;.
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be &apos;public&apos;.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidMessageFormat_Public {
             get {
@@ -113,7 +113,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize Method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidMessageFormat_ReturnType {
             get {
@@ -122,7 +122,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize Method &apos;{0}&apos; should take a single parameter of type &apos;TestContext&apos;.
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should take a single parameter of type &apos;TestContext&apos;.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter {
             get {
@@ -131,7 +131,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize Method &apos;{0}&apos; should be &apos;static&apos;.
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be &apos;static&apos;.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidMessageFormat_Static {
             get {
@@ -140,7 +140,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize Methods should have valid layout.
+        ///   Looks up a localized string similar to AssemblyInitialize methods should have valid layout.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidTitle {
             get {

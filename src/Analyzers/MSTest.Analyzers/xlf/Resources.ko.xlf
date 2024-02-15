@@ -22,43 +22,43 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>AssemblyInitialize Method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">AssemblyInitialize Method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotGeneric">
-        <source>AssemblyInitialize Method '{0}' should not be generic</source>
-        <target state="new">AssemblyInitialize Method '{0}' should not be generic</target>
+        <source>AssemblyInitialize method '{0}' should not be generic</source>
+        <target state="new">AssemblyInitialize method '{0}' should not be generic</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Ordinary">
-        <source>AssemblyInitialize Method '{0}' should be an 'ordinary' method</source>
-        <target state="new">AssemblyInitialize Method '{0}' should be an 'ordinary' method</target>
+        <source>AssemblyInitialize method '{0}' should be an 'ordinary' method</source>
+        <target state="new">AssemblyInitialize method '{0}' should be an 'ordinary' method</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Public">
-        <source>AssemblyInitialize Method '{0}' should be 'public'</source>
-        <target state="new">AssemblyInitialize Method '{0}' should be 'public'</target>
+        <source>AssemblyInitialize method '{0}' should be 'public'</source>
+        <target state="new">AssemblyInitialize method '{0}' should be 'public'</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_ReturnType">
-        <source>AssemblyInitialize Method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">AssemblyInitialize Method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter">
-        <source>AssemblyInitialize Method '{0}' should take a single parameter of type 'TestContext'</source>
-        <target state="new">AssemblyInitialize Method '{0}' should take a single parameter of type 'TestContext'</target>
+        <source>AssemblyInitialize method '{0}' should take a single parameter of type 'TestContext'</source>
+        <target state="new">AssemblyInitialize method '{0}' should take a single parameter of type 'TestContext'</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Static">
-        <source>AssemblyInitialize Method '{0}' should be 'static'</source>
-        <target state="new">AssemblyInitialize Method '{0}' should be 'static'</target>
+        <source>AssemblyInitialize method '{0}' should be 'static'</source>
+        <target state="new">AssemblyInitialize method '{0}' should be 'static'</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
-        <source>AssemblyInitialize Methods should have valid layout</source>
-        <target state="new">AssemblyInitialize Methods should have valid layout</target>
+        <source>AssemblyInitialize methods should have valid layout</source>
+        <target state="new">AssemblyInitialize methods should have valid layout</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
