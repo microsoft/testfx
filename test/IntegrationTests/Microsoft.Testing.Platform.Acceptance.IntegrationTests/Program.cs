@@ -21,6 +21,7 @@ builder.AddCodeCoverageProvider();
 #endif
 builder.AddCrashDumpProvider();
 builder.AddTrxReportProvider();
+builder.AddRetryProvider();
 
 // Custom suite tools
 CompositeExtensionFactory<SlowestTestsConsumer> slowestTestCompositeServiceFactory

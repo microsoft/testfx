@@ -240,7 +240,7 @@
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
         <source>TestInitialize method should have valid layout</source>
-        <target state="new">TestInitialize method should have valid layout</target>
+        <target state="needs-review-translation">I metodi di test dovrebbero avere un layout valido</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">

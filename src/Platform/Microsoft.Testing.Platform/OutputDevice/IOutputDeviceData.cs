@@ -3,6 +3,9 @@
 
 namespace Microsoft.Testing.Platform.OutputDevice;
 
+/// <summary>
+/// Represents the data for an output device.
+/// </summary>
 public interface IOutputDeviceData
 {
 }

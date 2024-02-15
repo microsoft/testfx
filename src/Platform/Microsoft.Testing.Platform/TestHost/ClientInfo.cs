@@ -8,11 +8,6 @@ namespace Microsoft.Testing.Platform.TestHost;
 /// </summary>
 public sealed class ClientInfo
 {
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ClientInfo"/> class.
-    /// </summary>
-    /// <param name="id">The client ID.</param>
-    /// <param name="version">The client version.</param>
     internal ClientInfo(string id, string version)
     {
         Id = id;
