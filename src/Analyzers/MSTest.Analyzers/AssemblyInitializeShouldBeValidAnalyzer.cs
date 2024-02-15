@@ -98,7 +98,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         if (methodSymbol.DeclaredAccessibility != Accessibility.Public
             || (!canDiscoverInternals && methodSymbol.GetResultantVisibility() != SymbolVisibility.Public)
-                 || (canDiscoverInternals && methodSymbol.GetResultantVisibility() == SymbolVisibility.Private))
+            || (canDiscoverInternals && methodSymbol.GetResultantVisibility() == SymbolVisibility.Private))
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicRule, methodSymbol.Name));
         }
