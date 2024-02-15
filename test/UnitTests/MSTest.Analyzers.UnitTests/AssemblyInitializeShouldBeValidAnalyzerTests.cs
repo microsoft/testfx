@@ -31,7 +31,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenAssemblyInitializeIsPublicInsideInternalClass_NoDiagnostic()
+    public async Task WhenAssemblyInitializeIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
