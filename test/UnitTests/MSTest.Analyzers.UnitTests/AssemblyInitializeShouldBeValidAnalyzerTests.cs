@@ -123,7 +123,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
                 .WithArguments("AssemblyInitialize"));
     }
 
-    public async Task WhenAssemblyInitializeHasParameters_Diagnostic()
+    public async Task WhenAssemblyInitializeDoesNotHaveParameters_Diagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;

@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AssemblyInitializeShouldBeValidDescription" xml:space="preserve">
-    <value>Assembly Initialize attribute should follow the following layout to be valid:
+    <value>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
 - it should be 'public' 
 - it should be 'static'
 - it should not be generic
@@ -128,28 +128,28 @@
 - it should not be a special method (finalizer, operator...).</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
-    <value>Assembly Initialize '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+    <value>AssemblyInitialize Method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
-    <value>Assembly Initialize '{0}' should not be generic</value>
+    <value>AssemblyInitialize Method '{0}' should not be generic</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
-    <value>Assembly Initialize '{0}' should be an 'ordinary' method</value>
+    <value>AssemblyInitialize Method '{0}' should be an 'ordinary' method</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat_Public" xml:space="preserve">
-    <value>Assembly Initialize '{0}' should be 'public'</value>
+    <value>AssemblyInitialize Method '{0}' should be 'public'</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
-    <value>Assembly Initialize '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+    <value>AssemblyInitialize Method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter" xml:space="preserve">
-    <value>Assembly Initialize '{0}' should take a single parameter of type TestContext</value>
+    <value>AssemblyInitialize Method '{0}' should take a single parameter of type TestContext</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat_Static" xml:space="preserve">
-    <value>Assembly Initialize '{0}' should be 'static'</value>
+    <value>AssemblyInitialize Method '{0}' should be 'static'</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidTitle" xml:space="preserve">
-    <value>Assembly Initializes method should have valid layout</value>
+    <value>AssemblyInitialize Method should have valid layout</value>
   </data>
   <data name="AvoidExpectedExceptionAttributeDescription" xml:space="preserve">
     <value>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</value>
