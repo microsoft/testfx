@@ -24,7 +24,7 @@
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>3.11.0-beta1.23614.1</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
-    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24081.5</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
+    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24113.2</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
     <!-- Testing platform (this comment is here to avoid conflict on darc PRs) -->
     <MicrosoftTestingPlatformVersion>1.1.0-preview.24113.5</MicrosoftTestingPlatformVersion>
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.9.28</MicrosoftVisualStudioThreadingAnalyzersVersion>
