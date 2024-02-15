@@ -50,7 +50,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
-    
+
     public async Task WhenTestCleanupIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
     {
         var code = """
@@ -74,7 +74,33 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
                 .WithLocation(0)
                 .WithArguments("TestCleanup"));
     }
-    
+
+    [Arguments("protected")]
+    [Arguments("internal")]
+    [Arguments("internal protected")]
+    [Arguments("private")]
+    public async Task WhenTestCleanupIsNotPublic_Diagnostic(string accessibility)
+    {
+        var code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestCleanup]
+                {{accessibility}} void {|#0:TestCleanup|}()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.PublicRule)
+                .WithLocation(0)
+                .WithArguments("TestCleanup"));
+    }
+
     public async Task WhenTestCleanupIsNotOrdinary_Diagnostic()
     {
         var code = """
@@ -135,32 +161,6 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
         await VerifyCS.VerifyAnalyzerAsync(
             code,
             VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(0)
-                .WithArguments("TestCleanup"));
-    }
-
-    [Arguments("protected")]
-    [Arguments("internal")]
-    [Arguments("internal protected")]
-    [Arguments("private")]
-    public async Task WhenTestCleanupIsNotPublic_Diagnostic(string accessibility)
-    {
-        var code = $$"""
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestCleanup]
-                {{accessibility}} void {|#0:TestCleanup|}()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.PublicRule)
                 .WithLocation(0)
                 .WithArguments("TestCleanup"));
     }

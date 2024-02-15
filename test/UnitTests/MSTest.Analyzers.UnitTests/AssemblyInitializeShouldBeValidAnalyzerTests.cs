@@ -74,6 +74,33 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
                 .WithLocation(0)
                 .WithArguments("AssemblyInitialize"));
     }
+
+    [Arguments("protected")]
+    [Arguments("internal")]
+    [Arguments("internal protected")]
+    [Arguments("private")]
+    public async Task WhenAssemblyInitializeIsNotPublic_Diagnostic(string accessibility)
+    {
+        var code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                {{accessibility}} static void {|#0:AssemblyInitialize|}(TestContext context)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.PublicRule)
+                .WithLocation(0)
+                .WithArguments("AssemblyInitialize"));
+    }
+
     public async Task WhenAssemblyInitializeIsNotOrdinary_Diagnostic()
     {
         var code = """
@@ -114,32 +141,6 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
         await VerifyCS.VerifyAnalyzerAsync(
             code,
             VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyInitialize"));
-    }
-
-    [Arguments("protected")]
-    [Arguments("internal")]
-    [Arguments("internal protected")]
-    [Arguments("private")]
-    public async Task WhenAssemblyInitializeIsNotPublic_Diagnostic(string accessibility)
-    {
-        var code = $$"""
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [AssemblyInitialize]
-                {{accessibility}} static void {|#0:AssemblyInitialize|}(TestContext context)
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.PublicRule)
                 .WithLocation(0)
                 .WithArguments("AssemblyInitialize"));
     }
