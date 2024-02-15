@@ -2,6 +2,65 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="es" original="../Resources.resx">
     <body>
+      <trans-unit id="AssemblyInitializeShouldBeValidDescription">
+        <source>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
+- it should be 'public' 
+- it should be 'static'
+- it should not be generic
+- it should take one parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</source>
+        <target state="new">Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
+- it should be 'public' 
+- it should be 'static'
+- it should not be generic
+- it should take one parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
+        <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotGeneric">
+        <source>AssemblyInitialize method '{0}' should not be generic</source>
+        <target state="new">AssemblyInitialize method '{0}' should not be generic</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Ordinary">
+        <source>AssemblyInitialize method '{0}' should be an 'ordinary' method</source>
+        <target state="new">AssemblyInitialize method '{0}' should be an 'ordinary' method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Public">
+        <source>AssemblyInitialize method '{0}' should be 'public'</source>
+        <target state="new">AssemblyInitialize method '{0}' should be 'public'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_ReturnType">
+        <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter">
+        <source>AssemblyInitialize method '{0}' should take a single parameter of type 'TestContext'</source>
+        <target state="new">AssemblyInitialize method '{0}' should take a single parameter of type 'TestContext'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Static">
+        <source>AssemblyInitialize method '{0}' should be 'static'</source>
+        <target state="new">AssemblyInitialize method '{0}' should be 'static'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidTitle">
+        <source>AssemblyInitialize methods should have valid layout</source>
+        <target state="new">AssemblyInitialize methods should have valid layout</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">Preferir "Assert.ThrowsException" o "Assert.ThrowsExceptionAsync" en lugar de '[ExpectedException]' ya que garantiza que solo la llamada esperada inicia la excepción esperada. Las API de aserción también proporcionan más flexibilidad y le permiten declarar propiedades adicionales de la ejecución.</target>
