@@ -45,6 +45,7 @@
       -->
     <ItemGroup>
       <_TemplateCsproj Include="$(MSBuildProjectDirectory)/Sdk/Sdk.props.template" Destination="$(MSBuildProjectDirectory)/Sdk/Sdk.props" />
+      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/Sdk/Runner/Runner.targets.template" Destination="$(MSBuildProjectDirectory)/Sdk/Runner/Runner.targets" />
     </ItemGroup>
 
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">

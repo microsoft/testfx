@@ -1,23 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <!-- Core -->
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
-  </ItemGroup>
+  <!-- Import Runner.targets -->
+  <Import Project="$(MSBuildThisFileDirectory)Runner/Runner.targets" Condition=" '$(UseVSTest)' == 'false' " />
 
-  <!-- Extensions -->
-  <ItemGroup Condition=" '$(EnableMSTestRunner)' == 'true' ">
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingExtensionsCrashDumpVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$(MicrosoftTestingExtensionsHangDumpVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$(MicrosoftTestingExtensionsHotReloadVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingExtensionsRetryVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' or '$(EnableAllTestingExtensions)' == 'true' " />
-  </ItemGroup>
+  <!-- Import VSTest.targets -->
+  <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
 
   <!-- Implicit bottom import -->
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />

@@ -300,7 +300,7 @@
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
-        <target state="new">Test methods should have valid layout</target>
+        <target state="translated">테스트 메서드에는 유효한 레이아웃이 있어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">

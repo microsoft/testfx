@@ -4,7 +4,7 @@
 namespace Microsoft.Testing.Platform.Capabilities;
 
 /// <summary>
-/// Represents the interface for capabilities.
+/// Represents the capabilities provided by an extension.
 /// </summary>
 /// <typeparam name="TCapability">The type of capability.</typeparam>
 public interface ICapabilities<TCapability>

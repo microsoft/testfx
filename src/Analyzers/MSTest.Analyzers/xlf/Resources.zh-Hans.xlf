@@ -299,7 +299,7 @@
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
-        <target state="new">Test methods should have valid layout</target>
+        <target state="translated">测试方法应具有有效的布局</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">
