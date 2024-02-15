@@ -50,15 +50,16 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             {
                 var taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
                 var valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+                var canDiscoverInternals = context.Compilation.CanDiscoverInternals();
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testInitializeAttributeSymbol, taskSymbol, valueTaskSymbol),
+                    context => AnalyzeSymbol(context, testInitializeAttributeSymbol, taskSymbol, valueTaskSymbol, canDiscoverInternals),
                     SymbolKind.Method);
             }
         });
     }
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testInitializeAttributeSymbol, INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol)
+        INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         if (!methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testInitializeAttributeSymbol)))
@@ -99,7 +100,9 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAsyncVoidRule, methodSymbol.Name));
         }
 
-        if (methodSymbol.DeclaredAccessibility != Accessibility.Public || methodSymbol.GetResultantVisibility() != SymbolVisibility.Public)
+        if (methodSymbol.DeclaredAccessibility != Accessibility.Public
+            || (!canDiscoverInternals && methodSymbol.GetResultantVisibility() != SymbolVisibility.Public)
+            || (canDiscoverInternals && methodSymbol.GetResultantVisibility() == SymbolVisibility.Private))
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicRule, methodSymbol.Name));
         }
