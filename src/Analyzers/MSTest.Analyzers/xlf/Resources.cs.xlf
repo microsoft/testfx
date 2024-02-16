@@ -190,7 +190,7 @@
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidTitle">
         <source>TestCleanup method should have valid layout</source>
-        <target state="new">TestCleanup method should have valid layout</target>
+        <target state="translated">Metoda TestCleanup by měla mít platné rozložení</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
