@@ -63,9 +63,8 @@ namespace MSTest.Analyzers {
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
         ///- it should be &apos;public&apos; 
-        ///- it should not be &apos;static&apos;
+        ///- it should not &apos;static&apos;
         ///- it should not be generic
-        ///- it should not be &apos;abstract&apos;
         ///- it should not take any parameter
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
         ///- it should not be &apos;async void&apos;
@@ -87,15 +86,6 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyCleanup  &apos;{0}&apos; should not be &apos;abstract&apos;.
-        /// </summary>
-        internal static string AssemblyCleanupShouldBeValidMessageFormat_NotAbstract {
-            get {
-                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_NotAbstract", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
         /// </summary>
         internal static string AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid {
@@ -110,15 +100,6 @@ namespace MSTest.Analyzers {
         internal static string AssemblyCleanupShouldBeValidMessageFormat_NotGeneric {
             get {
                 return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_NotGeneric", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; should not be &apos;static&apos;.
-        /// </summary>
-        internal static string AssemblyCleanupShouldBeValidMessageFormat_NotStatic {
-            get {
-                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_NotStatic", resourceCulture);
             }
         }
         
@@ -146,6 +127,15 @@ namespace MSTest.Analyzers {
         internal static string AssemblyCleanupShouldBeValidMessageFormat_ReturnType {
             get {
                 return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_ReturnType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; should be &apos;static&apos;.
+        /// </summary>
+        internal static string AssemblyCleanupShouldBeValidMessageFormat_Static {
+            get {
+                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_Static", resourceCulture);
             }
         }
         

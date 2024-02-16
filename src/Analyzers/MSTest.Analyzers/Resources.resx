@@ -120,9 +120,8 @@
   <data name="AssemblyCleanupShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
 - it should be 'public' 
-- it should not be 'static'
+- it should not 'static'
 - it should not be generic
-- it should not be 'abstract'
 - it should not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
@@ -131,17 +130,11 @@
   <data name="AssemblyCleanupShouldBeValidMessageFormat_NoParameters" xml:space="preserve">
     <value>AssemblyCleanup method '{0}' should not take any parameter</value>
   </data>
-  <data name="AssemblyCleanupShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
-    <value>AssemblyCleanup  '{0}' should not be 'abstract'</value>
-  </data>
   <data name="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
   </data>
   <data name="AssemblyCleanupShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
     <value>AssemblyCleanup method '{0}' should not be generic</value>
-  </data>
-  <data name="AssemblyCleanupShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
-    <value>AssemblyCleanup method '{0}' should not be 'static'</value>
   </data>
   <data name="AssemblyCleanupShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
     <value>AssemblyCleanup method '{0}' should be an 'ordinary' method</value>
@@ -151,6 +144,9 @@
   </data>
   <data name="AssemblyCleanupShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
     <value>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+  </data>
+  <data name="AssemblyCleanupShouldBeValidMessageFormat_Static" xml:space="preserve">
+    <value>AssemblyCleanup method '{0}' should be 'static'</value>
   </data>
   <data name="AssemblyCleanupShouldBeValidTitle" xml:space="preserve">
     <value>AssemblyCleanup methods should have valid layout</value>

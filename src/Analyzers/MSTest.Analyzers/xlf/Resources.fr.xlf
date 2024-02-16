@@ -5,18 +5,16 @@
       <trans-unit id="AssemblyCleanupShouldBeValidDescription">
         <source>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
 - it should be 'public' 
-- it should not be 'static'
+- it should not 'static'
 - it should not be generic
-- it should not be 'abstract'
 - it should not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
         <target state="new">Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
 - it should be 'public' 
-- it should not be 'static'
+- it should not 'static'
 - it should not be generic
-- it should not be 'abstract'
 - it should not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
@@ -28,11 +26,6 @@
         <target state="new">AssemblyCleanup method '{0}' should not take any parameter</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAbstract">
-        <source>AssemblyCleanup  '{0}' should not be 'abstract'</source>
-        <target state="new">AssemblyCleanup  '{0}' should not be 'abstract'</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid">
         <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="new">AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
@@ -41,11 +34,6 @@
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotGeneric">
         <source>AssemblyCleanup method '{0}' should not be generic</source>
         <target state="new">AssemblyCleanup method '{0}' should not be generic</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotStatic">
-        <source>AssemblyCleanup method '{0}' should not be 'static'</source>
-        <target state="new">AssemblyCleanup method '{0}' should not be 'static'</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Ordinary">
@@ -61,6 +49,11 @@
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_ReturnType">
         <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="new">AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Static">
+        <source>AssemblyCleanup method '{0}' should be 'static'</source>
+        <target state="new">AssemblyCleanup method '{0}' should be 'static'</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidTitle">
