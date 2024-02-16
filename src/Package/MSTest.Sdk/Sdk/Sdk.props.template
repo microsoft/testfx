@@ -1,19 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Project>
+
   <!-- Implicit top import -->
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
-  
+
   <PropertyGroup>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-    <TestingPlatformDonetTestSupport>false</TestingPlatformDonetTestSupport>
-    <IsPackable>false</IsPackable>
+    <UseVSTest Condition=" '$(UseVSTest)' == '' " >false</UseVSTest>
+    <MSTestVersion Condition=" '$(MSTestVersion)' == '' ">${MSTestVersion}</MSTestVersion>
+    <MicrosoftNETTestSdkVersion Condition=" '$(MicrosoftNETTestSdkVersion)' == '' ">${MicrosoftNETTestSdkVersion}</MicrosoftNETTestSdkVersion>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="${MicrosoftNETTestSdkVersion}" />
-    <PackageReference Include="MSTest.TestAdapter" Version="${Version}" />
-    <PackageReference Include="MSTest.TestFramework" Version="${Version}" />
-    <PackageReference Include="MSTest.Analyzers" Version="${Version}" />
-    <PackageReference Include="Microsoft.Testing.Extensions.VSTestBridge" Version="${MicrosoftTestingPlatformVersion}" />
-  </ItemGroup>
 </Project>

@@ -36,7 +36,7 @@
   
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
-      <_TemplateProperties>Version=$(Version);MicrosoftTestingPlatformVersion=$(MicrosoftTestingPlatformVersion);MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion)</_TemplateProperties>
+      <_TemplateProperties>MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(MicrosoftTestingPlatformVersion);MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--
@@ -45,6 +45,7 @@
       -->
     <ItemGroup>
       <_TemplateCsproj Include="$(MSBuildProjectDirectory)/Sdk/Sdk.props.template" Destination="$(MSBuildProjectDirectory)/Sdk/Sdk.props" />
+      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/Sdk/Runner/Runner.targets.template" Destination="$(MSBuildProjectDirectory)/Sdk/Runner/Runner.targets" />
     </ItemGroup>
 
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">

@@ -53,6 +53,76 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
                 .WithArguments("Finalize"));
     }
 
+    public async Task WhenTestInitializeIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            internal class MyTestClass
+            {
+                [TestInitialize]
+                public void TestInitialize()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestInitializeIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                internal void {|#0:TestInitialize|}()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.PublicRule)
+                .WithLocation(0)
+                .WithArguments("TestInitialize"));
+    }
+
+    [Arguments("protected")]
+    [Arguments("internal")]
+    [Arguments("internal protected")]
+    [Arguments("private")]
+    public async Task WhenTestInitializeIsNotPublic_Diagnostic(string accessibility)
+    {
+        var code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                {{accessibility}} void {|#0:TestInitialize|}()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.PublicRule)
+                .WithLocation(0)
+                .WithArguments("TestInitialize"));
+    }
+
     public async Task WhenTestInitializeIsAbstract_Diagnostic()
     {
         var code = """
@@ -91,32 +161,6 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
         await VerifyCS.VerifyAnalyzerAsync(
             code,
             VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(0)
-                .WithArguments("TestInitialize"));
-    }
-
-    [Arguments("protected")]
-    [Arguments("internal")]
-    [Arguments("internal protected")]
-    [Arguments("private")]
-    public async Task WhenTestInitializeIsNotPublic_Diagnostic(string accessibility)
-    {
-        var code = $$"""
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            [TestClass]
-            public class MyTestClass
-            {
-                [TestInitialize]
-                {{accessibility}} void {|#0:TestInitialize|}()
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.PublicRule)
                 .WithLocation(0)
                 .WithArguments("TestInitialize"));
     }

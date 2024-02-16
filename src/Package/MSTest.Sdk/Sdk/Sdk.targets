@@ -1,39 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="_SetupEntryPoint" BeforeTargets="GenerateProgramFile" Condition=" '$(EnableMSTestRunner)' == 'false' " >
-    <PropertyGroup>
-      <!-- Disable testing platform entry point generation -->
-      <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
-    </PropertyGroup>
-    <!--
-          We need to re-enable the VSTest sdk program.* generation by it's by default disabled when we reference Microsoft.Testing.Platform.MSBuild.
-          We cannot use the GenerateProgramFile property as Microsoft.NET.Test.Sdk.targets it's an 'InitialTargets' and we cannot plug any target before it.
-    -->
-    <CallTarget Targets="_GenerateProgramFileTakenFromVSTest" />
-  </Target>
 
-  <!--
-    ============================================================
-    GenerateProgramFile taken from Microsoft.NET.Test.Sdk.targets 
-    Generates Program file which contains the Main entry point
-    ============================================================
-  -->
-  <Target Name="_GenerateProgramFileTakenFromVSTest" >
+  <!-- Import Runner.targets -->
+  <Import Project="$(MSBuildThisFileDirectory)Runner/Runner.targets" Condition=" '$(UseVSTest)' == 'false' " />
 
-    <ItemGroup Condition="'$(Language)' == 'VB' or '$(Language)' == 'C#'">
-      <RemoveExistingMicrosoftNETTestSdkProgram Include="@(Compile)" Condition="'%(FileName)' == 'Microsoft.NET.Test.Sdk.Program'" />
-      <Compile Remove="@(RemoveExistingMicrosoftNETTestSdkProgram)" />
-      <Compile Include="$(GeneratedProgramFile)"/>
-    </ItemGroup>
-
-    <ItemGroup Condition="'$(Language)' == 'F#'">
-      <ProgramCompiles Include="@(Compile)" Condition="'%(Identity)' == 'Program.fs'" />
-      <CompileAfter Include="$(GeneratedProgramFile)" Condition="@(ProgramCompiles-&gt;Count()) == 0" />
-    </ItemGroup>
-
-    <Warning Condition="@(ProgramCompiles-&gt;Count()) != 0" Text="A 'Program.fs' file can be automatically generated for F# .NET Core test projects. To fix this warning, either delete the file from the project, or set the &lt;GenerateProgramFile&gt; property to 'false'." />
-
-  </Target>
+  <!-- Import VSTest.targets -->
+  <Import Project="$(MSBuildThisFileDirectory)VSTest/VSTest.targets" Condition=" '$(UseVSTest)' == 'true' " />
 
   <!-- Implicit bottom import -->
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />

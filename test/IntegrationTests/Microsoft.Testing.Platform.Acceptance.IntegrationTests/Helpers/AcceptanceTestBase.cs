@@ -112,6 +112,14 @@ public class UnitTest1
         }
     }
 
+    internal static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixMultiTfmFoldedBuildConfiguration()
+    {
+        foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())
+        {
+            yield return new TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>((TargetFrameworks.All.ToMSBuildTargetFrameworks(), compilationMode), $"multitfm,{compilationMode}");
+        }
+    }
+
     internal static IEnumerable<TestArgumentsEntry<(string MultiTfm, BuildConfiguration BuildConfiguration)>> GetBuildMatrixMultiTfmBuildConfiguration()
     {
         foreach (BuildConfiguration compilationMode in Enum.GetValues<BuildConfiguration>())

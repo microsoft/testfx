@@ -12,11 +12,23 @@ namespace Microsoft.Testing.Platform.Extensions.TestHostControllers;
 /// <param name="isLocked">Indicates whether the environment variable is locked.</param>
 public class EnvironmentVariable(string variable, string? value, bool isSecret, bool isLocked)
 {
+    /// <summary>
+    /// Gets the name of the environment variable.
+    /// </summary>
     public string Variable { get; } = variable;
 
+    /// <summary>
+    /// Gets the value of the environment variable.
+    /// </summary>
     public string? Value { get; } = value;
 
+    /// <summary>
+    /// Gets a value indicating whether the environment variable is a secret.
+    /// </summary>
     public bool IsSecret { get; } = isSecret;
 
+    /// <summary>
+    /// Gets a value indicating whether the environment variable is locked.
+    /// </summary>
     public bool IsLocked { get; } = isLocked;
 }

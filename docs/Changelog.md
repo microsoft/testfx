@@ -4,6 +4,36 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [3.2.1] - 2024-02-13
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0...v.3.2.1)
+
+## Fixed
+
+* MSTEST0002: fix false-positive with static TestClass (#2182) by @Evangelink in [#2199](https://github.com/microsoft/testfx/pull/2199)
+* Bump version of coverage and platform by @Evangelink in [#2280](https://github.com/microsoft/testfx/pull/2280)
+* [rel/3.2] Update dependencies from devdiv/DevDiv/vs-code-coverage by @dotnet-maestro in [#2315](https://github.com/microsoft/testfx/pull/2315)
+* Fix command line output validation (#2314) by @MarcoRossignoli in [#2317](https://github.com/microsoft/testfx/pull/2317)
+* [rel/3.2] Update dependencies from microsoft/testanywhere by @dotnet-maestro in [#2320](https://github.com/microsoft/testfx/pull/2320)
+* [rel/3.2] Update dependencies from microsoft/testanywhere by @dotnet-maestro in [#2326](https://github.com/microsoft/testfx/pull/2326)
+
+### Housekeeping
+
+* Remove unused localization entries by @Evangelink in [#2192](https://github.com/microsoft/testfx/pull/2192)
+* Remove version fixup workaround (#2209) by @Evangelink in [#2212](https://github.com/microsoft/testfx/pull/2212)
+
+### Artifacts
+
+* MSTest: [3.2.1](https://www.nuget.org/packages/MSTest/3.2.1)
+* MSTest.TestFramework: [3.2.1](https://www.nuget.org/packages/MSTest.TestFramework/3.2.1)
+* MSTest.TestAdapter: [3.2.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.2.1)
+* MSTest.Analyzers: [3.2.1](https://www.nuget.org/packages/MSTest.Analyzers/3.2.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.0.1)
+* Microsoft.Testing.Extensions.HangDump: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.0.1)
+* Microsoft.Testing.Extensions.HotReload: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.0.1)
+* Microsoft.Testing.Extensions.Retry: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.0.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.0.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.0.1)
+
 ## [3.2.0] - 2024-01-24
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.1.1...v.3.2.0)

@@ -61,6 +61,94 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
+        ///- it should be &apos;public&apos; 
+        ///- it should be &apos;static&apos;
+        ///- it should not be generic
+        ///- it should take one parameter of type &apos;TestContext&apos;
+        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///- it should not be &apos;async void&apos;
+        ///- it should not be a special method (finalizer, operator...)..
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should not be generic.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_NotGeneric {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_NotGeneric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_Ordinary {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_Ordinary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be &apos;public&apos;.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_Public {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_Public", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_ReturnType {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_ReturnType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should take a single parameter of type &apos;TestContext&apos;.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be &apos;static&apos;.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidMessageFormat_Static {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_Static", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AssemblyInitialize methods should have valid layout.
+        /// </summary>
+        internal static string AssemblyInitializeShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsException&apos; or &apos;Assert.ThrowsExceptionAsync&apos; over &apos;[ExpectedException]&apos; as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption..
         /// </summary>
         internal static string AvoidExpectedExceptionAttributeDescription {
@@ -230,7 +318,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup attribute should follow the following layout to be valid:
+        ///   Looks up a localized string similar to Methods marked with [TestCleanup] should follow the following layout to be valid:
         ///- it should be &apos;public&apos; 
         ///- it should not be &apos;static&apos;
         ///- it should not be generic
@@ -247,7 +335,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup &apos;{0}&apos; should not take any parameter.
+        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should not take any parameter.
         /// </summary>
         internal static string TestCleanupShouldBeValidMessageFormat_NoParameters {
             get {
@@ -256,7 +344,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup &apos;{0}&apos; should not be &apos;abstract&apos;.
+        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should not be &apos;abstract&apos;.
         /// </summary>
         internal static string TestCleanupShouldBeValidMessageFormat_NotAbstract {
             get {
@@ -265,7 +353,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup &apos;{0}&apos; should not be &apos;async void&apos;.
+        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should not be &apos;async void&apos;.
         /// </summary>
         internal static string TestCleanupShouldBeValidMessageFormat_NotAsyncVoid {
             get {
@@ -274,7 +362,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup &apos;{0}&apos; should not be generic.
+        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should not be generic.
         /// </summary>
         internal static string TestCleanupShouldBeValidMessageFormat_NotGeneric {
             get {
@@ -283,7 +371,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup &apos;{0}&apos; should not be &apos;static&apos;.
+        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should not be &apos;static&apos;.
         /// </summary>
         internal static string TestCleanupShouldBeValidMessageFormat_NotStatic {
             get {
@@ -292,7 +380,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup &apos;{0}&apos; should be an &apos;ordinary&apos; method.
+        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
         /// </summary>
         internal static string TestCleanupShouldBeValidMessageFormat_Ordinary {
             get {
@@ -301,7 +389,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup &apos;{0}&apos; should be &apos;public&apos;.
+        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should be &apos;public&apos;.
         /// </summary>
         internal static string TestCleanupShouldBeValidMessageFormat_Public {
             get {
@@ -310,7 +398,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
         /// </summary>
         internal static string TestCleanupShouldBeValidMessageFormat_ReturnType {
             get {
@@ -395,7 +483,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestInitialize attribute should follow the following layout to be valid:
+        ///   Looks up a localized string similar to Methods marked with [TestInitialize] should follow the following layout to be valid:
         ///- it should be &apos;public&apos; 
         ///- it should not be &apos;static&apos;
         ///- it should not be generic
@@ -412,7 +500,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should not take any parameter.
+        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should not take any parameter.
         /// </summary>
         internal static string TestInitializeShouldBeValidMessageFormat_NoParameters {
             get {
@@ -421,7 +509,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should not be &apos;abstract&apos;.
+        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should not be &apos;abstract&apos;.
         /// </summary>
         internal static string TestInitializeShouldBeValidMessageFormat_NotAbstract {
             get {
@@ -430,7 +518,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should not be &apos;async void&apos;.
+        ///   Looks up a localized string similar to TestInitialize method  &apos;{0}&apos; should not be &apos;async void&apos;.
         /// </summary>
         internal static string TestInitializeShouldBeValidMessageFormat_NotAsyncVoid {
             get {
@@ -439,7 +527,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should not be generic.
+        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should not be generic.
         /// </summary>
         internal static string TestInitializeShouldBeValidMessageFormat_NotGeneric {
             get {
@@ -448,7 +536,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should not be &apos;static&apos;.
+        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should not be &apos;static&apos;.
         /// </summary>
         internal static string TestInitializeShouldBeValidMessageFormat_NotStatic {
             get {
@@ -457,7 +545,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should be an &apos;ordinary&apos; method.
+        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
         /// </summary>
         internal static string TestInitializeShouldBeValidMessageFormat_Ordinary {
             get {
@@ -466,7 +554,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should be &apos;public&apos;.
+        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should be &apos;public&apos;.
         /// </summary>
         internal static string TestInitializeShouldBeValidMessageFormat_Public {
             get {
@@ -475,7 +563,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test Initialize &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
         /// </summary>
         internal static string TestInitializeShouldBeValidMessageFormat_ReturnType {
             get {
@@ -484,7 +572,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test methods should have valid layout.
+        ///   Looks up a localized string similar to TestInitialize method should have valid layout.
         /// </summary>
         internal static string TestInitializeShouldBeValidTitle {
             get {
