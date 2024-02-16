@@ -228,6 +228,40 @@
   <data name="ClassCleanupShouldBeValidTitle" xml:space="preserve">
     <value>ClassCleanup methods should have valid layout</value>
   </data>
+  <data name="ClassInitializeShouldBeValidDescription" xml:space="preserve">
+    <value>Methods marked with [ClassInitialize] should follow the following layout to be valid:
+- it should be 'public' 
+- it should be 'static'
+- it should not be generic
+- it should take one parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</value>
+  </data>
+  <data name="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
+    <value>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+  </data>
+  <data name="ClassInitializeShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
+    <value>ClassInitialize method '{0}' should not be generic</value>
+  </data>
+  <data name="ClassInitializeShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
+    <value>ClassInitialize method '{0}' should be an 'ordinary' method</value>
+  </data>
+  <data name="ClassInitializeShouldBeValidMessageFormat_Public" xml:space="preserve">
+    <value>ClassInitialize method '{0}' should be 'public'</value>
+  </data>
+  <data name="ClassInitializeShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
+    <value>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+  </data>
+  <data name="ClassInitializeShouldBeValidMessageFormat_SingleContextParameter" xml:space="preserve">
+    <value>ClassInitialize method '{0}' should take a single parameter of type 'TestContext'</value>
+  </data>
+  <data name="ClassInitializeShouldBeValidMessageFormat_Static" xml:space="preserve">
+    <value>ClassInitialize method '{0}' should be 'static'</value>
+  </data>
+  <data name="ClassInitializeShouldBeValidTitle" xml:space="preserve">
+    <value>ClassInitialize methods should have valid layout</value>
+  </data>
   <data name="PublicTypeShouldBeTestClassDescription" xml:space="preserve">
     <value>It's considered a good practice to have only test classes marked public in a test project.</value>
   </data>

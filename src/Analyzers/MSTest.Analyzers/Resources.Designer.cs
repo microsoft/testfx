@@ -352,6 +352,94 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Methods marked with [ClassInitialize] should follow the following layout to be valid:
+        ///- it should be &apos;public&apos; 
+        ///- it should be &apos;static&apos;
+        ///- it should not be generic
+        ///- it should take one parameter of type &apos;TestContext&apos;
+        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///- it should not be &apos;async void&apos;
+        ///- it should not be a special method (finalizer, operator...)..
+        /// </summary>
+        internal static string ClassInitializeShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("ClassInitializeShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        /// </summary>
+        internal static string ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid {
+            get {
+                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should not be generic.
+        /// </summary>
+        internal static string ClassInitializeShouldBeValidMessageFormat_NotGeneric {
+            get {
+                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_NotGeneric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
+        /// </summary>
+        internal static string ClassInitializeShouldBeValidMessageFormat_Ordinary {
+            get {
+                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_Ordinary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should be &apos;public&apos;.
+        /// </summary>
+        internal static string ClassInitializeShouldBeValidMessageFormat_Public {
+            get {
+                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_Public", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        /// </summary>
+        internal static string ClassInitializeShouldBeValidMessageFormat_ReturnType {
+            get {
+                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_ReturnType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should take a single parameter of type &apos;TestContext&apos;.
+        /// </summary>
+        internal static string ClassInitializeShouldBeValidMessageFormat_SingleContextParameter {
+            get {
+                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_SingleContextParameter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should be &apos;static&apos;.
+        /// </summary>
+        internal static string ClassInitializeShouldBeValidMessageFormat_Static {
+            get {
+                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_Static", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassInitialize methods should have valid layout.
+        /// </summary>
+        internal static string ClassInitializeShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("ClassInitializeShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
         /// </summary>
         internal static string PublicTypeShouldBeTestClassDescription {
