@@ -76,6 +76,65 @@
         <target state="translated">Избегать "[ExpectedException]"</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidDescription">
+        <source>Methods marked with [ClassInitialize] should follow the following layout to be valid:
+- it should be 'public' 
+- it should be 'static'
+- it should not be generic
+- it should take one parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</source>
+        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
+- it should be 'public' 
+- it should be 'static'
+- it should not be generic
+- it should take one parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid">
+        <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotGeneric">
+        <source>ClassInitialize method '{0}' should not be generic</source>
+        <target state="new">ClassInitialize method '{0}' should not be generic</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Ordinary">
+        <source>ClassInitialize method '{0}' should be an 'ordinary' method</source>
+        <target state="new">ClassInitialize method '{0}' should be an 'ordinary' method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Public">
+        <source>ClassInitialize method '{0}' should be 'public'</source>
+        <target state="new">ClassInitialize method '{0}' should be 'public'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_ReturnType">
+        <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_SingleContextParameter">
+        <source>ClassInitialize method '{0}' should take a single parameter of type 'TestContext'</source>
+        <target state="new">ClassInitialize method '{0}' should take a single parameter of type 'TestContext'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Static">
+        <source>ClassInitialize method '{0}' should be 'static'</source>
+        <target state="new">ClassInitialize method '{0}' should be 'static'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidTitle">
+        <source>ClassInitialize methods should have valid layout</source>
+        <target state="new">ClassInitialize methods should have valid layout</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">Рекомендуется использовать только тестовые классы, помеченные как общедоступные в тестовом проекте.</target>
