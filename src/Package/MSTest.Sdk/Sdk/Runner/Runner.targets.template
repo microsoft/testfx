@@ -5,7 +5,7 @@
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
-    <MicrosoftTestingExtensionsCommonVersion Condition=" '$(MicrosoftTestingExtensionsCommonVersion)' == '' " >1.1.0-preview.24113.5</MicrosoftTestingExtensionsCommonVersion>
+    <MicrosoftTestingExtensionsCommonVersion Condition=" '$(MicrosoftTestingExtensionsCommonVersion)' == '' " >${MicrosoftTestingPlatformVersion}</MicrosoftTestingExtensionsCommonVersion>
     <TestingPlatformDotnetTestSupport Condition=" $(TestingPlatformDotnetTestSupport) == '' ">true</TestingPlatformDotnetTestSupport>
     <TestingExtensionsProfile Condition=" $(TestingExtensionsProfile) == '' ">Default</TestingExtensionsProfile>
   </PropertyGroup>
@@ -26,7 +26,7 @@
     <_UserOptedOutMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'false' ">true</_UserOptedOutMicrosoftTestingExtensionsCodeCoverage>
     <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == ''  and $(TestingExtensionsProfile) == 'Default' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
     <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(_UserOptedOutMicrosoftTestingExtensionsCodeCoverage)' != 'true' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
-    <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >17.10.4-preview.24114.3</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >${MicrosoftTestingExtensionsCodeCoverageVersion}</MicrosoftTestingExtensionsCodeCoverageVersion>
 
     <!-- Hot Reload -->
     <_UserOptedOutMicrosoftTestingExtensionsHotReload Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'false' ">true</_UserOptedOutMicrosoftTestingExtensionsHotReload>
