@@ -68,6 +68,8 @@ MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.Messages.V
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.Messages.V100.ServerModeTests.WhenClientDies_Server_ShouldClose_Gracefully(string) (net6.0)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.Messages.V100.ServerModeTests.WhenClientDies_Server_ShouldClose_Gracefully(string) (net7.0)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.Messages.V100.ServerModeTests.WhenClientDies_Server_ShouldClose_Gracefully(string) (net8.0)
+MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.Invalid_TestingProfile_Name_Should_Fail(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Debug)
+MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.Invalid_TestingProfile_Name_Should_Fail(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Release)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_MSTestRunner_DotnetTest(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Debug)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_MSTestRunner_DotnetTest(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Release)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_MSTestRunner_Standalone_Enable_Default_Extensions(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration, bool) (disabled,Debug,CodeCoverage)
