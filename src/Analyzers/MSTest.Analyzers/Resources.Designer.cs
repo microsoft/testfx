@@ -88,6 +88,64 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DataRow attribute should have the following layout to be valid:
+        ///- should only be set on a test method;
+        ///- should have at least one argument;
+        ///- argument count should match method argument count;
+        ///- argument type should match method argument type..
+        /// </summary>
+        internal static string DataRowShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DataRow argument count should match method argument count.
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_ArgumentNumber {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DataRow argument type should match method argument type.
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_ArgumentType {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DataRow should have at least one argument.
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_AtLeastOneArgument {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_AtLeastOneArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DataRow should only be set on a test method.
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_OnTestMethod {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_OnTestMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DataRow should be valid.
+        /// </summary>
+        internal static string DataRowShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
         /// </summary>
         internal static string PublicTypeShouldBeTestClassDescription {

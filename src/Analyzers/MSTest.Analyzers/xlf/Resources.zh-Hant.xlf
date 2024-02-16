@@ -17,6 +17,44 @@
         <target state="translated">避免 '[ExpectedException]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataRowShouldBeValidDescription">
+        <source>DataRow attribute should have the following layout to be valid:
+- should only be set on a test method;
+- should have at least one argument;
+- argument count should match method argument count;
+- argument type should match method argument type.</source>
+        <target state="new">DataRow attribute should have the following layout to be valid:
+- should only be set on a test method;
+- should have at least one argument;
+- argument count should match method argument count;
+- argument type should match method argument type.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentNumber">
+        <source>DataRow argument count should match method argument count</source>
+        <target state="new">DataRow argument count should match method argument count</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentType">
+        <source>DataRow argument type should match method argument type</source>
+        <target state="new">DataRow argument type should match method argument type</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_AtLeastOneArgument">
+        <source>DataRow should have at least one argument</source>
+        <target state="new">DataRow should have at least one argument</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
+        <source>DataRow should only be set on a test method</source>
+        <target state="new">DataRow should only be set on a test method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidTitle">
+        <source>DataRow should be valid</source>
+        <target state="new">DataRow should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">在測試專案中僅將測試類別標記為公開被認為是一種很好的做法。</target>
