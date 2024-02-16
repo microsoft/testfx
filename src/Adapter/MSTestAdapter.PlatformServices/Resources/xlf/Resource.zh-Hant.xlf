@@ -2,6 +2,11 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="zh-Hant">
     <body>
+      <trans-unit id="AssemblyResolutionIsOnlyWorkingWithNetFramework">
+        <source>The runsettings 'AssemblyResolution' entries are only supported in .NET Framework. If your tests are working consider removing this entry otherwise you will need to make sure all dependent assemblies are found in the ouput directory of your test.</source>
+        <target state="translated">只有在 .NET Framework 中才支援 runsettings 'AssemblyResolution' 項目。如果您的測試可正常運作，請考慮移除這個項目，否則您必須確定在測試的輸出目錄中找到所有相依組件。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotFindFile">
         <source>Could not find file '{0}'.</source>
         <target state="translated">找不到檔案 '{0}'。</target>
