@@ -13,7 +13,7 @@ namespace MSTest.Analyzers.Test;
 [TestGroup]
 public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
-    public async Task WhenClassCleanIsPublic_NoDiagnostic()
+    public async Task WhenClassCleanupIsPublic_NoDiagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -21,8 +21,8 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             [TestClass]
             public class MyTestClass
             {
-                [ClassClean]
-                public static void ClassClean()
+                [ClassCleanup]
+                public static void ClassCleanup()
                 {
                 }
             }
@@ -31,7 +31,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenClassCleanIsNotOrdinary_Diagnostic()
+    public async Task WhenClassCleanupIsNotOrdinary_Diagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -39,7 +39,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             [TestClass]
             public class MyTestClass
             {
-                [ClassClean]
+                [ClassCleanup]
                 ~{|#0:MyTestClass|}()
                 {
                 }
@@ -53,7 +53,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
                 .WithArguments("Finalize"));
     }
 
-    public async Task WhenClassCleanIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
+    public async Task WhenClassCleanupIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -63,8 +63,8 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             [TestClass]
             internal class MyTestClass
             {
-                [ClassClean]
-                public static void ClassClean()
+                [ClassCleanup]
+                public static void ClassCleanup()
                 {
                 }
             }
@@ -73,7 +73,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenClassCleanIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
+    public async Task WhenClassCleanupIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -83,8 +83,8 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             [TestClass]
             public class MyTestClass
             {
-                [ClassClean]
-                internal static void {|#0:ClassClean|}()
+                [ClassCleanup]
+                internal static void {|#0:ClassCleanup|}()
                 {
                 }
             }
@@ -94,14 +94,14 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             code,
             VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.PublicRule)
                 .WithLocation(0)
-                .WithArguments("ClassClean"));
+                .WithArguments("ClassCleanup"));
     }
 
     [Arguments("protected")]
     [Arguments("internal")]
     [Arguments("internal protected")]
     [Arguments("private")]
-    public async Task WhenClassCleanIsNotPublic_Diagnostic(string accessibility)
+    public async Task WhenClassCleanupIsNotPublic_Diagnostic(string accessibility)
     {
         var code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -109,8 +109,8 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             [TestClass]
             public class MyTestClass
             {
-                [ClassClean]
-                {{accessibility}} static void {|#0:ClassClean|}()
+                [ClassCleanup]
+                {{accessibility}} static void {|#0:ClassCleanup|}()
                 {
                 }
             }
@@ -120,10 +120,10 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             code,
             VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.PublicRule)
                 .WithLocation(0)
-                .WithArguments("ClassClean"));
+                .WithArguments("ClassCleanup"));
     }
 
-    public async Task WhenClassCleanIsGeneric_Diagnostic()
+    public async Task WhenClassCleanupIsGeneric_Diagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -131,8 +131,8 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             [TestClass]
             public class MyTestClass
             {
-                [ClassClean]
-                public static void {|#0:ClassClean|}<T>()
+                [ClassCleanup]
+                public static void {|#0:ClassCleanup|}<T>()
                 {
                 }
             }
@@ -142,10 +142,10 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             code,
             VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.NotGenericRule)
                 .WithLocation(0)
-                .WithArguments("ClassClean"));
+                .WithArguments("ClassCleanup"));
     }
 
-    public async Task WhenClassCleanIsNotStatic_Diagnostic()
+    public async Task WhenClassCleanupIsNotStatic_Diagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -153,8 +153,8 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             [TestClass]
             public class MyTestClass
             {
-                [ClassClean]
-                public void {|#0:ClassClean|}()
+                [ClassCleanup]
+                public void {|#0:ClassCleanup|}()
                 {
                 }
             }
@@ -164,10 +164,10 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             code,
             VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.StaticRule)
                 .WithLocation(0)
-                .WithArguments("ClassClean"));
+                .WithArguments("ClassCleanup"));
     }
 
-    public async Task WhenClassCleanHasParameters_Diagnostic()
+    public async Task WhenClassCleanupHasParameters_Diagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -175,8 +175,8 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             [TestClass]
             public class MyTestClass
             {
-                [ClassClean]
-                public static void {|#0:ClassClean|}(TestContext testContext)
+                [ClassCleanup]
+                public static void {|#0:ClassCleanup|}(TestContext testContext)
                 {
                 }
             }
@@ -186,10 +186,10 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             code,
             VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.NoParametersRule)
                 .WithLocation(0)
-                .WithArguments("ClassClean"));
+                .WithArguments("ClassCleanup"));
     }
 
-    public async Task WhenClassCleanReturnTypeIsNotValid_Diagnostic()
+    public async Task WhenClassCleanupReturnTypeIsNotValid_Diagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -198,26 +198,26 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             [TestClass]
             public class MyTestClass
             {
-                [ClassClean]
-                public static int {|#0:ClassClean0|}()
+                [ClassCleanup]
+                public static int {|#0:ClassCleanup0|}()
                 {
                     return 0;
                 }
 
-                [ClassClean]
-                public static string {|#1:ClassClean1|}()
+                [ClassCleanup]
+                public static string {|#1:ClassCleanup1|}()
                 {
                     return "0";
                 }
 
-                [ClassClean]
-                public static Task<int> {|#2:ClassClean2|}()
+                [ClassCleanup]
+                public static Task<int> {|#2:ClassCleanup2|}()
                 {
                     return Task.FromResult(0);
                 }
 
-                [ClassClean]
-                public static ValueTask<int> {|#3:ClassClean3|}()
+                [ClassCleanup]
+                public static ValueTask<int> {|#3:ClassCleanup3|}()
                 {
                     return ValueTask.FromResult(0);
                 }
@@ -228,19 +228,19 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             code,
             VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.ReturnTypeRule)
                 .WithLocation(0)
-                .WithArguments("ClassClean0"),
+                .WithArguments("ClassCleanup0"),
             VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.ReturnTypeRule)
                 .WithLocation(1)
-                .WithArguments("ClassClean1"),
+                .WithArguments("ClassCleanup1"),
             VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.ReturnTypeRule)
                 .WithLocation(2)
-                .WithArguments("ClassClean2"),
+                .WithArguments("ClassCleanup2"),
             VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.ReturnTypeRule)
                 .WithLocation(3)
-                .WithArguments("ClassClean3"));
+                .WithArguments("ClassCleanup3"));
     }
 
-    public async Task WhenClassCleanReturnTypeIsValid_NoDiagnostic()
+    public async Task WhenClassCleanupReturnTypeIsValid_NoDiagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -249,19 +249,19 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             [TestClass]
             public class MyTestClass
             {
-                [ClassClean]
-                public static void ClassClean0()
+                [ClassCleanup]
+                public static void ClassCleanup0()
                 {
                 }
 
-                [ClassClean]
-                public static Task ClassClean1()
+                [ClassCleanup]
+                public static Task ClassCleanup1()
                 {
                     return Task.CompletedTask;
                 }
 
-                [ClassClean]
-                public static ValueTask ClassClean2()
+                [ClassCleanup]
+                public static ValueTask ClassCleanup2()
                 {
                     return ValueTask.CompletedTask;
                 }
@@ -271,7 +271,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenClassCleanIsAsyncVoid_Diagnostic()
+    public async Task WhenClassCleanupIsAsyncVoid_Diagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -280,8 +280,8 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             [TestClass]
             public class MyTestClass
             {
-                [ClassClean]
-                public static async void {|#0:ClassClean|}()
+                [ClassCleanup]
+                public static async void {|#0:ClassCleanup|}()
                 {
                     await Task.Delay(0);
                 }
@@ -292,6 +292,6 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
             code,
             VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.NotAsyncVoidRule)
                 .WithLocation(0)
-                .WithArguments("ClassClean"));
+                .WithArguments("ClassCleanup"));
     }
 }
