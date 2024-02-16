@@ -2,6 +2,65 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="tr" original="../Resources.resx">
     <body>
+      <trans-unit id="AssemblyCleanupShouldBeValidDescription">
+        <source>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
+- it should be 'public' 
+- it should be 'static'
+- it should not be generic
+- it should not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</source>
+        <target state="new">Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
+- it should be 'public' 
+- it should be 'static'
+- it should not be generic
+- it should not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NoParameters">
+        <source>AssemblyCleanup method '{0}' should not take any parameter</source>
+        <target state="new">AssemblyCleanup method '{0}' should not take any parameter</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid">
+        <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotGeneric">
+        <source>AssemblyCleanup method '{0}' should not be generic</source>
+        <target state="new">AssemblyCleanup method '{0}' should not be generic</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Ordinary">
+        <source>AssemblyCleanup method '{0}' should be an 'ordinary' method</source>
+        <target state="new">AssemblyCleanup method '{0}' should be an 'ordinary' method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Public">
+        <source>AssemblyCleanup method '{0}' should be 'public'</source>
+        <target state="new">AssemblyCleanup method '{0}' should be 'public'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_ReturnType">
+        <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Static">
+        <source>AssemblyCleanup method '{0}' should be 'static'</source>
+        <target state="new">AssemblyCleanup method '{0}' should be 'static'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupShouldBeValidTitle">
+        <source>AssemblyCleanup methods should have valid layout</source>
+        <target state="new">AssemblyCleanup methods should have valid layout</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
         <source>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
 - it should be 'public' 
@@ -74,6 +133,65 @@
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
         <source>Avoid '[ExpectedException]'</source>
         <target state="translated">'[ExpectedException]' kullanmayın</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidDescription">
+        <source>Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- it should be 'public' 
+- it should not 'static'
+- it should not be generic
+- it should not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</source>
+        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- it should be 'public' 
+- it should not 'static'
+- it should not be generic
+- it should not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NoParameters">
+        <source>ClassCleanup method '{0}' should not take any parameter</source>
+        <target state="new">ClassCleanup method '{0}' should not take any parameter</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid">
+        <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotGeneric">
+        <source>ClassCleanup method '{0}' should not be generic</source>
+        <target state="new">ClassCleanup method '{0}' should not be generic</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Ordinary">
+        <source>ClassCleanup method '{0}' should be an 'ordinary' method</source>
+        <target state="new">ClassCleanup method '{0}' should be an 'ordinary' method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Public">
+        <source>ClassCleanup method '{0}' should be 'public'</source>
+        <target state="new">ClassCleanup method '{0}' should be 'public'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_ReturnType">
+        <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Static">
+        <source>ClassCleanup method '{0}' should be 'static'</source>
+        <target state="new">ClassCleanup method '{0}' should be 'static'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidTitle">
+        <source>ClassCleanup methods should have valid layout</source>
+        <target state="new">ClassCleanup methods should have valid layout</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidDescription">
