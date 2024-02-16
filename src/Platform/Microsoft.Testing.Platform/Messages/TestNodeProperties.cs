@@ -125,8 +125,8 @@ public sealed record ErrorTestNodeStateProperty : TestNodeStateProperty
     /// <summary>
     /// Initializes a new instance of the <see cref="ErrorTestNodeStateProperty"/> class.
     /// </summary>
-    /// <param name="exception">Error exception</param>
-    /// <param name="explanation">Error explanation</param>
+    /// <param name="exception">Error exception.</param>
+    /// <param name="explanation">Error explanation.</param>
     public ErrorTestNodeStateProperty(Exception exception, string? explanation = null)
         : base(explanation ?? exception.Message)
     {
@@ -233,8 +233,8 @@ public readonly record struct TimingInfo(DateTimeOffset StartTime, DateTimeOffse
 /// <summary>
 /// Information about the timing of a test node step.
 /// </summary>
-/// <param name="Id">Step identifier</param>
-/// <param name="Description">Step description</param>
+/// <param name="Id">Step identifier.</param>
+/// <param name="Description">Step description.</param>
 /// <param name="Timing">Step timing info.</param>
 public sealed record StepTimingInfo(string Id, string Description, TimingInfo Timing);
 
