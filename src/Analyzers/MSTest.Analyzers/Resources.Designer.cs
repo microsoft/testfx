@@ -63,7 +63,7 @@ namespace MSTest.Analyzers {
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
         ///- it should be &apos;public&apos; 
-        ///- it should not &apos;static&apos;
+        ///- it should be &apos;static&apos;
         ///- it should not be generic
         ///- it should not take any parameter
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;

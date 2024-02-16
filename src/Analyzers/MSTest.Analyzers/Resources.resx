@@ -120,7 +120,7 @@
   <data name="AssemblyCleanupShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
 - it should be 'public' 
-- it should not 'static'
+- it should be 'static'
 - it should not be generic
 - it should not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
