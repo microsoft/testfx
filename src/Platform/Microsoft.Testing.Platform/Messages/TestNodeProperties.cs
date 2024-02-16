@@ -31,6 +31,9 @@ public abstract record TestNodeStateProperty(string? Explanation) : IProperty;
 /// <param name="Explanation">Textual explanation of the node.</param>
 public sealed record DiscoveredTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
 {
+    /// <summary>
+    /// Gets cached instance of the <see cref="DiscoveredTestNodeStateProperty"/>.
+    /// </summary>
     public static DiscoveredTestNodeStateProperty CachedInstance { get; } = new DiscoveredTestNodeStateProperty();
 }
 
@@ -40,6 +43,9 @@ public sealed record DiscoveredTestNodeStateProperty(string? Explanation = null)
 /// <param name="Explanation">Textual explanation of the node.</param>
 public sealed record InProgressTestNodeStateProperty(string? Explanation = null) : TestNodeStateProperty(Explanation)
 {
+    /// <summary>
+    /// Gets cached instance of the <see cref="InProgressTestNodeStateProperty"/>.
+    /// </summary>
     public static InProgressTestNodeStateProperty CachedInstance { get; } = new InProgressTestNodeStateProperty();
 }
 
