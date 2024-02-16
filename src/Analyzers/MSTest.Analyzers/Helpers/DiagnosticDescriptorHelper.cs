@@ -20,7 +20,7 @@ internal static class DiagnosticDescriptorHelper
         bool isReportedAtCompilationEnd = false,
         params string[] customTags)
         => new(id, title, messageFormat, category.ToString(), defaultSeverity, isEnabledByDefault, description,
-            $"https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-analyzers-{id}",
+            $"https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/{id.ToLowerInvariant()}",
             CreateCustomTags(isReportedAtCompilationEnd, customTags));
 
     public static DiagnosticDescriptor WithMessage(this DiagnosticDescriptor diagnosticDescriptor, LocalizableResourceString messageFormat)
