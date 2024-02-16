@@ -9,4 +9,3 @@ MSTEST0008 | Usage | Warning | TestInitializeShouldBeValidAnalyzer, [Documentati
 MSTEST0009 | Usage | Warning | TestCleanupShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-analyzers-MSTEST0009)
 MSTEST0010 | Usage | Warning | ClassInitializeShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-analyzers-MSTEST0010)
 MSTEST0012 | Usage | Warning | AssemblyInitializeShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-analyzers-MSTEST0012)
-MSTEST0013 | Usage | Warning | AssemblyCleanupShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-analyzers-MSTEST0013)
