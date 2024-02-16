@@ -135,6 +135,65 @@
         <target state="translated">避免 '[ExpectedException]'</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidDescription">
+        <source>Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- it should be 'public' 
+- it should not 'static'
+- it should not be generic
+- it should not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</source>
+        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- it should be 'public' 
+- it should not 'static'
+- it should not be generic
+- it should not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NoParameters">
+        <source>ClassCleanup method '{0}' should not take any parameter</source>
+        <target state="new">ClassCleanup method '{0}' should not take any parameter</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid">
+        <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotGeneric">
+        <source>ClassCleanup method '{0}' should not be generic</source>
+        <target state="new">ClassCleanup method '{0}' should not be generic</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Ordinary">
+        <source>ClassCleanup method '{0}' should be an 'ordinary' method</source>
+        <target state="new">ClassCleanup method '{0}' should be an 'ordinary' method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Public">
+        <source>ClassCleanup method '{0}' should be 'public'</source>
+        <target state="new">ClassCleanup method '{0}' should be 'public'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_ReturnType">
+        <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
+        <target state="new">ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Static">
+        <source>ClassCleanup method '{0}' should be 'static'</source>
+        <target state="new">ClassCleanup method '{0}' should be 'static'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidTitle">
+        <source>ClassCleanup methods should have valid layout</source>
+        <target state="new">ClassCleanup methods should have valid layout</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">在測試專案中僅將測試類別標記為公開被認為是一種很好的做法。</target>

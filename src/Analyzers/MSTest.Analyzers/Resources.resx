@@ -194,6 +194,40 @@
   <data name="AvoidExpectedExceptionAttributeTitle" xml:space="preserve">
     <value>Avoid '[ExpectedException]'</value>
   </data>
+  <data name="ClassCleanupShouldBeValidDescription" xml:space="preserve">
+    <value>Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- it should be 'public' 
+- it should not 'static'
+- it should not be generic
+- it should not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- it should not be 'async void'
+- it should not be a special method (finalizer, operator...).</value>
+  </data>
+  <data name="ClassCleanupShouldBeValidMessageFormat_NoParameters" xml:space="preserve">
+    <value>ClassCleanup method '{0}' should not take any parameter</value>
+  </data>
+  <data name="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
+    <value>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+  </data>
+  <data name="ClassCleanupShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
+    <value>ClassCleanup method '{0}' should not be generic</value>
+  </data>
+  <data name="ClassCleanupShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
+    <value>ClassCleanup method '{0}' should be an 'ordinary' method</value>
+  </data>
+  <data name="ClassCleanupShouldBeValidMessageFormat_Public" xml:space="preserve">
+    <value>ClassCleanup method '{0}' should be 'public'</value>
+  </data>
+  <data name="ClassCleanupShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
+    <value>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+  </data>
+  <data name="ClassCleanupShouldBeValidMessageFormat_Static" xml:space="preserve">
+    <value>ClassCleanup method '{0}' should be 'static'</value>
+  </data>
+  <data name="ClassCleanupShouldBeValidTitle" xml:space="preserve">
+    <value>ClassCleanup methods should have valid layout</value>
+  </data>
   <data name="PublicTypeShouldBeTestClassDescription" xml:space="preserve">
     <value>It's considered a good practice to have only test classes marked public in a test project.</value>
   </data>

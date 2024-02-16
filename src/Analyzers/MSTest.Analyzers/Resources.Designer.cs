@@ -264,6 +264,94 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Methods marked with [ClassCleanup] should follow the following layout to be valid:
+        ///- it should be &apos;public&apos; 
+        ///- it should not &apos;static&apos;
+        ///- it should not be generic
+        ///- it should not take any parameter
+        ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
+        ///- it should not be &apos;async void&apos;
+        ///- it should not be a special method (finalizer, operator...)..
+        /// </summary>
+        internal static string ClassCleanupShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("ClassCleanupShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should not take any parameter.
+        /// </summary>
+        internal static string ClassCleanupShouldBeValidMessageFormat_NoParameters {
+            get {
+                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_NoParameters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        /// </summary>
+        internal static string ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid {
+            get {
+                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should not be generic.
+        /// </summary>
+        internal static string ClassCleanupShouldBeValidMessageFormat_NotGeneric {
+            get {
+                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_NotGeneric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
+        /// </summary>
+        internal static string ClassCleanupShouldBeValidMessageFormat_Ordinary {
+            get {
+                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_Ordinary", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should be &apos;public&apos;.
+        /// </summary>
+        internal static string ClassCleanupShouldBeValidMessageFormat_Public {
+            get {
+                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_Public", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
+        /// </summary>
+        internal static string ClassCleanupShouldBeValidMessageFormat_ReturnType {
+            get {
+                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_ReturnType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should be &apos;static&apos;.
+        /// </summary>
+        internal static string ClassCleanupShouldBeValidMessageFormat_Static {
+            get {
+                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_Static", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ClassCleanup methods should have valid layout.
+        /// </summary>
+        internal static string ClassCleanupShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("ClassCleanupShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
         /// </summary>
         internal static string PublicTypeShouldBeTestClassDescription {
