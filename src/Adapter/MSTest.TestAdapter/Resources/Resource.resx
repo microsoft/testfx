@@ -182,7 +182,7 @@ Error: {1}</value>
     <value>File does not exist: {0}</value>
   </data>
   <data name="UTA_ErrorIncorrectTestMethodSignature" xml:space="preserve">
-    <value>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be Task. Example: public async Task Test.Class1.Test2()</value>
+    <value>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</value>
   </data>
   <data name="TestContextIsNull" xml:space="preserve">
     <value>TestContext cannot be Null.</value>
@@ -206,10 +206,10 @@ Error: {1}</value>
     <value>Error in executing test. No result returned by extension. If using extension of TestMethodAttribute then please contact vendor.</value>
   </data>
   <data name="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature" xml:space="preserve">
-    <value>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.</value>
+    <value>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</value>
   </data>
   <data name="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature" xml:space="preserve">
-    <value>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be Task.</value>
+    <value>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</value>
   </data>
   <data name="UTA_ErrorInvalidTimeout" xml:space="preserve">
     <value>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0.</value>
@@ -233,7 +233,7 @@ Error: {1}</value>
     <value>The {0}.TestContext has incorrect type.</value>
   </data>
   <data name="UTA_TestInitializeAndCleanupMethodHasWrongSignature" xml:space="preserve">
-    <value>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.</value>
+    <value>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</value>
   </data>
   <data name="UTA_TypeLoadError" xml:space="preserve">
     <value>Unable to get type {0}. Error: {1}.</value>

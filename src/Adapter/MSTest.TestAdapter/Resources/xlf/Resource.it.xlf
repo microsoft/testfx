@@ -130,9 +130,9 @@ Errore: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
-        <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be Task. Example: public async Task Test.Class1.Test2()</source>
-        <target state="translated">UTA007: la firma del metodo {1} definito nella classe {0} non è corretta. Il metodo di test contrassegnato con l'attributo [TestMethod] deve essere pubblico e non statico, non deve accettare parametri e deve includere un tipo restituito void. Esempio: public void Test.Class1.Test(). Se inoltre nel metodo di test si usa async-await, il tipo restituito deve essere Task. Esempio: public async Task Test.Class1.Test2()</target>
-        <note></note>
+        <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</source>
+        <target state="needs-review-translation">UTA007: la firma del metodo {1} definito nella classe {0} non è corretta. Il metodo di test contrassegnato con l'attributo [TestMethod] deve essere pubblico e non statico, non deve accettare parametri e deve includere un tipo restituito void. Esempio: public void Test.Class1.Test(). Se inoltre nel metodo di test si usa async-await, il tipo restituito deve essere Task. Esempio: public async Task Test.Class1.Test2()</target>
+        <note />
       </trans-unit>
       <trans-unit id="TestContextIsNull">
         <source>TestContext cannot be Null.</source>
@@ -170,14 +170,14 @@ Errore: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature">
-        <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.</source>
-        <target state="translated">La firma del metodo {0}.{1} non è corretta. Il metodo deve essere statico e pubblico, non deve restituire un valore né accettare parametri. Se inoltre si usa async-await nel metodo di test, il tipo restituito deve essere Task.</target>
-        <note></note>
+        <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
+        <target state="needs-review-translation">La firma del metodo {0}.{1} non è corretta. Il metodo deve essere statico e pubblico, non deve restituire un valore né accettare parametri. Se inoltre si usa async-await nel metodo di test, il tipo restituito deve essere Task.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature">
-        <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be Task.</source>
-        <target state="translated">La firma del metodo {0}.{1} non è corretta. Il metodo deve essere statico e pubblico, non deve restituire un valore e deve accettare un singolo parametro di tipo TestContext. Se inoltre si usa async-await nel metodo di test, il tipo restituito deve essere Task.</target>
-        <note></note>
+        <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
+        <target state="needs-review-translation">La firma del metodo {0}.{1} non è corretta. Il metodo deve essere statico e pubblico, non deve restituire un valore e deve accettare un singolo parametro di tipo TestContext. Se inoltre si usa async-await nel metodo di test, il tipo restituito deve essere Task.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0.</source>
@@ -215,9 +215,9 @@ Errore: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
-        <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.</source>
-        <target state="translated">La firma del metodo {0}.{1} non è corretta. Il metodo deve essere non statico e pubblico, non deve restituire un valore né accettare parametri. Se inoltre si usa async-await nel metodo di test, il tipo restituito deve essere Task.</target>
-        <note></note>
+        <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
+        <target state="needs-review-translation">La firma del metodo {0}.{1} non è corretta. Il metodo deve essere non statico e pubblico, non deve restituire un valore né accettare parametri. Se inoltre si usa async-await nel metodo di test, il tipo restituito deve essere Task.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_TypeLoadError">
         <source>Unable to get type {0}. Error: {1}.</source>
