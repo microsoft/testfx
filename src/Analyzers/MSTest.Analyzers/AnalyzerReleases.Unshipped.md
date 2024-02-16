@@ -8,3 +8,4 @@ MSTEST0007 | Usage | Info | UseAttributeOnTestMethodAnalyzer, [Documentation](ht
 MSTEST0008 | Usage | Warning | TestInitializeShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-analyzers-MSTEST0008)
 MSTEST0009 | Usage | Warning | TestCleanupShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-analyzers-MSTEST0009)
 MSTEST0012 | Usage | Warning | AssemblyInitializeShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-analyzers-MSTEST0012)
+MSTEST0013 | Usage | Warning | AssemblyCleanupShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-analyzers-MSTEST0013)
