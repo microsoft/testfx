@@ -238,6 +238,25 @@ public sealed class SdkTests : AcceptanceTestBase
         }
     }
 
+    [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
+    public async Task Invalid_TestingProfile_Name_Should_Fail(string multiTfm, BuildConfiguration buildConfiguration)
+    {
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+               AssetName,
+               SourceCode
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+               .PatchCodeWithReplace("$OutputType$", string.Empty)
+               .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
+               .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
+               .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>WrongName</TestingExtensionsProfile>"),
+               addPublicFeeds: true);
+
+        var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        Assert.AreEqual(1, compilationResult.ExitCode);
+        compilationResult.AssertOutputContains("Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'.");
+    }
+
     private const string SourceCode = """
 #file MSTestSdk.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$" >
