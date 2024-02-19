@@ -32,11 +32,11 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor AtLeastOneArgumentRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_AtLeastOneArgument), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor ArgumentNumberRule = DataRowOnTestMethodRule
-        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentNumber), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor ArgumentCountMismatchRule = DataRowOnTestMethodRule
+        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentCountMismatch), Resources.ResourceManager, typeof(Resources)));
 
-    internal static readonly DiagnosticDescriptor ArgumentTypeRule = DataRowOnTestMethodRule
-        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentType), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor ArgumentTypeMismatchRule = DataRowOnTestMethodRule
+        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
        = ImmutableArray.Create(DataRowOnTestMethodRule);
@@ -144,29 +144,39 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         //    doesn't accept params.
         // 2. Diagnostic on lower constructor argument count than method argument count if method
         //    accepts params. Discard params argument itself because it can contain 0 params.
-        int lastMethodArgumentIndex = methodSymbol.Parameters.Length - 1;
-        bool methodHasParams = methodSymbol.Parameters[lastMethodArgumentIndex].Type.Kind == SymbolKind.ArrayType;
-        if ((!methodHasParams && constructorArguments.Length != methodSymbol.Parameters.Length)
-            || (methodHasParams && constructorArguments.Length < methodSymbol.Parameters.Length - 1))
+        int lastMethodParameterIndex = methodSymbol.Parameters.Length - 1;
+        bool lastMethodParameterIsArray = methodSymbol.Parameters[lastMethodParameterIndex].Type.Kind == SymbolKind.ArrayType;
+        if ((!lastMethodParameterIsArray && constructorArguments.Length != methodSymbol.Parameters.Length)
+            || (lastMethodParameterIsArray && constructorArguments.Length < methodSymbol.Parameters.Length - 1))
         {
-            context.ReportDiagnostic(syntax.CreateDiagnostic(ArgumentNumberRule));
+            context.ReportDiagnostic(syntax.CreateDiagnostic(ArgumentCountMismatchRule, constructorArguments.Length, methodSymbol.Parameters.Length));
             return;
         }
 
-        int i = 0;
-        ITypeSymbol? paramsElementType = methodHasParams
-            ? ((IArrayTypeSymbol)methodSymbol.Parameters[lastMethodArgumentIndex].Type).ElementType
+        ITypeSymbol? paramsElementType = lastMethodParameterIsArray
+            ? ((IArrayTypeSymbol)methodSymbol.Parameters[lastMethodParameterIndex].Type).ElementType
             : null;
-        foreach (TypedConstant constructorArgument in constructorArguments)
+        List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices = new();
+        for (int constructorArgumentIndex = 0, methodParameterIndex = 0; constructorArgumentIndex < constructorArguments.Length; ++constructorArgumentIndex, ++methodParameterIndex)
         {
-            ITypeSymbol argumentType = constructorArgument.Type!;
-            ITypeSymbol paramType = (i == methodSymbol.Parameters.Length - 1 && methodHasParams)
+            ITypeSymbol? argumentType = constructorArguments[constructorArgumentIndex].Type;
+            ITypeSymbol paramType = (methodParameterIndex >= methodSymbol.Parameters.Length - 1 && lastMethodParameterIsArray)
                 ? paramsElementType!
-                : methodSymbol.Parameters[i++].Type;
-            if (!argumentType.IsAssignableTo(paramType, context.Compilation))
+                : methodSymbol.Parameters[methodParameterIndex].Type;
+            if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
             {
-                context.ReportDiagnostic(syntax.CreateDiagnostic(ArgumentTypeRule));
+                typeMismatchIndices.Add((constructorArgumentIndex, methodParameterIndex));
             }
         }
+
+        if (typeMismatchIndices.Count > 0)
+        {
+            context.ReportDiagnostic(syntax.CreateDiagnostic(ArgumentTypeMismatchRule, FormatTypeMismatchIndexList(typeMismatchIndices)));
+        }
+    }
+
+    private static string FormatTypeMismatchIndexList(List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices)
+    {
+        return string.Join(", ", typeMismatchIndices.ToArray());
     }
 }

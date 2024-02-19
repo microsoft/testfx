@@ -263,17 +263,17 @@
     <value>ClassInitialize methods should have valid layout</value>
   </data>
   <data name="DataRowShouldBeValidDescription" xml:space="preserve">
-    <value>DataRow attribute should have the following layout to be valid:
+    <value>DataRow entry should have the following layout to be valid:
 - should only be set on a test method;
 - should have at least one argument;
 - argument count should match method argument count;
 - argument type should match method argument type.</value>
   </data>
-  <data name="DataRowShouldBeValidMessageFormat_ArgumentNumber" xml:space="preserve">
-    <value>DataRow argument count should match method argument count</value>
+  <data name="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch" xml:space="preserve">
+    <value>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</value>
   </data>
-  <data name="DataRowShouldBeValidMessageFormat_ArgumentType" xml:space="preserve">
-    <value>DataRow argument type should match method argument type</value>
+  <data name="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch" xml:space="preserve">
+    <value>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</value>
   </data>
   <data name="DataRowShouldBeValidMessageFormat_AtLeastOneArgument" xml:space="preserve">
     <value>DataRow should have at least one argument</value>

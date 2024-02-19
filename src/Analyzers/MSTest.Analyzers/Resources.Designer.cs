@@ -440,7 +440,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to DataRow attribute should have the following layout to be valid:
+        ///   Looks up a localized string similar to DataRow entry should have the following layout to be valid:
         ///- should only be set on a test method;
         ///- should have at least one argument;
         ///- argument count should match method argument count;
@@ -453,20 +453,20 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to DataRow argument count should match method argument count.
+        ///   Looks up a localized string similar to DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1}).
         /// </summary>
-        internal static string DataRowShouldBeValidMessageFormat_ArgumentNumber {
+        internal static string DataRowShouldBeValidMessageFormat_ArgumentCountMismatch {
             get {
-                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentNumber", resourceCulture);
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentCountMismatch", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to DataRow argument type should match method argument type.
+        ///   Looks up a localized string similar to DataRow argument type should match method parameter type. Mismatches occur at indices: {0}.
         /// </summary>
-        internal static string DataRowShouldBeValidMessageFormat_ArgumentType {
+        internal static string DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch {
             get {
-                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentType", resourceCulture);
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch", resourceCulture);
             }
         }
         

@@ -32,6 +32,48 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndWithDataTestMethodAttribute_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataRow(1)]
+                [DataTestMethod]
+                public void TestMethod1(int a)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndWithDerivedTestMethodAttribute_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class DerivedTestMethod : TestMethodAttribute
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataRow(1)]
+                [DerivedTestMethod]
+                public void TestMethod1(int a)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArguments_NoDiagnostic()
     {
         var code = """
@@ -224,6 +266,25 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenDataRowIsCorrectlyDefinedWithOneNullArgumentAndMethodHasNoArguments_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataRow(null)]
+                [TestMethod]
+                public void TestMethod1()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     public async Task WhenDataRowIsNotSetOnATestMethod_Diagnostic()
     {
         var code = """
@@ -280,7 +341,11 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             """
         ;
 
-        await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentNumberRule).WithLocation(0));
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule)
+                .WithLocation(0)
+                .WithArguments(3, 4));
     }
 
     public async Task WhenDataRowHasArgumentMismatchWithTestMethod2_Diagnostic()
@@ -300,7 +365,11 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             """
         ;
 
-        await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentNumberRule).WithLocation(0));
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule)
+                .WithLocation(0)
+                .WithArguments(3, 2));
     }
 
     public async Task WhenDataRowHasTypeMismatchWithTestMethod_Diagnostic()
@@ -320,6 +389,10 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             """
         ;
 
-        await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeRule).WithLocation(0));
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeMismatchRule)
+                .WithLocation(0)
+                .WithArguments((2, 2)));
     }
 }
