@@ -250,6 +250,9 @@ static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expe
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual(string? expected, string? actual, bool ignoreCase, System.Globalization.CultureInfo? culture, string? message, params object?[]? parameters) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(System.IEquatable<T>? expected, System.IEquatable<T>? actual) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(System.IEquatable<T>? expected, System.IEquatable<T>? actual, string? message) -> void
+static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(System.IEquatable<T>? expected, System.IEquatable<T>? actual, string? message, params object?[]? parameters) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, string? message) -> void
 static Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreEqual<T>(T? expected, T? actual, string? message, params object?[]? parameters) -> void

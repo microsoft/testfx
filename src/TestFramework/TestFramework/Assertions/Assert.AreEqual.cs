@@ -202,6 +202,105 @@ public sealed partial class Assert
     }
 
     /// <summary>
+    /// Tests whether the specified values are equal and throws an exception
+    /// if the two values are not equal.
+    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first value to compare. This is the value the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second value to compare. This is the value produced by the code under test.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(IEquatable<T>? expected, IEquatable<T>? actual)
+        => AreEqual(expected, actual, string.Empty, null);
+
+    /// <summary>
+    /// Tests whether the specified values are equal and throws an exception
+    /// if the two values are not equal.
+    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first value to compare. This is the value the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second value to compare. This is the value produced by the code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is not equal to <paramref name="expected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(IEquatable<T>? expected, IEquatable<T>? actual, string? message)
+        => AreEqual(expected, actual, message, null);
+
+    /// <summary>
+    /// Tests whether the specified values are equal and throws an exception
+    /// if the two values are not equal.
+    /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The type of values to compare.
+    /// </typeparam>
+    /// <param name="expected">
+    /// The first value to compare. This is the value the tests expects.
+    /// </param>
+    /// <param name="actual">
+    /// The second value to compare. This is the value produced by the code under test.
+    /// </param>
+    /// <param name="message">
+    /// The message to include in the exception when <paramref name="actual"/>
+    /// is not equal to <paramref name="expected"/>. The message is shown in
+    /// test results.
+    /// </param>
+    /// <param name="parameters">
+    /// An array of parameters to use when formatting <paramref name="message"/>.
+    /// </param>
+    /// <exception cref="AssertFailedException">
+    /// Thrown if <paramref name="expected"/> is not equal to
+    /// <paramref name="actual"/>.
+    /// </exception>
+    public static void AreEqual<T>(IEquatable<T>? expected, IEquatable<T>? actual, string? message, params object?[]? parameters)
+    {
+        if (actual?.Equals(expected) == true)
+        {
+            return;
+        }
+
+        string userMessage = BuildUserMessage(message, parameters);
+        string finalMessage = actual != null && expected != null && !actual.GetType().Equals(expected.GetType())
+            ? string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualDifferentTypesFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                expected.GetType().FullName,
+                ReplaceNulls(actual),
+                actual.GetType().FullName)
+            : string.Format(
+                CultureInfo.CurrentCulture,
+                FrameworkMessages.AreEqualFailMsg,
+                userMessage,
+                ReplaceNulls(expected),
+                ReplaceNulls(actual));
+
+        ThrowAssertFailed("Assert.AreEqual", finalMessage);
+    }
+
+    /// <summary>
     /// Tests whether the specified values are unequal and throws an exception
     /// if the two values are equal.
     /// The equality is computed using the default <see cref="System.Collections.Generic.EqualityComparer{T}"/>.
