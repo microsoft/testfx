@@ -201,7 +201,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             configuration.CreateDefaultTestResultDirectory();
             await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice);
             await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(validationError!));
-            await commandLineHandler.PrintHelpAsync(null);
+            await commandLineHandler.PrintHelpAsync();
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine);
         }
 
