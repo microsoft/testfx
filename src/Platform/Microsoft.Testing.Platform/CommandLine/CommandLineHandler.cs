@@ -52,7 +52,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
     public string Description => string.Empty;
 
-    public async Task<bool> ParseAndValidateAsync(Func<Task> printBanner)
+    public async Task<(bool IsValid, string? ValidationError)> TryParseAndValidateAsync()
     {
         if (_parseResult.HasError)
         {
@@ -63,65 +63,47 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
                 stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t- {error}");
             }
 
-            await printBanner();
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(stringBuilder.ToString()));
-            return false;
+            return (false, stringBuilder.ToString());
         }
 
         if (ExtensionOptionsContainReservedPrefix(out string? reservedPrefixError))
         {
-            await printBanner();
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(reservedPrefixError));
-            return false;
+            return (false, reservedPrefixError);
         }
 
         if (ExtensionOptionsContainReservedOptions(out string? reservedOptionError))
         {
-            await printBanner();
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(reservedOptionError));
-            return false;
+            return (false, reservedOptionError);
         }
 
         if (ExtensionOptionAreDuplicated(out string? duplicationError))
         {
-            await printBanner();
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(duplicationError));
-            return false;
+            return (false, duplicationError);
         }
 
         if (UnknownOptions(out string? unknownOptionsError))
         {
-            await printBanner();
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(unknownOptionsError));
-            await _platformOutputDevice.DisplayAsync(this, EmptyText);
-            await PrintHelpAsync();
-            return false;
+            return (false, new StringBuilder().AppendLine(unknownOptionsError).AppendLine().ToString());
         }
 
         if (ExtensionArgumentArityAreInvalid(out string? arityErrors))
         {
-            await printBanner();
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(arityErrors));
-            return false;
+            return (false, arityErrors);
         }
 
         var optionsResult = await ValidateOptionsArgumentsAsync();
         if (!optionsResult.IsValid)
         {
-            await printBanner();
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(optionsResult.ErrorMessage));
-            return false;
+            return (false, optionsResult.ErrorMessage);
         }
 
         var configurationResult = await ValidateConfigurationAsync();
         if (!configurationResult.IsValid)
         {
-            await printBanner();
-            await _platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(configurationResult.ErrorMessage));
-            return false;
+            return (false, configurationResult.ErrorMessage);
         }
 
-        return true;
+        return (true, null);
     }
 
     private bool ExtensionOptionsContainReservedPrefix([NotNullWhen(true)] out string? error)

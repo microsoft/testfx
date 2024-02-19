@@ -13,5 +13,5 @@ internal interface ICommandLineHandler
 
     Task PrintHelpAsync(ITool[]? availableTools = null);
 
-    Task<bool> ParseAndValidateAsync(Func<Task> printBanner);
+    Task<(bool IsValid, string? ValidationError)> TryParseAndValidateAsync();
 }
