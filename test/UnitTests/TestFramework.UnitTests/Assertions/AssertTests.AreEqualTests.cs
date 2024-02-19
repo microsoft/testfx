@@ -381,6 +381,18 @@ public partial class AssertTests : TestContainer
         _ = cultureInfo.Calendar; // no warning
     }
 
+    public void AreEqualUsingCustomIEquatable()
+    {
+        var instanceOfA = new A { Id = "SomeId" };
+        var instanceOfB = new B { Id = "SomeId" };
+
+        // This call works because B implements IEquatable<A>
+        Assert.AreEqual(instanceOfA, instanceOfB);
+
+        // This one doesn't work
+        VerifyThrows(() => Assert.AreEqual(instanceOfB, instanceOfA));
+    }
+
     private CultureInfo? GetCultureInfo() => CultureInfo.CurrentCulture;
 
     private class TypeOverridesEquals
@@ -425,5 +437,33 @@ public partial class AssertTests : TestContainer
         {
             throw new NotImplementedException();
         }
+    }
+
+    private class A : IEquatable<A>
+    {
+        public string Id { get; set; } = string.Empty;
+
+        public bool Equals(A? other)
+            => other?.Id == Id;
+
+        public override bool Equals(object? obj)
+            => Equals(obj as A);
+
+        public override int GetHashCode()
+            => Id.GetHashCode() + 123;
+    }
+
+    private class B : IEquatable<A>
+    {
+        public string Id { get; set; } = string.Empty;
+
+        public override bool Equals(object? obj)
+            => Equals(obj as A);
+
+        public bool Equals(A? other)
+            => other?.Id == Id;
+
+        public override int GetHashCode()
+            => Id.GetHashCode() + 1234;
     }
 }
