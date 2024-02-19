@@ -423,7 +423,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task..
+        ///   Looks up a localized string similar to Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be &apos;Task&apos; or &apos;ValueTask&apos;..
         /// </summary>
         internal static string UTA_ClassOrAssemblyCleanupMethodHasWrongSignature {
             get {
@@ -432,7 +432,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be Task..
+        ///   Looks up a localized string similar to Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be &apos;Task&apos; or &apos;ValueTask&apos;..
         /// </summary>
         internal static string UTA_ClassOrAssemblyInitializeMethodHasWrongSignature {
             get {
@@ -486,7 +486,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be Task. Example: public async Task Test.Class1.Test2().
+        ///   Looks up a localized string similar to UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be &apos;Task&apos; or &apos;ValueTask&apos;. Example: public async Task Test.Class1.Test2().
         /// </summary>
         internal static string UTA_ErrorIncorrectTestMethodSignature {
             get {
@@ -703,7 +703,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task..
+        ///   Looks up a localized string similar to Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be &apos;Task&apos; or &apos;ValueTask&apos;..
         /// </summary>
         internal static string UTA_TestInitializeAndCleanupMethodHasWrongSignature {
             get {
