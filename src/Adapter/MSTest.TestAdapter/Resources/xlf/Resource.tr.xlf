@@ -131,7 +131,7 @@ Hata: {1}</target>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
         <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</source>
-        <target state="needs-review-translation">UTA007: {0} sınıfında tanımlanan {1} metodunun imzası doğru değil. [TestMethod] özniteliğiyle işaretlenen test metodu statik olmamalı, genel olmalı, return-type değeri void olmalı ve hiçbir parametre almamalıdır. Örnek: public void Test.Class1.Test(). Bunlara ek olarak, test metodunda async-await kullanıyorsanız return-type değeri Task olmalıdır. Örnek: public async Task Test.Class1.Test2()</target>
+        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextIsNull">
@@ -171,12 +171,12 @@ Hata: {1}</target>
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="needs-review-translation">{0}.{1} metodunun imzası yanlış. Metot statik, genel, değer döndürmeyen bir metot olmalı, hiçbir parametre almamalıdır. Bunlara ek olarak, metotta async-await kullanıyorsanız return-type değeri Task olmalıdır.</target>
+        <target state="new">Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="needs-review-translation">{0}.{1} metodunun imzası yanlış. Metot statik, genel, değer döndürmeyen bir metot olmalı ve TestContext türünde tek bir parametre almalıdır. Bunlara ek olarak, metotta async-await kullanıyorsanız return-type değeri Task olmalıdır.</target>
+        <target state="new">Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
@@ -216,7 +216,7 @@ Hata: {1}</target>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="needs-review-translation">{0}.{1} metodunun imzası yanlış. Metot statik olmayan, genel, değer döndürmeyen bir metot olmalı, hiçbir parametre almamalıdır. Bunlara ek olarak, metotta async-await kullanıyorsanız return-type değeri Task olmalıdır.</target>
+        <target state="new">Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TypeLoadError">
