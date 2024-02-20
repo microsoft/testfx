@@ -243,9 +243,9 @@ Analisi dello stack: {4}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
-        <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</source>
-        <target state="translated">La proprietà o il metodo {0} su {1} tipo restituito non è assegnabile a 'IEnumerable&lt;object[]&gt;' (né a 'IEnumerable&lt;ITuple&gt;' per .NET Core).</target>
-        <note />
+        <source>Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</source>
+        <target state="new">Property or method {0} on {1} does not return IEnumerable&lt;object[]&gt;.</target>
+        <note></note>
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
         <source>Value returned by property or method {0} shouldn't be null.</source>
