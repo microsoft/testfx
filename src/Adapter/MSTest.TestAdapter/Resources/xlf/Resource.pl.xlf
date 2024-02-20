@@ -2,6 +2,26 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="pl">
     <body>
+      <trans-unit id="AssemblyInitializeTimedOut">
+        <source>Assembly initialize method '{0}.{1}' timed out</source>
+        <target state="translated">Upłynął limit czasu metody inicjowania zestawu „{0}.{1}”.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyInitializeWasCancelled">
+        <source>Assembly initialize method '{0}.{1}' was cancelled</source>
+        <target state="translated">Anulowano metodę inicjowania zestawu „{0}.{1}”.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassInitializeTimedOut">
+        <source>Class initialize method '{0}.{1}' timed out</source>
+        <target state="translated">Upłynął limit czasu metody inicjowania klasy „{0}.{1}”.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassInitializeWasCancelled">
+        <source>Class initialize method '{0}.{1}' was cancelled</source>
+        <target state="translated">Anulowano metodę inicjowania klasy „{0}.{1}”.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Execution_Test_Timeout">
         <source>Test '{0}' exceeded execution timeout period.</source>
         <target state="translated">Test „{0}” przekroczył okres limitu czasu na wykonanie.</target>
@@ -110,9 +130,9 @@ Błąd: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
-        <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be Task. Example: public async Task Test.Class1.Test2()</source>
-        <target state="translated">UTA007: Metoda {1} zdefiniowana w klasie {0} nie ma poprawnej sygnatury. Metoda testowa oznaczona przez atrybut [TestMethod] musi być niestatyczna, publiczna, zwracać wartość typu void i nie powinna przyjmować żadnego parametru. Przykład: public void Test.Class1.Test(). Ponadto zwracana wartość musi być typu Task, gdy w metodzie testowej jest używane oczekiwanie asynchroniczne. Przykład: public async Task Test.Class1.Test2()</target>
-        <note></note>
+        <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</source>
+        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</target>
+        <note />
       </trans-unit>
       <trans-unit id="TestContextIsNull">
         <source>TestContext cannot be Null.</source>
@@ -150,14 +170,14 @@ Błąd: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature">
-        <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.</source>
-        <target state="translated">Metoda {0}.{1} ma nieprawidłową sygnaturę. Metoda musi być statyczna i publiczna, nie może zwracać wartości i nie powinna przyjmować żadnego parametru. Ponadto jeśli w metodzie jest używane oczekiwanie asynchroniczne, zwracanym typem musi być typ Task.</target>
-        <note></note>
+        <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
+        <target state="new">Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature">
-        <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be Task.</source>
-        <target state="translated">Metoda {0}.{1} ma nieprawidłową sygnaturę. Metoda musi być statyczna i publiczna, nie może zwracać wartości i nie powinna przyjmować pojedynczego parametru typu TestContext. Ponadto jeśli w metodzie jest używane oczekiwanie asynchroniczne, zwracanym typem musi być typ Task.</target>
-        <note></note>
+        <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
+        <target state="new">Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
         <source>UTA054: {0}.{1} has invalid Timeout attribute. The timeout must be a valid integer value and cannot be less than 0.</source>
@@ -195,9 +215,9 @@ Błąd: {1}</target>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
-        <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be Task.</source>
-        <target state="translated">Metoda {0}.{1} ma nieprawidłową sygnaturę. Metoda musi być niestatyczna i publiczna, nie może zwracać wartości i nie powinna przyjmować żadnego parametru. Ponadto jeśli w metodzie jest używane oczekiwanie asynchroniczne, zwracanym typem musi być typ Task.</target>
-        <note></note>
+        <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
+        <target state="new">Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_TypeLoadError">
         <source>Unable to get type {0}. Error: {1}.</source>
