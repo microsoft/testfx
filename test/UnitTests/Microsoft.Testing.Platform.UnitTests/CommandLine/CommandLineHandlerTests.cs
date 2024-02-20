@@ -55,7 +55,6 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     public async Task ParseAndValidateAsync_EmptyCommandLineArguments_ReturnsTrue()
@@ -190,7 +189,6 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     public async Task ParseAndValidateAsync_InvalidOption_ReturnsFalse()
@@ -210,7 +208,6 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     public async Task ParseAndValidateAsync_InvalidArgumentArity_ReturnsFalse()
@@ -230,7 +227,6 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     public async Task ParseAndValidateAsync_ReservedOptions_ReturnsFalse()
@@ -254,7 +250,6 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     public async Task ParseAndValidateAsync_ReservedOptionsPrefix_ReturnsFalse()
@@ -278,7 +273,6 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     public async Task ParseAndValidateAsync_UnknownOption_ReturnsFalse()
@@ -286,9 +280,6 @@ public class CommandLineHandlerTests : TestBase
         // Arrange
         string[] args = ["--x"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
-        var messages = new List<string>();
-        _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
-        .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) => messages.Add(((TextOutputDeviceData)data).Text));
 
         ICommandLineOptionsProvider[] extensionCommandLineProvider = new[]
         {
@@ -299,12 +290,11 @@ public class CommandLineHandlerTests : TestBase
             _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        (bool result, string? errorMessage) = await commandLineHandler.TryParseAndValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
-        Assert.IsTrue(messages.Count is 23);
-        Assert.IsTrue(messages[0].Equals($"Unknown option '--x'{Environment.NewLine}", StringComparison.Ordinal));
+        Assert.IsTrue(errorMessage!.Equals($"Unknown option '--x'{Environment.NewLine}", StringComparison.Ordinal));
     }
 
     public async Task ParseAndValidateAsync_InvalidValidConfiguration_ReturnsFalse()
@@ -329,7 +319,6 @@ public class CommandLineHandlerTests : TestBase
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     private sealed class ExtensionCommandLineProviderMockReservedOptions : ICommandLineOptionsProvider

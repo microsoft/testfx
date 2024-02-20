@@ -83,7 +83,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
         if (UnknownOptions(out string? unknownOptionsError))
         {
-            return (false, new StringBuilder().AppendLine(unknownOptionsError).AppendLine().ToString());
+            return (false, unknownOptionsError);
         }
 
         if (ExtensionArgumentArityAreInvalid(out string? arityErrors))
