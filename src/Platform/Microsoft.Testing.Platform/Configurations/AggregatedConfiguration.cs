@@ -67,6 +67,13 @@ internal sealed class AggregatedConfiguration(IConfigurationProvider[] configura
         _testHostWorkingDirectory = workingDirectory;
     }
 
+    public void CreateDefaultTestResultDirectory()
+    {
+        _currentWorkingDirectory = Path.GetDirectoryName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!;
+        _resultDirectory ??= Path.Combine(_currentWorkingDirectory, DefaultTestResultFolderName);
+        _resultDirectory = _fileSystem.CreateDirectory(_resultDirectory);
+    }
+
     public async Task CheckTestResultsDirectoryOverrideAndCreateItAsync(ICommandLineOptions commandLineOptions, IFileLoggerProvider? fileLoggerProvider)
     {
         // Load Configuration

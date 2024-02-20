@@ -195,8 +195,13 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(args, platformOutputDevice, loggingState.CommandLineParseResult);
 
         // If command line is not valid we return immediately.
-        if (!loggingState.CommandLineParseResult.HasTool && !await commandLineHandler.ParseAndValidateAsync(async () => await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice)))
+        (bool parseSucceded, string? validationError) = await commandLineHandler.TryParseAndValidateAsync();
+        if (!loggingState.CommandLineParseResult.HasTool && !parseSucceded)
         {
+            await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice);
+            ArgumentGuard.IsNotNull(validationError);
+            await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(validationError));
+            await commandLineHandler.PrintHelpAsync();
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine);
         }
 
