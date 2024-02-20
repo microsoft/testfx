@@ -244,7 +244,7 @@ Trasování zásobníku: {4}</target>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</source>
-        <target state="translated">Vlastnost nebo metoda {0} na návratovém typu {1} se nedá přiřadit k „IEnumerable&lt;object[]&gt;“ (ani „IEnumerable&lt;ITuple&gt;“ pro .NET Core).</target>
+        <target state="new">Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">

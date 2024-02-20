@@ -244,7 +244,7 @@ Stapelüberwachung: {4}</target>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</source>
-        <target state="translated">Die Eigenschaft oder Methode "{0}" für Rückgabetyp "{1}" kann "IEnumerable&lt;object[]&gt;" nicht zugewiesen werden (auch nicht "IEnumerable&lt;ITuple&gt;" für .NET Core).</target>
+        <target state="new">Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
