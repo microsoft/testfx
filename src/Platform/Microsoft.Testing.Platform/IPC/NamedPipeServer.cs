@@ -63,7 +63,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         CancellationToken cancellationToken)
     {
         ArgumentGuard.IsNotNull(pipeNameDescription);
-        _namedPipeServerStream = new((PipeName = pipeNameDescription).PipeName, PipeDirection.InOut, maxNumberOfServerInstances);
+        _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances);
         _callback = callback;
         _environment = environment;
         _logger = logger;
@@ -77,10 +77,10 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
     public async Task WaitConnectionAsync(CancellationToken cancellationToken)
     {
-        await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.PipeName}");
+        await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}");
         await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken);
         WasConnected = true;
-        await _logger.LogDebugAsync($"Client connected to {PipeName.PipeName}");
+        await _logger.LogDebugAsync($"Client connected to {PipeName.Name}");
         _loopTask = _task.Run(
             async () =>
         {
@@ -95,7 +95,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
             catch (Exception ex)
             {
-                await _logger.LogErrorAsync($"Exception on pipe: {PipeName.PipeName}", ex);
+                await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex);
                 _environment.FailFast($"[NamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
             }
         }, cancellationToken);
