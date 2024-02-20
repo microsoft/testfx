@@ -99,11 +99,7 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAsyncVoidRule, methodSymbol.Name));
         }
 
-        // The first check makes sure that the class always has public on the member,
-        // the other two check the visibility due to placement in a internal or private class (or public class in internal class etc.)
-        if (methodSymbol.DeclaredAccessibility != Accessibility.Public
-            || (!canDiscoverInternals && methodSymbol.GetResultantVisibility() != SymbolVisibility.Public)
-            || (canDiscoverInternals && methodSymbol.GetResultantVisibility() == SymbolVisibility.Private))
+        if (!methodSymbol.IsPublicAndHasCorrectResultantVisibility(canDiscoverInternals))
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicRule, methodSymbol.Name));
         }
