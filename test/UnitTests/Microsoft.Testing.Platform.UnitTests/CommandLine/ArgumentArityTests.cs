@@ -51,11 +51,10 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
+        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     public async Task ParseAndValidate_WhenOptionWithArityExactlyOneIsCalledWithTwoArguments_ReturnsFalse()
@@ -63,19 +62,15 @@ public class ArgumentArityTests : TestBase
         // Arrange
         string[] args = ["--exactlyOneArgumentsOption arg1", "arg2"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
-        _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
-        .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
-            Assert.AreEqual($"Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments{Environment.NewLine}", ((TextOutputDeviceData)data).Text, StringComparer.Ordinal));
 
         var commandLineHandler = new CommandLineHandler(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
+        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     public async Task ParseAndValidate_WhenOptionWithArityExactlyOneIsCalledWithoutArguments_ReturnsFalse()
@@ -91,11 +86,10 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
+        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     public async Task ParseAndValidate_WhenOptionWithArityZeroOrOneIsCalledWithTwoArguments_ReturnsFalse()
@@ -111,11 +105,10 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
+        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     public async Task ParseAndValidate_WhenOptionWithArityOneOrMoreIsCalledWithoutArguments_ReturnsFalse()
@@ -131,11 +124,10 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
+        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
-        _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Once);
     }
 
     public async Task ParseAndValidate_WhenOptionsGetsTheExpectedNumberOfArguments_ReturnsTrue()
@@ -147,7 +139,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        bool result = await commandLineHandler.ParseAndValidateAsync(() => Task.CompletedTask);
+        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
 
         // Assert
         Assert.IsTrue(result);
