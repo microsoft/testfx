@@ -501,7 +501,7 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
       </trans-unit>
       <trans-unit id="TestApplicationBuilderTestFrameworkNotRegistered">
         <source>The test framework adapter has not been registered. Use 'ITestApplicationBuilder.RegisterTestFramework' to register it</source>
-        <target state="needs-review-translation">L’adaptateur de l’infrastructure de tests n’a pas été inscrit. Utilisez « RegisterTestFrameworkAdapter » pour l’inscrire</target>
+        <target state="translated">L’adaptateur de l’infrastructure de tests n’a pas été inscrit. Utiliser « ITestApplicationBuilder.RegisterTestFramework » pour l’inscrire</target>
         <note />
       </trans-unit>
       <trans-unit id="TestApplicationResultDescription">
