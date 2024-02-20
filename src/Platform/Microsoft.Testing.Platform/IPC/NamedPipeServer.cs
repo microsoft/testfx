@@ -63,7 +63,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         CancellationToken cancellationToken)
     {
         ArgumentGuard.IsNotNull(pipeNameDescription);
-        _namedPipeServerStream = new((PipeName = pipeNameDescription).Name, PipeDirection.InOut, maxNumberOfServerInstances);
+        _namedPipeServerStream = new((PipeName = pipeNameDescription).PipeName, PipeDirection.InOut, maxNumberOfServerInstances);
         _callback = callback;
         _environment = environment;
         _logger = logger;
@@ -77,10 +77,10 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
 
     public async Task WaitConnectionAsync(CancellationToken cancellationToken)
     {
-        await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.Name}");
+        await _logger.LogDebugAsync($"Waiting for connection for the pipe name {PipeName.PipeName}");
         await _namedPipeServerStream.WaitForConnectionAsync(cancellationToken);
         WasConnected = true;
-        await _logger.LogDebugAsync($"Client connected to {PipeName.Name}");
+        await _logger.LogDebugAsync($"Client connected to {PipeName.PipeName}");
         _loopTask = _task.Run(
             async () =>
         {
@@ -95,7 +95,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
             }
             catch (Exception ex)
             {
-                await _logger.LogErrorAsync($"Exception on pipe: {PipeName.Name}", ex);
+                await _logger.LogErrorAsync($"Exception on pipe: {PipeName.PipeName}", ex);
                 _environment.FailFast($"[NamedPipeServer] Unhandled exception:{_environment.NewLine}{ex}", ex);
             }
         }, cancellationToken);
@@ -258,22 +258,27 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return new PipeNameDescription($"testingplatform.pipe.{name.Replace('\\', '.')}", false);
+            return new PipeNameDescription(name, $"testingplatform.pipe.{name.Replace('\\', '.')}", false);
         }
 
         string directoryId = Path.Combine(Path.GetTempPath(), name);
         Directory.CreateDirectory(directoryId);
-        return new PipeNameDescription(
-            !Directory.Exists(directoryId)
-                ? throw new DirectoryNotFoundException(string.Format(
+        if (!Directory.Exists(directoryId))
+        {
+            throw new DirectoryNotFoundException(
+                string.Format(
                     CultureInfo.InvariantCulture,
 #if PLATFORM_MSBUILD
                     $"Directory: {directoryId} doesn't exist.",
 #else
                     PlatformResources.CouldNotFindDirectoryErrorMessage,
 #endif
-                    directoryId))
-                : Path.Combine(directoryId, ".p"), true);
+                    directoryId));
+        }
+        else
+        {
+            return new PipeNameDescription(name, Path.Combine(directoryId, ".p"), true);
+        }
     }
 
     public void Dispose()

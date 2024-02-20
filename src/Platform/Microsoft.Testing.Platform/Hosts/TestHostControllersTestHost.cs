@@ -167,7 +167,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                     ServiceProvider.GetTask(),
                     abortRun);
                 testHostControllerIpc.RegisterAllSerializers();
-                processStartInfo.EnvironmentVariables[$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}"] = testHostControllerIpc.PipeName.Name;
+                processStartInfo.EnvironmentVariables[$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}"] = testHostControllerIpc.PipeName.PipeName;
 
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {

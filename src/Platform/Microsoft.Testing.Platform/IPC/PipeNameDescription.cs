@@ -3,12 +3,14 @@
 
 namespace Microsoft.Testing.Platform.IPC;
 
-internal sealed class PipeNameDescription(string name, bool isDirectory) : IDisposable
+internal sealed class PipeNameDescription(string sourceName, string pipeName, bool isDirectory) : IDisposable
 {
     private readonly bool _isDirectory = isDirectory;
     private bool _disposed;
 
-    public string Name { get; } = name;
+    public string SourceName { get; } = sourceName;
+
+    public string PipeName { get; } = pipeName;
 
     public void Dispose() => Dispose(true);
 
@@ -28,7 +30,7 @@ internal sealed class PipeNameDescription(string name, bool isDirectory) : IDisp
         {
             try
             {
-                Directory.Delete(Path.GetDirectoryName(Name)!, true);
+                Directory.Delete(Path.GetDirectoryName(PipeName)!, true);
             }
             catch (IOException)
             {

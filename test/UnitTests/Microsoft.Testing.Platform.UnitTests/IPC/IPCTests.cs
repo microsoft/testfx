@@ -57,7 +57,7 @@ public sealed class IPCTests : TestBase
             }
         });
 
-        NamedPipeClient namedPipeClient1 = new(pipeNameDescription.Name);
+        NamedPipeClient namedPipeClient1 = new(pipeNameDescription.PipeName);
         await namedPipeClient1.ConnectAsync(_testExecutionContext.CancellationToken);
         waitException.Wait();
 
@@ -91,7 +91,7 @@ public sealed class IPCTests : TestBase
     {
         Queue<BaseMessage> receivedMessages = new();
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
-        NamedPipeClient namedPipeClient = new(pipeNameDescription.Name);
+        NamedPipeClient namedPipeClient = new(pipeNameDescription.PipeName);
         namedPipeClient.RegisterSerializer<VoidResponse>(new VoidResponseSerializer());
         namedPipeClient.RegisterSerializer<TextMessage>(new TextMessageSerializer());
         namedPipeClient.RegisterSerializer<IntMessage>(new IntMessageSerializer());
@@ -215,7 +215,7 @@ public sealed class IPCTests : TestBase
         var connectedClients = new List<NamedPipeClient>();
         for (int i = 0; i < waitConnectionTask.Count; i++)
         {
-            NamedPipeClient namedPipeClient = new(pipeNameDescription.Name);
+            NamedPipeClient namedPipeClient = new(pipeNameDescription.PipeName);
             connectedClients.Add(namedPipeClient);
             await namedPipeClient.ConnectAsync(_testExecutionContext.CancellationToken);
         }
