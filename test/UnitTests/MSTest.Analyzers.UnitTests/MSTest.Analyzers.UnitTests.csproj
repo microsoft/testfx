@@ -20,6 +20,8 @@
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingPlatformVersion)" />
+    <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
+    <PackageReference Include="NuGet.Packaging" Version="$(NuGetPackagingVersion)" />
   </ItemGroup>
 
   <ItemGroup>
