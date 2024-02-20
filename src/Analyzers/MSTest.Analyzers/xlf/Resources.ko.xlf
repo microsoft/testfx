@@ -327,42 +327,42 @@
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat_NoParameters">
         <source>TestCleanup method '{0}' should not take any parameter</source>
-        <target state="new">TestCleanup method '{0}' should not take any parameter</target>
+        <target state="translated">TestCleanup 메서드 '{0}'은(는) 매개 변수를 사용하지 않아야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotAbstract">
         <source>TestCleanup method '{0}' should not be 'abstract'</source>
-        <target state="new">TestCleanup method '{0}' should not be 'abstract'</target>
+        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'abstract'가 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotAsyncVoid">
         <source>TestCleanup method '{0}' should not be 'async void'</source>
-        <target state="new">TestCleanup method '{0}' should not be 'async void'</target>
+        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'async void'가 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotGeneric">
         <source>TestCleanup method '{0}' should not be generic</source>
-        <target state="new">TestCleanup method '{0}' should not be generic</target>
+        <target state="translated">TestCleanup 메서드 '{0}'은(는) 제네릭이 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotStatic">
         <source>TestCleanup method '{0}' should not be 'static'</source>
-        <target state="new">TestCleanup method '{0}' should not be 'static'</target>
+        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'static'이 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat_Ordinary">
         <source>TestCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="new">TestCleanup method '{0}' should be an 'ordinary' method</target>
+        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'ordinary' 메서드여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat_Public">
         <source>TestCleanup method '{0}' should be 'public'</source>
-        <target state="new">TestCleanup method '{0}' should be 'public'</target>
+        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'public'이어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat_ReturnType">
         <source>TestCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">TestCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidTitle">
@@ -437,47 +437,47 @@
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_NoParameters">
         <source>TestInitialize method '{0}' should not take any parameter</source>
-        <target state="new">TestInitialize method '{0}' should not take any parameter</target>
+        <target state="translated">TestInitialize 메서드 '{0}'은(는) 매개 변수를 사용하지 않아야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAbstract">
         <source>TestInitialize method '{0}' should not be 'abstract'</source>
-        <target state="new">TestInitialize method '{0}' should not be 'abstract'</target>
+        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'abstract'가 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>TestInitialize method  '{0}' should not be 'async void'</source>
-        <target state="new">TestInitialize method  '{0}' should not be 'async void'</target>
+        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'async void'가 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotGeneric">
         <source>TestInitialize method '{0}' should not be generic</source>
-        <target state="new">TestInitialize method '{0}' should not be generic</target>
+        <target state="translated">TestInitialize 메서드 '{0}'은(는) 제네릭이 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotStatic">
         <source>TestInitialize method '{0}' should not be 'static'</source>
-        <target state="new">TestInitialize method '{0}' should not be 'static'</target>
+        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'static'이 아니어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_Ordinary">
         <source>TestInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="new">TestInitialize method '{0}' should be an 'ordinary' method</target>
+        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'ordinary' 메서드여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_Public">
         <source>TestInitialize method '{0}' should be 'public'</source>
-        <target state="new">TestInitialize method '{0}' should be 'public'</target>
+        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'public'이어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat_ReturnType">
         <source>TestInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">TestInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
         <source>TestInitialize method should have valid layout</source>
-        <target state="new">TestInitialize method should have valid layout</target>
+        <target state="translated">TestInitialize 메서드에는 유효한 레이아웃이 있어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">
