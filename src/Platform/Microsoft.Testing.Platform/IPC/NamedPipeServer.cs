@@ -258,7 +258,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return new PipeNameDescription(name, $"testingplatform.pipe.{name.Replace('\\', '.')}", false);
+            return new PipeNameDescription(name, $"testingplatform.pipe.{name}", false);
         }
 
         string directoryId = Path.Combine(Path.GetTempPath(), name);
