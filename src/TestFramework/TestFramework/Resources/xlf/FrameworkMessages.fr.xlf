@@ -244,7 +244,7 @@ Trace de la pile : {4}</target>
       </trans-unit>
       <trans-unit id="DynamicDataIEnumerableNull">
         <source>Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</source>
-        <target state="new">Property or method {0} on {1} return type is not assignable to 'IEnumerable&lt;object[]&gt;' (nor 'IEnumerable&lt;ITuple&gt;' for .NET Core).</target>
+        <target state="translated">La propriété ou la méthode {0} sur le type de retour {1} ne peut pas être attribuée à « IEnumerable&lt;object[]&gt; » (ni à « IEnumerable&lt;ITuple&gt; » pour .NET Core).</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataValueNull">
