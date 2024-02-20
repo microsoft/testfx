@@ -98,10 +98,12 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         }
 
         var configurationResult = await ValidateConfigurationAsync();
+#pragma warning disable IDE0046 // Convert to conditional expression - make the code less readable
         if (!configurationResult.IsValid)
         {
             return (false, configurationResult.ErrorMessage);
         }
+#pragma warning restore IDE0046 // Convert to conditional expression
 
         return (true, null);
     }
