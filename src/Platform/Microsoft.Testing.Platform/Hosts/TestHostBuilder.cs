@@ -198,9 +198,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         (bool parseSucceded, string? validationError) = await commandLineHandler.TryParseAndValidateAsync();
         if (!loggingState.CommandLineParseResult.HasTool && !parseSucceded)
         {
-            configuration.CreateDefaultTestResultDirectory();
             await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice);
-            await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(validationError!));
+            ArgumentGuard.IsNotNull(validationError);
+            await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(validationError));
             await commandLineHandler.PrintHelpAsync();
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine);
         }
