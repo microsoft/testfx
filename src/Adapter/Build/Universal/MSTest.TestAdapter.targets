@@ -5,6 +5,7 @@
     <!-- Handle the coexistance between testing platform and Microsoft.NET.Test.Sdk  -->
     <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' ">$(EnableMSTestRunner)</GenerateTestingPlatformEntryPoint>
     <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
+    <DisableTestingPlatformServerCapability Condition=" '$(EnableMSTestRunner)' == 'false' or '$(EnableMSTestRunner)' == '' " >true</DisableTestingPlatformServerCapability>
   </PropertyGroup>
 
   <Target Name="GetMSTestV2CultureHierarchy">
