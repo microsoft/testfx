@@ -36,7 +36,7 @@
     <MicrosoftTestingExtensionsCodeCoverageVersion>17.10.4-preview.24120.6</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- Pinned to 4.18.4 for security -->
     <MoqVersion>4.18.4</MoqVersion>
-    <MSBuildStructuredLogger>2.1.858</MSBuildStructuredLogger>
+    <MSBuildStructuredLogger>2.2.169</MSBuildStructuredLogger>
     <PollyVersion>8.2.0</PollyVersion>
     <PollyContribWaitAndRetryVersion>1.1.1</PollyContribWaitAndRetryVersion>
     <StrongNamerVersion>0.2.5</StrongNamerVersion>
