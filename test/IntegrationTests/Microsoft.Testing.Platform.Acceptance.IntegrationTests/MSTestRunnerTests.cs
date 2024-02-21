@@ -151,7 +151,7 @@ return await app.RunAsync();
         await Lock.WaitAsync();
         try
         {
-            TestAsset generator = await TestAsset.GenerateAssetAsync(
+            using TestAsset generator = await TestAsset.GenerateAssetAsync(
             AssetName,
             CurrentMSTestSourceCode
             .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{tfm}</TargetFramework>")
