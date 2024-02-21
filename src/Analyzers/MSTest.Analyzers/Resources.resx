@@ -262,6 +262,24 @@
   <data name="ClassInitializeShouldBeValidTitle" xml:space="preserve">
     <value>ClassInitialize methods should have valid layout</value>
   </data>
+  <data name="DataRowShouldBeValidDescription" xml:space="preserve">
+    <value>DataRow entry should have the following layout to be valid:
+- should only be set on a test method;
+- argument count should match method argument count;
+- argument type should match method argument type.</value>
+  </data>
+  <data name="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch" xml:space="preserve">
+    <value>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</value>
+  </data>
+  <data name="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch" xml:space="preserve">
+    <value>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</value>
+  </data>
+  <data name="DataRowShouldBeValidMessageFormat_OnTestMethod" xml:space="preserve">
+    <value>DataRow should only be set on a test method</value>
+  </data>
+  <data name="DataRowShouldBeValidTitle" xml:space="preserve">
+    <value>DataRow should be valid</value>
+  </data>
   <data name="PublicTypeShouldBeTestClassDescription" xml:space="preserve">
     <value>It's considered a good practice to have only test classes marked public in a test project.</value>
   </data>

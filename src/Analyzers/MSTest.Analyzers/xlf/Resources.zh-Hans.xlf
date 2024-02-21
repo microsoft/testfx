@@ -253,6 +253,37 @@
         <target state="new">ClassInitialize methods should have valid layout</target>
         <note />
       </trans-unit>
+      <trans-unit id="DataRowShouldBeValidDescription">
+        <source>DataRow entry should have the following layout to be valid:
+- should only be set on a test method;
+- argument count should match method argument count;
+- argument type should match method argument type.</source>
+        <target state="new">DataRow entry should have the following layout to be valid:
+- should only be set on a test method;
+- argument count should match method argument count;
+- argument type should match method argument type.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch">
+        <source>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</source>
+        <target state="new">DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
+        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
+        <target state="new">DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
+        <source>DataRow should only be set on a test method</source>
+        <target state="new">DataRow should only be set on a test method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DataRowShouldBeValidTitle">
+        <source>DataRow should be valid</source>
+        <target state="new">DataRow should be valid</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">在测试项目中仅将测试类标记为“公开”是一种不错的做法。</target>

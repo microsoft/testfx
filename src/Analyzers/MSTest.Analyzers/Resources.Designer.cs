@@ -440,6 +440,54 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DataRow entry should have the following layout to be valid:
+        ///- should only be set on a test method;
+        ///- argument count should match method argument count;
+        ///- argument type should match method argument type..
+        /// </summary>
+        internal static string DataRowShouldBeValidDescription {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1}).
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_ArgumentCountMismatch {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentCountMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DataRow argument type should match method parameter type. Mismatches occur at indices: {0}.
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DataRow should only be set on a test method.
+        /// </summary>
+        internal static string DataRowShouldBeValidMessageFormat_OnTestMethod {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_OnTestMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DataRow should be valid.
+        /// </summary>
+        internal static string DataRowShouldBeValidTitle {
+            get {
+                return ResourceManager.GetString("DataRowShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
         /// </summary>
         internal static string PublicTypeShouldBeTestClassDescription {

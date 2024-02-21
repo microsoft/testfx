@@ -11,3 +11,4 @@ MSTEST0010 | Usage | Warning | ClassInitializeShouldBeValidAnalyzer, [Documentat
 MSTEST0011 | Usage | Warning | ClassCleanupShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0011)
 MSTEST0012 | Usage | Warning | AssemblyInitializeShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0012)
 MSTEST0013 | Usage | Warning | AssemblyCleanupShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0013)
+MSTEST0014 | Usage | Warning | DataRowShouldBeValidAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/unit-testing-mstest-analyzers-MSTEST0014)
