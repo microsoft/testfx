@@ -223,7 +223,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         //    parameter count must be the same.
         // 2. If strict matching is not required then the argument count check is relaxed and we
         //    only need to make sure we don't have less constructor arguments than actual method
-        //    paramters.
+        //    parameters.
         return strictMatch
             ? constructorArgumentsLength != methodParameters.Length
             : constructorArgumentsLength < methodParameters.Length - 1;
