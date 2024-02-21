@@ -159,17 +159,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             constructorArguments = constructorArguments[0].Values;
         }
 
-        bool lastMethodParameterIsParams = lastMethodParameter.IsParams;
-        bool uniqueMethodParameter = methodSymbol.Parameters.Length == 1;
-        bool hasDefaultValue = lastMethodParameter.HasExplicitDefaultValue;
-        bool strictMatch =
-            !lastMethodParameterIsArray
-            || (lastMethodParameterIsArray
-                && !lastMethodParameterIsParams
-                && !uniqueMethodParameter
-                && !hasDefaultValue);
-
-        if (IsArgumentCountMismatch(constructorArguments.Length, methodSymbol.Parameters.Length, strictMatch))
+        if (IsArgumentCountMismatch(constructorArguments.Length, methodSymbol.Parameters))
         {
             context.ReportDiagnostic(syntax.CreateDiagnostic(
                 ArgumentCountMismatchRule,
@@ -208,13 +198,34 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
     }
 
-    private static bool IsArgumentCountMismatch(int constructorArgumentsLength, int methodParametersLength, bool strictMatch)
+    private static bool IsArgumentCountMismatch(int constructorArgumentsLength, ImmutableArray<IParameterSymbol> methodParameters)
     {
-        // 1. If last method parameter is not an array the lengths must be the same.
-        // 2. If last method parameter is an array the argument count check is relaxed and we only
-        //    need to make sure we don't have less constructor arguments than actual method paramters.
+        IParameterSymbol lastMethodParameter = methodParameters.Last();
+
+        bool lastMethodParameterIsArray = lastMethodParameter.Type.Kind == SymbolKind.ArrayType;
+        bool lastMethodParameterIsParams = lastMethodParameter.IsParams;
+        bool uniqueMethodParameter = methodParameters.Length == 1;
+        bool hasDefaultValue = lastMethodParameter.HasExplicitDefaultValue;
+
+        // Strict length matching should be done in the following cases:
+        // 1. Last method parameter is not an array (so it's not params either) so it doesn't
+        //    matter if it's the only parameter or if it has any default value.
+        // 2. Last method parameter is an array, but is not params, is not the only method
+        //    parameter and has no default value.
+        bool strictMatch =
+            !lastMethodParameterIsArray
+            || (lastMethodParameterIsArray
+                && !lastMethodParameterIsParams
+                && !uniqueMethodParameter
+                && !hasDefaultValue);
+
+        // 1. If strict matching is required then the constructor arguments count and method
+        //    parameter count must be the same.
+        // 2. If strict matching is not required then the argument count check is relaxed and we
+        //    only need to make sure we don't have less constructor arguments than actual method
+        //    paramters.
         return strictMatch
-            ? constructorArgumentsLength != methodParametersLength
-            : constructorArgumentsLength < methodParametersLength - 1;
+            ? constructorArgumentsLength != methodParameters.Length
+            : constructorArgumentsLength < methodParameters.Length - 1;
     }
 }
