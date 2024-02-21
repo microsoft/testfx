@@ -138,12 +138,10 @@
       <trans-unit id="DataRowShouldBeValidDescription">
         <source>DataRow entry should have the following layout to be valid:
 - should only be set on a test method;
-- should have at least one argument;
 - argument count should match method argument count;
 - argument type should match method argument type.</source>
         <target state="new">DataRow entry should have the following layout to be valid:
 - should only be set on a test method;
-- should have at least one argument;
 - argument count should match method argument count;
 - argument type should match method argument type.</target>
         <note />
@@ -156,11 +154,6 @@
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
         <target state="new">DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DataRowShouldBeValidMessageFormat_AtLeastOneArgument">
-        <source>DataRow should have at least one argument</source>
-        <target state="new">DataRow should have at least one argument</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">

@@ -29,9 +29,6 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    internal static readonly DiagnosticDescriptor AtLeastOneArgumentRule = DataRowOnTestMethodRule
-        .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_AtLeastOneArgument), Resources.ResourceManager, typeof(Resources)));
-
     internal static readonly DiagnosticDescriptor ArgumentCountMismatchRule = DataRowOnTestMethodRule
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentCountMismatch), Resources.ResourceManager, typeof(Resources)));
 
@@ -120,9 +117,36 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        // No constructor arguments and no method parameters -> nothing to check.
+        if (attribute.ConstructorArguments.Length == 0 && methodSymbol.Parameters.Length == 0)
+        {
+            return;
+        }
+
+        // Count mismatch since there's zero method parameters but there's at least one DataRow
+        // constructor argument.
+        if (methodSymbol.Parameters.Length == 0)
+        {
+            context.ReportDiagnostic(syntax.CreateDiagnostic(
+                ArgumentCountMismatchRule,
+                attribute.ConstructorArguments.Length,
+                methodSymbol.Parameters.Length));
+            return;
+        }
+
+        // Possible count mismatch depending on whether last method parameter is an array or not.
+        IParameterSymbol lastMethodParameter = methodSymbol.Parameters.Last();
+        bool lastMethodParameterIsArray = lastMethodParameter.Type.Kind == SymbolKind.ArrayType;
         if (attribute.ConstructorArguments.Length == 0)
         {
-            context.ReportDiagnostic(syntax.CreateDiagnostic(AtLeastOneArgumentRule));
+            if (!lastMethodParameterIsArray)
+            {
+                context.ReportDiagnostic(syntax.CreateDiagnostic(
+                    ArgumentCountMismatchRule,
+                    attribute.ConstructorArguments.Length,
+                    methodSymbol.Parameters.Length));
+            }
+
             return;
         }
 
@@ -130,49 +154,57 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         // on the one argument case. Check if we match either of the array argument constructors
         // and expand the array argument if we do.
         ImmutableArray<TypedConstant> constructorArguments = attribute.ConstructorArguments;
-        if (constructorArguments[0].IsNull)
-        {
-            return;
-        }
-
-        if (constructorArguments[0].Kind is TypedConstantKind.Array)
+        if (constructorArguments[0].Kind is TypedConstantKind.Array && !constructorArguments[0].IsNull)
         {
             constructorArguments = constructorArguments[0].Values;
         }
 
-        // 1. Diagnostic on mismatch of constructor argument count and method argument count if method
-        //    doesn't accept params.
-        // 2. Diagnostic on lower constructor argument count than method argument count if method
-        //    accepts params. Discard params argument itself because it can contain 0 params.
-        int lastMethodParameterIndex = methodSymbol.Parameters.Length - 1;
-        bool lastMethodParameterIsArray = methodSymbol.Parameters[lastMethodParameterIndex].Type.Kind == SymbolKind.ArrayType;
-        if ((!lastMethodParameterIsArray && constructorArguments.Length != methodSymbol.Parameters.Length)
-            || (lastMethodParameterIsArray && constructorArguments.Length < methodSymbol.Parameters.Length - 1))
+        if (IsArgumentCountMismatch(constructorArguments.Length, methodSymbol.Parameters.Length, lastMethodParameterIsArray))
         {
-            context.ReportDiagnostic(syntax.CreateDiagnostic(ArgumentCountMismatchRule, constructorArguments.Length, methodSymbol.Parameters.Length));
+            context.ReportDiagnostic(syntax.CreateDiagnostic(
+                ArgumentCountMismatchRule,
+                constructorArguments.Length,
+                methodSymbol.Parameters.Length));
             return;
         }
 
-        ITypeSymbol? paramsElementType = lastMethodParameterIsArray
-            ? ((IArrayTypeSymbol)methodSymbol.Parameters[lastMethodParameterIndex].Type).ElementType
-            : null;
+        // Check constructor argument types match method parameter types.
         List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices = new();
-        for (int constructorArgumentIndex = 0, methodParameterIndex = 0; constructorArgumentIndex < constructorArguments.Length; ++constructorArgumentIndex, ++methodParameterIndex)
+        for (int i = 0, j = 0; i < constructorArguments.Length; ++i, ++j)
         {
-            ITypeSymbol? argumentType = constructorArguments[constructorArgumentIndex].Type;
-            ITypeSymbol paramType = (methodParameterIndex >= methodSymbol.Parameters.Length - 1 && lastMethodParameterIsArray)
-                ? paramsElementType!
-                : methodSymbol.Parameters[methodParameterIndex].Type;
+            if (constructorArguments[i].IsNull)
+            {
+                continue;
+            }
+
+            ITypeSymbol? argumentType = constructorArguments[i].Type;
+            ITypeSymbol paramType = (lastMethodParameterIsArray && j >= methodSymbol.Parameters.Length - 1)
+                ? ((IArrayTypeSymbol)lastMethodParameter.Type).ElementType
+                : methodSymbol.Parameters[j].Type;
+
             if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
             {
-                typeMismatchIndices.Add((constructorArgumentIndex, methodParameterIndex));
+                typeMismatchIndices.Add((i, j));
             }
         }
 
+        // Report diagnostics if there's any type mismatch.
         if (typeMismatchIndices.Count > 0)
         {
-            context.ReportDiagnostic(syntax.CreateDiagnostic(ArgumentTypeMismatchRule, FormatTypeMismatchIndexList(typeMismatchIndices)));
+            context.ReportDiagnostic(syntax.CreateDiagnostic(
+                ArgumentTypeMismatchRule,
+                FormatTypeMismatchIndexList(typeMismatchIndices)));
         }
+    }
+
+    private static bool IsArgumentCountMismatch(int constructorArgumentsLength, int methodParametersLength, bool lastMethodParameterIsArray)
+    {
+        // 1. If last method parameter is not an array the lengths must be the same.
+        // 2. If last method parameter is an array the argument count check is relaxed and we only
+        //    need to make sure we don't have less constructor arguments than actual method paramters.
+        return lastMethodParameterIsArray
+            ? constructorArgumentsLength < methodParametersLength - 1
+            : constructorArgumentsLength != methodParametersLength;
     }
 
     private static string FormatTypeMismatchIndexList(List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices)

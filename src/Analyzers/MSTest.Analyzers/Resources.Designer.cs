@@ -442,7 +442,6 @@ namespace MSTest.Analyzers {
         /// <summary>
         ///   Looks up a localized string similar to DataRow entry should have the following layout to be valid:
         ///- should only be set on a test method;
-        ///- should have at least one argument;
         ///- argument count should match method argument count;
         ///- argument type should match method argument type..
         /// </summary>
@@ -467,15 +466,6 @@ namespace MSTest.Analyzers {
         internal static string DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch {
             get {
                 return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to DataRow should have at least one argument.
-        /// </summary>
-        internal static string DataRowShouldBeValidMessageFormat_AtLeastOneArgument {
-            get {
-                return ResourceManager.GetString("DataRowShouldBeValidMessageFormat_AtLeastOneArgument", resourceCulture);
             }
         }
         

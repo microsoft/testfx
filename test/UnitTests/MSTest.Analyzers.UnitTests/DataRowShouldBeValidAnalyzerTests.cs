@@ -266,7 +266,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenDataRowIsCorrectlyDefinedWithOneNullArgumentAndMethodHasNoArguments_NoDiagnostic()
+    public async Task WhenDataRowHasOneNullArgumentAndMethodHasNoArguments_Diagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -274,7 +274,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             [TestClass]
             public class MyTestClass
             {
-                [DataRow(null)]
+                [{|#0:DataRow(null)|}]
                 [TestMethod]
                 public void TestMethod1()
                 {
@@ -282,7 +282,11 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(code);
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule)
+                .WithLocation(0)
+                .WithArguments(1, 0));
     }
 
     public async Task WhenDataRowIsNotSetOnATestMethod_Diagnostic()
@@ -304,7 +308,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.DataRowOnTestMethodRule).WithLocation(0));
     }
 
-    public async Task WhenDataRowHasNoArgs_Diagnostic()
+    public async Task WhenDataRowHasNoArgsButMethodHasOneArgument_Diagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -321,7 +325,11 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             """
         ;
 
-        await VerifyCS.VerifyAnalyzerAsync(code, VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.AtLeastOneArgumentRule).WithLocation(0));
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule)
+                .WithLocation(0)
+                .WithArguments(0, 1));
     }
 
     public async Task WhenDataRowHasArgumentMismatchWithTestMethod_Diagnostic()
