@@ -170,21 +170,22 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         // Check constructor argument types match method parameter types.
         List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices = new();
-        for (int i = 0, j = 0; i < constructorArguments.Length; ++i, ++j)
+        for (int i = 0; i < constructorArguments.Length; ++i)
         {
+            // Null is considered as default for non-nullable types.
             if (constructorArguments[i].IsNull)
             {
                 continue;
             }
 
             ITypeSymbol? argumentType = constructorArguments[i].Type;
-            ITypeSymbol paramType = (lastMethodParameterIsArray && j >= methodSymbol.Parameters.Length - 1)
+            ITypeSymbol paramType = (lastMethodParameterIsArray && i >= methodSymbol.Parameters.Length - 1)
                 ? ((IArrayTypeSymbol)lastMethodParameter.Type).ElementType
-                : methodSymbol.Parameters[j].Type;
+                : methodSymbol.Parameters[i].Type;
 
             if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
             {
-                typeMismatchIndices.Add((i, j));
+                typeMismatchIndices.Add((i, Math.Min(i, methodSymbol.Parameters.Length - 1)));
             }
         }
 
@@ -209,6 +210,6 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
     private static string FormatTypeMismatchIndexList(List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices)
     {
-        return string.Join(", ", typeMismatchIndices.ToArray());
+        return string.Join(", ", typeMismatchIndices);
     }
 }
