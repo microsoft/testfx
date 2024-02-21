@@ -159,7 +159,17 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             constructorArguments = constructorArguments[0].Values;
         }
 
-        if (IsArgumentCountMismatch(constructorArguments.Length, methodSymbol.Parameters.Length, lastMethodParameterIsArray))
+        bool lastMethodParameterIsParams = lastMethodParameter.IsParams;
+        bool uniqueMethodParameter = methodSymbol.Parameters.Length == 1;
+        bool hasDefaultValue = lastMethodParameter.HasExplicitDefaultValue;
+        bool strictMatch =
+            !lastMethodParameterIsArray
+            || (lastMethodParameterIsArray
+                && !lastMethodParameterIsParams
+                && !uniqueMethodParameter
+                && !hasDefaultValue);
+
+        if (IsArgumentCountMismatch(constructorArguments.Length, methodSymbol.Parameters.Length, strictMatch))
         {
             context.ReportDiagnostic(syntax.CreateDiagnostic(
                 ArgumentCountMismatchRule,
@@ -194,22 +204,17 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         {
             context.ReportDiagnostic(syntax.CreateDiagnostic(
                 ArgumentTypeMismatchRule,
-                FormatTypeMismatchIndexList(typeMismatchIndices)));
+                string.Join(", ", typeMismatchIndices)));
         }
     }
 
-    private static bool IsArgumentCountMismatch(int constructorArgumentsLength, int methodParametersLength, bool lastMethodParameterIsArray)
+    private static bool IsArgumentCountMismatch(int constructorArgumentsLength, int methodParametersLength, bool strictMatch)
     {
         // 1. If last method parameter is not an array the lengths must be the same.
         // 2. If last method parameter is an array the argument count check is relaxed and we only
         //    need to make sure we don't have less constructor arguments than actual method paramters.
-        return lastMethodParameterIsArray
-            ? constructorArgumentsLength < methodParametersLength - 1
-            : constructorArgumentsLength != methodParametersLength;
-    }
-
-    private static string FormatTypeMismatchIndexList(List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices)
-    {
-        return string.Join(", ", typeMismatchIndices);
+        return strictMatch
+            ? constructorArgumentsLength != methodParametersLength
+            : constructorArgumentsLength < methodParametersLength - 1;
     }
 }

@@ -131,6 +131,29 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenDataRowHasThreeArgumentsAndMethodHasAnIntegerAndAnArrayArgument_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:DataRow(1, 2, 3)|}]
+                [TestMethod]
+                public void TestMethod1(int i, object[] o)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule)
+                .WithLocation(0)
+                .WithArguments(3, 2));
+    }
+
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndMethodHasAPrimitiveTypeAndAParamsArgument_NoDiagnostic()
     {
         var code = """
