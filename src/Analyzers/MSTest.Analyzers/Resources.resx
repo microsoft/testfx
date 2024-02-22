@@ -446,10 +446,10 @@
     <value>Test methods should have valid layout</value>
   </data>
   <data name="TestMethodShouldNotBeIgnoredAnalyzerDescription" xml:space="preserve">
-    <value>Test methods should not be ignored (marked with [Ignore]).</value>
+    <value>Test methods should not be ignored (marked with '[Ignore]').</value>
   </data>
   <data name="TestMethodShouldNotBeIgnoredAnalyzerFormat" xml:space="preserve">
-    <value>Test Method {0} should not be ignored</value>
+    <value>Test method '{0}' should not be ignored</value>
   </data>
   <data name="TestMethodShouldNotBeIgnoredAnalyzerTitle" xml:space="preserve">
     <value>Test method should not be ignored</value>

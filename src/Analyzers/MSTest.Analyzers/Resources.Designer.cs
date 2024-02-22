@@ -923,7 +923,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test methods should not be ignored (marked with [Ignore])..
+        ///   Looks up a localized string similar to Test methods should not be ignored (marked with &apos;[Ignore]&apos;)..
         /// </summary>
         internal static string TestMethodShouldNotBeIgnoredAnalyzerDescription {
             get {
@@ -932,7 +932,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test Method {0} should not be ignored.
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be ignored.
         /// </summary>
         internal static string TestMethodShouldNotBeIgnoredAnalyzerFormat {
             get {
