@@ -49,15 +49,17 @@ internal class TypeValidator
     /// <returns>Return true if it is a valid test class.</returns>
     internal virtual bool IsValidTestClass(Type type, ICollection<string> warnings)
     {
-        if (!type.GetTypeInfo().IsClass
-            || (!_reflectHelper.IsAttributeDefined<TestClassAttribute>(type, false)
-            && !_reflectHelper.HasAttributeDerivedFrom<TestClassAttribute>(type, false)))
+        TypeInfo typeInfo = type.GetTypeInfo();
+
+        if (!typeInfo.IsClass
+            || (!_reflectHelper.IsAttributeDefined<TestClassAttribute>(typeInfo, false)
+            && !_reflectHelper.HasAttributeDerivedFrom<TestClassAttribute>(typeInfo, false)))
         {
             return false;
         }
 
         // inaccessible class
-        if (!TypeHasValidAccessibility(type.GetTypeInfo(), _discoverInternals))
+        if (!TypeHasValidAccessibility(typeInfo, _discoverInternals))
         {
             var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
             warnings.Add(warning);
@@ -65,7 +67,7 @@ internal class TypeValidator
         }
 
         // Generic class
-        if (type.GetTypeInfo().IsGenericTypeDefinition && !type.GetTypeInfo().IsAbstract)
+        if (typeInfo.IsGenericTypeDefinition && !typeInfo.IsAbstract)
         {
             // In IDE generic classes that are not abstract are treated as not runnable. Keep consistence.
             var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
@@ -89,7 +91,7 @@ internal class TypeValidator
         // What we do is:
         //   - report the class as "not valid" test class. This will cause to skip enumerating tests from it.
         //   - Do not generate warnings/do not create NOT RUNNABLE tests.
-        return !type.GetTypeInfo().IsAbstract;
+        return !typeInfo.IsAbstract;
     }
 
     /// <summary>

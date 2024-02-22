@@ -65,10 +65,18 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>True if the specified attribute is defined on the type.</returns>
     public virtual bool IsAttributeDefined<TAttribute>(Type type, bool inherit)
         where TAttribute : Attribute
-    {
-        var memberInfo = (MemberInfo)type.GetTypeInfo();
-        return IsAttributeDefined<TAttribute>(memberInfo, inherit);
-    }
+        => IsAttributeDefined<TAttribute>((MemberInfo)type.GetTypeInfo(), inherit);
+
+    /// <summary>
+    /// Checks to see if the parameter memberInfo contains the parameter attribute or not.
+    /// </summary>
+    /// <typeparam name="TAttribute">Attribute to search for.</typeparam>
+    /// <param name="typeInfo">Type info to test.</param>
+    /// <param name="inherit">Look through inheritance or not.</param>
+    /// <returns>True if the specified attribute is defined on the type.</returns>
+    public virtual bool IsAttributeDefined<TAttribute>(TypeInfo typeInfo, bool inherit)
+        where TAttribute : Attribute
+        => IsAttributeDefined<TAttribute>((MemberInfo)typeInfo, inherit);
 
     /// <summary>
     /// Returns true when specified class/member has attribute derived from specific attribute.
@@ -79,10 +87,18 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>An object derived from Attribute that corresponds to the instance of found attribute.</returns>
     public virtual bool HasAttributeDerivedFrom<TAttribute>(Type type, bool inherit)
         where TAttribute : Attribute
-    {
-        var memberInfo = (MemberInfo)type.GetTypeInfo();
-        return HasAttributeDerivedFrom<TAttribute>(memberInfo, inherit);
-    }
+        => HasAttributeDerivedFrom<TAttribute>((MemberInfo)type.GetTypeInfo(), inherit);
+
+    /// <summary>
+    /// Returns true when specified class/member has attribute derived from specific attribute.
+    /// </summary>
+    /// <typeparam name="TAttribute">The base attribute type.</typeparam>
+    /// <param name="typeInfo">The type info.</param>
+    /// <param name="inherit">Should look at inheritance tree.</param>
+    /// <returns>An object derived from Attribute that corresponds to the instance of found attribute.</returns>
+    public virtual bool HasAttributeDerivedFrom<TAttribute>(TypeInfo typeInfo, bool inherit)
+        where TAttribute : Attribute
+        => HasAttributeDerivedFrom<TAttribute>((MemberInfo)typeInfo, inherit);
 
     /// <summary>
     /// Returns true when specified class/member has attribute derived from specific attribute.
