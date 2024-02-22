@@ -4,11 +4,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [3.2.2] - 2024-02-22
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.2.1...v.3.2.2)
+
+### Fixed
+
+* [rel/3.2] Workaround harmless MSBuild warning in VS by @Evangelink in [#2350](https://github.com/microsoft/testfx/pull/2350)
+* [rel/3.2] Fix analyzers doc link by @Evangelink in [#2362](https://github.com/microsoft/testfx/pull/2362)
+* Assert.AreEqual allow IEquatable<T> for actual and expected by @Evangelink in [#2382](https://github.com/microsoft/testfx/pull/2382)
+* Fix msbuild integration (#2389) by @MarcoRossignoli in [#2395](https://github.com/microsoft/testfx/pull/2395)
+* Remove the `TestingPlatformServer` if the runner is disabled (#2409) by @MarcoRossignoli in [#2410](https://github.com/microsoft/testfx/pull/2410)
+
+### Artifacts
+
+* MSTest: [3.2.2](https://www.nuget.org/packages/MSTest/3.2.2)
+* MSTest.TestFramework: [3.2.2](https://www.nuget.org/packages/MSTest.TestFramework/3.2.2)
+* MSTest.TestAdapter: [3.2.2](https://www.nuget.org/packages/MSTest.TestAdapter/3.2.2)
+* MSTest.Analyzers: [3.2.2](https://www.nuget.org/packages/MSTest.Analyzers/3.2.2)
+* Microsoft.Testing.Extensions.CrashDump: [1.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.0.2)
+* Microsoft.Testing.Extensions.HangDump: [1.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.0.2)
+* Microsoft.Testing.Extensions.HotReload: [1.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.0.2)
+* Microsoft.Testing.Extensions.Retry: [1.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.0.2)
+* Microsoft.Testing.Extensions.TrxReport: [1.0.2](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.0.2)
+
 ## [3.2.1] - 2024-02-13
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.2.0...v.3.2.1)
 
-## Fixed
+### Fixed
 
 * MSTEST0002: fix false-positive with static TestClass (#2182) by @Evangelink in [#2199](https://github.com/microsoft/testfx/pull/2199)
 * Bump version of coverage and platform by @Evangelink in [#2280](https://github.com/microsoft/testfx/pull/2280)
