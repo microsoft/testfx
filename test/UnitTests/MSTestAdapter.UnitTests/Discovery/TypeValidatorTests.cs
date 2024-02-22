@@ -176,7 +176,7 @@ public class TypeValidatorTests : TestContainer
         SetupTestClass();
         _typeValidator.IsValidTestClass(typeof(GenericClass<>), _warnings);
         Verify(_warnings.Count == 1);
-        Verify(_warnings.Contains(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorNonPublicTestClass, typeof(GenericClass<>).FullName)));
+        Verify(_warnings.Contains(string.Format(CultureInfo.InvariantCulture, Resource.UTA_ErrorTestClassIsGenericNonAbstract, typeof(GenericClass<>).FullName)));
     }
 
     #endregion

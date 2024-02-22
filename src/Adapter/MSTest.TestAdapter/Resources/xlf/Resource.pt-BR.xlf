@@ -72,6 +72,11 @@
         <target state="translated">UTA018: {0}: não é possível definir mais de um método com o atributo TestInitialize.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorTestClassIsGenericNonAbstract">
+        <source>TestClass attribute defined on generic non-abstract class {0}</source>
+        <target state="new">TestClass attribute defined on generic non-abstract class {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_InitMethodThrows">
         <source>Initialization method {0}.{1} threw exception. {2}.</source>
         <target state="translated">O método de inicialização {0}.{1} gerou exceção. {2}.</target>
