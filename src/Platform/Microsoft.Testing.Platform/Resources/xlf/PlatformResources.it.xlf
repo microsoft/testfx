@@ -274,6 +274,23 @@
         <target state="translated">Specifica la porta del client.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineCloseOnParentExit">
+        <source>Close the test process if the parent process exits. Parent process PID must be provided.</source>
+        <target state="new">Close the test process if the parent process exits. Parent process PID must be provided.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCloseOnParentExitInvalidParentProcess">
+        <source>Invalid parent process pid {0}
+{1}</source>
+        <target state="new">Invalid parent process pid {0}
+{1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineCloseOnParentExitSingleArgument">
+        <source>'--close-on-parent-exit' expects a single int PID argument</source>
+        <target state="new">'--close-on-parent-exit' expects a single int PID argument</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
         <target state="translated">Forza il logger di file predefinito per scrivere il log in modo sincrono. Utile per uno scenario in cui non si vuole perdere alcun log, ad esempio in caso di arresto anomalo del sistema. Si noti che l'esecuzione del test sta rallentando.</target>

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
 using System.Globalization;
 
 using Microsoft.Testing.Platform.Extensions;
@@ -31,6 +32,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
+    public const string CloseOnParentExitOptionKey = "close-on-parent-exit";
 
     private static readonly CommandLineOption MinimumExpectedTests = new(MinimumExpectedTestsOptionKey, "Specifies the minimum number of tests that are expected to run.", ArgumentArity.ZeroOrOne, false, isBuiltIn: true);
 
@@ -48,6 +50,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         MinimumExpectedTests,
         new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(CloseOnParentExitOptionKey, PlatformResources.PlatformCommandLineCloseOnParentExit, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
 
         // Hidden options
         new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
@@ -134,6 +137,11 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineClientHostOptionSingleArgument);
         }
 
+        if (commandOption.Name == CloseOnParentExitOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
+        {
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineCloseOnParentExitSingleArgument, PortOptionKey));
+        }
+
         // Now validate the minimum expected tests option
         return IsMinimumExpectedTestsOptionValidAsync(commandOption, arguments);
     }
@@ -175,6 +183,24 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             && commandLineOptions.IsOptionSet(MinimumExpectedTestsOptionKey))
         {
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
+        }
+
+        if (commandLineOptions.IsOptionSet(CloseOnParentExitOptionKey))
+        {
+            commandLineOptions.TryGetOptionArgumentList(CloseOnParentExitOptionKey, out string[]? pid);
+            ArgumentGuard.IsNotNull(pid);
+            RoslynDebug.Assert(pid.Length == 1);
+            int parentProcessPid = int.Parse(pid[0], CultureInfo.InvariantCulture);
+            try
+            {
+                // We let the api to do the validity check before to go down the subscription path.
+                // If we don't fail here but we fail below means that the parent process is not there anymore and we can take it as exited.
+                Process.GetProcessById(parentProcessPid);
+            }
+            catch (Exception ex)
+            {
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineCloseOnParentExitInvalidParentProcess, parentProcessPid, ex));
+            }
         }
 
         // Validation succeeded

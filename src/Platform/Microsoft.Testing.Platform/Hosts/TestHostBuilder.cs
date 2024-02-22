@@ -243,6 +243,15 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.TryAddService(telemetryService);
         AddApplicationMetadata(serviceProvider, builderMetrics);
 
+        // Subscribe to the parent process if the option is set.
+        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.CloseOnParentExitOptionKey))
+        {
+            NonCooperativeParentProcessListener nonCooperativeParentProcessListener = new(commandLineOptions, environment);
+
+            // Add to the service provider for cleanup.
+            serviceProvider.AddService(nonCooperativeParentProcessListener);
+        }
+
         // ============= SETUP COMMON SERVICE USED IN ALL MODES END ===============//
 
         // ============= SELECT AND RUN THE ACTUAL MODE ===============//

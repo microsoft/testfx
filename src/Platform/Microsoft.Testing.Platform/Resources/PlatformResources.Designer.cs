@@ -548,6 +548,34 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Close the test process if the parent process exits. Parent process PID must be provided..
+        /// </summary>
+        internal static string PlatformCommandLineCloseOnParentExit {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineCloseOnParentExit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid parent process pid {0}
+        ///{1}.
+        /// </summary>
+        internal static string PlatformCommandLineCloseOnParentExitInvalidParentProcess {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineCloseOnParentExitInvalidParentProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;--close-on-parent-exit&apos; expects a single int PID argument.
+        /// </summary>
+        internal static string PlatformCommandLineCloseOnParentExitSingleArgument {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineCloseOnParentExitSingleArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Force the built-in file logger to write the log synchronously. Useful for scenario where you don&apos;t want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution..
         /// </summary>
         internal static string PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription {
