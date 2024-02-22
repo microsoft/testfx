@@ -102,43 +102,18 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
                 .WithArguments("MyTestClass"));
     }
 
-    public async Task WhenClassIsGeneric_Diagnostic()
+    public async Task WhenClassIsGeneric_NoDiagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
-            public class {|#0:MyTestClass|}<T>
+            public class MyTestClass<T>
             {
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(0)
-                .WithArguments("MyTestClass"));
-    }
-
-    public async Task WhenClassIsNotGenericButAsOuterGeneric_Diagnostic()
-    {
-        var code = """
-            using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-            public class MyClass<T>
-            {
-                [TestClass]
-                public class {|#0:MyTestClass|}
-                {
-                }
-            }
-            """;
-
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(TestClassShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(0)
-                .WithArguments("MyTestClass"));
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
     public async Task WhenDiscoverInternalsAndTypeIsInternal_NoDiagnostic()

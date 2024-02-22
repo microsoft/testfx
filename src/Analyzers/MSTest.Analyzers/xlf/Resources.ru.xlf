@@ -310,11 +310,6 @@
 - класс не должен быть универсальным.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
-        <source>Test class '{0}' should not be generic</source>
-        <target state="translated">Тестовый класс "{0}" не должен быть универсальным</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
         <source>Test class '{0}' should not be 'static'</source>
         <target state="translated">Тестовый класс "{0}" не должен использовать значение "static"</target>
