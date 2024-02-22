@@ -372,4 +372,7 @@ Error: {1}</value>
   <data name="ClassInitializeWasCancelled" xml:space="preserve">
     <value>Class initialize method '{0}.{1}' was cancelled</value>
   </data>
+  <data name="UTA_ErrorTestClassIsGenericNonAbstract" xml:space="preserve">
+    <value>TestClass attribute defined on generic non-abstract class {0}</value>
+  </data>
 </root>

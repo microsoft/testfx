@@ -72,6 +72,11 @@
         <target state="translated">UTA018: {0}: TestInitialize 특성을 사용하는 메서드를 여러 개 정의할 수 없습니다.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorTestClassIsGenericNonAbstract">
+        <source>TestClass attribute defined on generic non-abstract class {0}</source>
+        <target state="new">TestClass attribute defined on generic non-abstract class {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_InitMethodThrows">
         <source>Initialization method {0}.{1} threw exception. {2}.</source>
         <target state="translated">초기화 메서드 {0}.{1}에서 예외를 throw했습니다. {2}.</target>

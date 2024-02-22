@@ -585,6 +585,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to TestClass attribute defined on generic non-abstract class {0}.
+        /// </summary>
+        internal static string UTA_ErrorTestClassIsGenericNonAbstract {
+            get {
+                return ResourceManager.GetString("UTA_ErrorTestClassIsGenericNonAbstract", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to UTA021: {0}: Null or empty custom property defined on method {1}. The custom property must have a valid name..
         /// </summary>
         internal static string UTA_ErrorTestPropertyNullOrEmpty {

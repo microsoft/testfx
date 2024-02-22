@@ -72,6 +72,11 @@
         <target state="translated">UTA018: {0}: Nejde definovat více jak jednu metodu s atributem TestInitialize.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorTestClassIsGenericNonAbstract">
+        <source>TestClass attribute defined on generic non-abstract class {0}</source>
+        <target state="new">TestClass attribute defined on generic non-abstract class {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_InitMethodThrows">
         <source>Initialization method {0}.{1} threw exception. {2}.</source>
         <target state="translated">Inicializační metoda {0}.{1} způsobila výjimku. {2}.</target>
