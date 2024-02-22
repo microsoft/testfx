@@ -30,7 +30,6 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
 
     internal static readonly DiagnosticDescriptor PublicOrInternalRule = PublicRule.WithMessage(new(nameof(Resources.TestClassShouldBeValidMessageFormat_PublicOrInternal), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor NotStaticRule = PublicRule.WithMessage(new(nameof(Resources.TestClassShouldBeValidMessageFormat_NotStatic), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NotGenericRule = PublicRule.WithMessage(new(nameof(Resources.TestClassShouldBeValidMessageFormat_NotGeneric), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(PublicRule);
@@ -79,11 +78,6 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
             {
                 context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(PublicOrInternalRule, namedTypeSymbol.Name));
             }
-        }
-
-        if (namedTypeSymbol.IsGenericType)
-        {
-            context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(NotGenericRule, namedTypeSymbol.Name));
         }
 
         if (namedTypeSymbol.IsStatic)

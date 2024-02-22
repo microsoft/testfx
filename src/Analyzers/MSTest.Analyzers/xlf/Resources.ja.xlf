@@ -310,11 +310,6 @@
 - ジェネリックにすることはできません。</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
-        <source>Test class '{0}' should not be generic</source>
-        <target state="translated">テスト クラス '{0}' をジェネリックにすることはできません</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
         <source>Test class '{0}' should not be 'static'</source>
         <target state="translated">テスト クラス '{0}' を 'static' にすることはできません</target>

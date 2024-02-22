@@ -527,15 +527,6 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should not be generic.
-        /// </summary>
-        internal static string TestClassShouldBeValidMessageFormat_NotGeneric {
-            get {
-                return ResourceManager.GetString("TestClassShouldBeValidMessageFormat_NotGeneric", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Test class &apos;{0}&apos; should not be &apos;static&apos;.
         /// </summary>
         internal static string TestClassShouldBeValidMessageFormat_NotStatic {
