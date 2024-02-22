@@ -72,6 +72,11 @@
         <target state="translated">UTA018: {0}: 不可定義一個以上具有 TestInitialize 屬性的方法。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorTestClassIsGenericNonAbstract">
+        <source>TestClass attribute defined on generic non-abstract class {0}</source>
+        <target state="new">TestClass attribute defined on generic non-abstract class {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_InitMethodThrows">
         <source>Initialization method {0}.{1} threw exception. {2}.</source>
         <target state="translated">初始設定方法 {0}.{1} 擲回例外狀況。{2}。</target>

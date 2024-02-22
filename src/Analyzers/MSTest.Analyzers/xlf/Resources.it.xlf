@@ -310,11 +310,6 @@
 - non dovrebbe essere generica.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
-        <source>Test class '{0}' should not be generic</source>
-        <target state="translated">La classe di test '{0}' non dovrebbe essere generica</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
         <source>Test class '{0}' should not be 'static'</source>
         <target state="translated">La classe di test '{0}' non dovrebbe essere 'statica'</target>

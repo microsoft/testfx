@@ -310,11 +310,6 @@
 – nesmí být obecné.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
-        <source>Test class '{0}' should not be generic</source>
-        <target state="translated">Testovací třída {0} by neměla být obecná.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
         <source>Test class '{0}' should not be 'static'</source>
         <target state="translated">Testovací třída {0} by neměla být static.</target>

@@ -310,11 +310,6 @@
 - 它不能是泛型。</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
-        <source>Test class '{0}' should not be generic</source>
-        <target state="translated">測試類別 '{0}' 不應為泛型</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
         <source>Test class '{0}' should not be 'static'</source>
         <target state="translated">測試類別 '{0}' 不應為 'static'</target>

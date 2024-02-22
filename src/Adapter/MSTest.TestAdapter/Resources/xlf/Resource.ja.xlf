@@ -72,6 +72,11 @@
         <target state="translated">UTA018: {0}: TestInitialize 属性を伴う 2 つ以上のメソッドを定義することはできません。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorTestClassIsGenericNonAbstract">
+        <source>TestClass attribute defined on generic non-abstract class {0}</source>
+        <target state="new">TestClass attribute defined on generic non-abstract class {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_InitMethodThrows">
         <source>Initialization method {0}.{1} threw exception. {2}.</source>
         <target state="translated">初期化メソッド {0}.{1} は例外をスローしました。{2}。</target>

@@ -295,9 +295,6 @@
 - it should not be 'static' (except if it contains only 'AssemblyInitialize' and/or 'AssemblyCleanup' methods)
 - it should not be generic.</value>
   </data>
-  <data name="TestClassShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
-    <value>Test class '{0}' should not be generic</value>
-  </data>
   <data name="TestClassShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
     <value>Test class '{0}' should not be 'static'</value>
   </data>

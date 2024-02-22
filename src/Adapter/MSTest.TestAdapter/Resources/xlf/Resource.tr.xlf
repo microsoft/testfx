@@ -72,6 +72,11 @@
         <target state="translated">UTA018: {0}: TestInitialize özniteliği ile birden fazla metot tanımlanamaz.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="UTA_ErrorTestClassIsGenericNonAbstract">
+        <source>TestClass attribute defined on generic non-abstract class {0}</source>
+        <target state="new">TestClass attribute defined on generic non-abstract class {0}</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_InitMethodThrows">
         <source>Initialization method {0}.{1} threw exception. {2}.</source>
         <target state="translated">Başlatma metodu {0}.{1} özel durum oluşturdu. {2}.</target>

@@ -310,11 +310,6 @@
 – Sie dürfen nicht generisch sein.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
-        <source>Test class '{0}' should not be generic</source>
-        <target state="translated">Die Testklasse "{0}" darf nicht generisch sein.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
         <source>Test class '{0}' should not be 'static'</source>
         <target state="translated">Die Testklasse "{0}" darf nicht "static" sein.</target>

@@ -310,11 +310,6 @@
 - 제네릭이 아니어야 합니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
-        <source>Test class '{0}' should not be generic</source>
-        <target state="translated">테스트 클래스 '{0}'은(는) 제네릭이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
         <source>Test class '{0}' should not be 'static'</source>
         <target state="translated">테스트 클래스 '{0}'은(는) 'static'이 아니어야 합니다.</target>
