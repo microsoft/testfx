@@ -89,7 +89,7 @@ configuration:
           - removeLabel:
               label: "Needs: Attention :wave:"
       - description: >-
-          If team members respond to an issue which needs attention
+          If team members respond to an issue which needs triage
           * Remove the "Needs: Triage :mag:" Label
         if:
           - or:
