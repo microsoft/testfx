@@ -574,6 +574,21 @@
         <target state="translated">测试方法应具有有效的布局</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
+        <source>Test methods should not be ignored (marked with [Ignore]).</source>
+        <target state="new">Test methods should not be ignored (marked with [Ignore]).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerFormat">
+        <source>Test Method {0} should not be ignored</source>
+        <target state="new">Test Method {0} should not be ignored</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerTitle">
+        <source>Test method should not be ignored</source>
+        <target state="new">Test method should not be ignored</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">只能对标记了 [TestMethod] 的方法设置 [{0}]</target>
