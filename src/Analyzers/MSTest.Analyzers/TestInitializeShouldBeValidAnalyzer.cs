@@ -62,7 +62,7 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (!methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testInitializeAttributeSymbol)))
+        if (!methodSymbol.IsTestInitializeMethod(testInitializeAttributeSymbol))
         {
             return;
         }
