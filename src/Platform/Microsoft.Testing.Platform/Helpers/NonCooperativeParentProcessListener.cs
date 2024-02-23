@@ -8,7 +8,7 @@ using Microsoft.Testing.Platform.CommandLine;
 
 namespace Microsoft.Testing.Platform.Helpers;
 
-internal class NonCooperativeParentProcessListener : IDisposable
+internal sealed class NonCooperativeParentProcessListener : IDisposable
 {
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IEnvironment _environment;
