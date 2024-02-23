@@ -51,8 +51,18 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzer : DiagnosticAnalyzer
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         var methodAttributes = methodSymbol.GetAttributes();
-        if (!methodAttributes.Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testMethodAttributeSymbol))
-            || !methodAttributes.Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, ignoreAttributeSymbol)))
+        bool isTestMethod = false;
+        List<AttributeData> dataRowAttributes = new();
+        foreach (var methodAttribute in methodAttributes)
+        {
+            // Current method should be a test method or should inherit from the TestMethod attribute.
+            if (methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol))
+            {
+                isTestMethod = true;
+            }
+        }
+
+        if (!isTestMethod || !methodAttributes.Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, ignoreAttributeSymbol)))
         {
             return;
         }
