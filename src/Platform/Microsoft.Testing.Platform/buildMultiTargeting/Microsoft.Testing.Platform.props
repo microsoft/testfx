@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project>
+  <ItemGroup>
+    <TestingPlatformMetadata Include="ExitOnProcessExitCapability" >
+      <Description>--exit-on-process-exit: Close the test process if specific process exits. Process PID must be provided.</Description>
+    </TestingPlatformMetadata>
+  </ItemGroup>
+</Project>

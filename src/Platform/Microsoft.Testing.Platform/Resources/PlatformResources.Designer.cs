@@ -638,6 +638,34 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid PID &apos;{0}&apos;
+        ///{1}.
+        /// </summary>
+        internal static string PlatformCommandLineExitOnProcessExitInvalidDependantProcess {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineExitOnProcessExitInvalidDependantProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exit the test process if dependent process exits. PID must be provided..
+        /// </summary>
+        internal static string PlatformCommandLineExitOnProcessExitOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineExitOnProcessExitOptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;--{0}&apos; expects a single int PID argument.
+        /// </summary>
+        internal static string PlatformCommandLineExitOnProcessExitSingleArgument {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineExitOnProcessExitSingleArgument", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show the command line help..
         /// </summary>
         internal static string PlatformCommandLineHelpOptionDescription {

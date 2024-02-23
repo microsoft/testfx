@@ -87,6 +87,21 @@ This package provides the core platform and the .NET implementation of the proto
     </EmbeddedResource>
   </ItemGroup>
 
+  <!-- NuGet package layout -->
+  <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
+  <ItemGroup>
+    <Content Include="buildMultiTargeting/**">
+      <Pack>true</Pack>
+      <PackagePath>buildMultiTargeting</PackagePath>
+    </Content>
+    <TfmSpecificPackageFile Include="buildTransitive/**">
+      <PackagePath>buildTransitive/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+    <TfmSpecificPackageFile Include="build/**">
+      <PackagePath>build/$(TargetFramework)</PackagePath>
+    </TfmSpecificPackageFile>
+  </ItemGroup>
+
   <Target Name="MoveNuGetPackage" AfterTargets="Pack" Condition=" '$(DoNotShipTestingPlatformPackage)' == 'true' ">
     <ItemGroup>
       <MicrosoftTestingPlatformNuGetPackage Include="$(ArtifactsNonShippingPackagesDir)Microsoft.Testing.Platform.*.nupkg" />

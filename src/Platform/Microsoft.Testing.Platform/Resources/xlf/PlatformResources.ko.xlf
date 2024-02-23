@@ -324,6 +324,23 @@
         <target state="translated">사용 가능한 테스트를 나열합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
+        <source>Invalid PID '{0}'
+{1}</source>
+        <target state="new">Invalid PID '{0}'
+{1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
+        <source>Exit the test process if dependent process exits. PID must be provided.</source>
+        <target state="new">Exit the test process if dependent process exits. PID must be provided.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
+        <source>'--{0}' expects a single int PID argument</source>
+        <target state="new">'--{0}' expects a single int PID argument</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">
         <source>Show the command line help.</source>
         <target state="translated">명령줄 도움말을 표시합니다.</target>

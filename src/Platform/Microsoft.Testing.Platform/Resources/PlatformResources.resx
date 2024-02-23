@@ -489,4 +489,14 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="PlatformCommandLineIgnoreExitCodeOptionDescription" xml:space="preserve">
     <value>Do not report non successful exit value for specific exit codes (e.g. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case)</value>
   </data>
+  <data name="PlatformCommandLineExitOnProcessExitOptionDescription" xml:space="preserve">
+    <value>Exit the test process if dependent process exits. PID must be provided.</value>
+  </data>
+  <data name="PlatformCommandLineExitOnProcessExitSingleArgument" xml:space="preserve">
+    <value>'--{0}' expects a single int PID argument</value>
+  </data>
+  <data name="PlatformCommandLineExitOnProcessExitInvalidDependantProcess" xml:space="preserve">
+    <value>Invalid PID '{0}'
+{1}</value>
+  </data>
 </root>
