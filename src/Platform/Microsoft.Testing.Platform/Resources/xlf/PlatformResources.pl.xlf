@@ -324,16 +324,16 @@
         <target state="translated">Wyświetl listę dostępnych testów.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExit">
-        <source>Close the test process if specific process exits. Process PID must be provided.</source>
-        <target state="new">Close the test process if specific process exits. Process PID must be provided.</target>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidParentProcess">
+        <source>Invalid PID '{0}'
+{1}</source>
+        <target state="new">Invalid PID '{0}'
+{1}</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidParentProcess">
-        <source>Invalid process pid {0}
-{1}</source>
-        <target state="new">Invalid process pid {0}
-{1}</target>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
+        <source>Exit the test process if dependent process exits. PID must be provided.</source>
+        <target state="new">Exit the test process if dependent process exits. PID must be provided.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">

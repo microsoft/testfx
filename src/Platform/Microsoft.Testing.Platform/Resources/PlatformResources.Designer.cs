@@ -638,21 +638,21 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Close the test process if specific process exits. Process PID must be provided..
-        /// </summary>
-        internal static string PlatformCommandLineExitOnProcessExit {
-            get {
-                return ResourceManager.GetString("PlatformCommandLineExitOnProcessExit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Invalid process pid {0}
+        ///   Looks up a localized string similar to Invalid PID &apos;{0}&apos;
         ///{1}.
         /// </summary>
         internal static string PlatformCommandLineExitOnProcessExitInvalidParentProcess {
             get {
                 return ResourceManager.GetString("PlatformCommandLineExitOnProcessExitInvalidParentProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Exit the test process if dependent process exits. PID must be provided..
+        /// </summary>
+        internal static string PlatformCommandLineExitOnProcessExitOptionDescription {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineExitOnProcessExitOptionDescription", resourceCulture);
             }
         }
         

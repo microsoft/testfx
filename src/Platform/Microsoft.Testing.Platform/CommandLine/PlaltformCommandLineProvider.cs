@@ -50,7 +50,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         MinimumExpectedTests,
         new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
-        new(ExitOnProcessExitOptionKey, PlatformResources.PlatformCommandLineExitOnProcessExit, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(ExitOnProcessExitOptionKey, PlatformResources.PlatformCommandLineExitOnProcessExitOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
 
         // Hidden options
         new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
@@ -188,7 +188,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         if (commandLineOptions.IsOptionSet(ExitOnProcessExitOptionKey))
         {
             commandLineOptions.TryGetOptionArgumentList(ExitOnProcessExitOptionKey, out string[]? pid);
-            ArgumentGuard.IsNotNull(pid);
+            ApplicationStateGuard.Ensure(pid is not null);
             RoslynDebug.Assert(pid.Length == 1);
             int parentProcessPid = int.Parse(pid[0], CultureInfo.InvariantCulture);
             try

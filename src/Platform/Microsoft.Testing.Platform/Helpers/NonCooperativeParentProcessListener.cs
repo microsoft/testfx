@@ -24,7 +24,7 @@ internal sealed class NonCooperativeParentProcessListener : IDisposable
     private void SubscribeToParentProcess()
     {
         _commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.ExitOnProcessExitOptionKey, out string[]? pid);
-        ArgumentGuard.IsNotNull(pid);
+        ApplicationStateGuard.Ensure(pid is not null);
         RoslynDebug.Assert(pid.Length == 1);
 
         try
