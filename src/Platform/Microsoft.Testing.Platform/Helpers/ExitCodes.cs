@@ -22,7 +22,7 @@ internal static class ExitCodes
     public const int ZeroTests = 8;
     public const int MinimumExpectedTestsPolicyViolation = 9;
     public const int TestAdapterTestSessionFailure = 10;
-    public const int ParentProcessExited = 11;
+    public const int DependentProcessExited = 11;
 
     public static string StringifyExitCode(int exitCode) => exitCode switch
     {
@@ -37,7 +37,7 @@ internal static class ExitCodes
         ZeroTests => nameof(ZeroTests),
         MinimumExpectedTestsPolicyViolation => nameof(MinimumExpectedTestsPolicyViolation),
         TestAdapterTestSessionFailure => nameof(TestAdapterTestSessionFailure),
-        ParentProcessExited => nameof(ParentProcessExited),
+        DependentProcessExited => nameof(DependentProcessExited),
         _ => exitCode.ToString(CultureInfo.InvariantCulture),
     };
 }
