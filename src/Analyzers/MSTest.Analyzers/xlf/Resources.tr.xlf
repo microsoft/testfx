@@ -258,30 +258,30 @@
 - should only be set on a test method;
 - argument count should match method argument count;
 - argument type should match method argument type.</source>
-        <target state="new">DataRow entry should have the following layout to be valid:
-- should only be set on a test method;
-- argument count should match method argument count;
-- argument type should match method argument type.</target>
+        <target state="translated">DataRow girdisi, geçerli olması için aşağıdaki koşulları karşılamalıdır:
+- yalnızca bir test yönteminde ayarlanmalıdır; 
+- bağımsız değişken sayısı yöntem bağımsız değişkeni sayısıyla eşleşmelidir;
+- bağımsız değişken sayısı yöntem bağımsız değişkeni sayısıyla eşleşmelidir.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch">
         <source>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</source>
-        <target state="new">DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</target>
+        <target state="translated">DataRow bağımsız değişken sayısı, yöntem parametresi sayısıyla eşleşmelidir (oluşturucu bağımsız değişkenleri: {0}, yöntem parametreleri: {1})</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="new">DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</target>
+        <target state="translated">DataRow bağımsız değişken türü, yöntem parametresinin türüyle eşleşmelidir. Dizinler sırasında uyuşmazlıklar oluştu: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
         <source>DataRow should only be set on a test method</source>
-        <target state="new">DataRow should only be set on a test method</target>
+        <target state="translated">DataRow yalnızca bir test yönteminde ayarlanmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidTitle">
         <source>DataRow should be valid</source>
-        <target state="new">DataRow should be valid</target>
+        <target state="translated">DataRow geçerli olmalıdır</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">

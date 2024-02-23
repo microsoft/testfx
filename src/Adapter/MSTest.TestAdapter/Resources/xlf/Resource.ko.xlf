@@ -136,7 +136,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
         <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</source>
-        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</target>
+        <target state="translated">UTA007: 클래스 {0}에 정의된 메서드 {1}에 올바른 서명이 없습니다. [TestMethod] 특성으로 표시된 테스트 메서드는 non-static, public, return-type이 void여야 하며 매개 변수를 사용하지 않아야 합니다. 예: public void Test.Class1.Test(). 또한 테스트 메서드에서 비동기 대기를 사용하는 경우 반환 형식은 Task여야 합니다. 예: public async Task Test.Class1.Test2()</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextIsNull">
@@ -176,12 +176,12 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="new">Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <target state="translated">{0}.{1} 메서드의 서명이 잘못되었습니다. 메서드는 정적이고 공용이어야 하며, 값을 반환하거나 매개 변수를 취하지 않습니다. 또한 메서드에서 비동기 대기를 사용하는 경우 반환 형식은 'Task' 또는 'ValueTask'여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="new">Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <target state="translated">{0}.{1} 메서드의 서명이 잘못되었습니다. 메서드는 static, public이어야 하고, 값을 반환하지 않으며, TestContext 형식의 단일 매개 변수를 사용해야 합니다. 또한 메서드에서 비동기 대기를 사용하는 경우 반환 형식은 'Task' 또는 'ValueTask'여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
@@ -221,7 +221,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="new">Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <target state="translated">{0}.{1} 메서드의 서명이 잘못되었습니다. 메서드는 정적이 아니고 공용이어야 하며, 값을 반환하거나 매개 변수를 사용할 수 없습니다. 또한 메서드에서 비동기 대기를 사용하는 경우 반환 형식은 'Task' 또는 'ValueTask'여야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TypeLoadError">
