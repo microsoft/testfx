@@ -38,6 +38,7 @@ Options:
   --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory\.
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+  --exit-on-process-exit                   Exit the test process if dependent process exits\. PID must be provided.
   --help                                   Show the command line help\.
   --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
@@ -71,6 +72,7 @@ Options:
   --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory\.
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+  --exit-on-process-exit                   Exit the test process if dependent process exits\. PID must be provided.
   --help                                   Show the command line help\.
   --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
@@ -105,6 +107,7 @@ Options:
   --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory\.
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+  --exit-on-process-exit                   Exit the test process if dependent process exits\. PID must be provided.
   --help                                   Show the command line help\.
   --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
