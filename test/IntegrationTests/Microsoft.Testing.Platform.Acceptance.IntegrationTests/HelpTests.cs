@@ -33,12 +33,12 @@ Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
 Usage {TestAssetFixture.NoExtensionAssetName}.* \[option providers\] \[extension option providers\]
 Execute a .NET Test Application\.
 Options:
-  --exit-on-process-exit                   Close the test process if specific process exits\. Process PID must be provided\.
   --diagnostic                             Enable the diagnostic logging\. The default log level is 'Trace'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
   --diagnostic-filelogger-synchronouswrite Force the built-in file logger to write the log synchronously\. Useful for scenario where you don't want to lose any log \(i\.e\. in case of crash\)\. Note that this is slowing down the test execution\.
   --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory\.
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+  --exit-on-process-exit                   Close the test process if specific process exits\. Process PID must be provided\.
   --help                                   Show the command line help\.
   --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
@@ -67,12 +67,12 @@ Unknown option '--{UnknownOption}'
 Usage {TestAssetFixture.NoExtensionAssetName}.* \[option providers\] \[extension option providers\]
 Execute a \.NET Test Application\.
 Options:
-  --exit-on-process-exit                   Close the test process if specific process exits\. Process PID must be provided\.
   --diagnostic                             Enable the diagnostic logging\. The default log level is 'Trace'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
   --diagnostic-filelogger-synchronouswrite Force the built-in file logger to write the log synchronously\. Useful for scenario where you don't want to lose any log \(i\.e\. in case of crash\)\. Note that this is slowing down the test execution\.
   --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory\.
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+  --exit-on-process-exit                   Close the test process if specific process exits\. Process PID must be provided\.
   --help                                   Show the command line help\.
   --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
@@ -102,12 +102,12 @@ Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
 Usage {TestAssetFixture.MSTestAssetName}.* \[option providers\] \[extension option providers\]
 Execute a .NET Test Application\.
 Options:
-  --exit-on-process-exit                   Close the test process if specific process exits\. Process PID must be provided\.
   --diagnostic                             Enable the diagnostic logging\. The default log level is 'Trace'\. The file will be written in the output directory with the name log_\[MMddHHssfff\]\.diag
   --diagnostic-filelogger-synchronouswrite Force the built-in file logger to write the log synchronously\. Useful for scenario where you don't want to lose any log \(i\.e\. in case of crash\)\. Note that this is slowing down the test execution\.
   --diagnostic-output-directory            Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory\.
   --diagnostic-output-fileprefix           Prefix for the log file name that will replace '\[log\]_\.'
   --diagnostic-verbosity                   Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+  --exit-on-process-exit                   Close the test process if specific process exits\. Process PID must be provided\.
   --help                                   Show the command line help\.
   --ignore-exit-code                       Do not report non successful exit value for specific exit codes \(e\.g\. '--ignore-exit-code 8;9' ignore exit code 8 and 9 and will return 0 in these case\)
   --info                                   Display \.NET test application information\.
