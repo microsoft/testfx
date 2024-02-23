@@ -71,4 +71,31 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests(ITestExecutionCont
                 .WithLocation(0)
                 .WithArguments("MyTestMethod"));
     }
+
+    public async Task WhenDerivedTestMethodAttributeIsIgnored_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class DerivedTestMethod : TestMethodAttribute
+            {
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [Ignore]
+                [DerivedTestMethod]
+                public void {|#0:MyTestMethod|}()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestMethodShouldNotBeIgnoredAnalyzer.TestMethodShouldNotBeIgnoredRule)
+                .WithLocation(0)
+                .WithArguments("MyTestMethod"));
+    }
 }
