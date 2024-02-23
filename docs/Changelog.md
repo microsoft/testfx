@@ -12,7 +12,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.2.1...v.3.2.2
 
 * [rel/3.2] Workaround harmless MSBuild warning in VS by @Evangelink in [#2350](https://github.com/microsoft/testfx/pull/2350)
 * [rel/3.2] Fix analyzers doc link by @Evangelink in [#2362](https://github.com/microsoft/testfx/pull/2362)
-* Assert.AreEqual allow IEquatable<T> for actual and expected by @Evangelink in [#2382](https://github.com/microsoft/testfx/pull/2382)
+* Assert.AreEqual allow IEquatable<T\> for actual and expected by @Evangelink in [#2382](https://github.com/microsoft/testfx/pull/2382)
 * Fix msbuild integration (#2389) by @MarcoRossignoli in [#2395](https://github.com/microsoft/testfx/pull/2395)
 * Remove the `TestingPlatformServer` if the runner is disabled (#2409) by @MarcoRossignoli in [#2410](https://github.com/microsoft/testfx/pull/2410)
 
