@@ -12,7 +12,7 @@ internal sealed class MSTestExtension : IExtension
 
     public string DisplayName => "MSTest";
 
-    public string Version => "3.2.0"; // TODO: Decide whether to read from assembly or use hardcoded string.
+    public string Version => "3.3.0"; // TODO: Decide whether to read from assembly or use hardcoded string.
 
     public string Description => "MSTest Framework for Microsoft Testing Platform";
 
