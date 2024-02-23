@@ -3,9 +3,7 @@
 
 using Microsoft.CodeAnalysis;
 
-using MSTest.Analyzers.Helpers;
-
-namespace MSTest.Analyzers;
+namespace MSTest.Analyzers.Helpers;
 
 internal static class DiagnosticDescriptorHelper
 {

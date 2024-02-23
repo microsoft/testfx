@@ -10,7 +10,7 @@ using Analyzer.Utilities.PooledObjects;
 
 using Microsoft.CodeAnalysis;
 
-using MSTest.Analyzers;
+using MSTest.Analyzers.Helpers;
 
 using Roslyn.Utilities;
 

@@ -61,7 +61,7 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (!methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, testCleanupAttributeSymbol)))
+        if (!methodSymbol.IsTestCleanupMethod(testCleanupAttributeSymbol))
         {
             return;
         }

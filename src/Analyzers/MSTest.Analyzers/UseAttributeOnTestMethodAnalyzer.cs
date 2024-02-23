@@ -147,11 +147,11 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             // Get a list of attributes and associated rules that are found in the current compilation
             // context.
             List<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> attributeRuleTuples = new();
-            foreach (var ruleTuple in RuleTuples)
+            foreach (var (attributeFullyQualifiedName, rule) in RuleTuples)
             {
-                if (context.Compilation.TryGetOrCreateTypeByMetadataName(ruleTuple.AttributeFullyQualifiedName, out var attributeSymbol))
+                if (context.Compilation.TryGetOrCreateTypeByMetadataName(attributeFullyQualifiedName, out var attributeSymbol))
                 {
-                    attributeRuleTuples.Add((attributeSymbol, ruleTuple.Rule));
+                    attributeRuleTuples.Add((attributeSymbol, rule));
                 }
             }
 
@@ -183,11 +183,11 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             }
 
             // Get all test attributes decorating the current method.
-            foreach (var tuple in attributeRuleTuples)
+            foreach (var (attributeSymbol, rule) in attributeRuleTuples)
             {
-                if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, tuple.AttributeSymbol))
+                if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, attributeSymbol))
                 {
-                    attributes.Add((methodAttribute, tuple.Rule));
+                    attributes.Add((methodAttribute, rule));
                 }
             }
         }
