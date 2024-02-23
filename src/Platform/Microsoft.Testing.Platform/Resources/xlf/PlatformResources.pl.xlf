@@ -337,8 +337,8 @@
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
-        <source>'--close-on-parent-exit' expects a single int PID argument</source>
-        <target state="new">'--close-on-parent-exit' expects a single int PID argument</target>
+        <source>'--{0}' expects a single int PID argument</source>
+        <target state="new">'--{0}' expects a single int PID argument</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">

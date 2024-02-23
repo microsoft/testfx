@@ -139,7 +139,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 
         if (commandOption.Name == ExitOnProcessExitOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, PortOptionKey));
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, ExitOnProcessExitOptionKey));
         }
 
         // Now validate the minimum expected tests option

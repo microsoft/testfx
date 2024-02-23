@@ -657,7 +657,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;--close-on-parent-exit&apos; expects a single int PID argument.
+        ///   Looks up a localized string similar to &apos;--{0}&apos; expects a single int PID argument.
         /// </summary>
         internal static string PlatformCommandLineExitOnProcessExitSingleArgument {
             get {
