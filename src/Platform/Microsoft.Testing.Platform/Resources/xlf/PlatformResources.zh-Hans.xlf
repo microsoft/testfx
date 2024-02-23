@@ -274,23 +274,6 @@
         <target state="translated">指定客户端的端口。</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineCloseOnParentExit">
-        <source>Close the test process if the parent process exits. Parent process PID must be provided.</source>
-        <target state="new">Close the test process if the parent process exits. Parent process PID must be provided.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineCloseOnParentExitInvalidParentProcess">
-        <source>Invalid parent process pid {0}
-{1}</source>
-        <target state="new">Invalid parent process pid {0}
-{1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineCloseOnParentExitSingleArgument">
-        <source>'--close-on-parent-exit' expects a single int PID argument</source>
-        <target state="new">'--close-on-parent-exit' expects a single int PID argument</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
         <target state="translated">强制内置文件记录器同步写入日志。适用于不想丢失任何日志的情况 (即在故障的情况下)。请注意，这会减慢测试的执行速度。</target>
@@ -339,6 +322,23 @@
       <trans-unit id="PlatformCommandLineDiscoverTestsOptionDescription">
         <source>List available tests.</source>
         <target state="translated">列出可用的测试。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExit">
+        <source>Close the test process if specific process exits. Process PID must be provided.</source>
+        <target state="new">Close the test process if specific process exits. Process PID must be provided.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidParentProcess">
+        <source>Invalid process pid {0}
+{1}</source>
+        <target state="new">Invalid process pid {0}
+{1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
+        <source>'--close-on-parent-exit' expects a single int PID argument</source>
+        <target state="new">'--close-on-parent-exit' expects a single int PID argument</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">

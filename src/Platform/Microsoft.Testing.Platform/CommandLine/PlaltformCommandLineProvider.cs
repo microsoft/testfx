@@ -32,7 +32,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string IgnoreExitCodeOptionKey = "ignore-exit-code";
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
-    public const string CloseOnParentExitOptionKey = "close-on-parent-exit";
+    public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
 
     private static readonly CommandLineOption MinimumExpectedTests = new(MinimumExpectedTestsOptionKey, "Specifies the minimum number of tests that are expected to run.", ArgumentArity.ZeroOrOne, false, isBuiltIn: true);
 
@@ -50,7 +50,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         MinimumExpectedTests,
         new(DiscoverTestsOptionKey, PlatformResources.PlatformCommandLineDiscoverTestsOptionDescription, ArgumentArity.Zero, false, isBuiltIn: true),
         new(IgnoreExitCodeOptionKey, PlatformResources.PlatformCommandLineIgnoreExitCodeOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
-        new(CloseOnParentExitOptionKey, PlatformResources.PlatformCommandLineCloseOnParentExit, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
+        new(ExitOnProcessExitOptionKey, PlatformResources.PlatformCommandLineExitOnProcessExit, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
 
         // Hidden options
         new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
@@ -137,9 +137,9 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineClientHostOptionSingleArgument);
         }
 
-        if (commandOption.Name == CloseOnParentExitOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
+        if (commandOption.Name == ExitOnProcessExitOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
         {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineCloseOnParentExitSingleArgument, PortOptionKey));
+            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, PortOptionKey));
         }
 
         // Now validate the minimum expected tests option
@@ -185,9 +185,9 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineMinimumExpectedTestsIncompatibleDiscoverTests);
         }
 
-        if (commandLineOptions.IsOptionSet(CloseOnParentExitOptionKey))
+        if (commandLineOptions.IsOptionSet(ExitOnProcessExitOptionKey))
         {
-            commandLineOptions.TryGetOptionArgumentList(CloseOnParentExitOptionKey, out string[]? pid);
+            commandLineOptions.TryGetOptionArgumentList(ExitOnProcessExitOptionKey, out string[]? pid);
             ArgumentGuard.IsNotNull(pid);
             RoslynDebug.Assert(pid.Length == 1);
             int parentProcessPid = int.Parse(pid[0], CultureInfo.InvariantCulture);
@@ -199,7 +199,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             }
             catch (Exception ex)
             {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineCloseOnParentExitInvalidParentProcess, parentProcessPid, ex));
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitInvalidParentProcess, parentProcessPid, ex));
             }
         }
 

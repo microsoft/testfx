@@ -243,8 +243,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.TryAddService(telemetryService);
         AddApplicationMetadata(serviceProvider, builderMetrics);
 
-        // Subscribe to the parent process if the option is set.
-        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.CloseOnParentExitOptionKey))
+        // Subscribe to the process if the option is set.
+        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ExitOnProcessExitOptionKey))
         {
             NonCooperativeParentProcessListener nonCooperativeParentProcessListener = new(commandLineOptions, environment);
 

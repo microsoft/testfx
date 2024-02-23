@@ -23,7 +23,7 @@ internal class NonCooperativeParentProcessListener : IDisposable
 
     private void SubscribeToParentProcess()
     {
-        _commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.CloseOnParentExitOptionKey, out string[]? pid);
+        _commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.ExitOnProcessExitOptionKey, out string[]? pid);
         ArgumentGuard.IsNotNull(pid);
         RoslynDebug.Assert(pid.Length == 1);
 

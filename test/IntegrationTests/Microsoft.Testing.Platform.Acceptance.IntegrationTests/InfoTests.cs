@@ -49,6 +49,10 @@ Built-in command line providers:
         Arity: 1
         Hidden: True
         Description: Specify the port of the client\.
+      --exit-on-process-exit
+        Arity: 1
+        Hidden: False
+        Description: Close the test process if specific process exits\. Process PID must be provided\.
       --diagnostic
         Arity: 0
         Hidden: False
