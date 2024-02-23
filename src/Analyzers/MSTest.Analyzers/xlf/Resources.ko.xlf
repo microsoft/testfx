@@ -570,6 +570,21 @@
         <target state="translated">테스트 메서드에는 유효한 레이아웃이 있어야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
+        <source>Test methods should not be ignored (marked with '[Ignore]').</source>
+        <target state="new">Test methods should not be ignored (marked with '[Ignore]').</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerFormat">
+        <source>Test method '{0}' should not be ignored</source>
+        <target state="new">Test method '{0}' should not be ignored</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerTitle">
+        <source>Test method should not be ignored</source>
+        <target state="new">Test method should not be ignored</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}]은(는) [TestMethod] 표시된 메서드에만 설정할 수 있습니다.</target>

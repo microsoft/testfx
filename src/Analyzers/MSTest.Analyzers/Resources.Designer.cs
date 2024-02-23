@@ -923,6 +923,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test methods should not be ignored (marked with &apos;[Ignore]&apos;)..
+        /// </summary>
+        internal static string TestMethodShouldNotBeIgnoredAnalyzerDescription {
+            get {
+                return ResourceManager.GetString("TestMethodShouldNotBeIgnoredAnalyzerDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method &apos;{0}&apos; should not be ignored.
+        /// </summary>
+        internal static string TestMethodShouldNotBeIgnoredAnalyzerFormat {
+            get {
+                return ResourceManager.GetString("TestMethodShouldNotBeIgnoredAnalyzerFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test method should not be ignored.
+        /// </summary>
+        internal static string TestMethodShouldNotBeIgnoredAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("TestMethodShouldNotBeIgnoredAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to [{0}] can only be set on methods marked with [TestMethod].
         /// </summary>
         internal static string UseAttributeOnTestMethodAnalyzerMessageFormat {

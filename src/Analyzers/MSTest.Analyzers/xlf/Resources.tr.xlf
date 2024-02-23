@@ -571,6 +571,21 @@
         <target state="translated">Test yöntemleri geçerli bir düzene sahip olmalıdır</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
+        <source>Test methods should not be ignored (marked with '[Ignore]').</source>
+        <target state="new">Test methods should not be ignored (marked with '[Ignore]').</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerFormat">
+        <source>Test method '{0}' should not be ignored</source>
+        <target state="new">Test method '{0}' should not be ignored</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerTitle">
+        <source>Test method should not be ignored</source>
+        <target state="new">Test method should not be ignored</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}] yalnızca [TestMethod] ile işaretli yöntemlerde ayarlanabilir</target>

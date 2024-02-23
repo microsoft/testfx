@@ -6,10 +6,10 @@ namespace MSTest.Analyzers;
 // IMPORTANT: Keep this file sorted alphabetically.
 internal static class WellKnownTypeNames
 {
+    public const string MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyInitializeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassCleanupAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ClassInitializeAttribute";
-    public const string MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.AssemblyCleanupAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.CssIterationAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.CssProjectStructureAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDataRowAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute";
@@ -17,6 +17,7 @@ internal static class WellKnownTypeNames
     public const string MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DiscoverInternalsAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingDoNotParallelizeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.DoNotParallelizeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ExpectedExceptionAttribute";
+    public const string MicrosoftVisualStudioTestToolsUnitTestingIgnoreAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.IgnoreAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.OwnerAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingParallelizeAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.ParallelizeAttribute";
     public const string MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute = "Microsoft.VisualStudio.TestTools.UnitTesting.PriorityAttribute";
