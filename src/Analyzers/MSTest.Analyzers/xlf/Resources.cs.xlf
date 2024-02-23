@@ -11,54 +11,55 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+        <target state="translated">Aby byly metody s označením [AssemblyCleanup] platné, musí se řídit následujícím rozložením: 
+.
+– musí být public, 
+– musí být static,
+– nesmí být obecné,
+– nesmí přijímat žádný parametr,
+– návratový typ musí být void, Task nebo ValueTask,
+– nesmí být async void,
+– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NoParameters">
         <source>AssemblyCleanup method '{0}' should not take any parameter</source>
-        <target state="new">AssemblyCleanup method '{0}' should not take any parameter</target>
+        <target state="translated">Metoda AssemblyCleanup {0} by neměla přijímat žádný parametr.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid">
         <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">Metoda AssemblyCleanup {0} by měla vracet hodnoty void, Task nebo ValueTask.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotGeneric">
         <source>AssemblyCleanup method '{0}' should not be generic</source>
-        <target state="new">AssemblyCleanup method '{0}' should not be generic</target>
+        <target state="translated">Metoda AssemblyCleanup {0} by neměla být obecná.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Ordinary">
         <source>AssemblyCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="new">AssemblyCleanup method '{0}' should be an 'ordinary' method</target>
+        <target state="translated">Metoda AssemblyCleanup {0} by měla být metoda ordinary.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Public">
         <source>AssemblyCleanup method '{0}' should be 'public'</source>
-        <target state="new">AssemblyCleanup method '{0}' should be 'public'</target>
+        <target state="translated">Metoda AssemblyCleanup {0} by měla být public.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_ReturnType">
         <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">Metoda AssemblyCleanup {0} by měla vracet hodnoty void, Task nebo ValueTask.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Static">
         <source>AssemblyCleanup method '{0}' should be 'static'</source>
-        <target state="new">AssemblyCleanup method '{0}' should be 'static'</target>
+        <target state="translated">Metoda AssemblyCleanup {0} by neměla být static.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidTitle">
         <source>AssemblyCleanup methods should have valid layout</source>
-        <target state="new">AssemblyCleanup methods should have valid layout</target>
+        <target state="translated">Metody AssemblyCleanup musí mít platné rozložení</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
@@ -70,54 +71,55 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should take one parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+        <target state="translated">Aby byly metody s označením [AssemblyInitialize] platné, musí se řídit následujícím rozložením: 
+.
+– musí být public, 
+– musí být static,
+– nesmí být obecné,
+– musí mít jeden parametr typu TestContext,
+– návratový typ musí být void, Task nebo ValueTask,
+– nesmí být async void,
+– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">Metoda AssemblyInitialize {0} by měla vracet hodnoty void, Task nebo ValueTask.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotGeneric">
         <source>AssemblyInitialize method '{0}' should not be generic</source>
-        <target state="new">AssemblyInitialize method '{0}' should not be generic</target>
+        <target state="translated">Metoda AssemblyInitialize {0} by neměla být obecná.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Ordinary">
         <source>AssemblyInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="new">AssemblyInitialize method '{0}' should be an 'ordinary' method</target>
+        <target state="translated">Metoda AssemblyInitialize {0} by měla být metoda ordinary.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Public">
         <source>AssemblyInitialize method '{0}' should be 'public'</source>
-        <target state="new">AssemblyInitialize method '{0}' should be 'public'</target>
+        <target state="translated">Metoda AssemblyInitialize {0} by měla být public.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_ReturnType">
         <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">Metoda AssemblyInitialize {0} by měla vracet hodnoty void, Task nebo ValueTask.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter">
         <source>AssemblyInitialize method '{0}' should take a single parameter of type 'TestContext'</source>
-        <target state="new">AssemblyInitialize method '{0}' should take a single parameter of type 'TestContext'</target>
+        <target state="translated">Metoda AssemblyInitialize {0} by měla mít jeden parametr typu TestContext.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Static">
         <source>AssemblyInitialize method '{0}' should be 'static'</source>
-        <target state="new">AssemblyInitialize method '{0}' should be 'static'</target>
+        <target state="translated">Metoda AssemblyInitialize {0} by měla být static.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
         <source>AssemblyInitialize methods should have valid layout</source>
-        <target state="new">AssemblyInitialize methods should have valid layout</target>
+        <target state="translated">Metody AssemblyInitialize musí mít platné rozložení</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
@@ -144,54 +146,55 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not 'static'
-- it should not be generic
-- it should not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+        <target state="translated">Aby byly metody s označením [ClassCleanup] platné, musí se řídit následujícím rozložením: 
+.
+– musí být public, 
+– nesmí být static,
+– nesmí být obecné,
+– nesmí přijímat žádný parametr,
+– návratový typ musí být void, Task nebo ValueTask,
+– nesmí být async void,
+– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NoParameters">
         <source>ClassCleanup method '{0}' should not take any parameter</source>
-        <target state="new">ClassCleanup method '{0}' should not take any parameter</target>
+        <target state="translated">Metoda ClassCleanup {0} by neměla přijímat žádný parametr.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid">
         <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">Metoda ClassCleanup {0} by měla vracet hodnoty void, Task nebo ValueTask.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotGeneric">
         <source>ClassCleanup method '{0}' should not be generic</source>
-        <target state="new">ClassCleanup method '{0}' should not be generic</target>
+        <target state="translated">Metoda ClassCleanup {0} by neměla být obecná.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Ordinary">
         <source>ClassCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="new">ClassCleanup method '{0}' should be an 'ordinary' method</target>
+        <target state="translated">Metoda ClassCleanup {0} by měla být metoda ordinary.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Public">
         <source>ClassCleanup method '{0}' should be 'public'</source>
-        <target state="new">ClassCleanup method '{0}' should be 'public'</target>
+        <target state="translated">Metoda ClassCleanup {0} by měla být public.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_ReturnType">
         <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">Metoda ClassCleanup {0} by měla vracet hodnoty void, Task nebo ValueTask.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Static">
         <source>ClassCleanup method '{0}' should be 'static'</source>
-        <target state="new">ClassCleanup method '{0}' should be 'static'</target>
+        <target state="translated">Metoda ClassCleanup {0} by měla být static.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidTitle">
         <source>ClassCleanup methods should have valid layout</source>
-        <target state="new">ClassCleanup methods should have valid layout</target>
+        <target state="translated">Metody ClassCleanup musí mít platné rozložení</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidDescription">
@@ -203,54 +206,55 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should take one parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+        <target state="translated">Aby byly metody s označením [ClassInitialize] platné, musí se řídit následujícím rozložením: 
+.
+– musí být public, 
+– musí být static,
+– nesmí být obecné,
+– musí mít jeden parametr typu TestContext,
+– návratový typ musí být void, Task nebo ValueTask,
+– nesmí být async void,
+– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">Metoda ClassInitialize {0} by měla vracet hodnoty void, Task nebo ValueTask.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotGeneric">
         <source>ClassInitialize method '{0}' should not be generic</source>
-        <target state="new">ClassInitialize method '{0}' should not be generic</target>
+        <target state="translated">Metoda ClassInitialize {0} by neměla být obecná.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Ordinary">
         <source>ClassInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="new">ClassInitialize method '{0}' should be an 'ordinary' method</target>
+        <target state="translated">Metoda ClassInitialize {0} by měla být metoda ordinary.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Public">
         <source>ClassInitialize method '{0}' should be 'public'</source>
-        <target state="new">ClassInitialize method '{0}' should be 'public'</target>
+        <target state="translated">Metoda ClassInitialize {0} by měla být public.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_ReturnType">
         <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="new">ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</target>
+        <target state="translated">Metoda ClassInitialize {0} by měla vracet hodnoty void, Task nebo ValueTask.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_SingleContextParameter">
         <source>ClassInitialize method '{0}' should take a single parameter of type 'TestContext'</source>
-        <target state="new">ClassInitialize method '{0}' should take a single parameter of type 'TestContext'</target>
+        <target state="translated">Metoda ClassInitialize {0} by měla mít jeden parametr typu TestContext.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Static">
         <source>ClassInitialize method '{0}' should be 'static'</source>
-        <target state="new">ClassInitialize method '{0}' should be 'static'</target>
+        <target state="translated">Metoda ClassInitialize {0} by měla být static.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidTitle">
         <source>ClassInitialize methods should have valid layout</source>
-        <target state="new">ClassInitialize methods should have valid layout</target>
+        <target state="translated">Metody ClassInitialize musí mít platné rozložení</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidDescription">
@@ -258,30 +262,30 @@
 - should only be set on a test method;
 - argument count should match method argument count;
 - argument type should match method argument type.</source>
-        <target state="new">DataRow entry should have the following layout to be valid:
-- should only be set on a test method;
-- argument count should match method argument count;
-- argument type should match method argument type.</target>
+        <target state="translated">Položka DataRow by měla mít platné následující rozložení:
+- by se mělo nastavovat jenom pro testovací metodu;
+- počet argumentů by měl odpovídat počtu argumentů metody;
+- typ argumentu by měl odpovídat typu argumentu metody.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch">
         <source>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</source>
-        <target state="new">DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</target>
+        <target state="translated">Počet argumentů dataRow by měl odpovídat počtu parametrů metody (argumenty konstruktoru: {0}, parametry metody: {1})</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="new">DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</target>
+        <target state="translated">Typ argumentu DataRow by měl odpovídat typu parametru metody. V indexech dochází k neshodě: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
         <source>DataRow should only be set on a test method</source>
-        <target state="new">DataRow should only be set on a test method</target>
+        <target state="translated">Objekt DataRow by měl být nastaven pouze pro testovací metodu</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidTitle">
         <source>DataRow should be valid</source>
-        <target state="new">DataRow should be valid</target>
+        <target state="translated">Argument DataRow by měl být platný</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">

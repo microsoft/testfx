@@ -136,7 +136,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="UTA_ErrorIncorrectTestMethodSignature">
         <source>UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</source>
-        <target state="new">UTA007: Method {1} defined in class {0} does not have correct signature. Test method marked with the [TestMethod] attribute must be non-static, public, return-type as void  and should not take any parameter. Example: public void Test.Class1.Test(). Additionally, if you are using async-await in test method then return-type must be 'Task' or 'ValueTask'. Example: public async Task Test.Class1.Test2()</target>
+        <target state="translated">UTA007: 在类 {0} 中定义的方法 {1} 没有正确的签名。用 [TestMethod] 特性标记的测试方法必须是返回类型为 void 的非静态的公共方法，并且不应采用任何参数。示例: public void Test.Class1.Test()。此外，如果在测试方法中使用同步等待，则返回类型必须为“Task”或“Value Task”。示例: public async Task Test.Class1.Test2()</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextIsNull">
@@ -176,12 +176,12 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="new">Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <target state="translated">方法 {0}。{1}的签名错误。该方法必须是静态的公共方法、不返回值并且不应采用任何参数。此外，如果在方法中使用同步等待，则返回类型必须为“Task”或“Value Task”。</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ClassOrAssemblyInitializeMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="new">Method {0}.{1} has wrong signature. The method must be static, public, does not return a value and should take a single parameter of type TestContext. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <target state="translated">方法 {0}。{1}的签名错误。该方法必须是静态的公共方法，不返回值，并且应采用一个 TestContext 类型的参数。此外，如果在方法中使用同步等待，则返回类型必须为“Task”或“Value Task”。</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_ErrorInvalidTimeout">
@@ -221,7 +221,7 @@ Error: {1}</source>
       </trans-unit>
       <trans-unit id="UTA_TestInitializeAndCleanupMethodHasWrongSignature">
         <source>Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</source>
-        <target state="new">Method {0}.{1} has wrong signature. The method must be non-static, public, does not return a value and should not take any parameter. Additionally, if you are using async-await in method then return-type must be 'Task' or 'ValueTask'.</target>
+        <target state="translated">方法 {0}。{1}的签名错误。该方法必须是非静态的公共方法、不返回值并且不应采用任何参数。此外，如果在方法中使用同步等待，则返回类型必须为“Task”或“Value Task”。</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_TypeLoadError">
