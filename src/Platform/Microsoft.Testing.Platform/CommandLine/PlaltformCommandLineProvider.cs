@@ -199,7 +199,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             }
             catch (Exception ex)
             {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitInvalidParentProcess, parentProcessPid, ex));
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitInvalidDependantProcess, parentProcessPid, ex));
             }
         }
 

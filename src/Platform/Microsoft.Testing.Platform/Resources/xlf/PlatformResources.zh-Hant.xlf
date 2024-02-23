@@ -324,7 +324,7 @@
         <target state="translated">列出可用的測試。</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidParentProcess">
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
         <source>Invalid PID '{0}'
 {1}</source>
         <target state="new">Invalid PID '{0}'

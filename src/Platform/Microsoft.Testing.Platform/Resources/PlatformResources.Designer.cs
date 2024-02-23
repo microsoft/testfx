@@ -641,9 +641,9 @@ namespace Microsoft.Testing.Platform.Resources {
         ///   Looks up a localized string similar to Invalid PID &apos;{0}&apos;
         ///{1}.
         /// </summary>
-        internal static string PlatformCommandLineExitOnProcessExitInvalidParentProcess {
+        internal static string PlatformCommandLineExitOnProcessExitInvalidDependantProcess {
             get {
-                return ResourceManager.GetString("PlatformCommandLineExitOnProcessExitInvalidParentProcess", resourceCulture);
+                return ResourceManager.GetString("PlatformCommandLineExitOnProcessExitInvalidDependantProcess", resourceCulture);
             }
         }
         

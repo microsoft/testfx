@@ -495,7 +495,7 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="PlatformCommandLineExitOnProcessExitSingleArgument" xml:space="preserve">
     <value>'--{0}' expects a single int PID argument</value>
   </data>
-  <data name="PlatformCommandLineExitOnProcessExitInvalidParentProcess" xml:space="preserve">
+  <data name="PlatformCommandLineExitOnProcessExitInvalidDependantProcess" xml:space="preserve">
     <value>Invalid PID '{0}'
 {1}</value>
   </data>
