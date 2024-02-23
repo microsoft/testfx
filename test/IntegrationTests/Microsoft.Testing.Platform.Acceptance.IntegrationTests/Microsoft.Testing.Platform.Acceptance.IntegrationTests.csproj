@@ -15,8 +15,8 @@
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
+    <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingFrameworkVersion)" GeneratePathProperty="True" />
+    <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingFrameworkVersion)" GeneratePathProperty="True" />
   </ItemGroup>
 
   <!-- Packages needed for the test assets but that we don't want to reference -->
