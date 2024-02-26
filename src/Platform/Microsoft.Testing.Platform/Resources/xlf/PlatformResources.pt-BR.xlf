@@ -327,18 +327,18 @@
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="new">Invalid PID '{0}'
+        <target state="translated">PID inválido "{0}"
 {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
-        <target state="new">Exit the test process if dependent process exits. PID must be provided.</target>
+        <target state="translated">Sair do processo de teste se o processo dependente for encerrado. O PID deve ser fornecido.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
         <source>'--{0}' expects a single int PID argument</source>
-        <target state="new">'--{0}' expects a single int PID argument</target>
+        <target state="translated">"--{0}" espera um único argumento int PID</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">

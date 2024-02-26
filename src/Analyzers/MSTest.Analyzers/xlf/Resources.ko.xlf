@@ -258,30 +258,30 @@
 - should only be set on a test method;
 - argument count should match method argument count;
 - argument type should match method argument type.</source>
-        <target state="new">DataRow entry should have the following layout to be valid:
-- should only be set on a test method;
-- argument count should match method argument count;
-- argument type should match method argument type.</target>
+        <target state="translated">DataRow 항목이 유효하려면 다음과 같은 레이아웃이 있어야 합니다.
+- 테스트 메서드에만 설정해야 합니다.
+- 인수 개수가 메서드 인수 개수와 일치해야 합니다.
+- 인수 형식이 메서드 인수 형식과 일치해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch">
         <source>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</source>
-        <target state="new">DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</target>
+        <target state="translated">DataRow 인수 개수는 메서드 매개 변수 개수(생성자 인수: {0}, 메서드 매개 변수: {1})와 일치해야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
         <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="new">DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</target>
+        <target state="translated">DataRow 인수 형식은 메서드 매개 변수 형식과 일치해야 합니다. 인덱스에서 불일치 발생: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
         <source>DataRow should only be set on a test method</source>
-        <target state="new">DataRow should only be set on a test method</target>
+        <target state="translated">DataRow는 테스트 메서드에서만 설정해야 함</target>
         <note />
       </trans-unit>
       <trans-unit id="DataRowShouldBeValidTitle">
         <source>DataRow should be valid</source>
-        <target state="new">DataRow should be valid</target>
+        <target state="translated">DataRow는 유효해야 함</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">

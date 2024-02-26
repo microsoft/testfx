@@ -571,17 +571,17 @@
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
         <source>Test methods should not be ignored (marked with '[Ignore]').</source>
-        <target state="new">Test methods should not be ignored (marked with '[Ignore]').</target>
+        <target state="translated">不應略過測試方法 (標示為 '[Ignore]')。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerFormat">
         <source>Test method '{0}' should not be ignored</source>
-        <target state="new">Test method '{0}' should not be ignored</target>
+        <target state="translated">不應略過測試方法 '{0}'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerTitle">
         <source>Test method should not be ignored</source>
-        <target state="new">Test method should not be ignored</target>
+        <target state="translated">不應略過測試方法</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
