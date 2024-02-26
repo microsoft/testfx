@@ -324,23 +324,6 @@
         <target state="translated">列出可用的測試。</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
-        <source>Invalid PID '{0}'
-{1}</source>
-        <target state="translated">無效的 PID '{0}'
-{1}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
-        <source>Exit the test process if dependent process exits. PID must be provided.</source>
-        <target state="translated">如果相依流程結束，則結束測試流程。必須提供 PID。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
-        <source>'--{0}' expects a single int PID argument</source>
-        <target state="translated">'--{0}' 需要單一 int PID 引數</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">
         <source>Show the command line help.</source>
         <target state="translated">顯示命令列說明。</target>
