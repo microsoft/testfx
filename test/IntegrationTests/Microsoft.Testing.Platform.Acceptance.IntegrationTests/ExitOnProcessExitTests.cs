@@ -30,7 +30,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase
         var startTime = Stopwatch.StartNew();
         while (true)
         {
-            Thread.Sleep(1000);
+            Thread.Sleep(500);
 
             // Look for the pid file created by the test host.
             var pidFile = Directory.GetFiles(Path.GetDirectoryName(testHost.FullName)!, "PID").ToArray();
