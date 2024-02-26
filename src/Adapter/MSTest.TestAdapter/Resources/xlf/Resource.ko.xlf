@@ -74,7 +74,7 @@
       </trans-unit>
       <trans-unit id="UTA_ErrorTestClassIsGenericNonAbstract">
         <source>TestClass attribute defined on generic non-abstract class {0}</source>
-        <target state="new">TestClass attribute defined on generic non-abstract class {0}</target>
+        <target state="translated">일반 비추상 클래스 {0}에 정의된 TestClass 속성</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_InitMethodThrows">

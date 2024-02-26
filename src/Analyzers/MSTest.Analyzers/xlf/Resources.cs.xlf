@@ -577,17 +577,17 @@
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
         <source>Test methods should not be ignored (marked with '[Ignore]').</source>
-        <target state="new">Test methods should not be ignored (marked with '[Ignore]').</target>
+        <target state="translated">Testovací metody by se neměly ignorovat (označené jako „[Ignorovat]“.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerFormat">
         <source>Test method '{0}' should not be ignored</source>
-        <target state="new">Test method '{0}' should not be ignored</target>
+        <target state="translated">Testovací metoda „{0}“ by se neměla ignorovat</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerTitle">
         <source>Test method should not be ignored</source>
-        <target state="new">Test method should not be ignored</target>
+        <target state="translated">Testovací metoda by se neměla ignorovat.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
