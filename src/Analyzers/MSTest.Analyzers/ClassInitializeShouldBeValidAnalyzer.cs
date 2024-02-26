@@ -81,11 +81,6 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (!methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol)))
-        {
-            return;
-        }
-
         if (methodSymbol.MethodKind != MethodKind.Ordinary)
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(OrdinaryRule, methodSymbol.Name));
