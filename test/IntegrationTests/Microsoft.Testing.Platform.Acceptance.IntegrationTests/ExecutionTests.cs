@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
 
@@ -10,6 +12,8 @@ namespace Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 public class ExecutionTests : AcceptanceTestBase
 {
     private const string AssetName = "ExecutionTests";
+    private const string AssetName2 = "ExecutionTests2";
+
     private readonly TestAssetFixture _testAssetFixture;
 
     public ExecutionTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
@@ -121,6 +125,17 @@ Minimum expected tests policy violation, tests ran 4, minimum expected 5 - Faile
         Assert.That(testHostResult.StandardOutput.Contains(OutputPattern), $"Output of the test host is:\n{testHostResult}");
     }
 
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task Exec_Honor_Request_Complete(string tfm)
+    {
+        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath2, AssetName2, tfm);
+        Stopwatch stopwatch = Stopwatch.StartNew();
+        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        stopwatch.Stop();
+        Assert.AreEqual(ExitCodes.Success, testHostResult.ExitCode);
+        Assert.IsTrue(stopwatch.Elapsed.TotalSeconds > 3);
+    }
+
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
@@ -182,12 +197,87 @@ global using Microsoft.Testing.Framework;
 global using Microsoft.Testing.Extensions;
 """;
 
+        private const string TestCode2 = """
+#file ExecutionTests2.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <OutputType>Exe</OutputType>
+        <UseAppHost>true</UseAppHost>
+        <LangVersion>preview</LangVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+    </ItemGroup>
+</Project>
+
+#file Program.cs
+using Microsoft.Testing.Platform;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Capabilities;
+using Microsoft.Testing.Platform.Capabilities.TestFramework;
+using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.TestFramework;
+
+ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyAdapter());
+using ITestApplication app = await builder.BuildAsync();
+return await app.RunAsync();
+
+internal class DummyAdapter : ITestFramework, IDataProducer
+{
+    public string Uid => nameof(DummyAdapter);
+
+    public string Version => string.Empty;
+
+    public string DisplayName => string.Empty;
+
+    public string Description => string.Empty;
+
+    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
+
+    public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
+
+    public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context) => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
+
+    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
+    {
+        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+            context.Request.Session.SessionUid,
+            new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+
+        Thread.Sleep(3_000);
+
+        context.Complete();
+    }
+
+    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+}
+
+internal class Capabilities : ITestFrameworkCapabilities
+{
+    IReadOnlyCollection<ITestFrameworkCapability> ICapabilities<ITestFrameworkCapability>.Capabilities => Array.Empty<ITestFrameworkCapability>();
+}
+
+""";
+
         public string TargetAssetPath => GetAssetPath(AssetName);
+
+        public string TargetAssetPath2 => GetAssetPath(AssetName2);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
             yield return (AssetName, AssetName,
                 TestCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));
+
+            yield return (AssetName2, AssetName2,
+                TestCode2
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion));

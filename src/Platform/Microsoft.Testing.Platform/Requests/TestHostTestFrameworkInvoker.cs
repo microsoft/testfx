@@ -69,7 +69,7 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
 
     public virtual async Task ExecuteRequestAsync(ITestFramework testFrameworkAdapter, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
     {
-        using SemaphoreSlim requestSemaphore = new(1);
+        using SemaphoreSlim requestSemaphore = new(0, 1);
         await testFrameworkAdapter.ExecuteRequestAsync(new(request, messageBus, requestSemaphore, cancellationToken));
         await requestSemaphore.WaitAsync(cancellationToken);
     }
