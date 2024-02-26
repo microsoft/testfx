@@ -126,7 +126,11 @@ public class DummyTestAdapter : ITestFramework
         => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
         => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
-    public Task ExecuteRequestAsync(ExecuteRequestContext context) => Task.CompletedTask;
+    public Task ExecuteRequestAsync(ExecuteRequestContext context)
+    {
+       context.Complete();
+       return Task.CompletedTask;
+    }
 }
 """;
 
