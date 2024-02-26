@@ -213,6 +213,11 @@
 – метод не должен быть специальным (метод завершения, оператор…).</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
+        <source>ClassInitialize methode '{0}' can't be iside a generic class without the Inheritance mode is set on it</source>
+        <target state="new">ClassInitialize methode '{0}' can't be iside a generic class without the Inheritance mode is set on it</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">Метод ClassInitialize "{0}" должен возвращать значение "void", "Task" или "ValueTask"</target>

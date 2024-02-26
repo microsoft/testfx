@@ -34,6 +34,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor NotAsyncVoidRule = PublicRule.WithMessage(new(nameof(Resources.ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor NotGenericRule = PublicRule.WithMessage(new(nameof(Resources.ClassInitializeShouldBeValidMessageFormat_NotGeneric), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor OrdinaryRule = PublicRule.WithMessage(new(nameof(Resources.ClassInitializeShouldBeValidMessageFormat_Ordinary), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor NotAGenericClassUnlessInheritanceModeSetRule = PublicRule.WithMessage(new(nameof(Resources.ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
        = ImmutableArray.Create(PublicRule);
@@ -62,7 +63,25 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol? testContextSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (!methodSymbol.IsClassInitializeMethod(classInitializeAttributeSymbol))
+        var namedTypeSymbol = context.Symbol.ContainingType;
+
+        bool isClassInitAttrExist = false;
+        bool isInheritanceModeSet = false;
+        foreach (AttributeData attr in methodSymbol.GetAttributes())
+        {
+            if (SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol))
+            {
+                isClassInitAttrExist = true;
+                isInheritanceModeSet = attr.ConstructorArguments.Length == 1 ? true : false;
+            }
+        }
+
+        if (!isClassInitAttrExist)
+        {
+            return;
+        }
+
+        if (!methodSymbol.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol)))
         {
             return;
         }
@@ -73,6 +92,11 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             // Do not check the other criteria, users should fix the method kind first.
             return;
+        }
+
+        if (namedTypeSymbol.IsGenericType && !isInheritanceModeSet)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAGenericClassUnlessInheritanceModeSetRule, methodSymbol.Name));
         }
 
         if (methodSymbol.Parameters.Length != 1 || testContextSymbol is null ||

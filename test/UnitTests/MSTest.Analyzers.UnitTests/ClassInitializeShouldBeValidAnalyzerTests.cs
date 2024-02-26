@@ -31,6 +31,46 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenClassInitializeIsGenericWithInheritanceModeSet_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+                public static void ClassInitialize(TestContext context)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassInitializeIsGenericWithoutSettingInheritanceMode_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [ClassInitialize]
+                public static void {|#0:ClassInitialize|}(TestContext context)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.NotAGenericClassUnlessInheritanceModeSetRule)
+                .WithLocation(0)
+                .WithArguments("ClassInitialize"));
+    }
+
     public async Task WhenClassInitializeIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
     {
         var code = """

@@ -368,6 +368,16 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ClassInitialize methode &apos;{0}&apos; can&apos;t be iside a generic class without the Inheritance mode is set on it.
+        /// </summary>
+        internal static string ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet {
+            get {
+                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSe" +
+                        "t", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
         /// </summary>
         internal static string ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid {
