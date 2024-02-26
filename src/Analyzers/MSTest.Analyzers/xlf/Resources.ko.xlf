@@ -572,17 +572,17 @@
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
         <source>Test methods should not be ignored (marked with '[Ignore]').</source>
-        <target state="new">Test methods should not be ignored (marked with '[Ignore]').</target>
+        <target state="translated">테스트 메서드는 무시하면 안 됩니다('[무시]'로 표시됨).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerFormat">
         <source>Test method '{0}' should not be ignored</source>
-        <target state="new">Test method '{0}' should not be ignored</target>
+        <target state="translated">테스트 메서드 '{0}'을(를) 무시하면 안 됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerTitle">
         <source>Test method should not be ignored</source>
-        <target state="new">Test method should not be ignored</target>
+        <target state="translated">테스트 메서드는 무시하면 안 됩니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
