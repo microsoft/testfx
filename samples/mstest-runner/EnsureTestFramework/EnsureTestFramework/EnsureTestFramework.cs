@@ -109,7 +109,6 @@ internal sealed class EnsureTestFramework : ITestFramework, IDataProducer
             context.Complete();
         }
 
-        return;
     }
 
     public Task<bool> IsEnabledAsync()
