@@ -327,18 +327,19 @@
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="new">Invalid PID '{0}'
+        <target state="translated">PID '{0}'
+ が無効です
 {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitOptionDescription">
         <source>Exit the test process if dependent process exits. PID must be provided.</source>
-        <target state="new">Exit the test process if dependent process exits. PID must be provided.</target>
+        <target state="translated">依存プロセスが終了した場合は、テスト プロセスを終了します。PID を指定する必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitSingleArgument">
         <source>'--{0}' expects a single int PID argument</source>
-        <target state="new">'--{0}' expects a single int PID argument</target>
+        <target state="translated">'--{0}' には 1 つの int PID 引数が必要です</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineHelpOptionDescription">
