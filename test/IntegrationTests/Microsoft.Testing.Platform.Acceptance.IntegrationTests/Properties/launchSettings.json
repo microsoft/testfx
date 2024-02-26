@@ -2,7 +2,7 @@
   "profiles": {
     "Microsoft.Testing.Platform.Acceptance.IntegrationTests": {
       "commandName": "Project",
-      "commandLineArgs": "--treenode-filter /*/*/*/**",
+      "commandLineArgs": "--treenode-filter /*/*/ExitOnProcessExitTests/**",
       "environmentVariables": {
         //"TESTINGPLATFORM_HOTRELOAD_ENABLED": "1"
       }
