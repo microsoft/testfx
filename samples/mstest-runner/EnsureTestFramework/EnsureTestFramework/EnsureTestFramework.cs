@@ -57,52 +57,59 @@ internal sealed class EnsureTestFramework : ITestFramework, IDataProducer
         return Task.FromResult(result);
     }
 
-    public Task ExecuteRequestAsync(ExecuteRequestContext context)
+    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
         IRequest request = context.Request;
-        switch (request)
+        try
         {
-            case DiscoverTestExecutionRequest:
-                {
-                    var testNode = new TestNode
+            switch (request)
+            {
+                case DiscoverTestExecutionRequest:
                     {
-                        DisplayName = "My test method",
-                        Uid = new TestNodeUid("A stable, unique id that identifies my test method, such as assemblyname.classname.methodname.parameters."),
-                        Properties = new PropertyBag(DiscoveredTestNodeStateProperty.CachedInstance),
-                    };
+                        var testNode = new TestNode
+                        {
+                            DisplayName = "My test method",
+                            Uid = new TestNodeUid("A stable, unique id that identifies my test method, such as assemblyname.classname.methodname.parameters."),
+                            Properties = new PropertyBag(DiscoveredTestNodeStateProperty.CachedInstance),
+                        };
 
-                    // Report back the update, including optional parent of this test node.
-                    var discovered = new TestNodeUpdateMessage(context.Request.Session.SessionUid, testNode, parentTestNodeUid: null);
+                        // Report back the update, including optional parent of this test node.
+                        var discovered = new TestNodeUpdateMessage(context.Request.Session.SessionUid, testNode, parentTestNodeUid: null);
 
-                    // By implementing this interface, we tell the message bus what data we will produce.
-                    IDataProducer testUpdateReporter = this;
-                    context.MessageBus.PublishAsync(testUpdateReporter, discovered);
-                    break;
-                }
-            case RunTestExecutionRequest:
-                {
-                    var failedProperty = new FailedTestNodeStateProperty(new InvalidOperationException("Assertion failed."));
-                    var testNode = new TestNode
+                        // By implementing this interface, we tell the message bus what data we will produce.
+                        IDataProducer testUpdateReporter = this;
+                        await context.MessageBus.PublishAsync(testUpdateReporter, discovered);
+                        break;
+                    }
+                case RunTestExecutionRequest:
                     {
-                        DisplayName = "My test method",
-                        Uid = new TestNodeUid("A stable, unique id that identifies my test method, such as assemblyname.classname.methodname.parameters."),
-                        Properties = new PropertyBag(
-                            failedProperty,
-                            new TimingProperty(new TimingInfo(DateTime.UtcNow.Subtract(TimeSpan.FromMilliseconds(100)), DateTime.UtcNow, TimeSpan.FromMilliseconds(100)))
-                        ),
-                    };
-                    var executed = new TestNodeUpdateMessage(context.Request.Session.SessionUid, testNode, parentTestNodeUid: null);
+                        var failedProperty = new FailedTestNodeStateProperty(new InvalidOperationException("Assertion failed."));
+                        var testNode = new TestNode
+                        {
+                            DisplayName = "My test method",
+                            Uid = new TestNodeUid("A stable, unique id that identifies my test method, such as assemblyname.classname.methodname.parameters."),
+                            Properties = new PropertyBag(
+                                failedProperty,
+                                new TimingProperty(new TimingInfo(DateTime.UtcNow.Subtract(TimeSpan.FromMilliseconds(100)), DateTime.UtcNow, TimeSpan.FromMilliseconds(100)))
+                            ),
+                        };
+                        var executed = new TestNodeUpdateMessage(context.Request.Session.SessionUid, testNode, parentTestNodeUid: null);
 
-                    // By implementing this interface, we tell the message bus what data we will produce.
-                    IDataProducer testUpdateReporter = this;
-                    context.MessageBus.PublishAsync(testUpdateReporter, executed);
-                    break;
-                }
-            default:
-                throw new NotSupportedException();
+                        // By implementing this interface, we tell the message bus what data we will produce.
+                        IDataProducer testUpdateReporter = this;
+                        await context.MessageBus.PublishAsync(testUpdateReporter, executed);
+                        break;
+                    }
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+        finally
+        {
+            context.Complete();
         }
 
-        return Task.CompletedTask;
+        return;
     }
 
     public Task<bool> IsEnabledAsync()
