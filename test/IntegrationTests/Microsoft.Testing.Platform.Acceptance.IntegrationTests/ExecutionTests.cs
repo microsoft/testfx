@@ -221,6 +221,7 @@ using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using System.Threading.Tasks;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.RegisterTestFramework(_ => new Capabilities(), (_, __) => new DummyAdapter());
@@ -243,15 +244,20 @@ internal class DummyAdapter : ITestFramework, IDataProducer
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context) => Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
 
-    public async Task ExecuteRequestAsync(ExecuteRequestContext context)
+    public Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
-        await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
-            context.Request.Session.SessionUid,
-            new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
+        Task.Run(async() =>
+        {
+            await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(
+                context.Request.Session.SessionUid,
+                new TestNode() { Uid = "0", DisplayName = "Test", Properties = new(PassedTestNodeStateProperty.CachedInstance) }));
 
-        Thread.Sleep(3_000);
+            Thread.Sleep(3_000);
 
-        context.Complete();
+            context.Complete();
+        });
+
+        return Task.CompletedTask;
     }
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
