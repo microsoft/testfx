@@ -10,6 +10,9 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 
+// Opt-out telemetry
+Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+
 CommandLine.MaxOutstandingCommands = Environment.ProcessorCount;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);

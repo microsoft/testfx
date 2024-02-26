@@ -13,6 +13,9 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.TestInfrastructure;
 
+// Opt-out telemetry
+Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
+
 // DebuggerUtility.AttachVSToCurrentProcess();
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.GetCommandLineOptions()));
