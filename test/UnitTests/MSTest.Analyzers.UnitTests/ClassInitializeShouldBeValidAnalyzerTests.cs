@@ -39,7 +39,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
             [TestClass]
             public class MyTestClass<T>
             {
-                [ClassInitialize(InheritanceBehavior.BeforeEachDerivedClass)]
+                [ClassInitialize(inheritanceBehavior: InheritanceBehavior.BeforeEachDerivedClass)]
                 public static void ClassInitialize(TestContext context)
                 {
                 }

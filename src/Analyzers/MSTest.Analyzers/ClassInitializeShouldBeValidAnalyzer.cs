@@ -3,6 +3,7 @@
 
 using System.Collections.Immutable;
 
+using Analyzer.Utilities;
 using Analyzer.Utilities.Extensions;
 
 using Microsoft.CodeAnalysis;
@@ -88,15 +89,16 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
 
                 foreach (var constructorArgument in constructorArguments)
                 {
-                    // Null is considered as default for non-nullable types.
-                    if (constructorArgument.IsNull)
+                    if (!SymbolEqualityComparer.Default.Equals(constructorArgument.Type, inheritanceBehaviorSymbol))
                     {
                         continue;
                     }
 
+                    // It's an enum so it can't be null
+                    RoslynDebug.Assert(constructorArgument.Value is not null);
+
                     // We need to check that the inheritanceBehavior is not set to none and it's value inside the enum is zero
-                    if (SymbolEqualityComparer.Default.Equals(constructorArgument.Type, inheritanceBehaviorSymbol)
-                        && constructorArgument.Value?.ToString() != "0")
+                    if (constructorArgument.Value.ToString() != "0")
                     {
                         isInheritanceModeSet = true;
                         break;
