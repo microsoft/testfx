@@ -50,33 +50,23 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
                 && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out var testContextSymbol))
             {
                 var taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
+                var inheritanceBehaviorSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingInheritanceBehavior);
                 var valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
                 bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, classInitializeAttributeSymbol, taskSymbol, valueTaskSymbol, testContextSymbol, canDiscoverInternals),
+                    context => AnalyzeSymbol(context, classInitializeAttributeSymbol, taskSymbol, valueTaskSymbol, testContextSymbol, inheritanceBehaviorSymbol, canDiscoverInternals),
                     SymbolKind.Method);
             }
         });
     }
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol classInitializeAttributeSymbol, INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol? testContextSymbol, bool canDiscoverInternals)
+        INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol? testContextSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         var namedTypeSymbol = context.Symbol.ContainingType;
 
-        bool isClassInitAttrExist = false;
-        bool isInheritanceModeSet = false;
-        foreach (AttributeData attr in methodSymbol.GetAttributes())
-        {
-            if (SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol))
-            {
-                isClassInitAttrExist = true;
-                isInheritanceModeSet = attr.ConstructorArguments.Length == 1 ? true : false;
-            }
-        }
-
-        if (!isClassInitAttrExist)
+        if (!methodSymbol.IsClassInitializeMethod(classInitializeAttributeSymbol))
         {
             return;
         }
@@ -89,9 +79,34 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (namedTypeSymbol.IsGenericType && !isInheritanceModeSet)
+        if (namedTypeSymbol.IsGenericType)
         {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAGenericClassUnlessInheritanceModeSetRule, methodSymbol.Name));
+            bool isInheritanceModeSet = false;
+            foreach (AttributeData attr in methodSymbol.GetAttributes())
+            {
+                ImmutableArray<TypedConstant> constructorArguments = attr.ConstructorArguments;
+
+                for (int i = 0; i < constructorArguments.Length; ++i)
+                {
+                    // Null is considered as default for non-nullable types.
+                    if (constructorArguments[i].IsNull)
+                    {
+                        continue;
+                    }
+
+                    // We need to check that the inheritanceBehavior is not set to none and it's value inside the enum is zero
+                    if (SymbolEqualityComparer.Default.Equals(constructorArguments[i].Type, inheritanceBehaviorSymbol)
+                        && constructorArguments[i].Value?.ToString() != "0")
+                    {
+                        isInheritanceModeSet = true;
+                    }
+                }
+            }
+
+            if (!isInheritanceModeSet)
+            {
+                context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAGenericClassUnlessInheritanceModeSetRule, methodSymbol.Name));
+            }
         }
 
         if (methodSymbol.Parameters.Length != 1 || testContextSymbol is null ||

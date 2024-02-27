@@ -49,6 +49,28 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenClassInitializeIsGenericWithInheritanceModeSetToNone_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [ClassInitialize(InheritanceBehavior.None)]
+                public static void {|#0:ClassInitialize|}(TestContext context)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.NotAGenericClassUnlessInheritanceModeSetRule)
+                .WithLocation(0)
+                .WithArguments("ClassInitialize"));
+    }
+
     public async Task WhenClassInitializeIsGenericWithoutSettingInheritanceMode_Diagnostic()
     {
         var code = """
