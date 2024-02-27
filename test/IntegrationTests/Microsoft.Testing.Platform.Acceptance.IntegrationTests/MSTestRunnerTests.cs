@@ -160,7 +160,7 @@ return await app.RunAsync();
             .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
             .PatchCodeWithReplace("$OutputType$", string.Empty)
             .PatchCodeWithReplace("$Extra$", string.Empty),
-            addPublicFeeds: false);
+            addPublicFeeds: true);
 
             string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
             var compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
