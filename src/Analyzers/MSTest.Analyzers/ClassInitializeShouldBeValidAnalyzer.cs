@@ -86,17 +86,17 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             {
                 ImmutableArray<TypedConstant> constructorArguments = attr.ConstructorArguments;
 
-                for (int i = 0; i < constructorArguments.Length; ++i)
+                foreach (var constructorArgument in constructorArguments)
                 {
                     // Null is considered as default for non-nullable types.
-                    if (constructorArguments[i].IsNull)
+                    if (constructorArgument.IsNull)
                     {
                         continue;
                     }
 
                     // We need to check that the inheritanceBehavior is not set to none and it's value inside the enum is zero
-                    if (SymbolEqualityComparer.Default.Equals(constructorArguments[i].Type, inheritanceBehaviorSymbol)
-                        && constructorArguments[i].Value?.ToString() != "0")
+                    if (SymbolEqualityComparer.Default.Equals(constructorArgument.Type, inheritanceBehaviorSymbol)
+                        && constructorArgument.Value?.ToString() != "0")
                     {
                         isInheritanceModeSet = true;
                     }
