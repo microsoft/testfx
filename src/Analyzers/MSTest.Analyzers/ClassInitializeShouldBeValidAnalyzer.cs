@@ -99,6 +99,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
                         && constructorArgument.Value?.ToString() != "0")
                     {
                         isInheritanceModeSet = true;
+                        break;
                     }
                 }
             }
