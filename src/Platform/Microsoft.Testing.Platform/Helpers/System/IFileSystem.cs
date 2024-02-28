@@ -14,4 +14,6 @@ internal interface IFileSystem
     Stream NewFileStream(string path, FileMode mode);
 
     Stream NewFileStream(string path, FileMode mode, FileAccess access);
+
+    string ReadAllText(string path);
 }
