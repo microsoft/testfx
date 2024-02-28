@@ -10,7 +10,7 @@ internal static class TelemetryProperties
     public const string ReporterIdPropertyName = $"reporter id";
     public const string IsCIPropertyName = "is ci";
 
-    public const string VersionValue = "18";
+    public const string VersionValue = "19";
 
     public const string True = "true";
     public const string False = "false";
