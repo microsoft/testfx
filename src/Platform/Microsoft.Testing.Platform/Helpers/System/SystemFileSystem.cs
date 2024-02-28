@@ -14,4 +14,6 @@ internal sealed class SystemFileSystem : IFileSystem
     public Stream NewFileStream(string path, FileMode mode) => new FileStream(path, mode);
 
     public Stream NewFileStream(string path, FileMode mode, FileAccess access) => new FileStream(path, mode, access);
+
+    public string ReadAllText(string path) => File.ReadAllText(path);
 }
