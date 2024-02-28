@@ -6,6 +6,7 @@ namespace Microsoft.Testing.Platform.Telemetry;
 internal static class TelemetryProperties
 {
     public const string VersionPropertyName = $"telemetry version";
+    public const string SessionId = "session id";
     public const string ReporterIdPropertyName = $"reporter id";
     public const string IsCIPropertyName = "is ci";
 
