@@ -95,6 +95,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Versions.cs.template" />
+    <Compile Update="Versions.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
   </ItemGroup>
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
