@@ -213,6 +213,11 @@
 - 특수 메서드(종료자, 연산자...)가 아니어야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
+        <source>ClassInitialize method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</source>
+        <target state="new">ClassInitialize method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">ClassInitialize 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>

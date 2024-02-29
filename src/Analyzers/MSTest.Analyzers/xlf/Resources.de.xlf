@@ -213,6 +213,11 @@
 – Darf keine spezielle Methode sein (Finalizer, Operator...)</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
+        <source>ClassInitialize method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</source>
+        <target state="new">ClassInitialize method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">Die ClassInitialize-Methode „{0}“ muss „void“, „Task“ oder „ValueTask“ zurückgeben.</target>
