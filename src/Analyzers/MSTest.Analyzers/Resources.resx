@@ -161,6 +161,9 @@
 - it should not be 'async void'
 - it should not be a special method (finalizer, operator...).</value>
   </data>
+  <data name="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass" xml:space="preserve">
+    <value>AssemblyInitialize method '{0}' can't be inside a generic class</value>
+  </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
   </data>

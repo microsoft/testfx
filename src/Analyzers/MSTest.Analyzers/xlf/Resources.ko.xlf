@@ -80,6 +80,11 @@
 - 특수 메서드(종료자, 연산자...)가 아니어야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass">
+        <source>AssemblyInitialize method '{0}' can't be inside a generic class</source>
+        <target state="new">AssemblyInitialize method '{0}' can't be inside a generic class</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">AssemblyInitialize 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>

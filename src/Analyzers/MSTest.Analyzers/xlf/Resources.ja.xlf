@@ -80,6 +80,11 @@
 - 特殊なメソッド (ファイナライザー、演算子...) にすることはできません。</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass">
+        <source>AssemblyInitialize method '{0}' can't be inside a generic class</source>
+        <target state="new">AssemblyInitialize method '{0}' can't be inside a generic class</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">AssemblyInitialize メソッド '{0}' は 'void'、'Task'、または 'ValueTask' を返す必要があります</target>
