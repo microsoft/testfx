@@ -34,6 +34,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor NotAsyncVoidRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor NotGenericRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyCleanupShouldBeValidMessageFormat_NotGeneric), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor OrdinaryRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyCleanupShouldBeValidMessageFormat_Ordinary), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor NotAGenericClassRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
        = ImmutableArray.Create(PublicRule);
@@ -61,6 +62,8 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
+        var containingTypeSymbol = context.Symbol.ContainingType;
+
         if (!methodSymbol.IsAssemblyCleanupMethod(assemblyCleanupAttributeSymbol))
         {
             return;
@@ -72,6 +75,11 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             // Do not check the other criteria, users should fix the method kind first.
             return;
+        }
+
+        if (containingTypeSymbol.IsGenericType)
+        {
+            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAGenericClassRule, methodSymbol.Name));
         }
 
         if (methodSymbol.Parameters.Length > 0)

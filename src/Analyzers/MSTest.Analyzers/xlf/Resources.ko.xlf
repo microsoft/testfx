@@ -26,6 +26,11 @@
         <target state="translated">AssemblyCleanup 메서드 '{0}'은(는) 매개 변수를 사용하지 않아야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass">
+        <source>AssemblyCleanup method '{0}' can't be inside a generic class</source>
+        <target state="new">AssemblyCleanup method '{0}' can't be inside a generic class</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid">
         <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">AssemblyCleanup 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>

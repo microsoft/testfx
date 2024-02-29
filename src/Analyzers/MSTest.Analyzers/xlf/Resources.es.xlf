@@ -26,6 +26,11 @@
         <target state="translated">El método AssemblyCleanup '{0}' no debería tomar ningún parámetro</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass">
+        <source>AssemblyCleanup method '{0}' can't be inside a generic class</source>
+        <target state="new">AssemblyCleanup method '{0}' can't be inside a generic class</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid">
         <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">El método AssemblyCleanup '{0}' debería devolver 'void', 'Task' o 'ValueTask'</target>

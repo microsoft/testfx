@@ -86,6 +86,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; can&apos;t be inside a generic class.
+        /// </summary>
+        internal static string AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass {
+            get {
+                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
         /// </summary>
         internal static string AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid {
