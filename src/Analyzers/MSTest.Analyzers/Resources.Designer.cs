@@ -368,7 +368,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; can&apos;t be inside a generic class without the Inheritance mode is set on it.
+        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; can&apos;t be inside a generic class without the `InheritanceBehavior` mode is set.
         /// </summary>
         internal static string ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet {
             get {
