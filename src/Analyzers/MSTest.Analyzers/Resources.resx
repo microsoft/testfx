@@ -130,6 +130,9 @@
   <data name="AssemblyCleanupShouldBeValidMessageFormat_NoParameters" xml:space="preserve">
     <value>AssemblyCleanup method '{0}' should not take any parameter</value>
   </data>
+  <data name="AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass" xml:space="preserve">
+    <value>AssemblyCleanup method '{0}' can't be inside a generic class</value>
+  </data>
   <data name="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
   </data>

@@ -31,6 +31,28 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenAssemblyCleanIsInsideAGenericClass_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [AssemblyCleanup]
+                public static void {|#0:AssemblyCleanup|}()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.NotAGenericClassRule)
+                .WithLocation(0)
+                .WithArguments("AssemblyCleanup"));
+    }
+
     public async Task WhenAssemblyCleanupIsNotOrdinary_Diagnostic()
     {
         var code = """
