@@ -85,8 +85,12 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             bool isInheritanceModeSet = false;
             foreach (AttributeData attr in methodSymbol.GetAttributes())
             {
-                ImmutableArray<TypedConstant> constructorArguments = attr.ConstructorArguments;
+                if (!SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classInitializeAttributeSymbol))
+                {
+                    continue;
+                }
 
+                ImmutableArray<TypedConstant> constructorArguments = attr.ConstructorArguments;
                 foreach (var constructorArgument in constructorArguments)
                 {
                     if (!SymbolEqualityComparer.Default.Equals(constructorArgument.Type, inheritanceBehaviorSymbol))
