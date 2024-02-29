@@ -80,6 +80,11 @@
 – Il ne doit pas s’agir d’une méthode spéciale (finaliseur, opérateur...).</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass">
+        <source>AssemblyInitialize method '{0}' can't be inside a generic class</source>
+        <target state="new">AssemblyInitialize method '{0}' can't be inside a generic class</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">La méthode AssemblyInitialize « {0} » doit retourner « void », « Task » ou « Value Task »</target>

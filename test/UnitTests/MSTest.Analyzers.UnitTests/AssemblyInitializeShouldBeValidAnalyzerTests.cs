@@ -51,6 +51,28 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenAssemblyInitializeIsInsideAGenericClass_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [AssemblyInitialize]
+                public static void {|#0:AssemblyInitialize|}(TestContext context)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.NotAGenericClassRule)
+                .WithLocation(0)
+                .WithArguments("AssemblyInitialize"));
+    }
+
     public async Task WhenAssemblyInitializeIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
     {
         var code = """

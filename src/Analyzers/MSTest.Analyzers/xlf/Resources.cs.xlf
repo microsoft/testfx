@@ -82,6 +82,11 @@
 – nesmí být speciální metodou (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass">
+        <source>AssemblyInitialize method '{0}' can't be inside a generic class</source>
+        <target state="new">AssemblyInitialize method '{0}' can't be inside a generic class</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">Metoda AssemblyInitialize {0} by měla vracet hodnoty void, Task nebo ValueTask.</target>
