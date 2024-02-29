@@ -289,6 +289,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; can&apos;t be inside a generic class without the `InheritanceBehavior` mode is set.
+        /// </summary>
+        internal static string ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet {
+            get {
+                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
         /// </summary>
         internal static string ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid {

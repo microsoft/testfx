@@ -159,6 +159,11 @@
         <target state="translated">ClassCleanup 方法“{0}”不应采用任何参数</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
+        <source>ClassCleanup method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</source>
+        <target state="new">ClassCleanup method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid">
         <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">ClassCleanup 方法“{0}”应返回“void”、“Task” 或“ValueTask”</target>

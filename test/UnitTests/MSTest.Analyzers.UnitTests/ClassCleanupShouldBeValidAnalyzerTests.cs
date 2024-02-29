@@ -31,6 +31,68 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenClassCleanupIsGenericWithInheritanceModeSet_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [ClassCleanup(inheritanceBehavior: InheritanceBehavior.BeforeEachDerivedClass)]
+                public static void ClassCleanup()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenClassCleanupIsGenericWithInheritanceModeSetToNone_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [ClassCleanup(InheritanceBehavior.None)]
+                public static void {|#0:ClassCleanup|}()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.NotAGenericClassUnlessInheritanceModeSetRule)
+                .WithLocation(0)
+                .WithArguments("ClassCleanup"));
+    }
+
+    public async Task WhenClassCleanupIsGenericWithoutSettingInheritanceMode_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass<T>
+            {
+                [ClassCleanup]
+                public static void {|#0:ClassCleanup|}()
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(ClassCleanupShouldBeValidAnalyzer.NotAGenericClassUnlessInheritanceModeSetRule)
+                .WithLocation(0)
+                .WithArguments("ClassCleanup"));
+    }
+
     public async Task WhenClassCleanupIsNotOrdinary_Diagnostic()
     {
         var code = """

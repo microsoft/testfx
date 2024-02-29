@@ -3,6 +3,7 @@
 
 using System.Collections.Immutable;
 
+using Analyzer.Utilities;
 using Analyzer.Utilities.Extensions;
 
 using Microsoft.CodeAnalysis;
@@ -34,6 +35,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor NotAsyncVoidRule = PublicRule.WithMessage(new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor NotGenericRule = PublicRule.WithMessage(new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_NotGeneric), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor OrdinaryRule = PublicRule.WithMessage(new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_Ordinary), Resources.ResourceManager, typeof(Resources)));
+    internal static readonly DiagnosticDescriptor NotAGenericClassUnlessInheritanceModeSetRule = PublicRule.WithMessage(new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
        = ImmutableArray.Create(PublicRule);
@@ -48,19 +50,22 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute, out var classCleanupAttributeSymbol))
             {
                 var taskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask);
+                var inheritanceBehaviorSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingInheritanceBehavior);
                 var valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
                 bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, classCleanupAttributeSymbol, taskSymbol, valueTaskSymbol, canDiscoverInternals),
+                    context => AnalyzeSymbol(context, classCleanupAttributeSymbol, taskSymbol, valueTaskSymbol, inheritanceBehaviorSymbol, canDiscoverInternals),
                     SymbolKind.Method);
             }
         });
     }
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol classCleanupAttributeSymbol, INamedTypeSymbol? taskSymbol,
-        INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
+        INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
+        var containingTypeSymbol = context.Symbol.ContainingType;
+
         if (!methodSymbol.IsClassCleanupMethod(classCleanupAttributeSymbol))
         {
             return;
@@ -72,6 +77,42 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
 
             // Do not check the other criteria, users should fix the method kind first.
             return;
+        }
+
+        if (containingTypeSymbol.IsGenericType)
+        {
+            bool isInheritanceModeSet = false;
+            foreach (AttributeData attr in methodSymbol.GetAttributes())
+            {
+                if (!SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classCleanupAttributeSymbol))
+                {
+                    continue;
+                }
+
+                ImmutableArray<TypedConstant> constructorArguments = attr.ConstructorArguments;
+                foreach (var constructorArgument in constructorArguments)
+                {
+                    if (!SymbolEqualityComparer.Default.Equals(constructorArgument.Type, inheritanceBehaviorSymbol))
+                    {
+                        continue;
+                    }
+
+                    // It's an enum so it can't be null
+                    RoslynDebug.Assert(constructorArgument.Value is not null);
+
+                    // We need to check that the inheritanceBehavior is not set to none and it's value inside the enum is zero
+                    if ((int)constructorArgument.Value != 0)
+                    {
+                        isInheritanceModeSet = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!isInheritanceModeSet)
+            {
+                context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAGenericClassUnlessInheritanceModeSetRule, methodSymbol.Name));
+            }
         }
 
         if (methodSymbol.Parameters.Length > 0)
