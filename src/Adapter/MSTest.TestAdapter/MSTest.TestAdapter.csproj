@@ -88,4 +88,29 @@
   <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
+
+  <!-- Version templating -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Versions.cs.template" />
+  </ItemGroup>
+  <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
+    <PropertyGroup>
+      <_TemplateProperties>MSTestVersion=$(Version)</_TemplateProperties>
+    </PropertyGroup>
+
+    <!--
+      List all templates that use ${} template, that will be replaced by the properties defined below.
+      This will happen on every build. When adding a new file, also add the destination fileto .gitignore.
+      -->
+    <ItemGroup>
+      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/Versions.cs.template" Destination="$(MSBuildProjectDirectory)/Versions.cs" />
+    </ItemGroup>
+
+    <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
+      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
+    </GenerateFileFromTemplate>
+  </Target>
 </Project>
