@@ -98,7 +98,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
                     RoslynDebug.Assert(constructorArgument.Value is not null);
 
                     // We need to check that the inheritanceBehavior is not set to none and it's value inside the enum is zero
-                    if (constructorArgument.Value.ToString() != "0")
+                    if ((int)constructorArgument.Value != 0)
                     {
                         isInheritanceModeSet = true;
                         break;
