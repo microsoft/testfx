@@ -80,11 +80,6 @@
 - 它不应是特殊方法（终结器、运算符...）。</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass">
-        <source>AssemblyInitialize method '{0}' can't be inside a generic class</source>
-        <target state="new">AssemblyInitialize method '{0}' can't be inside a generic class</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
         <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">AssemblyInitialize 方法“{0}”应返回“void”、“Task”或“ValueTask”</target>
