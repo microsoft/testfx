@@ -159,6 +159,11 @@
         <target state="translated">ClassCleanup 메서드 '{0}'은(는) 매개 변수를 사용하지 않아야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
+        <source>ClassCleanup method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</source>
+        <target state="new">ClassCleanup method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid">
         <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
         <target state="translated">ClassCleanup 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>

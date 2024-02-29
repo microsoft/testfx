@@ -207,6 +207,9 @@
   <data name="ClassCleanupShouldBeValidMessageFormat_NoParameters" xml:space="preserve">
     <value>ClassCleanup method '{0}' should not take any parameter</value>
   </data>
+  <data name="ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet" xml:space="preserve">
+    <value>ClassCleanup method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</value>
+  </data>
   <data name="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
   </data>
