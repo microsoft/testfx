@@ -239,7 +239,7 @@
 - it should not be a special method (finalizer, operator...).</value>
   </data>
   <data name="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet" xml:space="preserve">
-    <value>ClassInitialize methode '{0}' can't be iside a generic class without the Inheritance mode is set on it</value>
+    <value>ClassInitialize method '{0}' can't be inside a generic class without the Inheritance mode is set on it</value>
   </data>
   <data name="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
