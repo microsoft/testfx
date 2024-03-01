@@ -10,7 +10,7 @@ To use this channel, you will need to add or edit your [NuGet.Config](https://le
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <packageSources>
-    <!-- MSTest early access packages. See: aka.ms/mstest/preview -->
+    <!-- MSTest early access packages. See: https://aka.ms/mstest/preview -->
     <add key="test-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/test-tools/nuget/v3/index.json" />
   </packageSources>
 </configuration>
