@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <OutputType>exe</OutputType>
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- From preview feed. -->
+    <!-- 
+      Experimental MSTest Engine & source generator, 
+      close sourced, licensed the same as our extensions 
+      with Microsoft Testing Platform Tools license.
+    -->
+    <PackageReference Include="MSTest.Engine" Version="1.0.0-alpha.24151.3" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="1.0.0-alpha.24151.3" />
+    
+    <!-- From nuget.org. -->
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.0.2" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.2.2" />
+    <PackageReference Include="MSTest.Analyzers" Version="3.2.2" />
+    
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ClassLibrary1\ClassLibrary1.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+
+</Project>
