@@ -2,134 +2,6 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="it" original="../Resources.resx">
     <body>
-      <trans-unit id="AssemblyCleanupShouldBeValidDescription">
-        <source>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">I metodi contrassegnati con [AssemblyCleanup] devono seguire il layout seguente per essere validi:
-- Deve essere 'public'
-- Deve essere 'static'
-- Non deve essere generico
-- Non deve accettare alcun parametro
-- Il tipo restituito deve essere "void", "Task" o "ValueTask"
-- Non deve essere 'async void'
-- Non deve essere un metodo speciale (finalizzatore, operatore...).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NoParameters">
-        <source>AssemblyCleanup method '{0}' should not take any parameter</source>
-        <target state="translated">Il metodo AssemblyCleanup '{0}' non deve accettare alcun parametro</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass">
-        <source>AssemblyCleanup method '{0}' can't be inside a generic class</source>
-        <target state="new">AssemblyCleanup method '{0}' can't be inside a generic class</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Il metodo AssemblyCleanup '{0}' deve restituire 'void', 'Task' o 'ValueTask'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotGeneric">
-        <source>AssemblyCleanup method '{0}' should not be generic</source>
-        <target state="translated">Il metodo AssemblyCleanup '{0}' non deve essere generico</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Ordinary">
-        <source>AssemblyCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">Il metodo AssemblyCleanup '{0}' deve essere un metodo 'ordinary'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Public">
-        <source>AssemblyCleanup method '{0}' should be 'public'</source>
-        <target state="translated">Il metodo TestCleanup '{0}' deve essere 'public'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_ReturnType">
-        <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Il metodo AssemblyCleanup '{0}' deve restituire 'void', 'Task' o 'ValueTask'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Static">
-        <source>AssemblyCleanup method '{0}' should be 'static'</source>
-        <target state="translated">Il metodo AssemblyCleanup '{0}' deve essere 'static'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidTitle">
-        <source>AssemblyCleanup methods should have valid layout</source>
-        <target state="translated">Il metodo AssemblyCleanup deve avere un layout valido</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidDescription">
-        <source>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should take one parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">I metodi contrassegnati con [AssemblyInitialize] devono seguire il layout seguente per essere validi:
-- Deve essere 'public'
-- Deve essere 'static'
-- Non deve essere generico
-- deve accettare un parametro di tipo 'TestContext'
-- Il tipo restituito deve essere "void", "Task" o "ValueTask"
-- Non deve essere 'async void'
-- Non deve essere un metodo speciale (finalizzatore, operatore...).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass">
-        <source>AssemblyInitialize method '{0}' can't be inside a generic class</source>
-        <target state="new">AssemblyInitialize method '{0}' can't be inside a generic class</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Il metodo AssemblyInitialize '{0}' deve restituire 'void', 'Task' o 'ValueTask'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotGeneric">
-        <source>AssemblyInitialize method '{0}' should not be generic</source>
-        <target state="translated">Il metodo AssemblyInitialize '{0}' non deve essere generico</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Ordinary">
-        <source>AssemblyInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">Il metodo AssemblyInitialize '{0}' deve essere un metodo 'ordinary'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Public">
-        <source>AssemblyInitialize method '{0}' should be 'public'</source>
-        <target state="translated">Il metodo AssemblyInitialize '{0}' deve essere 'public'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_ReturnType">
-        <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Il metodo AssemblyInitialize '{0}' deve restituire 'void', 'Task' o 'ValueTask'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter">
-        <source>AssemblyInitialize method '{0}' should take a single parameter of type 'TestContext'</source>
-        <target state="translated">Il metodo AssemblyInitialize '{0}' deve accettare un singolo parametro di tipo 'TestContext'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Static">
-        <source>AssemblyInitialize method '{0}' should be 'static'</source>
-        <target state="translated">Il metodo AssemblyInitialize '{0}' deve essere 'static'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidTitle">
-        <source>AssemblyInitialize methods should have valid layout</source>
-        <target state="translated">Il metodo AssemblyInitialize deve avere un layout valido</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">Preferisci 'Assert.ThrowsException' o 'Assert.ThrowsExceptionAsync' a '[ExpectedException]', perché garantisce che solo la chiamata prevista lanci l'eccezione prevista. Le API di asserzione forniscono anche una maggiore flessibilità e consentono l’asserzione delle proprietà aggiuntive dell'eccezione.</target>
@@ -143,165 +15,6 @@
       <trans-unit id="AvoidExpectedExceptionAttributeTitle">
         <source>Avoid '[ExpectedException]'</source>
         <target state="translated">Evita '[ExpectedException]'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidDescription">
-        <source>Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not 'static'
-- it should not be generic
-- it should not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">I metodi contrassegnati con [ClassCleanup] devono seguire il layout seguente per essere validi:
-- Deve essere 'public'
-- Non deve essere 'static'
-- Non deve essere generico
-- Non deve accettare alcun parametro
-- Il tipo restituito deve essere "void", "Task" o "ValueTask"
-- Non deve essere 'async void'
-- Non deve essere un metodo speciale (finalizzatore, operatore...).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NoParameters">
-        <source>ClassCleanup method '{0}' should not take any parameter</source>
-        <target state="translated">Il metodo ClassCleanup '{0}' non deve accettare alcun parametro</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
-        <source>ClassCleanup method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="new">ClassCleanup method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Il metodo ClassCleanup '{0}' deve restituire 'void', 'Task' o 'ValueTask'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotGeneric">
-        <source>ClassCleanup method '{0}' should not be generic</source>
-        <target state="translated">Il metodo ClassCleanup '{0}' non deve essere generico</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Ordinary">
-        <source>ClassCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">Il metodo ClassCleanup '{0}' deve essere un metodo 'ordinary'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Public">
-        <source>ClassCleanup method '{0}' should be 'public'</source>
-        <target state="translated">Il metodo ClassCleanup '{0}' deve essere 'public'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_ReturnType">
-        <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Il metodo ClassCleanup '{0}' deve restituire 'void', 'Task' o 'ValueTask'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Static">
-        <source>ClassCleanup method '{0}' should be 'static'</source>
-        <target state="translated">Il metodo ClassCleanup '{0}' deve essere 'static'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidTitle">
-        <source>ClassCleanup methods should have valid layout</source>
-        <target state="translated">Il metodo ClassCleanup deve avere un layout valido</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidDescription">
-        <source>Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should take one parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">I metodi contrassegnati con [ClassInitialize] devono seguire il layout seguente per essere validi:
-- Deve essere 'public'
-- Deve essere 'static'
-- Non deve essere generico
-- deve accettare un parametro di tipo 'TestContext'
-- Il tipo restituito deve essere "void", "Task" o "ValueTask"
-- Non deve essere 'async void'
-- Non deve essere un metodo speciale (finalizzatore, operatore...).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
-        <source>ClassInitialize method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="new">ClassInitialize method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Il metodo ClassInitialize '{0}' deve restituire 'void', 'Task' o 'ValueTask'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotGeneric">
-        <source>ClassInitialize method '{0}' should not be generic</source>
-        <target state="translated">Il metodo ClassInitialize '{0}' non deve essere generico</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Ordinary">
-        <source>ClassInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">Il metodo ClassInitialize '{0}' deve essere un metodo 'ordinary'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Public">
-        <source>ClassInitialize method '{0}' should be 'public'</source>
-        <target state="translated">Il metodo ClassInitialize '{0}' deve essere 'public'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_ReturnType">
-        <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Il metodo ClassInitialize '{0}' deve restituire 'void', 'Task' o 'ValueTask'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_SingleContextParameter">
-        <source>ClassInitialize method '{0}' should take a single parameter of type 'TestContext'</source>
-        <target state="translated">Il metodo ClassInitialize '{0}' deve accettare un singolo parametro di tipo 'TestContext'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Static">
-        <source>ClassInitialize method '{0}' should be 'static'</source>
-        <target state="translated">Il metodo ClassInitialize '{0}' deve essere 'static'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidTitle">
-        <source>ClassInitialize methods should have valid layout</source>
-        <target state="translated">Il metodo ClassInitialize deve avere un layout valido</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DataRowShouldBeValidDescription">
-        <source>DataRow entry should have the following layout to be valid:
-- should only be set on a test method;
-- argument count should match method argument count;
-- argument type should match method argument type.</source>
-        <target state="translated">La voce di DataRow deve avere il layout seguente per essere valido:
-- deve essere impostato solo su un metodo di test;
-- il numero di argomenti deve corrispondere al numero di argomenti del metodo;
-- il tipo di argomento deve corrispondere al tipo di argomento del metodo.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentCountMismatch">
-        <source>DataRow argument count should match method parameter count (constructor arguments: {0}, method parameters: {1})</source>
-        <target state="translated">Il numero di argomenti DataRow deve corrispondere al numero di parametri del metodo (argomenti del costruttore: {0}, parametri del metodo: {1})</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch">
-        <source>DataRow argument type should match method parameter type. Mismatches occur at indices: {0}</source>
-        <target state="translated">Il tipo di argomento di DataRow deve corrispondere al tipo di parametro del metodo. Errori di corrispondenza in corrispondenza degli indici: {0}</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DataRowShouldBeValidMessageFormat_OnTestMethod">
-        <source>DataRow should only be set on a test method</source>
-        <target state="translated">DataRow deve essere impostato solo su un metodo di test</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DataRowShouldBeValidTitle">
-        <source>DataRow should be valid</source>
-        <target state="translated">DataRow deve essere valido</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
@@ -330,6 +43,11 @@
 - non dovrebbe essere generica.</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldBeValidMessageFormat_NotGeneric">
+        <source>Test class '{0}' should not be generic</source>
+        <target state="new">Test class '{0}' should not be generic</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestClassShouldBeValidMessageFormat_NotStatic">
         <source>Test class '{0}' should not be 'static'</source>
         <target state="translated">La classe di test '{0}' non dovrebbe essere 'statica'</target>
@@ -348,72 +66,6 @@
       <trans-unit id="TestClassShouldBeValidTitle">
         <source>Test classes should have valid layout</source>
         <target state="translated">Le classi di test dovrebbero avere un layout valido</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidDescription">
-        <source>Methods marked with [TestCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">I metodi contrassegnati con [TestCleanup] devono seguire il layout seguente per essere validi:
-- Deve essere 'public' 
-- Non deve essere 'static'
-- Non deve essere generico
-- Non deve essere 'abstract'
-- Non deve accettare alcun parametro
-- Il tipo restituito deve essere "void", "Task" o "ValueTask"
-- Non deve essere 'async void'
-- Non deve essere un metodo speciale (finalizzatore, operatore...).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NoParameters">
-        <source>TestCleanup method '{0}' should not take any parameter</source>
-        <target state="translated">Il metodo TestCleanup '{0}' non deve accettare alcun parametro</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotAbstract">
-        <source>TestCleanup method '{0}' should not be 'abstract'</source>
-        <target state="translated">Il metodo TestCleanup '{0}' non deve essere 'abstract'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>TestCleanup method '{0}' should not be 'async void'</source>
-        <target state="translated">Il metodo TestCleanup '{0}' non deve essere 'async void'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotGeneric">
-        <source>TestCleanup method '{0}' should not be generic</source>
-        <target state="translated">Il metodo TestCleanup '{0}' non deve essere generico</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotStatic">
-        <source>TestCleanup method '{0}' should not be 'static'</source>
-        <target state="translated">Il metodo TestCleanup '{0}' non deve essere 'static'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_Ordinary">
-        <source>TestCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">Il metodo TestCleanup '{0}' deve essere un metodo 'ordinary'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_Public">
-        <source>TestCleanup method '{0}' should be 'public'</source>
-        <target state="translated">Il metodo TestCleanup '{0}' deve essere 'public'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_ReturnType">
-        <source>TestCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Il metodo TestCleanup '{0}' deve restituire 'void', 'Task' o 'ValueTask'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidTitle">
-        <source>TestCleanup method should have valid layout</source>
-        <target state="translated">Il metodo TestCleanup deve avere un layout valido</target>
         <note />
       </trans-unit>
       <trans-unit id="TestContextShouldBeValidDescription">
@@ -459,89 +111,23 @@
         <target state="translated">La proprietà di contesto del test deve avere un layout valido</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidDescription">
-        <source>Methods marked with [TestInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">I metodi contrassegnati con [TestInitialize] devono seguire il layout seguente per essere validi:
-- Deve essere 'public' 
-- Non deve essere 'static'
-- Non deve essere generico
-- Non deve essere 'abstract'
-- Non deve accettare alcun parametro
-- Il tipo restituito deve essere "void", "Task" o "ValueTask"
-- Non deve essere 'async void'
-- Non deve essere un metodo speciale (finalizzatore, operatore...).</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NoParameters">
-        <source>TestInitialize method '{0}' should not take any parameter</source>
-        <target state="translated">Il metodo TestInitialize '{0}' non deve accettare alcun parametro</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAbstract">
-        <source>TestInitialize method '{0}' should not be 'abstract'</source>
-        <target state="translated">Il metodo TestInitialize '{0}' non deve essere 'abstract'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>TestInitialize method  '{0}' should not be 'async void'</source>
-        <target state="translated">Il metodo TestInitialize '{0}' non deve essere 'async void'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotGeneric">
-        <source>TestInitialize method '{0}' should not be generic</source>
-        <target state="translated">Il metodo TestInitialize '{0}' non deve essere generico</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotStatic">
-        <source>TestInitialize method '{0}' should not be 'static'</source>
-        <target state="translated">Il metodo TestInitialize '{0}' non deve essere 'static'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_Ordinary">
-        <source>TestInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">Il metodo TestInitialize '{0}' deve essere un metodo 'ordinary'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_Public">
-        <source>TestInitialize method '{0}' should be 'public'</source>
-        <target state="translated">Il metodo TestInitialize '{0}' deve essere 'public'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_ReturnType">
-        <source>TestInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Il metodo TestInitialize '{0}' deve restituire 'void', 'Task' o 'ValueTask'</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidTitle">
-        <source>TestInitialize method should have valid layout</source>
-        <target state="translated">Il metodo TestInitialize deve avere un layout valido</target>
-        <note />
-      </trans-unit>
       <trans-unit id="TestMethodShouldBeValidDescription">
         <source>Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
 - it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
 - it should not be 'static'
 - it should not be generic
 - it should not be 'abstract'
-- return type should be 'void', 'Task' or 'ValueTask'
+- return type should be 'void' or 'Task'
 - it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">I metodi di test, metodi contrassegnati con l'attributo '[TestMethod]', dovrebbero rispettare il layout seguente per essere considerati validi da MSTest:
-- dovrebbe essere 'pubblico' (o 'interno' se l'attributo '[assembly: DiscoverInternals]' è impostato)
-- non dovrebbe essere 'statico'
-- non dovrebbe essere generico
-- non dovrebbe essere 'astratto'
-- il tipo restituito deve essere 'void', 'Task' o 'ValueTask'
-- non dovrebbe essere 'asincrono nullo'
-- non dovrebbe essere un metodo speciale (finalizzatore, operatore...).</target>
+- it should be a special method (finalizer, operator...).</source>
+        <target state="new">Test methods, methods marked with the '[TestMethod]' attribute, should respect the following layout to be considered valid by MSTest:
+- it should be 'public' (or 'internal' if '[assembly: DiscoverInternals]' attribute is set)
+- it should not be 'static'
+- it should not be generic
+- it should not be 'abstract'
+- return type should be 'void' or 'Task'
+- it should not be 'async void'
+- it should be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_NotAbstract">
@@ -580,38 +166,13 @@
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidMessageFormat_ReturnType">
-        <source>Test method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">Il metodo di test '{0}' deve restituire 'void', 'Task' o 'ValueTask'</target>
+        <source>Test method '{0}' should return 'void' or 'Task'</source>
+        <target state="new">Test method '{0}' should return 'void' or 'Task'</target>
         <note />
       </trans-unit>
       <trans-unit id="TestMethodShouldBeValidTitle">
         <source>Test methods should have valid layout</source>
         <target state="translated">I metodi di test dovrebbero avere un layout valido</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerDescription">
-        <source>Test methods should not be ignored (marked with '[Ignore]').</source>
-        <target state="translated">I metodi di test non devono essere ignorati (contrassegnati con '[Ignora]').</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerFormat">
-        <source>Test method '{0}' should not be ignored</source>
-        <target state="translated">Il metodo di test '{0}' non deve essere ignorato</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerTitle">
-        <source>Test method should not be ignored</source>
-        <target state="translated">Il metodo di test non deve essere ignorato</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
-        <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="translated">[{0}] può essere impostato solo su metodi contrassegnati con [TestMethod]</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="UseAttributeOnTestMethodAnalyzerTitle">
-        <source>[{0}] can only be set on methods marked with [TestMethod]</source>
-        <target state="translated">[{0}] può essere impostato solo su metodi contrassegnati con [TestMethod]</target>
         <note />
       </trans-unit>
       <trans-unit id="UseParallelizeAttributeAnalyzerDescription">
