@@ -115,11 +115,13 @@ public class ServerTests : TestBase
         Assert.IsNotNull(msg);
 
         InitializeResponseArgs resultJson = SerializerUtilities.Deserialize<InitializeResponseArgs>((IDictionary<string, object?>)((ResponseMessage)msg).Result!);
-        Assert.AreEqual(
-                new InitializeResponseArgs(
-                    new ServerInfo("test-anywhere", "1.0.0"),
-                    new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false))),
-                resultJson);
+
+        var expectedResponse = new InitializeResponseArgs(
+                   new ServerInfo("test-anywhere", "this is dynamic"),
+                   new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false)));
+
+        Assert.AreEqual(expectedResponse.Capabilities, resultJson.Capabilities);
+        Assert.AreEqual(expectedResponse.ServerInfo.Name, resultJson.ServerInfo.Name);
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
 
