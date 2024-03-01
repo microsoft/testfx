@@ -30,10 +30,6 @@
     </Content>
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
-  </ItemGroup>
-  
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
       <_TemplateProperties>MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(MicrosoftTestingPlatformVersion);MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion)</_TemplateProperties>

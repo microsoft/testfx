@@ -177,9 +177,10 @@ public class FileLoggerTests : TestBase, IDisposable
         {
             if (_memoryStream.Length == 0)
             {
-                await Task.Delay(100);
+                await Task.Delay(1000);
             }
 
+            await _memoryStream.FlushAsync();
             Assert.AreEqual($"[00:00:00.000 Test - {currentLogLevel}] Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));
         }
         else
