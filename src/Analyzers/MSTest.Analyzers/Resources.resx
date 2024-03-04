@@ -131,7 +131,7 @@
     <value>AssemblyCleanup method '{0}' should not take any parameter</value>
   </data>
   <data name="AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass" xml:space="preserve">
-    <value>AssemblyCleanup method '{0}' can't be inside a generic class</value>
+    <value>AssemblyCleanup method '{0}' can't be declared on a generic class</value>
   </data>
   <data name="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
@@ -165,7 +165,7 @@
 - it should not be a special method (finalizer, operator...).</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass" xml:space="preserve">
-    <value>AssemblyInitialize method '{0}' can't be inside a generic class</value>
+    <value>AssemblyInitialize method '{0}' can't be declared on a generic class</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
@@ -214,7 +214,7 @@
     <value>ClassCleanup method '{0}' should not take any parameter</value>
   </data>
   <data name="ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet" xml:space="preserve">
-    <value>ClassCleanup method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</value>
+    <value>ClassCleanup method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</value>
   </data>
   <data name="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
@@ -248,7 +248,7 @@
 - it should not be a special method (finalizer, operator...).</value>
   </data>
   <data name="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet" xml:space="preserve">
-    <value>ClassInitialize method '{0}' can't be inside a generic class without the `InheritanceBehavior` mode is set</value>
+    <value>ClassInitialize method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</value>
   </data>
   <data name="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
     <value>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
