@@ -212,7 +212,7 @@ public class FileLoggerTests : TestBase, IDisposable
         {
             if (_memoryStream.Length == 0)
             {
-                await Task.Delay(100);
+                await Task.Delay(1000);
             }
 
             Assert.AreEqual($"0001-01-01T00:00:00.0000000+00:00 Test {currentLogLevel.ToString().ToUpperInvariant()} Message{Environment.NewLine}", Encoding.Default.GetString(_memoryStream.ToArray()));
