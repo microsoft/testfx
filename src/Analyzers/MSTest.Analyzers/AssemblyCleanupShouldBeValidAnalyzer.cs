@@ -62,7 +62,6 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        var containingTypeSymbol = context.Symbol.ContainingType;
 
         if (!methodSymbol.IsAssemblyCleanupMethod(assemblyCleanupAttributeSymbol))
         {
@@ -77,7 +76,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (containingTypeSymbol.IsGenericType)
+        if (context.Symbol.ContainingType.IsGenericType)
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAGenericClassRule, methodSymbol.Name));
         }

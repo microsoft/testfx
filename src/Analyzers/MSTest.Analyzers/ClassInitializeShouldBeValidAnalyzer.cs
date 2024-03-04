@@ -65,7 +65,6 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol? testContextSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        var containingTypeSymbol = context.Symbol.ContainingType;
 
         if (!methodSymbol.IsClassInitializeMethod(classInitializeAttributeSymbol))
         {
@@ -80,7 +79,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (containingTypeSymbol.IsGenericType)
+        if (context.Symbol.ContainingType.IsGenericType)
         {
             bool isInheritanceModeSet = false;
             foreach (AttributeData attr in methodSymbol.GetAttributes())

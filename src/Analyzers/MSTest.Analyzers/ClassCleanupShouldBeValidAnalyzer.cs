@@ -64,7 +64,6 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol? inheritanceBehaviorSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        var containingTypeSymbol = context.Symbol.ContainingType;
 
         if (!methodSymbol.IsClassCleanupMethod(classCleanupAttributeSymbol))
         {
@@ -79,7 +78,7 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (containingTypeSymbol.IsGenericType)
+        if (context.Symbol.ContainingType.IsGenericType)
         {
             bool isInheritanceModeSet = false;
             foreach (AttributeData attr in methodSymbol.GetAttributes())

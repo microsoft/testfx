@@ -63,7 +63,6 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, INamedTypeSymbol? testContextSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        var containingTypeSymbol = context.Symbol.ContainingType;
 
         if (!methodSymbol.IsAssemblyInitializeMethod(assemblyInitializeAttributeSymbol))
         {
@@ -78,7 +77,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
             return;
         }
 
-        if (containingTypeSymbol.IsGenericType)
+        if (context.Symbol.ContainingType.IsGenericType)
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAGenericClassRule, methodSymbol.Name));
         }

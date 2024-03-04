@@ -86,7 +86,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; can&apos;t be inside a generic class.
+        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; can&apos;t be declared on a generic class.
         /// </summary>
         internal static string AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass {
             get {
@@ -174,7 +174,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; can&apos;t be inside a generic class.
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; can&apos;t be declared on a generic class.
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass {
             get {
@@ -307,7 +307,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; can&apos;t be inside a generic class without the `InheritanceBehavior` mode is set.
+        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; can&apos;t be declared on a generic class without the `InheritanceBehavior` mode is set.
         /// </summary>
         internal static string ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet {
             get {
@@ -395,7 +395,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; can&apos;t be inside a generic class without the `InheritanceBehavior` mode is set.
+        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; can&apos;t be declared on a generic class without the `InheritanceBehavior` mode is set.
         /// </summary>
         internal static string ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet {
             get {
