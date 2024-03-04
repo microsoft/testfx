@@ -434,10 +434,10 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(
         IProcessHandler processHandler,
-        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
+        CTRLPlusCCancellationTokenSource testApplicationCancellationTokenSource,
         ILogger logger,
         TestHostControllerInfo testHostControllerInfo,
-        IConfiguration configuration,
+        AggregatedConfiguration configuration,
         SystemEnvironment environment)
     {
         if (!testHostControllerInfo.HasTestHostController)
