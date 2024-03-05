@@ -350,6 +350,21 @@
         <target state="translated">Las clases de prueba deben tener un diseño válido</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestClassShouldHaveTestMethodDescription">
+        <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</source>
+        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
+        <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</source>
+        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestClassShouldHaveTestMethodTitle">
+        <source>Test class should have test method</source>
+        <target state="new">Test class should have test method</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
         <source>Methods marked with [TestCleanup] should follow the following layout to be valid:
 - it should be 'public' 

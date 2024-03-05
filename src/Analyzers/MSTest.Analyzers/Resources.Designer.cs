@@ -600,6 +600,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test class should have at least one test method or be &apos;static&apos; with method(s) marked by &apos;[AssemblyInitialization]&apos; and/or &apos;[AssemblyCleanup]&apos;..
+        /// </summary>
+        internal static string TestClassShouldHaveTestMethodDescription {
+            get {
+                return ResourceManager.GetString("TestClassShouldHaveTestMethodDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test class &apos;{0}&apos; should have at least one test method or be &apos;static&apos; with method(s) marked by &apos;[AssemblyInitialization]&apos; and/or &apos;[AssemblyCleanup]&apos;.
+        /// </summary>
+        internal static string TestClassShouldHaveTestMethodMessageFormat {
+            get {
+                return ResourceManager.GetString("TestClassShouldHaveTestMethodMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test class should have test method.
+        /// </summary>
+        internal static string TestClassShouldHaveTestMethodTitle {
+            get {
+                return ResourceManager.GetString("TestClassShouldHaveTestMethodTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Methods marked with [TestCleanup] should follow the following layout to be valid:
         ///- it should be &apos;public&apos; 
         ///- it should not be &apos;static&apos;
