@@ -8,6 +8,7 @@
     <SuppressLicenseValidation>true</SuppressLicenseValidation>
   </PropertyGroup>
 
+  <!-- Insert the RepositoryVersion.cs informations -->
   <PropertyGroup>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
