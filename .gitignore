@@ -139,6 +139,7 @@ project.fragment.lock.json
 # ===========================
 /src/Package/MSTest.Sdk/Sdk/Sdk.props
 /src/Package/MSTest.Sdk/Sdk/Runner/Runner.targets
+/src/Platform/Microsoft.Testing.Platform/RepositoryVersion.cs
 
 # Playground project (use force add if a change is really worth it)
 /samples/Playground/
