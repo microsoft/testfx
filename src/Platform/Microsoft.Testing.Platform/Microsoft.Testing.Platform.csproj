@@ -6,8 +6,13 @@
     <IsPackable>true</IsPackable>
     <IsShippingPackage Condition=" '$(DoNotShipTestingPlatformPackage)' == 'true' ">false</IsShippingPackage>
     <SuppressLicenseValidation>true</SuppressLicenseValidation>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
+  </ItemGroup>
+  
   <ItemGroup>
     <AssemblyMetadata Include="Microsoft.Testing.Platform.Application.BuildTimeUTC" Value="$([System.DateTime]::UtcNow.ToString('yyyy/MM/dd'))" />
   </ItemGroup>
