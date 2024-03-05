@@ -6,13 +6,18 @@
     <IsPackable>true</IsPackable>
     <IsShippingPackage Condition=" '$(DoNotShipTestingPlatformPackage)' == 'true' ">false</IsShippingPackage>
     <SuppressLicenseValidation>true</SuppressLicenseValidation>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
+  <!--
+        Looks like in linux the Compile items are collected in different steps and our template generaged file is not included
+        so the build will fail. This is a workaround to include the file in the Compile items.
+  -->
+  <PropertyGroup>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
   </ItemGroup>
-
   <Target Name="InsertRepositoryVersion" BeforeTargets="PrepareForBuild" Condition=" $([MSBuild]::IsOSPlatform('Linux')) ">
     <ItemGroup>
       <Compile Include="$(Compile);RepositoryVersion.cs" />
