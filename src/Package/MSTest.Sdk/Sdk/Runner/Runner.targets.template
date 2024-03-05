@@ -3,6 +3,6 @@
 
   <Import Project="$(MSBuildThisFileDirectory)ClassicEngine.targets" Condition=" '$(EngineName)' == 'Classic' "/>
 
-  <Import Project="$(MSBuildThisFileDirectory)TestAnywhereEngine.targets" Condition=" '$(EngineName)' == 'TestAnywhere' "/>
+  <Import Project="$(MSBuildThisFileDirectory)TestingPlatform.targets" Condition=" '$(EngineName)' == 'TestAnywhere' "/>
 
 </Project>
