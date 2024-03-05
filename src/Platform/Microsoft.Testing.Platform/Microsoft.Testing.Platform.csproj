@@ -8,6 +8,19 @@
     <SuppressLicenseValidation>true</SuppressLicenseValidation>
   </PropertyGroup>
 
+  <!-- Insert the RepositoryVersion.cs -->
+  <PropertyGroup>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
+  </ItemGroup>
+  <Target Name="InsertRepositoryVersion" BeforeTargets="PrepareForBuild" >
+    <ItemGroup>
+      <Compile Include="$(Compile);$(IntermediateOutputPath)/RepositoryVersion.cs" />
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <AssemblyMetadata Include="Microsoft.Testing.Platform.Application.BuildTimeUTC" Value="$([System.DateTime]::UtcNow.ToString('yyyy/MM/dd'))" />
   </ItemGroup>

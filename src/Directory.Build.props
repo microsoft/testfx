@@ -11,12 +11,12 @@
   </ItemGroup>
 
   <!-- Version templating -->
-  <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild" Condition=" Exists('$(MSBuildProjectDirectory)/RepositoryVersion.cs.template') ">
+  <Target Name="GenerateRepositoryVersionSourceFile" AfterTargets="PrepareForBuild" Condition=" Exists('$(MSBuildProjectDirectory)/RepositoryVersion.cs.template') ">
     <PropertyGroup>
       <_TemplateProperties>Version=$(Version)</_TemplateProperties>
     </PropertyGroup>
     <ItemGroup>
-      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/RepositoryVersion.cs.template" Destination="$(MSBuildProjectDirectory)/RepositoryVersion.cs" />
+      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/RepositoryVersion.cs.template" Destination="$(IntermediateOutputPath)/RepositoryVersion.cs" />
     </ItemGroup>
 
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
