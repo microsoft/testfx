@@ -53,10 +53,10 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol? testMethodAttributeSymbol,
         INamedTypeSymbol? assemblyInitializationAttributeSymbol, INamedTypeSymbol? assemblyCleanupAttributeSymbol)
     {
-        var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
+        var classSymbol = (INamedTypeSymbol)context.Symbol;
 
         bool isTestClass = false;
-        foreach (var classAttribute in namedTypeSymbol.GetAttributes())
+        foreach (var classAttribute in classSymbol.GetAttributes())
         {
             if (classAttribute.AttributeClass.Inherits(testClassAttributeSymbol))
             {
@@ -73,7 +73,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
         bool hasAssemblyAttribute = false;
         bool hasTestMethod = false;
 
-        foreach (var classMember in namedTypeSymbol.GetMembers())
+        foreach (var classMember in classSymbol.GetMembers())
         {
             foreach (var attribute in classMember.GetAttributes())
             {
@@ -90,9 +90,9 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        if (!hasTestMethod && (!namedTypeSymbol.IsStatic || (namedTypeSymbol.IsStatic && !hasAssemblyAttribute)))
+        if (!hasTestMethod && (!classSymbol.IsStatic || (classSymbol.IsStatic && !hasAssemblyAttribute)))
         {
-            context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldHaveTestMethodRule, namedTypeSymbol.Name));
+            context.ReportDiagnostic(classSymbol.CreateDiagnostic(TestClassShouldHaveTestMethodRule, classSymbol.Name));
         }
     }
 }
