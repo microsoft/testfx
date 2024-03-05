@@ -9,8 +9,7 @@
   </PropertyGroup>
 
   <!--
-        Looks like in linux the Compile items are collected in different steps and our template generaged file is not included
-        so the build will fail. This is a workaround to include the file in the Compile items.
+        Looks like in linux the Compile items are collected in different steps and our template generaged file is not included.
   -->
   <PropertyGroup>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
@@ -18,11 +17,6 @@
   <ItemGroup>
     <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
   </ItemGroup>
-  <Target Name="InsertRepositoryVersion" BeforeTargets="PrepareForBuild" Condition=" $([MSBuild]::IsOSPlatform('Linux')) ">
-    <ItemGroup>
-      <Compile Include="$(Compile);RepositoryVersion.cs" />
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <AssemblyMetadata Include="Microsoft.Testing.Platform.Application.BuildTimeUTC" Value="$([System.DateTime]::UtcNow.ToString('yyyy/MM/dd'))" />
