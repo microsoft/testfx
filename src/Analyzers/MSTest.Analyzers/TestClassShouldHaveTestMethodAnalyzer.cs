@@ -61,6 +61,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
             if (classAttribute.AttributeClass.Inherits(testClassAttributeSymbol))
             {
                 isTestClass = true;
+                break;
             }
         }
 
@@ -89,8 +90,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        if (!hasTestMethod && (!namedTypeSymbol.IsStatic
-            || (namedTypeSymbol.IsStatic && !hasAssemblyAttribute)))
+        if (!hasTestMethod && (!namedTypeSymbol.IsStatic || (namedTypeSymbol.IsStatic && !hasAssemblyAttribute)))
         {
             context.ReportDiagnostic(namedTypeSymbol.CreateDiagnostic(TestClassShouldHaveTestMethodRule, namedTypeSymbol.Name));
         }
