@@ -51,7 +51,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
     }
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol, INamedTypeSymbol? testMethodAttributeSymbol,
-        INamedTypeSymbol assemblyInitializationAttributeSymbol, INamedTypeSymbol assemblyCleanupAttributeSymbol)
+        INamedTypeSymbol? assemblyInitializationAttributeSymbol, INamedTypeSymbol? assemblyCleanupAttributeSymbol)
     {
         var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
 
