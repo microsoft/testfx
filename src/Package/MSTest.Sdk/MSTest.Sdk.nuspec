@@ -11,7 +11,7 @@
     <file src="$MSBuildProjectDirectory$/Sdk/Sdk.targets" target="Sdk" />
     <file src="$MSBuildProjectDirectory$/Sdk/Runner/Runner.targets" target="Sdk/Runner" />
     <file src="$MSBuildProjectDirectory$/Sdk/Runner/ClassicEngine.targets" target="Sdk/Runner" />
-    <file src="$MSBuildProjectDirectory$/Sdk/Runner/TestAnywhereEngine.targets" target="Sdk/Runner" />
+    <file src="$MSBuildProjectDirectory$/Sdk/Runner/TestingPlatform.targets" target="Sdk/Runner" />
     <file src="$MSBuildProjectDirectory$/Sdk/VSTest/VSTest.targets" target="Sdk/VSTest" />
     <file src="$RepoRoot$src\Package\MSTest.Sdk\PACKAGE.md" target="" />
   </files>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <Import Project="$(MSBuildThisFileDirectory)ClassicEngine.targets" Condition=" '$(EngineName)' == 'Classic' "/>
+  <Import Project="$(MSBuildThisFileDirectory)ClassicEngine.targets" Condition=" '$(TestEngineName)' == 'Classic' "/>
 
-  <Import Project="$(MSBuildThisFileDirectory)TestAnywhereEngine.targets" Condition=" '$(EngineName)' == 'TestAnywhere' "/>
+  <Import Project="$(MSBuildThisFileDirectory)TestingPlatform.targets" Condition=" '$(TestEngineName)' == 'TestAnywhere' "/>
 
 </Project>
