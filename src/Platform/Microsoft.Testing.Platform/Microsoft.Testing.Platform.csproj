@@ -17,6 +17,7 @@
   <Target Name="InsertRepositoryVersion" BeforeTargets="PrepareForBuild" >
     <ItemGroup>
       <Compile Include="$(Compile);RepositoryVersion.cs" />
+      <EmbeddedResource Include="RepositoryVersion.cs" Watch="false" />
     </ItemGroup>
   </Target>
 
