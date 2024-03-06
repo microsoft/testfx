@@ -24,6 +24,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, IDisposable
 {
+    private const string ProtocolVersion = "1.0.0";
     private readonly Func<
         ServiceProvider,
         ITestExecutionRequestFactory,
@@ -417,7 +418,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     {
                         INamedFeatureCapability? namedFeatureCapability = capabilities.GetCapability<INamedFeatureCapability>();
                         return new InitializeResponseArgs(
-                            ServerInfo: new ServerInfo("test-anywhere", Version: AppVersion.DefaultSemVer),
+                            ServerInfo: new ServerInfo("test-anywhere", Version: ProtocolVersion),
                             Capabilities: new ServerCapabilities(
                                 new ServerTestingCapabilities(
                                     SupportsDiscovery: true,
