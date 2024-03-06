@@ -319,6 +319,15 @@
   <data name="TestClassShouldBeValidTitle" xml:space="preserve">
     <value>Test classes should have valid layout</value>
   </data>
+  <data name="TestClassShouldHaveTestMethodDescription" xml:space="preserve">
+    <value>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</value>
+  </data>
+  <data name="TestClassShouldHaveTestMethodMessageFormat" xml:space="preserve">
+    <value>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</value>
+  </data>
+  <data name="TestClassShouldHaveTestMethodTitle" xml:space="preserve">
+    <value>Test class should have test method</value>
+  </data>
   <data name="TestCleanupShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with [TestCleanup] should follow the following layout to be valid:
 - it should be 'public' 
