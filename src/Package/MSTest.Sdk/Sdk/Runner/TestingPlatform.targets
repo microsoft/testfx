@@ -20,6 +20,12 @@
     <EnableMicrosoftTestingExtensionsTrxReport Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == '' and $(TestingExtensionsProfile) == 'Default' " >true</EnableMicrosoftTestingExtensionsTrxReport>
     <EnableMicrosoftTestingExtensionsTrxReport Condition=" '$(_UserOptedOutMicrosoftTestingExtensionsTrxReport)' != 'true' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsTrxReport>
     <MicrosoftTestingExtensionsTrxReportVersion Condition=" '$(MicrosoftTestingExtensionsTrxReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsTrxReportVersion>
+
+    <!-- MS Code Coverage -->
+    <_UserOptedOutMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'false' ">true</_UserOptedOutMicrosoftTestingExtensionsCodeCoverage>
+    <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == ''  and $(TestingExtensionsProfile) == 'Default' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
+    <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(_UserOptedOutMicrosoftTestingExtensionsCodeCoverage)' != 'true' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
+    <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >$(MicrosoftTestingExtensionsCodeCoverageVersion)</MicrosoftTestingExtensionsCodeCoverageVersion>
   </PropertyGroup>
 
   <ItemGroup>
