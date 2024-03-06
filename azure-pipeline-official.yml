@@ -142,8 +142,8 @@ extends:
               - task: 1ES.PublishBuildArtifacts@1
                 displayName: 'Publish Test Results folders'
                 inputs:
-                  pathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-                  artifactName: TestResults
+                  PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  ArtifactName: TestResults
                 condition: failed()
 
             - task: NuGetAuthenticate@1
