@@ -74,100 +74,115 @@ variables:
       /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
       /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
 
-stages:
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
 
-- stage: build
-  displayName: Build
-  jobs:
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    pool:
+      name: netcore1espool-internal
+      image: 1es-windows-2022-pt
+      os: windows
+    customBuildTags:
+    - ES365AIMigrationTooling
+    stages:
 
-  - template: /eng/common/templates-official/jobs/jobs.yml@self
-    parameters:
-      enableMicrobuild: true
-      enablePublishBuildArtifacts: true
-      enablePublishTestResults: true
-      testResultsFormat: 'vstest'
-      enablePublishBuildAssets: true
-      enablePublishUsingPipelines: true
-      enableTelemetry: true
+    - stage: build
+      displayName: Build
       jobs:
-      - job: Windows
-        timeoutInMinutes: 90
-        pool:
-          name: netcore1espool-internal
-          demands: ImageOverride -equals 1es-windows-2022-pt
-          os: windows
-        steps:
-        - task: PowerShell@2
-          displayName: 'Install Windows SDK'
-          inputs:
-            targetType: filePath
-            filePath: './eng/install-windows-sdk.ps1'
-            failOnStderr: true
-            showWarnings: true
 
-        - script: eng\common\CIBuild.cmd
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            $(_InternalBuildArgs)
-            /p:Test=false
-          name: Build
-          displayName: Build
+      - template: /eng/common/templates-official/jobs/jobs.yml@self
+        parameters:
+          enableMicrobuild: true
+          enablePublishBuildArtifacts: true
+          enablePublishTestResults: true
+          testResultsFormat: 'vstest'
+          enablePublishBuildAssets: true
+          enablePublishUsingPipelines: true
+          enableTelemetry: true
+          jobs:
+          - job: Windows
+            timeoutInMinutes: 90
+            pool:
+              name: netcore1espool-internal
+              demands: ImageOverride -equals 1es-windows-2022-pt
+              os: windows
+            steps:
+            - task: PowerShell@2
+              displayName: 'Install Windows SDK'
+              inputs:
+                targetType: filePath
+                filePath: './eng/install-windows-sdk.ps1'
+                failOnStderr: true
+                showWarnings: true
 
-        - ${{ if eq(parameters.SkipTests, False) }}:
-          # -ci is allowing to import some environment variables and some required configurations
-          - script: Test.cmd
-              -configuration $(_BuildConfig)
-              -ci
-            name: Test
-            displayName: Test
+            - script: eng\common\CIBuild.cmd
+                -configuration $(_BuildConfig)
+                -prepareMachine
+                $(_InternalBuildArgs)
+                /p:Test=false
+              name: Build
+              displayName: Build
 
-          # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-          # through the console or trx
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Test Results folders'
-            inputs:
-              PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-              ArtifactName: TestResults
-            condition: failed()
+            - ${{ if eq(parameters.SkipTests, False) }}:
+              # -ci is allowing to import some environment variables and some required configurations
+              - script: Test.cmd
+                  -configuration $(_BuildConfig)
+                  -ci
+                name: Test
+                displayName: Test
 
-        - task: NuGetAuthenticate@1
-          displayName: 'NuGet Authenticate to test-tools feed'
+              # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
+              # through the console or trx
+              - task: 1ES.PublishBuildArtifacts@1
+                displayName: 'Publish Test Results folders'
+                inputs:
+                  pathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  artifactName: TestResults
+                condition: failed()
 
-        - task: NuGetCommand@2
-          displayName: 'Publish NuGet packages to test-tools feed'
-          inputs:
-            command: push
-            # Do not push symbol packages nor Microsoft.Testing.Platform package
-            packagesToPush: 'artifacts/packages/$(_BuildConfig)/**/*.nupkg;!artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg;!artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg'
-            publishVstsFeed: 'public/test-tools'
+            - task: NuGetAuthenticate@1
+              displayName: 'NuGet Authenticate to test-tools feed'
 
-      - job: Linux
-        timeoutInMinutes: 90
-        pool:
-          name: netcore1espool-internal
-          demands: ImageOverride -equals 1es-ubuntu-2204-pt
-          os: linux
-        steps:
-        - script: eng/common/cibuild.sh
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            /p:Test=false
-            /p:NonWindowsBuild=true
-          displayName: Build
+            - task: 1ES.PublishNuget@1
+              displayName: 'Publish NuGet packages to test-tools feed'
+              inputs:
+                # Do not push symbol packages nor Microsoft.Testing.Platform package
+                packagesToPush: 'artifacts/packages/$(_BuildConfig)/**/*.nupkg;!artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg;!artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg'
+                publishVstsFeed: 'public/test-tools'
 
-        - ${{ if eq(parameters.SkipTests, False) }}:
-          # -ci is allowing to import some environment variables and some required configurations
-          - script: |
-              chmod +x ./test.sh
-              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest
-            name: Test
-            displayName: Tests
+          - job: Linux
+            timeoutInMinutes: 90
+            pool:
+              name: netcore1espool-internal
+              demands: ImageOverride -equals 1es-ubuntu-2204-pt
+              os: linux
+            steps:
+            - script: eng/common/cibuild.sh
+                -configuration $(_BuildConfig)
+                -prepareMachine
+                /p:Test=false
+                /p:NonWindowsBuild=true
+              displayName: Build
 
-  - template: /eng/common/templates-official/job/onelocbuild.yml@self
-    parameters:
-      GitHubOrg: microsoft
-      MirrorRepo: testfx
-      LclSource: lclFilesfromPackage
-      LclPackageId: 'LCL-JUNO-PROD-TESTFX'
+            - ${{ if eq(parameters.SkipTests, False) }}:
+              # -ci is allowing to import some environment variables and some required configurations
+              - script: |
+                  chmod +x ./test.sh
+                  ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest
+                name: Test
+                displayName: Tests
 
-- template: eng\common\templates-official\post-build\post-build.yml@self
+      - template: /eng/common/templates-official/job/onelocbuild.yml@self
+        parameters:
+          GitHubOrg: microsoft
+          MirrorRepo: testfx
+          LclSource: lclFilesfromPackage
+          LclPackageId: 'LCL-JUNO-PROD-TESTFX'
+
+    - template: eng\common\templates-official\post-build\post-build.yml@self
