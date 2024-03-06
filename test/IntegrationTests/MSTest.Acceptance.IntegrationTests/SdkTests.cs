@@ -287,7 +287,7 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$Extensions$", string.Empty),
                addPublicFeeds: true);
 
-        var compilationResult = await DotnetCli.RunAsync($"publish -r {RID} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        var compilationResult = await DotnetCli.RunAsync($"publish -r {RID} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult.AssertOutputNotContains("warning");
         compilationResult.AssertOutputContains("Generating native code");
         var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
