@@ -266,6 +266,8 @@ public sealed class SdkTests : AcceptanceTestBase
 
     public async Task NativeAot_Smoke_Test_On_Windows()
     {
+        // Sometimes we got strange error from the compilers like "fatal error LNK1136: invalid or corrupt file"
+        // I suppose due to the load on the build machines. So, we retry the test a few times.
         await RetryHelper.RetryAsync(
             async () =>
         {
