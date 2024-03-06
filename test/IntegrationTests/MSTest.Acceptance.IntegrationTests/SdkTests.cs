@@ -31,6 +31,7 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
                .PatchCodeWithReplace("$EnableMSTestRunner$", "<UseVSTest>true</UseVSTest>")
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", string.Empty),
                addPublicFeeds: true);
 
@@ -58,6 +59,7 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", string.Empty),
                addPublicFeeds: true);
 
@@ -85,6 +87,7 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", string.Empty),
                addPublicFeeds: true);
 
@@ -153,6 +156,7 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", msbuildExtensionEnableFragment),
                addPublicFeeds: true);
 
@@ -180,6 +184,7 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"),
                addPublicFeeds: true);
 
@@ -218,6 +223,7 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", enableDefaultExtensions ? string.Empty : "<TestingExtensionsProfile>None</TestingExtensionsProfile>"),
                addPublicFeeds: true);
 
@@ -249,12 +255,45 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
                .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>WrongName</TestingExtensionsProfile>"),
                addPublicFeeds: true);
 
         var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
         Assert.AreEqual(1, compilationResult.ExitCode);
         compilationResult.AssertOutputContains("Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'.");
+    }
+
+    public async Task NativeAot_Smoke_Test_On_Windows()
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+               AssetName,
+               SourceCode
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+               .PatchCodeWithReplace("$OutputType$", string.Empty)
+               .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent.Arguments}</TargetFramework>")
+               .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
+               .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$ExtraProperties$", """
+        <TestEngineName>TestAnywhere</TestEngineName>
+        <PublishAot>true</PublishAot>
+        <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
+        """)
+               .PatchCodeWithReplace("$Extensions$", string.Empty),
+               addPublicFeeds: true);
+
+        var compilationResult = await DotnetCli.RunAsync($"publish -r {RID} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        compilationResult.AssertOutputNotContains("warning");
+        compilationResult.AssertOutputContains("Generating native code");
+        var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
+        var testHostResult = await testHost.ExecuteAsync();
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
     }
 
     private const string SourceCode = """
@@ -265,6 +304,7 @@ public sealed class SdkTests : AcceptanceTestBase
     $TargetFramework$
     $EnableMSTestRunner$
     $TestingPlatformDotnetTestSupport$
+    $ExtraProperties$
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
