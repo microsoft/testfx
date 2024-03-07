@@ -127,8 +127,8 @@ stages:
           matrix:
             Release:
               _BuildConfig: Release
-              Debug:
-                _BuildConfig: Debug
+            Debug:
+              _BuildConfig: Debug
         steps:
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
