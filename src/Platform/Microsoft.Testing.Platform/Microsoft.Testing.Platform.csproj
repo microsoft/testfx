@@ -102,6 +102,22 @@ This package provides the core platform and the .NET implementation of the proto
     </EmbeddedResource>
   </ItemGroup>
 
+  <!-- Version templating -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
+  </ItemGroup>
+  <Target Name="GenerateRepositoryVersionSourceFile" AfterTargets="PrepareForBuild" >
+    <PropertyGroup>
+      <_TemplateProperties>Version=$(Version)</_TemplateProperties>
+    </PropertyGroup>
+    <ItemGroup>
+      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/RepositoryVersion.cs.template" Destination="$(IntermediateOutputPath)/RepositoryVersion.cs" />
+    </ItemGroup>
+    <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
+      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
+    </GenerateFileFromTemplate>
+  </Target>
+
   <!-- NuGet package layout -->
   <!-- NuGet folders https://learn.microsoft.com/nuget/create-packages/creating-a-package#from-a-convention-based-working-directory -->
   <ItemGroup>

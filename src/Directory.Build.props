@@ -5,22 +5,4 @@
   <PropertyGroup>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
-  </ItemGroup>
-
-  <!-- Version templating -->
-  <Target Name="GenerateRepositoryVersionSourceFile" AfterTargets="PrepareForBuild" Condition=" Exists('$(MSBuildProjectDirectory)/RepositoryVersion.cs.template') ">
-    <PropertyGroup>
-      <_TemplateProperties>Version=$(Version)</_TemplateProperties>
-    </PropertyGroup>
-    <ItemGroup>
-      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/RepositoryVersion.cs.template" Destination="$(IntermediateOutputPath)/RepositoryVersion.cs" />
-    </ItemGroup>
-
-    <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
-      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
-    </GenerateFileFromTemplate>
-  </Target>
 </Project>
