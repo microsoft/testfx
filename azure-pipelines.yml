@@ -82,8 +82,8 @@ stages:
           matrix:
             Release:
               _BuildConfig: Release
-              Debug:
-                _BuildConfig: Debug
+            Debug:
+              _BuildConfig: Debug
         steps:
         - task: PowerShell@2
           displayName: 'Install Windows SDK'
