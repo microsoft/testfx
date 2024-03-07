@@ -29,10 +29,6 @@ pr:
       - src/**/*.xlf
 
 parameters:
-- name: isRTM
-  displayName: "Produce RTM version?"
-  type: boolean
-  default: False
 # This option should be used with caution. This is useful for unblocking circular deps issue with testanywhere
 - name: SkipTests
   displayName: "Skip tests"
@@ -46,9 +42,9 @@ variables:
   - name: Codeql.Enabled
     value: true
   - name: _RunAsInternal
-    value: ${{ and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}
+    value: False
   - name: _RunAsPublic
-    value: ${{ eq(variables._RunAsInternal, False) }}
+    value: True
   # Set default value for variables of PR and Public builds
   - name: _SignType
     value: test
@@ -60,28 +56,6 @@ variables:
     value: ' '
   - name: _ReleaseVersionKind
     value: ''
-
-  - ${{ if eq(parameters.isRTM, True) }}:
-    - name: _ReleaseVersionKind
-      value: release
-
-  # Produce real signed binaries for Internal builds
-  - ${{ if eq(variables._RunAsInternal, True) }}:
-    - group: DotNet-Symbol-Server-Pats
-    - name: _SignType
-      value: real
-    - name: _SignArgs
-      value: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName) /p:Sign=$(_Sign)
-    - name: _Sign
-      value: True
-    - name: _InternalBuildArgs
-      value: /p:DotNetSignType=$(_SignType)
-        /p:TeamName=$(_TeamName)
-        /p:DotNetFinalVersionKind=$(_ReleaseVersionKind)
-        /p:DotNetPublishUsingPipelines=true
-        /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-        /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
-        /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
 
 stages:
 
@@ -102,19 +76,14 @@ stages:
       - job: Windows
         timeoutInMinutes: 90
         pool:
-          ${{ if eq(variables._RunAsPublic, True) }}:
-            name: NetCore-Public
-            demands: ImageOverride -equals windows.vs2022preview.amd64.open
-          ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCore1ESPool-Svc-Internal
-            demands: ImageOverride -equals windows.vs2022preview.amd64
+          name: NetCore-Public
+          demands: ImageOverride -equals windows.vs2022preview.amd64.open
         strategy:
           matrix:
             Release:
               _BuildConfig: Release
-            ${{ if eq(variables._RunAsPublic, True) }}:
-              Debug:
-                _BuildConfig: Debug
+            Debug:
+              _BuildConfig: Debug
         steps:
         - task: PowerShell@2
           displayName: 'Install Windows SDK'
@@ -149,34 +118,17 @@ stages:
               ArtifactName: TestResults
             condition: failed()
 
-        - ${{ if eq(variables._RunAsInternal, True) }}:
-          - task: NuGetAuthenticate@1
-            displayName: 'NuGet Authenticate to test-tools feed'
-
-          - task: NuGetCommand@2
-            displayName: 'Publish NuGet packages to test-tools feed'
-            inputs:
-              command: push
-              # Do not push symbol packages nor Microsoft.Testing.Platform package
-              packagesToPush: 'artifacts/packages/$(_BuildConfig)/**/*.nupkg;!artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg;!artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg'
-              publishVstsFeed: 'public/test-tools'
-
       - job: Linux
         timeoutInMinutes: 90
         pool:
-          ${{ if eq(variables._RunAsPublic, True) }}:
-            name: NetCore-Public
-            demands: ImageOverride -equals build.ubuntu.2004.amd64.open
-          ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals build.ubuntu.2004.amd64
+          name: NetCore-Public
+          demands: ImageOverride -equals build.ubuntu.2004.amd64.open          
         strategy:
           matrix:
             Release:
               _BuildConfig: Release
-            ${{ if eq(variables._RunAsPublic, True) }}:
-              Debug:
-                _BuildConfig: Debug
+            Debug:
+              _BuildConfig: Debug
         steps:
         - script: eng/common/cibuild.sh
             -configuration $(_BuildConfig)
@@ -192,14 +144,3 @@ stages:
               ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest
             name: Test
             displayName: Tests
-
-  - ${{ if eq(variables._RunAsInternal, True) }}:
-    - template: /eng/common/templates/job/onelocbuild.yml
-      parameters:
-        GitHubOrg: microsoft
-        MirrorRepo: testfx
-        LclSource: lclFilesfromPackage
-        LclPackageId: 'LCL-JUNO-PROD-TESTFX'
-
-- ${{ if eq(variables._RunAsInternal, True) }}:
-  - template: eng\common\templates\post-build\post-build.yml
