@@ -139,25 +139,22 @@ extends:
                 name: Test
                 displayName: Test
 
-              # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-              # through the console or trx
-              - task: 1ES.PublishBuildArtifacts@1
-                displayName: 'Publish Test Results folders'
-                inputs:
-                  PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-                  ArtifactName: TestResults
-                condition: failed()
+            templateContext:
+                outputs:
+                - output: pipelineArtifact
+                  # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
+                  # through the console or trx
+                  displayName: 'Publish Test Results folders'
+                  targetPath: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  artifactName: TestResults
+                  condition: failed()
 
-            - task: NuGetAuthenticate@1
-              displayName: 'NuGet Authenticate to test-tools feed'
-
-            - task: 1ES.PublishNuget@1
-              displayName: 'Publish NuGet packages to test-tools feed'
-              inputs:
-                # Do not push symbol packages nor Microsoft.Testing.Platform package
-                packageParentPath: '$(Build.SourcesDirectory)'
-                packagesToPush: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg'
-                publishVstsFeed: 'public/test-tools'
+                - output: nuget
+                  displayName: 'Publish NuGet packages to test-tools feed'
+                  # Do not push symbol packages nor Microsoft.Testing.Platform package
+                  packageParentPath: '$(Build.SourcesDirectory)'
+                  packagesToPush: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg'
+                  publishVstsFeed: 'public/test-tools'
 
           - job: Linux
             timeoutInMinutes: 90
