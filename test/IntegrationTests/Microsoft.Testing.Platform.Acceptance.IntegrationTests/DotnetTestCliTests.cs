@@ -33,6 +33,7 @@ public class DotnetTestCliTests : AcceptanceTestBase
 
         string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
         var compilationResult = await DotnetCli.RunAsync($"test -m:1 -nodeReuse:false {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        compilationResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
+        // There is whitespace difference in output in parent and public repo that depends on the version of the dotnet SDK used.
+        compilationResult.AssertOutputRegEx(@"Passed!\s+-\s+Failed:\s+0,\s+Passed:\s+1,\s+Skipped:\s+0,\s+Total:\s+1");
     }
 }
