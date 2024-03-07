@@ -1,0 +1,90 @@
+{
+  "properties": {
+    "helpUri": "https://eng.ms/docs/microsoft-security/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/microsoft-guardian/general/baselines"
+  },
+  "version": "1.0.0",
+  "baselines": {
+    "default": {
+      "name": "default",
+      "createdDate": "2024-03-07 12:29:19Z",
+      "lastUpdatedDate": "2024-03-07 12:29:19Z"
+    }
+  },
+  "results": {
+    "14fa818f4cbbc36caf275b998729b2e077885fe6772194a268813e485df6552e": {
+      "signature": "14fa818f4cbbc36caf275b998729b2e077885fe6772194a268813e485df6552e",
+      "alternativeSignatures": [
+        "d3b863b79e1fe6642c38819bade488a97e8bbddda12eb8774205317644f156e4"
+      ],
+      "target": ".packages/runtime.win10-arm64.microsoft.net.native.sharedlibrary/2.2.8-rel-29722-00/tools/SharedLibrary/chk/Native/SharedLibrary.dll",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2024-03-07 12:29:19Z",
+      "expirationDate": "2024-08-24 13:29:50Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2024-03-07 13:29:50Z"
+    },
+    "c27b51a2eb5af16a546de8bdf9916ef2e5932c7d93b65c8096c6b9efdcaa2375": {
+      "signature": "c27b51a2eb5af16a546de8bdf9916ef2e5932c7d93b65c8096c6b9efdcaa2375",
+      "alternativeSignatures": [
+        "3f35865030a2818ad938a80ab45df4434e328fba3c4326cdc54d980b4550cf4b"
+      ],
+      "target": ".packages/runtime.win10-arm64.microsoft.net.native.sharedlibrary/2.2.8-rel-29722-00/tools/SharedLibrary/ret/Native/SharedLibrary.dll",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2024-03-07 12:29:19Z",
+      "expirationDate": "2024-08-24 13:29:50Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2024-03-07 13:29:50Z"
+    },
+    "6cb0d2f65258d0d01eef047874c6043169a3fa6e1aea5279e264ff095ef68234": {
+      "signature": "6cb0d2f65258d0d01eef047874c6043169a3fa6e1aea5279e264ff095ef68234",
+      "alternativeSignatures": [
+        "00073341ef3192c9f0f5292653381572a4a738fc91c6a5a73af6bc6627e9ef1a"
+      ],
+      "target": ".packages/runtime.win10-arm64.microsoft.net.native.compiler/2.2.10-rel-29722-00/tools/arm64/ilc/tools/link/link.exe",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2024-03-07 12:29:19Z",
+      "expirationDate": "2024-08-24 13:29:50Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2024-03-07 13:29:50Z"
+    },
+    "040c189d87aa84e00bd7b888c85fe08dda3f3413e6933a2ebf1a3e77da3ab455": {
+      "signature": "040c189d87aa84e00bd7b888c85fe08dda3f3413e6933a2ebf1a3e77da3ab455",
+      "alternativeSignatures": [
+        "c4a5ba9ee751bdb3ac21c15095b5e73129d05ba3f680408b81bbb03634d96055"
+      ],
+      "target": "artifacts/tmp/Release/testsuite/9HbS6/.packages/runtime.win-x64.microsoft.dotnet.ilcompiler/8.0.1/tools/ilc.exe",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2007",
+      "createdDate": "2024-03-07 12:29:19Z",
+      "expirationDate": "2024-08-24 13:29:50Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2024-03-07 13:29:50Z"
+    },
+    "9b7bc201cbf039b3c41b0b4f35ada9f8d26122096d346b692d528ebd0d2e879a": {
+      "signature": "9b7bc201cbf039b3c41b0b4f35ada9f8d26122096d346b692d528ebd0d2e879a",
+      "alternativeSignatures": [
+        "0f3501431d56d843fdf3b42cc7d4e39f4c6ff80c9cc9332777f91afa4a5ea139"
+      ],
+      "target": "artifacts/tmp/Release/testsuite/9HbS6/.packages/runtime.win-x64.microsoft.dotnet.ilcompiler/8.0.1/tools/ilc.exe",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "binskim",
+      "ruleId": "BA2008",
+      "createdDate": "2024-03-07 12:29:19Z",
+      "expirationDate": "2024-08-24 13:29:50Z",
+      "justification": "This error is baselined with an expiration date of 180 days from 2024-03-07 13:29:50Z"
+    }
+  }
+}
