@@ -27,8 +27,8 @@
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24155.2</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
     <MSTestEngineVersion>1.0.0-alpha.24151.7</MSTestEngineVersion>
     <!-- Testing platform (this comment is here to avoid conflict on darc PRs) -->
-    <MicrosoftTestingPlatformVersion>1.1.0-preview.24156.1</MicrosoftTestingPlatformVersion>
-    <MicrosoftTestingFrameworkVersion>1.1.0-preview.24156.1</MicrosoftTestingFrameworkVersion>
+    <MicrosoftTestingPlatformVersion>1.1.0-preview.24157.4</MicrosoftTestingPlatformVersion>
+    <MicrosoftTestingFrameworkVersion>1.1.0-preview.24157.4</MicrosoftTestingFrameworkVersion>
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.9.28</MicrosoftVisualStudioThreadingAnalyzersVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.556</StyleCopAnalyzersVersion>
   </PropertyGroup>
