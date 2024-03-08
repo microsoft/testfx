@@ -112,7 +112,7 @@ extends:
             timeoutInMinutes: 90
             pool:
               name: netcore1espool-internal
-              demands: ImageOverride -equals 1es-windows-2022-pt
+              image: 1es-windows-2022-pt
               os: windows
             steps:
             - task: PowerShell@2
@@ -163,7 +163,7 @@ extends:
             timeoutInMinutes: 90
             pool:
               name: netcore1espool-internal
-              demands: ImageOverride -equals 1es-ubuntu-2204-pt
+              image: 1es-ubuntu-2204-pt
               os: linux
             steps:
             - script: eng/common/cibuild.sh
