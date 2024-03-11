@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass">
         <source>AssemblyCleanup method '{0}' can't be declared on a generic class</source>
-        <target state="new">AssemblyCleanup method '{0}' can't be declared on a generic class</target>
+        <target state="translated">Metodu AssemblyCleanup {0} nelze deklarovat pro obecnou třídu.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid">
@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass">
         <source>AssemblyInitialize method '{0}' can't be declared on a generic class</source>
-        <target state="new">AssemblyInitialize method '{0}' can't be declared on a generic class</target>
+        <target state="translated">Metodu AssemblyInitialize {0} nelze deklarovat pro obecnou třídu.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
@@ -174,7 +174,7 @@
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
         <source>ClassCleanup method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="new">ClassCleanup method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</target>
+        <target state="translated">Metodu ClassCleanup {0} nelze deklarovat pro obecnou třídu bez nastavení režimu InheritanceBehavior.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid">
@@ -234,7 +234,7 @@
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
         <source>ClassInitialize method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="new">ClassInitialize method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</target>
+        <target state="translated">Metodu ClassInitialize {0} nelze deklarovat pro obecnou třídu bez nastavení režimu InheritanceBehavior.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid">

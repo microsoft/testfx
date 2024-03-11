@@ -352,17 +352,17 @@
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</source>
-        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</target>
+        <target state="translated">測試類別至少應有一個測試方法，或是方法以 '[AssemblyInitialization]' 和/或 '[AssemblyCleanup]' 標示的 'static'。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</source>
-        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</target>
+        <target state="translated">測試類別 '{0}' 至少應有一個測試方法，或是方法以 '[AssemblyInitialization]' 和/或 '[AssemblyCleanup]' 標示的 'static'。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="new">Test class should have test method</target>
+        <target state="translated">測試類別應該要有測試方法</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
