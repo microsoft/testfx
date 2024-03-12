@@ -138,6 +138,11 @@ extends:
                   -ci
                 name: Test
                 displayName: Test
+              
+              # Remove temporary artifacts to avoid finding binskim issues for exes we don't own.
+              - pwsh: |
+                  Remove-Item -Path $(Build.SourcesDirectory)/artifacts/tmp -Recurse -Force
+                displayName: Remove artifacts/tmp
 
               # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
               # through the console or trx
