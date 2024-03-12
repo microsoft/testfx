@@ -352,17 +352,17 @@
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</source>
-        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</target>
+        <target state="translated">A classe de teste deve ter pelo menos um método de teste ou ser "static" com métodos marcados por "[AssemblyInitialization]" e/ou "[AssemblyCleanup]".</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</source>
-        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</target>
+        <target state="translated">A classe de teste "{0}" deve ter pelo menos um método de teste ou ser "static" com métodos marcados por "[AssemblyInitialization]" e/ou "[AssemblyCleanup]"</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="new">Test class should have test method</target>
+        <target state="translated">A classe de teste deve ter um método de teste</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
