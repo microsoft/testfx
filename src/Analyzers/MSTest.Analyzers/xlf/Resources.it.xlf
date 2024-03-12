@@ -130,6 +130,16 @@
         <target state="translated">Il metodo AssemblyInitialize deve avere un layout valido</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
+        <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
+        <target state="new">'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
+        <source>Assertion arguments should be passed in the correct order</source>
+        <target state="new">Assertion arguments should be passed in the correct order</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">Preferisci 'Assert.ThrowsException' o 'Assert.ThrowsExceptionAsync' a '[ExpectedException]', perché garantisce che solo la chiamata prevista lanci l'eccezione prevista. Le API di asserzione forniscono anche una maggiore flessibilità e consentono l’asserzione delle proprietà aggiuntive dell'eccezione.</target>
