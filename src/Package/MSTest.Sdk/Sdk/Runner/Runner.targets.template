@@ -3,6 +3,6 @@
 
   <Import Project="$(MSBuildThisFileDirectory)ClassicEngine.targets" Condition=" '$(PublishAot)' == '' or '$(PublishAot)' == 'false' "/>
 
-  <Import Project="$(MSBuildThisFileDirectory)TestingPlatform.targets" Condition=" '$(PublishAot)' == 'true' "/>
+  <Import Project="$(MSBuildThisFileDirectory)NativeAOT.targets" Condition=" '$(PublishAot)' == 'true' "/>
 
 </Project>

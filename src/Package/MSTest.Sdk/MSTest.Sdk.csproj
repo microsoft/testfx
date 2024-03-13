@@ -31,6 +31,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Sdk\Runner\Common.targets" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
   </ItemGroup>
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
