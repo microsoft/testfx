@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 
 using Analyzer.Utilities.Extensions;
 
@@ -10,6 +11,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
 using MSTest.Analyzers.Helpers;
+using MSTest.Analyzers.RoslynAnalyzerHelpers;
 
 namespace MSTest.Analyzers;
 
@@ -67,28 +69,27 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrder : DiagnosticAnalyz
         }
 
         // If the actual value is a constant or a literal, then the arguments are in the wrong order.
-        if (actualArgument.ConstantValue.HasValue
-            || actualArgument.Value.Kind == OperationKind.Literal)
-        {
-            // TODO: Decide if we want to be strict and check that expected is not a constant or a literal.
-            context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
-            return;
-        }
-
-        if (actualArgument.Value is not ILocalReferenceOperation localRefSymbol)
-        {
-            // TODO: Decide if we want to be strict
-            context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
-            return;
-        }
-
-        if (localRefSymbol.Local.Name.StartsWith("expected", StringComparison.Ordinal))
+        if (actualArgument.Value.Kind == OperationKind.Literal
+            || actualArgument.Value.ConstantValue.HasValue)
         {
             context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
             return;
         }
 
-        if (expectedArgument.Value is ISymbol expectedSymbol && expectedSymbol.Name.StartsWith("actual", StringComparison.Ordinal))
+        if (actualArgument.Value is not IInvocationOperation)
+        {
+            if (actualArgument.Value is not ILocalReferenceOperation actualLocalReference
+                || actualLocalReference.Local.Name.StartsWith("expected", StringComparison.Ordinal)
+                || actualLocalReference.Local.Name.StartsWith("_expected", StringComparison.Ordinal)
+                || actualLocalReference.Local.Name.StartsWith("Expected", StringComparison.Ordinal))
+            {
+                context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
+                return;
+            }
+        }
+
+        if (expectedArgument.Value.GetReferencedMemberOrLocalOrParameter() is { } expectedSymbol
+            && expectedSymbol.Name.StartsWith("actual", StringComparison.Ordinal))
         {
             context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
         }
@@ -101,8 +102,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrder : DiagnosticAnalyz
             return null;
         }
 
-        IArgumentOperation? expectedArgument = invocationOperation.Arguments.FirstOrDefault(x => string.Equals(x.Parameter?.Name, "expected", StringComparison.Ordinal));
-        if (expectedArgument is null)
+        if (invocationOperation.Arguments.FirstOrDefault(IsExpectedOrNotExpectedName) is not { } expectedArgument)
         {
             return null;
         }
@@ -111,5 +111,11 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrder : DiagnosticAnalyz
         return actualArgument is null
             ? null
             : (expectedArgument, actualArgument);
+
+        // Local functions
+        static bool IsExpectedOrNotExpectedName(IArgumentOperation argumentOperation)
+            => argumentOperation.Parameter is not null
+            && (string.Equals(argumentOperation.Parameter?.Name, "expected", StringComparison.Ordinal)
+                || string.Equals(argumentOperation.Parameter?.Name, "notExpected", StringComparison.Ordinal));
     }
 }
