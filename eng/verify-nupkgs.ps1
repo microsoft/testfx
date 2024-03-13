@@ -19,7 +19,7 @@ function Unzip {
 function Confirm-NugetPackages {
     Write-Verbose "Starting Confirm-NugetPackages."
     $expectedNumOfFiles = @{
-        "MSTest.Sdk"                            = 12;
+        "MSTest.Sdk"                            = 13;
         "MSTest.Internal.TestFx.Documentation"  = 10;
         "MSTest.TestFramework"                  = 130;
         "MSTest.TestAdapter"                    = 166;
