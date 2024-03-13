@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildThisFileDirectory)Common.targets"/>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.Engine" Version="$(MSTestEngineVersion)" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestEngineVersion)" />
+  </ItemGroup>
+
+  <!-- Extensions -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " />
+    <!-- Support for -p:AotMsCodeCoverageInstrumentation="true" during dotnet publish for native aot -->
+    <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and $(PublishAot) == 'true' " />
+  </ItemGroup>
+
+</Project>

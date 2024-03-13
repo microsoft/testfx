@@ -285,7 +285,6 @@ public sealed class SdkTests : AcceptanceTestBase
                    .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
                    .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                    .PatchCodeWithReplace("$ExtraProperties$", """
-        <TestEngineName>TestAnywhere</TestEngineName>
         <PublishAot>true</PublishAot>
         <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
         """)
