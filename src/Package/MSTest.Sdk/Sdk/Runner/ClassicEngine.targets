@@ -31,7 +31,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" Condition=" $(EnableMSTestAnalyzers) != 'false' " />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
   </ItemGroup>
 
   <!-- Extensions -->
