@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <ItemGroup>
-    <PackageReference Include="MSTest" Version="$(MSTestVersion)" />
+    <PackageReference Update="MSTest" Version="$(MSTestVersion)" />
   </ItemGroup>
 
 </Project>
