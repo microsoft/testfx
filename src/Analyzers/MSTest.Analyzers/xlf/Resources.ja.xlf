@@ -130,6 +130,21 @@
         <target state="translated">AssemblyInitialize メソッドには有効なレイアウトが必要です</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
+        <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
+        <target state="new">'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
+        <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
+        <target state="new">Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
+        <source>Assertion arguments should be passed in the correct order</source>
+        <target state="new">Assertion arguments should be passed in the correct order</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">'[ExpectedException]' よりも 'Assert.ThrowsException' または 'Assert.ThrowsExceptionAsync' を優先します。これは、予期された呼び出しのみが予期された例外をスローするようにするためです。アサート API も柔軟性が高く、例外の追加プロパティをアサートできます。</target>
