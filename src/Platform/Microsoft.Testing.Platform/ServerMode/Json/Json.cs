@@ -434,38 +434,38 @@ internal sealed class Json
 
         _deserializers[typeof(IDictionary<string, object?>)] = new JsonElementDeserializer<IDictionary<string, object?>>((json, jsonDocument) =>
         {
-            var dict = new Dictionary<string, object?>();
+            var items = new Dictionary<string, object?>();
             foreach (var kvp in jsonDocument.EnumerateObject())
             {
                 switch (kvp.Value.ValueKind)
                 {
                     case JsonValueKind.String:
-                        dict.Add(kvp.Name, kvp.Value.GetString());
+                        items.Add(kvp.Name, kvp.Value.GetString());
                         break;
                     case JsonValueKind.Number:
-                        dict.Add(kvp.Name, kvp.Value.GetInt32());
+                        items.Add(kvp.Name, kvp.Value.GetInt32());
                         break;
                     case JsonValueKind.True:
-                        dict.Add(kvp.Name, true);
+                        items.Add(kvp.Name, true);
                         break;
                     case JsonValueKind.False:
-                        dict.Add(kvp.Name, false);
+                        items.Add(kvp.Name, false);
                         break;
                     case JsonValueKind.Object:
-                        dict.Add(kvp.Name, json.Bind<IDictionary<string, object?>>(kvp.Value));
+                        items.Add(kvp.Name, json.Bind<IDictionary<string, object?>>(kvp.Value));
                         break;
                     case JsonValueKind.Array:
-                        dict.Add(kvp.Name, json.Bind<object[]>(kvp.Value));
+                        items.Add(kvp.Name, json.Bind<object[]>(kvp.Value));
                         break;
                     case JsonValueKind.Null:
-                        dict.Add(kvp.Name, null);
+                        items.Add(kvp.Name, null);
                         break;
                     default:
                         throw new InvalidOperationException($"key: {kvp.Name}, value: {kvp.Value}, type: {kvp.Value.ValueKind}");
                 }
             }
 
-            return dict;
+            return items;
         });
 
         _deserializers[typeof(ErrorMessage)] = new JsonElementDeserializer<ErrorMessage>(
