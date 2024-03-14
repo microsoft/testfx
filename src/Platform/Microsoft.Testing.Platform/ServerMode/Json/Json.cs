@@ -18,7 +18,7 @@ internal sealed class Json
 
     public Json(Dictionary<Type, JsonSerializer>? serializers = null, Dictionary<Type, JsonDeserializer>? deserializers = null)
     {
-        // Overriden default serializers for better performance using .NET runtime serialization Apis
+        // Overridden default serializers for better performance using .NET runtime serialization APIs
 
         // Serialize response types.
         _serializers[typeof(RequestMessage)] = new JsonObjectSerializer<RequestMessage>(request =>
@@ -471,7 +471,6 @@ internal sealed class Json
         _deserializers[typeof(ErrorMessage)] = new JsonElementDeserializer<ErrorMessage>(
           (json, jsonElement) =>
           {
-
               int id = json.Bind<int>(jsonElement, JsonRpcStrings.Id);
               IDictionary<string, object?> errorObj = json.Bind<IDictionary<string, object?>>(jsonElement, JsonRpcStrings.Error);
 
