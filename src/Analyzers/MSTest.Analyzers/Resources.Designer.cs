@@ -264,7 +264,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to .
+        ///   Looks up a localized string similar to Assertion arguments should be passed in the correct order. &apos;actual&apos; and &apos;expected&apos;/&apos;notExpected&apos; arguments have been swapped..
         /// </summary>
         internal static string AssertionArgsShouldBePassedInCorrectOrderMessageFormat {
             get {

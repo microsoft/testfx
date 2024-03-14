@@ -195,7 +195,7 @@
     <value>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</value>
   </data>
   <data name="AssertionArgsShouldBePassedInCorrectOrderMessageFormat" xml:space="preserve">
-    <value />
+    <value>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</value>
   </data>
   <data name="AssertionArgsShouldBePassedInCorrectOrderTitle" xml:space="preserve">
     <value>Assertion arguments should be passed in the correct order</value>
