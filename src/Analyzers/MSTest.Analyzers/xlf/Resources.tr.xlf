@@ -319,6 +319,16 @@
         <target state="translated">DataRow geçerli olmalıdır</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="new">Prefer TestInitialize methods over constructors</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorTitle">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="new">Prefer TestInitialize methods over constructors</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">Test projesinde yalnızca public olarak işaretlenmiş test sınıflarının olması iyi bir uygulama olarak kabul edilir.</target>

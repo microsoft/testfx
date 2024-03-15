@@ -5,3 +5,4 @@
 Rule ID | Category | Severity | Notes
 --------|----------|----------|-------
 MSTEST0017 | Usage | Info | AssertionArgsShouldBePassedInCorrectOrder, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0017)
+MSTEST0019 | Design | Disabled | PreferTestInitializeOverConstructorAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0019)

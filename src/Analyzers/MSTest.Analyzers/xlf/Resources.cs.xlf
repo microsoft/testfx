@@ -323,6 +323,16 @@
         <target state="translated">Argument DataRow by měl být platný</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="new">Prefer TestInitialize methods over constructors</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorTitle">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="new">Prefer TestInitialize methods over constructors</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">Osvědčeným postupem je označit jako veřejné v testovacím projektu jen testovací třídy.</target>
