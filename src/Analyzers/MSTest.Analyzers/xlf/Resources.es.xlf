@@ -130,21 +130,6 @@
         <target state="translated">Los métodos AssemblyInitialize deben tener un diseño válido</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
-        <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
-        <target state="new">'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
-        <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
-        <target state="new">Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
-        <source>Assertion arguments should be passed in the correct order</source>
-        <target state="new">Assertion arguments should be passed in the correct order</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">Preferir "Assert.ThrowsException" o "Assert.ThrowsExceptionAsync" en lugar de '[ExpectedException]' ya que garantiza que solo la llamada esperada inicia la excepción esperada. Las API de aserción también proporcionan más flexibilidad y le permiten declarar propiedades adicionales de la ejecución.</target>
@@ -317,16 +302,6 @@
       <trans-unit id="DataRowShouldBeValidTitle">
         <source>DataRow should be valid</source>
         <target state="translated">DataRow debe ser válido</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
-        <source>Prefer constructors over TestInitialize methods</source>
-        <target state="new">Prefer constructors over TestInitialize methods</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferConstructorOverTestInitializeTitle">
-        <source>Prefer constructors over TestInitialize methods</source>
-        <target state="new">Prefer constructors over TestInitialize methods</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
