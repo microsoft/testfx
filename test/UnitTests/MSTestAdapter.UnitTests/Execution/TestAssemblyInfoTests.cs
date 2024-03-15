@@ -206,7 +206,8 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = tc => {
+        DummyTestClass.AssemblyInitializeMethodBody = tc =>
+        {
             // This helper calls inner helper, and the inner helper ctor throws.
             // We want to see the real exception on screen, and not TypeInitializationException
             // which has no info about what failed.
@@ -332,10 +333,11 @@ public class TestAssemblyInfoTests : TestContainer
         static FailingStaticHelper()
         {
             throw new InvalidOperationException("I fail.");
-            // FailingInnerStaticHelper.Initialize();
         }
 
-        public static void DoWork() { }
+        public static void DoWork()
+        {
+        }
     }
 
     private static class FailingInnerStaticHelper
@@ -345,6 +347,8 @@ public class TestAssemblyInfoTests : TestContainer
             throw new InvalidOperationException("I fail.");
         }
 
-        public static void Initialize() { }
+        public static void Initialize()
+        {
+        }
     }
 }
