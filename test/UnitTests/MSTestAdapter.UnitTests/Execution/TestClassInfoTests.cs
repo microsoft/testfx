@@ -451,6 +451,30 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.RunClassInitialize(_testContext);
     }
 
+    public void RunClassInitializeShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
+    {
+        DummyTestClass.ClassInitializeMethodBody = tc =>
+        {
+            // This helper calls inner helper, and the inner helper ctor throws.
+            // We want to see the real exception on screen, and not TypeInitializationException
+            // which has no info about what failed.
+            FailingStaticHelper.DoWork();
+        };
+        _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
+
+        var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
+
+        Verify(exception is not null);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(
+            exception.Message
+            == "Class Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests+DummyTestClass.ClassInitializeMethod threw exception. System.InvalidOperationException: I fail..");
+        Verify(
+            exception.StackTraceInformation.ErrorStackTrace.StartsWith(
+            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.FailingStaticHelper..cctor()", StringComparison.Ordinal));
+        Verify(exception.InnerException.GetType() == typeof(InvalidOperationException));
+    }
+
     #endregion
 
     #region Run Class Cleanup tests
@@ -567,6 +591,23 @@ public class TestClassInfoTests : TestContainer
         Verify(classcleanupCallCount == 1, "DummyBaseTestClass.CleanupClassMethod call count");
     }
 
+    public void RunClassCleanupShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
+    {
+        DummyTestClass.ClassCleanupMethodBody = () =>
+        {
+            // This helper calls inner helper, and the inner helper ctor throws.
+            // We want to see the real exception on screen, and not TypeInitializationException
+            // which has no info about what failed.
+            FailingStaticHelper.DoWork();
+        };
+        _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
+
+        var errorMessage = _testClassInfo.RunClassCleanup();
+
+        Verify(errorMessage.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: System.InvalidOperationException: I fail..", StringComparison.Ordinal));
+        Verify(errorMessage.Contains("at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.FailingStaticHelper..cctor()"));
+    }
+
     #endregion
 
     [DummyTestClass]
@@ -653,5 +694,17 @@ public class TestClassInfoTests : TestContainer
 
     private class DummyTestClassAttribute : UTF.TestClassAttribute
     {
+    }
+
+    private static class FailingStaticHelper
+    {
+        static FailingStaticHelper()
+        {
+            throw new InvalidOperationException("I fail.");
+        }
+
+        public static void DoWork()
+        {
+        }
     }
 }
