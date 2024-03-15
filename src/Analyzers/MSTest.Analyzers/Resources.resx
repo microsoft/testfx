@@ -301,6 +301,12 @@
   <data name="DataRowShouldBeValidTitle" xml:space="preserve">
     <value>DataRow should be valid</value>
   </data>
+  <data name="PreferConstructorOverTestInitializeMessageFormat" xml:space="preserve">
+    <value>Prefer constructors over TestInitialize methods</value>
+  </data>
+  <data name="PreferConstructorOverTestInitializeTitle" xml:space="preserve">
+    <value>Prefer constructors over TestInitialize methods</value>
+  </data>
   <data name="PreferTestInitializeOverConstructorMessageFormat" xml:space="preserve">
     <value>Prefer TestInitialize methods over constructors</value>
   </data>

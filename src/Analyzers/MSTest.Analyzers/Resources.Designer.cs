@@ -552,6 +552,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
+        /// </summary>
+        internal static string PreferConstructorOverTestInitializeMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferConstructorOverTestInitializeMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
+        /// </summary>
+        internal static string PreferConstructorOverTestInitializeTitle {
+            get {
+                return ResourceManager.GetString("PreferConstructorOverTestInitializeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer TestInitialize methods over constructors.
         /// </summary>
         internal static string PreferTestInitializeOverConstructorMessageFormat {

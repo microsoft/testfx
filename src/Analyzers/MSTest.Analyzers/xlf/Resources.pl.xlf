@@ -319,6 +319,16 @@
         <target state="translated">Element DataRow powinien być prawidłowy</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="new">Prefer constructors over TestInitialize methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeTitle">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="new">Prefer constructors over TestInitialize methods</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
         <source>Prefer TestInitialize methods over constructors</source>
         <target state="new">Prefer TestInitialize methods over constructors</target>
