@@ -375,8 +375,7 @@ public sealed class SdkTests : AcceptanceTestBase
                    .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                    .PatchCodeWithReplace("$ExtraProperties$", """
         <PublishAot>true</PublishAot>
-        <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
-        <NoWarn>$(NoWarn);NU1507</NoWarn>
+        <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>        
         """)
                    .PatchCodeWithReplace("$Extensions$", string.Empty),
                    addPublicFeeds: true);
@@ -409,6 +408,7 @@ public sealed class SdkTests : AcceptanceTestBase
     $TestingPlatformDotnetTestSupport$
     $ExtraProperties$
     <PlatformTarget>x64</PlatformTarget>
+    <NoWarn>$(NoWarn);NU1507</NoWarn>
   </PropertyGroup>
 
   <!-- Extensions -->
