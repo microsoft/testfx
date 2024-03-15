@@ -27,7 +27,7 @@ internal static class ExceptionExtensions
         // TargetInvocationException: Because .NET Framework wraps method.Invoke() into TargetInvocationException.
         // TypeInitializationException: Because AssemblyInitialize is static, and often helpers that are also static
         // are used to implement it, and they fail in constructor.
-        while (exception is TargetInvocationException or TypeInitializationException 
+        while (exception is TargetInvocationException or TypeInitializationException
             && exception.InnerException is not null)
         {
             exception = exception.InnerException;
