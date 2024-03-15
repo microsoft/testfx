@@ -172,7 +172,7 @@ public class TestAssemblyInfo
             throw AssemblyInitializationException;
         }
 
-        var realException = AssemblyInitializationException.InnerException ?? AssemblyInitializationException;
+        var realException = AssemblyInitializationException.GetRealException();
 
         var outcome = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
 
