@@ -153,7 +153,7 @@ public class MSTestSettings
     internal int AssemblyInitializeTimeout { get; private set; }
 
     /// <summary>
-    ///  Gets specified global AssemblyInitialize timeout.
+    ///  Gets specified global AssemblyCleanup timeout.
     /// </summary>
     internal int AssemblyCleanupTimeout { get; private set; }
 
