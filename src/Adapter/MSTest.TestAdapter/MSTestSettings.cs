@@ -59,6 +59,7 @@ public class MSTestSettings
         TestTimeout = 0;
         AssemblyInitializeTimeout = 0;
         ClassInitializeTimeout = 0;
+        AssemblyCleanupTimeout = 0;
         TreatClassAndAssemblyCleanupWarningsAsErrors = false;
     }
 
@@ -152,6 +153,11 @@ public class MSTestSettings
     internal int AssemblyInitializeTimeout { get; private set; }
 
     /// <summary>
+    ///  Gets specified global AssemblyInitialize timeout.
+    /// </summary>
+    internal int AssemblyCleanupTimeout { get; private set; }
+
+    /// <summary>
     ///  Gets specified global ClassInitializeTimeout timeout.
     /// </summary>
     internal int ClassInitializeTimeout { get; private set; }
@@ -186,6 +192,7 @@ public class MSTestSettings
         CurrentSettings.TestTimeout = settings.TestTimeout;
         CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors = settings.TreatClassAndAssemblyCleanupWarningsAsErrors;
         CurrentSettings.AssemblyInitializeTimeout = settings.AssemblyInitializeTimeout;
+        CurrentSettings.AssemblyCleanupTimeout = settings.AssemblyCleanupTimeout;
         CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
     }
 
@@ -431,6 +438,16 @@ public class MSTestSettings
                             if (int.TryParse(reader.ReadInnerXml(), out int testTimeout) && testTimeout > 0)
                             {
                                 settings.TestTimeout = testTimeout;
+                            }
+
+                            break;
+                        }
+
+                    case "ASSEMBLYCLEANUPTIMEOUT":
+                        {
+                            if (int.TryParse(reader.ReadInnerXml(), out int assemblyCleanupTimeout) && assemblyCleanupTimeout > 0)
+                            {
+                                settings.AssemblyCleanupTimeout = assemblyCleanupTimeout;
                             }
 
                             break;

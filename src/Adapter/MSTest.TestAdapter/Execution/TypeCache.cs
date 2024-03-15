@@ -449,6 +449,10 @@ internal class TypeCache : MarshalByRefObject
                 else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
                 {
                     assemblyInfo.AssemblyCleanupMethod = methodInfo;
+                    if (MSTestSettings.CurrentSettings.AssemblyInitializeTimeout > 0)
+                    {
+                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = MSTestSettings.CurrentSettings.AssemblyCleanupTimeout;
+                    }
                 }
             }
         }
