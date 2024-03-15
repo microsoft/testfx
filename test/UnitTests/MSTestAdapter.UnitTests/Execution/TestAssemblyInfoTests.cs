@@ -204,6 +204,29 @@ public class TestAssemblyInfoTests : TestContainer
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
     }
 
+    public void RunAssemblyInitializeShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
+    {
+        DummyTestClass.AssemblyInitializeMethodBody = tc => {
+            // This helper calls inner helper, and the inner helper ctor throws.
+            // We want to see the real exception on screen, and not TypeInitializationException
+            // which has no info about what failed.
+            FailingStaticHelper.DoWork();
+        };
+        _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
+
+        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
+
+        Verify(exception is not null);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(
+            exception.Message
+            == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.InvalidOperationException: I fail.. Aborting test execution.");
+        Verify(
+            exception.StackTraceInformation.ErrorStackTrace.StartsWith(
+            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.FailingStaticHelper..cctor()", StringComparison.Ordinal));
+        Verify(exception.InnerException.GetType() == typeof(InvalidOperationException));
+    }
+
     public void RunAssemblyInitializeShouldThrowForAlreadyExecutedTestAssemblyInitWithException()
     {
         DummyTestClass.AssemblyInitializeMethodBody = (tc) => { };
@@ -302,5 +325,26 @@ public class TestAssemblyInfoTests : TestContainer
         {
             AssemblyCleanupMethodBody.Invoke();
         }
+    }
+
+    private static class FailingStaticHelper
+    {
+        static FailingStaticHelper()
+        {
+            throw new InvalidOperationException("I fail.");
+            // FailingInnerStaticHelper.Initialize();
+        }
+
+        public static void DoWork() { }
+    }
+
+    private static class FailingInnerStaticHelper
+    {
+        static FailingInnerStaticHelper()
+        {
+            throw new InvalidOperationException("I fail.");
+        }
+
+        public static void Initialize() { }
     }
 }

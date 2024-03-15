@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -146,6 +147,82 @@ public class ExceptionExtensionsTests : TestContainer
 
         Verify(outcome == UTF.UnitTestOutcome.Failed);
         Verify(exceptionMessage == "Dummy Message");
+    }
+    #endregion
+
+    #region GetRealException scenarios
+    public void GetRealExceptionGetsTheTopExceptionWhenThereIsJustOne()
+    {
+        var exception = new InvalidOperationException();
+        var actual = exception.GetRealException();
+
+        Verify(actual is InvalidOperationException);
+    }
+
+    public void GetRealExceptionGetsTheInnerExceptionWhenTheExceptionIsTargetInvocation()
+    {
+        var exception = new TargetInvocationException(new InvalidOperationException());
+        var actual = exception.GetRealException();
+
+        Verify(actual is InvalidOperationException);
+    }
+
+    public void GetRealExceptionGetsTheTargetInvocationExceptionWhenTargetInvocationIsProvidedWithNullInnerException()
+    {
+        var exception = new TargetInvocationException(null);
+        var actual = exception.GetRealException();
+
+        Verify(actual is TargetInvocationException);
+    }
+
+    public void GetRealExceptionGetsTheInnerMostRealException()
+    {
+        var exception = new TargetInvocationException(new TargetInvocationException(new TargetInvocationException(new InvalidOperationException())));
+        var actual = exception.GetRealException();
+
+        Verify(actual is InvalidOperationException);
+    }
+
+    public void GetRealExceptionGetsTheInnerMostTargetInvocationException()
+    {
+        var exception = new TargetInvocationException(new TargetInvocationException(new TargetInvocationException("inner most", null)));
+        var actual = exception.GetRealException();
+
+        Verify(actual is TargetInvocationException);
+        Verify(actual.Message == "inner most");
+    }
+
+    public void GetRealExceptionGetsTheInnerExceptionWhenTheExceptionIsTypeInitialization()
+    {
+        var exception = new TypeInitializationException("some type", new InvalidOperationException());
+        var actual = exception.GetRealException();
+
+        Verify(actual is InvalidOperationException);
+    }
+
+    public void GetRealExceptionGetsTheTypeInitializationExceptionWhenTypeInitializationIsProvidedWithNullInnerException()
+    {
+        var exception = new TypeInitializationException("some type", null);
+        var actual = exception.GetRealException();
+
+        Verify(actual is TypeInitializationException);
+    }
+
+    public void GetRealExceptionGetsTheInnerMostRealExceptionOfTypeInitialization()
+    {
+        var exception = new TypeInitializationException("some type", new TypeInitializationException("some type", new TypeInitializationException("some type", new InvalidOperationException())));
+        var actual = exception.GetRealException();
+
+        Verify(actual is InvalidOperationException);
+    }
+
+    public void GetRealExceptionGetsTheInnerMostTypeInitializationException()
+    {
+        var exception = new TypeInitializationException("some type", new TypeInitializationException("some type", new TypeInitializationException("inner most", null)));
+        var actual = exception.GetRealException();
+
+        Verify(actual is TypeInitializationException);
+        Verify(actual.Message == "The type initializer for 'inner most' threw an exception.");
     }
     #endregion
 }
