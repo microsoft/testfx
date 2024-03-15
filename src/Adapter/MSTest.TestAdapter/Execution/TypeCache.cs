@@ -461,7 +461,7 @@ internal class TypeCache : MarshalByRefObject
                         DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
                         assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = timeoutAttribute.Timeout;
                     }
-                    else if (MSTestSettings.CurrentSettings.AssemblyInitializeTimeout > 0)
+                    else if (MSTestSettings.CurrentSettings.AssemblyCleanupTimeout > 0)
                     {
                         assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = MSTestSettings.CurrentSettings.AssemblyCleanupTimeout;
                     }
