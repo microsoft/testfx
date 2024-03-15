@@ -319,16 +319,6 @@
         <target state="translated">Значение DataRow должно быть допустимым</target>
         <note />
       </trans-unit>
-      <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
-        <source>Prefer constructors over TestInitialize methods</source>
-        <target state="new">Prefer constructors over TestInitialize methods</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferConstructorOverTestInitializeTitle">
-        <source>Prefer constructors over TestInitialize methods</source>
-        <target state="new">Prefer constructors over TestInitialize methods</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">Рекомендуется использовать только тестовые классы, помеченные как общедоступные в тестовом проекте.</target>
