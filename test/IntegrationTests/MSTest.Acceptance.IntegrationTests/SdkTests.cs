@@ -375,7 +375,7 @@ public sealed class SdkTests : AcceptanceTestBase
                    .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
                    .PatchCodeWithReplace("$ExtraProperties$", """
         <PublishAot>true</PublishAot>
-        <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>        
+        <EnableMicrosoftTestingExtensionsCodeCoverage>false</EnableMicrosoftTestingExtensionsCodeCoverage>
         """)
                    .PatchCodeWithReplace("$Extensions$", string.Empty),
                    addPublicFeeds: true);

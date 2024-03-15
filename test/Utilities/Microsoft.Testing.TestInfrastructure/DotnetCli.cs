@@ -92,17 +92,7 @@ public static class DotnetCli
 
             if (DoNotRetry)
             {
-                if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new InvalidOperationException("Command should not start with 'dotnet'");
-                }
-
-                using var dotnet = new DotnetMuxer(environmentVariables);
-                int exitCode = await dotnet.Args(args, workingDirectory, timeoutInSeconds);
-
-                return exitCode != 0 && failIfReturnValueIsNotZero
-                    ? throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}")
-                    : new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines);
+                return await CallTheMuxer(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero);
             }
             else
             {
@@ -112,17 +102,7 @@ public static class DotnetCli
                     .WaitAndRetryAsync(delay)
                     .ExecuteAsync(async () =>
                     {
-                        if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
-                        {
-                            throw new InvalidOperationException("Command should not start with 'dotnet'");
-                        }
-
-                        using var dotnet = new DotnetMuxer(environmentVariables);
-                        int exitCode = await dotnet.Args(args, workingDirectory, timeoutInSeconds);
-
-                        return exitCode != 0 && failIfReturnValueIsNotZero
-                            ? throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}")
-                            : new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines);
+                        return await CallTheMuxer(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero);
                     });
             }
         }
@@ -130,5 +110,20 @@ public static class DotnetCli
         {
             s_maxOutstandingCommands_semaphore.Release();
         }
+    }
+
+    private static async Task<DotnetMuxerResult> CallTheMuxer(string args, Dictionary<string, string> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
+    {
+        if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Command should not start with 'dotnet'");
+        }
+
+        using var dotnet = new DotnetMuxer(environmentVariables);
+        int exitCode = await dotnet.Args(args, workingDirectory, timeoutInSeconds);
+
+        return exitCode != 0 && failIfReturnValueIsNotZero
+            ? throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}")
+            : new DotnetMuxerResult(args, exitCode, dotnet.StandardOutput, dotnet.StandardOutputLines, dotnet.StandardError, dotnet.StandardErrorLines);
     }
 }

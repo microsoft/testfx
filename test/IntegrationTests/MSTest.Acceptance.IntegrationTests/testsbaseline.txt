@@ -71,6 +71,8 @@ MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.Messages.V
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.Invalid_TestingProfile_Name_Should_Fail(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Debug)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.Invalid_TestingProfile_Name_Should_Fail(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Release)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.NativeAot_Smoke_Test_On_Windows()
+MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_CentralPackageManagement_Standalone(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Debug)
+MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_CentralPackageManagement_Standalone(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Release)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_MSTestRunner_DotnetTest(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Debug)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_MSTestRunner_DotnetTest(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Release)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_MSTestRunner_Standalone(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Debug)
