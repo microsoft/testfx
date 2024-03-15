@@ -130,21 +130,6 @@
         <target state="translated">AssemblyInitialize 方法應該具有有效的配置</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
-        <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
-        <target state="new">'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
-        <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
-        <target state="new">Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
-        <source>Assertion arguments should be passed in the correct order</source>
-        <target state="new">Assertion arguments should be passed in the correct order</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">偏好 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' 而非 '[ExpectedException]'，因為它可確保只有預期的呼叫會擲出預期的例外狀況。判斷提示 API 也提供更多彈性，並允許您斷言例外狀況的額外屬性。</target>
