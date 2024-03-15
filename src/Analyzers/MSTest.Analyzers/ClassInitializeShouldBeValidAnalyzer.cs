@@ -38,7 +38,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor NotAGenericClassUnlessInheritanceModeSetRule = PublicRule.WithMessage(new(nameof(Resources.ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-       = ImmutableArray.Create(PublicRule);
+        = ImmutableArray.Create(PublicRule);
 
     public override void Initialize(AnalysisContext context)
     {

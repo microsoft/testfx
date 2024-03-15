@@ -35,7 +35,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-       = ImmutableArray.Create(DataRowOnTestMethodRule);
+        = ImmutableArray.Create(DataRowOnTestMethodRule);
 
     public override void Initialize(AnalysisContext context)
     {

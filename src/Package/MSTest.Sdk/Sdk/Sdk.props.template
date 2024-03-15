@@ -6,7 +6,6 @@
 
   <PropertyGroup>
     <UseVSTest Condition=" '$(UseVSTest)' == '' " >false</UseVSTest>
-    <TestEngineName Condition=" '$(EngineName)' == '' ">Classic</TestEngineName>
     <MSTestVersion Condition=" '$(MSTestVersion)' == '' ">${MSTestVersion}</MSTestVersion>
     <MSTestEngineVersion Condition=" '$(MSTestEngineVersion)' == '' ">${MSTestEngineVersion}</MSTestEngineVersion>
     <MicrosoftNETTestSdkVersion Condition=" '$(MicrosoftNETTestSdkVersion)' == '' ">${MicrosoftNETTestSdkVersion}</MicrosoftNETTestSdkVersion>

@@ -255,6 +255,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;Assert.AreEqual&apos;, &apos;Assert.AreNotEqual&apos;, &apos;Assert.AreSame&apos; and &apos;Assert.AreNotSame&apos; expects the expected value to be passed first and the actual value to be passed as second argument..
+        /// </summary>
+        internal static string AssertionArgsShouldBePassedInCorrectOrderDescription {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldBePassedInCorrectOrderDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assertion arguments should be passed in the correct order. &apos;actual&apos; and &apos;expected&apos;/&apos;notExpected&apos; arguments have been swapped..
+        /// </summary>
+        internal static string AssertionArgsShouldBePassedInCorrectOrderMessageFormat {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldBePassedInCorrectOrderMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assertion arguments should be passed in the correct order.
+        /// </summary>
+        internal static string AssertionArgsShouldBePassedInCorrectOrderTitle {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldBePassedInCorrectOrderTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsException&apos; or &apos;Assert.ThrowsExceptionAsync&apos; over &apos;[ExpectedException]&apos; as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption..
         /// </summary>
         internal static string AvoidExpectedExceptionAttributeDescription {

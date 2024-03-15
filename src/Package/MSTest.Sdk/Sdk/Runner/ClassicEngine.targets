@@ -1,55 +1,28 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <Import Project="$(MSBuildThisFileDirectory)Common.targets"/>
+
   <PropertyGroup>
     <EnableMSTestRunner>true</EnableMSTestRunner>
-    <IsPackable>false</IsPackable>
-    <OutputType>Exe</OutputType>
-    <MicrosoftTestingExtensionsCommonVersion Condition=" '$(MicrosoftTestingExtensionsCommonVersion)' == '' " >$(MicrosoftTestingPlatformVersion)</MicrosoftTestingExtensionsCommonVersion>
-    <TestingPlatformDotnetTestSupport Condition=" $(TestingPlatformDotnetTestSupport) == '' ">true</TestingPlatformDotnetTestSupport>
-    <TestingExtensionsProfile Condition=" $(TestingExtensionsProfile) == '' ">Default</TestingExtensionsProfile>
   </PropertyGroup>
-
-  <Target Name="_MSTestSDKValidateTestingExtensionsProfile" BeforeTargets="Build">
-    <Error Condition=" '$(TestingExtensionsProfile)' != 'Default' and '$(TestingExtensionsProfile)' != 'AllMicrosoft' and '$(TestingExtensionsProfile)' != 'None' " Text="Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'." />
-  </Target>
 
   <!-- Extensions -->
   <PropertyGroup>
-    <!-- TrxReport -->
-    <_UserOptedOutMicrosoftTestingExtensionsTrxReport Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'false' ">true</_UserOptedOutMicrosoftTestingExtensionsTrxReport>
-    <EnableMicrosoftTestingExtensionsTrxReport Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == '' and $(TestingExtensionsProfile) == 'Default' " >true</EnableMicrosoftTestingExtensionsTrxReport>
-    <EnableMicrosoftTestingExtensionsTrxReport Condition=" '$(_UserOptedOutMicrosoftTestingExtensionsTrxReport)' != 'true' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsTrxReport>
-    <MicrosoftTestingExtensionsTrxReportVersion Condition=" '$(MicrosoftTestingExtensionsTrxReportVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsTrxReportVersion>
-
-    <!-- MS Code Coverage -->
-    <_UserOptedOutMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'false' ">true</_UserOptedOutMicrosoftTestingExtensionsCodeCoverage>
-    <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == ''  and $(TestingExtensionsProfile) == 'Default' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
-    <EnableMicrosoftTestingExtensionsCodeCoverage Condition=" '$(_UserOptedOutMicrosoftTestingExtensionsCodeCoverage)' != 'true' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsCodeCoverage>
-    <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >$(MicrosoftTestingExtensionsCodeCoverageVersion)</MicrosoftTestingExtensionsCodeCoverageVersion>
-
     <!-- Hot Reload -->
-    <_UserOptedOutMicrosoftTestingExtensionsHotReload Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'false' ">true</_UserOptedOutMicrosoftTestingExtensionsHotReload>
-    <EnableMicrosoftTestingExtensionsHotReload Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == '' " >false</EnableMicrosoftTestingExtensionsHotReload>
-    <EnableMicrosoftTestingExtensionsHotReload Condition=" '$(_UserOptedOutMicrosoftTestingExtensionsHotReload)' != 'true' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHotReload>
+    <EnableMicrosoftTestingExtensionsHotReload Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHotReload>
     <MicrosoftTestingExtensionsHotReloadVersion Condition=" '$(MicrosoftTestingExtensionsHotReloadVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHotReloadVersion>
 
     <!-- Retry -->
-    <_UserOptedOutMicrosoftTestingExtensionsRetry Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'false' ">true</_UserOptedOutMicrosoftTestingExtensionsRetry>
-    <EnableMicrosoftTestingExtensionsRetry Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == '' " >false</EnableMicrosoftTestingExtensionsRetry>
-    <EnableMicrosoftTestingExtensionsRetry Condition=" '$(_UserOptedOutMicrosoftTestingExtensionsRetry)' != 'true' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsRetry>
+    <EnableMicrosoftTestingExtensionsRetry Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsRetry>
     <MicrosoftTestingExtensionsRetryVersion Condition=" '$(MicrosoftTestingExtensionsRetryVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsRetryVersion>
 
     <!-- Crash dump -->
-    <_UserOptedOutMicrosoftTestingExtensionsCrashDump Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'false' ">true</_UserOptedOutMicrosoftTestingExtensionsCrashDump>
-    <EnableMicrosoftTestingExtensionsCrashDump Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == '' " >false</EnableMicrosoftTestingExtensionsCrashDump>
-    <EnableMicrosoftTestingExtensionsCrashDump Condition=" '$(_UserOptedOutMicrosoftTestingExtensionsCrashDump)' != 'true' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsCrashDump>
+    <EnableMicrosoftTestingExtensionsCrashDump Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsCrashDump>
     <MicrosoftTestingExtensionsCrashDumpVersion Condition=" '$(MicrosoftTestingExtensionsCrashDumpVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsCrashDumpVersion>
 
     <!-- Hang dump -->
-    <_UserOptedOutMicrosoftTestingExtensionsHangDump Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'false' ">true</_UserOptedOutMicrosoftTestingExtensionsHangDump>
-    <EnableMicrosoftTestingExtensionsHangDump Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == '' " >false</EnableMicrosoftTestingExtensionsHangDump>
-    <EnableMicrosoftTestingExtensionsHangDump Condition=" '$(_UserOptedOutMicrosoftTestingExtensionsHangDump)' != 'true' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHangDump>
+    <EnableMicrosoftTestingExtensionsHangDump Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' != 'false' and '$(TestingExtensionsProfile)' == 'AllMicrosoft' " >true</EnableMicrosoftTestingExtensionsHangDump>
     <MicrosoftTestingExtensionsHangDumpVersion Condition=" '$(MicrosoftTestingExtensionsHangDumpVersion)' == '' " >$(MicrosoftTestingExtensionsCommonVersion)</MicrosoftTestingExtensionsHangDumpVersion>
   </PropertyGroup>
 
@@ -58,7 +31,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
   </ItemGroup>
 
   <!-- Extensions -->

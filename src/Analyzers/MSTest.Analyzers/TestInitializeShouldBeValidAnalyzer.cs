@@ -37,7 +37,7 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor OrdinaryRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_Ordinary), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-       = ImmutableArray.Create(PublicRule);
+        = ImmutableArray.Create(PublicRule);
 
     public override void Initialize(AnalysisContext context)
     {
