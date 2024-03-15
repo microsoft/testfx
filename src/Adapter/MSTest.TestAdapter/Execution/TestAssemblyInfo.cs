@@ -218,8 +218,9 @@ public class TestAssemblyInfo
             Exception? assemblyCleanupException = null;
             try
             {
-                assemblyCleanupException = MethodRunner.RunWithTimeout(
+                assemblyCleanupException = MethodRunner.RunWithTimeoutAndCancellation(
                      () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
+                     new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
                      Resource.AssemblyCleanupWasCancelled,
@@ -278,8 +279,9 @@ public class TestAssemblyInfo
         {
             try
             {
-                Exception? assemblyCleanupException = MethodRunner.RunWithTimeout(
+                Exception? assemblyCleanupException = MethodRunner.RunWithTimeoutAndCancellation(
                      () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
+                     new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
                      Resource.AssemblyCleanupWasCancelled,
