@@ -319,6 +319,16 @@
         <target state="translated">DataRow는 유효해야 함</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="new">Prefer constructors over TestInitialize methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeTitle">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="new">Prefer constructors over TestInitialize methods</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">테스트 프로젝트에서 공용으로 표시된 테스트 클래스만 사용하는 것이 좋습니다.</target>

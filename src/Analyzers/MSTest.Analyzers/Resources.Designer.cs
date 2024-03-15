@@ -552,6 +552,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
+        /// </summary>
+        internal static string PreferConstructorOverTestInitializeMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferConstructorOverTestInitializeMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
+        /// </summary>
+        internal static string PreferConstructorOverTestInitializeTitle {
+            get {
+                return ResourceManager.GetString("PreferConstructorOverTestInitializeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
         /// </summary>
         internal static string PublicTypeShouldBeTestClassDescription {
