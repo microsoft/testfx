@@ -60,12 +60,4 @@ public sealed class PreferTestInitializeOverConstructorAnalyzerTests(ITestExecut
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
-
-    public class MyTestClass
-    {
-        public MyTestClass()
-        {
-            
-        }
-    }
 }
