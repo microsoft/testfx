@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;

@@ -62,8 +62,8 @@ This package provides the core platform and the .NET implementation of the proto
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.TrxReport" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Extensions.VSTestBridge.TestAdapter" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Framework" Key="$(VsPublicKey)" />
-    <InternalsVisibleTo Include="Microsoft.Testing.Framework.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Internal.Framework" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="Microsoft.Testing.Internal.Framework.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.Engine" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="MSTest.Engine.UnitTests" Key="$(VsPublicKey)" />
     <InternalsVisibleTo Include="Microsoft.Testing.Platform.Acceptance.IntegrationTests" Key="$(VsPublicKey)" />
