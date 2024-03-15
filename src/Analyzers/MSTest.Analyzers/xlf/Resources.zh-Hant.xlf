@@ -329,6 +329,16 @@
         <target state="new">Prefer constructors over TestInitialize methods</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="new">Prefer TestInitialize methods over constructors</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorTitle">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="new">Prefer TestInitialize methods over constructors</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">在測試專案中僅將測試類別標記為公開被認為是一種很好的做法。</target>

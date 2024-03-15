@@ -307,6 +307,12 @@
   <data name="PreferConstructorOverTestInitializeTitle" xml:space="preserve">
     <value>Prefer constructors over TestInitialize methods</value>
   </data>
+  <data name="PreferTestInitializeOverConstructorMessageFormat" xml:space="preserve">
+    <value>Prefer TestInitialize methods over constructors</value>
+  </data>
+  <data name="PreferTestInitializeOverConstructorTitle" xml:space="preserve">
+    <value>Prefer TestInitialize methods over constructors</value>
+  </data>
   <data name="PublicTypeShouldBeTestClassDescription" xml:space="preserve">
     <value>It's considered a good practice to have only test classes marked public in a test project.</value>
   </data>
