@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="8.0.0-beta.24161.7">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="8.0.0-beta.24165.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>cd10e5d3748676d70ae2b4d9c84f073eeb203cac</Sha>
+      <Sha>f311667e0587f19c3fa9553a909975662107a351</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="8.0.0-beta.24161.7">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Templating" Version="8.0.0-beta.24165.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>cd10e5d3748676d70ae2b4d9c84f073eeb203cac</Sha>
+      <Sha>f311667e0587f19c3fa9553a909975662107a351</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.XliffTasks" Version="9.0.0-beta.24102.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
@@ -17,17 +17,17 @@
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
       <Sha>4c964d79cff663c7dc28fa5a67895f419e6ef6fb</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Framework" Version="1.2.0-preview.24164.2">
+    <Dependency Name="Microsoft.Testing.Framework" Version="1.2.0-preview.24166.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>cda8e69fc8b735848170e0537c2088639e8cadc4</Sha>
+      <Sha>513d21b446a108f0e2255c0b96203278816df43d</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="1.2.0-preview.24164.2">
+    <Dependency Name="Microsoft.Testing.Platform" Version="1.2.0-preview.24166.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>cda8e69fc8b735848170e0537c2088639e8cadc4</Sha>
+      <Sha>513d21b446a108f0e2255c0b96203278816df43d</Sha>
     </Dependency>
-    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24164.2">
+    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24166.1">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>cda8e69fc8b735848170e0537c2088639e8cadc4</Sha>
+      <Sha>513d21b446a108f0e2255c0b96203278816df43d</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

@@ -313,6 +313,12 @@
   <data name="PreferDisposeOverTestCleanupTitle" xml:space="preserve">
     <value>Prefer 'Dispose' over TestCleanup methods</value>
   </data>
+  <data name="PreferTestCleanupOverDisposeMessageFormat" xml:space="preserve">
+    <value>Prefer TestCleanup over 'Dispose' methods</value>
+  </data>
+  <data name="PreferTestCleanupOverDisposeTitle" xml:space="preserve">
+    <value>Prefer TestCleanup over 'Dispose' methods</value>
+  </data>
   <data name="PreferTestInitializeOverConstructorMessageFormat" xml:space="preserve">
     <value>Prefer TestInitialize methods over constructors</value>
   </data>

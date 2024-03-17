@@ -8,3 +8,4 @@ MSTEST0017 | Usage | Info | AssertionArgsShouldBePassedInCorrectOrder, [Document
 MSTEST0019 | Design | Disabled | PreferTestInitializeOverConstructorAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0019)
 MSTEST0020 | Design | Disabled | PreferConstructorOverTestInitializeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0020)
 MSTEST0021 | Design | Disabled | PreferDisposeOverTestCleanupAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0021)
+MSTEST0022 | Design | Disabled | PreferTestCleanupOverDisposeAnalyzer, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0022)
