@@ -570,6 +570,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Prefer &apos;Dispose&apos; over TestCleanup methods.
+        /// </summary>
+        internal static string PreferDisposeOverTestCleanupMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferDisposeOverTestCleanupMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer &apos;Dispose&apos; over TestCleanup methods.
+        /// </summary>
+        internal static string PreferDisposeOverTestCleanupTitle {
+            get {
+                return ResourceManager.GetString("PreferDisposeOverTestCleanupTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer TestCleanup over &apos;Dispose&apos; methods.
         /// </summary>
         internal static string PreferTestCleanupOverDisposeMessageFormat {
