@@ -329,6 +329,16 @@
         <target state="new">Prefer constructors over TestInitialize methods</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeMessageFormat">
+        <source>Prefer TestCleanup over 'Dispose' methods</source>
+        <target state="new">Prefer TestCleanup over 'Dispose' methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeTitle">
+        <source>Prefer TestCleanup over 'Dispose' methods</source>
+        <target state="new">Prefer TestCleanup over 'Dispose' methods</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
         <source>Prefer TestInitialize methods over constructors</source>
         <target state="new">Prefer TestInitialize methods over constructors</target>
