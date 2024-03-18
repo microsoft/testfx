@@ -12,6 +12,8 @@ namespace Microsoft.Testing.Platform.ServerMode.Json;
 
 internal sealed class Json
 {
+    private const string RPCVersion = "2.0";
+
     private readonly Dictionary<Type, JsonDeserializer> _deserializers = [];
     private readonly Dictionary<Type, JsonSerializer> _serializers = [];
     private readonly ObjectPool<MemoryStream> _memoryStreamPool = new(() => new MemoryStream());
@@ -25,7 +27,7 @@ internal sealed class Json
          {
              var list = new (string, object?)[4]
              {
-                 (JsonRpcStrings.JsonRpc, "2.0"),
+                 (JsonRpcStrings.JsonRpc, RPCVersion),
                  (JsonRpcStrings.Id, request.Id),
                  (JsonRpcStrings.Method, request.Method),
                  (JsonRpcStrings.Params, request.Params),
@@ -38,7 +40,7 @@ internal sealed class Json
         {
             var list = new (string, object?)[3]
             {
-                 (JsonRpcStrings.JsonRpc, "2.0"),
+                 (JsonRpcStrings.JsonRpc, RPCVersion),
                  (JsonRpcStrings.Id, response.Id),
                  (JsonRpcStrings.Result, response.Result),
             };
@@ -50,7 +52,7 @@ internal sealed class Json
         {
             var list = new (string, object?)[3]
             {
-                 (JsonRpcStrings.JsonRpc, "2.0"),
+                 (JsonRpcStrings.JsonRpc, RPCVersion),
                  (JsonRpcStrings.Method, notification.Method),
                  (JsonRpcStrings.Params, notification.Params),
             };
@@ -60,16 +62,16 @@ internal sealed class Json
 
         _serializers[typeof(ErrorMessage)] = new JsonObjectSerializer<ErrorMessage>(error =>
         {
-            object errorMsg = new Dictionary<string, object?>(3)
+            var errorMsg = new (string, object?)[3]
             {
-                { JsonRpcStrings.Code, error.ErrorCode },
-                { JsonRpcStrings.Data, error.Data ?? new() },
-                { JsonRpcStrings.Message, error.Message },
+                (JsonRpcStrings.Code, error.ErrorCode),
+                (JsonRpcStrings.Data, error.Data ?? new()),
+                (JsonRpcStrings.Message, error.Message),
             };
 
             var list = new (string, object?)[4]
             {
-                 (JsonRpcStrings.JsonRpc, "2.0"),
+                 (JsonRpcStrings.JsonRpc, RPCVersion),
                  (JsonRpcStrings.Code, error.ErrorCode),
                  (JsonRpcStrings.Id, error.Id),
                  (JsonRpcStrings.Error, errorMsg),
@@ -182,22 +184,11 @@ internal sealed class Json
             };
 
             TestMetadataProperty[] metadataProperties = message.Properties.OfType<TestMetadataProperty>();
-            bool isNodeTypeAction = false;
+            bool hasActionNodeType = false;
 
             if (metadataProperties.Length > 0)
             {
-#if NETCOREAPP
                 properties.Add(("traits", metadataProperties.Select(x => new KeyValuePair<string, string>(x.Key, x.Value))));
-#else
-                var collection = new List<(string, object?)>(metadataProperties.Length);
-                foreach (TestMetadataProperty metadata in metadataProperties)
-                {
-                    collection.Add((metadata.Key, metadata.Value));
-
-                }
-
-                properties.Add(("traits", collection));
-#endif
             }
 
             foreach (IProperty property in message.Properties)
@@ -216,17 +207,7 @@ internal sealed class Json
 
                 if (property is SerializableNamedKeyValuePairsStringProperty namedKvpStringProperty)
                 {
-#if NETCOREAPP
                     properties.Add((namedKvpStringProperty.Name, namedKvpStringProperty.Pairs));
-#else
-                    var collection = new List<(string, object?)>(namedKvpStringProperty.Pairs.Length);
-                    foreach (KeyValuePair<string, string> item in namedKvpStringProperty.Pairs)
-                    {
-                        collection.Add((item.Key, item.Value));
-                    }
-
-                    properties.Add((namedKvpStringProperty.Name, collection));
-#endif
                     continue;
                 }
 
@@ -251,7 +232,7 @@ internal sealed class Json
                 if (property is TestNodeStateProperty testNodeStateProperty)
                 {
                     properties.Add(("node-type", "action"));
-                    isNodeTypeAction = true;
+                    hasActionNodeType = true;
                     switch (property)
                     {
                         case DiscoveredTestNodeStateProperty _:
@@ -345,7 +326,7 @@ internal sealed class Json
                 }
             }
 
-            if (!isNodeTypeAction)
+            if (!hasActionNodeType)
             {
                 properties.Add(("node-type", "group"));
             }
@@ -394,7 +375,6 @@ internal sealed class Json
                 (JsonRpcStrings.WorkingDirectory, info.WorkingDirectory),
                 (JsonRpcStrings.EnvironmentVariables, info.EnvironmentVariables),
             };
-
             return list;
         });
 
@@ -468,44 +448,82 @@ internal sealed class Json
             return items;
         });
 
-        _deserializers[typeof(ErrorMessage)] = new JsonElementDeserializer<ErrorMessage>(
-          (json, jsonElement) =>
-          {
-              int id = json.Bind<int>(jsonElement, JsonRpcStrings.Id);
-              IDictionary<string, object?> errorObj = json.Bind<IDictionary<string, object?>>(jsonElement, JsonRpcStrings.Error);
+        _deserializers[typeof(RpcMessage)] = new JsonElementDeserializer<RpcMessage>((json, jsonElement) =>
+        {
+            ValidateJsonRpcHeader(json, jsonElement);
 
-#if !NETCOREAPP
-              if (errorObj.TryGetValue(JsonRpcStrings.Data, out object? errorData))
-              {
-                  if (errorData is Dictionary<string, object?> error && error.Count == 0)
-                  {
-                      errorObj[JsonRpcStrings.Data] = null!;
-                  }
-              }
-#endif
+            string? method = json.OptionalPropertyBind<string>(jsonElement, JsonRpcStrings.Method);
+            if (method is not null)
+            {
+                int id = json.OptionalPropertyBind<int>(jsonElement, JsonRpcStrings.Id);
 
-              if (!errorObj.TryGetValue(JsonRpcStrings.Code, out object? codeObj) ||
-                codeObj is not int code)
-              {
-                  throw new MessageFormatException("error.code field missing");
-              }
+                object? @params = null;
+                if (method != JsonRpcMethods.Exit)
+                {
+                    if (jsonElement.TryGetProperty(JsonRpcStrings.Params, out JsonElement value))
+                    {
+                        // Parse the specific methods
+                        @params = method switch
+                        {
+                            JsonRpcMethods.Initialize => json.Bind<InitializeRequestArgs>(value),
+                            JsonRpcMethods.TestingDiscoverTests => json.Bind<DiscoverRequestArgs>(value),
+                            JsonRpcMethods.TestingRunTests => json.Bind<RunRequestArgs>(value),
+                            JsonRpcMethods.CancelRequest => json.Bind<CancelRequestArgs>(value),
+                            JsonRpcMethods.Exit => json.Bind<ExitRequestArgs>(value),
 
-              if (!errorObj.TryGetValue(JsonRpcStrings.Message, out object? errorMessageObj) ||
-                errorMessageObj is not string errorMessage)
-              {
-                  throw new MessageFormatException("error.message field is missing");
-              }
+                            // Note: Let the server report unknown RPC request back to the client.
+                            _ => null,
+                        };
+                    }
+                }
 
-              object? data = errorObj.TryGetValue(JsonRpcStrings.Data, out object? dataJson)
-                ? dataJson
-                : null;
+                return id is default(int)
+                    ? new RequestMessage(id, method, @params)
+                    : new NotificationMessage(method, @params);
+            }
 
-              return new ErrorMessage(
-                  Id: id,
-                  ErrorCode: code,
-                  Message: errorMessage ?? string.Empty,
-                  Data: null);
-          });
+            ErrorMessage? error = json.OptionalPropertyBind<ErrorMessage>(jsonElement, JsonRpcStrings.Error);
+
+            if (error is not null)
+            {
+                return error;
+            }
+
+            if (jsonElement.TryGetProperty(JsonRpcStrings.Result, out JsonElement result))
+            {
+                // Note: Because the result message does not contain the original method name,
+                //       it's not possible for us to do a typed deserialization.
+                //       The best option we've got is to return a generic property bag.
+                int id = json.Bind<int>(result, JsonRpcStrings.Id);
+
+                return new ResponseMessage(id, result);
+            }
+
+            throw new MessageFormatException();
+        });
+
+        _deserializers[typeof(InitializeRequestArgs)] = new JsonElementDeserializer<InitializeRequestArgs>((json, jsonElement) =>
+        {
+            return new InitializeRequestArgs(
+                ProcessId: json.Bind<int>(jsonElement, JsonRpcStrings.ProcessId),
+                ClientInfo: json.Bind<ClientInfo>(jsonElement, JsonRpcStrings.ClientInfo),
+                Capabilities: json.Bind<ClientCapabilities>(jsonElement, JsonRpcStrings.Capabilities));
+        });
+
+        _deserializers[typeof(ClientInfo)] = new JsonElementDeserializer<ClientInfo>((json, jsonElement) =>
+        {
+            return new ClientInfo(
+                Name: json.Bind<string>(jsonElement, JsonRpcStrings.Name),
+                Version: json.Bind<string>(jsonElement, JsonRpcStrings.Version));
+        });
+
+        _deserializers[typeof(ClientCapabilities)] = new JsonElementDeserializer<ClientCapabilities>((json, jsonElement) =>
+        {
+            jsonElement.TryGetProperty(JsonRpcStrings.Testing, out JsonElement testing);
+
+            return new ClientCapabilities(
+                    DebuggerProvider: json.Bind<bool>(testing, JsonRpcStrings.DebuggerProvider));
+        });
 
         _deserializers[typeof(InitializeResponseArgs)] = new JsonElementDeserializer<InitializeResponseArgs>(
           (json, jsonElement) =>
@@ -539,6 +557,22 @@ internal sealed class Json
                         VSTestProviderSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.VSTestProviderSupport));
           });
 
+        _deserializers[typeof(DiscoverRequestArgs)] = new JsonElementDeserializer<DiscoverRequestArgs>((json, jsonElement) =>
+        {
+            return new DiscoverRequestArgs(
+                RunId: json.Bind<Guid>(jsonElement, JsonRpcStrings.RunId),
+                TestNodes: json.OptionalPropertyBind<ICollection<TestNode>?>(jsonElement, JsonRpcStrings.Tests),
+                GraphFilter: json.OptionalPropertyBind<string>(jsonElement, JsonRpcStrings.Filter));
+        });
+
+        _deserializers[typeof(RunRequestArgs)] = new JsonElementDeserializer<RunRequestArgs>((json, jsonElement) =>
+        {
+            return new RunRequestArgs(
+                RunId: json.Bind<Guid>(jsonElement, JsonRpcStrings.RunId),
+                TestNodes: json.OptionalPropertyBind<ICollection<TestNode>?>(jsonElement, JsonRpcStrings.Tests),
+                GraphFilter: json.OptionalPropertyBind<string>(jsonElement, JsonRpcStrings.Filter));
+        });
+
         _deserializers[typeof(TestNode)] = new JsonElementDeserializer<TestNode>(
             (json, properties) =>
             {
@@ -546,17 +580,20 @@ internal sealed class Json
                 string uid = json.Bind<string>(properties, JsonRpcStrings.Uid) ?? string.Empty;
                 string displayName = json.Bind<string>(properties, JsonRpcStrings.DisplayName);
 
-                var locationFile = json.Bind<string>(properties, "location.file");
+                var locationFile = json.OptionalPropertyBind<string>(properties, "location.file");
                 if (locationFile is not null)
                 {
                     ApplicationStateGuard.Ensure(locationFile is not null);
-                    var locationLineStart = json.Bind<int>(properties, "location.line-start");
-                    var locationLineEnd = json.Bind<int>(properties, "location.line-end");
+                    var locationLineStart = json.OptionalPropertyBind<int>(properties, "location.line-start");
+                    var locationLineEnd = json.OptionalPropertyBind<int>(properties, "location.line-end");
 
-                    var testFileLocationProperty = new TestFileLocationProperty(
-                        locationFile,
-                        new LinePositionSpan(new LinePosition(locationLineStart, 0), new LinePosition(locationLineEnd, 0)));
-                    propertyBag.Add(testFileLocationProperty);
+                    if (locationLineStart is not default(int) && locationLineEnd is not default(int))
+                    {
+                        var testFileLocationProperty = new TestFileLocationProperty(
+                            locationFile,
+                            new LinePositionSpan(new LinePosition(locationLineStart, 0), new LinePosition(locationLineEnd, 0)));
+                        propertyBag.Add(testFileLocationProperty);
+                    }
                 }
 
                 return new TestNode
@@ -570,8 +607,42 @@ internal sealed class Json
         _deserializers[typeof(CancelRequestArgs)] = new JsonElementDeserializer<CancelRequestArgs>(
           (json, jsonElement) =>
           {
+              int id = json.OptionalPropertyBind<int>(jsonElement, JsonRpcStrings.Id);
+
+              return id is default(int) ? throw new MessageFormatException("id field should be a string or an int") : new CancelRequestArgs(id);
+          });
+
+        _deserializers[typeof(ExitRequestArgs)] = new JsonElementDeserializer<ExitRequestArgs>(
+          (json, jsonElement) => new ExitRequestArgs());
+
+        _deserializers[typeof(ErrorMessage)] = new JsonElementDeserializer<ErrorMessage>(
+          (json, jsonElement) =>
+          {
+              ValidateJsonRpcHeader(json, jsonElement);
+
               int id = json.Bind<int>(jsonElement, JsonRpcStrings.Id);
-              return new CancelRequestArgs(id);
+              var error = jsonElement.GetProperty(JsonRpcStrings.Error);
+
+#if !NETCOREAPP
+                      var data = json.OptionalPropertyBind<IDictionary<string, object?>>(error, JsonRpcStrings.Data);
+                      if (data is not null)
+                      {
+                          if (data is Dictionary<string, object?> error && error.Count == 0)
+                          {
+                              data = null!;
+                          }
+                      }
+#endif
+              var code = json.Bind<int>(error, JsonRpcStrings.Code);
+              var message = json.Bind<string>(error, JsonRpcStrings.Message);
+
+              var data = json.OptionalPropertyBind<IDictionary<string, object?>>(error, JsonRpcStrings.Data);
+
+              return new ErrorMessage(
+                  Id: id,
+                  ErrorCode: code,
+                  Message: message ?? string.Empty,
+                  Data: data);
           });
 
         // Try to add serializers passed from outside
@@ -683,6 +754,42 @@ internal sealed class Json
         throw new InvalidOperationException($"Cannot find deserializer for {typeof(T)}.");
     }
 
+    internal T? OptionalPropertyBind<T>(JsonElement element, string? property = null)
+    {
+        if (property != null && !element.TryGetProperty(property, out element))
+        {
+            return default;
+        }
+
+        bool deserializerFound = _deserializers.TryGetValue(typeof(T), out JsonDeserializer? deserializer);
+
+        if (deserializerFound && deserializer is JsonElementDeserializer<T> objectDeserializer)
+        {
+            T obj = objectDeserializer.CreateObject(this, element);
+            return obj;
+        }
+
+        if (deserializerFound && deserializer is JsonCollectionDeserializer<T> collectionDeserializer)
+        {
+            T obj = collectionDeserializer.CreateObject(this, element);
+            return obj;
+        }
+
+        if (deserializerFound && deserializer is JsonElementDeserializer<object> baseObjectDeserializer)
+        {
+            var obj = (T)baseObjectDeserializer.CreateObject(this, element);
+            return obj;
+        }
+
+        if (deserializerFound && deserializer is JsonCollectionDeserializer<object> baseCollectionDeserializer)
+        {
+            var obj = (T)baseCollectionDeserializer.CreateObject(this, element);
+            return obj;
+        }
+
+        throw new InvalidOperationException($"Cannot find deserializer for {typeof(T)}.");
+    }
+
     private async Task SerializeAsync(object? obj, Utf8JsonWriter writer)
     {
         // Serialize null
@@ -747,6 +854,17 @@ internal sealed class Json
         if (converter == null)
         {
             throw new InvalidOperationException($"Flattener missing {obj.GetType()}.");
+        }
+    }
+
+    private static void ValidateJsonRpcHeader(Json json, JsonElement jsonElement)
+    {
+        var rpcVersion = json.Bind<string>(jsonElement, JsonRpcStrings.JsonRpc);
+
+        // Note: The test anywhere supports only JSON-RPC version 2.0
+        if (rpcVersion is null or not RPCVersion)
+        {
+            throw new MessageFormatException("jsonrpc field is not valid");
         }
     }
 }
