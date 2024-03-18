@@ -489,12 +489,16 @@ internal sealed class Json
                 return error;
             }
 
-            if (jsonElement.TryGetProperty(JsonRpcStrings.Result, out JsonElement result))
+            if (jsonElement.TryGetProperty(JsonRpcStrings.Result, out JsonElement element))
             {
                 // Note: Because the result message does not contain the original method name,
                 //       it's not possible for us to do a typed deserialization.
                 //       The best option we've got is to return a generic property bag.
-                int id = json.Bind<int>(result, JsonRpcStrings.Id);
+                string idStr = json.Bind<string>(jsonElement, JsonRpcStrings.Id);
+                int id = int.TryParse(idStr, out int identity) ? identity : default;
+
+                var result = element.ValueKind == JsonValueKind.Null ? null :
+                    json.Bind<IDictionary<string, object>>(jsonElement, JsonRpcStrings.Result);
 
                 return new ResponseMessage(id, result);
             }
