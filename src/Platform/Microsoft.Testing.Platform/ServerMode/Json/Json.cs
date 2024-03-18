@@ -491,26 +491,23 @@ internal sealed class Json
                 int id = json.OptionalPropertyBind<int>(jsonElement, JsonRpcStrings.Id);
 
                 object? @params = null;
-                if (method != JsonRpcMethods.Exit)
+                if (jsonElement.TryGetProperty(JsonRpcStrings.Params, out JsonElement value))
                 {
-                    if (jsonElement.TryGetProperty(JsonRpcStrings.Params, out JsonElement value))
+                    // Parse the specific methods
+                    @params = method switch
                     {
-                        // Parse the specific methods
-                        @params = method switch
-                        {
-                            JsonRpcMethods.Initialize => json.Bind<InitializeRequestArgs>(value),
-                            JsonRpcMethods.TestingDiscoverTests => json.Bind<DiscoverRequestArgs>(value),
-                            JsonRpcMethods.TestingRunTests => json.Bind<RunRequestArgs>(value),
-                            JsonRpcMethods.CancelRequest => json.Bind<CancelRequestArgs>(value),
-                            JsonRpcMethods.Exit => json.Bind<ExitRequestArgs>(value),
+                        JsonRpcMethods.Initialize => json.Bind<InitializeRequestArgs>(value),
+                        JsonRpcMethods.TestingDiscoverTests => json.Bind<DiscoverRequestArgs>(value),
+                        JsonRpcMethods.TestingRunTests => json.Bind<RunRequestArgs>(value),
+                        JsonRpcMethods.CancelRequest => json.Bind<CancelRequestArgs>(value),
+                        JsonRpcMethods.Exit => json.Bind<ExitRequestArgs>(value),
 
-                            // Note: Let the server report unknown RPC request back to the client.
-                            _ => null,
-                        };
-                    }
+                        // Note: Let the server report unknown RPC request back to the client.
+                        _ => null,
+                    };
                 }
 
-                return id is default(int)
+                return id is not default(int)
                     ? new RequestMessage(id, method, @params)
                     : new NotificationMessage(method, @params);
             }
@@ -527,8 +524,7 @@ internal sealed class Json
                 // Note: Because the result message does not contain the original method name,
                 //       it's not possible for us to do a typed deserialization.
                 //       The best option we've got is to return a generic property bag.
-                string idStr = json.Bind<string>(jsonElement, JsonRpcStrings.Id);
-                int id = int.TryParse(idStr, out int identity) ? identity : default;
+                int id = json.Bind<int>(jsonElement, JsonRpcStrings.Id);
 
                 var result = element.ValueKind == JsonValueKind.Null ? null :
                     json.Bind<IDictionary<string, object>>(jsonElement, JsonRpcStrings.Result);
