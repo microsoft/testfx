@@ -552,6 +552,78 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
+        /// </summary>
+        internal static string PreferConstructorOverTestInitializeMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferConstructorOverTestInitializeMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
+        /// </summary>
+        internal static string PreferConstructorOverTestInitializeTitle {
+            get {
+                return ResourceManager.GetString("PreferConstructorOverTestInitializeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer &apos;Dispose&apos; over TestCleanup methods.
+        /// </summary>
+        internal static string PreferDisposeOverTestCleanupMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferDisposeOverTestCleanupMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer &apos;Dispose&apos; over TestCleanup methods.
+        /// </summary>
+        internal static string PreferDisposeOverTestCleanupTitle {
+            get {
+                return ResourceManager.GetString("PreferDisposeOverTestCleanupTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer TestCleanup over &apos;Dispose&apos; methods.
+        /// </summary>
+        internal static string PreferTestCleanupOverDisposeMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferTestCleanupOverDisposeMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer TestCleanup over &apos;Dispose&apos; methods.
+        /// </summary>
+        internal static string PreferTestCleanupOverDisposeTitle {
+            get {
+                return ResourceManager.GetString("PreferTestCleanupOverDisposeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer TestInitialize methods over constructors.
+        /// </summary>
+        internal static string PreferTestInitializeOverConstructorMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferTestInitializeOverConstructorMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer TestInitialize methods over constructors.
+        /// </summary>
+        internal static string PreferTestInitializeOverConstructorTitle {
+            get {
+                return ResourceManager.GetString("PreferTestInitializeOverConstructorTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
         /// </summary>
         internal static string PublicTypeShouldBeTestClassDescription {

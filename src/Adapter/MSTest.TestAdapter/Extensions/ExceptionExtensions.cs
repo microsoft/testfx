@@ -19,15 +19,22 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 internal static class ExceptionExtensions
 {
     /// <summary>
-    /// In .NET framework, the exception thrown by the test method invocation is wrapped in a TargetInvocationException, so we
-    /// need to unwrap it to get the real exception.
+    /// TargetInvocationException and TypeInitializationException do not carry any useful information
+    /// to the user. Find the first inner exception that has useful information.
     /// </summary>
     internal static Exception GetRealException(this Exception exception)
-        => exception.GetType() == typeof(TargetInvocationException)
-            && exception.Source is "mscorlib" or "System.Private.CoreLib"
-            && exception.InnerException is not null
-                ? exception.InnerException
-                : exception;
+    {
+        // TargetInvocationException: Because .NET Framework wraps method.Invoke() into TargetInvocationException.
+        // TypeInitializationException: Because AssemblyInitialize is static, and often helpers that are also static
+        // are used to implement it, and they fail in constructor.
+        while (exception is TargetInvocationException or TypeInitializationException
+            && exception.InnerException is not null)
+        {
+            exception = exception.InnerException;
+        }
+
+        return exception;
+    }
 
     /// <summary>
     /// Get the exception message if available, empty otherwise.

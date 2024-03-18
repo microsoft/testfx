@@ -35,6 +35,14 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$Extensions$", string.Empty),
                addPublicFeeds: true);
 
+        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
+""");
+
         var compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
@@ -63,6 +71,14 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$Extensions$", string.Empty),
                addPublicFeeds: true);
 
+        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
+""");
+
         var compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
@@ -90,6 +106,47 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", string.Empty),
                addPublicFeeds: true);
+
+        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
+""");
+
+        var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        Assert.AreEqual(0, compilationResult.ExitCode);
+        foreach (var tfm in multiTfm.Split(";"))
+        {
+            var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+            var testHostResult = await testHost.ExecuteAsync();
+            testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        }
+    }
+
+    [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
+    public async Task RunTests_With_CentralPackageManagement_Standalone(string multiTfm, BuildConfiguration buildConfiguration)
+    {
+        using TestAsset generator = await TestAsset.GenerateAssetAsync(
+               AssetName,
+               SourceCode
+               .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
+               .PatchCodeWithReplace("$OutputType$", string.Empty)
+               .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
+               .PatchCodeWithReplace("$EnableMSTestRunner$", string.Empty)
+               .PatchCodeWithReplace("$TestingPlatformDotnetTestSupport$", string.Empty)
+               .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
+               .PatchCodeWithReplace("$Extensions$", string.Empty),
+               addPublicFeeds: true);
+
+        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
+""");
 
         var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
@@ -160,6 +217,14 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$Extensions$", msbuildExtensionEnableFragment),
                addPublicFeeds: true);
 
+        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
+""");
+
         var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
         foreach (var tfm in multiTfm.Split(";"))
@@ -187,6 +252,14 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>AllMicrosoft</TestingExtensionsProfile>"),
                addPublicFeeds: true);
+
+        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
+""");
 
         var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
@@ -227,6 +300,14 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$Extensions$", enableDefaultExtensions ? string.Empty : "<TestingExtensionsProfile>None</TestingExtensionsProfile>"),
                addPublicFeeds: true);
 
+        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
+""");
+
         var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
         foreach (var tfm in multiTfm.Split(";"))
@@ -258,6 +339,14 @@ public sealed class SdkTests : AcceptanceTestBase
                .PatchCodeWithReplace("$ExtraProperties$", string.Empty)
                .PatchCodeWithReplace("$Extensions$", "<TestingExtensionsProfile>WrongName</TestingExtensionsProfile>"),
                addPublicFeeds: true);
+
+        File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
+""");
 
         var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
         Assert.AreEqual(1, compilationResult.ExitCode);
@@ -291,6 +380,14 @@ public sealed class SdkTests : AcceptanceTestBase
                    .PatchCodeWithReplace("$Extensions$", string.Empty),
                    addPublicFeeds: true);
 
+            File.WriteAllText(Path.Combine(generator.TargetAssetPath, "Directory.Packages.props"), """
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+</Project>
+""");
+
             var compilationResult = await DotnetCli.RunAsync($"publish -r {RID} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
             compilationResult.AssertOutputNotContains("warning");
             compilationResult.AssertOutputContains("Generating native code");
@@ -311,6 +408,7 @@ public sealed class SdkTests : AcceptanceTestBase
     $TestingPlatformDotnetTestSupport$
     $ExtraProperties$
     <PlatformTarget>x64</PlatformTarget>
+    <NoWarn>$(NoWarn);NU1507</NoWarn>
   </PropertyGroup>
 
   <!-- Extensions -->

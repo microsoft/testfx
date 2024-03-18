@@ -22,4 +22,8 @@ internal static class DiagnosticIds
     public const string TestMethodShouldNotBeIgnoredRuleId = "MSTEST0015";
     public const string TestClassShouldHaveTestMethodRuleId = "MSTEST0016";
     public const string AssertionArgsShouldBePassedInCorrectOrderRuleId = "MSTEST0017";
+    public const string PreferTestInitializeOverConstructorRuleId = "MSTEST0019";
+    public const string PreferConstructorOverTestInitializeRuleId = "MSTEST0020";
+    public const string PreferDisposeOverTestCleanupRuleId = "MSTEST0021";
+    public const string PreferTestCleanupOverDisposeRuleId = "MSTEST0022";
 }
