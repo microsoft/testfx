@@ -627,7 +627,6 @@ internal sealed class Json
                         locationFile,
                         new LinePositionSpan(new LinePosition(locationLineStart, 0), new LinePosition(locationLineEnd, 0)));
                     propertyBag.Add(testFileLocationProperty);
-
                 }
 
                 return new TestNode
