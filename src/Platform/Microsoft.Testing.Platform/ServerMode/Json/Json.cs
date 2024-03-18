@@ -623,26 +623,23 @@ internal sealed class Json
               int id = json.Bind<int>(jsonElement, JsonRpcStrings.Id);
               var error = jsonElement.GetProperty(JsonRpcStrings.Error);
 
-#if !NETCOREAPP
-                      var data = json.OptionalPropertyBind<IDictionary<string, object?>>(error, JsonRpcStrings.Data);
-                      if (data is not null)
-                      {
-                          if (data is Dictionary<string, object?> error && error.Count == 0)
-                          {
-                              data = null!;
-                          }
-                      }
-#endif
+              var dataObj = json.OptionalPropertyBind<IDictionary<string, object?>>(error, JsonRpcStrings.Data);
+              if (dataObj is not null)
+              {
+                  if (dataObj is Dictionary<string, object?> data && data.Count == 0)
+                  {
+                      dataObj = null!;
+                  }
+              }
+
               var code = json.Bind<int>(error, JsonRpcStrings.Code);
               var message = json.Bind<string>(error, JsonRpcStrings.Message);
-
-              var data = json.OptionalPropertyBind<IDictionary<string, object?>>(error, JsonRpcStrings.Data);
 
               return new ErrorMessage(
                   Id: id,
                   ErrorCode: code,
                   Message: message ?? string.Empty,
-                  Data: data);
+                  Data: dataObj);
           });
 
         // Try to add serializers passed from outside
