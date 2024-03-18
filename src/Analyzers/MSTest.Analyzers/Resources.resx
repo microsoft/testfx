@@ -307,6 +307,12 @@
   <data name="DoNotNegateBooleanAssertionTitle" xml:space="preserve">
     <value>Do not negate boolean assertions</value>
   </data>
+  <data name="DoNotStoreStaticTestContextAnalyzerMessageFormat" xml:space="preserve">
+    <value>Do not store TestContext in a static member</value>
+  </data>
+  <data name="DoNotStoreStaticTestContextAnalyzerTitle" xml:space="preserve">
+    <value>Do not store TestContext in a static member</value>
+  </data>
   <data name="PreferConstructorOverTestInitializeMessageFormat" xml:space="preserve">
     <value>Prefer constructors over TestInitialize methods</value>
   </data>

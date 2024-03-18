@@ -329,6 +329,16 @@
         <target state="new">Do not negate boolean assertions</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotStoreStaticTestContextAnalyzerMessageFormat">
+        <source>Do not store TestContext in a static member</source>
+        <target state="new">Do not store TestContext in a static member</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotStoreStaticTestContextAnalyzerTitle">
+        <source>Do not store TestContext in a static member</source>
+        <target state="new">Do not store TestContext in a static member</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
         <source>Prefer constructors over TestInitialize methods</source>
         <target state="new">Prefer constructors over TestInitialize methods</target>

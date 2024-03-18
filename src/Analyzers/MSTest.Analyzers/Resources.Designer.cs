@@ -570,6 +570,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do not store TestContext in a static member.
+        /// </summary>
+        internal static string DoNotStoreStaticTestContextAnalyzerMessageFormat {
+            get {
+                return ResourceManager.GetString("DoNotStoreStaticTestContextAnalyzerMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not store TestContext in a static member.
+        /// </summary>
+        internal static string DoNotStoreStaticTestContextAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("DoNotStoreStaticTestContextAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
         /// </summary>
         internal static string PreferConstructorOverTestInitializeMessageFormat {
