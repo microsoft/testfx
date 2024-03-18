@@ -301,6 +301,12 @@
   <data name="DataRowShouldBeValidTitle" xml:space="preserve">
     <value>DataRow should be valid</value>
   </data>
+  <data name="DoNotNegateBooleanAssertionMessageFormat" xml:space="preserve">
+    <value>Do not negate boolean assertions, instead use the opposite assertion</value>
+  </data>
+  <data name="DoNotNegateBooleanAssertionTitle" xml:space="preserve">
+    <value>Do not negate boolean assertions</value>
+  </data>
   <data name="PreferConstructorOverTestInitializeMessageFormat" xml:space="preserve">
     <value>Prefer constructors over TestInitialize methods</value>
   </data>
