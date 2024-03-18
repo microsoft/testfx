@@ -26,4 +26,6 @@ internal static class DiagnosticIds
     public const string PreferConstructorOverTestInitializeRuleId = "MSTEST0020";
     public const string PreferDisposeOverTestCleanupRuleId = "MSTEST0021";
     public const string PreferTestCleanupOverDisposeRuleId = "MSTEST0022";
+    public const string DoNotNegateBooleanAssertionRuleId = "MSTEST0023";
+    public const string DoNotStoreStaticTestContextAnalyzerRuleId = "MSTEST0024";
 }

@@ -552,6 +552,42 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Do not negate boolean assertions, instead use the opposite assertion.
+        /// </summary>
+        internal static string DoNotNegateBooleanAssertionMessageFormat {
+            get {
+                return ResourceManager.GetString("DoNotNegateBooleanAssertionMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not negate boolean assertions.
+        /// </summary>
+        internal static string DoNotNegateBooleanAssertionTitle {
+            get {
+                return ResourceManager.GetString("DoNotNegateBooleanAssertionTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not store TestContext in a static member.
+        /// </summary>
+        internal static string DoNotStoreStaticTestContextAnalyzerMessageFormat {
+            get {
+                return ResourceManager.GetString("DoNotStoreStaticTestContextAnalyzerMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not store TestContext in a static member.
+        /// </summary>
+        internal static string DoNotStoreStaticTestContextAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("DoNotStoreStaticTestContextAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
         /// </summary>
         internal static string PreferConstructorOverTestInitializeMessageFormat {
