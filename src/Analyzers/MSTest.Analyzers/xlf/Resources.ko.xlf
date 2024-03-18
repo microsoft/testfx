@@ -130,6 +130,21 @@
         <target state="translated">AssemblyInitialize 메서드에는 유효한 레이아웃이 있어야 합니다.</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
+        <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
+        <target state="new">'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
+        <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
+        <target state="new">Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
+        <source>Assertion arguments should be passed in the correct order</source>
+        <target state="new">Assertion arguments should be passed in the correct order</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">예상되는 호출만 예상되는 예외를 throw하도록 보장하는 '[ExpectedException]'보다 'Assert.ThrowsException' 또는 'Assert.ThrowsExceptionAsync'를 사용하는 것이 좋습니다. 또한 Assert API는 더 많은 유연성을 제공하고 예외의 추가 속성을 어설션할 수 있도록 합니다.</target>
@@ -302,6 +317,56 @@
       <trans-unit id="DataRowShouldBeValidTitle">
         <source>DataRow should be valid</source>
         <target state="translated">DataRow는 유효해야 함</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
+        <source>Do not negate boolean assertions, instead use the opposite assertion</source>
+        <target state="new">Do not negate boolean assertions, instead use the opposite assertion</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionTitle">
+        <source>Do not negate boolean assertions</source>
+        <target state="new">Do not negate boolean assertions</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="new">Prefer constructors over TestInitialize methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeTitle">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="new">Prefer constructors over TestInitialize methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferDisposeOverTestCleanupMessageFormat">
+        <source>Prefer 'Dispose' over TestCleanup methods</source>
+        <target state="new">Prefer 'Dispose' over TestCleanup methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferDisposeOverTestCleanupTitle">
+        <source>Prefer 'Dispose' over TestCleanup methods</source>
+        <target state="new">Prefer 'Dispose' over TestCleanup methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeMessageFormat">
+        <source>Prefer TestCleanup over 'Dispose' methods</source>
+        <target state="new">Prefer TestCleanup over 'Dispose' methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeTitle">
+        <source>Prefer TestCleanup over 'Dispose' methods</source>
+        <target state="new">Prefer TestCleanup over 'Dispose' methods</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="new">Prefer TestInitialize methods over constructors</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorTitle">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="new">Prefer TestInitialize methods over constructors</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
