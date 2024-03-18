@@ -512,13 +512,6 @@ internal sealed class Json
                     : new NotificationMessage(method, @params);
             }
 
-            ErrorMessage? error = json.OptionalPropertyBind<ErrorMessage>(jsonElement, JsonRpcStrings.Error);
-
-            if (error is not null)
-            {
-                return error;
-            }
-
             if (jsonElement.TryGetProperty(JsonRpcStrings.Result, out JsonElement element))
             {
                 // Note: Because the result message does not contain the original method name,
@@ -532,7 +525,9 @@ internal sealed class Json
                 return new ResponseMessage(id, result);
             }
 
-            throw new MessageFormatException();
+            ErrorMessage? error = json.OptionalPropertyBind<ErrorMessage>(jsonElement);
+
+            return error is not null ? (RpcMessage)error : throw new MessageFormatException();
         });
 
         _deserializers[typeof(InitializeRequestArgs)] = new JsonElementDeserializer<InitializeRequestArgs>((json, jsonElement) =>
@@ -592,16 +587,22 @@ internal sealed class Json
 
         _deserializers[typeof(DiscoverRequestArgs)] = new JsonElementDeserializer<DiscoverRequestArgs>((json, jsonElement) =>
         {
+            string runId = json.Bind<string>(jsonElement, JsonRpcStrings.RunId);
+            _ = Guid.TryParse(runId, out Guid result);
+
             return new DiscoverRequestArgs(
-                RunId: json.Bind<Guid>(jsonElement, JsonRpcStrings.RunId),
+                RunId: result,
                 TestNodes: json.OptionalPropertyBind<ICollection<TestNode>?>(jsonElement, JsonRpcStrings.Tests),
                 GraphFilter: json.OptionalPropertyBind<string>(jsonElement, JsonRpcStrings.Filter));
         });
 
         _deserializers[typeof(RunRequestArgs)] = new JsonElementDeserializer<RunRequestArgs>((json, jsonElement) =>
         {
+            string runId = json.Bind<string>(jsonElement, JsonRpcStrings.RunId);
+            _ = Guid.TryParse(runId, out Guid result);
+
             return new RunRequestArgs(
-                RunId: json.Bind<Guid>(jsonElement, JsonRpcStrings.RunId),
+                RunId: result,
                 TestNodes: json.OptionalPropertyBind<ICollection<TestNode>?>(jsonElement, JsonRpcStrings.Tests),
                 GraphFilter: json.OptionalPropertyBind<string>(jsonElement, JsonRpcStrings.Filter));
         });
@@ -640,9 +641,9 @@ internal sealed class Json
         _deserializers[typeof(CancelRequestArgs)] = new JsonElementDeserializer<CancelRequestArgs>(
           (json, jsonElement) =>
           {
-              int id = json.OptionalPropertyBind<int>(jsonElement, JsonRpcStrings.Id);
+              string? id = json.OptionalPropertyBind<string>(jsonElement, JsonRpcStrings.Id);
 
-              return id is default(int) ? throw new MessageFormatException("id field should be a string or an int") : new CancelRequestArgs(id);
+              return int.TryParse(id, out int result) ? new CancelRequestArgs(result) : throw new MessageFormatException("id field should be a string or an int");
           });
 
         _deserializers[typeof(ExitRequestArgs)] = new JsonElementDeserializer<ExitRequestArgs>(
