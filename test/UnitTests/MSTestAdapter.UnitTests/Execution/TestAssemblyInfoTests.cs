@@ -319,7 +319,7 @@ public class TestAssemblyInfoTests : TestContainer
 
         var actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();
 
-        Verify(actualErrorMessage.StartsWith("Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: System.InvalidOperationException: I fail.. StackTrace:", StringComparison.Ordinal));
+        Verify(actualErrorMessage.StartsWith("Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: System.TypeInitializationException: The type initializer for 'FailingStaticHelper' threw an exception. ---> System.InvalidOperationException: I fail.. StackTrace:", StringComparison.Ordinal));
         Verify(actualErrorMessage.Contains("at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.FailingStaticHelper..cctor()"));
     }
 
