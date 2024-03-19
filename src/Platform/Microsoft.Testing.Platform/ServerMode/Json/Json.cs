@@ -20,7 +20,6 @@ internal sealed class Json
 
     public Json(Dictionary<Type, JsonSerializer>? serializers = null, Dictionary<Type, JsonDeserializer>? deserializers = null)
     {
-
         // Overridden default serializers for better performance using .NET runtime serialization APIs
 
         // Serialize response types.
@@ -264,7 +263,7 @@ internal sealed class Json
                             {
                                 properties.Add(("execution-state", "failed"));
                                 properties.Add(("error.message", failedTestNodeStateProperty?.Explanation ?? failedTestNodeStateProperty?.Exception?.Message));
-                                if (failedTestNodeStateProperty?.Exception != null)
+                                if (failedTestNodeStateProperty?.Exception is not null)
                                 {
                                     Exception exception = failedTestNodeStateProperty.Exception;
                                     properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));
@@ -279,7 +278,7 @@ internal sealed class Json
                             {
                                 properties.Add(("execution-state", "timed-out"));
                                 properties.Add(("error.message", timeoutTestNodeStateProperty?.Explanation ?? timeoutTestNodeStateProperty?.Exception?.Message));
-                                if (timeoutTestNodeStateProperty?.Exception != null)
+                                if (timeoutTestNodeStateProperty?.Exception is not null)
                                 {
                                     properties.Add(("error.stacktrace", timeoutTestNodeStateProperty?.Exception?.StackTrace ?? string.Empty));
                                 }
@@ -291,7 +290,7 @@ internal sealed class Json
                             {
                                 properties.Add(("execution-state", "error"));
                                 properties.Add(("error.message", errorTestNodeStateProperty?.Explanation ?? errorTestNodeStateProperty?.Exception?.Message));
-                                if (errorTestNodeStateProperty?.Exception != null)
+                                if (errorTestNodeStateProperty?.Exception is not null)
                                 {
                                     properties.Add(("error.stacktrace", errorTestNodeStateProperty?.Exception?.StackTrace ?? string.Empty));
                                 }
@@ -303,7 +302,7 @@ internal sealed class Json
                             {
                                 properties.Add(("execution-state", "cancelled"));
                                 properties.Add(("error.message", cancelledTestNodeStateProperty?.Explanation ?? cancelledTestNodeStateProperty?.Exception?.Message));
-                                if (cancelledTestNodeStateProperty?.Exception != null)
+                                if (cancelledTestNodeStateProperty?.Exception is not null)
                                 {
                                     properties.Add(("error.stacktrace", cancelledTestNodeStateProperty?.Exception?.StackTrace ?? string.Empty));
                                 }
@@ -635,7 +634,7 @@ internal sealed class Json
           });
 
         // Try to add serializers passed from outside
-        if (serializers != null)
+        if (serializers is not null)
         {
             foreach (KeyValuePair<Type, JsonSerializer> serializer in serializers)
             {
@@ -650,7 +649,7 @@ internal sealed class Json
             }
         }
 
-        if (deserializers != null)
+        if (deserializers is not null)
         {
             foreach (KeyValuePair<Type, JsonDeserializer> deserializer in deserializers)
             {
@@ -776,7 +775,7 @@ internal sealed class Json
             {
                 writer.WriteStartObject();
                 (string Key, object? Value)[]? properties = objectConverter.Properties(obj);
-                if (properties != null)
+                if (properties is not null)
                 {
                     int count = 1;
                     foreach ((string property, object? value) in properties)
