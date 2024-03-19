@@ -38,21 +38,7 @@ public class TestMethodInfo : ITestMethod
         TestMethod = testMethod;
         Parent = parent;
         TestMethodOptions = testMethodOptions;
-        TestInitializeMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
-        TestCleanupMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
     }
-
-    /// <summary>
-    /// Gets the timeout for the test initialize methods.
-    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
-    /// </summary>
-    internal Dictionary<MethodInfo, int> TestInitializeMethodTimeoutMilliseconds { get; }
-
-    /// <summary>
-    /// Gets the timeout for the test cleanup methods.
-    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
-    /// </summary>
-    internal Dictionary<MethodInfo, int> TestCleanupMethodTimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets a value indicating whether timeout is set.
@@ -634,7 +620,7 @@ public class TestMethodInfo : ITestMethod
         }
 
         int? timeout = null;
-        if (TestInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
+        if (Parent.TestInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
         {
             timeout = localTimeout;
         }
@@ -656,7 +642,7 @@ public class TestMethodInfo : ITestMethod
         }
 
         int? timeout = null;
-        if (TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
+        if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
         {
             timeout = localTimeout;
         }

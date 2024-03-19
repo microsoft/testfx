@@ -54,6 +54,8 @@ public class TestClassInfo
         ClassCleanupMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
         BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
         BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
+        TestInitializeMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
+        TestCleanupMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
         Parent = parent;
         ClassAttribute = classAttribute;
         _testClassExecuteSyncObject = new object();
@@ -114,6 +116,18 @@ public class TestClassInfo
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
     internal Dictionary<MethodInfo, int> ClassCleanupMethodTimeoutMilliseconds { get; }
+
+    /// <summary>
+    /// Gets the timeout for the test initialize methods.
+    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
+    /// </summary>
+    internal Dictionary<MethodInfo, int> TestInitializeMethodTimeoutMilliseconds { get; private set; }
+
+    /// <summary>
+    /// Gets the timeout for the test cleanup methods.
+    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
+    /// </summary>
+    internal Dictionary<MethodInfo, int> TestCleanupMethodTimeoutMilliseconds { get; private set; }
 
     /// <summary>
     /// Gets a value indicating whether class initialize has executed.

@@ -659,8 +659,6 @@ internal class TypeCache : MarshalByRefObject
             throw new TypeInspectionException(message);
         }
 
-        TestMethodInfo testMethodInfo = new(methodInfo, classInfo, new());
-
         if (hasTestInitialize)
         {
             if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
@@ -673,11 +671,11 @@ internal class TypeCache : MarshalByRefObject
 
                 var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
                 DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
-                testMethodInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
             }
             else if (MSTestSettings.CurrentSettings.TestInitializeTimeout > 0)
             {
-                testMethodInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestInitializeTimeout);
+                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestInitializeTimeout);
             }
 
             if (!isBase)
@@ -705,11 +703,11 @@ internal class TypeCache : MarshalByRefObject
 
                 var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
                 DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
-                testMethodInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
             }
             else if (MSTestSettings.CurrentSettings.TestCleanupTimeout > 0)
             {
-                testMethodInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestCleanupTimeout);
+                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestCleanupTimeout);
             }
 
             if (!isBase)
