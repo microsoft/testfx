@@ -238,12 +238,6 @@ public class TestAssemblyInfo
             return null;
         }
 
-        // Cache and return an already created TestFailedException.
-        if (assemblyCleanupException is TestFailedException)
-        {
-            return assemblyCleanupException.ToString();
-        }
-
         var realException = assemblyCleanupException.InnerException ?? assemblyCleanupException;
 
         // special case AssertFailedException to trim off part of the stack trace
