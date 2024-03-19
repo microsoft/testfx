@@ -415,10 +415,6 @@ public class TestClassInfo
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
                         ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
                     }
-
-                    IsClassCleanupExecuted = true;
-
-                    return null;
                 }
                 catch (Exception exception)
                 {
@@ -430,12 +426,9 @@ public class TestClassInfo
         // If ClassCleanup was successful, then don't do anything
         if (ClassCleanupException == null)
         {
+            // We didn't but it in a finally function above to not change the old behavior as it was only in the the try
+            IsClassCleanupExecuted = true;
             return null;
-        }
-
-        if (ClassCleanupException is TestFailedException)
-        {
-            throw ClassCleanupException;
         }
 
         var realException = ClassCleanupException.GetRealException();
@@ -480,6 +473,8 @@ public class TestClassInfo
             return;
         }
 
+        MethodInfo? classCleanupMethod = null;
+
         lock (_testClassExecuteSyncObject)
         {
             if (IsClassCleanupExecuted
@@ -487,8 +482,6 @@ public class TestClassInfo
             {
                 return;
             }
-
-            MethodInfo? classCleanupMethod = null;
 
             try
             {
@@ -500,48 +493,49 @@ public class TestClassInfo
                     classCleanupMethod = baseClassCleanupQueue.Dequeue();
                     ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
                 }
-
-                IsClassCleanupExecuted = true;
-
-                // If ClassCleanup was successful, then don't do anything
-                if (ClassCleanupException == null)
-                {
-                    return;
-                }
-
-                if (ClassCleanupException is TestFailedException)
-                {
-                    throw ClassCleanupException;
-                }
             }
             catch (Exception exception)
             {
-                var realException = exception.GetRealException();
-                ClassCleanupException = realException;
-
-                // special case AssertFailedException to trim off part of the stack trace
-                string errorMessage = realException is AssertFailedException or AssertInconclusiveException
-                    ? realException.Message
-                    : realException.GetFormattedExceptionMessage();
-
-                var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
-
-                var testFailedException = new TestFailedException(
-                    ObjectModelUnitTestOutcome.Failed,
-                    string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-                        classCleanupMethod!.DeclaringType!.Name,
-                        classCleanupMethod.Name,
-                        errorMessage,
-                        exceptionStackTraceInfo?.ErrorStackTrace),
-                    exceptionStackTraceInfo,
-                    realException);
-                ClassCleanupException = testFailedException;
-
-                throw testFailedException;
+                ClassCleanupException = exception;
             }
         }
+
+        // If ClassCleanup was successful, then don't do anything
+        if (ClassCleanupException == null)
+        {
+            // We didn't but it in a finally function above to not change the old behavior as it was only in the the try
+            IsClassCleanupExecuted = true;
+            return;
+        }
+
+        if (ClassCleanupException is TestFailedException)
+        {
+            throw ClassCleanupException;
+        }
+
+        var realException = ClassCleanupException.GetRealException();
+
+        // special case AssertFailedException to trim off part of the stack trace
+        string errorMessage = realException is AssertFailedException or AssertInconclusiveException
+            ? realException.Message
+            : realException.GetFormattedExceptionMessage();
+
+        var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
+
+        var testFailedException = new TestFailedException(
+            ObjectModelUnitTestOutcome.Failed,
+            string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_ClassCleanupMethodWasUnsuccesful,
+                classCleanupMethod!.DeclaringType!.Name,
+                classCleanupMethod.Name,
+                errorMessage,
+                exceptionStackTraceInfo?.ErrorStackTrace),
+            exceptionStackTraceInfo,
+            realException);
+        ClassCleanupException = testFailedException;
+
+        throw testFailedException;
     }
 
     private TestFailedException? InvokeCleanupMethod(MethodInfo? methodInfo)
