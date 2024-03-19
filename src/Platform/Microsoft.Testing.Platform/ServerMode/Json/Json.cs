@@ -12,8 +12,6 @@ namespace Microsoft.Testing.Platform.ServerMode.Json;
 
 internal sealed class Json
 {
-    private const string RPCVersion = "2.0";
-
     private readonly Dictionary<Type, JsonDeserializer> _deserializers = [];
     private readonly Dictionary<Type, JsonSerializer> _serializers = [];
     private readonly ObjectPool<MemoryStream> _memoryStreamPool = new(() => new MemoryStream());
@@ -27,7 +25,7 @@ internal sealed class Json
          {
              var list = new (string, object?)[4]
              {
-                 (JsonRpcStrings.JsonRpc, RPCVersion),
+                 (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Id, request.Id),
                  (JsonRpcStrings.Method, request.Method),
                  (JsonRpcStrings.Params, request.Params),
@@ -40,7 +38,7 @@ internal sealed class Json
         {
             var list = new (string, object?)[3]
             {
-                 (JsonRpcStrings.JsonRpc, RPCVersion),
+                 (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Id, response.Id),
                  (JsonRpcStrings.Result, response.Result),
             };
@@ -52,7 +50,7 @@ internal sealed class Json
         {
             var list = new (string, object?)[3]
             {
-                 (JsonRpcStrings.JsonRpc, RPCVersion),
+                 (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Method, notification.Method),
                  (JsonRpcStrings.Params, notification.Params),
             };
@@ -71,7 +69,7 @@ internal sealed class Json
 
             var list = new (string, object?)[4]
             {
-                 (JsonRpcStrings.JsonRpc, RPCVersion),
+                 (JsonRpcStrings.JsonRpc, "2.0"),
                  (JsonRpcStrings.Code, error.ErrorCode),
                  (JsonRpcStrings.Id, error.Id),
                  (JsonRpcStrings.Error, errorMsg),
@@ -831,7 +829,7 @@ internal sealed class Json
         var rpcVersion = json.Bind<string>(jsonElement, JsonRpcStrings.JsonRpc);
 
         // Note: The test anywhere supports only JSON-RPC version 2.0
-        if (rpcVersion is null or not RPCVersion)
+        if (rpcVersion is null or not "2.0")
         {
             throw new MessageFormatException("jsonrpc field is not valid");
         }
