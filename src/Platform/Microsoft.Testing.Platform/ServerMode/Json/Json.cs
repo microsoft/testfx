@@ -20,38 +20,6 @@ internal sealed class Json
 
     public Json(Dictionary<Type, JsonSerializer>? serializers = null, Dictionary<Type, JsonDeserializer>? deserializers = null)
     {
-        // At the moment we're sometime not using custom performant serialization because we need to support
-        // netstandard2.0 and to flat with jsonite we use a Dictionary<string, object?>
-        // We share the serialization logic inside SerializerUtilities.
-        _deserializers[typeof(JsoniteProperties)] = new JsonElementDeserializer<JsoniteProperties>(
-        (json, jsonDocument) =>
-        {
-            var obj = new JsoniteProperties();
-            foreach (JsonProperty property in jsonDocument.EnumerateObject())
-            {
-                // !!!DANGER!!!
-                // This is a big boxing source, we have to implement custom json serialization for better performance.
-                // And avoid to land here if serialization is already implemented for the type.
-                object? value = DeserializeObject(json, property.Value);
-                obj.Add(property.Name, value!);
-
-                // !!!DANGER!!!
-            }
-
-            return obj.Count == 0 ? null! : obj;
-
-            static object? DeserializeObject(Json json, JsonElement value)
-                => value.ValueKind switch
-                {
-                    JsonValueKind.Object => json.Bind<JsoniteProperties>(value),
-                    JsonValueKind.Array => value.EnumerateArray().Select(element => DeserializeObject(json, element)).ToList(),
-                    JsonValueKind.String => value.GetString(),
-                    JsonValueKind.Number => value.GetInt32(),
-                    JsonValueKind.True => true,
-                    JsonValueKind.False => false,
-                    _ => null,
-                };
-        });
 
         // Overridden default serializers for better performance using .NET runtime serialization APIs
 
@@ -734,7 +702,7 @@ internal sealed class Json
 
     internal T Bind<T>(JsonElement element, string? property = null)
     {
-        if (property != null)
+        if (property is not null)
         {
             try
             {
@@ -751,7 +719,7 @@ internal sealed class Json
 
     internal bool TryBind<T>(JsonElement element, out T? value, string? property = null)
     {
-        if (property != null && !element.TryGetProperty(property, out element))
+        if (property is not null && !element.TryGetProperty(property, out element))
         {
             value = default;
             return false;
