@@ -132,17 +132,17 @@
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
         <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
-        <target state="new">'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</target>
+        <target state="translated">"Assert.AreEqual", "Assert.AreNotEqual", "Assert.AreSame" y "Assert.AreNotSame" esperan que el valor esperado se pase primero y que el valor real se pase como segundo argumento.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
         <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
-        <target state="new">Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</target>
+        <target state="translated">Los argumentos de aserción deben pasarse en el orden correcto. Se han intercambiado los argumentos "actual" y "expected"/"notExpected".</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
         <source>Assertion arguments should be passed in the correct order</source>
-        <target state="new">Assertion arguments should be passed in the correct order</target>
+        <target state="translated">Los argumentos de aserción deben pasarse en el orden correcto</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
@@ -341,42 +341,42 @@
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
         <source>Prefer constructors over TestInitialize methods</source>
-        <target state="new">Prefer constructors over TestInitialize methods</target>
+        <target state="translated">Preferir constructores en lugar de métodos TestInitialize</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeTitle">
         <source>Prefer constructors over TestInitialize methods</source>
-        <target state="new">Prefer constructors over TestInitialize methods</target>
+        <target state="translated">Preferir constructores en lugar de métodos TestInitialize</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupMessageFormat">
         <source>Prefer 'Dispose' over TestCleanup methods</source>
-        <target state="new">Prefer 'Dispose' over TestCleanup methods</target>
+        <target state="translated">Preferir "Dispose" sobre los métodos TestCleanup</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferDisposeOverTestCleanupTitle">
         <source>Prefer 'Dispose' over TestCleanup methods</source>
-        <target state="new">Prefer 'Dispose' over TestCleanup methods</target>
+        <target state="translated">Preferir "Dispose" sobre los métodos TestCleanup</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeMessageFormat">
         <source>Prefer TestCleanup over 'Dispose' methods</source>
-        <target state="new">Prefer TestCleanup over 'Dispose' methods</target>
+        <target state="translated">Preferir TestCleanup en lugar de métodos "Dispose"</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestCleanupOverDisposeTitle">
         <source>Prefer TestCleanup over 'Dispose' methods</source>
-        <target state="new">Prefer TestCleanup over 'Dispose' methods</target>
+        <target state="translated">Preferir TestCleanup en lugar de métodos "Dispose"</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
         <source>Prefer TestInitialize methods over constructors</source>
-        <target state="new">Prefer TestInitialize methods over constructors</target>
+        <target state="translated">Preferir métodos TestInitialize en lugar de constructores</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferTestInitializeOverConstructorTitle">
         <source>Prefer TestInitialize methods over constructors</source>
-        <target state="new">Prefer TestInitialize methods over constructors</target>
+        <target state="translated">Preferir métodos TestInitialize en lugar de constructores</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">

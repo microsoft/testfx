@@ -5,13 +5,13 @@ using Microsoft.Testing.Framework;
 using Microsoft.Testing.TestInfrastructure;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
-    MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrder,
+    MSTest.Analyzers.AssertionArgsShouldBePassedInCorrectOrderAnalyzer,
     Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.UnitTests;
 
 [TestGroup]
-public sealed class AssertionArgsShouldBePassedInCorrectOrderTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
+public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
     public async Task WhenUsingLiterals()
     {

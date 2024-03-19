@@ -15,7 +15,7 @@ using MSTest.Analyzers.RoslynAnalyzerHelpers;
 namespace MSTest.Analyzers;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class AssertionArgsShouldBePassedInCorrectOrder : DiagnosticAnalyzer
+public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : DiagnosticAnalyzer
 {
     private static readonly ImmutableArray<string> SupportedMethodNames = ImmutableArray.Create(new[]
     {
