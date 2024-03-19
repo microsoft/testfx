@@ -485,10 +485,10 @@ internal sealed class Json
         {
             ValidateJsonRpcHeader(json, jsonElement);
 
-            string? method = json.OptionalPropertyBind<string>(jsonElement, JsonRpcStrings.Method);
+            string? method = json.OptionalBind<string>(jsonElement, JsonRpcStrings.Method);
             if (method is not null)
             {
-                int id = json.OptionalPropertyBind<int>(jsonElement, JsonRpcStrings.Id);
+                int id = json.OptionalBind<int>(jsonElement, JsonRpcStrings.Id);
 
                 object? @params = null;
                 if (jsonElement.TryGetProperty(JsonRpcStrings.Params, out JsonElement value))
@@ -525,7 +525,7 @@ internal sealed class Json
                 return new ResponseMessage(id, result);
             }
 
-            ErrorMessage? error = json.OptionalPropertyBind<ErrorMessage>(jsonElement);
+            ErrorMessage? error = json.OptionalBind<ErrorMessage>(jsonElement);
 
             return error is not null ? (RpcMessage)error : throw new MessageFormatException();
         });
@@ -592,8 +592,8 @@ internal sealed class Json
 
             return new DiscoverRequestArgs(
                 RunId: result,
-                TestNodes: json.OptionalPropertyBind<ICollection<TestNode>?>(jsonElement, JsonRpcStrings.Tests),
-                GraphFilter: json.OptionalPropertyBind<string>(jsonElement, JsonRpcStrings.Filter));
+                TestNodes: json.OptionalBind<ICollection<TestNode>?>(jsonElement, JsonRpcStrings.Tests),
+                GraphFilter: json.OptionalBind<string>(jsonElement, JsonRpcStrings.Filter));
         });
 
         _deserializers[typeof(RunRequestArgs)] = new JsonElementDeserializer<RunRequestArgs>((json, jsonElement) =>
@@ -603,8 +603,8 @@ internal sealed class Json
 
             return new RunRequestArgs(
                 RunId: result,
-                TestNodes: json.OptionalPropertyBind<ICollection<TestNode>?>(jsonElement, JsonRpcStrings.Tests),
-                GraphFilter: json.OptionalPropertyBind<string>(jsonElement, JsonRpcStrings.Filter));
+                TestNodes: json.OptionalBind<ICollection<TestNode>?>(jsonElement, JsonRpcStrings.Tests),
+                GraphFilter: json.OptionalBind<string>(jsonElement, JsonRpcStrings.Filter));
         });
 
         _deserializers[typeof(TestNode)] = new JsonElementDeserializer<TestNode>(
@@ -614,12 +614,12 @@ internal sealed class Json
                 string uid = json.Bind<string>(properties, JsonRpcStrings.Uid) ?? string.Empty;
                 string displayName = json.Bind<string>(properties, JsonRpcStrings.DisplayName);
 
-                var locationFile = json.OptionalPropertyBind<string>(properties, "location.file");
+                var locationFile = json.OptionalBind<string>(properties, "location.file");
                 if (locationFile is not null)
                 {
                     ApplicationStateGuard.Ensure(locationFile is not null);
-                    int locationLineStart = json.OptionalPropertyBind<int>(properties, "location.line-start");
-                    int locationLineEnd = json.OptionalPropertyBind<int>(properties, "location.line-end");
+                    int locationLineStart = json.OptionalBind<int>(properties, "location.line-start");
+                    int locationLineEnd = json.OptionalBind<int>(properties, "location.line-end");
 
                     ApplicationStateGuard.Ensure(locationLineStart is not default(int));
                     ApplicationStateGuard.Ensure(locationLineEnd is not default(int));
@@ -641,7 +641,7 @@ internal sealed class Json
         _deserializers[typeof(CancelRequestArgs)] = new JsonElementDeserializer<CancelRequestArgs>(
           (json, jsonElement) =>
           {
-              int id = json.OptionalPropertyBind<int>(jsonElement, JsonRpcStrings.Id);
+              int id = json.OptionalBind<int>(jsonElement, JsonRpcStrings.Id);
 
               return id is default(int) ? throw new MessageFormatException("id field should be a string or an int") : new CancelRequestArgs(id);
           });
@@ -659,7 +659,7 @@ internal sealed class Json
 
               var code = json.Bind<int>(error, JsonRpcStrings.Code);
               var message = json.Bind<string>(error, JsonRpcStrings.Message);
-              var data = json.OptionalPropertyBind<IDictionary<string, object?>>(error, JsonRpcStrings.Data);
+              var data = json.OptionalBind<IDictionary<string, object?>>(error, JsonRpcStrings.Data);
               if (data is not null && data.Count == 0)
               {
                   data = null;
@@ -781,7 +781,7 @@ internal sealed class Json
         throw new InvalidOperationException($"Cannot find deserializer for {typeof(T)}.");
     }
 
-    internal T? OptionalPropertyBind<T>(JsonElement element, string? property = null)
+    internal T? OptionalBind<T>(JsonElement element, string? property = null)
     {
         if (property != null && !element.TryGetProperty(property, out element))
         {
