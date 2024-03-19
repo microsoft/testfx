@@ -22,6 +22,16 @@
         <target state="translated">程序集初始化方法“{0}.{1}”已取消</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassCleanupTimedOut">
+        <source>Class cleanup method '{0}.{1}' timed out</source>
+        <target state="new">Class cleanup method '{0}.{1}' timed out</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupWasCancelled">
+        <source>Class cleanup method '{0}.{1}' was cancelled</source>
+        <target state="new">Class cleanup method '{0}.{1}' was cancelled</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
         <source>Class initialize method '{0}.{1}' timed out</source>
         <target state="translated">类初始化方法“{0}.{1}”超时</target>

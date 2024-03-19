@@ -22,6 +22,16 @@
         <target state="translated">Il metodo di inizializzazione dell'assembly "{0}.{1}" è stato annullato</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassCleanupTimedOut">
+        <source>Class cleanup method '{0}.{1}' timed out</source>
+        <target state="new">Class cleanup method '{0}.{1}' timed out</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupWasCancelled">
+        <source>Class cleanup method '{0}.{1}' was cancelled</source>
+        <target state="new">Class cleanup method '{0}.{1}' was cancelled</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
         <source>Class initialize method '{0}.{1}' timed out</source>
         <target state="translated">Timeout del metodo di inizializzazione della classe "{0}.{1}"</target>

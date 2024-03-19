@@ -22,6 +22,16 @@
         <target state="translated">Anulowano metodę inicjowania zestawu „{0}.{1}”.</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassCleanupTimedOut">
+        <source>Class cleanup method '{0}.{1}' timed out</source>
+        <target state="new">Class cleanup method '{0}.{1}' timed out</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupWasCancelled">
+        <source>Class cleanup method '{0}.{1}' was cancelled</source>
+        <target state="new">Class cleanup method '{0}.{1}' was cancelled</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
         <source>Class initialize method '{0}.{1}' timed out</source>
         <target state="translated">Upłynął limit czasu metody inicjowania klasy „{0}.{1}”.</target>

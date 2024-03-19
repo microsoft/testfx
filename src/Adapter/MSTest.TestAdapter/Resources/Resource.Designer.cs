@@ -143,6 +143,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Class cleanup method &apos;{0}.{1}&apos; timed out.
+        /// </summary>
+        internal static string ClassCleanupTimedOut {
+            get {
+                return ResourceManager.GetString("ClassCleanupTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class cleanup method &apos;{0}.{1}&apos; was cancelled.
+        /// </summary>
+        internal static string ClassCleanupWasCancelled {
+            get {
+                return ResourceManager.GetString("ClassCleanupWasCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Class initialize method &apos;{0}.{1}&apos; timed out.
         /// </summary>
         internal static string ClassInitializeTimedOut {

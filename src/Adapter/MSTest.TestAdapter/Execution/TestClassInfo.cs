@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -51,6 +52,7 @@ public class TestClassInfo
         BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
         BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo?, MethodInfo?>>();
         ClassInitializeMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
+        ClassCleanupMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
         BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
         BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
         Parent = parent;
@@ -107,6 +109,12 @@ public class TestClassInfo
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
     internal Dictionary<MethodInfo, int> ClassInitializeMethodTimeoutMilliseconds { get; }
+
+    /// <summary>
+    /// Gets the timeout for the class cleanup methods.
+    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
+    /// </summary>
+    internal Dictionary<MethodInfo, int> ClassCleanupMethodTimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets a value indicating whether class initialize has executed.
@@ -374,6 +382,7 @@ public class TestClassInfo
             return null;
         }
 
+        MethodInfo? classCleanupMethod = null;
         lock (_testClassExecuteSyncObject)
         {
             if (IsClassCleanupExecuted)
@@ -383,17 +392,15 @@ public class TestClassInfo
 
             if (IsClassInitializeExecuted || ClassInitializeMethod is null)
             {
-                MethodInfo? classCleanupMethod = null;
-
                 try
                 {
                     classCleanupMethod = ClassCleanupMethod;
-                    classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
-                    while (baseClassCleanupQueue.Count > 0)
+                    while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is not null)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        classCleanupMethod?.InvokeAsSynchronousTask(null);
+                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
                     }
 
                     IsClassCleanupExecuted = true;
@@ -402,37 +409,47 @@ public class TestClassInfo
                 }
                 catch (Exception exception)
                 {
-                    var realException = exception.GetRealException();
-                    ClassCleanupException = realException;
-
-                    // special case AssertFailedException to trim off part of the stack trace
-                    string errorMessage = realException is AssertFailedException or AssertInconclusiveException
-                        ? realException.Message
-                        : realException.GetFormattedExceptionMessage();
-
-                    var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
-
-                    errorMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-                        classCleanupMethod!.DeclaringType!.Name,
-                        classCleanupMethod.Name,
-                        errorMessage,
-                        exceptionStackTraceInfo?.ErrorStackTrace);
-
-                    if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
-                    {
-                        var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
-                        ClassCleanupException = testFailedException;
-                        throw testFailedException;
-                    }
-
-                    return errorMessage;
+                    ClassCleanupException = exception;
                 }
             }
         }
 
-        return null;
+        // If ClassCleanup was successful, then don't do anything
+        if (ClassCleanupException == null)
+        {
+            return null;
+        }
+
+        if (ClassCleanupException is TestFailedException)
+        {
+            throw ClassCleanupException;
+        }
+
+        var realException = ClassCleanupException.GetRealException();
+
+        // special case AssertFailedException to trim off part of the stack trace
+        string errorMessage = realException is AssertFailedException or AssertInconclusiveException
+            ? realException.Message
+            : realException.GetFormattedExceptionMessage();
+
+        var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
+
+        errorMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_ClassCleanupMethodWasUnsuccesful,
+            classCleanupMethod!.DeclaringType!.Name,
+            classCleanupMethod.Name,
+            errorMessage,
+            exceptionStackTraceInfo?.ErrorStackTrace);
+
+        if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
+        {
+            var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
+            ClassCleanupException = testFailedException;
+            throw testFailedException;
+        }
+
+        return errorMessage;
     }
 
     /// <summary>
@@ -463,17 +480,26 @@ public class TestClassInfo
             try
             {
                 classCleanupMethod = ClassCleanupMethod;
-                classCleanupMethod?.InvokeAsSynchronousTask(null);
+                ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
                 var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
-                while (baseClassCleanupQueue.Count > 0)
+                while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is not null)
                 {
                     classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                    classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
                 }
 
                 IsClassCleanupExecuted = true;
 
-                return;
+                // If ClassCleanup was successful, then don't do anything
+                if (ClassCleanupException == null)
+                {
+                    return;
+                }
+
+                if (ClassCleanupException is TestFailedException)
+                {
+                    throw ClassCleanupException;
+                }
             }
             catch (Exception exception)
             {
@@ -503,5 +529,27 @@ public class TestClassInfo
                 throw testFailedException;
             }
         }
+    }
+
+    private TestFailedException? InvokeCleanupMethod(MethodInfo? methodInfo)
+    {
+        if (methodInfo is null)
+        {
+            return null;
+        }
+
+        int? timeout = null;
+        if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
+        {
+            timeout = localTimeout;
+        }
+
+        return MethodRunner.RunWithTimeoutAndCancellation(
+            () => methodInfo.InvokeAsSynchronousTask(null),
+            new CancellationTokenSource(),
+            timeout,
+            methodInfo,
+            Resource.ClassCleanupWasCancelled,
+            Resource.ClassCleanupTimedOut);
     }
 }

@@ -381,4 +381,10 @@ Error: {1}</value>
   <data name="AssemblyCleanupWasCancelled" xml:space="preserve">
     <value>Assembly cleanup method '{0}.{1}' was cancelled</value>
   </data>
+  <data name="ClassCleanupTimedOut" xml:space="preserve">
+    <value>Class cleanup method '{0}.{1}' timed out</value>
+  </data>
+  <data name="ClassCleanupWasCancelled" xml:space="preserve">
+    <value>Class cleanup method '{0}.{1}' was cancelled</value>
+  </data>
 </root>

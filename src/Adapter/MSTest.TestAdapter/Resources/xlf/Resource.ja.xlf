@@ -22,6 +22,16 @@
         <target state="translated">アセンブリ初期化メソッド '{0}.{1}' が取り消されました</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassCleanupTimedOut">
+        <source>Class cleanup method '{0}.{1}' timed out</source>
+        <target state="new">Class cleanup method '{0}.{1}' timed out</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupWasCancelled">
+        <source>Class cleanup method '{0}.{1}' was cancelled</source>
+        <target state="new">Class cleanup method '{0}.{1}' was cancelled</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
         <source>Class initialize method '{0}.{1}' timed out</source>
         <target state="translated">クラス初期化メソッド '{0}.{1}' がタイムアウトになりました</target>

@@ -22,6 +22,16 @@
         <target state="translated">Se canceló el método de inicialización de ensamblado "{0}.{1}"</target>
         <note />
       </trans-unit>
+      <trans-unit id="ClassCleanupTimedOut">
+        <source>Class cleanup method '{0}.{1}' timed out</source>
+        <target state="new">Class cleanup method '{0}.{1}' timed out</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupWasCancelled">
+        <source>Class cleanup method '{0}.{1}' was cancelled</source>
+        <target state="new">Class cleanup method '{0}.{1}' was cancelled</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
         <source>Class initialize method '{0}.{1}' timed out</source>
         <target state="translated">Se agotó el tiempo de espera del método de inicialización de clase "{0}.{1}"</target>
