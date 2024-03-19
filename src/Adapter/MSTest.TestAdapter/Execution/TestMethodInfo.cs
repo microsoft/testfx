@@ -477,6 +477,13 @@ public class TestMethodInfo : ITestMethod
             return;
         }
 
+        if (testCleanupException is TestFailedException)
+        {
+            result.Outcome = UTF.UnitTestOutcome.Failed;
+            result.TestFailureException = testCleanupException;
+            return;
+        }
+
         var cleanupError = new StringBuilder();
         var cleanupStackTrace = new StringBuilder();
         if (result.TestFailureException is TestFailedException testFailureException)
@@ -579,6 +586,13 @@ public class TestMethodInfo : ITestMethod
         if (testInitializeException == null)
         {
             return true;
+        }
+
+        if (testInitializeException is TestFailedException)
+        {
+            result.Outcome = UTF.UnitTestOutcome.Failed;
+            result.TestFailureException = testInitializeException;
+            return false;
         }
 
         var realException = testInitializeException.GetRealException();
