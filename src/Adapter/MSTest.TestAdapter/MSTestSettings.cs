@@ -201,7 +201,6 @@ public class MSTestSettings
         CurrentSettings.AssemblyCleanupTimeout = settings.AssemblyCleanupTimeout;
         CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
-
     }
 
     /// <summary>
