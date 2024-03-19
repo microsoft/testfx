@@ -617,13 +617,11 @@ internal sealed class Json
 
                 if (json.TryBind(properties, out string? locationFile, "location.file"))
                 {
-                    ApplicationStateGuard.Ensure(locationFile is not null);
-
                     json.TryBind(properties, out int locationLineStart, "location.line-start");
                     json.TryBind(properties, out int locationLineEnd, "location.line-end");
 
                     var testFileLocationProperty = new TestFileLocationProperty(
-                        locationFile,
+                        locationFile!,
                         new LinePositionSpan(new LinePosition(locationLineStart, 0), new LinePosition(locationLineEnd, 0)));
                     propertyBag.Add(testFileLocationProperty);
                 }
@@ -639,7 +637,7 @@ internal sealed class Json
         _deserializers[typeof(CancelRequestArgs)] = new JsonElementDeserializer<CancelRequestArgs>(
           (json, jsonElement) =>
           {
-              return json.TryBind(jsonElement, out int id, JsonRpcStrings.Id) ? new CancelRequestArgs(id) : throw new MessageFormatException("id field should be a string or an int");
+              return json.TryBind(jsonElement, out int id, JsonRpcStrings.Id) ? new CancelRequestArgs(id) : throw new MessageFormatException("id field should be an int");
           });
 
         _deserializers[typeof(ExitRequestArgs)] = new JsonElementDeserializer<ExitRequestArgs>(
