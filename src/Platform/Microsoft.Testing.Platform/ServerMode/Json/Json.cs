@@ -752,42 +752,16 @@ internal sealed class Json
             }
         }
 
-        bool deserializerFound = _deserializers.TryGetValue(typeof(T), out JsonDeserializer? deserializer);
-
-        if (deserializerFound && deserializer is JsonElementDeserializer<T> objectDeserializer)
-        {
-            T obj = objectDeserializer.CreateObject(this, element);
-            return obj;
-        }
-
-        if (deserializerFound && deserializer is JsonCollectionDeserializer<T> collectionDeserializer)
-        {
-            T obj = collectionDeserializer.CreateObject(this, element);
-            return obj;
-        }
-
-        if (deserializerFound && deserializer is JsonElementDeserializer<object> baseObjectDeserializer)
-        {
-            var obj = (T)baseObjectDeserializer.CreateObject(this, element);
-            return obj;
-        }
-
-        if (deserializerFound && deserializer is JsonCollectionDeserializer<object> baseCollectionDeserializer)
-        {
-            var obj = (T)baseCollectionDeserializer.CreateObject(this, element);
-            return obj;
-        }
-
-        throw new InvalidOperationException($"Cannot find deserializer for {typeof(T)}.");
+        return Deserialize<T>(element);
     }
 
     internal T? OptionalBind<T>(JsonElement element, string? property = null)
     {
-        if (property != null && !element.TryGetProperty(property, out element))
-        {
-            return default;
-        }
+        return property != null && !element.TryGetProperty(property, out element) ? default : Deserialize<T>(element);
+    }
 
+    private T Deserialize<T>(JsonElement element)
+    {
         bool deserializerFound = _deserializers.TryGetValue(typeof(T), out JsonDeserializer? deserializer);
 
         if (deserializerFound && deserializer is JsonElementDeserializer<T> objectDeserializer)
