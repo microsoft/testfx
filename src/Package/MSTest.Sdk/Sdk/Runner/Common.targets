@@ -26,9 +26,4 @@
     <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >$(MicrosoftTestingExtensionsCodeCoverageVersion)</MicrosoftTestingExtensionsCodeCoverageVersion>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <EnablePlaywright Condition=" '$(EnablePlaywright)' == '' ">false</EnablePlaywright>
-    <MicrosoftPlaywrightVersion Condition=" '$(MicrosoftPlaywrightVersion)' == '' ">$(MicrosoftPlaywrightVersion)</MicrosoftPlaywrightVersion>
-  </PropertyGroup>
-
 </Project>

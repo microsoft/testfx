@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <PropertyGroup>
-    <EnablePlaywright Condition=" '$(EnablePlaywright)' == '' ">false</EnablePlaywright>
-    <MicrosoftPlaywrightVersion Condition=" '$(MicrosoftPlaywrightVersion)' == '' ">$(MicrosoftPlaywrightVersion)</MicrosoftPlaywrightVersion>
-  </PropertyGroup>
-
   <ItemGroup Condition=" '$(EnablePlaywright)' == 'false' ">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" VersionOverride="$(MicrosoftNETTestSdkVersion)"  />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)"  />
