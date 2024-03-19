@@ -641,9 +641,9 @@ internal sealed class Json
         _deserializers[typeof(CancelRequestArgs)] = new JsonElementDeserializer<CancelRequestArgs>(
           (json, jsonElement) =>
           {
-              string? id = json.OptionalPropertyBind<string>(jsonElement, JsonRpcStrings.Id);
+              int id = json.OptionalPropertyBind<int>(jsonElement, JsonRpcStrings.Id);
 
-              return int.TryParse(id, out int result) ? new CancelRequestArgs(result) : throw new MessageFormatException("id field should be a string or an int");
+              return id is default(int) ? throw new MessageFormatException("id field should be a string or an int") : new CancelRequestArgs(id);
           });
 
         _deserializers[typeof(ExitRequestArgs)] = new JsonElementDeserializer<ExitRequestArgs>(
