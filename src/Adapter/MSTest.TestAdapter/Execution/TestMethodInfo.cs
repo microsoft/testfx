@@ -38,7 +38,21 @@ public class TestMethodInfo : ITestMethod
         TestMethod = testMethod;
         Parent = parent;
         TestMethodOptions = testMethodOptions;
+        TestInitializeMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
+        TestCleanupMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
     }
+
+    /// <summary>
+    /// Gets the timeout for the test initialize methods.
+    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
+    /// </summary>
+    internal Dictionary<MethodInfo, int> TestInitializeMethodTimeoutMilliseconds { get; }
+
+    /// <summary>
+    /// Gets the timeout for the test cleanup methods.
+    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
+    /// </summary>
+    internal Dictionary<MethodInfo, int> TestCleanupMethodTimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets a value indicating whether timeout is set.
@@ -446,14 +460,27 @@ public class TestMethodInfo : ITestMethod
         {
             try
             {
+                Exception? testCleanupException;
+
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
-                testCleanupMethod?.InvokeAsSynchronousTask(classInstance, null);
+                testCleanupException = InvokeCleanupMethod(testCleanupMethod, classInstance);
                 var baseTestCleanupQueue = new Queue<MethodInfo>(Parent.BaseTestCleanupMethodsQueue);
-                while (baseTestCleanupQueue.Count > 0)
+                while (baseTestCleanupQueue.Count > 0 && testCleanupException is not null)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupMethod?.InvokeAsSynchronousTask(classInstance, null);
+                    testCleanupException = InvokeCleanupMethod(testCleanupMethod, classInstance);
+                }
+
+                // If testCleanup was successful, then don't do anything
+                if (testCleanupException == null)
+                {
+                    return;
+                }
+
+                if (testCleanupException is TestFailedException)
+                {
+                    throw testCleanupException;
                 }
             }
             finally
@@ -543,19 +570,34 @@ public class TestMethodInfo : ITestMethod
         MethodInfo? testInitializeMethod = null;
         try
         {
+            Exception? testInitializeException;
+
             // TestInitialize methods for base classes are called in reverse order of discovery
             // Grandparent -> Parent -> Child TestClass
             var baseTestInitializeStack = new Stack<MethodInfo>(Parent.BaseTestInitializeMethodsQueue);
             while (baseTestInitializeStack.Count > 0)
             {
                 testInitializeMethod = baseTestInitializeStack.Pop();
-                testInitializeMethod?.InvokeAsSynchronousTask(classInstance, null);
+                testInitializeException = InvokeInitializeMethod(testInitializeMethod, classInstance);
+                if (testInitializeException is not null)
+                {
+                    break;
+                }
             }
 
             testInitializeMethod = Parent.TestInitializeMethod;
-            testInitializeMethod?.InvokeAsSynchronousTask(classInstance, null);
+            testInitializeException = InvokeInitializeMethod(testInitializeMethod, classInstance);
 
-            return true;
+            // If testInitialization was successful, then don't do anything
+            if (testInitializeException == null)
+            {
+                return true;
+            }
+
+            if (testInitializeException is TestFailedException)
+            {
+                throw testInitializeException;
+            }
         }
         catch (Exception ex)
         {
@@ -582,6 +624,50 @@ public class TestMethodInfo : ITestMethod
         }
 
         return false;
+    }
+
+    private TestFailedException? InvokeInitializeMethod(MethodInfo? methodInfo, object classInstance)
+    {
+        if (methodInfo is null)
+        {
+            return null;
+        }
+
+        int? timeout = null;
+        if (TestInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
+        {
+            timeout = localTimeout;
+        }
+
+        return MethodRunner.RunWithTimeoutAndCancellation(
+            () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
+            new CancellationTokenSource(),
+            timeout,
+            methodInfo,
+            Resource.TestInitializeWasCancelled,
+            Resource.TestInitializeTimedOut);
+    }
+
+    private TestFailedException? InvokeCleanupMethod(MethodInfo? methodInfo, object classInstance)
+    {
+        if (methodInfo is null)
+        {
+            return null;
+        }
+
+        int? timeout = null;
+        if (TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
+        {
+            timeout = localTimeout;
+        }
+
+        return MethodRunner.RunWithTimeoutAndCancellation(
+            () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
+            new CancellationTokenSource(),
+            timeout,
+            methodInfo,
+            Resource.TestCleanupWasCancelled,
+            Resource.TestCleanupTimedOut);
     }
 
     /// <summary>

@@ -61,6 +61,8 @@ public class MSTestSettings
         ClassInitializeTimeout = 0;
         AssemblyCleanupTimeout = 0;
         ClassCleanupTimeout = 0;
+        TestInitializeTimeout = 0;
+        TestCleanupTimeout = 0;
         TreatClassAndAssemblyCleanupWarningsAsErrors = false;
     }
 
@@ -169,6 +171,16 @@ public class MSTestSettings
     internal int ClassCleanupTimeout { get; private set; }
 
     /// <summary>
+    ///  Gets specified global TestInitializeTimeout timeout.
+    /// </summary>
+    internal int TestInitializeTimeout { get; private set; }
+
+    /// <summary>
+    ///  Gets specified global TestCleanupTimeout timeout.
+    /// </summary>
+    internal int TestCleanupTimeout { get; private set; }
+
+    /// <summary>
     /// Gets a value indicating whether failures in class cleanups should be treated as errors.
     /// </summary>
     public bool TreatClassAndAssemblyCleanupWarningsAsErrors { get; private set; }
@@ -201,6 +213,9 @@ public class MSTestSettings
         CurrentSettings.AssemblyCleanupTimeout = settings.AssemblyCleanupTimeout;
         CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
+        CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
+        CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
+
     }
 
     /// <summary>
@@ -485,6 +500,26 @@ public class MSTestSettings
                             if (int.TryParse(reader.ReadInnerXml(), out int classCleanupTimeout) && classCleanupTimeout > 0)
                             {
                                 settings.ClassCleanupTimeout = classCleanupTimeout;
+                            }
+
+                            break;
+                        }
+
+                    case "TESTINITIALIZETIMEOUT":
+                        {
+                            if (int.TryParse(reader.ReadInnerXml(), out int testInitializeTimeout) && testInitializeTimeout > 0)
+                            {
+                                settings.TestInitializeTimeout = testInitializeTimeout;
+                            }
+
+                            break;
+                        }
+
+                    case "TESTCLEANUPTIMEOUT":
+                        {
+                            if (int.TryParse(reader.ReadInnerXml(), out int testCleanupTimeout) && testCleanupTimeout > 0)
+                            {
+                                settings.TestCleanupTimeout = testCleanupTimeout;
                             }
 
                             break;

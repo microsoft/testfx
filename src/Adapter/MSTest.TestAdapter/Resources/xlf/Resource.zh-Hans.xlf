@@ -52,6 +52,26 @@
         <target state="translated">选定的平台不支持在任何提供的源中运行测试</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="TestCleanupTimedOut">
+        <source>Test cleanup method '{0}.{1}' timed out</source>
+        <target state="new">Test cleanup method '{0}.{1}' timed out</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestCleanupWasCancelled">
+        <source>Test cleanup method '{0}.{1}' was cancelled</source>
+        <target state="new">Test cleanup method '{0}.{1}' was cancelled</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeTimedOut">
+        <source>Test initialize method '{0}.{1}' timed out</source>
+        <target state="new">Test initialize method '{0}.{1}' timed out</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeWasCancelled">
+        <source>Test initialize method '{0}.{1}' was cancelled</source>
+        <target state="new">Test initialize method '{0}.{1}' was cancelled</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
         <source>TestCleanup method {0}.{1} threw exception. {2}.</source>
         <target state="translated">TestCleanup 方法 {0}.{1} 引发异常。{2}。</target>

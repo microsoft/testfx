@@ -377,6 +377,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test cleanup method &apos;{0}.{1}&apos; timed out.
+        /// </summary>
+        internal static string TestCleanupTimedOut {
+            get {
+                return ResourceManager.GetString("TestCleanupTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test cleanup method &apos;{0}.{1}&apos; was cancelled.
+        /// </summary>
+        internal static string TestCleanupWasCancelled {
+            get {
+                return ResourceManager.GetString("TestCleanupWasCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to TestContext cannot be Null..
         /// </summary>
         internal static string TestContextIsNull {
@@ -391,6 +409,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string TestContextMessageBanner {
             get {
                 return ResourceManager.GetString("TestContextMessageBanner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test initialize method &apos;{0}.{1}&apos; timed out.
+        /// </summary>
+        internal static string TestInitializeTimedOut {
+            get {
+                return ResourceManager.GetString("TestInitializeTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test initialize method &apos;{0}.{1}&apos; was cancelled.
+        /// </summary>
+        internal static string TestInitializeWasCancelled {
+            get {
+                return ResourceManager.GetString("TestInitializeWasCancelled", resourceCulture);
             }
         }
         

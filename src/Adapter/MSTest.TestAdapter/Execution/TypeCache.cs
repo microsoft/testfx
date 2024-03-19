@@ -659,8 +659,27 @@ internal class TypeCache : MarshalByRefObject
             throw new TypeInspectionException(message);
         }
 
+        TestMethodInfo testMethodInfo = new(methodInfo, classInfo, new());
+
         if (hasTestInitialize)
         {
+            if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+            {
+                if (!methodInfo.HasCorrectTimeout())
+                {
+                    var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+                    throw new TypeInspectionException(message);
+                }
+
+                var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
+                DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
+                testMethodInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+            }
+            else if (MSTestSettings.CurrentSettings.TestInitializeTimeout > 0)
+            {
+                testMethodInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestInitializeTimeout);
+            }
+
             if (!isBase)
             {
                 classInfo.TestInitializeMethod = methodInfo;
@@ -676,6 +695,23 @@ internal class TypeCache : MarshalByRefObject
 
         if (hasTestCleanup)
         {
+            if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+            {
+                if (!methodInfo.HasCorrectTimeout())
+                {
+                    var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+                    throw new TypeInspectionException(message);
+                }
+
+                var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
+                DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
+                testMethodInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+            }
+            else if (MSTestSettings.CurrentSettings.TestCleanupTimeout > 0)
+            {
+                testMethodInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestCleanupTimeout);
+            }
+
             if (!isBase)
             {
                 classInfo.TestCleanupMethod = methodInfo;

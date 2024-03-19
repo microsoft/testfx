@@ -387,4 +387,16 @@ Error: {1}</value>
   <data name="ClassCleanupWasCancelled" xml:space="preserve">
     <value>Class cleanup method '{0}.{1}' was cancelled</value>
   </data>
+  <data name="TestCleanupTimedOut" xml:space="preserve">
+    <value>Test cleanup method '{0}.{1}' timed out</value>
+  </data>
+  <data name="TestCleanupWasCancelled" xml:space="preserve">
+    <value>Test cleanup method '{0}.{1}' was cancelled</value>
+  </data>
+  <data name="TestInitializeTimedOut" xml:space="preserve">
+    <value>Test initialize method '{0}.{1}' timed out</value>
+  </data>
+  <data name="TestInitializeWasCancelled" xml:space="preserve">
+    <value>Test initialize method '{0}.{1}' was cancelled</value>
+  </data>
 </root>
