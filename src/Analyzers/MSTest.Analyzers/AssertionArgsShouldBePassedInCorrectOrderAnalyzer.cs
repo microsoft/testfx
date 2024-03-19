@@ -75,12 +75,11 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : Diagnost
             return;
         }
 
-        if (actualArgument.Value is not IInvocationOperation)
+        if (actualArgument.Value.GetReferencedMemberOrLocalOrParameter() is { } actualSymbol)
         {
-            if (actualArgument.Value is not ILocalReferenceOperation actualLocalReference
-                || actualLocalReference.Local.Name.StartsWith("expected", StringComparison.Ordinal)
-                || actualLocalReference.Local.Name.StartsWith("_expected", StringComparison.Ordinal)
-                || actualLocalReference.Local.Name.StartsWith("Expected", StringComparison.Ordinal))
+            if (actualSymbol.Name.StartsWith("expected", StringComparison.Ordinal)
+                || actualSymbol.Name.StartsWith("_expected", StringComparison.Ordinal)
+                || actualSymbol.Name.StartsWith("Expected", StringComparison.Ordinal))
             {
                 context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
                 return;
