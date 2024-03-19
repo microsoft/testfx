@@ -25,11 +25,11 @@
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24165.4</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <!-- Testing platform (this comment is here to avoid conflict on darc PRs) -->
+    <MicrosoftPlaywrightVersion>1.42.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingFrameworkVersion>1.2.0-preview.24167.1</MicrosoftTestingFrameworkVersion>
     <MicrosoftTestingPlatformVersion>1.2.0-preview.24167.1</MicrosoftTestingPlatformVersion>
-    <MSTestEngineVersion>1.0.0-alpha.24167.1</MSTestEngineVersion>
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.9.28</MicrosoftVisualStudioThreadingAnalyzersVersion>
+    <MSTestEngineVersion>1.0.0-alpha.24167.1</MSTestEngineVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.556</StyleCopAnalyzersVersion>
   </PropertyGroup>
   <PropertyGroup Label="MSTest test dependencies">
