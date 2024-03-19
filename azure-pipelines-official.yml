@@ -160,7 +160,7 @@ extends:
               displayName: 'Publish NuGet packages to test-tools feed'
               inputs:
                 # Do not push symbol packages nor Microsoft.Testing.Platform package
-                packageParentPath: '$(Build.SourcesDirectory)'
+                packageParentPath: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)'
                 packagesToPush: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg'
                 publishVstsFeed: 'public/test-tools'
 
