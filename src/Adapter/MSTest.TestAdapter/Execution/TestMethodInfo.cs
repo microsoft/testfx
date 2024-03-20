@@ -532,13 +532,17 @@ public class TestMethodInfo : ITestMethod
             cleanupStackTraceInfo ??= realExceptionStackTraceInfo;
         }
 
-        var finalStackTraceInfo = cleanupStackTraceInfo != null
-            ? new StackTraceInformation(
-                cleanupStackTrace.ToString(),
-                cleanupStackTraceInfo.ErrorFilePath,
-                cleanupStackTraceInfo.ErrorLineNumber,
-                cleanupStackTraceInfo.ErrorColumnNumber)
-            : new StackTraceInformation(cleanupStackTrace.ToString());
+        StackTraceInformation? finalStackTraceInfo = null;
+        if (cleanupStackTrace.Length != 0)
+        {
+            finalStackTraceInfo = cleanupStackTraceInfo != null
+                ? new StackTraceInformation(
+                    cleanupStackTrace.ToString(),
+                    cleanupStackTraceInfo.ErrorFilePath,
+                    cleanupStackTraceInfo.ErrorLineNumber,
+                    cleanupStackTraceInfo.ErrorColumnNumber)
+                : new StackTraceInformation(cleanupStackTrace.ToString());
+        }
 
         result.Outcome = result.Outcome.GetMoreImportantOutcome(realException is AssertInconclusiveException ? UTF.UnitTestOutcome.Inconclusive : UTF.UnitTestOutcome.Failed);
         result.TestFailureException = new TestFailedException(result.Outcome.ToUnitTestOutcome(), cleanupError.ToString(), finalStackTraceInfo, realException);
