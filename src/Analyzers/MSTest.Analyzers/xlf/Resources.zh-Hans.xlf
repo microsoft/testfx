@@ -130,21 +130,6 @@
         <target state="translated">AssemblyInitialize 方法应具有有效的布局</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
-        <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
-        <target state="translated">“Assert.AreEqual”、“Assert.AreNotEqual”、“Assert.AreSame” 和 “Assert.AreNotSame” 要求先传递预期值，然后将实际值作为第二个参数传递。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
-        <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
-        <target state="translated">应按正确的顺序传递断言参数。已交换 “actual” 和 “expected”/“notExpected” 参数。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
-        <source>Assertion arguments should be passed in the correct order</source>
-        <target state="translated">应按正确的顺序传递断言参数</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">首选 "Assert.ThrowsException" 或 "Assert.ThrowsExceptionAsync" 而不是 "[ExpectedException]"，因为它确保只有预期调用才会引发预期异常。断言 API 还提供更多的灵活性，并允许你断言异常的额外属性。</target>
@@ -317,66 +302,6 @@
       <trans-unit id="DataRowShouldBeValidTitle">
         <source>DataRow should be valid</source>
         <target state="translated">DataRow 应有效</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
-        <source>Do not negate boolean assertions, instead use the opposite assertion</source>
-        <target state="new">Do not negate boolean assertions, instead use the opposite assertion</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DoNotNegateBooleanAssertionTitle">
-        <source>Do not negate boolean assertions</source>
-        <target state="new">Do not negate boolean assertions</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DoNotStoreStaticTestContextAnalyzerMessageFormat">
-        <source>Do not store TestContext in a static member</source>
-        <target state="new">Do not store TestContext in a static member</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DoNotStoreStaticTestContextAnalyzerTitle">
-        <source>Do not store TestContext in a static member</source>
-        <target state="new">Do not store TestContext in a static member</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
-        <source>Prefer constructors over TestInitialize methods</source>
-        <target state="translated">首选构造函数而不是 TestInitialize 方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferConstructorOverTestInitializeTitle">
-        <source>Prefer constructors over TestInitialize methods</source>
-        <target state="translated">首选构造函数而不是 TestInitialize 方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferDisposeOverTestCleanupMessageFormat">
-        <source>Prefer 'Dispose' over TestCleanup methods</source>
-        <target state="translated">首选 “Dispose” 而不是 TestCleanup 方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferDisposeOverTestCleanupTitle">
-        <source>Prefer 'Dispose' over TestCleanup methods</source>
-        <target state="translated">首选 “Dispose” 而不是 TestCleanup 方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferTestCleanupOverDisposeMessageFormat">
-        <source>Prefer TestCleanup over 'Dispose' methods</source>
-        <target state="translated">首选 TestCleanup 而不是 “Dispose” 方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferTestCleanupOverDisposeTitle">
-        <source>Prefer TestCleanup over 'Dispose' methods</source>
-        <target state="translated">首选 TestCleanup 而不是 “Dispose” 方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
-        <source>Prefer TestInitialize methods over constructors</source>
-        <target state="translated">首选 TestInitialize 方法而不是构造函数</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferTestInitializeOverConstructorTitle">
-        <source>Prefer TestInitialize methods over constructors</source>
-        <target state="translated">首选 TestInitialize 方法而不是构造函数</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">

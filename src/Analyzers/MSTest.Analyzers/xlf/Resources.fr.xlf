@@ -130,21 +130,6 @@
         <target state="translated">La méthode AssemblyInitialize doit avoir une disposition valide</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
-        <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
-        <target state="translated">« Assert.AreEqual », « Assert.AreNotEqual », « Assert.AreSame » et « Assert.AreNotSame » supposent que la valeur attendue soit passée en premier et que la valeur réelle soit passée en tant que deuxième argument.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
-        <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
-        <target state="translated">Les arguments d’assertion doivent être passés dans l’ordre approprié. Les arguments « actual » et « expected »/« notExpected » ont été permutés.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
-        <source>Assertion arguments should be passed in the correct order</source>
-        <target state="translated">Les arguments d’assertion doivent être passés dans l’ordre approprié</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">Préférez « Assert.ThrowsException » ou « Assert.ThrowsExceptionAsync » à « [ExpectedException] », car cela assure que seul l’appel attendu lève l’exception attendue. Les API d’assertion offrent également plus de flexibilité et vous permettent de déclarer des propriétés supplémentaires de l’exception.</target>
@@ -317,66 +302,6 @@
       <trans-unit id="DataRowShouldBeValidTitle">
         <source>DataRow should be valid</source>
         <target state="translated">DataRow doit être valide</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
-        <source>Do not negate boolean assertions, instead use the opposite assertion</source>
-        <target state="new">Do not negate boolean assertions, instead use the opposite assertion</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DoNotNegateBooleanAssertionTitle">
-        <source>Do not negate boolean assertions</source>
-        <target state="new">Do not negate boolean assertions</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DoNotStoreStaticTestContextAnalyzerMessageFormat">
-        <source>Do not store TestContext in a static member</source>
-        <target state="new">Do not store TestContext in a static member</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="DoNotStoreStaticTestContextAnalyzerTitle">
-        <source>Do not store TestContext in a static member</source>
-        <target state="new">Do not store TestContext in a static member</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
-        <source>Prefer constructors over TestInitialize methods</source>
-        <target state="translated">Préférer les constructeurs aux méthodes TestInitialize</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferConstructorOverTestInitializeTitle">
-        <source>Prefer constructors over TestInitialize methods</source>
-        <target state="translated">Préférer les constructeurs aux méthodes TestInitialize</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferDisposeOverTestCleanupMessageFormat">
-        <source>Prefer 'Dispose' over TestCleanup methods</source>
-        <target state="translated">Préférer « Dispose » aux méthodes TestCleanup</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferDisposeOverTestCleanupTitle">
-        <source>Prefer 'Dispose' over TestCleanup methods</source>
-        <target state="translated">Préférer « Dispose » aux méthodes TestCleanup</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferTestCleanupOverDisposeMessageFormat">
-        <source>Prefer TestCleanup over 'Dispose' methods</source>
-        <target state="translated">Préférer TestCleanup aux méthodes « Dispose »</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferTestCleanupOverDisposeTitle">
-        <source>Prefer TestCleanup over 'Dispose' methods</source>
-        <target state="translated">Préférer TestCleanup aux méthodes « Dispose »</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
-        <source>Prefer TestInitialize methods over constructors</source>
-        <target state="translated">Préférer les méthodes TestInitialize aux constructeurs</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PreferTestInitializeOverConstructorTitle">
-        <source>Prefer TestInitialize methods over constructors</source>
-        <target state="translated">Préférer les méthodes TestInitialize aux constructeurs</target>
         <note />
       </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
