@@ -5,7 +5,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-[assembly: Parallelize(Scope = ExecutionScope.ClassLevel, Workers = 0)]
+[assembly: Parallelize(Scope = ExecutionScope.MethodLevel, Workers = 0)]
 
 namespace Playground;
 
@@ -13,8 +13,8 @@ namespace Playground;
 public class TestClass
 {
     [TestMethod]
-    public async Task Test1()
+    public async Task Test()
     {
-        await Task.Delay(1000);
+
     }
 }
