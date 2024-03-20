@@ -49,8 +49,8 @@
     <ItemGroup>
       <MicrosoftTestingExtensionsCrashDumpPackage Include="$(PkgMicrosoft_Testing_Extensions_CrashDump)\microsoft.testing.extensions.crashdump.*.nupkg" />
       <MicrosoftTestingExtensionsTrxReportPackage Include="$(PkgMicrosoft_Testing_Extensions_TrxReport)\microsoft.testing.extensions.trxreport.*.nupkg" />
-      <MicrosoftTestingInternalFrameworkPackage Include="$(PkgMicrosoft_Testing_Internal_Framework)\Microsoft.Testing.Internal.Framework.*.nupkg" />
-      <MicrosoftTestingInternalFrameworkSourceGenerationPackage Include="$(PkgMicrosoft_Testing_Internal_Framework_SourceGeneration)\Microsoft.Testing.Internal.Framework.SourceGeneration.*.nupkg" />
+      <MicrosoftTestingInternalFrameworkPackage Include="$(PkgMicrosoft_Testing_Internal_Framework)\microsoft.testing.internal.framework.*.nupkg" />
+      <MicrosoftTestingInternalFrameworkSourceGenerationPackage Include="$(PkgMicrosoft_Testing_Internal_Framework_SourceGeneration)\microsoft.testing.internal.framework.sourcegeneration.*.nupkg" />
     </ItemGroup>
 
     <Copy SourceFiles="@(MicrosoftTestingExtensionsCrashDumpPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
