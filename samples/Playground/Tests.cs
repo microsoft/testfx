@@ -13,8 +13,7 @@ namespace Playground;
 public class TestClass
 {
     [TestMethod]
-    public async Task Test()
+    public void Test()
     {
-
     }
 }
