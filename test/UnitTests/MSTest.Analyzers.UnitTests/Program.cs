@@ -4,8 +4,8 @@
 using System.Diagnostics;
 
 using Microsoft.Testing.Extensions;
-using Microsoft.Testing.Framework;
-using Microsoft.Testing.Framework.Configurations;
+using Microsoft.Testing.Internal.Framework;
+using Microsoft.Testing.Internal.Framework.Configurations;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;

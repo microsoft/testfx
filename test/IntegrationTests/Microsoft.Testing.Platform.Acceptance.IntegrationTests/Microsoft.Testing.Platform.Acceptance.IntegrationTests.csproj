@@ -15,8 +15,8 @@
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingFrameworkVersion)" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$(MicrosoftTestingFrameworkVersion)" GeneratePathProperty="True" />
+    <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
+    <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
   </ItemGroup>
 
   <!-- Packages needed for the test assets but that we don't want to reference -->
@@ -49,14 +49,14 @@
     <ItemGroup>
       <MicrosoftTestingExtensionsCrashDumpPackage Include="$(PkgMicrosoft_Testing_Extensions_CrashDump)\microsoft.testing.extensions.crashdump.*.nupkg" />
       <MicrosoftTestingExtensionsTrxReportPackage Include="$(PkgMicrosoft_Testing_Extensions_TrxReport)\microsoft.testing.extensions.trxreport.*.nupkg" />
-      <MicrosoftTestingFrameworkPackage Include="$(PkgMicrosoft_Testing_Framework)\microsoft.testing.framework.*.nupkg" />
-      <MicrosoftTestingFrameworkSourceGenerationPackage Include="$(PkgMicrosoft_Testing_Framework_SourceGeneration)\microsoft.testing.framework.sourcegeneration.*.nupkg" />
+      <MicrosoftTestingInternalFrameworkPackage Include="$(PkgMicrosoft_Testing_Internal_Framework)\microsoft.testing.internal.framework.*.nupkg" />
+      <MicrosoftTestingInternalFrameworkSourceGenerationPackage Include="$(PkgMicrosoft_Testing_Internal_Framework_SourceGeneration)\microsoft.testing.internal.framework.sourcegeneration.*.nupkg" />
     </ItemGroup>
 
     <Copy SourceFiles="@(MicrosoftTestingExtensionsCrashDumpPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
     <Copy SourceFiles="@(MicrosoftTestingExtensionsTrxReportPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
-    <Copy SourceFiles="@(MicrosoftTestingFrameworkPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
-    <Copy SourceFiles="@(MicrosoftTestingFrameworkSourceGenerationPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+    <Copy SourceFiles="@(MicrosoftTestingInternalFrameworkPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+    <Copy SourceFiles="@(MicrosoftTestingInternalFrameworkSourceGenerationPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
 
     <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.hangdump\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.hangdump.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.hangdump.$(MicrosoftTestingPlatformVersion).nupkg" />
     <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.telemetry\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.telemetry.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.telemetry.$(MicrosoftTestingPlatformVersion).nupkg" />

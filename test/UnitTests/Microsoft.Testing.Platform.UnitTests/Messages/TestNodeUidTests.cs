@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.TestInfrastructure;
+
+using FrameworkTestNodeUid = Microsoft.Testing.Internal.Framework.TestNodeUid;
 
 using TestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
 
@@ -21,7 +23,7 @@ public class TestNodeUidTests : TestBase
         TestNodeUid testNodeUid = "TestNodeUid";
         string testNodeUidString = testNodeUid;
         Assert.AreEqual(new TestNodeUid("TestNodeUid"), testNodeUid);
-        Assert.IsTrue(new Framework.TestNodeUid("TestNodeUid") == "TestNodeUid");
+        Assert.IsTrue(new FrameworkTestNodeUid("TestNodeUid") == "TestNodeUid");
         Assert.IsTrue(testNodeUid == "TestNodeUid");
         Assert.IsTrue(testNodeUid != "TestNodeUid2");
         Assert.IsTrue(testNodeUidString == testNodeUid);
