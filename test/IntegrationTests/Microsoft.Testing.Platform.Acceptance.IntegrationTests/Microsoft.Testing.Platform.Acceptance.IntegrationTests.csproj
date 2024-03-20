@@ -49,14 +49,14 @@
     <ItemGroup>
       <MicrosoftTestingExtensionsCrashDumpPackage Include="$(PkgMicrosoft_Testing_Extensions_CrashDump)\microsoft.testing.extensions.crashdump.*.nupkg" />
       <MicrosoftTestingExtensionsTrxReportPackage Include="$(PkgMicrosoft_Testing_Extensions_TrxReport)\microsoft.testing.extensions.trxreport.*.nupkg" />
-      <MicrosoftTestingFrameworkPackage Include="$(PkgMicrosoft_Testing_Framework)\Microsoft.Testing.Internal.Framework.*.nupkg" />
-      <MicrosoftTestingFrameworkSourceGenerationPackage Include="$(PkgMicrosoft_Testing_Framework_SourceGeneration)\Microsoft.Testing.Internal.Framework.sourcegeneration.*.nupkg" />
+      <MicrosoftTestingInternalFrameworkPackage Include="$(PkgMicrosoft_Testing_Internal_Framework)\Microsoft.Testing.Internal.Framework.*.nupkg" />
+      <MicrosoftTestingInternalFrameworkSourceGenerationPackage Include="$(PkgMicrosoft_Testing_Internal_Framework_SourceGeneration)\Microsoft.Testing.Internal.Framework.SourceGeneration.*.nupkg" />
     </ItemGroup>
 
     <Copy SourceFiles="@(MicrosoftTestingExtensionsCrashDumpPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
     <Copy SourceFiles="@(MicrosoftTestingExtensionsTrxReportPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
-    <Copy SourceFiles="@(MicrosoftTestingFrameworkPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
-    <Copy SourceFiles="@(MicrosoftTestingFrameworkSourceGenerationPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+    <Copy SourceFiles="@(MicrosoftTestingInternalFrameworkPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
+    <Copy SourceFiles="@(MicrosoftTestingInternalFrameworkSourceGenerationPackage)" DestinationFiles="$(ArtifactsTmpDir)/packages/%(Filename)%(Extension)" />
 
     <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.hangdump\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.hangdump.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.hangdump.$(MicrosoftTestingPlatformVersion).nupkg" />
     <Copy SourceFiles="$(NuGetPackageRoot)microsoft.testing.extensions.telemetry\$(MicrosoftTestingPlatformVersion)\microsoft.testing.extensions.telemetry.$(MicrosoftTestingPlatformVersion).nupkg" DestinationFiles="$(ArtifactsTmpDir)/packages/microsoft.testing.extensions.telemetry.$(MicrosoftTestingPlatformVersion).nupkg" />
