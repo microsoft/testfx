@@ -19,8 +19,7 @@ public class Program
         testApplicationBuilder.AddMSTest(() => new[] { Assembly.GetEntryAssembly()! });
 
         // Enable Trx
-        //testApplicationBuilder.AddTrxReportProvider();
-
+        // testApplicationBuilder.AddTrxReportProvider();
         using var testApplication = await testApplicationBuilder.BuildAsync();
         return await testApplication.RunAsync();
     }
