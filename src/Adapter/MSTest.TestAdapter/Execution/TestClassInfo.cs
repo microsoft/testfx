@@ -410,7 +410,7 @@ public class TestClassInfo
                     classCleanupMethod = ClassCleanupMethod;
                     ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
-                    while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is not null)
+                    while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
                         ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
@@ -488,7 +488,7 @@ public class TestClassInfo
                 classCleanupMethod = ClassCleanupMethod;
                 ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
                 var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
-                while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is not null)
+                while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                 {
                     classCleanupMethod = baseClassCleanupQueue.Dequeue();
                     ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);

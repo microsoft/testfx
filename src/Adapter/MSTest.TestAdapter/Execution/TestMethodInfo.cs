@@ -451,7 +451,7 @@ public class TestMethodInfo : ITestMethod
                 // Current TestClass -> Parent -> Grandparent
                 testCleanupException = InvokeCleanupMethod(testCleanupMethod, classInstance);
                 var baseTestCleanupQueue = new Queue<MethodInfo>(Parent.BaseTestCleanupMethodsQueue);
-                while (baseTestCleanupQueue.Count > 0 && testCleanupException is not null)
+                while (baseTestCleanupQueue.Count > 0 && testCleanupException is null)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
                     testCleanupException = InvokeCleanupMethod(testCleanupMethod, classInstance);
@@ -557,7 +557,7 @@ public class TestMethodInfo : ITestMethod
         DebugEx.Assert(result != null, "result != null");
 
         MethodInfo? testInitializeMethod = null;
-        Exception? testInitializeException;
+        Exception? testInitializeException = null;
 
         try
         {
@@ -574,8 +574,11 @@ public class TestMethodInfo : ITestMethod
                 }
             }
 
-            testInitializeMethod = Parent.TestInitializeMethod;
-            testInitializeException = InvokeInitializeMethod(testInitializeMethod, classInstance);
+            if (testInitializeException == null)
+            {
+                testInitializeMethod = Parent.TestInitializeMethod;
+                testInitializeException = InvokeInitializeMethod(testInitializeMethod, classInstance);
+            }
         }
         catch (Exception ex)
         {
