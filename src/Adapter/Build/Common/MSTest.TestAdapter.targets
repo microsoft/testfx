@@ -5,6 +5,7 @@
     <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' ">$(EnableMSTestRunner)</GenerateTestingPlatformEntryPoint>
     <GenerateProgramFile Condition=" '$(EnableMSTestRunner)' == 'true' ">false</GenerateProgramFile>
     <DisableTestingPlatformServerCapability Condition=" '$(EnableMSTestRunner)' == 'false' or '$(EnableMSTestRunner)' == '' " >true</DisableTestingPlatformServerCapability>
+    <IsTestingPlatformApplication>$(EnableMSTestRunner)</IsTestingPlatformApplication>
   </PropertyGroup>
 
   <ItemGroup>
