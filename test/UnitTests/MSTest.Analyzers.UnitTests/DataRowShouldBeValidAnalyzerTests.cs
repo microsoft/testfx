@@ -131,6 +131,29 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenDataRowPassesOneItemAndParameterExpectsArray_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:DataRow(1)|}]
+                [TestMethod]
+                public void TestMethod1(object[] o)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeMismatchRule)
+                .WithLocation(0)
+                .WithArguments((0, 0)));
+    }
+
     public async Task WhenDataRowHasThreeArgumentsAndMethodHasAnIntegerAndAnArrayArgument_Diagnostic()
     {
         var code = """
@@ -486,5 +509,37 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(0).WithArguments(4, 3),
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(1).WithArguments(1, 3),
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(2).WithArguments(1, 5));
+    }
+
+    public async Task Testfx_2606_NullArgumentForArray()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [DataRow(
+                    "123",
+                    new string[] { "something" },
+                    null)]
+                [DataRow(
+                    "123",
+                    null,
+                    new string[] { "something" })]
+                public void TestSomething(
+                    string x,
+                    string[] y,
+                    string[] z)
+                {
+                    Assert.AreEqual("123", x);
+                    Assert.IsNotNull(y);
+                    Assert.IsNull(z);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 }
