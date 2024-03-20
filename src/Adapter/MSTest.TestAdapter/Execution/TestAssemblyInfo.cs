@@ -172,7 +172,7 @@ public class TestAssemblyInfo
             throw AssemblyInitializationException;
         }
 
-        var realException = AssemblyInitializationException.InnerException ?? AssemblyInitializationException;
+        var realException = AssemblyInitializationException.GetRealException();
 
         var outcome = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
 
@@ -218,7 +218,7 @@ public class TestAssemblyInfo
             }
             catch (Exception ex)
             {
-                var realException = ex.InnerException ?? ex;
+                var realException = ex.GetRealException();
 
                 // special case AssertFailedException to trim off part of the stack trace
                 string errorMessage = realException is AssertFailedException or AssertInconclusiveException
@@ -259,7 +259,7 @@ public class TestAssemblyInfo
             }
             catch (Exception ex)
             {
-                var realException = ex.InnerException ?? ex;
+                var realException = ex.GetRealException();
 
                 // special case AssertFailedException to trim off part of the stack trace
                 string errorMessage = realException is AssertFailedException or AssertInconclusiveException

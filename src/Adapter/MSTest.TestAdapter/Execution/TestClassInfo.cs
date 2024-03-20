@@ -312,7 +312,7 @@ public class TestClassInfo
         }
 
         // Fail the current test if it was a failure.
-        var realException = ClassInitializationException.InnerException ?? ClassInitializationException;
+        var realException = ClassInitializationException.GetRealException();
 
         var outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
 
@@ -402,7 +402,7 @@ public class TestClassInfo
                 }
                 catch (Exception exception)
                 {
-                    var realException = exception.InnerException ?? exception;
+                    var realException = exception.GetRealException();
                     ClassCleanupException = realException;
 
                     // special case AssertFailedException to trim off part of the stack trace
@@ -477,7 +477,7 @@ public class TestClassInfo
             }
             catch (Exception exception)
             {
-                var realException = exception.InnerException ?? exception;
+                var realException = exception.GetRealException();
                 ClassCleanupException = realException;
 
                 // special case AssertFailedException to trim off part of the stack trace

@@ -29,7 +29,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-       = ImmutableArray.Create(TestClassShouldHaveTestMethodRule);
+        = ImmutableArray.Create(TestClassShouldHaveTestMethodRule);
 
     public override void Initialize(AnalysisContext context)
     {

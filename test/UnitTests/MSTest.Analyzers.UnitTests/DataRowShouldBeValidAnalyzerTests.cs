@@ -450,4 +450,41 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
                 .WithLocation(0)
                 .WithArguments((2, 2)));
     }
+
+    public async Task DefaultArguments()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataRow(1L, "s")]                      // Correct count (using optional default value)
+                [DataRow(1L, "s", true)]                // Correct count
+                [{|#0:DataRow(1L, "s", true, "a")|}]    // Too many args
+                [{|#1:DataRow(1L)|}]                    // Not enough args
+                [TestMethod]
+                public void TestMethod1(long l, string s, bool b = false)
+                {
+                }
+
+                [DataRow(1L, "s")]                          // Correct count (using optional default value)
+                [DataRow(1L, "s", true)]                    // Correct count (using some default)
+                [DataRow(1L, "s", true, 1.0)]               // Correct count
+                [DataRow(1L, "s", true, 1.0, "a", false)]   // Extra args are swallowed by params
+                [{|#2:DataRow(1L)|}]                        // Not enough args
+                [TestMethod]
+                public void TestMethod2(long l, string s, bool b = false, double d = 1.0, params object[] others)
+                {
+                }
+            }
+            """
+        ;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(0).WithArguments(4, 3),
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(1).WithArguments(1, 3),
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(2).WithArguments(1, 5));
+    }
 }

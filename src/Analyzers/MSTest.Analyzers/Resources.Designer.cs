@@ -255,6 +255,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;Assert.AreEqual&apos;, &apos;Assert.AreNotEqual&apos;, &apos;Assert.AreSame&apos; and &apos;Assert.AreNotSame&apos; expects the expected value to be passed first and the actual value to be passed as second argument..
+        /// </summary>
+        internal static string AssertionArgsShouldBePassedInCorrectOrderDescription {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldBePassedInCorrectOrderDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assertion arguments should be passed in the correct order. &apos;actual&apos; and &apos;expected&apos;/&apos;notExpected&apos; arguments have been swapped..
+        /// </summary>
+        internal static string AssertionArgsShouldBePassedInCorrectOrderMessageFormat {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldBePassedInCorrectOrderMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assertion arguments should be passed in the correct order.
+        /// </summary>
+        internal static string AssertionArgsShouldBePassedInCorrectOrderTitle {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldBePassedInCorrectOrderTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer &apos;Assert.ThrowsException&apos; or &apos;Assert.ThrowsExceptionAsync&apos; over &apos;[ExpectedException]&apos; as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption..
         /// </summary>
         internal static string AvoidExpectedExceptionAttributeDescription {
@@ -521,6 +548,114 @@ namespace MSTest.Analyzers {
         internal static string DataRowShouldBeValidTitle {
             get {
                 return ResourceManager.GetString("DataRowShouldBeValidTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not negate boolean assertions, instead use the opposite assertion.
+        /// </summary>
+        internal static string DoNotNegateBooleanAssertionMessageFormat {
+            get {
+                return ResourceManager.GetString("DoNotNegateBooleanAssertionMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not negate boolean assertions.
+        /// </summary>
+        internal static string DoNotNegateBooleanAssertionTitle {
+            get {
+                return ResourceManager.GetString("DoNotNegateBooleanAssertionTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not store TestContext in a static member.
+        /// </summary>
+        internal static string DoNotStoreStaticTestContextAnalyzerMessageFormat {
+            get {
+                return ResourceManager.GetString("DoNotStoreStaticTestContextAnalyzerMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not store TestContext in a static member.
+        /// </summary>
+        internal static string DoNotStoreStaticTestContextAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("DoNotStoreStaticTestContextAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
+        /// </summary>
+        internal static string PreferConstructorOverTestInitializeMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferConstructorOverTestInitializeMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
+        /// </summary>
+        internal static string PreferConstructorOverTestInitializeTitle {
+            get {
+                return ResourceManager.GetString("PreferConstructorOverTestInitializeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer &apos;Dispose&apos; over TestCleanup methods.
+        /// </summary>
+        internal static string PreferDisposeOverTestCleanupMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferDisposeOverTestCleanupMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer &apos;Dispose&apos; over TestCleanup methods.
+        /// </summary>
+        internal static string PreferDisposeOverTestCleanupTitle {
+            get {
+                return ResourceManager.GetString("PreferDisposeOverTestCleanupTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer TestCleanup over &apos;Dispose&apos; methods.
+        /// </summary>
+        internal static string PreferTestCleanupOverDisposeMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferTestCleanupOverDisposeMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer TestCleanup over &apos;Dispose&apos; methods.
+        /// </summary>
+        internal static string PreferTestCleanupOverDisposeTitle {
+            get {
+                return ResourceManager.GetString("PreferTestCleanupOverDisposeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer TestInitialize methods over constructors.
+        /// </summary>
+        internal static string PreferTestInitializeOverConstructorMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferTestInitializeOverConstructorMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Prefer TestInitialize methods over constructors.
+        /// </summary>
+        internal static string PreferTestInitializeOverConstructorTitle {
+            get {
+                return ResourceManager.GetString("PreferTestInitializeOverConstructorTitle", resourceCulture);
             }
         }
         

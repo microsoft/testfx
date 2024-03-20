@@ -187,7 +187,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = tc => { throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message")); };
+        DummyTestClass.AssemblyInitializeMethodBody = tc => { throw new ArgumentException("Some actualErrorMessage message", new InvalidOperationException("Inner actualErrorMessage message")); };
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
         var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
@@ -196,12 +196,36 @@ public class TestAssemblyInfoTests : TestContainer
         Verify(exception.Outcome == UnitTestOutcome.Failed);
         Verify(
             exception.Message
-            == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.ArgumentException: Some exception message. Aborting test execution.");
+            == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.ArgumentException: Some actualErrorMessage message. Aborting test execution.");
         Verify(
             exception.StackTraceInformation.ErrorStackTrace.StartsWith(
             "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions>", StringComparison.Ordinal));
         Verify(exception.InnerException.GetType() == typeof(ArgumentException));
         Verify(exception.InnerException.InnerException.GetType() == typeof(InvalidOperationException));
+    }
+
+    public void RunAssemblyInitializeShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
+    {
+        DummyTestClass.AssemblyInitializeMethodBody = tc =>
+        {
+            // This helper calls inner helper, and the inner helper ctor throws.
+            // We want to see the real exception on screen, and not TypeInitializationException
+            // which has no info about what failed.
+            FailingStaticHelper.DoWork();
+        };
+        _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
+
+        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
+
+        Verify(exception is not null);
+        Verify(exception.Outcome == UnitTestOutcome.Failed);
+        Verify(
+            exception.Message
+            == "Assembly Initialization method Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests+DummyTestClass.AssemblyInitializeMethod threw exception. System.InvalidOperationException: I fail.. Aborting test execution.");
+        Verify(
+            exception.StackTraceInformation.ErrorStackTrace.StartsWith(
+            "    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.FailingStaticHelper..cctor()", StringComparison.Ordinal));
+        Verify(exception.InnerException.GetType() == typeof(InvalidOperationException));
     }
 
     public void RunAssemblyInitializeShouldThrowForAlreadyExecutedTestAssemblyInitWithException()
@@ -282,6 +306,23 @@ public class TestAssemblyInfoTests : TestContainer
             "Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: System.ArgumentException: Argument Exception. StackTrace:     at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.<>c.<RunAssemblyCleanupShouldReturnExceptionDetailsOfNonAssertExceptions>", StringComparison.Ordinal));
     }
 
+    public void RunAssemblyCleanupShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
+    {
+        DummyTestClass.AssemblyCleanupMethodBody = () =>
+        {
+            // This helper calls inner helper, and the inner helper ctor throws.
+            // We want to see the real exception on screen, and not TypeInitializationException
+            // which has no info about what failed.
+            FailingStaticHelper.DoWork();
+        };
+        _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod");
+
+        var actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();
+
+        Verify(actualErrorMessage.StartsWith("Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: System.InvalidOperationException: I fail.. StackTrace:", StringComparison.Ordinal));
+        Verify(actualErrorMessage.Contains("at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.FailingStaticHelper..cctor()"));
+    }
+
     #endregion
 
     [UTF.TestClass]
@@ -301,6 +342,30 @@ public class TestAssemblyInfoTests : TestContainer
         public static void AssemblyCleanupMethod()
         {
             AssemblyCleanupMethodBody.Invoke();
+        }
+    }
+
+    private static class FailingStaticHelper
+    {
+        static FailingStaticHelper()
+        {
+            throw new InvalidOperationException("I fail.");
+        }
+
+        public static void DoWork()
+        {
+        }
+    }
+
+    private static class FailingInnerStaticHelper
+    {
+        static FailingInnerStaticHelper()
+        {
+            throw new InvalidOperationException("I fail.");
+        }
+
+        public static void Initialize()
+        {
         }
     }
 }

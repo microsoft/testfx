@@ -191,6 +191,15 @@
   <data name="AssemblyInitializeShouldBeValidTitle" xml:space="preserve">
     <value>AssemblyInitialize methods should have valid layout</value>
   </data>
+  <data name="AssertionArgsShouldBePassedInCorrectOrderDescription" xml:space="preserve">
+    <value>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</value>
+  </data>
+  <data name="AssertionArgsShouldBePassedInCorrectOrderMessageFormat" xml:space="preserve">
+    <value>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</value>
+  </data>
+  <data name="AssertionArgsShouldBePassedInCorrectOrderTitle" xml:space="preserve">
+    <value>Assertion arguments should be passed in the correct order</value>
+  </data>
   <data name="AvoidExpectedExceptionAttributeDescription" xml:space="preserve">
     <value>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</value>
   </data>
@@ -291,6 +300,42 @@
   </data>
   <data name="DataRowShouldBeValidTitle" xml:space="preserve">
     <value>DataRow should be valid</value>
+  </data>
+  <data name="DoNotNegateBooleanAssertionMessageFormat" xml:space="preserve">
+    <value>Do not negate boolean assertions, instead use the opposite assertion</value>
+  </data>
+  <data name="DoNotNegateBooleanAssertionTitle" xml:space="preserve">
+    <value>Do not negate boolean assertions</value>
+  </data>
+  <data name="DoNotStoreStaticTestContextAnalyzerMessageFormat" xml:space="preserve">
+    <value>Do not store TestContext in a static member</value>
+  </data>
+  <data name="DoNotStoreStaticTestContextAnalyzerTitle" xml:space="preserve">
+    <value>Do not store TestContext in a static member</value>
+  </data>
+  <data name="PreferConstructorOverTestInitializeMessageFormat" xml:space="preserve">
+    <value>Prefer constructors over TestInitialize methods</value>
+  </data>
+  <data name="PreferConstructorOverTestInitializeTitle" xml:space="preserve">
+    <value>Prefer constructors over TestInitialize methods</value>
+  </data>
+  <data name="PreferDisposeOverTestCleanupMessageFormat" xml:space="preserve">
+    <value>Prefer 'Dispose' over TestCleanup methods</value>
+  </data>
+  <data name="PreferDisposeOverTestCleanupTitle" xml:space="preserve">
+    <value>Prefer 'Dispose' over TestCleanup methods</value>
+  </data>
+  <data name="PreferTestCleanupOverDisposeMessageFormat" xml:space="preserve">
+    <value>Prefer TestCleanup over 'Dispose' methods</value>
+  </data>
+  <data name="PreferTestCleanupOverDisposeTitle" xml:space="preserve">
+    <value>Prefer TestCleanup over 'Dispose' methods</value>
+  </data>
+  <data name="PreferTestInitializeOverConstructorMessageFormat" xml:space="preserve">
+    <value>Prefer TestInitialize methods over constructors</value>
+  </data>
+  <data name="PreferTestInitializeOverConstructorTitle" xml:space="preserve">
+    <value>Prefer TestInitialize methods over constructors</value>
   </data>
   <data name="PublicTypeShouldBeTestClassDescription" xml:space="preserve">
     <value>It's considered a good practice to have only test classes marked public in a test project.</value>

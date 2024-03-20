@@ -29,7 +29,7 @@
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass">
         <source>AssemblyCleanup method '{0}' can't be declared on a generic class</source>
-        <target state="new">AssemblyCleanup method '{0}' can't be declared on a generic class</target>
+        <target state="translated">Metodu AssemblyCleanup {0} nelze deklarovat pro obecnou třídu.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid">
@@ -89,7 +89,7 @@
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass">
         <source>AssemblyInitialize method '{0}' can't be declared on a generic class</source>
-        <target state="new">AssemblyInitialize method '{0}' can't be declared on a generic class</target>
+        <target state="translated">Metodu AssemblyInitialize {0} nelze deklarovat pro obecnou třídu.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
@@ -130,6 +130,21 @@
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
         <source>AssemblyInitialize methods should have valid layout</source>
         <target state="translated">Metody AssemblyInitialize musí mít platné rozložení</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
+        <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
+        <target state="translated">Assert.AreEqual, Assert.AreNotEqual, Assert.AreSame a Assert.AreNotSame očekává, že se jako první argument předá očekávaná hodnota a jako druhý argument skutečná hodnota.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
+        <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
+        <target state="translated">Argumenty kontrolního výrazu musí být předány ve správném pořadí. Argumenty actual a expected/notExpected byly prohozeny.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
+        <source>Assertion arguments should be passed in the correct order</source>
+        <target state="translated">Argumenty kontrolního výrazu musí být předány ve správném pořadí</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
@@ -174,7 +189,7 @@
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
         <source>ClassCleanup method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="new">ClassCleanup method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</target>
+        <target state="translated">Metodu ClassCleanup {0} nelze deklarovat pro obecnou třídu bez nastavení režimu InheritanceBehavior.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid">
@@ -234,7 +249,7 @@
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
         <source>ClassInitialize method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="new">ClassInitialize method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</target>
+        <target state="translated">Metodu ClassInitialize {0} nelze deklarovat pro obecnou třídu bez nastavení režimu InheritanceBehavior.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid">
@@ -308,6 +323,66 @@
         <target state="translated">Argument DataRow by měl být platný</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
+        <source>Do not negate boolean assertions, instead use the opposite assertion</source>
+        <target state="new">Do not negate boolean assertions, instead use the opposite assertion</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionTitle">
+        <source>Do not negate boolean assertions</source>
+        <target state="new">Do not negate boolean assertions</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotStoreStaticTestContextAnalyzerMessageFormat">
+        <source>Do not store TestContext in a static member</source>
+        <target state="new">Do not store TestContext in a static member</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotStoreStaticTestContextAnalyzerTitle">
+        <source>Do not store TestContext in a static member</source>
+        <target state="new">Do not store TestContext in a static member</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="translated">Upřednostňovat konstruktory před metodami TestInitialize</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeTitle">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="translated">Upřednostňovat konstruktory před metodami TestInitialize</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferDisposeOverTestCleanupMessageFormat">
+        <source>Prefer 'Dispose' over TestCleanup methods</source>
+        <target state="translated">Upřednostňovat metody Dispose před metodami TestCleanup</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferDisposeOverTestCleanupTitle">
+        <source>Prefer 'Dispose' over TestCleanup methods</source>
+        <target state="translated">Upřednostňovat metody Dispose před metodami TestCleanup</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeMessageFormat">
+        <source>Prefer TestCleanup over 'Dispose' methods</source>
+        <target state="translated">Upřednostňovat metody TestCleanup před metodami Dispose</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeTitle">
+        <source>Prefer TestCleanup over 'Dispose' methods</source>
+        <target state="translated">Upřednostňovat metody TestCleanup před metodami Dispose</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="translated">Upřednostňovat metody TestInitialize před konstruktory</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorTitle">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="translated">Upřednostňovat metody TestInitialize před konstruktory</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">Osvědčeným postupem je označit jako veřejné v testovacím projektu jen testovací třídy.</target>
@@ -356,17 +431,17 @@
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</source>
-        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</target>
+        <target state="translated">Testovací třída by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialization] a/nebo [AssemblyCleanup].</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</source>
-        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</target>
+        <target state="translated">Testovací třída {0} by měla mít aspoň jednu testovací metodu nebo by měla být static s metodami s označením [AssemblyInitialization] a/nebo [AssemblyCleanup].</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="new">Test class should have test method</target>
+        <target state="translated">Testovací třída by měla mít testovací metodu</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
