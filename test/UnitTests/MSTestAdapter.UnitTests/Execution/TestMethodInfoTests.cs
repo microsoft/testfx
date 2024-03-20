@@ -518,7 +518,7 @@ public class TestMethodInfoTests : TestContainer
 #if NETFRAMEWORK
         Verify(exception.StackTraceInformation is null);
 #else
-        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>", StringComparison.Ordinal));
+        Verify(exception.StackTraceInformation is null);
 #endif
     }
 
