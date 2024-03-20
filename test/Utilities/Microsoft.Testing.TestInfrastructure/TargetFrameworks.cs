@@ -3,7 +3,7 @@
 
 using System.Runtime.InteropServices;
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 
 namespace Microsoft.Testing.TestInfrastructure;
 

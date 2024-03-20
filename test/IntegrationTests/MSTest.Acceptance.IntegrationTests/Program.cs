@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Extensions;
-using Microsoft.Testing.Framework.Configurations;
+using Microsoft.Testing.Internal.Framework.Configurations;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 

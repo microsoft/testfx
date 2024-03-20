@@ -5,7 +5,7 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 
 namespace Microsoft.Testing.TestInfrastructure;
 
