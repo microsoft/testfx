@@ -240,32 +240,6 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
                 internal int PropertyInt { get; set; } = 42;
 
                 [TestMethod]
-                public void NonCompliant()
-                {
-                    string s = "";
-                    int i = 42;
-
-                    [|Assert.AreEqual(s, fieldString)|];
-                    [|Assert.AreEqual(s, PropertyString)|];
-                    [|Assert.AreEqual(i, fieldInt)|];
-                    [|Assert.AreEqual(i, PropertyInt)|];
-
-                    [|Assert.AreNotEqual(s, fieldString)|];
-                    [|Assert.AreNotEqual(s, PropertyString)|];
-                    [|Assert.AreNotEqual(i, fieldInt)|];
-                    [|Assert.AreNotEqual(i, PropertyInt)|];
-
-                    [|Assert.AreSame(s, fieldString)|];
-                    [|Assert.AreSame(s, PropertyString)|];
-                    [|Assert.AreSame(i, fieldInt)|];
-                    [|Assert.AreSame(i, PropertyInt)|];
-                    [|Assert.AreNotSame(s, fieldString)|];
-                    [|Assert.AreNotSame(s, PropertyString)|];
-                    [|Assert.AreNotSame(i, fieldInt)|];
-                    [|Assert.AreNotSame(i, PropertyInt)|];
-                }
-
-                [TestMethod]
                 public void Compliant()
                 {
                     string s = "";
@@ -275,21 +249,37 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
                     Assert.AreEqual(PropertyString, s);
                     Assert.AreEqual(fieldInt, i);
                     Assert.AreEqual(PropertyInt, i);
-            
+                    Assert.AreEqual(s, fieldString);
+                    Assert.AreEqual(s, PropertyString);
+                    Assert.AreEqual(i, fieldInt);
+                    Assert.AreEqual(i, PropertyInt);
+
                     Assert.AreNotEqual(fieldString, s);
                     Assert.AreNotEqual(PropertyString, s);
                     Assert.AreNotEqual(fieldInt, i);
                     Assert.AreNotEqual(PropertyInt, i);
+                    Assert.AreNotEqual(s, fieldString);
+                    Assert.AreNotEqual(s, PropertyString);
+                    Assert.AreNotEqual(i, fieldInt);
+                    Assert.AreNotEqual(i, PropertyInt);
             
                     Assert.AreSame(fieldString, s);
                     Assert.AreSame(PropertyString, s);
                     Assert.AreSame(fieldInt, i);
                     Assert.AreSame(PropertyInt, i);
+                    Assert.AreSame(s, fieldString);
+                    Assert.AreSame(s, PropertyString);
+                    Assert.AreSame(i, fieldInt);
+                    Assert.AreSame(i, PropertyInt);
             
                     Assert.AreNotSame(fieldString, s);
                     Assert.AreNotSame(PropertyString, s);
                     Assert.AreNotSame(fieldInt, i);
                     Assert.AreNotSame(PropertyInt, i);
+                    Assert.AreNotSame(s, fieldString);
+                    Assert.AreNotSame(s, PropertyString);
+                    Assert.AreNotSame(i, fieldInt);
+                    Assert.AreNotSame(i, PropertyInt);
                 }
             }
             """;
