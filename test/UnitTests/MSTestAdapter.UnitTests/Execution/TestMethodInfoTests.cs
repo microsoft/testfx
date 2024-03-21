@@ -621,7 +621,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(errorMessage == exception.Message);
 
 #if NETFRAMEWORK
-        if (exception.StackTraceInformation.ErrorStackTrace != string.Empty)
+        if (exception.StackTraceInformation != null)
         {
             throw new Exception($"Expected stack trace to be empty.");
         }
