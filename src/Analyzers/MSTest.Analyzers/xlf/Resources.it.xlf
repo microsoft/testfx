@@ -321,22 +321,22 @@
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
         <source>Do not negate boolean assertions, instead use the opposite assertion</source>
-        <target state="new">Do not negate boolean assertions, instead use the opposite assertion</target>
+        <target state="translated">Non negare asserzioni booleane, usare l'asserzione opposta</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotNegateBooleanAssertionTitle">
         <source>Do not negate boolean assertions</source>
-        <target state="new">Do not negate boolean assertions</target>
+        <target state="translated">Non negare asserzioni booleane</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerMessageFormat">
         <source>Do not store TestContext in a static member</source>
-        <target state="new">Do not store TestContext in a static member</target>
+        <target state="translated">Non archiviare TestContext in un membro statico</target>
         <note />
       </trans-unit>
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerTitle">
         <source>Do not store TestContext in a static member</source>
-        <target state="new">Do not store TestContext in a static member</target>
+        <target state="translated">Non archiviare TestContext in un membro statico</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
