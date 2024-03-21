@@ -121,13 +121,13 @@ public class TestClassInfo
     /// Gets the timeout for the test initialize methods.
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
-    internal Dictionary<MethodInfo, int> TestInitializeMethodTimeoutMilliseconds { get; private set; }
+    internal Dictionary<MethodInfo, int> TestInitializeMethodTimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets the timeout for the test cleanup methods.
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
-    internal Dictionary<MethodInfo, int> TestCleanupMethodTimeoutMilliseconds { get; private set; }
+    internal Dictionary<MethodInfo, int> TestCleanupMethodTimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets a value indicating whether class initialize has executed.
