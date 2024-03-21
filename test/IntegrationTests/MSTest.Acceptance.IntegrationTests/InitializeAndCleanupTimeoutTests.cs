@@ -9,7 +9,7 @@ using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
+public class InitializeAndCleanupTimeout : AcceptanceTestBase
 {
     private static readonly Dictionary<string, (string MethodFullName, string Prefix, string EnvVarSuffix, string RunSettingsEntryName)> InfoByKind = new()
     {
@@ -26,7 +26,7 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
     private readonly TestAssetFixture _testAssetFixture;
 
     // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
-    public AssemblyAndClassInitializeTimeout(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
+    public InitializeAndCleanupTimeout(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
         AcceptanceFixture globalFixture)
         : base(testExecutionContext)
     {
