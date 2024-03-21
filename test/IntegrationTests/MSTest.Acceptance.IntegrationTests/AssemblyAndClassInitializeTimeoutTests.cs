@@ -19,6 +19,8 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
         ["baseClassInit"] = ("TestClassBase.ClassInitBase", "Class initialize", "BASE_CLASSINIT", "ClassInitializeTimeout"),
         ["classCleanup"] = ("TestClass.ClassCleanupMethod", "Class cleanup", "CLASSCLEANUP", "ClassCleanupTimeout"),
         ["baseClassCleanup"] = ("TestClassBase.ClassCleanupBase", "Class cleanup", "BASE_CLASSCLEANUP", "ClassCleanupTimeout"),
+        ["testInit"] = ("TestClass.TestInit", "Test initialize", "TESTINIT", "TestInitializeTimeout"),
+        ["testCleanup"] = ("TestClass.TestCleanupMethod", "Test cleanup", "TESTClEANUP", "TestCleanupTimeout"),
     };
 
     private readonly TestAssetFixture _testAssetFixture;
@@ -138,6 +140,32 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task AssemblyCleanup_WhenTimeoutExpires_AssemblyCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
        => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "assemblyCleanup");
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TestInitialize_WhenTimeoutExpires_TestInitializeTaskIsCancelled(string tfm)
+        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+            "LONG_WAIT_", "testInit");
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TestInitialize_WhenTimeoutExpires_FromRunSettings_TestInitializeIsCancelled(string tfm)
+       => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "testInit");
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TestInitialize_WhenTimeoutExpires_TestInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
+       => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "testInit");
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TestCleanup_WhenTimeoutExpires_TestCleanupTaskIsCancelled(string tfm)
+        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+            "LONG_WAIT_", "testCleanup");
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TestCleanup_WhenTimeoutExpires_FromRunSettings_TestCleanupIsCancelled(string tfm)
+       => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "testCleanup");
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task TestCleanup_WhenTimeoutExpires_TestCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
+       => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "testCleanup");
 
     private async Task RunAndAssertTestWasCancelledAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)
     {
@@ -335,6 +363,34 @@ public class TestClass : TestClassBase
         else if (Environment.GetEnvironmentVariable("TIMEOUT_CLASSINIT") == "1")
         {
             await Task.Delay(60_000, testContext.CancellationTokenSource.Token);
+        }
+        else
+        {
+            await Task.CompletedTask;
+        }
+    }
+
+    $TimeoutAttribute$
+    [TestInitialize]
+    public async Task TestInit()
+    {
+        if (Environment.GetEnvironmentVariable("LONG_WAIT_TESTINIT") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_TESTINIT") == "1")
+        {
+            await Task.Delay(10_000);
+        }
+        else
+        {
+            await Task.CompletedTask;
+        }
+    }
+
+    $TimeoutAttribute$
+    [TestCleanup]
+    public async Task TestCleanupMethod()
+    {
+        if (Environment.GetEnvironmentVariable("LONG_WAIT_TESTCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_TESTCLEANUP") == "1")
+        {
+            await Task.Delay(10_000);
         }
         else
         {
