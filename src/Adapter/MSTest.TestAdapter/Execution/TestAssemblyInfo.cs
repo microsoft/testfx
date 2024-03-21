@@ -238,7 +238,7 @@ public class TestAssemblyInfo
             return null;
         }
 
-        var realException = assemblyCleanupException.InnerException ?? assemblyCleanupException;
+        var realException = assemblyCleanupException.GetRealException();
 
         // special case AssertFailedException to trim off part of the stack trace
         string errorMessage = realException is AssertFailedException or AssertInconclusiveException
