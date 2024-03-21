@@ -65,6 +65,7 @@
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net6.0\" />
     <file src="$ArtifactsBinDir$MSTestAdapter.PlatformServices\$Configuration$\net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll" target="build\net6.0\winui\" />
     <file src="net6.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\net6.0\" />
+    <file src="net6.0-windows10.0.18362.0\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" target="build\net6.0\winui" />
     <file src="net6.0\Microsoft.TestPlatform.AdapterUtilities.dll" target="build\net6.0\" />
 
     <!-- net7.0 -->

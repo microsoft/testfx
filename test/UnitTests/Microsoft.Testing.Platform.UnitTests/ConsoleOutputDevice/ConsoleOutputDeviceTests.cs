@@ -3,7 +3,7 @@
 
 using System.Globalization;
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.TestInfrastructure;
 
 namespace Microsoft.Testing.Platform.UnitTests.ConsoleOutputDevice;

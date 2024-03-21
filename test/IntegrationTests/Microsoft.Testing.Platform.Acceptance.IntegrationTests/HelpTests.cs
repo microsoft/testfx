@@ -141,8 +141,8 @@ Extension options:
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
-        <PackageReference Include="Microsoft.Testing.Framework" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
-        <PackageReference Include="Microsoft.Testing.Framework.SourceGeneration" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
+        <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$MicrosoftTestingPlatformExtensionsVersion$" />
     </ItemGroup>
 </Project>
 
@@ -167,7 +167,7 @@ public class UnitTest1
 
 #file Usings.cs
 global using Microsoft.Testing.Platform.Builder;
-global using Microsoft.Testing.Framework;
+global using Microsoft.Testing.Internal.Framework;
 global using Microsoft.Testing.Extensions;
 """;
 

@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Framework" Version="$(MicrosoftTestingFrameworkVersion)" />
+    <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
     <PackageReference Include="Polly" Version="$(PollyVersion)" />
     <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="$(PollyContribWaitAndRetryVersion)" />
   </ItemGroup>

@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;

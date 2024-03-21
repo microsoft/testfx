@@ -1,5 +1,5 @@
 ﻿using Microsoft.Testing.Extensions;
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Builder;
 namespace TestProject1
 {

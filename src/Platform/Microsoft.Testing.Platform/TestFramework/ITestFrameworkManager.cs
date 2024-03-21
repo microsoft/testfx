@@ -4,7 +4,7 @@
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 
-namespace Microsoft.Testing.Framework;
+namespace Microsoft.Testing.Internal.Framework;
 
 internal interface ITestFrameworkManager
 {

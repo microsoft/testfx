@@ -3,7 +3,7 @@
 
 using System.Diagnostics;
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.TestInfrastructure;
 
