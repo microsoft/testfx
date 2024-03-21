@@ -14,6 +14,7 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
     private static readonly Dictionary<string, (string MethodFullName, string Prefix, string EnvVarSuffix, string RunSettingsEntryName)> InfoByKind = new()
     {
         ["assemblyInit"] = ("TestClass.AssemblyInit", "Assembly initialize", "ASSEMBLYINIT", "AssemblyInitializeTimeout"),
+        ["assemblyCleanup"] = ("TestClass.AssemblyCleanupMethod", "Assembly cleanup", "ASSEMBLYClEANUP", "AssemblyCleanupTimeout"),
         ["classInit"] = ("TestClass.ClassInit", "Class initialize", "CLASSINIT", "ClassInitializeTimeout"),
         ["baseClassInit"] = ("TestClassBase.ClassInitBase", "Class initialize", "BASE_CLASSINIT", "ClassInitializeTimeout"),
         ["classCleanup"] = ("TestClass.ClassCleanupMethod", "Class cleanup", "CLASSCLEANUP", "ClassCleanupTimeout"),
@@ -124,6 +125,19 @@ public class AssemblyAndClassInitializeTimeout : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task BaseClassCleanup_WhenTimeoutExpires_ClassCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
         => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "baseClassCleanup");
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task AssemblyCleanup_WhenTimeoutExpires_AssemblyCleanupTaskIsCancelled(string tfm)
+        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+            "LONG_WAIT_", "assemblyCleanup");
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task AssemblyCleanup_WhenTimeoutExpires_FromRunSettings_AssemblyCleanupIsCancelled(string tfm)
+       => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "assemblyCleanup");
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task AssemblyCleanup_WhenTimeoutExpires_AssemblyCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
+       => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "assemblyCleanup");
 
     private async Task RunAndAssertTestWasCancelledAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)
     {
@@ -333,6 +347,20 @@ public class TestClass : TestClassBase
     public static async Task ClassCleanupMethod()
     {
         if (Environment.GetEnvironmentVariable("LONG_WAIT_CLASSCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_CLASSCLEANUP") == "1")
+        {
+            await Task.Delay(10_000);
+        }
+        else
+        {
+            await Task.CompletedTask;
+        }
+    }
+
+    $TimeoutAttribute$
+    [AssemblyCleanup]
+    public static async Task AssemblyCleanupMethod()
+    {
+        if (Environment.GetEnvironmentVariable("LONG_WAIT_ASSEMBLYCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_ASSEMBLYCLEANUP") == "1")
         {
             await Task.Delay(10_000);
         }
