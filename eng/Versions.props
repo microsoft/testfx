@@ -24,12 +24,12 @@
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>$(MicrosoftCodeAnalysisAnalyzersVersion)</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
-    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24165.4</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
+    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24170.6</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
     <MicrosoftPlaywrightVersion>1.42.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingFrameworkVersion>1.2.0-preview.24168.3</MicrosoftTestingFrameworkVersion>
-    <MicrosoftTestingPlatformVersion>1.2.0-preview.24170.1</MicrosoftTestingPlatformVersion>
+    <MicrosoftTestingPlatformVersion>1.2.0-preview.24171.1</MicrosoftTestingPlatformVersion>
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.9.28</MicrosoftVisualStudioThreadingAnalyzersVersion>
-    <MSTestEngineVersion>1.0.0-alpha.24170.1</MSTestEngineVersion>
+    <MSTestEngineVersion>1.0.0-alpha.24171.1</MSTestEngineVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.556</StyleCopAnalyzersVersion>
   </PropertyGroup>
   <PropertyGroup Label="MSTest test dependencies">
