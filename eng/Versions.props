@@ -25,17 +25,17 @@
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24165.4</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <!-- Testing platform (this comment is here to avoid conflict on darc PRs) -->
-    <MicrosoftTestingFrameworkVersion>1.2.0-preview.24167.1</MicrosoftTestingFrameworkVersion>
-    <MicrosoftTestingPlatformVersion>1.2.0-preview.24167.1</MicrosoftTestingPlatformVersion>
-    <MSTestEngineVersion>1.0.0-alpha.24167.1</MSTestEngineVersion>
+    <MicrosoftPlaywrightVersion>1.42.0</MicrosoftPlaywrightVersion>
+    <MicrosoftTestingFrameworkVersion>1.2.0-preview.24168.3</MicrosoftTestingFrameworkVersion>
+    <MicrosoftTestingPlatformVersion>1.2.0-preview.24170.1</MicrosoftTestingPlatformVersion>
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.9.28</MicrosoftVisualStudioThreadingAnalyzersVersion>
+    <MSTestEngineVersion>1.0.0-alpha.24170.1</MSTestEngineVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.556</StyleCopAnalyzersVersion>
   </PropertyGroup>
   <PropertyGroup Label="MSTest test dependencies">
     <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
     <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.2-beta1.24074.2</MicrosoftCodeAnalysisAnalyzerTestingVersion>
-    <MicrosoftTestingExtensionsCodeCoverageVersion>17.11.0-preview.24168.1</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftTestingExtensionsCodeCoverageVersion>17.11.0-preview.24169.2</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- Pinned to 4.18.4 for security -->
     <MoqVersion>4.18.4</MoqVersion>
     <MSBuildStructuredLogger>2.2.169</MSBuildStructuredLogger>

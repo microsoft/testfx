@@ -5,7 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Builder;
 using Microsoft.Testing.Platform.Capabilities;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
@@ -206,7 +206,7 @@ public class ServerTests : TestBase
             {
                 "jsonrpc": "2.0",
                 "method": "$/cancelRequest",
-                "params": { "id": "2" }
+                "params": { "id": 2 }
             }
             """;
         await WriteMessageAsync(writer, cancelRequestMessage);

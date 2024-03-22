@@ -17,6 +17,9 @@ public class Program
 
         var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
         testApplicationBuilder.AddMSTest(() => new[] { Assembly.GetEntryAssembly()! });
+
+        // Enable Trx
+        // testApplicationBuilder.AddTrxReportProvider();
         using var testApplication = await testApplicationBuilder.BuildAsync();
         return await testApplication.RunAsync();
     }

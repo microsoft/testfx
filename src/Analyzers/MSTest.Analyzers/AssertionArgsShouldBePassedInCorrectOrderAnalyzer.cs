@@ -15,7 +15,7 @@ using MSTest.Analyzers.RoslynAnalyzerHelpers;
 namespace MSTest.Analyzers;
 
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
-public sealed class AssertionArgsShouldBePassedInCorrectOrder : DiagnosticAnalyzer
+public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : DiagnosticAnalyzer
 {
     private static readonly ImmutableArray<string> SupportedMethodNames = ImmutableArray.Create(new[]
     {
@@ -75,12 +75,11 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrder : DiagnosticAnalyz
             return;
         }
 
-        if (actualArgument.Value is not IInvocationOperation)
+        if (actualArgument.Value.GetReferencedMemberOrLocalOrParameter() is { } actualSymbol)
         {
-            if (actualArgument.Value is not ILocalReferenceOperation actualLocalReference
-                || actualLocalReference.Local.Name.StartsWith("expected", StringComparison.Ordinal)
-                || actualLocalReference.Local.Name.StartsWith("_expected", StringComparison.Ordinal)
-                || actualLocalReference.Local.Name.StartsWith("Expected", StringComparison.Ordinal))
+            if (actualSymbol.Name.StartsWith("expected", StringComparison.Ordinal)
+                || actualSymbol.Name.StartsWith("_expected", StringComparison.Ordinal)
+                || actualSymbol.Name.StartsWith("Expected", StringComparison.Ordinal))
             {
                 context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
                 return;

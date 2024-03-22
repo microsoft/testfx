@@ -27,10 +27,15 @@
   </PropertyGroup>
 
   <!-- Core -->
-  <ItemGroup>
+  <ItemGroup Condition=" '$(EnablePlaywright)' == 'false' ">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" VersionOverride="$(MicrosoftNETTestSdkVersion)"  />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)"  />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(EnablePlaywright)' == 'true' ">
+    <PackageReference Include="Microsoft.Playwright.MSTest" Version="$(MicrosoftPlaywrightVersion)" VersionOverride="$(MicrosoftPlaywrightVersion)" />
     <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
   </ItemGroup>
 

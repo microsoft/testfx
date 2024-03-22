@@ -3,7 +3,7 @@
 
 using System.Collections.Concurrent;
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 
 namespace Microsoft.Testing.TestInfrastructure;
 

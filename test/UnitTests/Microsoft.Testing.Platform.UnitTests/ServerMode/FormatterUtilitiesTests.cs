@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.TestInfrastructure;
@@ -32,7 +32,7 @@ public class FormatterUtilitiesTests : TestBase
         RpcMessage msg = _formatter.Deserialize<RpcMessage>("""
             {
                 "jsonrpc": "2.0",
-                "id": "1",
+                "id": 1,
                 "result": null
             }
             """
