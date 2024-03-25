@@ -4,7 +4,7 @@
 /// <summary>
 /// Repository version, created at build time.
 /// </summary>
-internal static class RepositoryVersion
+internal static class PlatformVersion
 {
     public const string Version = "${Version}";
 }
