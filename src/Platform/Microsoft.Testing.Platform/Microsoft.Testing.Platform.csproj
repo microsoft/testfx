@@ -8,16 +8,16 @@
     <SuppressLicenseValidation>true</SuppressLicenseValidation>
   </PropertyGroup>
 
-  <!-- Insert the RepositoryVersion.cs -->
+  <!-- Insert the PlatformVersion.cs -->
   <PropertyGroup>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
   </ItemGroup>
-  <Target Name="InsertRepositoryVersion" BeforeTargets="PrepareForBuild" >
+  <Target Name="InsertPlatformVersion" BeforeTargets="PrepareForBuild" >
     <ItemGroup>
-      <Compile Include="$(Compile);$(IntermediateOutputPath)/RepositoryVersion.cs" />
+      <Compile Include="$(Compile);$(IntermediateOutputPath)/PlatformVersion.cs" />
     </ItemGroup>
   </Target>
 
@@ -106,12 +106,12 @@ This package provides the core platform and the .NET implementation of the proto
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
   </ItemGroup>
-  <Target Name="GenerateRepositoryVersionSourceFile" AfterTargets="PrepareForBuild" >
+  <Target Name="GeneratePlatformVersionSourceFile" AfterTargets="PrepareForBuild" >
     <PropertyGroup>
       <_TemplateProperties>Version=$(Version)</_TemplateProperties>
     </PropertyGroup>
     <ItemGroup>
-      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/RepositoryVersion.cs.template" Destination="$(IntermediateOutputPath)/RepositoryVersion.cs" />
+      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/PlatformVersion.cs.template" Destination="$(IntermediateOutputPath)/PlatformVersion.cs" />
     </ItemGroup>
     <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
       <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />

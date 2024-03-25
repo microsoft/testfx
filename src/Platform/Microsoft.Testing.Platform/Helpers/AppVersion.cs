@@ -5,5 +5,5 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal static class AppVersion
 {
-    public static readonly string DefaultSemVer = RepositoryVersion.Version;
+    public static readonly string DefaultSemVer = PlatformVersion.Version;
 }
