@@ -12,7 +12,7 @@ internal sealed class MSTestExtension : IExtension
 
     public string DisplayName => "MSTest";
 
-    public string Version => RepositoryVersion.Version;
+    public string Version => MSTestVersion.SemanticVersion;
 
     public string Description => "MSTest Framework for Microsoft Testing Platform";
 

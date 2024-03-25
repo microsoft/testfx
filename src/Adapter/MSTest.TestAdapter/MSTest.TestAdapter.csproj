@@ -84,6 +84,35 @@
     </None>
   </ItemGroup>
 
+  <!-- Insert the MSTestVersion.cs -->
+  <PropertyGroup>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
+  </ItemGroup>
+  <Target Name="InsertMSTestVersion" BeforeTargets="PrepareForBuild" >
+    <ItemGroup>
+      <Compile Include="$(Compile);$(IntermediateOutputPath)/MSTestVersion.cs" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Version templating -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
+  </ItemGroup>
+  <Target Name="GenerateMSTestVersionSourceFile" AfterTargets="PrepareForBuild" >
+    <PropertyGroup>
+      <_TemplateProperties>Version=$(Version)</_TemplateProperties>
+    </PropertyGroup>
+    <ItemGroup>
+      <_TemplateCsproj Include="$(MSBuildProjectDirectory)/MSTestVersion.cs.template" Destination="$(IntermediateOutputPath)/MSTestVersion.cs" />
+    </ItemGroup>
+    <GenerateFileFromTemplate TemplateFile="%(_TemplateCsproj.Identity)" OutputPath="%(_TemplateCsproj.Destination)" Properties="$(_TemplateProperties)">
+      <Output TaskParameter="ResolvedOutputPath" ItemName="FileWrites" />
+    </GenerateFileFromTemplate>
+  </Target>
+
   <!-- SDK bottom import -->
   <Import Project="Sdk.targets" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
