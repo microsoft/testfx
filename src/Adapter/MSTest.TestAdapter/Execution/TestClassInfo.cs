@@ -327,7 +327,7 @@ public class TestClassInfo
             return;
         }
 
-        // If the exception is already  a `TestFailedException` we throw it as-is
+        // If the exception is already a `TestFailedException` we throw it as-is
         if (ClassInitializationException is TestFailedException)
         {
             throw ClassInitializationException;
@@ -504,7 +504,7 @@ public class TestClassInfo
             return;
         }
 
-        // If the exception is already  a `TestFailedException` we throw it as-is
+        // If the exception is already a `TestFailedException` we throw it as-is
         if (ClassCleanupException is TestFailedException)
         {
             throw ClassCleanupException;

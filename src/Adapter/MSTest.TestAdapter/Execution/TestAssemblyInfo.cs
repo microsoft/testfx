@@ -171,7 +171,7 @@ public class TestAssemblyInfo
             return;
         }
 
-        // If the exception is already  a `TestFailedException` we throw it as-is
+        // If the exception is already a `TestFailedException` we throw it as-is
         if (AssemblyInitializationException is TestFailedException)
         {
             throw AssemblyInitializationException;
@@ -294,7 +294,7 @@ public class TestAssemblyInfo
             return;
         }
 
-        // If the exception is already  a `TestFailedException` we throw it as-is
+        // If the exception is already a `TestFailedException` we throw it as-is
         if (assemblyCleanupException is TestFailedException)
         {
             throw assemblyCleanupException;

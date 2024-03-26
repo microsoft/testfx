@@ -477,7 +477,7 @@ public class TestMethodInfo : ITestMethod
             return;
         }
 
-        // If the exception is already  a `TestFailedException` we throw it as-is
+        // If the exception is already a `TestFailedException` we throw it as-is
         if (testCleanupException is TestFailedException)
         {
             result.Outcome = UTF.UnitTestOutcome.Failed;
@@ -596,7 +596,7 @@ public class TestMethodInfo : ITestMethod
             return true;
         }
 
-        // If the exception is already  a `TestFailedException` we throw it as-is
+        // If the exception is already a `TestFailedException` we throw it as-is
         if (testInitializeException is TestFailedException)
         {
             result.Outcome = UTF.UnitTestOutcome.Failed;
