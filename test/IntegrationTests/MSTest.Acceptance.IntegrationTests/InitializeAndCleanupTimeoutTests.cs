@@ -348,6 +348,20 @@ public class TestClass : TestClassBase
     }
 
     $TimeoutAttribute$
+    [AssemblyCleanup]
+    public static async Task AssemblyCleanupMethod()
+    {
+        if (Environment.GetEnvironmentVariable("LONG_WAIT_ASSEMBLYCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_ASSEMBLYCLEANUP") == "1")
+        {
+            await Task.Delay(10_000);
+        }
+        else
+        {
+            await Task.CompletedTask;
+        }
+    }
+
+    $TimeoutAttribute$
     [ClassInitialize]
     public static async Task ClassInit(TestContext testContext)
     {
@@ -363,6 +377,20 @@ public class TestClass : TestClassBase
         else if (Environment.GetEnvironmentVariable("TIMEOUT_CLASSINIT") == "1")
         {
             await Task.Delay(60_000, testContext.CancellationTokenSource.Token);
+        }
+        else
+        {
+            await Task.CompletedTask;
+        }
+    }
+
+    $TimeoutAttribute$
+    [ClassCleanup]
+    public static async Task ClassCleanupMethod()
+    {
+        if (Environment.GetEnvironmentVariable("LONG_WAIT_CLASSCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_CLASSCLEANUP") == "1")
+        {
+            await Task.Delay(10_000);
         }
         else
         {
@@ -389,34 +417,6 @@ public class TestClass : TestClassBase
     public async Task TestCleanupMethod()
     {
         if (Environment.GetEnvironmentVariable("LONG_WAIT_TESTCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_TESTCLEANUP") == "1")
-        {
-            await Task.Delay(10_000);
-        }
-        else
-        {
-            await Task.CompletedTask;
-        }
-    }
-
-    $TimeoutAttribute$
-    [ClassCleanup]
-    public static async Task ClassCleanupMethod()
-    {
-        if (Environment.GetEnvironmentVariable("LONG_WAIT_CLASSCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_CLASSCLEANUP") == "1")
-        {
-            await Task.Delay(10_000);
-        }
-        else
-        {
-            await Task.CompletedTask;
-        }
-    }
-
-    $TimeoutAttribute$
-    [AssemblyCleanup]
-    public static async Task AssemblyCleanupMethod()
-    {
-        if (Environment.GetEnvironmentVariable("LONG_WAIT_ASSEMBLYCLEANUP") == "1" || Environment.GetEnvironmentVariable("TIMEOUT_ASSEMBLYCLEANUP") == "1")
         {
             await Task.Delay(10_000);
         }
