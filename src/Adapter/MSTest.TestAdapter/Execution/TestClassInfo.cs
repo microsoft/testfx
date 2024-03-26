@@ -416,6 +416,8 @@ public class TestClassInfo
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
                         ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
                     }
+
+                    IsClassCleanupExecuted = ClassCleanupException is null;
                 }
                 catch (Exception exception)
                 {
@@ -427,8 +429,6 @@ public class TestClassInfo
         // If ClassCleanup was successful, then don't do anything
         if (ClassCleanupException == null)
         {
-            // We didn't but it in a finally function above to not change the old behavior as it was only in the the try
-            IsClassCleanupExecuted = true;
             return null;
         }
 
@@ -494,6 +494,8 @@ public class TestClassInfo
                     classCleanupMethod = baseClassCleanupQueue.Dequeue();
                     ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
                 }
+
+                IsClassCleanupExecuted = ClassCleanupException is null;
             }
             catch (Exception exception)
             {
@@ -504,8 +506,6 @@ public class TestClassInfo
         // If ClassCleanup was successful, then don't do anything
         if (ClassCleanupException == null)
         {
-            // We didn't but it in a finally function above to not change the old behavior as it was only in the the try
-            IsClassCleanupExecuted = true;
             return;
         }
 
