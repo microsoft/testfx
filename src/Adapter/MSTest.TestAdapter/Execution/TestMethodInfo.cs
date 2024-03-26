@@ -449,12 +449,12 @@ public class TestMethodInfo : ITestMethod
             {
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
-                testCleanupException = InvokeCleanupMethod(testCleanupMethod, classInstance);
+                testCleanupException = testCleanupMethod is not null ? InvokeCleanupMethod(testCleanupMethod, classInstance) : null;
                 var baseTestCleanupQueue = new Queue<MethodInfo>(Parent.BaseTestCleanupMethodsQueue);
                 while (baseTestCleanupQueue.Count > 0 && testCleanupException is null)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupException = InvokeCleanupMethod(testCleanupMethod, classInstance);
+                    testCleanupException = testCleanupMethod is not null ? InvokeCleanupMethod(testCleanupMethod, classInstance) : null;
                 }
             }
             finally
@@ -572,7 +572,7 @@ public class TestMethodInfo : ITestMethod
             while (baseTestInitializeStack.Count > 0)
             {
                 testInitializeMethod = baseTestInitializeStack.Pop();
-                testInitializeException = InvokeInitializeMethod(testInitializeMethod, classInstance);
+                testInitializeException = testInitializeMethod is not null ? InvokeInitializeMethod(testInitializeMethod, classInstance) : null;
                 if (testInitializeException is not null)
                 {
                     break;
@@ -582,7 +582,7 @@ public class TestMethodInfo : ITestMethod
             if (testInitializeException == null)
             {
                 testInitializeMethod = Parent.TestInitializeMethod;
-                testInitializeException = InvokeInitializeMethod(testInitializeMethod, classInstance);
+                testInitializeException = testInitializeMethod is not null ? InvokeInitializeMethod(testInitializeMethod, classInstance) : null;
             }
         }
         catch (Exception ex)
@@ -628,13 +628,8 @@ public class TestMethodInfo : ITestMethod
         return false;
     }
 
-    private TestFailedException? InvokeInitializeMethod(MethodInfo? methodInfo, object classInstance)
+    private TestFailedException? InvokeInitializeMethod(MethodInfo methodInfo, object classInstance)
     {
-        if (methodInfo is null)
-        {
-            return null;
-        }
-
         int? timeout = null;
         if (Parent.TestInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
         {
@@ -650,13 +645,8 @@ public class TestMethodInfo : ITestMethod
             Resource.TestInitializeTimedOut);
     }
 
-    private TestFailedException? InvokeCleanupMethod(MethodInfo? methodInfo, object classInstance)
+    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, object classInstance)
     {
-        if (methodInfo is null)
-        {
-            return null;
-        }
-
         int? timeout = null;
         if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
         {

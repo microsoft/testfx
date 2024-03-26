@@ -290,7 +290,7 @@ public class TestClassInfo
                             var baseInitCleanupMethods = baseClassInitializeStack.Pop();
                             initializeMethod = baseInitCleanupMethods.Item1;
 
-                            ClassInitializationException = InvokeInitializeMethod(initializeMethod, testContext);
+                            ClassInitializationException = ClassInitializeMethod is not null ? InvokeInitializeMethod(ClassInitializeMethod, testContext) : null;
                             if (ClassInitializationException is not null)
                             {
                                 break;
@@ -305,7 +305,7 @@ public class TestClassInfo
                         if (ClassInitializationException is null)
                         {
                             initializeMethod = null;
-                            ClassInitializationException = InvokeInitializeMethod(ClassInitializeMethod, testContext);
+                            ClassInitializationException = ClassInitializeMethod is not null ? InvokeInitializeMethod(ClassInitializeMethod, testContext) : null;
                         }
                     }
                     catch (Exception ex)
@@ -355,13 +355,8 @@ public class TestClassInfo
         throw testFailedException;
     }
 
-    private TestFailedException? InvokeInitializeMethod(MethodInfo? methodInfo, TestContext testContext)
+    private TestFailedException? InvokeInitializeMethod(MethodInfo methodInfo, TestContext testContext)
     {
-        if (methodInfo is null)
-        {
-            return null;
-        }
-
         int? timeout = null;
         if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
         {
@@ -409,12 +404,12 @@ public class TestClassInfo
                 try
                 {
                     classCleanupMethod = ClassCleanupMethod;
-                    ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
+                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
                     while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
+                        ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
                     }
 
                     IsClassCleanupExecuted = ClassCleanupException is null;
@@ -487,12 +482,12 @@ public class TestClassInfo
             try
             {
                 classCleanupMethod = ClassCleanupMethod;
-                ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
+                ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
                 var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
                 while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                 {
                     classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                    ClassCleanupException = InvokeCleanupMethod(classCleanupMethod);
+                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
                 }
 
                 IsClassCleanupExecuted = ClassCleanupException is null;
@@ -540,13 +535,8 @@ public class TestClassInfo
         throw testFailedException;
     }
 
-    private TestFailedException? InvokeCleanupMethod(MethodInfo? methodInfo)
+    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo)
     {
-        if (methodInfo is null)
-        {
-            return null;
-        }
-
         int? timeout = null;
         if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
         {
