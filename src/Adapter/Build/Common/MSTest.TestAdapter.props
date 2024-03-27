@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <EnableMSTestV2CopyResources Condition=" '$(EnableMSTestV2CopyResources)' == '' ">true</EnableMSTestV2CopyResources>
-    <EnableMSTestRunner Condition=" '$(EnableMSTestRunner)' == '' ">false</EnableMSTestRunner>
-    <IsTestingPlatformApplication>$(EnableMSTestRunner)</IsTestingPlatformApplication>
+    <EnableMSTestRunner Condition=" '$(EnableMSTestRunner)' == '' ">false</EnableMSTestRunner>    
   </PropertyGroup>
 
   <ItemGroup>
