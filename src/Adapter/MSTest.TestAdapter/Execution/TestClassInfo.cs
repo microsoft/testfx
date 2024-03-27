@@ -290,7 +290,7 @@ public class TestClassInfo
                             var baseInitCleanupMethods = baseClassInitializeStack.Pop();
                             initializeMethod = baseInitCleanupMethods.Item1;
 
-                            ClassInitializationException = ClassInitializeMethod is not null ? InvokeInitializeMethod(ClassInitializeMethod, testContext) : null;
+                            ClassInitializationException = initializeMethod is not null ? InvokeInitializeMethod(initializeMethod, testContext) : null;
                             if (ClassInitializationException is not null)
                             {
                                 break;
