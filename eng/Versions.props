@@ -35,7 +35,7 @@
   <PropertyGroup Label="MSTest test dependencies">
     <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
     <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.2-beta1.24074.2</MicrosoftCodeAnalysisAnalyzerTestingVersion>
-    <MicrosoftTestingExtensionsCodeCoverageVersion>17.11.0-preview.24177.3</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftTestingExtensionsCodeCoverageVersion>17.11.0-preview.24178.3</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- Pinned to 4.18.4 for security -->
     <MoqVersion>4.18.4</MoqVersion>
     <MSBuildStructuredLogger>2.2.169</MSBuildStructuredLogger>
