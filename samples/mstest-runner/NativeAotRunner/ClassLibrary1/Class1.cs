@@ -1,10 +1,9 @@
-﻿namespace ClassLibrary1
+﻿namespace ClassLibrary1;
+
+public class Class1
 {
-    public class Class1
+    public int Add(int left, int right)
     {
-        public int Add(int left, int right)
-        {
-            return left + right;
-        }
+        return left + right;
     }
 }
