@@ -24,7 +24,7 @@
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>$(MicrosoftCodeAnalysisAnalyzersVersion)</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
     <!-- MSBuild Sdk versions updates -->
-    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24177.1</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
+    <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24179.4</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
     <MicrosoftPlaywrightVersion>1.42.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingFrameworkVersion>1.2.0-preview.24168.3</MicrosoftTestingFrameworkVersion>
     <MicrosoftTestingPlatformVersion>1.2.0-preview.24176.2</MicrosoftTestingPlatformVersion>
@@ -35,7 +35,7 @@
   <PropertyGroup Label="MSTest test dependencies">
     <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
     <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.2-beta1.24074.2</MicrosoftCodeAnalysisAnalyzerTestingVersion>
-    <MicrosoftTestingExtensionsCodeCoverageVersion>17.11.0-preview.24178.3</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftTestingExtensionsCodeCoverageVersion>17.11.0-preview.24178.6</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- Pinned to 4.18.4 for security -->
     <MoqVersion>4.18.4</MoqVersion>
     <MSBuildStructuredLogger>2.2.169</MSBuildStructuredLogger>
