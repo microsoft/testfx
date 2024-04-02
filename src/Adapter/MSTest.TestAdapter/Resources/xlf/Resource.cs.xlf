@@ -4,12 +4,12 @@
     <body>
       <trans-unit id="AssemblyCleanupTimedOut">
         <source>Assembly cleanup method '{0}.{1}' timed out</source>
-        <target state="new">Assembly cleanup method '{0}.{1}' timed out</target>
+        <target state="translated">Metoda čištění sestavení {0}. Vypršel časový limit {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
         <source>Assembly cleanup method '{0}.{1}' was cancelled</source>
-        <target state="new">Assembly cleanup method '{0}.{1}' was cancelled</target>
+        <target state="translated">Metoda čištění sestavení {0}.{1} bylo zrušeno.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
@@ -24,12 +24,12 @@
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">
         <source>Class cleanup method '{0}.{1}' timed out</source>
-        <target state="new">Class cleanup method '{0}.{1}' timed out</target>
+        <target state="translated">Metoda čištění třídy {0}. Vypršel časový limit {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
         <source>Class cleanup method '{0}.{1}' was cancelled</source>
-        <target state="new">Class cleanup method '{0}.{1}' was cancelled</target>
+        <target state="translated">Metoda čištění třídy {0}.{1} bylo zrušeno.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
@@ -54,22 +54,22 @@
       </trans-unit>
       <trans-unit id="TestCleanupTimedOut">
         <source>Test cleanup method '{0}.{1}' timed out</source>
-        <target state="new">Test cleanup method '{0}.{1}' timed out</target>
+        <target state="translated">Metoda čištění testu {0}. Vypršel časový limit {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
         <source>Test cleanup method '{0}.{1}' was cancelled</source>
-        <target state="new">Test cleanup method '{0}.{1}' was cancelled</target>
+        <target state="translated">Metoda čištění testu {0}.{1} bylo zrušeno.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
         <source>Test initialize method '{0}.{1}' timed out</source>
-        <target state="new">Test initialize method '{0}.{1}' timed out</target>
+        <target state="translated">Metoda inicializace testu {0}. Vypršel časový limit {1}</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
         <source>Test initialize method '{0}.{1}' was cancelled</source>
-        <target state="new">Test initialize method '{0}.{1}' was cancelled</target>
+        <target state="translated">Metoda inicializace testu {0}.{1} byla zrušena.</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
