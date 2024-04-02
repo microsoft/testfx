@@ -40,6 +40,7 @@ parameters:
   default: False
 
 variables:
+  - template: /eng/common/templates-official/variables/pool-providers.yml@self
   # Cannot use key:value syntax in root defined variables
   - name: _TeamName
     value: MSTest
@@ -87,8 +88,8 @@ extends:
     featureFlags:
       autoBaseline: true
     pool:
-      name: netcore1espool-internal
-      image: 1es-windows-2022-pt
+      name: $(DncEngInternalBuildPool)
+      image: windows.vs2022.amd64
       os: windows
     customBuildTags:
     - ES365AIMigrationTooling
@@ -111,8 +112,8 @@ extends:
           - job: Windows
             timeoutInMinutes: 90
             pool:
-              name: netcore1espool-internal
-              image: 1es-windows-2022-pt
+              name: $(DncEngInternalBuildPool)
+              image: windows.vs2022.amd64
               os: windows
             steps:
             - task: PowerShell@2
@@ -167,7 +168,7 @@ extends:
           - job: Linux
             timeoutInMinutes: 90
             pool:
-              name: netcore1espool-internal
+              name: $(DncEngInternalBuildPool)
               image: 1es-ubuntu-2204-pt
               os: linux
             steps:
