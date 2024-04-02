@@ -161,4 +161,34 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.NotReadonlyRule)
                 .WithLocation(0));
     }
+
+    [Arguments("TestContext", "private")]
+    [Arguments("TestContext", "public")]
+    [Arguments("TestContext", "internal")]
+    [Arguments("TestContext", "protected")]
+    [Arguments("testcontext", "private")]
+    [Arguments("testcontext", "public")]
+    [Arguments("testcontext", "internal")]
+    [Arguments("testcontext", "protected")]
+    [Arguments("TESTCONTEXT", "private")]
+    [Arguments("TESTCONTEXT", "public")]
+    [Arguments("TESTCONTEXT", "internal")]
+    [Arguments("TESTCONTEXT", "protected")]
+    [Arguments("TeStCoNtExT", "private")]
+    [Arguments("TeStCoNtExT", "public")]
+    [Arguments("TeStCoNtExT", "internal")]
+    [Arguments("TeStCoNtExT", "protected")]
+    public async Task WhenTestContextIsFieldNotOnTestClass_NoDiagnostic(string fieldName, string accessibility)
+    {
+        var code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                {{accessibility}} TestContext {{fieldName}};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }
