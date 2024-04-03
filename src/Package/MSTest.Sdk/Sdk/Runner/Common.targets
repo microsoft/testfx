@@ -26,4 +26,8 @@
     <MicrosoftTestingExtensionsCodeCoverageVersion Condition=" '$(MicrosoftTestingExtensionsCodeCoverageVersion)' == '' " >$(MicrosoftTestingExtensionsCodeCoverageVersion)</MicrosoftTestingExtensionsCodeCoverageVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <AssemblyMetadata Include="MSTest.Extension.Uid" Value="MSTest.Sdk" />
+  </ItemGroup>
+
 </Project>
