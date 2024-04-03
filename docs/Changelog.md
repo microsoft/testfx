@@ -4,9 +4,82 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [3.3.0] - 2024-04-23
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.2.2...v3.3.0)
+
+### Added
+
+* MSTEST0007: [<\Test Attributes>] can only be set on methods marked with [TestMethod] by @cvpoienaru in [#2221](https://github.com/microsoft/testfx/pull/2221)
+* MSTEST0008: `[TestInitialize]` should be valid by @engyebrahim in [#2292](https://github.com/microsoft/testfx/pull/2292)
+* MSTEST0009: `[TestCleanup]` should have valid layout by @cvpoienaru in [#2312](https://github.com/microsoft/testfx/pull/2312)
+* MSTEST0010: `[ClassInitialize]` should be valid by @engyebrahim in [#2354](https://github.com/microsoft/testfx/pull/2354)
+* MSTEST0011: `[ClassCleanup]` should be valid  by @engyebrahim in [#2356](https://github.com/microsoft/testfx/pull/2356)
+* MSTEST0012: `[AssemblyInitialize]` should be valid by @engyebrahim in [#2328](https://github.com/microsoft/testfx/pull/2328)
+* MSTEST0013: `[AssemblyCleanup]` should be valid by @engyebrahim in [#2353](https://github.com/microsoft/testfx/pull/2353)
+* MSTEST0014: `[DataRow]` should be valid by @cvpoienaru in [#2352](https://github.com/microsoft/testfx/pull/2352)
+* MSTEST0015: Test method should not be ignored by @engyebrahim in [#2429](https://github.com/microsoft/testfx/pull/2429)
+* MSTEST0016: Test class should have test method by @engyebrahim in [#2518](https://github.com/microsoft/testfx/pull/2518)
+* Add support for ValueTask return type by @Evangelink in [#2208](https://github.com/microsoft/testfx/pull/2208)
+* Allow IEnumerable of tuple for DynamicData source by @Evangelink in [#2226](https://github.com/microsoft/testfx/pull/2226)
+* Add a console logger sample for the runner by @Evangelink in [#2246](https://github.com/microsoft/testfx/pull/2246)
+* Create preview.md by @nohwnd in [#2268](https://github.com/microsoft/testfx/pull/2268)
+* Use Task.Run for Assembly/Class init to allow exiting by @Evangelink in [#2265](https://github.com/microsoft/testfx/pull/2265)
+* Document logging public APIs by @Evangelink in [#2290](https://github.com/microsoft/testfx/pull/2290)
+* Document test framework public APIs by @Evangelink in [#2286](https://github.com/microsoft/testfx/pull/2286)
+* Document messages public APIs by @Evangelink in [#2287](https://github.com/microsoft/testfx/pull/2287)
+* Document command line public APIs by @Evangelink in [#2285](https://github.com/microsoft/testfx/pull/2285)
+* Document requests public APIs by @Evangelink in [#2289](https://github.com/microsoft/testfx/pull/2289)
+* Document builder public API by @Evangelink in [#2283](https://github.com/microsoft/testfx/pull/2283)
+* Document configuration public APIs by @Evangelink in [#2291](https://github.com/microsoft/testfx/pull/2291)
+* Document testhost related public APIs by @Evangelink in [#2284](https://github.com/microsoft/testfx/pull/2284)
+* Document extensions/services public APIs by @Evangelink in [#2288](https://github.com/microsoft/testfx/pull/2288)
+* Document messages public api by @MarcoRossignoli in [#2357](https://github.com/microsoft/testfx/pull/2357)
+* Complete public api docs by @MarcoRossignoli in [#2359](https://github.com/microsoft/testfx/pull/2359)
+* Assert.AreEqual allow IEquatable<\T> for actual and expected by @Evangelink in [#2381](https://github.com/microsoft/testfx/pull/2381)
+* Introduce `--exit-on-process-exit` by @MarcoRossignoli in [#2434](https://github.com/microsoft/testfx/pull/2434)
+* Add example for simple framework without VSTest bridge by @nohwnd in [#2446](https://github.com/microsoft/testfx/pull/2446)
+* Add graph query filtering doc draft by @MarcoRossignoli in [#2460](https://github.com/microsoft/testfx/pull/2460)
+
+### Fixed
+
+* MSTEST0002: fix false-positive with static TestClass by @Evangelink in [#2182](https://github.com/microsoft/testfx/pull/2182)
+* Fix code samples by @Evangelink in [#2217](https://github.com/microsoft/testfx/pull/2217)
+* Fix setup of MSBuild Reference item entry by @Evangelink in [#2220](https://github.com/microsoft/testfx/pull/2220)
+* Fix support of WinUI for net6+ by @Evangelink in [#2222](https://github.com/microsoft/testfx/pull/2222)
+* Fix MSTEST0002 - Generic TestClass is valid by @Evangelink in [#2428](https://github.com/microsoft/testfx/pull/2428)
+* Fix MSTEST0005 to report only inside test classes by @Evangelink in [#2642](https://github.com/microsoft/testfx/pull/2642)
+* Preserve real exception and fix tests by @MarcoRossignoli in [#2272](https://github.com/microsoft/testfx/pull/2272)
+* Shorten server pipe name by @MarcoRossignoli in [#2302](https://github.com/microsoft/testfx/pull/2302)
+* Fix `TestMethod` should be valid analyzer description by @engyebrahim in [#2295](https://github.com/microsoft/testfx/pull/2295)
+* Fix command line banner output by @MarcoRossignoli in [#2314](https://github.com/microsoft/testfx/pull/2314)
+* Workaround harmless MSBuild warning in VS by @Evangelink in [#2349](https://github.com/microsoft/testfx/pull/2349)
+* Fix analyzers doc link by @Evangelink in [#2361](https://github.com/microsoft/testfx/pull/2361)
+* Remove the `TestingPlatformServer` if the runner is disabled by @MarcoRossignoli in [#2409](https://github.com/microsoft/testfx/pull/2409)
+* Honor request.Complete() by @MarcoRossignoli in [#2448](https://github.com/microsoft/testfx/pull/2448)
+* Make `RootDeploymentDirectory` name unique by @MarcoRossignoli in [#2456](https://github.com/microsoft/testfx/pull/2456)
+
+### Housekeeping
+
+* Reduce calls to GetTypeInfo() by @Evangelink in [#2426](https://github.com/microsoft/testfx/pull/2426)
+* Improve warning message for generic non-abstract test classes by @Evangelink in [#2427](https://github.com/microsoft/testfx/pull/2427)
+* Remove the `Microsoft.Testing.Extensions.Telemetry` from the package by @MarcoRossignoli in [#2454](https://github.com/microsoft/testfx/pull/2454)
+
+### Artifacts
+
+* MSTest: [3.3.0](https://www.nuget.org/packages/MSTest/3.3.0)
+* MSTest.TestFramework: [3.3.0](https://www.nuget.org/packages/MSTest.TestFramework/3.3.0)
+* MSTest.TestAdapter: [3.3.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.3.0)
+* MSTest.Analyzers: [3.3.0](https://www.nuget.org/packages/MSTest.Analyzers/3.3.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.1.0)
+* Microsoft.Testing.Extensions.HangDump: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.1.0)
+* Microsoft.Testing.Extensions.HotReload: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.1.0)
+* Microsoft.Testing.Extensions.Retry: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.1.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.1.0)
+
 ## [3.2.2] - 2024-02-22
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.2.1...v.3.2.2)
+See full log [here](https://github.com/microsoft/testfx/compare/v3.2.1...v3.2.2)
 
 ### Fixed
 
