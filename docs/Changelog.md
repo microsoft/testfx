@@ -6,9 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [3.3.1] - 2024-04-04
 
-See full log [here](https://github.com/microsoft/testfx/compare/v3.0.0...v3.3.1)
+See full log [here](https://github.com/microsoft/testfx/compare/v3.3.0...v3.3.1)
+
+### Fixed
 
 * Fix `MSTest.SDK` deps by @MarcoRossignoli in [#2650](https://github.com/microsoft/testfx/pull/2650)
+
+### Artifacts
+
+* MSTest: [3.3.1](https://www.nuget.org/packages/MSTest/3.3.1)
+* MSTest.TestFramework: [3.3.1](https://www.nuget.org/packages/MSTest.TestFramework/3.3.1)
+* MSTest.TestAdapter: [3.3.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.3.1)
+* MSTest.Analyzers: [3.3.1](https://www.nuget.org/packages/MSTest.Analyzers/3.3.1)
+* MSTest.Sdk: [3.3.1](https://www.nuget.org/packages/MSTest.Sdk/3.3.1)
+* Microsoft.Testing.Extensions.CrashDump: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.1.0)
+* Microsoft.Testing.Extensions.HangDump: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.1.0)
+* Microsoft.Testing.Extensions.HotReload: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.1.0)
+* Microsoft.Testing.Extensions.Retry: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.1.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.1.0)
 
 ## [3.3.0] - 2024-04-03
 
