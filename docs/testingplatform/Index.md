@@ -3,3 +3,4 @@
 ## Table of content
 
 1. [Pillars](pillars.md)
+1. [High level architecture](architecture.md)
