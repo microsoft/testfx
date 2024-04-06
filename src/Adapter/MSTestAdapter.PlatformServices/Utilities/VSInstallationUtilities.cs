@@ -1,23 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK
 
-#if NETFRAMEWORK || NETCOREAPP3_1
 using System.Diagnostics;
-#endif
 using System.Runtime.InteropServices;
 
 using static System.String;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
-#if NETFRAMEWORK
-public
-#else
-internal
-#endif
-    static class VSInstallationUtilities
+public static class VSInstallationUtilities
 {
     /// <summary>
     /// Public assemblies directory name.
@@ -95,11 +88,7 @@ internal
     /// </summary>
     /// <returns>True, if portable mode; false, otherwise.</returns>
     public static bool IsCurrentProcessRunningInPortableMode()
-#if NET6_0_OR_GREATER
-        => IsProcessRunningInPortableMode(Environment.ProcessPath);
-#else
         => IsProcessRunningInPortableMode(Process.GetCurrentProcess().MainModule.FileName);
-#endif
 
     /// <summary>
     /// Is the EXE specified running in Portable Mode.
