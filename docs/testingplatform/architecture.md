@@ -80,14 +80,14 @@ graph TD;
 
 The above section provides a brief introduction to the architecture of the testing platform. The current extensibility points are divided into two categories:
 
-1. **In process** extensions that can be accessed via the `TestHost` property of the test application builder.
+1. **In process** extensions can be accessed through the `TestHost` property of the test application builder. In process means that they will run in the same process as the test framework.
 
 ```cs
 ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 testApplicationBuilder.TestHost.AddXXX(...);
 ```
 
-1. **Out of process** extensions that can be accessed via the `TestHostControllers` property of the test application builder.
+1. **Out of process** extensions can be accessed through the `TestHostControllers` property of the test application builder. These extensions run in a separate process from the test framework to "observe" it.
 
 ```cs
 ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
