@@ -27,12 +27,12 @@ internal class TestingFramework : ITestFramework
 
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
     }
 
     public Task<CreateTestSessionResult> CreateTestSessionAsync(CreateTestSessionContext context)
     {
-        throw new NotImplementedException();
+        return Task.FromResult(new CreateTestSessionResult() { IsSuccess = true });
     }
 
     public Task ExecuteRequestAsync(ExecuteRequestContext context)
@@ -42,6 +42,6 @@ internal class TestingFramework : ITestFramework
 
     public Task<bool> IsEnabledAsync()
     {
-        throw new NotImplementedException();
+        return Task.FromResult(true);
     }
 }
