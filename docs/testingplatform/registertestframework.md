@@ -23,7 +23,6 @@ Below a sample of a test framework registration that returns empty capabilities.
 User code:
 
 ```cs
-...
 internal class TestingFrameworkCapabilities : ITestFrameworkCapabilities
 {
     public IReadOnlyCollection<ITestFrameworkCapability> Capabilities => [];
