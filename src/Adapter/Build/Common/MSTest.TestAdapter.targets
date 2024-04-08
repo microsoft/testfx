@@ -1,5 +1,33 @@
 <Project>
 
+  <PropertyGroup>
+    <EnableMSTestV2CopyResources Condition=" '$(EnableMSTestV2CopyResources)' == '' ">true</EnableMSTestV2CopyResources>
+    <EnableMSTestRunner Condition=" '$(EnableMSTestRunner)' == '' ">false</EnableMSTestRunner>
+    <IsTestingPlatformApplication>$(EnableMSTestRunner)</IsTestingPlatformApplication>
+  </PropertyGroup>
+
+  <!-- Override settings from Microsoft.Testing.Platform.MSBuild.targets that are imported before this file -->
+  <PropertyGroup Condition=" $(IsTestingPlatformApplication) == 'True' ">
+    <GenerateTestingPlatformConfigurationFile Condition=" '$(GenerateTestingPlatformConfigurationFile)' == '' " >True</GenerateTestingPlatformConfigurationFile>
+    <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' " >True</GenerateTestingPlatformEntryPoint>
+  </PropertyGroup>
+  <PropertyGroup Condition=" $(IsTestingPlatformApplication) != 'True' ">
+    <GenerateTestingPlatformConfigurationFile />
+    <GenerateTestingPlatformEntryPoint />
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      !!! IMPORTANT !!!
+      DO NOT CHANGE THE GUID, IT'S A WELL KNOWN EXTENSION POINT AND THIS EXTENSION NEEDS TO BE REGISTERED AT THE END
+      WE HAVE CODE INSIDE THE TASK 'TestingPlatformEntryPoint' TO ENSURE THE ORDER OF THE REGISTRATION BASED ON THIS GUID
+    -->
+    <TestingPlatformBuilderHook Include="031F8871-2660-4208-8F6B-FC142B40ABFF" Condition=" $(GenerateTestingPlatformEntryPoint) == 'true' " >
+      <DisplayName>MSTest</DisplayName>
+      <TypeFullName>Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+
   <!-- Handle the coexistance between testing platform and Microsoft.NET.Test.Sdk  -->
   <PropertyGroup>
     <GenerateTestingPlatformEntryPoint Condition=" '$(GenerateTestingPlatformEntryPoint)' == '' ">$(EnableMSTestRunner)</GenerateTestingPlatformEntryPoint>
