@@ -1,0 +1,33 @@
+﻿<Project Sdk="MSTest.Sdk/3.3.1">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+
+    <!-- Use VSTest as runner/platform (this is not the default). This is changing the included packages and default configuration. -->
+    <UseVSTest>true</UseVSTest>
+  </PropertyGroup>
+
+</Project>
+
+<!--
+Below is the equivalent project configuration when not using MSTest.Sdk
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" Version="3.3.1" />
+  </ItemGroup>
+
+</Project>
+-->
