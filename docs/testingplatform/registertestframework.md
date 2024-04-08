@@ -64,4 +64,4 @@ return await testApplication.RunAsync();
 ```
 
 > [!NOTE]
-> Return empty [ITestFrameworkCapabilities](capabilities.md) should not hinder the execution of the test session. The fundamental features of discovering and running tests should always be ensured. The impact should be limited to extensions that may opt out if the test framework lacks a certain feature.
+> Returning empty [ITestFrameworkCapabilities](capabilities.md) should not prevent the execution of the test session. All test frameworks should be capable of discovering and running tests. The impact should be limited to extensions that may opt out if the test framework lacks a certain feature.
