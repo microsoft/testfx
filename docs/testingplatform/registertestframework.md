@@ -6,7 +6,9 @@ You can register only one testing framework per test application builder using t
 The API's signature is as follows:
 
 ```cs
-ITestApplicationBuilder RegisterTestFramework(Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory, Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> adapterFactory);
+ITestApplicationBuilder RegisterTestFramework(
+    Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,
+    Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> adapterFactory);
 ```
 
 The `RegisterTestFramework` API expects two factories:
