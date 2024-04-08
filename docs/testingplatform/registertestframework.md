@@ -1,6 +1,6 @@
 # Register the testing framework
 
-In this section we will explain how to register the test framework to the testing platform.
+This section explains how to register the test framework to the testing platform.
 You can register only one testing framework per test application builder using the api `TestApplication.RegisterTestFramework` as shown [here](architecture.md)
 
 The API's signature is as follows:
@@ -14,11 +14,12 @@ ITestApplicationBuilder RegisterTestFramework(
 The `RegisterTestFramework` API expects two factories:
 
 1. `Func<IServiceProvider, ITestFrameworkCapabilities>`: This is a lambda function that accepts an object implementing the [`IServiceProvider`](iserviceprovider.md) interface and returns an object implementing the [`ITestFrameworkCapabilities`](capabilities.md) interface. The [`IServiceProvider`](iserviceprovider.md) provides access to platform services such as configurations, loggers, command line arguments, etc.
-The [`ITestFrameworkCapabilities`](capabilities.md) interface is used to announce the capabilities supported by the testing framework to the platform and extensions. It allows the platform and extensions to interact correctly by implementing and supporting specific behaviors. For a better understanding of the [concept of capabilities](capabilities.md), refer to the respective section.
+
+    The [`ITestFrameworkCapabilities`](capabilities.md) interface is used to announce the capabilities supported by the testing framework to the platform and extensions. It allows the platform and extensions to interact correctly by implementing and supporting specific behaviors. For a better understanding of the [concept of capabilities](capabilities.md), refer to the respective section.
 
 1. `Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>`: This is a lambda function that takes in an [ITestFrameworkCapabilities](capabilities.md) object, which is the instance returned by the `Func<IServiceProvider, ITestFrameworkCapabilities>`, and an [IServiceProvider](iserviceprovider.md) to provide access to platform services once more. The expected return object is one that implements the [ITestFramework](itestframework.md) interface. The ITestFramework serves as the execution engine that discovers and runs tests, and communicates the results back to the testing platform.
 
-The need for the platform to separate the creation of the [`ITestFrameworkCapabilities`](capabilities.md) and the creation of the [ITestFramework](itestframework.md) is an optimization to avoid to create the test framework if anyway the supported capabilities are not sufficient to execute the current testing session.
+The need for the platform to separate the creation of the [`ITestFrameworkCapabilities`](capabilities.md) and the creation of the [ITestFramework](itestframework.md) is an optimization to avoid creating the test framework if the supported capabilities are not sufficient to execute the current testing session.
 
 Below a sample of a test framework registration that returns empty capabilities.
 
