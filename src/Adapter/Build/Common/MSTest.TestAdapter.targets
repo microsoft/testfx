@@ -16,7 +16,7 @@
     <GenerateTestingPlatformEntryPoint />
   </PropertyGroup>
   </PropertyGroup>
-  <Target Name="OverrideTestingPlatformSettings"  Condition=" '$(EnableMSTestRunner)' == 'true' " BeforeTargets="Build">
+  <Target Name="OverrideTestingPlatformSettings"  Condition=" '$(EnableMSTestRunner)' == 'true' " BeforeTargets="Build;GenerateAdditionalSources">
     <ItemGroup>
       <AssemblyMetadata Remove="Microsoft.Testing.Platform.Application" />
     </ItemGroup>
