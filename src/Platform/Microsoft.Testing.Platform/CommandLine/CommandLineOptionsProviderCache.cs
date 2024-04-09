@@ -6,15 +6,10 @@ using Microsoft.Testing.Platform.Extensions.CommandLine;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal struct CommandLineOptionsProviderCache : ICommandLineOptionsProvider
+internal struct CommandLineOptionsProviderCache(ICommandLineOptionsProvider commandLineOptionsProvider) : ICommandLineOptionsProvider
 {
-    private readonly ICommandLineOptionsProvider _commandLineOptionsProvider;
+    private readonly ICommandLineOptionsProvider _commandLineOptionsProvider = commandLineOptionsProvider;
     private CommandLineOption[]? _commandLineOptions;
-
-    public CommandLineOptionsProviderCache(ICommandLineOptionsProvider commandLineOptionsProvider)
-    {
-        _commandLineOptionsProvider = commandLineOptionsProvider;
-    }
 
     public readonly string Uid => _commandLineOptionsProvider.Uid;
 
