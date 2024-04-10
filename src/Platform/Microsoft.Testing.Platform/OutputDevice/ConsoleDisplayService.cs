@@ -142,7 +142,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                 _bannerDisplayed = true;
 
                 StringBuilder stringBuilder = new();
-                stringBuilder.AppendLine($"Microsoft(R) Testing Platform Execution Command Line Tool");
+                stringBuilder.Append(".NET Testing Platform");
                 if (_runtimeFeature.IsDynamicCodeSupported)
                 {
                     var version = (AssemblyInformationalVersionAttribute?)Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
@@ -152,11 +152,11 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                         int index = informationalVersion.LastIndexOfAny(PlusSign);
                         if (index != -1)
                         {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {informationalVersion[..(index + 10)]}");
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $" v{informationalVersion[..(index + 10)]}");
                         }
                         else
                         {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $"Version: {informationalVersion}");
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $" v{informationalVersion}");
                         }
 
                         var buildTime = Assembly.GetExecutingAssembly()
@@ -168,17 +168,17 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                         {
                             stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildTime.Value})");
                         }
-
-                        stringBuilder.AppendLine();
                     }
+
+                    stringBuilder.Append(" [");
 #if !NETCOREAPP
-                    stringBuilder.AppendLine($"RuntimeInformation: {RuntimeInformation.FrameworkDescription} ({RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant()})");
+                    stringBuilder.Append(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
 #else
-                    stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"RuntimeInformation: {RuntimeInformation.RuntimeIdentifier} - {RuntimeInformation.FrameworkDescription}");
+                    stringBuilder.Append(RuntimeInformation.RuntimeIdentifier);
 #endif
+                    stringBuilder.Append(CultureInfo.InvariantCulture, $" - {RuntimeInformation.FrameworkDescription}]");
                 }
 
-                stringBuilder.Append("Copyright(c) Microsoft Corporation.  All rights reserved.");
                 _console.WriteLine(stringBuilder.ToString());
             }
 
