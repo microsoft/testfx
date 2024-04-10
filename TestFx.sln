@@ -32,13 +32,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{CA01DAF5
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{3B88BD67-C767-466D-8C9C-C14681544B84}"
 	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\Common\MSTest.TestAdapter.props = src\Adapter\Build\Common\MSTest.TestAdapter.props
 		src\Adapter\Build\Common\MSTest.TestAdapter.targets = src\Adapter\Build\Common\MSTest.TestAdapter.targets
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Universal", "Universal", "{89314305-F815-4969-9B1B-8AEDE109DEC4}"
 	ProjectSection(SolutionItems) = preProject
-		src\Adapter\Build\Universal\MSTest.TestAdapter.props = src\Adapter\Build\Universal\MSTest.TestAdapter.props
 		src\Adapter\Build\Universal\MSTest.TestAdapter.targets = src\Adapter\Build\Universal\MSTest.TestAdapter.targets
 	EndProjectSection
 EndProject
