@@ -24,10 +24,10 @@ public class ThreadOperations : IThreadOperations
     public bool Execute(Action action, int timeout, CancellationToken cancelToken)
     {
 #if NETFRAMEWORK
-        return ExecuteWithThread(action, timeout, cancelToken);
+        return ExecuteWithCustomThread(action, timeout, cancelToken);
 #else
         return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
-            ? ExecuteWithThread(action, timeout, cancelToken)
+            ? ExecuteWithCustomThread(action, timeout, cancelToken)
             : ExecuteWithThreadPool(action, timeout, cancelToken);
 #endif
     }
@@ -42,7 +42,7 @@ public class ThreadOperations : IThreadOperations
             // False means execution timed out.
             return executionTask.Wait(timeout, cancellationToken);
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException oce) when (oce.CancellationToken == cancellationToken)
         {
             // Task execution canceled.
             return false;
@@ -53,7 +53,7 @@ public class ThreadOperations : IThreadOperations
 #if NET6_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 #endif
-    private static bool ExecuteWithThread(Action action, int timeout, CancellationToken cancellationToken)
+    private static bool ExecuteWithCustomThread(Action action, int timeout, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
         {
@@ -71,18 +71,14 @@ public class ThreadOperations : IThreadOperations
 
         try
         {
+            // Creates a Task<bool> that represents the results of the execution thread.
             var executionTask = Task.Run(() => executionThread.Join(timeout), cancellationToken);
-            if (executionTask.Wait(timeout, cancellationToken))
-            {
-                return executionTask.Result;
-            }
-            else
-            {
-                // Timed out.
-                return false;
-            }
+            executionTask.Wait(cancellationToken);
+
+            // If the execution thread completes before the timeout, the task will return true, otherwise false.
+            return executionTask.Result;
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException oce) when (oce.CancellationToken == cancellationToken)
         {
             // Task execution canceled.
             return false;

@@ -11,6 +11,7 @@ using Microsoft.Testing.Extensions.VSTestBridge.Requests;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -85,8 +86,9 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
 #pragma warning restore VSTHRD103 // Call async methods when in an async method
 #endif
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        request.FrameworkHandle.SendMessage(TestMessageLevel.Error, ex.ToString());
                     }
 
                     return;
