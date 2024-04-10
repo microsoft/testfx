@@ -195,8 +195,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(args, platformOutputDevice, loggingState.CommandLineParseResult);
 
         // If command line is not valid we return immediately.
-        (bool parseSucceded, string? validationError) = await commandLineHandler.TryParseAndValidateAsync();
-        if (!loggingState.CommandLineParseResult.HasTool && !parseSucceded)
+        (bool parseSucceeded, string? validationError) = await commandLineHandler.TryParseAndValidateAsync();
+        if (!loggingState.CommandLineParseResult.HasTool && !parseSucceeded)
         {
             await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice);
             ArgumentGuard.IsNotNull(validationError);
