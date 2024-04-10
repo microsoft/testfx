@@ -11,12 +11,7 @@ public class NoBannerTests : AcceptanceTestBase
 {
     private const string AssetName = "NoBannerTest";
     private readonly TestAssetFixture _testAssetFixture;
-    private readonly string _bannerRegexMatchPattern = """
-\s*Microsoft\(R\) Testing Platform Execution Command Line Tool.*
-\s*Version:.*
-\s*RuntimeInformation:.*
-\s*Copyright\(c\) Microsoft Corporation[.]  All rights reserved[.].*
-""";
+    private readonly string _bannerRegexMatchPattern = ".NET Testing Platform v.+ \[.+\]";
 
     public NoBannerTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
         : base(testExecutionContext)
