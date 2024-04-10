@@ -26,10 +26,7 @@ public class InfoTests : AcceptanceTestBase
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string regexMatchPattern = $"""
-Microsoft\(R\) Testing Platform Execution Command Line Tool
-Version: .+
-RuntimeInformation: .+
-Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
+.NET Testing Platform v.+ \[.+\]
 Microsoft Testing Platform:
   Version: .+
   Dynamic Code Supported: True
