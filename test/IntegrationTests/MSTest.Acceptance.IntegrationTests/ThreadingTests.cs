@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Runtime.InteropServices;
+
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 
@@ -28,17 +30,23 @@ public sealed class ThreadingTests : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task RunnerGeneratedMain_WhenRunsettingsAsksForSTA_ThreadIsSTA(string tfm)
+    public async Task RunnerGeneratedMain_WhenRunsettingsAsksForSTA_ThreadIsSTAIfOnWindowsAndMTAOtherwise(string tfm)
     {
         TestHost testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
+        bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
         {
-            ["MSTEST_EXPECTED_APARTMENTSTATE"] = "STA",
+            ["MSTEST_EXPECTED_APARTMENTSTATE"] = isWindows ? "STA" : "MTA",
         });
 
         testHostResult.AssertExitCodeIs(0);
         testHostResult.AssertOutputContains("Passed!");
+
+        if (!isWindows)
+        {
+            testHostResult.AssertOutputContains("Runsettings entry '<ExecutionApartmentState>STA</ExecutionApartmentState>' is not supported on non-Windows OSes");
+        }
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -58,6 +66,12 @@ public sealed class ThreadingTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task RunnerManualMain_WhenMainIsSTAThreadAndNoRunsettingsProvided_ThreadIsSTA(string tfm)
     {
+        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         TestHost testHost = TestHost.LocateFrom(_testAssetFixture.STAThreadProjectPath, TestAssetFixture.STAThreadProjectName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new()
         {
@@ -71,6 +85,12 @@ public sealed class ThreadingTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task RunnerManualMain_WhenMainIsSTAThreadAndRunsettingsAsksForSTA_ThreadIsSTA(string tfm)
     {
+        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         TestHost testHost = TestHost.LocateFrom(_testAssetFixture.STAThreadProjectPath, TestAssetFixture.STAThreadProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
@@ -85,6 +105,12 @@ public sealed class ThreadingTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task RunnerManualMain_WhenMainIsSTAThreadAndRunsettingsAsksForMTA_ThreadIsMTA(string tfm)
     {
+        // Test cannot work on non-Windows OSes as the main method is marked with [STAThread]
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
         TestHost testHost = TestHost.LocateFrom(_testAssetFixture.STAThreadProjectPath, TestAssetFixture.STAThreadProjectName, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "mta.runsettings");
         TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()

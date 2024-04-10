@@ -399,4 +399,7 @@ Error: {1}</value>
   <data name="TestInitializeWasCancelled" xml:space="preserve">
     <value>Test initialize method '{0}.{1}' was cancelled</value>
   </data>
+  <data name="STAIsOnlySupportedOnWindowsWarning" xml:space="preserve">
+    <value>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</value>
+  </data>
 </root>

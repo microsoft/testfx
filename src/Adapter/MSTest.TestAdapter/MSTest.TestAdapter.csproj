@@ -91,7 +91,7 @@
   <ItemGroup>
     <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
   </ItemGroup>
-  <Target Name="InsertMSTestVersion" BeforeTargets="PrepareForBuild" >
+  <Target Name="InsertMSTestVersion" BeforeTargets="PrepareForBuild">
     <ItemGroup>
       <Compile Include="$(Compile);$(IntermediateOutputPath)/MSTestVersion.cs" />
     </ItemGroup>
@@ -101,7 +101,14 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
   </ItemGroup>
-  <Target Name="GenerateMSTestVersionSourceFile" AfterTargets="PrepareForBuild" >
+  <ItemGroup>
+    <Compile Update="Resources\Resource.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <Target Name="GenerateMSTestVersionSourceFile" AfterTargets="PrepareForBuild">
     <PropertyGroup>
       <_TemplateProperties>Version=$(Version)</_TemplateProperties>
     </PropertyGroup>

@@ -47,6 +47,11 @@
         <target state="translated">Test {0} překročil časový limit spuštění.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
+        <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
+        <target state="new">Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="SourcesNotSupported">
         <source>Running tests in any of the provided sources is not supported for the selected platform</source>
         <target state="translated">Spouštění testů v některém z uvedených zdrojů se pro vybranou platformu nepodporuje.</target>

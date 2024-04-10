@@ -359,6 +359,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Runsettings entry &apos;&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;&apos; is not supported on non-Windows OSes..
+        /// </summary>
+        internal static string STAIsOnlySupportedOnWindowsWarning {
+            get {
+                return ResourceManager.GetString("STAIsOnlySupportedOnWindowsWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to discover tests from assembly {0}. Reason:{1}.
         /// </summary>
         internal static string TestAssembly_AssemblyDiscoveryFailure {
