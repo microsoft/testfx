@@ -97,15 +97,34 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
             case DynamicDataSourceType.Property:
                 var property = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(_dynamicDataSourceName)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
-                obj = property.GetValue(null, null);
+                if (property.GetGetMethod(true) is not { } getMethod
+                    || !getMethod.IsStatic)
+                {
+                    throw new NotSupportedException(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            FrameworkMessages.DynamicDataInvalidPropertyLayout,
+                            property.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{property.Name}" : property.Name));
+                }
 
+                obj = property.GetValue(null, null);
                 break;
 
             case DynamicDataSourceType.Method:
                 var method = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(_dynamicDataSourceName)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {_dynamicDataSourceName}");
-                obj = method.Invoke(null, null);
+                if (!method.IsStatic
+                    || method.ContainsGenericParameters
+                    || method.GetParameters().Length > 0)
+                {
+                    throw new NotSupportedException(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            FrameworkMessages.DynamicDataInvalidPropertyLayout,
+                            method.DeclaringType?.FullName is { } typeFullName ? $"{typeFullName}.{method.Name}" : method.Name));
+                }
 
+                obj = method.Invoke(null, null);
                 break;
         }
 

@@ -281,4 +281,10 @@ Stack Trace: {4}</value>
       - {1} fully qualified class name like "Microsoft.UI.Xaml.Application"
     </comment>
   </data>
+  <data name="DynamicDataInvalidMethodLayout" xml:space="preserve">
+    <value>Dynamic data method '{0}' should be static, parameterless and non-generic.</value>
+  </data>
+  <data name="DynamicDataInvalidPropertyLayout" xml:space="preserve">
+    <value>Dynamic data property '{0}' should be static and have a getter.</value>
+  </data>
 </root>
