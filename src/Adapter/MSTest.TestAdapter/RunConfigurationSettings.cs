@@ -33,7 +33,7 @@ public class RunConfigurationSettings
     /// <summary>
     /// Gets a value indicating the requested platform apartment state.
     /// </summary>
-    public ApartmentState? ExecutionApartmentState { get; private set; }
+    internal ApartmentState? ExecutionApartmentState { get; private set; }
 
     /// <summary>
     /// Populate adapter settings from the context.
