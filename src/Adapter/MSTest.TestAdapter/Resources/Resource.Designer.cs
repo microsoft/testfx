@@ -440,6 +440,17 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Argument mismatch error for test method &apos;{0}.{1}&apos;: the number or types of arguments passed do not match the parameters.
+        ///Arguments types: &apos;{2}&apos;
+        ///Parameters types: &apos;{3}&apos;.
+        /// </summary>
+        internal static string TestMethodArgumentsMismatchError {
+            get {
+                return ResourceManager.GetString("TestMethodArgumentsMismatchError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Test method {0} was not found..
         /// </summary>
         internal static string TestNotFound {
@@ -802,7 +813,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?.
+        ///   Looks up a localized string similar to Argument mismatch error for test method &apos;{0}.{1}&apos;: only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?.
         /// </summary>
         internal static string UTA_TestMethodExpectedParameters {
             get {

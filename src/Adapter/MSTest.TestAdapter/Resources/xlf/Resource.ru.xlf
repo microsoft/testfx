@@ -77,6 +77,15 @@
         <target state="translated">Метод инициализации теста "{0}.{1}" отменен</target>
         <note />
       </trans-unit>
+      <trans-unit id="TestMethodArgumentsMismatchError">
+        <source>Argument mismatch error for test method '{0}.{1}': the number ot types of arguments passed do not match the parameters.
+Arguments types: '{2}'
+Parameters types: '{3}'</source>
+        <target state="new">Argument mismatch error for test method '{0}.{1}': the number ot types of arguments passed do not match the parameters.
+Arguments types: '{2}'
+Parameters types: '{3}'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
         <source>TestCleanup method {0}.{1} threw exception. {2}.</source>
         <target state="translated">Метод TestCleanup {0}.{1} создал исключение. {2}.</target>
@@ -379,9 +388,9 @@ Error: {1}</source>
         <note></note>
       </trans-unit>
       <trans-unit id="UTA_TestMethodExpectedParameters">
-        <source>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</source>
-        <target state="translated">Только методы теста, управляемые данными, могут иметь параметры. Вы планировали использовать [DataRow] или [DynamicData]?</target>
-        <note></note>
+        <source>Argument mismatch error for test method '{0}.{1}': only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</source>
+        <target state="new">Argument mismatch error for test method '{0}.{1}': only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</target>
+        <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' execution has been aborted.</source>

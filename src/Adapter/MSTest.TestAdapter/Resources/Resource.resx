@@ -307,7 +307,7 @@ Error: {1}</value>
     <value>Failed to discover tests from assembly {0}. Reason:{1}</value>
   </data>
   <data name="UTA_TestMethodExpectedParameters" xml:space="preserve">
-    <value>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</value>
+    <value>Argument mismatch error for test method '{0}.{1}': only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</value>
   </data>
   <data name="Execution_Test_Cancelled" xml:space="preserve">
     <value>Test '{0}' execution has been aborted.</value>
@@ -401,5 +401,10 @@ Error: {1}</value>
   </data>
   <data name="STAIsOnlySupportedOnWindowsWarning" xml:space="preserve">
     <value>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</value>
+  </data>
+  <data name="TestMethodArgumentsMismatchError" xml:space="preserve">
+    <value>Argument mismatch error for test method '{0}.{1}': the number or types of arguments passed do not match the parameters.
+Arguments types: '{2}'
+Parameters types: '{3}'</value>
   </data>
 </root>
