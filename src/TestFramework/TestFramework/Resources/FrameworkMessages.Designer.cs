@@ -304,6 +304,24 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Dynamic data method &apos;{0}&apos; should be static, parameterless and non-generic..
+        /// </summary>
+        internal static string DynamicDataInvalidMethodLayout {
+            get {
+                return ResourceManager.GetString("DynamicDataInvalidMethodLayout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dynamic data property &apos;{0}&apos; should be static and have a getter..
+        /// </summary>
+        internal static string DynamicDataInvalidPropertyLayout {
+            get {
+                return ResourceManager.GetString("DynamicDataInvalidPropertyLayout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value returned by property or method {0} shouldn&apos;t be null..
         /// </summary>
         internal static string DynamicDataValueNull {
