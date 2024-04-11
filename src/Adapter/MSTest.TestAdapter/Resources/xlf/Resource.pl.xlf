@@ -78,10 +78,10 @@
         <note />
       </trans-unit>
       <trans-unit id="TestMethodArgumentsMismatchError">
-        <source>Argument mismatch error for test method '{0}.{1}': the number ot types of arguments passed do not match the parameters.
+        <source>Argument mismatch error for test method '{0}.{1}': the number or types of arguments passed do not match the parameters.
 Arguments types: '{2}'
 Parameters types: '{3}'</source>
-        <target state="new">Argument mismatch error for test method '{0}.{1}': the number ot types of arguments passed do not match the parameters.
+        <target state="new">Argument mismatch error for test method '{0}.{1}': the number or types of arguments passed do not match the parameters.
 Arguments types: '{2}'
 Parameters types: '{3}'</target>
         <note />
