@@ -26,10 +26,7 @@ public class HelpTests : AcceptanceTestBase
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string RegexMatchPattern = $"""
-Microsoft\(R\) Testing Platform Execution Command Line Tool
-Version: .+
-RuntimeInformation: .+
-Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
+.NET Testing Platform v.+ \[.+\]
 Usage {TestAssetFixture.NoExtensionAssetName}.* \[option providers\] \[extension option providers\]
 Execute a .NET Test Application\.
 Options:
@@ -95,10 +92,7 @@ Extension options:
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string RegexMatchPattern = $"""
-Microsoft\(R\) Testing Platform Execution Command Line Tool
-Version: .+
-RuntimeInformation: .+
-Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
+.NET Testing Platform v.+ \[.+\]
 Usage {TestAssetFixture.MSTestAssetName}.* \[option providers\] \[extension option providers\]
 Execute a .NET Test Application\.
 Options:

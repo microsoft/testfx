@@ -59,8 +59,8 @@
     <AdditionalFiles Include="PublicAPI\PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
     <AdditionalFiles Include="PublicAPI\PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' != '$(UwpMinimum)' " />
     <Compile Update="Resources\Resource.Designer.cs">
-      <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
       <DependentUpon>Resource.resx</DependentUpon>
     </Compile>
     <EmbeddedResource Update="Resources\Resource.resx">
@@ -91,7 +91,7 @@
   <ItemGroup>
     <Compile Include="**/*.cs" Exclude="**/*.user; **/*.*proj; **/*.sln; **/*.vssscc" />
   </ItemGroup>
-  <Target Name="InsertMSTestVersion" BeforeTargets="PrepareForBuild" >
+  <Target Name="InsertMSTestVersion" BeforeTargets="PrepareForBuild">
     <ItemGroup>
       <Compile Include="$(Compile);$(IntermediateOutputPath)/MSTestVersion.cs" />
     </ItemGroup>
@@ -101,7 +101,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Templating" Version="$(MicrosoftDotNetBuildTasksTemplatingPackageVersion)" AllowExplicitReference="true" PrivateAssets="All" IsImplicitlyDefined="true" />
   </ItemGroup>
-  <Target Name="GenerateMSTestVersionSourceFile" AfterTargets="PrepareForBuild" >
+  <Target Name="GenerateMSTestVersionSourceFile" AfterTargets="PrepareForBuild">
     <PropertyGroup>
       <_TemplateProperties>Version=$(Version)</_TemplateProperties>
     </PropertyGroup>

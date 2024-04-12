@@ -47,6 +47,11 @@
         <target state="translated">Der Test "{0}" hat das Ausführungstimeout überschritten.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
+        <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
+        <target state="new">Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="SourcesNotSupported">
         <source>Running tests in any of the provided sources is not supported for the selected platform</source>
         <target state="translated">Das Ausführen von Tests in einer der angegebenen Quellen wird für die ausgewählte Plattform nicht unterstützt.</target>

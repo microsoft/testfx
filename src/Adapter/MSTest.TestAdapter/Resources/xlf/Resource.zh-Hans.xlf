@@ -47,6 +47,11 @@
         <target state="translated">测试“{0}”的执行超时。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
+        <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
+        <target state="new">Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="SourcesNotSupported">
         <source>Running tests in any of the provided sources is not supported for the selected platform</source>
         <target state="translated">选定的平台不支持在任何提供的源中运行测试</target>
