@@ -155,7 +155,6 @@ MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.R
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_MSTestRunner_Standalone(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Release)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_VSTest(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Debug)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.SdkTests.RunTests_With_VSTest(string, Microsoft.Testing.TestInfrastructure.BuildConfiguration) (multitfm,Release)
-MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.ValueTaskTests.CanUseValueTaskForAllKnownLocations()
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.TestDiscoveryTests.DiscoverTests_FindsAllTests(string) (net462)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.TestDiscoveryTests.DiscoverTests_FindsAllTests(string) (net6.0)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.TestDiscoveryTests.DiscoverTests_FindsAllTests(string) (net7.0)
