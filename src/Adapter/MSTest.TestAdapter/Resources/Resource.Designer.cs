@@ -143,6 +143,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot run test method &apos;{0}.{1}&apos;: test data doesn&apos;t match method parameters. Either the count or types are different.
+        ///Test expected {2} parameter(s), with types &apos;{3}&apos;,
+        ///but received {4} argument(s), with types &apos;{5}&apos;..
+        /// </summary>
+        internal static string CannotRunTestArgumentsMismatchError {
+            get {
+                return ResourceManager.GetString("CannotRunTestArgumentsMismatchError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot run test method &apos;{0}.{1}&apos;: method has parameters, but does not define any test source. Use &apos;[DataRow]&apos;, &apos;[DynamicData]&apos;, or a custom &apos;ITestDataSource&apos; data source to provide test data..
+        /// </summary>
+        internal static string CannotRunTestMethodNoDataError {
+            get {
+                return ResourceManager.GetString("CannotRunTestMethodNoDataError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Class cleanup method &apos;{0}.{1}&apos; timed out.
         /// </summary>
         internal static string ClassCleanupTimedOut {
@@ -436,17 +456,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string TestInitializeWasCancelled {
             get {
                 return ResourceManager.GetString("TestInitializeWasCancelled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Argument mismatch error for test method &apos;{0}.{1}&apos;: the number or types of arguments passed do not match the parameters.
-        ///Arguments types: &apos;{2}&apos;
-        ///Parameters types: &apos;{3}&apos;.
-        /// </summary>
-        internal static string TestMethodArgumentsMismatchError {
-            get {
-                return ResourceManager.GetString("TestMethodArgumentsMismatchError", resourceCulture);
             }
         }
         
@@ -809,15 +818,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string UTA_TestInitializeAndCleanupMethodHasWrongSignature {
             get {
                 return ResourceManager.GetString("UTA_TestInitializeAndCleanupMethodHasWrongSignature", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Argument mismatch error for test method &apos;{0}.{1}&apos;: only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?.
-        /// </summary>
-        internal static string UTA_TestMethodExpectedParameters {
-            get {
-                return ResourceManager.GetString("UTA_TestMethodExpectedParameters", resourceCulture);
             }
         }
         

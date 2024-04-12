@@ -369,7 +369,7 @@ public class MethodInfoExtensionsTests : TestContainer
         catch (TestFailedException ex)
         {
             Verify(ex.Outcome == UnitTestOutcome.Error);
-            Verify(ex.TryGetMessage() == Resource.UTA_TestMethodExpectedParameters);
+            Verify(ex.TryGetMessage() == Resource.CannotRunTestMethodNoDataError);
         }
     }
 

@@ -22,6 +22,20 @@
         <target state="translated">アセンブリ初期化メソッド '{0}.{1}' が取り消されました</target>
         <note />
       </trans-unit>
+      <trans-unit id="CannotRunTestArgumentsMismatchError">
+        <source>Cannot run test method '{0}.{1}': test data doesn't match method parameters. Either the count or types are different.
+Test expected {2} parameter(s), with types '{3}',
+but received {4} argument(s), with types '{5}'.</source>
+        <target state="new">Cannot run test method '{0}.{1}': test data doesn't match method parameters. Either the count or types are different.
+Test expected {2} parameter(s), with types '{3}',
+but received {4} argument(s), with types '{5}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRunTestMethodNoDataError">
+        <source>Cannot run test method '{0}.{1}': method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</source>
+        <target state="new">Cannot run test method '{0}.{1}': method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">
         <source>Class cleanup method '{0}.{1}' timed out</source>
         <target state="translated">クラス クリーンアップ メソッド '{0}.{1}' がタイムアウトしました</target>
@@ -75,15 +89,6 @@
       <trans-unit id="TestInitializeWasCancelled">
         <source>Test initialize method '{0}.{1}' was cancelled</source>
         <target state="translated">テスト初期化メソッド '{0}.{1}' が取り消されました</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestMethodArgumentsMismatchError">
-        <source>Argument mismatch error for test method '{0}.{1}': the number or types of arguments passed do not match the parameters.
-Arguments types: '{2}'
-Parameters types: '{3}'</source>
-        <target state="new">Argument mismatch error for test method '{0}.{1}': the number or types of arguments passed do not match the parameters.
-Arguments types: '{2}'
-Parameters types: '{3}'</target>
         <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
@@ -386,11 +391,6 @@ Error: {1}</source>
         <source>Failed to discover tests from assembly {0}. Reason:{1}</source>
         <target state="translated">アセンブリ {0} からテストを検出できませんでした。理由:{1}</target>
         <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_TestMethodExpectedParameters">
-        <source>Argument mismatch error for test method '{0}.{1}': only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</source>
-        <target state="new">Argument mismatch error for test method '{0}.{1}': only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</target>
-        <note />
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">
         <source>Test '{0}' execution has been aborted.</source>

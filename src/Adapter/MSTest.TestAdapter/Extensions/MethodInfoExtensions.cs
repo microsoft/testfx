@@ -156,7 +156,7 @@ internal static class MethodInfoExtensions
                 ObjectModel.UnitTestOutcome.Error,
                 string.Format(
                     CultureInfo.InvariantCulture,
-                    Resource.UTA_TestMethodExpectedParameters,
+                    Resource.CannotRunTestMethodNoDataError,
                     methodInfo.DeclaringType!.FullName,
                     methodInfo.Name));
         }
@@ -178,11 +178,13 @@ internal static class MethodInfoExtensions
                     ObjectModel.UnitTestOutcome.Error,
                     string.Format(
                         CultureInfo.InvariantCulture,
-                        Resource.TestMethodArgumentsMismatchError,
+                        Resource.CannotRunTestArgumentsMismatchError,
                         methodInfo.DeclaringType!.FullName,
                         methodInfo.Name,
-                        string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>()),
-                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>())));
+                        methodParameters?.Length ?? 0,
+                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>()),
+                        arguments?.Length ?? 0,
+                        string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())));
             }
 
             task = methodInfo.Invoke(classInstance, arguments) as Task;
