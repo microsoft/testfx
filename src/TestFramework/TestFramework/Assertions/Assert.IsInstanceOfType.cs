@@ -43,6 +43,15 @@ public sealed partial class Assert
         => IsInstanceOfType(value, typeof(T), string.Empty, null);
 
     /// <summary>
+    /// Tests whether the specified object is an instance of the generic
+    /// type and throws an exception if the generic type is not in the
+    /// inheritance hierarchy of the object.
+    /// </summary>
+    /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
+    public static void IsInstanceOfType<T>([NotNull] object? value, out T instance)
+        => IsInstanceOfType<T>(value, out instance, string.Empty, null);
+
+    /// <summary>
     /// Tests whether the specified object is an instance of the expected
     /// type and throws an exception if the expected type is not in the
     /// inheritance hierarchy of the object.
@@ -74,6 +83,15 @@ public sealed partial class Assert
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>([NotNull] object? value, string? message)
         => IsInstanceOfType(value, typeof(T), message, null);
+
+    /// <summary>
+    /// Tests whether the specified object is an instance of the generic
+    /// type and throws an exception if the generic type is not in the
+    /// inheritance hierarchy of the object.
+    /// </summary>
+    /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
+    public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, string? message)
+        => IsInstanceOfType<T>(value, out instance, message, null);
 
     /// <summary>
     /// Tests whether the specified object is an instance of the expected
@@ -130,6 +148,18 @@ public sealed partial class Assert
     /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
     public static void IsInstanceOfType<T>([NotNull] object? value, string? message, params object?[]? parameters)
         => IsInstanceOfType(value, typeof(T), message, parameters);
+
+    /// <summary>
+    /// Tests whether the specified object is an instance of the generic
+    /// type and throws an exception if the generic type is not in the
+    /// inheritance hierarchy of the object.
+    /// </summary>
+    /// <typeparam name="T">The expected type of <paramref name="value"/>.</typeparam>
+    public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, string? message, params object?[]? parameters)
+    {
+        IsInstanceOfType(value, typeof(T), message, parameters);
+        instance = (T)value!;
+    }
 
     /// <summary>
     /// Tests whether the specified object is not an instance of the wrong
