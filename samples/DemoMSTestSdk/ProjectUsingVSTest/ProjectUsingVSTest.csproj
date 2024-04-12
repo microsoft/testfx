@@ -4,7 +4,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
 
     <!-- Use VSTest as runner/platform (this is not the default). This is changing the included packages and default configuration. -->
     <UseVSTest>true</UseVSTest>
