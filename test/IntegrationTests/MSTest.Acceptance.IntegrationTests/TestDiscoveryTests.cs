@@ -29,8 +29,8 @@ public class TestDiscoveryTests : AcceptanceTestBase
         var testHostResult = await testHost.ExecuteAsync("--list-tests");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContains($"Test1");
-        testHostResult.AssertOutputContains($"Test2");
+        testHostResult.AssertOutputContains("Test1");
+        testHostResult.AssertOutputContains("Test2");
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
@@ -41,8 +41,8 @@ public class TestDiscoveryTests : AcceptanceTestBase
         var testHostResult = await testHost.ExecuteAsync("--list-tests --filter Name=Test1");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContains($"Test1");
-        testHostResult.AssertOutputDoesNotContain($"Test2");
+        testHostResult.AssertOutputContains("Test1");
+        testHostResult.AssertOutputDoesNotContain("Test2");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
@@ -90,7 +90,7 @@ public class TestClass
     [TestMethod]
     public void Test1() {}
 
-[TestMethod]
+    [TestMethod]
     public void Test2() {}
 }
 """;
