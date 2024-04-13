@@ -1,1 +1,5 @@
 #nullable enable
+Microsoft.Testing.Platform.Requests.RequestNotSupportedException
+Microsoft.Testing.Platform.Requests.RequestNotSupportedException.RequestNotSupportedException() -> void
+Microsoft.Testing.Platform.Requests.RequestNotSupportedException.RequestNotSupportedException(Microsoft.Testing.Platform.Requests.IRequest! request) -> void
+Microsoft.Testing.Platform.Requests.RequestNotSupportedException.Request.get -> Microsoft.Testing.Platform.Requests.IRequest!
