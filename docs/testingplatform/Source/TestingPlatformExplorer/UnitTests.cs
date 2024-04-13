@@ -1,36 +1,29 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using TestingPlatformExplorer.FunctionalTestingFramework;
+using TestingPlatformExplorer.TestingFramework;
 
 namespace TestingPlatformExplorer.UnitTests;
 
-public class UnitTestsRegistration
+public class SomeTests
 {
-    public static Func<(TestOutCome, string)>[] GetActions()
+    [TestMethod]
+    public static void TestMethod1() => Assert.AreEqual(1, 1);
+
+    [TestMethod]
+    public static void TestMethod2() => Assert.AreEqual(1, 2);
+
+    [TestMethod]
+    public static void TestMethod3()
     {
-        return new Func<(TestOutCome, string)>[]
-        {
-            () => UnitTests.TestMethod1(),
-            () => UnitTests.TestMethod2(),
-            () => UnitTests.TestMethod3(),
-        };
+        int a = 1;
+        int b = 0;
+        int c = a / b;
+
+        Assert.AreEqual(c, 2);
     }
-}
-
-public enum TestOutCome
-{
-    Passed,
-    Failed,
-    Skipped
-}
-
-public class UnitTests
-{
-    public static (TestOutCome, string) TestMethod1() => Assert.AreEqual(1, 1);
-
-    public static (TestOutCome, string) TestMethod2() => Assert.AreEqual(1, 2);
 
     [Skip]
-    public static (TestOutCome, string) TestMethod3() => Assert.AreEqual(1, 1);
+    [TestMethod]
+    public static void TestMethod4() => Assert.AreEqual(1, 1);
 }
