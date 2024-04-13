@@ -3,9 +3,9 @@
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 
-namespace TestingPlatformExplorer.TestingFramework;
+namespace TestingPlatformExplorer.FunctionalTestingFramework;
 
-internal class TestingFrameworkCapabilities : ITestFrameworkCapabilities
+internal class FunctionalTestingFrameworkCapabilities : ITestFrameworkCapabilities
 {
     public IReadOnlyCollection<ITestFrameworkCapability> Capabilities => [];
 }
