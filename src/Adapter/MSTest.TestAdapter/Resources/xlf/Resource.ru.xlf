@@ -49,7 +49,7 @@
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
-        <target state="new">Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</target>
+        <target state="translated">Запись Runsettings "&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;" не поддерживается в ОС, отличных от Windows.</target>
         <note />
       </trans-unit>
       <trans-unit id="SourcesNotSupported">

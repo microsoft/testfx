@@ -84,12 +84,12 @@
       </trans-unit>
       <trans-unit id="DynamicDataInvalidMethodLayout">
         <source>Dynamic data method '{0}' should be static, parameterless and non-generic.</source>
-        <target state="new">Dynamic data method '{0}' should be static, parameterless and non-generic.</target>
+        <target state="translated">Die dynamische Datenmethode "{0}" muss statisch, parameterlos sein und nichtgenerisch sein.</target>
         <note />
       </trans-unit>
       <trans-unit id="DynamicDataInvalidPropertyLayout">
         <source>Dynamic data property '{0}' should be static and have a getter.</source>
-        <target state="new">Dynamic data property '{0}' should be static and have a getter.</target>
+        <target state="translated">Die dynamische Dateneigenschaft "{0}" muss statisch sein und über einen Getter verfügen.</target>
         <note />
       </trans-unit>
       <trans-unit id="ElementNumbersDontMatch">
