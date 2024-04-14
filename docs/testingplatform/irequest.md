@@ -59,9 +59,7 @@ The third attribute is `Properties`, which is a `PropertyBag` type. As demonstra
 
 ***The testing platform identifies specific properties added to a `TestNode` to determine whether a test has passed, failed, or been skipped.***
 
-You can find the current list of available properties in this source file: <https://github.com/microsoft/testfx/blob/main/src/Platform/Microsoft.Testing.Platform/Messages/TestNodeProperties.cs>. Please note that this list may be updated in the future.
-
-To comprehend how the platform interprets the properties, you should refer to the source file <https://github.com/microsoft/testfx/blob/main/src/Platform/Microsoft.Testing.Platform/Messages/TestNodeProperties.Categories.cs>. This file outlines the **category** of the property and explains how a property found within the `PropertyBag` for a `TestNode` will be interpreted as discovered, succeeded, failed, or skipped.
+You can find the current list of available properties with the relative description in the section [TestNodeUpdateMessage.TestNode](testnodeupdatemessage.md)
 
 Finally this section makes clear that you test framework implementaion needs to implement the `IDataProducer` that produces `TestNodeUpdateMessage`s like in the sample below:
 
@@ -175,3 +173,28 @@ await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExe
 ```
 
 You can visit the [code sample](codesample.md) for a working execution sample.
+
+### TestSessionContext
+
+The `TestSessionContext` is a shared property across all requests, providing information about the ongoing test session:
+
+```cs
+public class TestSessionContext
+{
+    public SessionUid SessionUid { get; }
+    public ClientInfo Client { get; }
+}
+
+public readonly struct SessionUid(string value)
+{
+    public string Value { get; }
+}
+
+public sealed class ClientInfo
+{
+    public string Id { get; }
+    public string Version { get; }
+}
+```
+
+The `TestSessionContext` consists of the `SessionUid`, a unique identifier for the ongoing test session that aids in logging and correlating test session data. It also includes the `ClientInfo` type, which provides details about the *initiator* of the test session. The test framework may choose different routes or publish varying information based on the identity of the test session's *initiator*.
