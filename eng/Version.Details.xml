@@ -13,21 +13,21 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>2fb543a45580400a559b5ae41c96a815ea14dac5</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.11.1-preview.24211.1">
+    <Dependency Name="Microsoft.Testing.Extensions.CodeCoverage" Version="17.11.1-preview.24212.2">
       <Uri>https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</Uri>
-      <Sha>dd810984642b14c11955902c1130dc7349c19ece</Sha>
+      <Sha>95db06b3781595306a20244a8a5687265cb15e5e</Sha>
     </Dependency>
     <Dependency Name="Microsoft.Testing.Framework" Version="1.2.0-preview.24168.3">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
       <Sha>445bda5374781f22ebd553dbc5c52d4c9c4176eb</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="1.2.0-preview.24211.1">
+    <Dependency Name="Microsoft.Testing.Platform" Version="1.2.0-preview.24212.2">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>cb1189ebd25c63eca4d292686c4c5221dc57faa8</Sha>
+      <Sha>f78a32c0436d67d4692bcc0c678fdbc702af1036</Sha>
     </Dependency>
-    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24211.1">
+    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24212.2">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>cb1189ebd25c63eca4d292686c4c5221dc57faa8</Sha>
+      <Sha>f78a32c0436d67d4692bcc0c678fdbc702af1036</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
