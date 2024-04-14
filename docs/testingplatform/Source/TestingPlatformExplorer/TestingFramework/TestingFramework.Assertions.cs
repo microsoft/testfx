@@ -3,41 +3,23 @@
 
 namespace TestingPlatformExplorer.TestingFramework;
 
-[Serializable]
-public class AssertException : Exception
-{
-    public AssertException()
-    {
-    }
-
-    public AssertException(string message)
-        : base(message)
-    {
-    }
-
-    public AssertException(string message, Exception inner)
-        : base(message, inner)
-    {
-    }
-}
-
 public static class Assert
 {
     public static void AreEqual<T>(T expected, T actual)
     {
         if (expected is null)
         {
-            throw new ArgumentNullException(nameof(expected));
+            throw new ArgumentException("'expected' cannot be null", nameof(expected));
         }
 
         if (actual is null)
         {
-            throw new ArgumentNullException(nameof(expected));
+            throw new ArgumentException("'actual' cannot be null", nameof(actual));
         }
 
         if (!expected.Equals(actual))
         {
-            throw new AssertException($"Expected: {expected}, Actual: {actual}");
+            throw new AssertionException($"Expected: {expected}, Actual: {actual}");
         }
     }
 }

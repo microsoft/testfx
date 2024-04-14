@@ -5,7 +5,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 
 namespace TestingPlatformExplorer.TestingFramework;
 
-internal class TestingFrameworkCapabilities : ITestFrameworkCapabilities
+internal sealed class TestingFrameworkCapabilities : ITestFrameworkCapabilities
 {
     public IReadOnlyCollection<ITestFrameworkCapability> Capabilities => [];
 }

@@ -2,7 +2,7 @@
 
 The following official [learn.microsoft.com website](https://learn.microsoft.com/visualstudio/test/unit-test-basics) contains all the information about writing unit tests, unit test frameworks, integration with CLI and Visual Studio.
 
-This [blog post](https://devblogs.microsoft.com/devops/mstest-v2-now-and-ahead/) announce the vision for MSTest V2.
+This [blog post](https://devblogs.microsoft.com/devops/mstest-v2-now-and-ahead/) announces the vision for MSTest V2.
 
 For API documentation refer [here](https://docs.microsoft.com/dotnet/api/microsoft.visualstudio.testtools.unittesting).
 
@@ -15,7 +15,7 @@ For API documentation refer [here](https://docs.microsoft.com/dotnet/api/microso
 
 You can find the main differences with MSTest v1 in [Deltas w.r.t MSTest V1](delta-with-MSTestV1.md).
 
-You can find detailed examples and explanation of MSTest features at
+You can find detailed examples and explanations of MSTest features at
 
 - [MSTest element via runsettings](https://learn.microsoft.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#mstest-element)
 - [Use the MSTest framework in unit tests](https://learn.microsoft.com/visualstudio/test/using-microsoft-visualstudio-testtools-unittesting-members-in-unit-tests)
