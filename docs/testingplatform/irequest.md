@@ -130,7 +130,6 @@ public class RunTestExecutionRequest
 
 The `RunTestExecutionRequest` instructs the test framework **to execute** the tests and communicate this information thought to the [IMessageBus](imessagebus.md).
 
-As outlined in the previous section, the property for an executed test can be one from this list <https://github.com/microsoft/testfx/blob/main/src/Platform/Microsoft.Testing.Platform/Messages/TestNodeProperties.Categories.cs#L15>.
 Here is a generic code snippet for reference:
 
 ```cs
