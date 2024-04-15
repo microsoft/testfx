@@ -5,23 +5,25 @@ using TestingPlatformExplorer.TestingFramework;
 
 namespace TestingPlatformExplorer.UnitTests;
 
-public class UnitTests
+public class SomeTests
 {
     [TestMethod]
-    public static void TestMethod1()
-    {
-        Assert.Equals(1, 1);
-    }
+    public static void TestMethod1() => Assert.AreEqual(1, 1);
 
     [TestMethod]
-    public static void TestMethod2()
-    {
-        Assert.Equals(1, 2);
-    }
+    public static void TestMethod2() => Assert.AreEqual(1, 2);
 
-    [TestMethod(skip: true)]
+    [TestMethod]
     public static void TestMethod3()
     {
-        Assert.Equals(1, 1);
+        int a = 1;
+        int b = 0;
+        int c = a / b;
+
+        Assert.AreEqual(c, 2);
     }
+
+    [Skip]
+    [TestMethod]
+    public static void TestMethod4() => Assert.AreEqual(1, 1);
 }

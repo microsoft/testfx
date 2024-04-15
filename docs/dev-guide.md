@@ -1,10 +1,10 @@
 # Development Guide
 
-This document contains all the required information to build, test and consume MSTest.
+This document contains all the required information to build, test, and consume MSTest.
 
 ## Prerequisites
 
-In order to build and test all functionalities of MSTest, we recommend installing [Visual Studio 2022](https://visualstudio.microsoft.com/) with the following workloads:
+To build and test all functionalities of MSTest, we recommend installing [Visual Studio 2022](https://visualstudio.microsoft.com/) with the following workloads:
 
 - `.NET desktop development`
 - `Universal Windows Platform development`
@@ -12,10 +12,10 @@ In order to build and test all functionalities of MSTest, we recommend installin
 
 ## Recommended workflow
 
-We recommend the following overall workflow when developing for this repository:
+We recommend the following overall workflow when developing this repository:
 
 - Fork this repository.
-- Always work in your fork.
+- Always work on your fork.
 - Always keep your fork up to date.
 
 ### Starting with your fork
@@ -26,7 +26,7 @@ Before updating your fork, run this command:
 git remote add upstream https://github.com/Microsoft/testfx.git
 ```
 
-This will make management of multiple forks and your own work easier over time.
+This will make management of multiple forks and your work easier over time.
 
 ### Updating your fork
 
@@ -66,7 +66,7 @@ For Linux and macOS:
 
 ### Common building options
 
-By default, the script generates a *Debug* build type, which is not optimized code and includes asserts. As its name suggests, this makes it easier and friendlier to debug the code. If you want to make performance measurements, you ought to build the *Release* version instead, which doesn't have any asserts and has all code optimizations enabled. Likewise, if you plan on running tests, the *Release* configuration is more suitable since it's considerably faster than the *Debug* one. For this, you add the flag `-configuration release` (or `-c release`). For example:
+By default, the script generates a *Debug* build type, which is not optimized code and includes asserts. As its name suggests, this makes it easier and friendlier to debug the code. If you want to make performance measurements, you ought to build the *Release* version instead, which doesn't have any assets and has all code optimizations enabled. Likewise, if you plan on running tests, the *Release* configuration is more suitable since it's considerably faster than the *Debug* one. For this, you add the flag `-configuration release` (or `-c release`). For example:
 
 For Windows:
 
@@ -80,13 +80,13 @@ For Linux and macOS:
 ./build.sh --configuration release
 ```
 
-Another common flag is `-pack` that will produce the NuGet packages of MSTest. These packages are required for the acceptance tests (see [testing section](#testing)).
+Another common flag is `-pack` which will produce the NuGet packages of MSTest. These packages are required for the acceptance tests (see [testing section](#testing)).
 
 For more information about all the different options available, supply the argument `-help|-h` when invoking the build script. On Unix-like systems, non-abbreviated arguments can be passed in with a single `-` or double hyphen `--`.
 
 ### Build layout
 
-MSTest uses Microsoft common infrastructure called [arcade](https://github.com/dotnet/arcade) as such all outputs are following this structure:
+MSTest uses Microsoft common infrastructure called [arcade](https://github.com/dotnet/arcade) as such all outputs follow this structure:
 
 ```text
 artifacts
@@ -159,10 +159,10 @@ For Linux and macOS:
 ./build.sh -pack -test -integrationTest
 ```
 
-Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kind of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
+Note that `-test` allows to run the unit tests and `-integrationTest` allows to run the two kinds of integration tests. Acceptance integration tests require the NuGet packages to have been produced hence the `-pack` flag.
 
 ## Working with Visual Studio
 
-If you are working with Visual Studio, we recommend opening it through the `open-vs.cmd` script at the repo root. This script will set all the required environment variables required so that Visual Studio picks up the locally downloaded version of the .NET SDK. If you prefer to use your machine wide configuration, you can open Visual Studio directly.
+If you are working with Visual Studio, we recommend opening it through the `open-vs.cmd` script at the repo root. This script will set all the required environment variables required so that Visual Studio picks up the locally downloaded version of the .NET SDK. If you prefer to use your machine-wide configuration, you can open Visual Studio directly.
 
-Inside of Visual Studio, all projects can be built normally. All but acceptance tests can be tested directly from Visual Studio. The acceptance tests will always use the version of the NuGet packages produced in the `artifacts/packages/shipping` folder so if you have made some changes and run these tests, it's likely that the changes will not be applied.
+Inside Visual Studio, all projects can be built normally. All but acceptance tests can be tested directly from Visual Studio. The acceptance tests will always use the version of the NuGet packages produced in the `artifacts/packages/shipping` folder so if you have made some changes and run these tests, it's likely that the changes will not be applied.
