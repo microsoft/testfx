@@ -63,7 +63,7 @@ but received {4} argument(s), with types '{5}'.</target>
       </trans-unit>
       <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
         <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
-        <target state="new">Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</target>
+        <target state="translated">Não há suporte para a entrada runsettings "&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;" em sistemas operacionais que não sejam Windows.</target>
         <note />
       </trans-unit>
       <trans-unit id="SourcesNotSupported">

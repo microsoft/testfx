@@ -64,15 +64,48 @@ public partial class AssertTests
     }
 
     [TestMethod]
+    public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_WhenValueIsNull_Fails()
+    {
+        AssertTests? assertTests = null;
+        void Action() => Assert.IsInstanceOfType<AssertTests>(null, out assertTests);
+        var ex = VerifyThrows(Action);
+        Verify(ex is AssertFailedException);
+        Verify(assertTests is null);
+    }
+
+    [TestMethod]
     public void IsInstanceOfTypeUsingGenericType_OnSameInstance_DoesNotThrow()
     {
         Assert.IsInstanceOfType<int>(5);
     }
 
     [TestMethod]
+    public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_OnSameInstance_DoesNotThrow()
+    {
+        Assert.IsInstanceOfType<int>(5, out int instance);
+        Verify(instance == 5);
+    }
+
+    [TestMethod]
+    public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_OnSameInstanceReferenceType_DoesNotThrow()
+    {
+        object testInstance = new AssertTests();
+        Assert.IsInstanceOfType<AssertTests>(testInstance, out AssertTests instance);
+        Verify(testInstance == instance);
+    }
+
+    [TestMethod]
     public void IsInstanceOfTypeUsingGenericType_OnHigherInstance_DoesNotThrow()
     {
         Assert.IsInstanceOfType<object>(5);
+    }
+
+    [TestMethod]
+    public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_OnHigherInstance_DoesNotThrow()
+    {
+        object testInstance = new AssertTests();
+        Assert.IsInstanceOfType<object>(testInstance, out object instance);
+        Verify(instance == testInstance);
     }
 
     [TestMethod]
@@ -118,6 +151,14 @@ public partial class AssertTests
     }
 
     [TestMethod]
+    public void IsInstanceOfTypeGenericWithOutParameter_WhenNonNullNullableValue_LearnNonNull()
+    {
+        object? obj = GetObj();
+        Assert.IsInstanceOfType<object>(obj, out object _);
+        _ = obj.ToString(); // no warning about possible null
+    }
+
+    [TestMethod]
     public void IsInstanceOfType_WhenNonNullNullableValueAndMessage_LearnNonNull()
     {
         object? obj = GetObj();
@@ -142,6 +183,14 @@ public partial class AssertTests
     }
 
     [TestMethod]
+    public void IsInstanceOfTypeGenericWithOutParameter_WhenNonNullNullableValueAndMessage_LearnNonNull()
+    {
+        object? obj = GetObj();
+        Assert.IsInstanceOfType<object>(obj, out object _, "my message");
+        _ = obj.ToString(); // no warning about possible null
+    }
+
+    [TestMethod]
     public void IsInstanceOfType_WhenNonNullNullableValueAndCompositeMessage_LearnNonNull()
     {
         object? obj = GetObj();
@@ -162,6 +211,14 @@ public partial class AssertTests
     {
         object? obj = GetObj();
         Assert.IsInstanceOfType<object>(obj, "my message with {0}", "arg");
+        _ = obj.ToString(); // no warning about possible null
+    }
+
+    [TestMethod]
+    public void IsInstanceOfTypeGenericWithOutParameter_WhenNonNullNullableValueAndCompositeMessage_LearnNonNull()
+    {
+        object? obj = GetObj();
+        Assert.IsInstanceOfType<object>(obj, out object _, "my message with {0}", "arg");
         _ = obj.ToString(); // no warning about possible null
     }
 
