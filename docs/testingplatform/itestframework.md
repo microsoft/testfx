@@ -93,6 +93,7 @@ sequenceDiagram
     ITestFramework->>ExecuteRequestContext_3: Complete()
     ITestFramework->>ExecuteRequestContext_2: Complete()
     Testing platform->>ITestFramework: CloseTestSessionAsync(CloseTestSessionContext)
+    ITestFramework-->>Testing platform: CloseTestSessionResult
 ```
 
 The diagram above illustrates that the testing platform issues 3 requests after creating the test framework instance. The test framework processes these requests and utilizes the `IMessageBus` service, which is included in the request itself, to deliver the result for each specific request. Once a particular request has been handled, the test framework invokes the `Complete()` method on it, indicating to the testing platform that the request has been fulfilled.
