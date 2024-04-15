@@ -1,1 +1,2 @@
 ﻿#nullable enable
+abstract Microsoft.VisualStudio.TestTools.UnitTesting.TestContext.ReportProgress(string! progress, int percent, bool done) -> void

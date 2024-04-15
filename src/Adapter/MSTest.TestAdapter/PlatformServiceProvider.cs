@@ -156,8 +156,8 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties)
+    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties, IProgressReporter progressReporter)
     {
-        return new TestContextImplementation(testMethod, writer, properties);
+        return new TestContextImplementation(testMethod, writer, properties, progressReporter);
     }
 }

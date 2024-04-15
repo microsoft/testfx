@@ -125,7 +125,7 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties)
     {
-        return new TestContextImplementation(testMethod, writer, properties);
+        return new TestContextImplementation(testMethod, writer, properties, null);
     }
 
     public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle)
@@ -147,5 +147,10 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
     public void SetupMockReflectionOperations()
     {
         MockReflectionOperations = new Mock<IReflectionOperations>();
+    }
+
+    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties, IProgressReporter progressReporter)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -49,7 +49,7 @@ public class TestMethodRunnerTests : TestContainer
 
         var testAssemblyInfo = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
         _testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
-        _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>());
+        _testContextImplementation = new TestContextImplementation(_testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>(), null);
         _testClassInfo = new TestClassInfo(
             type: typeof(DummyTestClass),
             constructor: constructorInfo,

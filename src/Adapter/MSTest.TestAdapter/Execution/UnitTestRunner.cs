@@ -106,7 +106,7 @@ internal class UnitTestRunner : MarshalByRefObject
     /// <param name="testMethod"> The test Method. </param>
     /// <param name="testContextProperties"> The test context properties. </param>
     /// <returns> The <see cref="UnitTestResult"/>. </returns>
-    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties)
+    internal UnitTestResult[] RunSingleTest(TestMethod testMethod, IDictionary<string, object?> testContextProperties, IProgressReporter progressReporter)
     {
         if (testMethod == null)
         {
@@ -117,7 +117,7 @@ internal class UnitTestRunner : MarshalByRefObject
         {
             using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
             var properties = new Dictionary<string, object?>(testContextProperties);
-            var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
+            var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties, progressReporter);
             testContext.SetOutcome(UTF.UnitTestOutcome.InProgress);
 
             // Get the testMethod

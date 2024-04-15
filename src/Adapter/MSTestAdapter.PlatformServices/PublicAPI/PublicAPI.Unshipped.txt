@@ -1,1 +1,6 @@
 ﻿#nullable enable
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IProgressReporter
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IProgressReporter.ReportProgress(string! message, int percent, bool done) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestContextImplementation(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod! testMethod, System.IO.StringWriter! stringWriter, System.Collections.Generic.IDictionary<string!, object?>! properties, Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.IProgressReporter! progressReporter) -> void
+Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TryGetPropertyValue(string! propertyName, out object? propertyValue) -> bool
+override Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.ReportProgress(string! progress, int percent, bool done) -> void

@@ -96,6 +96,10 @@
       <Compile Include="$(Compile);$(IntermediateOutputPath)/MSTestVersion.cs" />
     </ItemGroup>
   </Target>
+  <ItemGroup>
+    <Compile Remove="Execution\TestExecutionRecorderToProgressReporterAdapter.cs" />
+    <Compile Remove="IProgressReporter.cs" />
+  </ItemGroup>
 
   <!-- Version templating -->
   <ItemGroup>

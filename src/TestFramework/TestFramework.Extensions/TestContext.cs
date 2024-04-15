@@ -212,4 +212,6 @@ public abstract class TestContext
 
         return (T?)propertyValue;
     }
+
+    public abstract void ReportProgress(string progress, int percent, bool done);
 }

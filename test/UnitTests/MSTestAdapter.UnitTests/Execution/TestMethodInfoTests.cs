@@ -58,7 +58,7 @@ public class TestMethodInfoTests : TestContainer
 
         _testAssemblyInfo = new TestAssemblyInfo(typeof(DummyTestClass).Assembly);
         var testMethod = new TestMethod("dummyTestName", "dummyClassName", "dummyAssemblyName", false);
-        _testContextImplementation = new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>());
+        _testContextImplementation = new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>(), null);
         _testClassInfo = new TestClassInfo(
             type: typeof(DummyTestClass),
             constructor: _constructorInfo,

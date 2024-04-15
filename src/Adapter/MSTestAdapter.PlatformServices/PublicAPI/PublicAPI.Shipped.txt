@@ -94,8 +94,6 @@ Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextIm
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetDataConnection(object? dbConnection) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetDataRow(object? dataRow) -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.SetOutcome(Microsoft.VisualStudio.TestTools.UnitTesting.UnitTestOutcome outcome) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TestContextImplementation(Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.ObjectModel.ITestMethod! testMethod, System.IO.StringWriter! stringWriter, System.Collections.Generic.IDictionary<string!, object?>! properties) -> void
-Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestContextImplementation.TryGetPropertyValue(string! propertyName, out object? propertyValue) -> bool
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestDataSource
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestDataSource.TestDataSource() -> void
 Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.TestDeployment

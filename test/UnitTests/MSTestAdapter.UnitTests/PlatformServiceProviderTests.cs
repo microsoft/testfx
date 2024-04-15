@@ -76,7 +76,7 @@ public class PlatformServiceProviderTests : TestContainer
         testMethod.Setup(tm => tm.Name).Returns("M");
 
         // Act.
-        var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, writer, properties);
+        var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, writer, properties, null);
 
         // Assert.
         Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");

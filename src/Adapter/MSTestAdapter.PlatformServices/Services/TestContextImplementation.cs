@@ -32,6 +32,7 @@ public class TestContextImplementation : TestContext, ITestContext
     /// </summary>
     private readonly StringWriter _stringWriter;
     private readonly ThreadSafeStringWriter? _threadSafeStringWriter;
+    private readonly IProgressReporter _progressReporter;
 
     /// <summary>
     /// Test Method.
@@ -71,10 +72,12 @@ public class TestContextImplementation : TestContext, ITestContext
     /// <param name="testMethod">The test method.</param>
     /// <param name="stringWriter">The writer where diagnostic messages are written to.</param>
     /// <param name="properties">Properties/configuration passed in.</param>
-    public TestContextImplementation(ITestMethod testMethod, StringWriter stringWriter, IDictionary<string, object?> properties)
+    public TestContextImplementation(ITestMethod testMethod, StringWriter stringWriter, IDictionary<string, object?> properties, IProgressReporter progressReporter)
     {
         DebugEx.Assert(testMethod != null, "TestMethod is not null");
         DebugEx.Assert(properties != null, "properties is not null");
+
+        _progressReporter = progressReporter;
 
 #if NETFRAMEWORK
         DebugEx.Assert(stringWriter != null, "StringWriter is not null");
@@ -344,4 +347,9 @@ public class TestContextImplementation : TestContext, ITestContext
     }
 
     #endregion
+
+    public override void ReportProgress(string progress, int percent, bool done)
+    {
+        _progressReporter.ReportProgress(progress, percent, done);
+    }
 }

@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using FrameworkITestDataSource = Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource;
@@ -30,6 +31,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// Type cache.
     /// </summary>
     private readonly TypeCache _typeCache = new(ReflectHelper);
+    private readonly IProgressReporter _nullProgressReporter = new NullProgressReporter();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AssemblyEnumerator"/> class.
@@ -267,10 +269,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
 
         // NOTE: From this place we don't have any path that would let the user write a message on the TestContext and we don't do
-        // anything with what would be printed anyway so we can simply use a simple StringWriter.
+        // anything with what would be printed anyway so we can simply use a simple StringWriter, and NullProgressWriter.
         using var writer = new StringWriter();
         var testMethod = test.TestMethod;
-        var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
+        var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters, _nullProgressReporter);
         var testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
         return testMethodInfo != null && TryProcessTestDataSourceTests(test, testMethodInfo, tests);
     }
@@ -350,5 +352,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
 
         return true;
+    }
+}
+
+internal class NullProgressReporter : IProgressReporter
+{
+    public void ReportProgress(string message, int percent, bool done)
+    {
     }
 }

@@ -375,11 +375,12 @@ public class TestExecutionManager
 
     private void ExecuteTestsWithTestRunner(
         IEnumerable<TestCase> tests,
-        ITestExecutionRecorder testExecutionRecorder,
+        IFrameworkHandle testExecutionRecorder,
         string source,
         IDictionary<string, object> sourceLevelParameters,
         UnitTestRunner testRunner)
     {
+        var progressReporter = new ProgressReporterAdapter(testExecutionRecorder);
         foreach (var currentTest in tests)
         {
             if (_cancellationToken != null && _cancellationToken.Canceled)
@@ -398,7 +399,7 @@ public class TestExecutionManager
             // Run single test passing test context properties to it.
             var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
             var testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
-            var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
+            var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties, progressReporter);
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 
