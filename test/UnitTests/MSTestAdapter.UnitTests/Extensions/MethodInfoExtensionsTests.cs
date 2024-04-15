@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -369,7 +370,7 @@ public class MethodInfoExtensionsTests : TestContainer
         catch (TestFailedException ex)
         {
             Verify(ex.Outcome == UnitTestOutcome.Error);
-            Verify(ex.TryGetMessage() == Resource.CannotRunTestMethodNoDataError);
+            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestMethodNoDataError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters"));
         }
     }
 

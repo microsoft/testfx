@@ -171,7 +171,9 @@ internal static class MethodInfoExtensions
         }
         else
         {
-            if (methodParameters?.Length != arguments?.Length
+            var methodParametersLengthOrZero = methodParameters?.Length ?? 0;
+            var argumentsLengthOrZero = arguments?.Length ?? 0;
+            if (methodParametersLengthOrZero != argumentsLengthOrZero
                 || !AreArgumentAndParameterTypesAssignable(arguments, methodParameters))
             {
                 throw new TestFailedException(
@@ -181,9 +183,9 @@ internal static class MethodInfoExtensions
                         Resource.CannotRunTestArgumentsMismatchError,
                         methodInfo.DeclaringType!.FullName,
                         methodInfo.Name,
-                        methodParameters?.Length ?? 0,
+                        methodParametersLengthOrZero,
                         string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>()),
-                        arguments?.Length ?? 0,
+                        argumentsLengthOrZero,
                         string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())));
             }
 
@@ -196,7 +198,7 @@ internal static class MethodInfoExtensions
 
     private static bool AreArgumentAndParameterTypesAssignable(object?[]? arguments, ParameterInfo[]? parameters)
     {
-        if (arguments is null && parameters is null)
+        if (arguments is null or { Length: 0 } && parameters is null or { Length: 0 })
         {
             return true;
         }
