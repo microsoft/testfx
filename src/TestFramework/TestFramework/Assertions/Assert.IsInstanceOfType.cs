@@ -158,7 +158,7 @@ public sealed partial class Assert
     public static void IsInstanceOfType<T>([NotNull] object? value, out T instance, string? message, params object?[]? parameters)
     {
         IsInstanceOfType(value, typeof(T), message, parameters);
-        instance = (T)value!;
+        instance = (T)value;
     }
 
     /// <summary>
