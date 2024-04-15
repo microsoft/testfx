@@ -73,10 +73,10 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
         bool hasAssemblyAttribute = false;
         bool hasTestMethod = false;
 
-        var baseType = classSymbol;
+        var currentType = classSymbol;
         do
         {
-            foreach (var classMember in baseType.GetMembers())
+            foreach (var classMember in currentType.GetMembers())
             {
                 foreach (var attribute in classMember.GetAttributes())
                 {
@@ -93,9 +93,9 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
                 }
             }
 
-            baseType = classSymbol.BaseType;
+            currentType = classSymbol.BaseType;
         }
-        while (baseType != null);
+        while (currentType != null);
 
         if (!hasTestMethod && (!classSymbol.IsStatic || (classSymbol.IsStatic && !hasAssemblyAttribute)))
         {
