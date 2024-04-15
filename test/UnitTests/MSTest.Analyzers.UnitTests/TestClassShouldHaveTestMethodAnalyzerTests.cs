@@ -101,4 +101,44 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
                 .WithLocation(0)
                 .WithArguments("MyTestClass"));
     }
+
+    public async Task WhenTestClassWithoutAssemblyAttributes_InheritsFromClassHasTestMethod_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class BaseClass()
+            {
+                [TestMethod]
+                public void TestMethod1UsingName() { }
+            }
+
+            [TestClass]
+            public class Derived : BaseClass
+            {
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassWithoutAssemblyAttributes_InheritsFromClassDoesNotHaveTestMethod_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public abstract class BaseClass()
+            {
+            }
+            
+            [TestClass]
+            public class {|#0:Derived|} : BaseClass
+            {
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRule)
+                .WithLocation(0)
+                .WithArguments("Derived"));
+    }
 }
