@@ -93,9 +93,9 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
                 }
             }
 
-            currentType = classSymbol.BaseType;
+            currentType = currentType.BaseType;
         }
-        while (currentType != null);
+        while (currentType is not null);
 
         if (!hasTestMethod && (!classSymbol.IsStatic || (classSymbol.IsStatic && !hasAssemblyAttribute)))
         {
