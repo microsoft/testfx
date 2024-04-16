@@ -102,12 +102,12 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
                 .WithArguments("MyTestClass"));
     }
 
-    public async Task WhenTestClassWithoutAssemblyAttributes_InheritsFromClassHasTestMethod_NoDiagnostic()
+    public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromAbstractClassHasTestMethod_NoDiagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            public abstract class BaseClass()
+            public abstract class BaseClass
             {
                 [TestMethod]
                 public void TestMethod1UsingName() { }
@@ -121,15 +121,151 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenTestClassWithoutAssemblyAttributes_InheritsFromClassDoesNotHaveTestMethod_NoDiagnostic()
+    public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromClassHasTestMethod_NoDiagnostic()
     {
         var code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-            public abstract class BaseClass()
+            public class BaseClass
+            {
+                [TestMethod]
+                public void TestMethod1UsingName() { }
+            }
+
+            [TestClass]
+            public class Derived : BaseClass
+            {
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromTestClassHasTestMethod_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class BaseClass
+            {
+                [TestMethod]
+                public void TestMethod1UsingName() { }
+            }
+
+            [TestClass]
+            public class Derived : BaseClass
+            {
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromAbstractTestClassHasTestMethod_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class BaseClass
+            {
+                [TestMethod]
+                public void TestMethod1UsingName() { }
+            }
+
+            [TestClass]
+            public class Derived : BaseClass
+            {
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromBaseBaseClassHasTestMethod_NoDiagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseBase
+            {
+                [TestMethod]
+                public void TestMethod1UsingName() { }
+            }
+
+            public class BaseClass : BaseBase
             {
             }
             
+            [TestClass]
+            public class Derived : BaseClass
+            {
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromClassDoesNotHaveTestMethod_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseClass
+            {
+            }
+            
+            [TestClass]
+            public class {|#0:Derived|} : BaseClass
+            {
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRule)
+                .WithLocation(0)
+                .WithArguments("Derived"));
+    }
+
+    public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromClassHasAssemblyInitialize_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseClass
+            {
+               [AssemblyInitialize]
+               public static void AssInit(TestContext testContext)
+               {
+               }
+            }
+            
+            [TestClass]
+            public class {|#0:Derived|} : BaseClass
+            {
+            }
+            """;
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(TestClassShouldHaveTestMethodAnalyzer.TestClassShouldHaveTestMethodRule)
+                .WithLocation(0)
+                .WithArguments("Derived"));
+    }
+
+    public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromBaseBaseClassHasAssemblyCleanup_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class BaseBase
+            {
+               [AssemblyCleanup]
+               public void AssInit()
+               {
+               }
+            }
+
+            public class BaseClass : BaseBase
+            {
+            }
+
             [TestClass]
             public class {|#0:Derived|} : BaseClass
             {
