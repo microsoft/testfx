@@ -215,8 +215,8 @@ internal static class MethodInfoExtensions
 
         for (int i = 0; i < parameters.Length; i++)
         {
-            if (arguments[i] is not { } argument
-                || !parameters[i].ParameterType.IsAssignableFrom(argument.GetType()))
+            if (arguments[i] is { } argument
+                && !parameters[i].ParameterType.IsAssignableFrom(argument.GetType()))
             {
                 return false;
             }

@@ -56,6 +56,19 @@ public partial class CLITestBase : TestContainer
         return artifactsBinFolder;
     }
 
+    protected static string GetArtifactsTestResultsFolderPath()
+    {
+        var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
+        var artifactsFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\..\.."));
+        Directory.Exists(artifactsFolder).Should().BeTrue();
+
+        var testResultsFolder = Path.Combine(artifactsFolder, "TestResults", Configuration);
+        Directory.CreateDirectory(testResultsFolder);
+
+        return testResultsFolder;
+    }
+
     protected static string GetAssetFullPath(string assetName, string configuration = null, string targetFramework = null)
     {
         configuration ??= Configuration;
@@ -87,16 +100,16 @@ public partial class CLITestBase : TestContainer
         }
 
         XmlElement root = doc.DocumentElement;
-        RunConfiguration runConfiguration = new(string.Empty);
-        XmlElement runConfigElement = runConfiguration.ToXml();
+        RunConfiguration runConfiguration = new(string.Empty) { TestResultsDirectory = GetArtifactsTestResultsFolderPath() };
+        XmlElement runConfigurationElement = runConfiguration.ToXml();
         if (root[runConfiguration.SettingsName] == null)
         {
-            XmlNode newNode = doc.ImportNode(runConfigElement, true);
+            XmlNode newNode = doc.ImportNode(runConfigurationElement, true);
             root.AppendChild(newNode);
         }
         else
         {
-            XmlNode newNode = doc.ImportNode(runConfigElement.FirstChild, true);
+            XmlNode newNode = doc.ImportNode(runConfigurationElement.FirstChild, true);
             root[runConfiguration.SettingsName].AppendChild(newNode);
         }
 
