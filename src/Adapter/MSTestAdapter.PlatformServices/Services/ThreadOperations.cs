@@ -44,6 +44,7 @@ public class ThreadOperations : IThreadOperations
         }
         catch (Exception ex) when
             ((ex is OperationCanceledException oce && oce.CancellationToken == cancellationToken)
+
             // This exception occurs when the cancellation happens before the task is actually started.
             || (ex is TaskCanceledException tce && tce.CancellationToken == cancellationToken))
         {
@@ -83,6 +84,7 @@ public class ThreadOperations : IThreadOperations
         }
         catch (Exception ex) when
             ((ex is OperationCanceledException oce && oce.CancellationToken == cancellationToken)
+
             // This exception occurs when the cancellation happens before the task is actually started.
             || (ex is TaskCanceledException tce && tce.CancellationToken == cancellationToken))
         {
