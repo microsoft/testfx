@@ -100,7 +100,9 @@ public class DebuggerUtility
         IEnumMoniker? enumMoniker = null;
         try
         {
+#pragma warning disable IL2050
             var r = CreateBindCtx(0, out bindCtx);
+#pragma warning restore IL2050
             Marshal.ThrowExceptionForHR(r);
             if (bindCtx == null)
             {
