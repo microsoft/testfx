@@ -73,22 +73,29 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
         bool hasAssemblyAttribute = false;
         bool hasTestMethod = false;
 
-        foreach (var classMember in classSymbol.GetMembers())
+        var currentType = classSymbol;
+        do
         {
-            foreach (var attribute in classMember.GetAttributes())
+            foreach (var classMember in currentType.GetMembers())
             {
-                if (attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
+                foreach (var attribute in classMember.GetAttributes())
                 {
-                    hasTestMethod = true;
-                }
+                    if (attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
+                    {
+                        hasTestMethod = true;
+                    }
 
-                if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyInitializationAttributeSymbol)
-                    || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyCleanupAttributeSymbol))
-                {
-                    hasAssemblyAttribute = true;
+                    if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyInitializationAttributeSymbol)
+                        || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, assemblyCleanupAttributeSymbol))
+                    {
+                        hasAssemblyAttribute = true;
+                    }
                 }
             }
+
+            currentType = currentType.BaseType;
         }
+        while (currentType is not null);
 
         if (!hasTestMethod && (!classSymbol.IsStatic || (classSymbol.IsStatic && !hasAssemblyAttribute)))
         {
