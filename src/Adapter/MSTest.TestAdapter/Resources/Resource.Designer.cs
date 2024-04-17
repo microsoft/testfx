@@ -143,7 +143,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot run test method &apos;{0}.{1}&apos;: test data doesn&apos;t match method parameters. Either the count or types are different.
+        ///   Looks up a localized string similar to Cannot run test method &apos;{0}.{1}&apos;: Test data doesn&apos;t match method parameters. Either the count or types are different.
         ///Test expected {2} parameter(s), with types &apos;{3}&apos;,
         ///but received {4} argument(s), with types &apos;{5}&apos;..
         /// </summary>
@@ -154,7 +154,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot run test method &apos;{0}.{1}&apos;: method has parameters, but does not define any test source. Use &apos;[DataRow]&apos;, &apos;[DynamicData]&apos;, or a custom &apos;ITestDataSource&apos; data source to provide test data..
+        ///   Looks up a localized string similar to Cannot run test method &apos;{0}.{1}&apos;: Method has parameters, but does not define any test source. Use &apos;[DataRow]&apos;, &apos;[DynamicData]&apos;, or a custom &apos;ITestDataSource&apos; data source to provide test data..
         /// </summary>
         internal static string CannotRunTestMethodNoDataError {
             get {

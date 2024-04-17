@@ -307,7 +307,7 @@ Error: {1}</value>
     <value>Failed to discover tests from assembly {0}. Reason:{1}</value>
   </data>
   <data name="CannotRunTestMethodNoDataError" xml:space="preserve">
-    <value>Cannot run test method '{0}.{1}': method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</value>
+    <value>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</value>
   </data>
   <data name="Execution_Test_Cancelled" xml:space="preserve">
     <value>Test '{0}' execution has been aborted.</value>
@@ -403,7 +403,7 @@ Error: {1}</value>
     <value>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</value>
   </data>
   <data name="CannotRunTestArgumentsMismatchError" xml:space="preserve">
-    <value>Cannot run test method '{0}.{1}': test data doesn't match method parameters. Either the count or types are different.
+    <value>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</value>
   </data>
