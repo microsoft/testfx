@@ -397,6 +397,11 @@ public class TestMethodInfo : ITestMethod
             return new TestFailedException(ObjectModelUnitTestOutcome.Error, errorMessage);
         }
 
+        if (ex is TestFailedException testFailedException)
+        {
+            return testFailedException;
+        }
+
         // Get the real exception thrown by the test method
         if (realException.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out var exceptionMessage, out var exceptionStackTraceInfo))
         {
