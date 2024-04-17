@@ -42,7 +42,10 @@ public class ThreadOperations : IThreadOperations
             // False means execution timed out.
             return executionTask.Wait(timeout, cancellationToken);
         }
-        catch (OperationCanceledException oce) when (oce.CancellationToken == cancellationToken)
+        catch (Exception ex) when
+            ((ex is OperationCanceledException oce && oce.CancellationToken == cancellationToken)
+            // This exception occurs when the cancellation happens before the task is actually started.
+            || (ex is TaskCanceledException tce && tce.CancellationToken == cancellationToken))
         {
             // Task execution canceled.
             return false;
@@ -78,7 +81,10 @@ public class ThreadOperations : IThreadOperations
             // If the execution thread completes before the timeout, the task will return true, otherwise false.
             return executionTask.Result;
         }
-        catch (OperationCanceledException oce) when (oce.CancellationToken == cancellationToken)
+        catch (Exception ex) when
+            ((ex is OperationCanceledException oce && oce.CancellationToken == cancellationToken)
+            // This exception occurs when the cancellation happens before the task is actually started.
+            || (ex is TaskCanceledException tce && tce.CancellationToken == cancellationToken))
         {
             // Task execution canceled.
             return false;
