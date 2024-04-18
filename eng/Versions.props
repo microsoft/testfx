@@ -27,9 +27,9 @@
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24204.3</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
     <MicrosoftPlaywrightVersion>1.42.0</MicrosoftPlaywrightVersion>
     <MicrosoftTestingFrameworkVersion>1.2.0-preview.24168.3</MicrosoftTestingFrameworkVersion>
-    <MicrosoftTestingPlatformVersion>1.2.0-preview.24216.1</MicrosoftTestingPlatformVersion>
+    <MicrosoftTestingPlatformVersion>1.2.0-preview.24217.2</MicrosoftTestingPlatformVersion>
     <MicrosoftVisualStudioThreadingAnalyzersVersion>17.9.28</MicrosoftVisualStudioThreadingAnalyzersVersion>
-    <MSTestEngineVersion>1.0.0-alpha.24216.1</MSTestEngineVersion>
+    <MSTestEngineVersion>1.0.0-alpha.24217.2</MSTestEngineVersion>
     <StyleCopAnalyzersVersion>1.2.0-beta.556</StyleCopAnalyzersVersion>
   </PropertyGroup>
   <PropertyGroup Label="MSTest test dependencies">
