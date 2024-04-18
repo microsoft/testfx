@@ -94,6 +94,20 @@ public class TestAsset : IDisposable
     <config>
         <add key="globalPackagesFolder" value=".packages" />
     </config>
+    <packageSourceMapping>
+        <packageSource key="local-nonshipping">
+            <package pattern="*" />
+        </packageSource>
+        <packageSource key="local-shipping">
+            <package pattern="*" />
+        </packageSource>
+        <packageSource key="local-tmp-packages">
+            <package pattern="*" />
+        </packageSource>
+        <packageSource key="dotnet-public">
+            <package pattern="*" />
+        </packageSource>
+    </packageSourceMapping>
 </configuration>
 
 """;

@@ -165,9 +165,8 @@ public class TempDirectory : IDisposable
             string directoryPath = System.IO.Path.Combine(currentDirectory, "tmp", Constants.BuildConfiguration, "testsuite", RandomId.Next());
             Directory.CreateDirectory(directoryPath);
 
-            string directoryProp = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
-            string directoryTarget = System.IO.Path.Combine(directoryPath, "Directory.Build.targets");
-            File.WriteAllText(directoryProp, $"""
+            string directoryBuildProps = System.IO.Path.Combine(directoryPath, "Directory.Build.props");
+            File.WriteAllText(directoryBuildProps, $"""
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
     <PropertyGroup>
@@ -180,9 +179,21 @@ public class TempDirectory : IDisposable
     </PropertyGroup>
 </Project>
 """);
-            File.WriteAllText(directoryTarget, """
+
+            string directoryBuildTarget = System.IO.Path.Combine(directoryPath, "Directory.Build.targets");
+            File.WriteAllText(directoryBuildTarget, """
 <?xml version="1.0" encoding="utf-8"?>
 <Project/>
+""");
+
+            string directoryPackagesProps = System.IO.Path.Combine(directoryPath, "Directory.Packages.props");
+            File.WriteAllText(directoryPackagesProps, """
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+    <PropertyGroup>
+      <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+</Project>
 """);
 
             string finalDirectory = directoryPath;

@@ -11,8 +11,6 @@ namespace Microsoft.MSTestV2.CLIAutomation;
 
 public partial class CLITestBase : TestContainer
 {
-    private const string EngineeringFolder = "eng";
-
     private const string Configuration =
 #if DEBUG
         "Debug";
@@ -25,10 +23,10 @@ public partial class CLITestBase : TestContainer
 #pragma warning restore IDE0051 // Remove unused private members
     private const string DefaultTargetFramework = "net462";
 
-    protected static XmlDocument ReadVersionProps()
+    protected static XmlDocument ReadCPMFile()
     {
-        var versionPropsFilePath = Path.Combine(GetArtifactsBinFolderPath(), "..", "..", EngineeringFolder, "Versions.props");
-        using var fileStream = File.OpenRead(versionPropsFilePath);
+        var cpmFilePath = Path.Combine(GetArtifactsBinFolderPath(), "..", "..", "Directory.Packages.props");
+        using var fileStream = File.OpenRead(cpmFilePath);
 #pragma warning disable CA3075 // Insecure DTD processing in XML
         using var xmlTextReader = new XmlTextReader(fileStream) { Namespaces = false };
 #pragma warning restore CA3075 // Insecure DTD processing in XML
@@ -40,8 +38,8 @@ public partial class CLITestBase : TestContainer
 
     protected static string GetTestPlatformVersion()
     {
-        var versionPropsXml = ReadVersionProps();
-        var testSdkVersion = versionPropsXml.DocumentElement.SelectSingleNode($"PropertyGroup/MicrosoftNETTestSdkVersion");
+        var cpmXml = ReadCPMFile();
+        var testSdkVersion = cpmXml.DocumentElement.SelectSingleNode($"PropertyGroup/MicrosoftNETTestSdkVersion");
 
         return testSdkVersion.InnerText;
     }
