@@ -37,6 +37,7 @@
     -->
   <ItemGroup Condition="'$(ImplicitUsings)' == 'true' Or '$(ImplicitUsings)' == 'enable'">
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="Microsoft.Playwright.MSTest" Condition=" '$(EnablePlaywright)' == 'true' " />
   </ItemGroup>
 
 </Project>
