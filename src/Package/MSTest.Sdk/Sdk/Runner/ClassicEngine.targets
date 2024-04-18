@@ -28,25 +28,25 @@
 
   <!-- Core -->
   <ItemGroup Condition=" '$(EnablePlaywright)' == 'false' ">
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" IsImplicitlyDefined="True" Sdk="MSTest"  />
-    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest"  />
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" IsImplicitlyDefined="True" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" IsImplicitlyDefined="True" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" IsImplicitlyDefined="True" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(EnablePlaywright)' == 'true' ">
-    <PackageReference Include="Microsoft.Playwright.MSTest" Version="$(MicrosoftPlaywrightVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
+    <PackageReference Include="Microsoft.Playwright.MSTest" Version="$(MicrosoftPlaywrightVersion)" IsImplicitlyDefined="True" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " />
   </ItemGroup>
 
   <!-- Extensions -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)" IsImplicitlyDefined="True" Sdk="MSTest" Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingExtensionsCrashDumpVersion)" IsImplicitlyDefined="True" Sdk="MSTest" Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$(MicrosoftTestingExtensionsHangDumpVersion)" IsImplicitlyDefined="True" Sdk="MSTest" Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" IsImplicitlyDefined="True" Sdk="MSTest" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$(MicrosoftTestingExtensionsHotReloadVersion)" IsImplicitlyDefined="True" Sdk="MSTest" Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' " />
-    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingExtensionsRetryVersion)" IsImplicitlyDefined="True" Sdk="MSTest" Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingExtensionsCrashDumpVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$(MicrosoftTestingExtensionsHangDumpVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$(MicrosoftTestingExtensionsHotReloadVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingExtensionsRetryVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " />
   </ItemGroup>
 
 </Project>
