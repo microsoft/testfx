@@ -55,6 +55,7 @@
     <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup Label="Test dependencies">
+    <PackageVersion Include="FSharp.Core" Version="8.0.101" />
     <!-- Pinned to 4.18.4 for security -->
     <PackageVersion Include="Moq" Version="4.18.4" />
     <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="8.0.0" />
