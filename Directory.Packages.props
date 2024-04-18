@@ -45,7 +45,7 @@
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
-    <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="$(MicrosoftVisualStudioThreadingAnalyzersVersion)" />
+    <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.9.28" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
     <!-- CVE-2019-0820 -->
