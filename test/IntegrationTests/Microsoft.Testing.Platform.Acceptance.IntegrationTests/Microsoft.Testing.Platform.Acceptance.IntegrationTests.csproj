@@ -10,13 +10,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MSBuild.StructuredLogger" Version="$(MSBuildStructuredLogger)" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
-    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
-    <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" GeneratePathProperty="True" />
+    <PackageReference Include="MSBuild.StructuredLogger" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+    <PackageReference Include="Microsoft.Testing.Extensions.Retry" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" GeneratePathProperty="True" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" GeneratePathProperty="True" />
+    <PackageReference Include="Microsoft.Testing.Internal.Framework" GeneratePathProperty="True" />
+    <PackageReference Include="Microsoft.Testing.Internal.Framework.SourceGeneration" GeneratePathProperty="True" />
   </ItemGroup>
 
   <!-- Packages needed for the test assets but that we don't want to reference -->
