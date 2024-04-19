@@ -35,7 +35,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         .WithMessage(new(nameof(Resources.DataRowShouldBeValidMessageFormat_ArgumentTypeMismatch), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-       = ImmutableArray.Create(DataRowOnTestMethodRule);
+        = ImmutableArray.Create(DataRowOnTestMethodRule);
 
     public override void Initialize(AnalysisContext context)
     {
@@ -111,7 +111,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeAttribute(SymbolAnalysisContext context, AttributeData attribute, IMethodSymbol methodSymbol)
     {
-        if (attribute.ApplicationSyntaxReference?.GetSyntax() is not { } syntax)
+        if (attribute.ApplicationSyntaxReference?.GetSyntax() is not { } dataRowSyntax)
         {
             return;
         }
@@ -126,7 +126,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         // constructor argument.
         if (methodSymbol.Parameters.Length == 0)
         {
-            context.ReportDiagnostic(syntax.CreateDiagnostic(
+            context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
                 ArgumentCountMismatchRule,
                 attribute.ConstructorArguments.Length,
                 methodSymbol.Parameters.Length));
@@ -134,13 +134,11 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         // Possible count mismatch depending on whether last method parameter is an array or not.
-        IParameterSymbol lastMethodParameter = methodSymbol.Parameters.Last();
-        bool lastMethodParameterIsArray = lastMethodParameter.Type.Kind == SymbolKind.ArrayType;
         if (attribute.ConstructorArguments.Length == 0)
         {
-            if (!lastMethodParameterIsArray)
+            if (methodSymbol.Parameters[^1].Type.Kind != SymbolKind.ArrayType)
             {
-                context.ReportDiagnostic(syntax.CreateDiagnostic(
+                context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
                     ArgumentCountMismatchRule,
                     attribute.ConstructorArguments.Length,
                     methodSymbol.Parameters.Length));
@@ -160,7 +158,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         if (IsArgumentCountMismatch(constructorArguments.Length, methodSymbol.Parameters))
         {
-            context.ReportDiagnostic(syntax.CreateDiagnostic(
+            context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
                 ArgumentCountMismatchRule,
                 constructorArguments.Length,
                 methodSymbol.Parameters.Length));
@@ -169,62 +167,81 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         // Check constructor argument types match method parameter types.
         List<(int ConstructorArgumentIndex, int MethodParameterIndex)> typeMismatchIndices = new();
-        for (int i = 0; i < constructorArguments.Length; ++i)
+        for (int currentArgumentIndex = 0; currentArgumentIndex < constructorArguments.Length; currentArgumentIndex++)
         {
             // Null is considered as default for non-nullable types.
-            if (constructorArguments[i].IsNull)
+            if (constructorArguments[currentArgumentIndex].IsNull)
             {
                 continue;
             }
 
-            ITypeSymbol? argumentType = constructorArguments[i].Type;
-            ITypeSymbol paramType = (lastMethodParameterIsArray && i >= methodSymbol.Parameters.Length - 1)
-                ? ((IArrayTypeSymbol)lastMethodParameter.Type).ElementType
-                : methodSymbol.Parameters[i].Type;
+            ITypeSymbol? argumentType = constructorArguments[currentArgumentIndex].Type;
+            ITypeSymbol paramType = GetParameterType(methodSymbol, currentArgumentIndex, constructorArguments.Length);
 
             if (argumentType is not null && !argumentType.IsAssignableTo(paramType, context.Compilation))
             {
-                typeMismatchIndices.Add((i, Math.Min(i, methodSymbol.Parameters.Length - 1)));
+                typeMismatchIndices.Add((currentArgumentIndex, Math.Min(currentArgumentIndex, methodSymbol.Parameters.Length - 1)));
             }
         }
 
         // Report diagnostics if there's any type mismatch.
         if (typeMismatchIndices.Count > 0)
         {
-            context.ReportDiagnostic(syntax.CreateDiagnostic(
+            context.ReportDiagnostic(dataRowSyntax.CreateDiagnostic(
                 ArgumentTypeMismatchRule,
                 string.Join(", ", typeMismatchIndices)));
         }
     }
 
+    private static ITypeSymbol GetParameterType(IMethodSymbol methodSymbol, int currentArgumentIndex, int argumentsCount)
+    {
+        if (currentArgumentIndex >= methodSymbol.Parameters.Length - 1)
+        {
+            IParameterSymbol lastParameter = methodSymbol.Parameters[^1];
+
+            // When last parameter is params, we want to check that the extra arguments match the type of the array
+            if (lastParameter.IsParams)
+            {
+                return ((IArrayTypeSymbol)lastParameter.Type).ElementType;
+            }
+
+            // When only parameter is array and we have more than one argument, we want to check the array type
+            if (argumentsCount > 1 && methodSymbol.Parameters.Length == 1 && lastParameter.Type.Kind == SymbolKind.ArrayType)
+            {
+                return ((IArrayTypeSymbol)lastParameter.Type).ElementType;
+            }
+        }
+
+        return methodSymbol.Parameters[currentArgumentIndex].Type;
+    }
+
     private static bool IsArgumentCountMismatch(int constructorArgumentsLength, ImmutableArray<IParameterSymbol> methodParameters)
     {
-        IParameterSymbol lastMethodParameter = methodParameters.Last();
+        int optionalParametersCount = methodParameters.Count(x => x.HasExplicitDefaultValue);
+        bool isLastParameterParams = methodParameters[^1].IsParams;
+        bool isOnlyParameterAndIsArray = methodParameters.Length == 1 && methodParameters[0].Type.Kind == SymbolKind.ArrayType;
 
-        bool lastMethodParameterIsArray = lastMethodParameter.Type.Kind == SymbolKind.ArrayType;
-        bool lastMethodParameterIsParams = lastMethodParameter.IsParams;
-        bool uniqueMethodParameter = methodParameters.Length == 1;
-        bool hasDefaultValue = lastMethodParameter.HasExplicitDefaultValue;
+        if (isOnlyParameterAndIsArray)
+        {
+            return false;
+        }
 
-        // Strict length matching should be done in the following cases:
-        // 1. Last method parameter is not an array (so it's not params either) so it doesn't
-        //    matter if it's the only parameter or if it has any default value.
-        // 2. Last method parameter is an array, but is not params, is not the only method
-        //    parameter and has no default value.
-        bool strictMatch =
-            !lastMethodParameterIsArray
-            || (lastMethodParameterIsArray
-                && !lastMethodParameterIsParams
-                && !uniqueMethodParameter
-                && !hasDefaultValue);
+        // When there is a params parameter, we should only check if the minimal number of arguments is matched.
+        if (isLastParameterParams)
+        {
+            return constructorArgumentsLength < methodParameters.Length - 1 /* params can be empty */ - optionalParametersCount;
+        }
 
-        // 1. If strict matching is required then the constructor arguments count and method
-        //    parameter count must be the same.
-        // 2. If strict matching is not required then the argument count check is relaxed and we
-        //    only need to make sure we don't have less constructor arguments than actual method
-        //    parameters.
-        return strictMatch
-            ? constructorArgumentsLength != methodParameters.Length
-            : constructorArgumentsLength < methodParameters.Length - 1;
+        // When there are some optional parameters (and no params), we are invalid if:
+        // - there are too many arguments
+        // - less than non-optional parameters
+        if (optionalParametersCount > 0)
+        {
+            return constructorArgumentsLength > methodParameters.Length
+                || constructorArgumentsLength < methodParameters.Length - optionalParametersCount;
+        }
+
+        // Strict check
+        return constructorArgumentsLength != methodParameters.Length;
     }
 }

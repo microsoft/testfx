@@ -62,6 +62,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assembly cleanup method &apos;{0}.{1}&apos; timed out.
+        /// </summary>
+        internal static string AssemblyCleanupTimedOut {
+            get {
+                return ResourceManager.GetString("AssemblyCleanupTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assembly cleanup method &apos;{0}.{1}&apos; was cancelled.
+        /// </summary>
+        internal static string AssemblyCleanupWasCancelled {
+            get {
+                return ResourceManager.GetString("AssemblyCleanupWasCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Assembly initialize method &apos;{0}.{1}&apos; timed out.
         /// </summary>
         internal static string AssemblyInitializeTimedOut {
@@ -121,6 +139,44 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string CannotExpandIDataSourceAttribute_DuplicateDisplayName {
             get {
                 return ResourceManager.GetString("CannotExpandIDataSourceAttribute_DuplicateDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot run test method &apos;{0}.{1}&apos;: Test data doesn&apos;t match method parameters. Either the count or types are different.
+        ///Test expected {2} parameter(s), with types &apos;{3}&apos;,
+        ///but received {4} argument(s), with types &apos;{5}&apos;..
+        /// </summary>
+        internal static string CannotRunTestArgumentsMismatchError {
+            get {
+                return ResourceManager.GetString("CannotRunTestArgumentsMismatchError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot run test method &apos;{0}.{1}&apos;: Method has parameters, but does not define any test source. Use &apos;[DataRow]&apos;, &apos;[DynamicData]&apos;, or a custom &apos;ITestDataSource&apos; data source to provide test data..
+        /// </summary>
+        internal static string CannotRunTestMethodNoDataError {
+            get {
+                return ResourceManager.GetString("CannotRunTestMethodNoDataError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class cleanup method &apos;{0}.{1}&apos; timed out.
+        /// </summary>
+        internal static string ClassCleanupTimedOut {
+            get {
+                return ResourceManager.GetString("ClassCleanupTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class cleanup method &apos;{0}.{1}&apos; was cancelled.
+        /// </summary>
+        internal static string ClassCleanupWasCancelled {
+            get {
+                return ResourceManager.GetString("ClassCleanupWasCancelled", resourceCulture);
             }
         }
         
@@ -323,6 +379,15 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Runsettings entry &apos;&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;&apos; is not supported on non-Windows OSes..
+        /// </summary>
+        internal static string STAIsOnlySupportedOnWindowsWarning {
+            get {
+                return ResourceManager.GetString("STAIsOnlySupportedOnWindowsWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to discover tests from assembly {0}. Reason:{1}.
         /// </summary>
         internal static string TestAssembly_AssemblyDiscoveryFailure {
@@ -341,6 +406,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test cleanup method &apos;{0}.{1}&apos; timed out.
+        /// </summary>
+        internal static string TestCleanupTimedOut {
+            get {
+                return ResourceManager.GetString("TestCleanupTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test cleanup method &apos;{0}.{1}&apos; was cancelled.
+        /// </summary>
+        internal static string TestCleanupWasCancelled {
+            get {
+                return ResourceManager.GetString("TestCleanupWasCancelled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to TestContext cannot be Null..
         /// </summary>
         internal static string TestContextIsNull {
@@ -355,6 +438,24 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string TestContextMessageBanner {
             get {
                 return ResourceManager.GetString("TestContextMessageBanner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test initialize method &apos;{0}.{1}&apos; timed out.
+        /// </summary>
+        internal static string TestInitializeTimedOut {
+            get {
+                return ResourceManager.GetString("TestInitializeTimedOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Test initialize method &apos;{0}.{1}&apos; was cancelled.
+        /// </summary>
+        internal static string TestInitializeWasCancelled {
+            get {
+                return ResourceManager.GetString("TestInitializeWasCancelled", resourceCulture);
             }
         }
         
@@ -717,15 +818,6 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         internal static string UTA_TestInitializeAndCleanupMethodHasWrongSignature {
             get {
                 return ResourceManager.GetString("UTA_TestInitializeAndCleanupMethodHasWrongSignature", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?.
-        /// </summary>
-        internal static string UTA_TestMethodExpectedParameters {
-            get {
-                return ResourceManager.GetString("UTA_TestMethodExpectedParameters", resourceCulture);
             }
         }
         

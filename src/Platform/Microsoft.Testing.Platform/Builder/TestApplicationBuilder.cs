@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
@@ -31,7 +31,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     private readonly ApplicationLoggingState _loggingState;
     private readonly TestApplicationOptions _testApplicationOptions;
     private readonly IUnhandledExceptionsHandler _unhandledExceptionsHandler;
-    private readonly ITestHostBuilder _testHostBuilder;
+    private readonly TestHostBuilder _testHostBuilder;
     private ITestHost? _testHost;
     private Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>? _testFrameworkAdapterFactory;
     private Func<IServiceProvider, ITestFrameworkCapabilities>? _testFrameworkCapabilitiesFactory;
@@ -43,7 +43,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler)
     {
-        _testHostBuilder = TestHostBuilderFactory();
+        _testHostBuilder = new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler()));
         _args = args;
         _createBuilderStart = createBuilderStart;
         _loggingState = loggingState;
@@ -70,11 +70,6 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     internal ITelemetryManager TelemetryManager => _testHostBuilder.Telemetry;
 
     internal IToolsManager Tools => _testHostBuilder.Tools;
-
-    // Callers from the outside can substitute the builder and the services that are used
-    // to build a testhost. We use this to provide a different builder for VSTest tests.
-    internal static Func<ITestHostBuilder> TestHostBuilderFactory { get; set; }
-        = () => new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler()));
 
     public ITestApplicationBuilder RegisterTestFramework(
         Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,

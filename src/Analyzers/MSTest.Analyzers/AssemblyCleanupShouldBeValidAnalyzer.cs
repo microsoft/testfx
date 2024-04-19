@@ -37,7 +37,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor NotAGenericClassRule = PublicRule.WithMessage(new(nameof(Resources.AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass), Resources.ResourceManager, typeof(Resources)));
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-       = ImmutableArray.Create(PublicRule);
+        = ImmutableArray.Create(PublicRule);
 
     public override void Initialize(AnalysisContext context)
     {

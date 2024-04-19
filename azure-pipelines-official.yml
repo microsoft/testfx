@@ -40,6 +40,7 @@ parameters:
   default: False
 
 variables:
+  - template: /eng/common/templates-official/variables/pool-providers.yml@self
   # Cannot use key:value syntax in root defined variables
   - name: _TeamName
     value: MSTest
@@ -87,8 +88,8 @@ extends:
     featureFlags:
       autoBaseline: true
     pool:
-      name: netcore1espool-internal
-      image: 1es-windows-2022-pt
+      name: $(DncEngInternalBuildPool)
+      image: windows.vs2022.amd64
       os: windows
     customBuildTags:
     - ES365AIMigrationTooling
@@ -111,8 +112,8 @@ extends:
           - job: Windows
             timeoutInMinutes: 90
             pool:
-              name: netcore1espool-internal
-              demands: ImageOverride -equals 1es-windows-2022-pt
+              name: $(DncEngInternalBuildPool)
+              image: windows.vs2022.amd64
               os: windows
             steps:
             - task: PowerShell@2
@@ -139,28 +140,36 @@ extends:
                 name: Test
                 displayName: Test
 
-            templateContext:
-                outputs:
-                - output: pipelineArtifact
-                  # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
-                  # through the console or trx
-                  displayName: 'Publish Test Results folders'
-                  targetPath: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-                  artifactName: TestResults
-                  condition: failed()
+              # Remove temporary artifacts to avoid finding binskim issues for exes we don't own.
+              - pwsh: |
+                  Remove-Item -Path $(Build.SourcesDirectory)/artifacts/tmp -Recurse -Force
+                displayName: Remove artifacts/tmp
 
-                - output: nuget
-                  displayName: 'Publish NuGet packages to test-tools feed'
-                  # Do not push symbol packages nor Microsoft.Testing.Platform package
-                  packageParentPath: '$(Build.SourcesDirectory)'
-                  packagesToPush: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg'
-                  publishVstsFeed: 'public/test-tools'
+              # This step is only helpful for diagnosing some issues with vstest/test host that would not appear
+              # through the console or trx
+              - task: 1ES.PublishBuildArtifacts@1
+                displayName: 'Publish Test Results folders'
+                inputs:
+                  PathtoPublish: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+                  ArtifactName: TestResults
+                condition: failed()
+
+            - task: NuGetAuthenticate@1
+              displayName: 'NuGet Authenticate to test-tools feed'
+
+            - task: 1ES.PublishNuget@1
+              displayName: 'Publish NuGet packages to test-tools feed'
+              inputs:
+                # Do not push symbol packages nor Microsoft.Testing.Platform package
+                packageParentPath: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)'
+                packagesToPush: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/*.symbols.nupkg;!$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/NonShipping/Microsoft.Testing.Platform.*.nupkg'
+                publishVstsFeed: 'public/test-tools'
 
           - job: Linux
             timeoutInMinutes: 90
             pool:
-              name: netcore1espool-internal
-              demands: ImageOverride -equals 1es-ubuntu-2204-pt
+              name: $(DncEngInternalBuildPool)
+              image: 1es-ubuntu-2204-pt
               os: linux
             steps:
             - script: eng/common/cibuild.sh
@@ -178,11 +187,12 @@ extends:
                 name: Test
                 displayName: Tests
 
-      - template: /eng/common/templates-official/job/onelocbuild.yml@self
-        parameters:
-          GitHubOrg: microsoft
-          MirrorRepo: testfx
-          LclSource: lclFilesfromPackage
-          LclPackageId: 'LCL-JUNO-PROD-TESTFX'
+      - ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+        - template: /eng/common/templates-official/job/onelocbuild.yml@self
+          parameters:
+            GitHubOrg: microsoft
+            MirrorRepo: testfx
+            LclSource: lclFilesfromPackage
+            LclPackageId: 'LCL-JUNO-PROD-TESTFX'
 
     - template: eng\common\templates-official\post-build\post-build.yml@self

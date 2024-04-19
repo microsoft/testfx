@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
 #if !WINDOWS_UWP
@@ -103,15 +103,29 @@ public class TestSourceHost : ITestSourceHost
     public void SetupHost()
     {
 #if NETFRAMEWORK || NET
-        List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
+        List<string> resolutionPaths = GetResolutionPaths(
+            _sourceFileName,
+#if NETFRAMEWORK
+            VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
+#else
+            false);
+#endif
 
         if (EqtTrace.IsInfoEnabled)
         {
             EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths.ToArray()));
         }
 
-        _parentDomainAssemblyResolver = new AssemblyResolver(resolutionPaths);
-        AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_parentDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName)!);
+        var assemblyResolver = new AssemblyResolver(resolutionPaths);
+        if (TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(assemblyResolver, Path.GetDirectoryName(_sourceFileName)!))
+        {
+            _parentDomainAssemblyResolver = assemblyResolver;
+        }
+        else
+        {
+            assemblyResolver.Dispose();
+        }
+
 #endif
 
 #if NETFRAMEWORK
@@ -153,7 +167,7 @@ public class TestSourceHost : ITestSourceHost
 
             _childDomainAssemblyResolver = (AssemblyResolver)resolver;
 
-            AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_childDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName));
+            _ = TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_childDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName));
         }
 #endif
     }
@@ -185,13 +199,15 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     public void Dispose()
     {
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NET
         if (_parentDomainAssemblyResolver != null)
         {
             _parentDomainAssemblyResolver.Dispose();
             _parentDomainAssemblyResolver = null;
         }
+#endif
 
+#if NETFRAMEWORK
         if (_childDomainAssemblyResolver != null)
         {
             _childDomainAssemblyResolver.Dispose();
@@ -351,6 +367,7 @@ public class TestSourceHost : ITestSourceHost
         {
             EqtTrace.Info("DesktopTestSourceHost.GetResolutionPaths(): Not running in portable mode");
 
+#if NETFRAMEWORK
             string? pathToPublicAssemblies = VSInstallationUtilities.PathToPublicAssemblies;
             if (!StringEx.IsNullOrWhiteSpace(pathToPublicAssemblies))
             {
@@ -362,6 +379,7 @@ public class TestSourceHost : ITestSourceHost
             {
                 resolutionPaths.Add(pathToPrivateAssemblies);
             }
+#endif
         }
 
         // Adding adapter folder to resolution paths
@@ -379,13 +397,13 @@ public class TestSourceHost : ITestSourceHost
         return resolutionPaths;
     }
 
-    private static void AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(AssemblyResolver assemblyResolver, string baseDirectory)
+    private static bool TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(AssemblyResolver assemblyResolver, string baseDirectory)
     {
         // Check if user specified any adapter settings
         MSTestAdapterSettings adapterSettings = MSTestSettingsProvider.Settings;
         if (adapterSettings == null)
         {
-            return;
+            return false;
         }
 
         try
@@ -394,6 +412,7 @@ public class TestSourceHost : ITestSourceHost
             if (additionalSearchDirectories?.Count > 0)
             {
                 assemblyResolver.AddSearchDirectoriesFromRunSetting(additionalSearchDirectories);
+                return true;
             }
         }
         catch (Exception exception)
@@ -403,6 +422,8 @@ public class TestSourceHost : ITestSourceHost
                 exception,
                 exception.Message);
         }
+
+        return false;
     }
 #endif
 }

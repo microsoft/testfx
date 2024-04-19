@@ -206,7 +206,7 @@ public class ServerTests : TestBase
             {
                 "jsonrpc": "2.0",
                 "method": "$/cancelRequest",
-                "params": { "id": "2" }
+                "params": { "id": 2 }
             }
             """;
         await WriteMessageAsync(writer, cancelRequestMessage);

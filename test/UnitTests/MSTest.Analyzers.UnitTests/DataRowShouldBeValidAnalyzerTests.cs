@@ -1,7 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using Microsoft.Testing.Framework;
+using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.TestInfrastructure;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
@@ -129,6 +129,29 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenDataRowPassesOneItemAndParameterExpectsArray_Diagnostic()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [{|#0:DataRow(1)|}]
+                [TestMethod]
+                public void TestMethod1(object[] o)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeMismatchRule)
+                .WithLocation(0)
+                .WithArguments((0, 0)));
     }
 
     public async Task WhenDataRowHasThreeArgumentsAndMethodHasAnIntegerAndAnArrayArgument_Diagnostic()
@@ -449,5 +472,74 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
             VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentTypeMismatchRule)
                 .WithLocation(0)
                 .WithArguments((2, 2)));
+    }
+
+    public async Task DefaultArguments()
+    {
+        var code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataRow(1L, "s")]                      // Correct count (using optional default value)
+                [DataRow(1L, "s", true)]                // Correct count
+                [{|#0:DataRow(1L, "s", true, "a")|}]    // Too many args
+                [{|#1:DataRow(1L)|}]                    // Not enough args
+                [TestMethod]
+                public void TestMethod1(long l, string s, bool b = false)
+                {
+                }
+
+                [DataRow(1L, "s")]                          // Correct count (using optional default value)
+                [DataRow(1L, "s", true)]                    // Correct count (using some default)
+                [DataRow(1L, "s", true, 1.0)]               // Correct count
+                [DataRow(1L, "s", true, 1.0, "a", false)]   // Extra args are swallowed by params
+                [{|#2:DataRow(1L)|}]                        // Not enough args
+                [TestMethod]
+                public void TestMethod2(long l, string s, bool b = false, double d = 1.0, params object[] others)
+                {
+                }
+            }
+            """
+        ;
+
+        await VerifyCS.VerifyAnalyzerAsync(
+            code,
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(0).WithArguments(4, 3),
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(1).WithArguments(1, 3),
+            VerifyCS.Diagnostic(DataRowShouldBeValidAnalyzer.ArgumentCountMismatchRule).WithLocation(2).WithArguments(1, 5));
+    }
+
+    public async Task Testfx_2606_NullArgumentForArray()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            
+            [TestClass]
+            public class MyTestClass
+            {
+                [DataTestMethod]
+                [DataRow(
+                    "123",
+                    new string[] { "something" },
+                    null)]
+                [DataRow(
+                    "123",
+                    null,
+                    new string[] { "something" })]
+                public void TestSomething(
+                    string x,
+                    string[] y,
+                    string[] z)
+                {
+                    Assert.AreEqual("123", x);
+                    Assert.IsNotNull(y);
+                    Assert.IsNull(z);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 }

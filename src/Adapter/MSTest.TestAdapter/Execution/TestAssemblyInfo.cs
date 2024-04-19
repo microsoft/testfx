@@ -60,6 +60,11 @@ public class TestAssemblyInfo
     internal int? AssemblyInitializeMethodTimeoutMilliseconds { get; set; }
 
     /// <summary>
+    /// Gets or sets the AssemblyCleanupMethod timeout.
+    /// </summary>
+    internal int? AssemblyCleanupMethodTimeoutMilliseconds { get; set; }
+
+    /// <summary>
     /// Gets <c>AssemblyCleanup</c> method for the assembly.
     /// </summary>
     public MethodInfo? AssemblyCleanupMethod
@@ -166,13 +171,13 @@ public class TestAssemblyInfo
             return;
         }
 
-        // Cache and return an already created TestFailedException.
+        // If the exception is already a `TestFailedException` we throw it as-is
         if (AssemblyInitializationException is TestFailedException)
         {
             throw AssemblyInitializationException;
         }
 
-        var realException = AssemblyInitializationException.InnerException ?? AssemblyInitializationException;
+        var realException = AssemblyInitializationException.GetRealException();
 
         var outcome = realException is AssertInconclusiveException ? UnitTestOutcome.Inconclusive : UnitTestOutcome.Failed;
 
@@ -208,33 +213,46 @@ public class TestAssemblyInfo
             return null;
         }
 
+        Exception? assemblyCleanupException = null;
         lock (_assemblyInfoExecuteSyncObject)
         {
             try
             {
-                AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
-
-                return null;
+                assemblyCleanupException = MethodRunner.RunWithTimeoutAndCancellation(
+                     () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
+                     new CancellationTokenSource(),
+                     AssemblyCleanupMethodTimeoutMilliseconds,
+                     AssemblyCleanupMethod,
+                     Resource.AssemblyCleanupWasCancelled,
+                     Resource.AssemblyCleanupTimedOut);
             }
             catch (Exception ex)
             {
-                var realException = ex.InnerException ?? ex;
-
-                // special case AssertFailedException to trim off part of the stack trace
-                string errorMessage = realException is AssertFailedException or AssertInconclusiveException
-                    ? realException.Message
-                    : realException.GetFormattedExceptionMessage();
-
-                DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
-                return string.Format(
-                    CultureInfo.CurrentCulture,
-                    Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
-                    AssemblyCleanupMethod.DeclaringType.Name,
-                    AssemblyCleanupMethod.Name,
-                    errorMessage,
-                    realException.GetStackTraceInformation()?.ErrorStackTrace);
+                assemblyCleanupException = ex;
             }
         }
+
+        // If assemblyCleanup was successful, then don't do anything
+        if (assemblyCleanupException is null)
+        {
+            return null;
+        }
+
+        var realException = assemblyCleanupException.GetRealException();
+
+        // special case AssertFailedException to trim off part of the stack trace
+        string errorMessage = realException is AssertFailedException or AssertInconclusiveException
+            ? realException.Message
+            : realException.GetFormattedExceptionMessage();
+
+        DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
+        return string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
+            AssemblyCleanupMethod.DeclaringType.Name,
+            AssemblyCleanupMethod.Name,
+            errorMessage,
+            realException.GetStackTraceInformation()?.ErrorStackTrace);
     }
 
     /// <summary>
@@ -251,36 +269,57 @@ public class TestAssemblyInfo
             return;
         }
 
+        Exception? assemblyCleanupException;
         lock (_assemblyInfoExecuteSyncObject)
         {
             try
             {
-                AssemblyCleanupMethod.InvokeAsSynchronousTask(null);
+                assemblyCleanupException = MethodRunner.RunWithTimeoutAndCancellation(
+                     () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
+                     new CancellationTokenSource(),
+                     AssemblyCleanupMethodTimeoutMilliseconds,
+                     AssemblyCleanupMethod,
+                     Resource.AssemblyCleanupWasCancelled,
+                     Resource.AssemblyCleanupTimedOut);
             }
             catch (Exception ex)
             {
-                var realException = ex.InnerException ?? ex;
-
-                // special case AssertFailedException to trim off part of the stack trace
-                string errorMessage = realException is AssertFailedException or AssertInconclusiveException
-                    ? realException.Message
-                    : realException.GetFormattedExceptionMessage();
-
-                var exceptionStackTraceInfo = realException.GetStackTraceInformation();
-                DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
-
-                throw new TestFailedException(
-                    UnitTestOutcome.Failed,
-                    string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
-                        AssemblyCleanupMethod.DeclaringType.Name,
-                        AssemblyCleanupMethod.Name,
-                        errorMessage,
-                        exceptionStackTraceInfo?.ErrorStackTrace),
-                    exceptionStackTraceInfo,
-                    realException);
+                assemblyCleanupException = ex;
             }
         }
+
+        // If assemblyCleanup was successful, then don't do anything
+        if (assemblyCleanupException is null)
+        {
+            return;
+        }
+
+        // If the exception is already a `TestFailedException` we throw it as-is
+        if (assemblyCleanupException is TestFailedException)
+        {
+            throw assemblyCleanupException;
+        }
+
+        var realException = assemblyCleanupException.GetRealException();
+
+        // special case AssertFailedException to trim off part of the stack trace
+        string errorMessage = realException is AssertFailedException or AssertInconclusiveException
+            ? realException.Message
+            : realException.GetFormattedExceptionMessage();
+
+        var exceptionStackTraceInfo = realException.GetStackTraceInformation();
+        DebugEx.Assert(AssemblyCleanupMethod.DeclaringType?.Name is not null, "AssemblyCleanupMethod.DeclaringType.Name is null");
+
+        throw new TestFailedException(
+            UnitTestOutcome.Failed,
+            string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_AssemblyCleanupMethodWasUnsuccesful,
+                AssemblyCleanupMethod.DeclaringType.Name,
+                AssemblyCleanupMethod.Name,
+                errorMessage,
+                exceptionStackTraceInfo?.ErrorStackTrace),
+            exceptionStackTraceInfo,
+            realException);
     }
 }

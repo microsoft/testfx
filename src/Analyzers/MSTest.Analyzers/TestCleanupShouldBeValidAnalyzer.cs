@@ -36,7 +36,8 @@ public sealed class TestCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     internal static readonly DiagnosticDescriptor NotGenericRule = PublicRule.WithMessage(new(nameof(Resources.TestCleanupShouldBeValidMessageFormat_NotGeneric), Resources.ResourceManager, typeof(Resources)));
     internal static readonly DiagnosticDescriptor OrdinaryRule = PublicRule.WithMessage(new(nameof(Resources.TestCleanupShouldBeValidMessageFormat_Ordinary), Resources.ResourceManager, typeof(Resources)));
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(PublicRule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
+        = ImmutableArray.Create(PublicRule);
 
     public override void Initialize(AnalysisContext context)
     {

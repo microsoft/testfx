@@ -93,13 +93,14 @@ public class DataRowTests : CLITestBase
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "FullyQualifiedName~DataRowTests_Regular&TestCategory~DataRowOptionalInvalidArguments");
 
-        ValidatePassedTestsContain(
+        ValidateFailedTests(
+            false,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
             "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
 
         // 3 tests of DerivedClass.DataRowTestMethodFailsWithInvalidArguments - 3 datarow result and no parent result
-        ValidatePassedTestsCount(3);
+        ValidateFailedTestsCount(3);
     }
 
     public void ExecuteDataRowTests_Enums()
@@ -207,9 +208,6 @@ public class DataRowTests : CLITestBase
             "DataRow2 (20,String parameter,True,False)",
             "DataRow2 (30,String parameter,True,False)",
             "DataRow2 (40,String parameter,True,False)",
-            "DataRowTestMethodFailsWithInvalidArguments ()",
-            "DataRowTestMethodFailsWithInvalidArguments (2)",
-            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)",
             "DataRowTestDouble (10.01,20.01)",
             "DataRowTestDouble (10.02,20.02)",
             "DataRowTestMixed (1,10,10,10,10,10,10,10,10)",
@@ -239,6 +237,10 @@ public class DataRowTests : CLITestBase
             "SixteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
             "MultipleIntegersWrappedWithParams (1,2,3,4,5)");
 
-        ValidateFailedTestsCount(0);
+        ValidateFailedTests(
+            false,
+            "DataRowTestMethodFailsWithInvalidArguments ()",
+            "DataRowTestMethodFailsWithInvalidArguments (2)",
+            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
     }
 }

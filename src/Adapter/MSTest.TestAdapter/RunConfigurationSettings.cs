@@ -5,6 +5,7 @@ using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -28,6 +29,11 @@ public class RunConfigurationSettings
     /// Gets a value indicating whether source information needs to be collected or not.
     /// </summary>
     public bool CollectSourceInformation { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating the requested platform apartment state.
+    /// </summary>
+    internal ApartmentState? ExecutionApartmentState { get; private set; }
 
     /// <summary>
     /// Populate adapter settings from the context.
@@ -118,6 +124,21 @@ public class RunConfigurationSettings
                                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                                 "CollectSourceInformation value Found : {0} ",
                                 result);
+                            }
+
+                            break;
+                        }
+
+                    case "EXECUTIONTHREADAPARTMENTSTATE":
+                        {
+                            if (Enum.TryParse(reader.ReadInnerXml(), out PlatformApartmentState platformApartmentState))
+                            {
+                                settings.ExecutionApartmentState = platformApartmentState switch
+                                {
+                                    PlatformApartmentState.STA => ApartmentState.STA,
+                                    PlatformApartmentState.MTA => ApartmentState.MTA,
+                                    _ => throw new NotSupportedException($"Platform apartment state '{platformApartmentState}' is not supported."),
+                                };
                             }
 
                             break;
