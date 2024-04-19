@@ -52,11 +52,26 @@ internal sealed class CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFe
 
         if (_runtimeFeature.IsDynamicCodeSupported)
         {
+            // Application is running non-native, this is safe to call.
 #pragma warning disable IL3000
             moduleName = Assembly.GetEntryAssembly()?.Location;
 #pragma warning restore IL3000
         }
+        else
+        {
+            if (IsCurrentTestApplicationHostDotnetMuxer)
+            {
+                // Application is running non-native, but with <PublishAot>true</PublishAot>.
+                // In such case we can be started as dotnet MyTests.dll.
+                // This condition prevents us from setting the path to test application to location of dotnet.exe.
+                // This api is safe to call.
+#pragma warning disable IL3000
+                moduleName = Assembly.GetEntryAssembly()?.Location;
+#pragma warning restore IL3000
+            }
+        }
 
+        // We are either an exe, or a native exe.
         moduleName = RoslynString.IsNullOrEmpty(moduleName)
             ? GetProcessPath(_environment, _process)
             : moduleName;
