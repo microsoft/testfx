@@ -130,6 +130,21 @@
         <target state="translated">AssemblyInitialize メソッドには有効なレイアウトが必要です</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
+        <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
+        <target state="translated">'Assert.AreEqual'、'Assert.AreNotEqual'、'Assert.AreSame'、および 'Assert.AreNotSame' では、必要な値が最初に渡され、実際の値が 2 番目の引数として渡される必要があります。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
+        <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
+        <target state="translated">アサーション引数は正しい順序で渡す必要があります。'actual' 引数と 'expected'/'notExpected' 引数がスワップされました。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
+        <source>Assertion arguments should be passed in the correct order</source>
+        <target state="translated">アサーション引数は正しい順序で渡す必要があります</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
         <source>Prefer 'Assert.ThrowsException' or 'Assert.ThrowsExceptionAsync' over '[ExpectedException]' as it ensures that only the expected call throws the expected exception. The assert APIs also provide more flexibility and allow you to assert extra properties of the exeption.</source>
         <target state="translated">'[ExpectedException]' よりも 'Assert.ThrowsException' または 'Assert.ThrowsExceptionAsync' を優先します。これは、予期された呼び出しのみが予期された例外をスローするようにするためです。アサート API も柔軟性が高く、例外の追加プロパティをアサートできます。</target>
@@ -304,6 +319,66 @@
         <target state="translated">DataRow は有効である必要があります</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
+        <source>Do not negate boolean assertions, instead use the opposite assertion</source>
+        <target state="translated">ブール型アサーションを否定しないでください。代わりに、逆のアサーションを使用してください</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionTitle">
+        <source>Do not negate boolean assertions</source>
+        <target state="translated">ブール型アサーションを否定しない</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotStoreStaticTestContextAnalyzerMessageFormat">
+        <source>Do not store TestContext in a static member</source>
+        <target state="translated">静的メンバーに TestContext を格納しない</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotStoreStaticTestContextAnalyzerTitle">
+        <source>Do not store TestContext in a static member</source>
+        <target state="translated">静的メンバーに TestContext を格納しない</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="translated">TestInitialize メソッドよりもコンストラクターを優先する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeTitle">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="translated">TestInitialize メソッドよりもコンストラクターを優先する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferDisposeOverTestCleanupMessageFormat">
+        <source>Prefer 'Dispose' over TestCleanup methods</source>
+        <target state="translated">TestCleanup メソッドよりも 'Dispose' を優先する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferDisposeOverTestCleanupTitle">
+        <source>Prefer 'Dispose' over TestCleanup methods</source>
+        <target state="translated">TestCleanup メソッドよりも 'Dispose' を優先する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeMessageFormat">
+        <source>Prefer TestCleanup over 'Dispose' methods</source>
+        <target state="translated">'Dispose' メソッドよりも TestCleanup を優先する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeTitle">
+        <source>Prefer TestCleanup over 'Dispose' methods</source>
+        <target state="translated">'Dispose' メソッドよりも TestCleanup を優先する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="translated">コンストラクターよりも TestInitialize メソッドを優先する</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorTitle">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="translated">コンストラクターよりも TestInitialize メソッドを優先する</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">テスト プロジェクトでは、テスト クラスのみをパブリックとしてマークすることをお勧めします。</target>
@@ -352,17 +427,17 @@
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</source>
-        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</target>
+        <target state="translated">テスト クラスには、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialization]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</source>
-        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</target>
+        <target state="translated">テスト クラス '{0}' には、少なくとも 1 つのテスト メソッドがあるか、'[AssemblyInitialization]' または '[AssemblyCleanup]' によってマークされたメソッドを含む 'static' である必要があります。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="new">Test class should have test method</target>
+        <target state="translated">テスト クラスにはテスト メソッドが必要です</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">

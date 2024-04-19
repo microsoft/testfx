@@ -28,7 +28,7 @@
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass">
         <source>AssemblyCleanup method '{0}' can't be declared on a generic class</source>
-        <target state="new">AssemblyCleanup method '{0}' can't be declared on a generic class</target>
+        <target state="translated">'{0}' AssemblyCleanup 메서드는 제네릭 클래스에서 선언할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid">
@@ -87,7 +87,7 @@
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass">
         <source>AssemblyInitialize method '{0}' can't be declared on a generic class</source>
-        <target state="new">AssemblyInitialize method '{0}' can't be declared on a generic class</target>
+        <target state="translated">'{0}' AssemblyInitialize 메서드는 제네릭 클래스에서 선언할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
@@ -128,6 +128,21 @@
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
         <source>AssemblyInitialize methods should have valid layout</source>
         <target state="translated">AssemblyInitialize 메서드에는 유효한 레이아웃이 있어야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
+        <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
+        <target state="translated">'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' 및 'Assert.AreNotSame'에는 필요한 값이 먼저 전달되고 실제 값이 두 번째 인수로 전달되어야 합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderMessageFormat">
+        <source>Assertion arguments should be passed in the correct order. 'actual' and 'expected'/'notExpected' arguments have been swapped.</source>
+        <target state="translated">어설션 인수는 올바른 순서로 전달되어야 합니다. 'actual' 및 'expected'/'notExpected' 인수가 바뀌었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderTitle">
+        <source>Assertion arguments should be passed in the correct order</source>
+        <target state="translated">어설션 인수는 올바른 순서로 전달되어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="AvoidExpectedExceptionAttributeDescription">
@@ -171,7 +186,7 @@
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
         <source>ClassCleanup method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="new">ClassCleanup method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</target>
+        <target state="translated">'{0}' ClassCleanup 메서드는 'InheritanceBehavior' 모드가 설정되지 않은 제네릭 클래스에서 선언할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid">
@@ -230,7 +245,7 @@
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
         <source>ClassInitialize method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="new">ClassInitialize method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</target>
+        <target state="translated">'{0}' ClassInitialize 메서드는 'InheritanceBehavior' 모드가 설정되지 않은 제네릭 클래스에서 선언할 수 없습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid">
@@ -304,6 +319,66 @@
         <target state="translated">DataRow는 유효해야 함</target>
         <note />
       </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionMessageFormat">
+        <source>Do not negate boolean assertions, instead use the opposite assertion</source>
+        <target state="translated">부울 어설션을 부정하지 말고 반대 어설션을 사용하세요</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotNegateBooleanAssertionTitle">
+        <source>Do not negate boolean assertions</source>
+        <target state="translated">부울 어설션 부정하지 마세요</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotStoreStaticTestContextAnalyzerMessageFormat">
+        <source>Do not store TestContext in a static member</source>
+        <target state="translated">TestContext를 정적 멤버에 저장하지 마세요</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="DoNotStoreStaticTestContextAnalyzerTitle">
+        <source>Do not store TestContext in a static member</source>
+        <target state="translated">TestContext를 정적 멤버에 저장하지 마세요</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="translated">TestInitialize 메서드보다 생성자 선호</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferConstructorOverTestInitializeTitle">
+        <source>Prefer constructors over TestInitialize methods</source>
+        <target state="translated">TestInitialize 메서드보다 생성자 선호</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferDisposeOverTestCleanupMessageFormat">
+        <source>Prefer 'Dispose' over TestCleanup methods</source>
+        <target state="translated">TestCleanup 메서드보다 'Dispose' 선호</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferDisposeOverTestCleanupTitle">
+        <source>Prefer 'Dispose' over TestCleanup methods</source>
+        <target state="translated">TestCleanup 메서드보다 'Dispose' 선호</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeMessageFormat">
+        <source>Prefer TestCleanup over 'Dispose' methods</source>
+        <target state="translated">'Dispose' 메서드보다 TestCleanup 선호</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestCleanupOverDisposeTitle">
+        <source>Prefer TestCleanup over 'Dispose' methods</source>
+        <target state="translated">'Dispose' 메서드보다 TestCleanup 선호</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorMessageFormat">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="translated">생성자보다 TestInitialize 메서드 선호</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferTestInitializeOverConstructorTitle">
+        <source>Prefer TestInitialize methods over constructors</source>
+        <target state="translated">생성자보다 TestInitialize 메서드 선호</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">테스트 프로젝트에서 공용으로 표시된 테스트 클래스만 사용하는 것이 좋습니다.</target>
@@ -352,17 +427,17 @@
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodDescription">
         <source>Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</source>
-        <target state="new">Test class should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'.</target>
+        <target state="translated">테스트 클래스에는 하나 이상의 테스트 메서드가 있거나 '[AssemblyInitialization]' 및/또는 '[AssemblyCleanup]'으로 표시된 메서드가 있는 'static'이어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodMessageFormat">
         <source>Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</source>
-        <target state="new">Test class '{0}' should have at least one test method or be 'static' with method(s) marked by '[AssemblyInitialization]' and/or '[AssemblyCleanup]'</target>
+        <target state="translated">테스트 클래스 '{0}'에 하나 이상의 테스트 메서드가 있거나 '[AssemblyInitialization]' 및/또는 '[AssemblyCleanup]'으로 표시된 메서드가 있는 'static'이어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestClassShouldHaveTestMethodTitle">
         <source>Test class should have test method</source>
-        <target state="new">Test class should have test method</target>
+        <target state="translated">테스트 클래스에는 테스트 메서드가 있어야 합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">

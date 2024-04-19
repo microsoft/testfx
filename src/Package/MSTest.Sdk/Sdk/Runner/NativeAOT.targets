@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildThisFileDirectory)Common.targets"/>
+
+  <Target Name="_MSTestSDKValidatePlaywright" BeforeTargets="Build">
+    <Error Condition=" '$(EnablePlaywright)' == 'true' " Text="Playwright currently doesn't support NativeAOT mode." />
+  </Target>
+
+  <!-- Core -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" IsImplicitlyDefined="True" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" IsImplicitlyDefined="True" />
+    <PackageReference Include="MSTest.Engine" Version="$(MSTestEngineVersion)" IsImplicitlyDefined="True" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestEngineVersion)" IsImplicitlyDefined="True" />
+  </ItemGroup>
+
+  <!-- Extensions -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " />
+    <!-- Support for -p:AotMsCodeCoverageInstrumentation="true" during dotnet publish for native aot -->
+    <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and $(PublishAot) == 'true' " />
+  </ItemGroup>
+
+</Project>

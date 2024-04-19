@@ -449,6 +449,22 @@ internal class TypeCache : MarshalByRefObject
                 else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
                 {
                     assemblyInfo.AssemblyCleanupMethod = methodInfo;
+                    if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+                    {
+                        if (!methodInfo.HasCorrectTimeout())
+                        {
+                            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+                            throw new TypeInspectionException(message);
+                        }
+
+                        var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
+                        DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
+                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = timeoutAttribute.Timeout;
+                    }
+                    else if (MSTestSettings.CurrentSettings.AssemblyCleanupTimeout > 0)
+                    {
+                        assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = MSTestSettings.CurrentSettings.AssemblyCleanupTimeout;
+                    }
                 }
             }
         }
@@ -578,6 +594,23 @@ internal class TypeCache : MarshalByRefObject
 
         if (isCleanupMethod)
         {
+            if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+            {
+                if (!methodInfo.HasCorrectTimeout())
+                {
+                    var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+                    throw new TypeInspectionException(message);
+                }
+
+                var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
+                DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
+                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+            }
+            else if (MSTestSettings.CurrentSettings.ClassCleanupTimeout > 0)
+            {
+                classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.ClassCleanupTimeout);
+            }
+
             if (isBase)
             {
                 if (_reflectionHelper.GetCustomAttribute<ClassCleanupAttribute>(methodInfo)!
@@ -628,6 +661,23 @@ internal class TypeCache : MarshalByRefObject
 
         if (hasTestInitialize)
         {
+            if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+            {
+                if (!methodInfo.HasCorrectTimeout())
+                {
+                    var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+                    throw new TypeInspectionException(message);
+                }
+
+                var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
+                DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
+                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+            }
+            else if (MSTestSettings.CurrentSettings.TestInitializeTimeout > 0)
+            {
+                classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestInitializeTimeout);
+            }
+
             if (!isBase)
             {
                 classInfo.TestInitializeMethod = methodInfo;
@@ -643,6 +693,23 @@ internal class TypeCache : MarshalByRefObject
 
         if (hasTestCleanup)
         {
+            if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+            {
+                if (!methodInfo.HasCorrectTimeout())
+                {
+                    var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
+                    throw new TypeInspectionException(message);
+                }
+
+                var timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
+                DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
+                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
+            }
+            else if (MSTestSettings.CurrentSettings.TestCleanupTimeout > 0)
+            {
+                classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, MSTestSettings.CurrentSettings.TestCleanupTimeout);
+            }
+
             if (!isBase)
             {
                 classInfo.TestCleanupMethod = methodInfo;

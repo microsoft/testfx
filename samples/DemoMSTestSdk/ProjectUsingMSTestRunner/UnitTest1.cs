@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-/// <summary>
-/// Repository version, created at build time.
-/// </summary>
-internal static class RepositoryVersion
+namespace ProjectUsingMSTestRunner;
+
+[TestClass]
+public class UnitTest1
 {
-    public const string Version = "3.3.0-dev";
+    [TestMethod]
+    public void TestMethod1()
+    {
+    }
 }

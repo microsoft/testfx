@@ -516,9 +516,9 @@ public class TestMethodInfoTests : TestContainer
         Verify(expectedErrorMessage == exception.Message);
 
 #if NETFRAMEWORK
-        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()", StringComparison.Ordinal));
+        Verify(exception.StackTraceInformation is null);
 #else
-        Verify(exception.StackTraceInformation.ErrorStackTrace.StartsWith("    at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestInitialize_WhenTestReturnsTaskFromException_DisplayProperException>", StringComparison.Ordinal));
+        Verify(exception.StackTraceInformation is null);
 #endif
     }
 
@@ -621,14 +621,14 @@ public class TestMethodInfoTests : TestContainer
         Verify(errorMessage == exception.Message);
 
 #if NETFRAMEWORK
-        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith("   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()", StringComparison.Ordinal))
+        if (exception.StackTraceInformation != null)
         {
-            throw new Exception($"Expected stack trace to start with '   at System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()' but\n{exception.StackTraceInformation.ErrorStackTrace}\n does not.");
+            throw new Exception($"Expected stack trace to be empty.");
         }
 #else
-        if (!exception.StackTraceInformation.ErrorStackTrace.StartsWith("   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>", StringComparison.Ordinal))
+        if (exception.StackTraceInformation != null)
         {
-            throw new Exception($"Expected stack trace to start with '   at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestMethodInfoTests.<>c.<<TestCleanup_WhenTestReturnsTaskFromException_DisplayProperException>' but\n{exception.StackTraceInformation.ErrorStackTrace}\n does not.");
+            throw new Exception($"Expected stack trace to be empty.");
         }
 #endif
     }

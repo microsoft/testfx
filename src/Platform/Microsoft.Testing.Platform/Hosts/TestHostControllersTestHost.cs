@@ -104,82 +104,89 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 #endif
             }
 
-            SystemEnvironmentVariableProvider systemEnvironmentVariableProvider = new(environment);
-            EnvironmentVariables environmentVariables = new(_loggerFactory)
-            {
-                CurrentProvider = systemEnvironmentVariableProvider,
-            };
-            await systemEnvironmentVariableProvider.UpdateAsync(environmentVariables);
-
-            foreach (ITestHostEnvironmentVariableProvider environmentVariableProvider in _testHostsInformation.EnvironmentVariableProviders)
-            {
-                environmentVariables.CurrentProvider = environmentVariableProvider;
-                await environmentVariableProvider.UpdateAsync(environmentVariables);
-            }
-
-            environmentVariables.CurrentProvider = null;
-
-            List<(IExtension, string)> failedValidations = [];
-            foreach (ITestHostEnvironmentVariableProvider hostEnvironmentVariableProvider in _testHostsInformation.EnvironmentVariableProviders)
-            {
-                var variableResult = await hostEnvironmentVariableProvider.ValidateTestHostEnvironmentVariablesAsync(environmentVariables);
-                if (!variableResult.IsValid)
-                {
-                    failedValidations.Add((hostEnvironmentVariableProvider, variableResult.ErrorMessage));
-                }
-            }
-
-            if (failedValidations.Count > 0)
-            {
-                StringBuilder displayErrorMessageBuilder = new();
-                StringBuilder logErrorMessageBuilder = new();
-                displayErrorMessageBuilder.AppendLine(PlatformResources.GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage);
-                logErrorMessageBuilder.AppendLine("The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:");
-                foreach ((IExtension extension, string errorMessage) in failedValidations)
-                {
-                    displayErrorMessageBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.EnvironmentVariableProviderFailedWithError, extension.DisplayName, extension.Uid, errorMessage));
-                    displayErrorMessageBuilder.AppendLine(CultureInfo.InvariantCulture, $"Provider '{extension.DisplayName}' (UID: {extension.Uid}) failed with error: {errorMessage}");
-                }
-
-                await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(displayErrorMessageBuilder.ToString()));
-                await _logger.LogErrorAsync(logErrorMessageBuilder.ToString());
-                return ExitCodes.InvalidPlatformSetup;
-            }
-
-            foreach (EnvironmentVariable envVar in environmentVariables.GetAll())
-            {
-                processStartInfo.EnvironmentVariables[envVar.Variable] = envVar.Value;
-            }
-
-            processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPID}", "1");
-
+            // Prepare the environment variables used by the test host
             string processCorrelationId = Guid.NewGuid().ToString("N");
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID}", processCorrelationId);
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", process.GetCurrentProcess()?.Id.ToString(CultureInfo.InvariantCulture) ?? "null pid");
+            processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPID}", "1");
             await _logger.LogDebugAsync($"{$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID}"} '{processCorrelationId}'");
 
-            // Check if we need to launch a test host controller process
-            NamedPipeServer? testHostControllerIpc = null;
+            NamedPipeServer testHostControllerIpc = new(
+                $"MONITORTOHOST_{Guid.NewGuid():N}",
+                HandleRequestAsync,
+                _environment,
+                _loggerFactory.CreateLogger<NamedPipeServer>(),
+                ServiceProvider.GetTask(), abortRun);
+            testHostControllerIpc.RegisterAllSerializers();
+            processStartInfo.EnvironmentVariables[$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}"] = testHostControllerIpc.PipeName.Name;
+
+            // Setup data consumers
+            await BuildAndRegisterTestControllersExtensionsAsync();
+
+            // Apply the ITestHostEnvironmentVariableProvider
+            if (_testHostsInformation.EnvironmentVariableProviders.Length > 0)
+            {
+                SystemEnvironmentVariableProvider systemEnvironmentVariableProvider = new(environment);
+                EnvironmentVariables environmentVariables = new(_loggerFactory)
+                {
+                    CurrentProvider = systemEnvironmentVariableProvider,
+                };
+                await systemEnvironmentVariableProvider.UpdateAsync(environmentVariables);
+
+                foreach (ITestHostEnvironmentVariableProvider environmentVariableProvider in _testHostsInformation.EnvironmentVariableProviders)
+                {
+                    environmentVariables.CurrentProvider = environmentVariableProvider;
+                    await environmentVariableProvider.UpdateAsync(environmentVariables);
+                }
+
+                environmentVariables.CurrentProvider = null;
+
+                List<(IExtension, string)> failedValidations = [];
+                foreach (ITestHostEnvironmentVariableProvider hostEnvironmentVariableProvider in _testHostsInformation.EnvironmentVariableProviders)
+                {
+                    var variableResult = await hostEnvironmentVariableProvider.ValidateTestHostEnvironmentVariablesAsync(environmentVariables);
+                    if (!variableResult.IsValid)
+                    {
+                        failedValidations.Add((hostEnvironmentVariableProvider, variableResult.ErrorMessage));
+                    }
+                }
+
+                if (failedValidations.Count > 0)
+                {
+                    StringBuilder displayErrorMessageBuilder = new();
+                    StringBuilder logErrorMessageBuilder = new();
+                    displayErrorMessageBuilder.AppendLine(PlatformResources.GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage);
+                    logErrorMessageBuilder.AppendLine("The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:");
+                    foreach ((IExtension extension, string errorMessage) in failedValidations)
+                    {
+                        displayErrorMessageBuilder.AppendLine(string.Format(CultureInfo.InvariantCulture, PlatformResources.EnvironmentVariableProviderFailedWithError, extension.DisplayName, extension.Uid, errorMessage));
+                        displayErrorMessageBuilder.AppendLine(CultureInfo.InvariantCulture, $"Provider '{extension.DisplayName}' (UID: {extension.Uid}) failed with error: {errorMessage}");
+                    }
+
+                    await platformOutputDevice.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(displayErrorMessageBuilder.ToString()));
+                    await _logger.LogErrorAsync(logErrorMessageBuilder.ToString());
+                    return ExitCodes.InvalidPlatformSetup;
+                }
+
+                foreach (EnvironmentVariable envVar in environmentVariables.GetAll())
+                {
+                    processStartInfo.EnvironmentVariables[envVar.Variable] = envVar.Value;
+                }
+            }
+
+            // Apply the ITestHostProcessLifetimeHandler.BeforeTestHostProcessStartAsync
             if (_testHostsInformation.LifetimeHandlers.Length > 0)
             {
-                testHostControllerIpc = new NamedPipeServer($"MONITORTOHOST_{Guid.NewGuid():N}", HandleRequestAsync,
-                    _environment, _loggerFactory.CreateLogger<NamedPipeServer>(),
-                    ServiceProvider.GetTask(),
-                    abortRun);
-                testHostControllerIpc.RegisterAllSerializers();
-                processStartInfo.EnvironmentVariables[$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}"] = testHostControllerIpc.PipeName.Name;
-
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
                     await lifetimeHandler.BeforeTestHostProcessStartAsync(abortRun);
                 }
             }
 
+            // Launch the test host process
             string testHostProcessStartupTime = _clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID}", testHostProcessStartupTime);
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID} '{testHostProcessStartupTime}'");
-
-            // Launch the test host process
             await _logger.LogDebugAsync($"Starting test host process");
             IProcess testHostProcess = process.Start(processStartInfo)
                 ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotStartProcessErrorMessage, processStartInfo.FileName));
@@ -192,41 +199,33 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
             await _logger.LogDebugAsync($"Started test host process '{testHostProcess.Id}' HasExited: {testHostProcess.HasExited}");
 
+            string? seconds = configuration[PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds];
+            int timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : int.Parse(seconds, CultureInfo.InvariantCulture);
+            await _logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds '{timeoutSeconds}'");
+
+            // Wait for the test host controller to connect
+            using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
+            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, abortRun))
+            {
+                await _logger.LogDebugAsync($"Wait connection from the test host process");
+                await testHostControllerIpc.WaitConnectionAsync(linkedToken.Token);
+            }
+
+            // Wait for the test host controller to send the PID of the test host process
+            using (var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout))
+            {
+                _waitForPid.Wait(timeout.Token);
+            }
+
+            await _logger.LogDebugAsync($"Fire OnTestHostProcessStartedAsync");
+
+            if (_testHostPID is null)
+            {
+                throw ApplicationStateGuard.Unreachable();
+            }
+
             if (_testHostsInformation.LifetimeHandlers.Length > 0)
             {
-                if (testHostControllerIpc is null)
-                {
-                    throw new InvalidOperationException("Unexpected null testHostControllerIpc");
-                }
-
-                string? seconds = configuration[PlatformConfigurationConstants.PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds];
-                int timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : int.Parse(seconds, CultureInfo.InvariantCulture);
-                await _logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds '{timeoutSeconds}'");
-
-                // Wait for the test host controller to connect
-                using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
-                using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, abortRun))
-                {
-                    await _logger.LogDebugAsync($"Wait connection from the test host process");
-                    await testHostControllerIpc.WaitConnectionAsync(linkedToken.Token);
-                }
-
-                // Wait for the test host controller to send the PID of the test host process
-                using (var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout))
-                {
-                    _waitForPid.Wait(timeout.Token);
-                }
-
-                // Setup data consumers
-                await BuildAndRegisterTestControllersExtensionsAsync();
-
-                await _logger.LogDebugAsync($"Fire OnTestHostProcessStartedAsync");
-
-                if (_testHostPID is null)
-                {
-                    throw ApplicationStateGuard.Unreachable();
-                }
-
                 // We don't block the host during the 'OnTestHostProcessStartedAsync' by-design, if 'ITestHostProcessLifetimeHandler' extensions needs
                 // to block the execution of the test host should add an in-process extension like an 'ITestApplicationLifecycleCallbacks' and
                 // wait for a connection/signal to return.

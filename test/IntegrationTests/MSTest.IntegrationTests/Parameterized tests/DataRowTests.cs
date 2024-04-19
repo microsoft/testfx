@@ -89,7 +89,7 @@ public class DataRowTests : CLITestBase
         var testResults = RunTests(testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(
+        VerifyE2E.TestsFailed(
             testResults,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
@@ -279,9 +279,6 @@ public class DataRowTests : CLITestBase
             "DataRow2 (20,String parameter,True,False)",
             "DataRow2 (30,String parameter,True,False)",
             "DataRow2 (40,String parameter,True,False)",
-            "DataRowTestMethodFailsWithInvalidArguments ()",
-            "DataRowTestMethodFailsWithInvalidArguments (2)",
-            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)",
             "DataRowTestDouble (10.01,20.01)",
             "DataRowTestDouble (10.02,20.02)",
             "DataRowTestMixed (1,10,10,10,10,10,10,10,10)",
@@ -311,6 +308,10 @@ public class DataRowTests : CLITestBase
             "SixteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
             "MultipleIntegersWrappedWithParams (1,2,3,4,5)");
 
-        VerifyE2E.FailedTestCount(testResults, 0);
+        VerifyE2E.TestsFailed(
+            testResults,
+            "DataRowTestMethodFailsWithInvalidArguments ()",
+            "DataRowTestMethodFailsWithInvalidArguments (2)",
+            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
     }
 }
