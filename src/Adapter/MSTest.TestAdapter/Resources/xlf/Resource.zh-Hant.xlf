@@ -26,14 +26,14 @@
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
-Test expected {2} parameter(s), with types '{3}',
-but received {4} argument(s), with types '{5}'.</target>
+        <target state="translated">無法執行測試方法 '{0}.{1}': 測試資料不符合方法參數。計數或類型不同。
+測試預期的 {2} 參數，類型為 '{3}'，
+但收到 {4} 引數，類型為 '{5}'。</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">
         <source>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</target>
+        <target state="translated">無法執行測試方法 '{0}.{1}': 方法具有參數，但未定義任何測試來源。使用 '[DataRow]'、'[DynamicData]' 或自訂 'ITestDataSource' 資料來源來提供測試資料。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">

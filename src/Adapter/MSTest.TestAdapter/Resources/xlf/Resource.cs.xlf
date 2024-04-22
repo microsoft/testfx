@@ -26,14 +26,14 @@
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
-Test expected {2} parameter(s), with types '{3}',
-but received {4} argument(s), with types '{5}'.</target>
+        <target state="translated">Testovací metodu {0}.{1} nejde spustit: Testovací data neodpovídají parametrům metody. Liší se počet nebo typy.
+Pro test se očekával tento počet parametrů: {2} s typy {3},
+byl však přijat tento počet argumentů: {4} s typy {5}.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">
         <source>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</target>
+        <target state="translated">Nelze spustit testovací metodu {0}.{1}: Metoda má parametry, ale nedefinuje žádný zdroj testu. K poskytování testovacích dat použijte zdroj dat [DataRow] nebo [DynamicData], případně vlastní zdroj dat ITestDataSource.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">
