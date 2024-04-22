@@ -3,20 +3,17 @@
 
 #if NETCOREAPP
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-#else
-using System.Reflection;
 #endif
 
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Services;
 
-internal sealed class CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process) : ITestApplicationModuleInfo
+internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment, IProcessHandler process) : ITestApplicationModuleInfo
 {
-    private readonly IRuntimeFeature _runtimeFeature = runtimeFeature;
     private readonly IEnvironment _environment = environment;
     private readonly IProcessHandler _process = process;
     private static readonly string[] MuxerExec = ["exec"];
@@ -48,14 +45,10 @@ internal sealed class CurrentTestApplicationModuleInfo(IRuntimeFeature runtimeFe
 #endif
     public string GetCurrentTestApplicationFullPath()
     {
-        string? moduleName = null;
-
-        if (_runtimeFeature.IsDynamicCodeSupported)
-        {
 #pragma warning disable IL3000
-            moduleName = Assembly.GetEntryAssembly()?.Location;
+        // This is empty in native app, or in single file app.
+        string? moduleName = Assembly.GetEntryAssembly()?.Location;
 #pragma warning restore IL3000
-        }
 
         moduleName = RoslynString.IsNullOrEmpty(moduleName)
             ? GetProcessPath(_environment, _process)
