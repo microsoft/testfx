@@ -26,14 +26,14 @@
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
-Test expected {2} parameter(s), with types '{3}',
-but received {4} argument(s), with types '{5}'.</target>
+        <target state="translated">테스트 메서드 '{0}{1}'을(를) 실행할 수 없음: 테스트 데이터가 메서드 매개 변수와 일치하지 않습니다. 개수 또는 형식이 다릅니다.
+테스트에 {2} 매개 변수로 ‘{3}’ 형식이 필요하지만,
+{4} 인수의 ‘{5}’ 형식을 받았습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">
         <source>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</target>
+        <target state="translated">테스트 메서드 '{0}{1}'을(를) 실행할 수 없음: 메서드에 매개 변수가 있지만 테스트 원본을 정의하지 않습니다. '[DataRow]', '[DynamicData]' 또는 사용자 지정 'ITestDataSource' 데이터 원본을 사용하여 테스트 데이터를 제공합니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">

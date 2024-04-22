@@ -26,14 +26,15 @@
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
-Test expected {2} parameter(s), with types '{3}',
-but received {4} argument(s), with types '{5}'.</target>
+        <target state="translated">テスト メソッド '{0}を実行できません。{1}': テスト データがメソッド パラメーターと一致しません。カウントまたは型が異なります。
+型 '{3}'、
+ を持つ、予期された {2} パラメーターをテストします
+ただし、型 '{5}' の引数 {4} を受け取りました。</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">
         <source>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</target>
+        <target state="translated">テスト メソッド '{0} を実行できません。{1}': メソッドにはパラメーターがありますが、テスト ソースは定義されていません。'[DataRow]'、'[DynamicData]'、カスタムの 'ITestDataSource' データ ソースを使用して、テスト データを提供します。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">

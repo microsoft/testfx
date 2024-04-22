@@ -26,14 +26,14 @@
         <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
 Test expected {2} parameter(s), with types '{3}',
 but received {4} argument(s), with types '{5}'.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
-Test expected {2} parameter(s), with types '{3}',
-but received {4} argument(s), with types '{5}'.</target>
+        <target state="translated">Не удается запустить метод теста "{0}.{1}": тестовые данные не соответствуют параметрам метода. Количество или типы отличаются.
+Число ожидаемых для теста параметров: {2} с типами "{3}",
+но число полученных аргументов: {4} с типами "{5}".</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotRunTestMethodNoDataError">
         <source>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</source>
-        <target state="new">Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</target>
+        <target state="translated">Не удается запустить метод теста "{0}.{1}": метод имеет параметры, но не определяет источник теста. Используйте "[DataRow]", "[DynamicData]" или настраиваемый источник данных "ITestDataSource" для предоставления тестовых данных.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">
