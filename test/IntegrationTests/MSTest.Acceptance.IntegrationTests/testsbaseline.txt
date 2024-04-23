@@ -192,3 +192,7 @@ MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.ThreadingT
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.ThreadingTests.TestMethodThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string) (net7.0)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.ThreadingTests.TestMethodThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string) (net8.0)
 MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.ValueTaskTests.CanUseValueTaskForAllKnownLocations()
+MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.InfoTests.UsingInfoArgument_OutputCorrectVersionForMSTest(string) (net462)
+MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.InfoTests.UsingInfoArgument_OutputCorrectVersionForMSTest(string) (net6.0)
+MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.InfoTests.UsingInfoArgument_OutputCorrectVersionForMSTest(string) (net7.0)
+MSTest.Acceptance.IntegrationTests.MSTest.Acceptance.IntegrationTests.InfoTests.UsingInfoArgument_OutputCorrectVersionForMSTest(string) (net8.0)
