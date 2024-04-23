@@ -182,9 +182,9 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     #region ToSettings tests.
 
-    public void ToSettingsShouldNotThrowExceptionWhenRunSettingsXmlUnderTagMSTestv2IsWrong()
+    public void ToSettingsShouldNotThrowExceptionWhenRunSettingsXmlUnderTagMSTestV2IsWrong()
     {
-        string runSettingxml =
+        string runSettingsXml =
               @"<MSTestV2>
                     <IgnoreTestImpact>true</IgnoreTestImpact>
                     <AssemblyResolutionBug>
@@ -196,7 +196,7 @@ public class MSTestAdapterSettingsTests : TestContainer
                     <CleanUpCommunicationChannels>false</CleanUpCommunicationChannels>
                   </MSTestV2>";
 
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingsXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
 
@@ -205,7 +205,7 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void ToSettingsShouldThrowExceptionWhenRunSettingsXmlIsWrong()
     {
-        string runSettingxml =
+        string runSettingsXml =
               @"<MSTestV2>
                     <AssemblyResolution>
                         <DirectoryBug  path=""C:\\MsTest\\Adapter"" includeSubDirectories =""true"" />
@@ -214,7 +214,7 @@ public class MSTestAdapterSettingsTests : TestContainer
                     </AssemblyResolution>
                   </MSTestV2>";
 
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingsXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
 
@@ -230,10 +230,10 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void DeploymentEnabledIsByDefaultTrueWhenNotSpecified()
     {
-        string runSettingxml =
+        string runSettingsXml =
             @"<MSTestV2>
                   </MSTestV2>";
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingsXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
@@ -242,11 +242,11 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void DeploymentEnabledShouldBeConsumedFromRunSettingsWhenSpecified()
     {
-        string runSettingxml =
+        string runSettingsXml =
             @"<MSTestV2>
                         <DeploymentEnabled>False</DeploymentEnabled>
                   </MSTestV2>";
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingsXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
@@ -259,10 +259,10 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void DeployTestSourceDependenciesIsEnabledByDefault()
     {
-        string runSettingxml =
+        string runSettingsXml =
             @"<MSTestV2>
                   </MSTestV2>";
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingsXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
@@ -271,11 +271,11 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void DeployTestSourceDependenciesWhenFalse()
     {
-        string runSettingxml =
+        string runSettingsXml =
             @"<MSTestV2>
                      <DeployTestSourceDependencies>False</DeployTestSourceDependencies>
                   </MSTestV2>";
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingsXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
@@ -284,11 +284,11 @@ public class MSTestAdapterSettingsTests : TestContainer
 
     public void DeployTestSourceDependenciesWhenTrue()
     {
-        string runSettingxml =
+        string runSettingsXml =
             @"<MSTestV2>
                      <DeployTestSourceDependencies>True</DeployTestSourceDependencies>
                   </MSTestV2>";
-        StringReader stringReader = new(runSettingxml);
+        StringReader stringReader = new(runSettingsXml);
         XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);

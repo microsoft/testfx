@@ -301,12 +301,12 @@ public class TestMethodRunnerTests : TestContainer
 
         UTF.DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
 
-        var attribs = new Attribute[] { dataSourceAttribute };
+        var attributes = new Attribute[] { dataSourceAttribute };
 
         TestDataSource testDataSource = new();
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
 
         var results = testMethodRunner.RunTestMethod();
@@ -333,10 +333,10 @@ public class TestMethodRunnerTests : TestContainer
             dummyIntData,
             dummyStringData);
 
-        var attribs = new Attribute[] { dataRowAttribute };
+        var attributes = new Attribute[] { dataRowAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
 
         var results = testMethodRunner.RunTestMethod();
         Verify(results[0].Outcome == AdapterTestOutcome.Inconclusive);
@@ -349,10 +349,10 @@ public class TestMethodRunnerTests : TestContainer
 
         UTF.DataSourceAttribute dataSourceAttribute = new("DummyConnectionString", "DummyTableName");
 
-        var attribs = new Attribute[] { dataSourceAttribute };
+        var attributes = new Attribute[] { dataSourceAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
 
         var results = testMethodRunner.RunTestMethod();
@@ -375,10 +375,10 @@ public class TestMethodRunnerTests : TestContainer
             dummyIntData,
             dummyStringData);
 
-        var attribs = new Attribute[] { dataSourceAttribute, dataRowAttribute };
+        var attributes = new Attribute[] { dataSourceAttribute, dataRowAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
 
         var results = testMethodRunner.RunTestMethod();
@@ -402,10 +402,10 @@ public class TestMethodRunnerTests : TestContainer
             DisplayName = "DataRowTestDisplayName",
         };
 
-        var attribs = new Attribute[] { dataRowAttribute };
+        var attributes = new Attribute[] { dataRowAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
 
         var results = testMethodRunner.RunTestMethod();
 
@@ -425,10 +425,10 @@ public class TestMethodRunnerTests : TestContainer
             dummyIntData,
             dummyStringData);
 
-        var attribs = new Attribute[] { dataRowAttribute };
+        var attributes = new Attribute[] { dataRowAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
 
         var results = testMethodRunner.RunTestMethod();
 
@@ -451,10 +451,10 @@ public class TestMethodRunnerTests : TestContainer
         UTF.DataRowAttribute dataRowAttribute1 = new(dummyIntData1);
         UTF.DataRowAttribute dataRowAttribute2 = new(dummyIntData2);
 
-        var attribs = new Attribute[] { dataRowAttribute1, dataRowAttribute2 };
+        var attributes = new Attribute[] { dataRowAttribute1, dataRowAttribute2 };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attribs);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
 
         var results = testMethodRunner.RunTestMethod();
         Verify(results[0].ResultFiles.ToList().Contains("C:\\temp.txt"));

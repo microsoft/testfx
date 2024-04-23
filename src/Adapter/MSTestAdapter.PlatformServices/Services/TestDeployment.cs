@@ -149,7 +149,7 @@ public class TestDeployment : ITestDeployment
         RunDirectories = _deploymentUtility.CreateDeploymentDirectories(runContext);
 
         // Deployment directories are created but deployment will not happen.
-        // This is added just to keep consistency with MSTestv1 behavior.
+        // This is added just to keep consistency with MSTest v1 behavior.
         if (!hasDeploymentItems)
         {
             return false;

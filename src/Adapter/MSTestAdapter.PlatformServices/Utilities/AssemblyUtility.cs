@@ -163,7 +163,7 @@ internal class AssemblyUtility
                 string satellite = Path.ChangeExtension(Path.GetFileName(assemblyPath), "resources" + extension);
                 string satellitePath = Path.Combine(assemblyDir, Path.Combine(dir, satellite));
 
-                // We don't use Assembly.LoadFrom/Assembly.GetSatelliteAssebmlies because this is rather slow
+                // We don't use Assembly.LoadFrom/Assembly.GetSatelliteAssemblies because this is rather slow
                 // (1620ms for 266 cultures when directories do not exist).
                 if (File.Exists(satellitePath))
                 {

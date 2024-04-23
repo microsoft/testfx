@@ -444,7 +444,7 @@ public class TypeCacheTests : TestContainer
         var type = typeof(DummyDerivedTestClassWithInitializeMethods);
         var baseType = typeof(DummyTestClassWithInitializeMethods);
 
-        var testMethod = new TestMethod("TestMehtod", type.FullName, "A", false);
+        var testMethod = new TestMethod("TestMethod", type.FullName, "A", false);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<UTF.TestClassAttribute>(type, true)).Returns(true);
@@ -494,7 +494,7 @@ public class TypeCacheTests : TestContainer
         var type = typeof(DummyDerivedTestClassWithCleanupMethods);
 
         var baseType = typeof(DummyTestClassWithCleanupMethods);
-        var testMethod = new TestMethod("TestMehtod", type.FullName, "A", false);
+        var testMethod = new TestMethod("TestMethod", type.FullName, "A", false);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<UTF.TestClassAttribute>(type, true)).Returns(true);
@@ -583,7 +583,7 @@ public class TypeCacheTests : TestContainer
     {
         var grandparentType = typeof(DummyBaseTestClassWithInitAndCleanupMethods);
         var parentType = typeof(DummyChildBaseTestClassWithInitAndCleanupMethods);
-        var type = typeof(DummyTestClassWithParentAndGrandparentInitAndCleanupMeethods);
+        var type = typeof(DummyTestClassWithParentAndGrandparentInitAndCleanupMethods);
 
         var grandparentInitMethod = grandparentType.GetMethod("ClassInit");
         var grandparentCleanupMethod = grandparentType.GetMethod("ClassCleanup");
@@ -785,7 +785,7 @@ public class TypeCacheTests : TestContainer
     {
         var type = typeof(DummyDerivedTestClassWithInitializeMethods);
         var baseType = typeof(DummyTestClassWithInitializeMethods);
-        var testMethod = new TestMethod("TestMehtod", type.FullName, "A", isAsync: false);
+        var testMethod = new TestMethod("TestMethod", type.FullName, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<UTF.TestClassAttribute>(type, true)).Returns(true);
@@ -806,7 +806,7 @@ public class TypeCacheTests : TestContainer
     {
         var type = typeof(DummyDerivedTestClassWithCleanupMethods);
         var baseType = typeof(DummyTestClassWithCleanupMethods);
-        var testMethod = new TestMethod("TestMehtod", type.FullName, "A", isAsync: false);
+        var testMethod = new TestMethod("TestMethod", type.FullName, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<UTF.TestClassAttribute>(type, true)).Returns(true);
@@ -944,14 +944,14 @@ public class TypeCacheTests : TestContainer
 
     public void GetTestMethodInfoWhenTimeoutAttributeNotSetShouldReturnTestMethodInfoWithGlobalTimeout()
     {
-        string runSettingxml =
+        string runSettingsXml =
             @"<RunSettings>
                     <MSTestV2>
                         <TestTimeout>4000</TestTimeout>
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias));
 
         var type = typeof(DummyTestClassWithTestMethods);
         var methodInfo = type.GetMethod("TestMethod");
@@ -967,14 +967,14 @@ public class TypeCacheTests : TestContainer
 
     public void GetTestMethodInfoWhenTimeoutAttributeSetShouldReturnTimeoutBasedOnAttributeEvenIfGlobalTimeoutSet()
     {
-        string runSettingxml =
+        string runSettingsXml =
             @"<RunSettings>
                     <MSTestV2>
                         <TestTimeout>4000</TestTimeout>
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias));
 
         var type = typeof(DummyTestClassWithTestMethods);
         var methodInfo = type.GetMethod("TestMethodWithTimeout");
@@ -993,14 +993,14 @@ public class TypeCacheTests : TestContainer
 
     public void GetTestMethodInfoForInvalidGLobalTimeoutShouldReturnTestMethodInfoWithTimeoutZero()
     {
-        string runSettingxml =
+        string runSettingsXml =
             @"<RunSettings>
                     <MSTestV2>
                         <TestTimeout>30.5</TestTimeout>
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias));
 
         var type = typeof(DummyTestClassWithTestMethods);
         var methodInfo = type.GetMethod("TestMethod");
@@ -1581,7 +1581,7 @@ public class TypeCacheTests : TestContainer
         {
         }
 
-        public void TestMehtod()
+        public void TestMethod()
         {
         }
     }
@@ -1593,7 +1593,7 @@ public class TypeCacheTests : TestContainer
         {
         }
 
-        public void TestMehtod()
+        public void TestMethod()
         {
         }
     }
@@ -1641,7 +1641,7 @@ public class TypeCacheTests : TestContainer
     }
 
     [DummyTestClass]
-    private class DummyTestClassWithParentAndGrandparentInitAndCleanupMeethods : DummyChildBaseTestClassWithInitAndCleanupMethods
+    private class DummyTestClassWithParentAndGrandparentInitAndCleanupMethods : DummyChildBaseTestClassWithInitAndCleanupMethods
     {
         public void TestMethod()
         {

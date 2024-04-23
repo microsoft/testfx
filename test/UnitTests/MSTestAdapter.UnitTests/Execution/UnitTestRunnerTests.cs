@@ -52,7 +52,7 @@ public class UnitTestRunnerTests : TestContainer
 
     public void ConstructorShouldPopulateSettings()
     {
-        string runSettingxml =
+        string runSettingsXml =
              @"<RunSettings>
                      <MSTest>
                         <ForcedLegacyMode>True</ForcedLegacyMode>
@@ -70,7 +70,7 @@ public class UnitTestRunnerTests : TestContainer
                 }
             });
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName);
         var assemblyEnumerator = new UnitTestRunner(adapterSettings);
 
         Verify(MSTestSettings.CurrentSettings.ForcedLegacyMode);
@@ -88,7 +88,7 @@ public class UnitTestRunnerTests : TestContainer
         Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
-    public void RunSingleTestShouldThrowIfTestRunParamtersIsNull()
+    public void RunSingleTestShouldThrowIfTestRunParametersIsNull()
     {
         var testMethod = new TestMethod("M", "C", "A", isAsync: false);
         void A() => _unitTestRunner.RunSingleTest(testMethod, null);
@@ -322,7 +322,7 @@ public class UnitTestRunnerTests : TestContainer
 
     private MSTestSettings GetSettingsWithDebugTrace(bool captureDebugTraceValue)
     {
-        string runSettingxml =
+        string runSettingsXml =
              @"<RunSettings>
                      <MSTest>
                         <CaptureTraceOutput>" + captureDebugTraceValue + @"</CaptureTraceOutput>
@@ -339,7 +339,7 @@ public class UnitTestRunnerTests : TestContainer
                 }
             });
 
-        return MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        return MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsName);
     }
 
     #endregion

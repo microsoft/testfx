@@ -298,7 +298,7 @@ public class TestExecutionManager
             // Parallel and not parallel sets.
             testSets = testsToRun.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, false));
 
-            var parallelizableTestSet = testSets.FirstOrDefault(g => g.Key == false);
+            var parallelizableTestSet = testSets.FirstOrDefault(g => !g.Key);
             var nonParallelizableTestSet = testSets.FirstOrDefault(g => g.Key);
 
             if (parallelizableTestSet != null)
