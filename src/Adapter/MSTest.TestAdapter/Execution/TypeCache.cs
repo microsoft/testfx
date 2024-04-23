@@ -70,24 +70,24 @@ internal class TypeCache : MarshalByRefObject
     /// <summary>
     /// Gets Class Info cache which has cleanup methods to execute.
     /// </summary>
-    public TestClassInfo[] ClassInfoListWithExecutableCleanupMethods =>
-        _classInfoCache.Values.Where(classInfo => classInfo.HasExecutableCleanupMethod).ToArray();
+    public IEnumerable<TestClassInfo> ClassInfoListWithExecutableCleanupMethods
+        => _classInfoCache.Values.Where(classInfo => classInfo.HasExecutableCleanupMethod);
 
     /// <summary>
     /// Gets Assembly Info cache which has cleanup methods to execute.
     /// </summary>
-    public TestAssemblyInfo[] AssemblyInfoListWithExecutableCleanupMethods =>
-        _testAssemblyInfoCache.Values.Where(assemblyInfo => assemblyInfo.HasExecutableCleanupMethod).ToArray();
+    public IEnumerable<TestAssemblyInfo> AssemblyInfoListWithExecutableCleanupMethods
+        => _testAssemblyInfoCache.Values.Where(assemblyInfo => assemblyInfo.HasExecutableCleanupMethod);
 
     /// <summary>
     /// Gets the set of cached assembly info values.
     /// </summary>
-    public TestAssemblyInfo[] AssemblyInfoCache => _testAssemblyInfoCache.Values.ToArray();
+    public ICollection<TestAssemblyInfo> AssemblyInfoCache => _testAssemblyInfoCache.Values;
 
     /// <summary>
     /// Gets the set of cached class info values.
     /// </summary>
-    public TestClassInfo[] ClassInfoCache => _classInfoCache.Values.ToArray();
+    public ICollection<TestClassInfo> ClassInfoCache => _classInfoCache.Values;
 
     /// <summary>
     /// Get the test method info corresponding to the parameter test Element.

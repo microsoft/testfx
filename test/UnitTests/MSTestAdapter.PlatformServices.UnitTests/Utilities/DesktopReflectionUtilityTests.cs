@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NET462
+using System.Collections;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -21,13 +22,13 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        Verify(attributes.Count == 2);
 
         var expectedAttributes = new string[] { "DummyA : a1", "DummyA : a2" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    internal static string[] GetAttributeValuePairs(object[] attributes)
+    internal static string[] GetAttributeValuePairs(IEnumerable attributes)
     {
         var attribValuePairs = new List<string>();
         foreach (var attrib in attributes)

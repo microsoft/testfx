@@ -158,18 +158,18 @@ internal class TypeEnumerator
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
         };
 
-        var traits = _reflectHelper.GetTestPropertiesAsTraits(method);
+        var traits = _reflectHelper.GetTestPropertiesAsTraits(method).ToList();
 
         var ownerTrait = _reflectHelper.GetTestOwnerAsTraits(method);
         if (ownerTrait != null)
         {
-            traits = traits.Concat(new[] { ownerTrait });
+            traits.Add(ownerTrait);
         }
 
         var priorityTrait = _reflectHelper.GetTestPriorityAsTraits(testElement.Priority);
         if (priorityTrait != null)
         {
-            traits = traits.Concat(new[] { priorityTrait });
+            traits.Add(priorityTrait);
         }
 
         testElement.Traits = traits.ToArray();

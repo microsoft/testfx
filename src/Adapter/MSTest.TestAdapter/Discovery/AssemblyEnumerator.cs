@@ -122,7 +122,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The file name of the assembly.</param>
     /// <param name="warningMessages">Contains warnings if any, that need to be passed back to the caller.</param>
     /// <returns>Gets the types defined in the provided assembly.</returns>
-    internal static Type?[] GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
+    internal static IReadOnlyList<Type> GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
     {
         var types = new List<Type>();
         try
@@ -150,7 +150,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return ex.Types!;
         }
 
-        return types.ToArray();
+        return types;
     }
 
     /// <summary>
@@ -278,8 +278,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
     private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
     {
         var methodInfo = testMethodInfo.MethodInfo;
-        var testDataSources = ReflectHelper.GetAttributes<Attribute>(methodInfo, false)?.Where(a => a is FrameworkITestDataSource).OfType<FrameworkITestDataSource>().ToArray();
-        if (testDataSources == null || testDataSources.Length == 0)
+        var testDataSources = ReflectHelper.GetAttributes<Attribute>(methodInfo, false)?.OfType<FrameworkITestDataSource>();
+        if (testDataSources == null || !testDataSources.Any())
         {
             return false;
         }
@@ -296,7 +296,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, FrameworkITestDataSource[] testDataSources,
+    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, IEnumerable<FrameworkITestDataSource> testDataSources,
         List<UnitTestElement> tests)
     {
         foreach (var dataSource in testDataSources)

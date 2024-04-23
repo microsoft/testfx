@@ -88,7 +88,7 @@ public class AssemblyEnumeratorTests : TestContainer
         // Setup mocks
         mockAssembly.Setup(a => a.DefinedTypes).Returns(new List<TypeInfo>());
 
-        Verify(AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings).Length == 0);
+        Verify(AssemblyEnumerator.GetTypes(mockAssembly.Object, string.Empty, _warnings).Count == 0);
     }
 
     public void GetTypesShouldReturnSetOfDefinedTypes()

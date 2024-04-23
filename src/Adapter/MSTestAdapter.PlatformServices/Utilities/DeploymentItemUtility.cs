@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP
 
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -61,7 +62,7 @@ internal class DeploymentItemUtility
     /// <param name="classLevelDeploymentItems"> The class level deployment items. </param>
     /// <param name="warnings"> The warnings. </param>
     /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>.of deployment item information. </returns>
-    internal KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, IList<DeploymentItem> classLevelDeploymentItems,
+    internal KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, IEnumerable<DeploymentItem> classLevelDeploymentItems,
         ICollection<string> warnings)
     {
         var testLevelDeploymentItems = GetDeploymentItems(_reflectionUtility.GetCustomAttributes(method, typeof(DeploymentItemAttribute)), warnings);
@@ -177,7 +178,7 @@ internal class DeploymentItemUtility
         return false;
     }
 
-    private static List<DeploymentItem> GetDeploymentItems(object[] deploymentItemAttributes, ICollection<string> warnings)
+    private static List<DeploymentItem> GetDeploymentItems(IEnumerable deploymentItemAttributes, ICollection<string> warnings)
     {
         var deploymentItems = new List<DeploymentItem>();
 
@@ -198,7 +199,7 @@ internal class DeploymentItemUtility
 
     [return: NotNullIfNotNull(nameof(deploymentItemList1))]
     [return: NotNullIfNotNull(nameof(deploymentItemList2))]
-    private static IList<DeploymentItem>? Concat(IList<DeploymentItem>? deploymentItemList1, IList<DeploymentItem>? deploymentItemList2)
+    private static IEnumerable<DeploymentItem>? Concat(IEnumerable<DeploymentItem>? deploymentItemList1, IEnumerable<DeploymentItem>? deploymentItemList2)
     {
         if (deploymentItemList1 == null && deploymentItemList2 == null)
         {
@@ -237,9 +238,9 @@ internal class DeploymentItemUtility
             KeyValuePair<string, string>[];
     }
 
-    private static KeyValuePair<string, string>[]? ToKeyValuePairs(IList<DeploymentItem> deploymentItemList)
+    private static KeyValuePair<string, string>[]? ToKeyValuePairs(IEnumerable<DeploymentItem> deploymentItemList)
     {
-        if (deploymentItemList == null || deploymentItemList.Count == 0)
+        if (deploymentItemList == null || !deploymentItemList.Any())
         {
             return null;
         }

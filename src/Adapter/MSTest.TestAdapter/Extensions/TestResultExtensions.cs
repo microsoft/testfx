@@ -15,32 +15,37 @@ public static class TestResultExtensions
     /// <param name="testResults">The test framework's TestResult object array.</param>
     /// <returns>The serializable UnitTestResult object array.</returns>
     public static UnitTestResult[] ToUnitTestResults(this UTF.TestResult[] testResults)
+        => ToUnitTestResults((IReadOnlyCollection<UTF.TestResult>)testResults);
+
+    internal static UnitTestResult[] ToUnitTestResults(this IReadOnlyCollection<UTF.TestResult> testResults)
     {
-        UnitTestResult[] unitTestResults = new UnitTestResult[testResults.Length];
+        UnitTestResult[] unitTestResults = new UnitTestResult[testResults.Count];
 
-        for (int i = 0; i < testResults.Length; ++i)
+        int i = 0;
+        foreach (var testResult in testResults)
         {
-            UnitTestOutcome outcome = testResults[i].Outcome.ToUnitTestOutcome();
+            UnitTestOutcome outcome = testResult.Outcome.ToUnitTestOutcome();
 
-            UnitTestResult unitTestResult = testResults[i].TestFailureException != null
+            UnitTestResult unitTestResult = testResult.TestFailureException is { } testFailureException
                 ? new UnitTestResult(
                     new TestFailedException(
                         outcome,
-                        testResults[i].TestFailureException!.TryGetMessage(),
-                        testResults[i].TestFailureException is TestFailedException testException ? testException.StackTraceInformation : testResults[i].TestFailureException!.TryGetStackTraceInformation()))
+                        testFailureException.TryGetMessage(),
+                        testFailureException is TestFailedException testException ? testException.StackTraceInformation : testFailureException.TryGetStackTraceInformation()))
                 : new UnitTestResult { Outcome = outcome };
-            unitTestResult.StandardOut = testResults[i].LogOutput;
-            unitTestResult.StandardError = testResults[i].LogError;
-            unitTestResult.DebugTrace = testResults[i].DebugTrace;
-            unitTestResult.TestContextMessages = testResults[i].TestContextMessages;
-            unitTestResult.Duration = testResults[i].Duration;
-            unitTestResult.DisplayName = testResults[i].DisplayName;
-            unitTestResult.DatarowIndex = testResults[i].DatarowIndex;
-            unitTestResult.ResultFiles = testResults[i].ResultFiles;
-            unitTestResult.ExecutionId = testResults[i].ExecutionId;
-            unitTestResult.ParentExecId = testResults[i].ParentExecId;
-            unitTestResult.InnerResultsCount = testResults[i].InnerResultsCount;
+            unitTestResult.StandardOut = testResult.LogOutput;
+            unitTestResult.StandardError = testResult.LogError;
+            unitTestResult.DebugTrace = testResult.DebugTrace;
+            unitTestResult.TestContextMessages = testResult.TestContextMessages;
+            unitTestResult.Duration = testResult.Duration;
+            unitTestResult.DisplayName = testResult.DisplayName;
+            unitTestResult.DatarowIndex = testResult.DatarowIndex;
+            unitTestResult.ResultFiles = testResult.ResultFiles;
+            unitTestResult.ExecutionId = testResult.ExecutionId;
+            unitTestResult.ParentExecId = testResult.ParentExecId;
+            unitTestResult.InnerResultsCount = testResult.InnerResultsCount;
             unitTestResults[i] = unitTestResult;
+            i++;
         }
 
         return unitTestResults;

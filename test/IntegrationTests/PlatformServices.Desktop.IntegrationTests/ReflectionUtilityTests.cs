@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
 using System.Reflection;
 
 using FluentAssertions;
@@ -273,7 +274,7 @@ public class ReflectionUtilityTests : TestContainer
         return null;
     }
 
-    private static string[] GetAttributeValuePairs(object[] attributes)
+    private static string[] GetAttributeValuePairs(IEnumerable attributes)
     {
         var attributeValuePairs = new List<string>();
         foreach (var attribute in attributes)

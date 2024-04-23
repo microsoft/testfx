@@ -272,7 +272,7 @@ internal abstract class DeploymentUtilityBase
     /// <param name="isDirectory">Is this a directory.</param>
     /// <returns>Paths to items to deploy.</returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    protected string[]? GetFullPathToFilesCorrespondingToDeploymentItem(DeploymentItem deploymentItem, string testSource, string resultsDirectory, IList<string> warnings, out bool isDirectory)
+    protected List<string>? GetFullPathToFilesCorrespondingToDeploymentItem(DeploymentItem deploymentItem, string testSource, string resultsDirectory, IList<string> warnings, out bool isDirectory)
     {
         DebugEx.Assert(deploymentItem != null, "deploymentItem should not be null.");
         DebugEx.Assert(!StringEx.IsNullOrEmpty(testSource), "testSource should not be null or empty.");
@@ -283,7 +283,8 @@ internal abstract class DeploymentUtilityBase
             if (isDirectory)
             {
                 return FileUtility.AddFilesFromDirectory(
-                    directory!, (deployDirectory) => string.Equals(deployDirectory, resultsDirectory, StringComparison.OrdinalIgnoreCase), false).ToArray();
+                    directory!,
+                    (deployDirectory) => string.Equals(deployDirectory, resultsDirectory, StringComparison.OrdinalIgnoreCase), false);
             }
 
             if (IsDeploymentItemSourceAFile(deploymentItem.SourcePath, testSource, out string fileName))
@@ -375,7 +376,7 @@ internal abstract class DeploymentUtilityBase
     {
         string? configFile = GetConfigFile(testSource);
 
-        if (StringEx.IsNullOrEmpty(configFile) == false)
+        if (!StringEx.IsNullOrEmpty(configFile))
         {
             DeploymentItemUtility.AddDeploymentItem(deploymentItems, new DeploymentItem(configFile));
         }

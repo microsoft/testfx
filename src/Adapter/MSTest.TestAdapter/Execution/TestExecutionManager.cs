@@ -154,7 +154,8 @@ public class TestExecutionManager
         return new();
     }
 
-    internal void SendTestResults(TestCase test, UnitTestResult[] unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime, ITestExecutionRecorder testExecutionRecorder)
+    internal void SendTestResults(TestCase test, IEnumerable<UnitTestResult> unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime,
+        ITestExecutionRecorder testExecutionRecorder)
     {
         foreach (var unitTestResult in unitTestResults)
         {
@@ -199,7 +200,8 @@ public class TestExecutionManager
 
     private static bool MatchTestFilter(ITestCaseFilterExpression? filterExpression, TestCase test, TestMethodFilter testMethodFilter)
     {
-        if (filterExpression != null && filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)) == false)
+        if (filterExpression != null
+            && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
         {
             // Skip test if not fitting filter criteria.
             return false;
@@ -235,15 +237,12 @@ public class TestExecutionManager
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
         // Default test set is filtered tests based on user provided filter criteria
-        ICollection<TestCase> testsToRun = Array.Empty<TestCase>();
         var filterExpression = TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
         if (filterHasError)
         {
             // Bail out without processing everything else below.
             return;
         }
-
-        testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, TestMethodFilter)).ToArray();
 
         // this is done so that appropriate values of test context properties are set at source level
         // and are merged with session level parameters
@@ -270,6 +269,7 @@ public class TestExecutionManager
         var sourceSettings = (sourceSettingsProvider != null) ? TestAssemblySettingsProvider.GetSettings(source) : new TestAssemblySettings();
         var parallelWorkers = sourceSettings.Workers;
         var parallelScope = sourceSettings.Scope;
+        var testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, TestMethodFilter)).ToArray();
         InitializeClassCleanupManager(source, testRunner, testsToRun, sourceSettings);
 
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
@@ -356,10 +356,12 @@ public class TestExecutionManager
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed tests belonging to source {0}", source);
     }
 
-    private static void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, ICollection<TestCase> testsToRun, TestAssemblySettings sourceSettings)
+    private static void InitializeClassCleanupManager(string source, UnitTestRunner testRunner, IEnumerable<TestCase> testsToRun,
+        TestAssemblySettings sourceSettings)
     {
         try
         {
+            // We need the call to ToArray as the test runner is serializable
             var unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
             testRunner.InitializeClassCleanupManager(unitTestElements, (int)sourceSettings.ClassCleanupLifecycle);
         }
