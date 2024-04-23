@@ -89,7 +89,7 @@ public sealed class TestApplication : ITestApplication
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, systemEnvironment);
         TestHostControllerInfo testHostControllerInfo = new(parseResult);
         SystemProcessHandler systemProcess = new();
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), systemEnvironment, systemProcess);
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(systemEnvironment, systemProcess);
 
         // Create the UnhandledExceptionHandler that will be set inside the TestHostBuilder.
         LazyInitializer.EnsureInitialized(ref s_unhandledExceptionHandler, () => new UnhandledExceptionHandler(systemEnvironment, new SystemConsole(), parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)));
