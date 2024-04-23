@@ -35,7 +35,7 @@ public sealed class PublishAotNonNativeTests : AcceptanceTestBase
         // In the real-world issue, access to path C:\Program Files\dotnet\ is denied, but we run this from a local .dotnet folder, where we have write access.
         // So instead of relying on the test run failing because of AccessDenied, we check the output, and see where TestResults were placed.
         // They must not be next to the local dotnet.exe.
-        string testsFailed = "error run failed: Tests failed:";
+        string testsFailed = "error : Tests failed:";
         compilationResult.AssertOutputContains(testsFailed);
         string failedResultsLine = compilationResult.StandardOutputLines.Single(l => l.Contains(testsFailed));
         if (failedResultsLine.Contains("dotnet"))
