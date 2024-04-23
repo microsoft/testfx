@@ -43,7 +43,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         TestApplicationOptions testApplicationOptions,
         IUnhandledExceptionsHandler unhandledExceptionsHandler)
     {
-        _testHostBuilder = new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler()));
+        _testHostBuilder = new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()));
         _args = args;
         _createBuilderStart = createBuilderStart;
         _loggingState = loggingState;

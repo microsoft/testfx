@@ -34,7 +34,7 @@ public class ConfigurationManagerTests : TestBase
         fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
             .Returns(new MemoryStream(Encoding.UTF8.GetBytes(jsonFileConfig)));
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler());
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() => new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
         IConfiguration configuration = await configurationManager.BuildAsync(null);
@@ -63,7 +63,7 @@ public class ConfigurationManagerTests : TestBase
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open)).Returns(new MemoryStream(Encoding.UTF8.GetBytes(string.Empty)));
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler());
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() =>
             new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
@@ -88,7 +88,7 @@ public class ConfigurationManagerTests : TestBase
         Mock<IFileLoggerProvider> loggerProviderMock = new();
         loggerProviderMock.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(loggerMock.Object);
 
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler());
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() =>
             new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
@@ -101,7 +101,7 @@ public class ConfigurationManagerTests : TestBase
 
     public async ValueTask BuildAsync_EmptyConfigurationSources_ThrowsException()
     {
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler());
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo);
         await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null));
     }
@@ -111,7 +111,7 @@ public class ConfigurationManagerTests : TestBase
         Mock<IConfigurationSource> mockConfigurationSource = new();
         mockConfigurationSource.Setup(x => x.IsEnabledAsync()).ReturnsAsync(false);
 
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler());
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() => mockConfigurationSource.Object);
 
@@ -130,7 +130,7 @@ public class ConfigurationManagerTests : TestBase
             ConfigurationProvider = mockConfigurationProvider.Object,
         };
 
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler());
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(new SystemFileSystem(), testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() => fakeConfigurationSource);
 
