@@ -26,9 +26,9 @@ public class ReflectionOperations : IReflectionOperations
     public object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
     {
 #if NETFRAMEWORK
-        return ReflectionUtility.GetCustomAttributes(memberInfo, inherit);
+        return ReflectionUtility.GetCustomAttributes(memberInfo, inherit).ToArray();
 #else
-        return memberInfo.GetCustomAttributes(inherit).ToArray();
+        return memberInfo.GetCustomAttributes(inherit);
 #endif
     }
 
@@ -43,9 +43,9 @@ public class ReflectionOperations : IReflectionOperations
     public object[]? GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
     {
 #if NETFRAMEWORK
-        return ReflectionUtility.GetCustomAttributes(memberInfo, type, inherit);
+        return ReflectionUtility.GetCustomAttributes(memberInfo, type, inherit).ToArray();
 #else
-        return memberInfo.GetCustomAttributes(type, inherit).ToArray();
+        return memberInfo.GetCustomAttributes(type, inherit);
 #endif
     }
 
@@ -58,7 +58,7 @@ public class ReflectionOperations : IReflectionOperations
     public object[] GetCustomAttributes(Assembly assembly, Type type)
     {
 #if NETFRAMEWORK
-        return ReflectionUtility.GetCustomAttributes(assembly, type);
+        return ReflectionUtility.GetCustomAttributes(assembly, type).ToArray();
 #else
         return assembly.GetCustomAttributes(type).ToArray<object>();
 #endif

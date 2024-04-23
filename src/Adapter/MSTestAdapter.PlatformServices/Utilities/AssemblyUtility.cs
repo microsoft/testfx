@@ -193,7 +193,7 @@ internal class AssemblyUtility
     /// <param name="configFile"> Config file to use while trying to resolve dependencies. </param>
     /// <param name="warnings"> The warnings. </param>
     /// <returns> The <see cref="string"/>[]. </returns>
-    internal virtual string[] GetFullPathToDependentAssemblies(string assemblyPath, string? configFile, out IList<string> warnings)
+    internal virtual /* for mocking purposes - should be refactored */ IReadOnlyList<string> GetFullPathToDependentAssemblies(string assemblyPath, string? configFile, out IList<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyPath), "assemblyPath");
 
@@ -261,7 +261,7 @@ internal class AssemblyUtility
                 }
             }
 
-            return dependenciesFromDllDirectory.ToArray();
+            return dependenciesFromDllDirectory;
         }
         finally
         {

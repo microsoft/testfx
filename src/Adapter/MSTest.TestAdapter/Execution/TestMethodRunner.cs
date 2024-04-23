@@ -228,11 +228,7 @@ internal class TestMethodRunner
             results.Add(emptyResult);
         }
 
-        var unitTestResults = results
-            .ToArray()
-            .ToUnitTestResults();
-
-        return unitTestResults;
+        return results.ToUnitTestResults();
     }
 
     private bool ExecuteDataSourceBasedTests(List<TestResult> results)
@@ -291,16 +287,13 @@ internal class TestMethodRunner
         }
         else
         {
-            UTF.ITestDataSource[]? testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)
-                ?.Where(a => a is UTF.ITestDataSource)
-                .OfType<UTF.ITestDataSource>()
-                .ToArray();
+            var testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>();
 
-            if (testDataSources != null && testDataSources.Length > 0)
+            if (testDataSources != null)
             {
-                isDataDriven = true;
                 foreach (var testDataSource in testDataSources)
                 {
+                    isDataDriven = true;
                     foreach (var data in testDataSource.GetData(_testMethodInfo.MethodInfo))
                     {
                         try

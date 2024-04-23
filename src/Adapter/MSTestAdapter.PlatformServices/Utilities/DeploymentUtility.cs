@@ -242,7 +242,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
 
         // Note: if this is not an assembly we simply return empty array, also:
         //       we do recursive search and report missing.
-        string[] references = AssemblyUtility.GetFullPathToDependentAssemblies(testSource, configFile, out var warningList);
+        var references = AssemblyUtility.GetFullPathToDependentAssemblies(testSource, configFile, out var warningList);
         foreach (var warning in warningList)
         {
             warnings.Add(warning);

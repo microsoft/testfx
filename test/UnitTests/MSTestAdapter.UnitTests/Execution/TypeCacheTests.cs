@@ -222,7 +222,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.AssemblyInfoCache.Length == 1);
+        Verify(_typeCache.AssemblyInfoCache.Count == 1);
     }
 
     public void GetTestMethodInfoShouldNotThrowIfWeFailToDiscoverTypeFromAnAssembly()
@@ -242,7 +242,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.AssemblyInfoCache.Length == 1);
+        Verify(_typeCache.AssemblyInfoCache.Count == 1);
     }
 
     public void GetTestMethodInfoShouldCacheAssemblyInitializeAttribute()
@@ -261,8 +261,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.AssemblyInfoCache.Length == 1);
-        Verify(type.GetMethod("AssemblyInit") == _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyInitializeMethod);
+        Verify(_typeCache.AssemblyInfoCache.Count == 1);
+        Verify(type.GetMethod("AssemblyInit") == _typeCache.AssemblyInfoCache.First().AssemblyInitializeMethod);
     }
 
     public void GetTestMethodInfoShouldCacheAssemblyCleanupAttribute()
@@ -281,8 +281,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.AssemblyInfoCache.Length == 1);
-        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyCleanupMethod);
+        Verify(_typeCache.AssemblyInfoCache.Count == 1);
+        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.AssemblyInfoCache.First().AssemblyCleanupMethod);
     }
 
     public void GetTestMethodInfoShouldCacheAssemblyInitAndCleanupAttribute()
@@ -303,9 +303,9 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.AssemblyInfoCache.Length == 1);
-        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyCleanupMethod);
-        Verify(type.GetMethod("AssemblyInit") == _typeCache.AssemblyInfoCache.ToArray()[0].AssemblyInitializeMethod);
+        Verify(_typeCache.AssemblyInfoCache.Count == 1);
+        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.AssemblyInfoCache.First().AssemblyCleanupMethod);
+        Verify(type.GetMethod("AssemblyInit") == _typeCache.AssemblyInfoCache.First().AssemblyInitializeMethod);
     }
 
     public void GetTestMethodInfoShouldThrowIfAssemblyInitHasIncorrectSignature()
@@ -392,7 +392,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         _mockReflectHelper.Verify(rh => rh.IsAttributeDefined<UTF.TestClassAttribute>(type.GetTypeInfo(), true), Times.Once);
-        Verify(_typeCache.AssemblyInfoCache.Length == 1);
+        Verify(_typeCache.AssemblyInfoCache.Count == 1);
     }
 
     #endregion
@@ -413,9 +413,9 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.ClassInfoCache.Length == 1);
-        Verify(_typeCache.ClassInfoCache.ToArray()[0].TestInitializeMethod is null);
-        Verify(_typeCache.ClassInfoCache.ToArray()[0].TestCleanupMethod is null);
+        Verify(_typeCache.ClassInfoCache.Count == 1);
+        Verify(_typeCache.ClassInfoCache.First().TestInitializeMethod is null);
+        Verify(_typeCache.ClassInfoCache.First().TestCleanupMethod is null);
     }
 
     public void GetTestMethodInfoShouldCacheClassInitializeAttribute()
@@ -434,7 +434,7 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.ClassInfoCache.Length == 1);
+        Verify(_typeCache.ClassInfoCache.Count == 1);
         Verify(_typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Count == 0);
         Verify(type.GetMethod("AssemblyInit") == _typeCache.ClassInfoCache.First().ClassInitializeMethod);
     }
@@ -463,8 +463,8 @@ public class TypeCacheTests : TestContainer
             new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
             false);
 
-        Verify(_typeCache.ClassInfoCache.Length == 1);
-        Verify(_typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count == 1);
+        Verify(_typeCache.ClassInfoCache.Count == 1);
+        Verify(_typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Count == 1);
         Verify(_typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item2 is null, "No base class cleanup");
         Verify(baseType.GetMethod("AssemblyInit") == _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item1);
     }
@@ -485,8 +485,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.ClassInfoCache.Length == 1);
-        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
+        Verify(_typeCache.ClassInfoCache.Count == 1);
+        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.ClassInfoCache.First().ClassCleanupMethod);
     }
 
     public void GetTestMethodInfoShouldCacheBaseClassCleanupAttributes()
@@ -509,7 +509,7 @@ public class TypeCacheTests : TestContainer
             new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
             false);
 
-        Verify(_typeCache.ClassInfoCache.Length == 1);
+        Verify(_typeCache.ClassInfoCache.Count == 1);
         Verify(_typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Count == 1);
         Verify(_typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item1 is null, "No base class init");
         Verify(baseType.GetMethod("AssemblyCleanup") == _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item2);
@@ -532,9 +532,9 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.ClassInfoCache.Length == 1);
-        Verify(type.GetMethod("AssemblyInit") == _typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
-        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
+        Verify(_typeCache.ClassInfoCache.Count == 1);
+        Verify(type.GetMethod("AssemblyInit") == _typeCache.ClassInfoCache.First().ClassInitializeMethod);
+        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.ClassInfoCache.First().ClassCleanupMethod);
     }
 
     public void GetTestMethodInfoShouldCacheBaseClassInitAndCleanupAttributes()
@@ -570,13 +570,13 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.ClassInfoCache.Length == 1);
-        Verify(type.GetMethod("AssemblyInit") == _typeCache.ClassInfoCache.ToArray()[0].ClassInitializeMethod);
-        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.ClassInfoCache.ToArray()[0].ClassCleanupMethod);
+        Verify(_typeCache.ClassInfoCache.Count == 1);
+        Verify(type.GetMethod("AssemblyInit") == _typeCache.ClassInfoCache.First().ClassInitializeMethod);
+        Verify(type.GetMethod("AssemblyCleanup") == _typeCache.ClassInfoCache.First().ClassCleanupMethod);
 
-        Verify(_typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Count == 1);
-        Verify(baseInitializeMethod == _typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Peek().Item1);
-        Verify(baseCleanupMethod == _typeCache.ClassInfoCache.ToArray()[0].BaseClassInitAndCleanupMethods.Peek().Item2);
+        Verify(_typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Count == 1);
+        Verify(baseInitializeMethod == _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item1);
+        Verify(baseCleanupMethod == _typeCache.ClassInfoCache.First().BaseClassInitAndCleanupMethods.Peek().Item2);
     }
 
     public void GetTestMethodInfoShouldCacheParentAndGrandparentClassInitAndCleanupAttributes()
@@ -629,7 +629,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         var classInfo = _typeCache.ClassInfoCache.FirstOrDefault();
-        Verify(_typeCache.ClassInfoCache.Length == 1);
+        Verify(_typeCache.ClassInfoCache.Count == 1);
         Verify(classInfo.ClassInitializeMethod is null);
         Verify(classInfo.ClassCleanupMethod is null);
 
@@ -724,8 +724,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.ClassInfoCache.Length == 1);
-        Verify(type.GetMethod("TestInit") == _typeCache.ClassInfoCache.ToArray()[0].TestInitializeMethod);
+        Verify(_typeCache.ClassInfoCache.Count == 1);
+        Verify(type.GetMethod("TestInit") == _typeCache.ClassInfoCache.First().TestInitializeMethod);
     }
 
     public void GetTestMethodInfoShouldCacheTestCleanupAttribute()
@@ -744,8 +744,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.ClassInfoCache.Length == 1);
-        Verify(type.GetMethod("TestCleanup") == _typeCache.ClassInfoCache.ToArray()[0].TestCleanupMethod);
+        Verify(_typeCache.ClassInfoCache.Count == 1);
+        Verify(type.GetMethod("TestCleanup") == _typeCache.ClassInfoCache.First().TestCleanupMethod);
     }
 
     public void GetTestMethodInfoShouldThrowIfTestInitOrCleanupHasIncorrectSignature()
@@ -798,8 +798,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.ClassInfoCache.Length == 1);
-        Verify(baseType.GetMethod("TestInit") == _typeCache.ClassInfoCache.ToArray()[0].BaseTestInitializeMethodsQueue.Peek());
+        Verify(_typeCache.ClassInfoCache.Count == 1);
+        Verify(baseType.GetMethod("TestInit") == _typeCache.ClassInfoCache.First().BaseTestInitializeMethodsQueue.Peek());
     }
 
     public void GetTestMethodInfoShouldCacheTestCleanupAttributeDefinedInBaseClass()
@@ -819,8 +819,8 @@ public class TypeCacheTests : TestContainer
                 new TestContextImplementation(testMethod, new ThreadSafeStringWriter(null, "test"), new Dictionary<string, object>()),
                 false);
 
-        Verify(_typeCache.ClassInfoCache.Length == 1);
-        Verify(baseType.GetMethod("TestCleanup") == _typeCache.ClassInfoCache.ToArray()[0].BaseTestCleanupMethodsQueue.Peek());
+        Verify(_typeCache.ClassInfoCache.Count == 1);
+        Verify(baseType.GetMethod("TestCleanup") == _typeCache.ClassInfoCache.First().BaseTestCleanupMethodsQueue.Peek());
     }
 
     public void GetTestMethodInfoShouldCacheClassInfoInstanceAndReuseFromCache()
@@ -843,7 +843,7 @@ public class TypeCacheTests : TestContainer
                 false);
 
         _testablePlatformServiceProvider.MockFileOperations.Verify(fo => fo.LoadAssembly(It.IsAny<string>(), It.IsAny<bool>()), Times.Once);
-        Verify(_typeCache.ClassInfoCache.Length == 1);
+        Verify(_typeCache.ClassInfoCache.Count == 1);
     }
 
     #endregion
@@ -889,7 +889,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(methodInfo == testMethodInfo.TestMethod);
         Verify(testMethodInfo.TestMethodOptions.Timeout == 0);
-        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
+        Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
 
@@ -909,7 +909,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(methodInfo == testMethodInfo.TestMethod);
         Verify(testMethodInfo.TestMethodOptions.Timeout == 10);
-        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
+        Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
 
@@ -1027,7 +1027,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(methodInfo == testMethodInfo.TestMethod);
         Verify(testMethodInfo.TestMethodOptions.Timeout == 0);
-        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
+        Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
         Verify(testMethodInfo.TestMethodOptions.Executor is DerivedTestMethodAttribute);
     }
@@ -1145,7 +1145,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(methodInfo == testMethodInfo.TestMethod);
         Verify(testMethodInfo.TestMethodOptions.Timeout == 0);
-        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
+        Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
 
@@ -1162,7 +1162,7 @@ public class TypeCacheTests : TestContainer
 
         Verify(methodInfo == testMethodInfo.TestMethod);
         Verify(testMethodInfo.TestMethodOptions.Timeout == 0);
-        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
+        Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
 
@@ -1185,7 +1185,7 @@ public class TypeCacheTests : TestContainer
         // so cannot be compared directly. Use MethodHandle to verify it's the same.
         Verify(methodInfo.MethodHandle == testMethodInfo.TestMethod.MethodHandle);
         Verify(testMethodInfo.TestMethodOptions.Timeout == 0);
-        Verify(_typeCache.ClassInfoCache.ToArray()[0] == testMethodInfo.Parent);
+        Verify(_typeCache.ClassInfoCache.First() == testMethodInfo.Parent);
         Verify(testMethodInfo.TestMethodOptions.Executor is not null);
     }
 
@@ -1199,7 +1199,7 @@ public class TypeCacheTests : TestContainer
     {
         var cleanupMethods = _typeCache.ClassInfoListWithExecutableCleanupMethods;
 
-        Verify(cleanupMethods.Length == 0);
+        Verify(!cleanupMethods.Any());
     }
 
     public void ClassInfoListWithExecutableCleanupMethodsShouldReturnEmptyListWhenClassInfoCacheDoesNotHaveTestCleanupMethods()
@@ -1221,7 +1221,7 @@ public class TypeCacheTests : TestContainer
 
         var cleanupMethods = _typeCache.ClassInfoListWithExecutableCleanupMethods;
 
-        Verify(cleanupMethods.Length == 0);
+        Verify(!cleanupMethods.Any());
     }
 
     public void ClassInfoListWithExecutableCleanupMethodsShouldReturnClassInfosWithExecutableCleanupMethods()
@@ -1243,8 +1243,8 @@ public class TypeCacheTests : TestContainer
 
         var cleanupMethods = _typeCache.ClassInfoListWithExecutableCleanupMethods;
 
-        Verify(cleanupMethods.Length == 1);
-        Verify(type.GetMethod("AssemblyCleanup") == cleanupMethods.ToArray()[0].ClassCleanupMethod);
+        Verify(cleanupMethods.Count() == 1);
+        Verify(type.GetMethod("AssemblyCleanup") == cleanupMethods.First().ClassCleanupMethod);
     }
 
     #endregion
@@ -1255,7 +1255,7 @@ public class TypeCacheTests : TestContainer
     {
         var cleanupMethods = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
 
-        Verify(cleanupMethods.Length == 0);
+        Verify(!cleanupMethods.Any());
     }
 
     public void AssemblyInfoListWithExecutableCleanupMethodsShouldReturnEmptyListWhenAssemblyInfoCacheDoesNotHaveTestCleanupMethods()
@@ -1277,7 +1277,7 @@ public class TypeCacheTests : TestContainer
 
         var cleanupMethods = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
 
-        Verify(cleanupMethods.Length == 0);
+        Verify(!cleanupMethods.Any());
     }
 
     public void AssemblyInfoListWithExecutableCleanupMethodsShouldReturnAssemblyInfoWithExecutableCleanupMethods()
@@ -1299,8 +1299,8 @@ public class TypeCacheTests : TestContainer
 
         var cleanupMethods = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
 
-        Verify(cleanupMethods.Length == 1);
-        Verify(type.GetMethod("AssemblyCleanup") == cleanupMethods.ToArray()[0].AssemblyCleanupMethod);
+        Verify(cleanupMethods.Count() == 1);
+        Verify(type.GetMethod("AssemblyCleanup") == cleanupMethods.First().AssemblyCleanupMethod);
     }
 
     #endregion

@@ -43,7 +43,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     /// <param name="warnings"> The warnings. </param>
     /// <returns> Full path to dependent assemblies. </returns>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    public string[] GetFullPathToDependentAssemblies(string assemblyPath, out IList<string> warnings)
+    public IReadOnlyCollection<string> GetFullPathToDependentAssemblies(string assemblyPath, out IList<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrEmpty(assemblyPath), "assemblyPath");
 
@@ -70,7 +70,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
 
         ProcessChildren(assembly, result, visitedAssemblies, warnings);
 
-        return result.ToArray();
+        return result;
     }
 
     /// <summary>

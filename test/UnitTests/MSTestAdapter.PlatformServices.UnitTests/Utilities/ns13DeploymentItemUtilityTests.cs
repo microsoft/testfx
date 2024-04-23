@@ -45,6 +45,8 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void GetClassLevelDeploymentItemsShouldReturnEmptyListWhenNoDeploymentItems()
     {
+        _mockReflectionUtility.Setup(x => x.GetCustomAttributes(typeof(DeploymentItemUtilityTests).GetTypeInfo(), typeof(DeploymentItemAttribute)))
+            .Returns([]);
         var deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
 
         Verify(deploymentItems is not null);
@@ -163,10 +165,11 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void GetDeploymentItemsShouldReturnNullOnNoDeploymentItems()
     {
-        Verify(_deploymentItemUtility.GetDeploymentItems(
-            typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems"),
-            null,
-            _warnings) is null);
+        var method = typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems");
+        _mockReflectionUtility.Setup(x => x.GetCustomAttributes(method, typeof(DeploymentItemAttribute)))
+            .Returns([]);
+
+        Verify(_deploymentItemUtility.GetDeploymentItems(method, null, _warnings) is null);
     }
 
     public void GetDeploymentItemsShouldReturnMethodLevelDeploymentItemsOnly()
@@ -207,11 +210,12 @@ public class DeploymentItemUtilityTests : TestContainer
                 _defaultDeploymentItemOutputDirectory),
         };
 
+        var method = typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems");
+        _mockReflectionUtility.Setup(x => x.GetCustomAttributes(method, typeof(DeploymentItemAttribute)))
+            .Returns([]);
+
         // Act.
-        var deploymentItems = _deploymentItemUtility.GetDeploymentItems(
-            typeof(DeploymentItemUtilityTests).GetMethod("GetDeploymentItemsShouldReturnNullOnNoDeploymentItems"),
-            classLevelDeploymentItems,
-            _warnings);
+        var deploymentItems = _deploymentItemUtility.GetDeploymentItems(method, classLevelDeploymentItems, _warnings);
 
         // Assert.
         var expectedDeploymentItems = new[]

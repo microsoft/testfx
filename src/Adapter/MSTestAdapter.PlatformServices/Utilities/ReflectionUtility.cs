@@ -23,10 +23,8 @@ internal class ReflectionUtility
     /// <param name="type"> The attribute type. </param>
     /// <returns> The vale of the custom attribute. </returns>
     [return: NotNullIfNotNull(nameof(attributeProvider))]
-    internal virtual object[]? GetCustomAttributes(MemberInfo attributeProvider, Type type)
-    {
-        return GetCustomAttributes(attributeProvider, type, true);
-    }
+    internal virtual IReadOnlyList<object>? GetCustomAttributes(MemberInfo attributeProvider, Type type)
+        => GetCustomAttributes(attributeProvider, type, true);
 
     /// <summary>
     /// Gets all the custom attributes adorned on a member.
@@ -35,10 +33,8 @@ internal class ReflectionUtility
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
     [return: NotNullIfNotNull(nameof(memberInfo))]
-    internal static object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
-    {
-        return GetCustomAttributes(memberInfo, type: null, inherit: inherit);
-    }
+    internal static IReadOnlyList<object>? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
+        => GetCustomAttributes(memberInfo, type: null, inherit: inherit);
 
     /// <summary>
     /// Get custom attributes on a member for both normal and reflection only load.
@@ -48,7 +44,7 @@ internal class ReflectionUtility
     /// <param name="inherit">If inherited type of attribute.</param>
     /// <returns>All attributes of give type on member.</returns>
     [return: NotNullIfNotNull(nameof(memberInfo))]
-    internal static object[]? GetCustomAttributes(MemberInfo? memberInfo, Type? type, bool inherit)
+    internal static IReadOnlyList<object>? GetCustomAttributes(MemberInfo? memberInfo, Type? type, bool inherit)
     {
         if (memberInfo == null)
         {
@@ -129,24 +125,26 @@ internal class ReflectionUtility
             }
 
             nonUniqueAttributes.AddRange(uniqueAttributes.Values);
-            return nonUniqueAttributes.ToArray();
+            return nonUniqueAttributes;
         }
 #else
-        return type == null ? memberInfo.GetCustomAttributes(inherit).ToArray() : memberInfo.GetCustomAttributes(type, inherit).ToArray();
+        return type == null
+            ? memberInfo.GetCustomAttributes(inherit)
+            : memberInfo.GetCustomAttributes(type, inherit);
 #endif
     }
 
 #if NETFRAMEWORK
-    internal static object[] GetCustomAttributes(Assembly assembly, Type type)
+    internal static List<Attribute> GetCustomAttributes(Assembly assembly, Type type)
     {
         if (!assembly.ReflectionOnly)
         {
-            return assembly.GetCustomAttributes(type).ToArray();
+            return assembly.GetCustomAttributes(type).ToList();
         }
 
         List<CustomAttributeData> customAttributes = [.. CustomAttributeData.GetCustomAttributes(assembly)];
 
-        List<object> attributesArray = [];
+        List<Attribute> attributesArray = [];
 
         foreach (var attribute in customAttributes)
         {
@@ -164,7 +162,7 @@ internal class ReflectionUtility
             }
         }
 
-        return attributesArray.ToArray();
+        return attributesArray;
     }
 
     /// <summary>
@@ -256,10 +254,13 @@ internal class ReflectionUtility
                 continue;
             }
 
-            if (GetCustomAttributes(
-                    attributeInstance.GetType().GetTypeInfo(),
-                    typeof(AttributeUsageAttribute),
-                    true).FirstOrDefault() is AttributeUsageAttribute attributeUsageAttribute && !attributeUsageAttribute.AllowMultiple)
+            var attributeUsageAttributes = GetCustomAttributes(
+                attributeInstance.GetType().GetTypeInfo(),
+                typeof(AttributeUsageAttribute),
+                true);
+            if (attributeUsageAttributes.Count > 0
+                && attributeUsageAttributes[0] is AttributeUsageAttribute attributeUsageAttribute
+                && !attributeUsageAttribute.AllowMultiple)
             {
                 if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))
                 {
@@ -279,9 +280,7 @@ internal class ReflectionUtility
     /// <param name="memberInfo"> The member Info. </param>
     /// <returns> True if the member is loaded in a reflection only context. </returns>
     private static bool IsReflectionOnlyLoad(MemberInfo? memberInfo)
-    {
-        return memberInfo != null ? memberInfo.Module.Assembly.ReflectionOnly : false;
-    }
+        => memberInfo != null && memberInfo.Module.Assembly.ReflectionOnly;
 
     private static bool IsTypeInheriting(Type? type1, Type type2)
     {

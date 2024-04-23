@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
 using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
@@ -20,7 +21,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        Verify(attributes.Count == 2);
 
         var expectedAttributes = new string[] { "DummyA : base", "DummySingleA : base" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -33,7 +34,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, false);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        Verify(attributes.Count == 2);
 
         var expectedAttributes = new string[] { "DummyA : derived", "DummySingleA : derived" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -46,7 +47,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 3);
+        Verify(attributes.Count == 3);
 
         // Notice that the DummySingleA on the base method does not show up since it can only be defined once.
         var expectedAttributes = new string[] { "DummyA : derived", "DummySingleA : derived", "DummyA : base", };
@@ -60,7 +61,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, false);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        Verify(attributes.Count == 1);
 
         var expectedAttributes = new string[] { "DummyA : ba" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -73,7 +74,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, false);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        Verify(attributes.Count == 1);
 
         var expectedAttributes = new string[] { "DummyA : a" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -86,7 +87,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, true);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        Verify(attributes.Count == 2);
 
         var expectedAttributes = new string[] { "DummyA : a", "DummyA : ba" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -99,7 +100,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        Verify(attributes.Count == 1);
 
         var expectedAttributes = new string[] { "DummyA : base" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -112,7 +113,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        Verify(attributes.Count == 1);
 
         var expectedAttributes = new string[] { "DummyA : derived" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -125,7 +126,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        Verify(attributes.Count == 2);
 
         var expectedAttributes = new string[] { "DummyA : derived", "DummyA : base", };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -138,7 +139,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, typeof(DummyAAttribute), false);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        Verify(attributes.Count == 1);
 
         var expectedAttributes = new string[] { "DummyA : ba" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -151,7 +152,7 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(typeInfo, typeof(DummyAAttribute), false);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 1);
+        Verify(attributes.Count == 1);
 
         var expectedAttributes = new string[] { "DummyA : a" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
@@ -164,13 +165,13 @@ public class ReflectionUtilityTests : TestContainer
         var attributes = ReflectionUtility.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
 
         Verify(attributes is not null);
-        Verify(attributes.Length == 2);
+        Verify(attributes.Count == 2);
 
         var expectedAttributes = new string[] { "DummyA : a", "DummyA : ba" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
-    internal static string[] GetAttributeValuePairs(object[] attributes)
+    internal static List<string> GetAttributeValuePairs(IEnumerable attributes)
     {
         var attribValuePairs = new List<string>();
         foreach (var attrib in attributes)
@@ -187,7 +188,7 @@ public class ReflectionUtilityTests : TestContainer
             }
         }
 
-        return attribValuePairs.ToArray();
+        return attribValuePairs;
     }
 
     [DummyA("ba")]

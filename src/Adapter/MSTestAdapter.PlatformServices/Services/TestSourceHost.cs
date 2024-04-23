@@ -113,7 +113,7 @@ public class TestSourceHost : ITestSourceHost
 
         if (EqtTrace.IsInfoEnabled)
         {
-            EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths.ToArray()));
+            EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths));
         }
 
         var assemblyResolver = new AssemblyResolver(resolutionPaths);
