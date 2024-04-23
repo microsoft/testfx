@@ -12,4 +12,9 @@
     <PackageReference Include="Polly.Contrib.WaitAndRetry" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- This is not a test project despite it references Microsoft.Testing.Internal.Framework -->
+    <ProjectCapability Remove="TestContainer" />
+  </ItemGroup>
+
 </Project>
