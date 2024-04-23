@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <GenerateProgramFile>false</GenerateProgramFile>
     <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments) --retry-failed-tests 3</TestRunnerAdditionalArguments>
+    <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
