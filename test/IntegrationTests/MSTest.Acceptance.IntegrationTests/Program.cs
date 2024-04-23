@@ -15,6 +15,7 @@ using MSTest.Acceptance.IntegrationTests;
 Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
 CommandLine.MaxOutstandingCommands = Environment.ProcessorCount;
+DotnetCli.DoNotRetry = Debugger.IsAttached;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.GetCommandLineOptions()));

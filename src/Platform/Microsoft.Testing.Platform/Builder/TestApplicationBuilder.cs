@@ -74,7 +74,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     // Callers from the outside can substitute the builder and the services that are used
     // to build a testhost. We use this to provide a different builder for VSTest tests.
     internal static Func<ITestHostBuilder> TestHostBuilderFactory { get; set; }
-        = () => new TestHostBuilder(new SystemFileSystem(), new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler()));
+        = () => new TestHostBuilder(new SystemFileSystem(), new SystemEnvironment(), new SystemProcessHandler(), new CurrentTestApplicationModuleInfo(new SystemEnvironment(), new SystemProcessHandler()));
 
     public ITestApplicationBuilder RegisterTestFramework(
         Func<IServiceProvider, ITestFrameworkCapabilities> capabilitiesFactory,
