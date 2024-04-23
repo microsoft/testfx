@@ -6,7 +6,6 @@
     <IsPackable>false</IsPackable>
     <WarningsAsErrors>false</WarningsAsErrors>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
-    <UseAppHost>false</UseAppHost>
     <SelfContained>false</SelfContained>
     <UseVSTestRunner>false</UseVSTestRunner>
     <ImplicitUsings>true</ImplicitUsings>
