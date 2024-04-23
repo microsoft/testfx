@@ -169,7 +169,7 @@ extends:
             timeoutInMinutes: 90
             pool:
               name: $(DncEngInternalBuildPool)
-              image: 1es-ubuntu-2204-pt
+              image: 1es-ubuntu-2204
               os: linux
             steps:
             - script: eng/common/cibuild.sh
