@@ -112,7 +112,7 @@ public class TypeEnumeratorTests : TestContainer
 
     public void GetTestsShouldReturnBaseTestMethodsFromAnotherAssemblyByConfiguration()
     {
-        string runSettingxml =
+        string runSettingsXml =
         @"<RunSettings>   
                 <MSTestV2>
                   <CaptureTraceOutput>true</CaptureTraceOutput>
@@ -124,7 +124,7 @@ public class TypeEnumeratorTests : TestContainer
         var mockRunContext = new Mock<IRunContext>();
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         MSTestSettings.PopulateSettings(mockRunContext.Object);
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: true);
@@ -135,13 +135,13 @@ public class TypeEnumeratorTests : TestContainer
         Verify(tests is not null);
 
         // DummyDerivedFromRemoteTestClass inherits DummyRemoteBaseTestClass from different assembly.
-        // BestTestMethod from DummyRemoteBaseTestClass should be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = truem.
+        // BestTestMethod from DummyRemoteBaseTestClass should be discovered when RunSettings MSTestV2 specifies EnableBaseClassTestMethodsFromOtherAssemblies = true.
         Verify(tests.Any(t => t.TestMethod.Name == "BaseTestMethod"));
     }
 
     public void GetTestsShouldNotReturnBaseTestMethodsFromAnotherAssemblyByConfiguration()
     {
-        string runSettingxml =
+        string runSettingsXml =
             @"<RunSettings>   
                 <MSTestV2>
                   <CaptureTraceOutput>true</CaptureTraceOutput>
@@ -153,7 +153,7 @@ public class TypeEnumeratorTests : TestContainer
         var mockRunContext = new Mock<IRunContext>();
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
-        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
 
         MSTestSettings.PopulateSettings(mockRunContext.Object);
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: false);

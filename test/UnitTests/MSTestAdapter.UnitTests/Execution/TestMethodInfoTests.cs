@@ -871,7 +871,7 @@ public class TestMethodInfoTests : TestContainer
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
     }
 
-    public void TestMethodInfoInvokeShouldCallDiposeForDisposableTestClass()
+    public void TestMethodInfoInvokeShouldCallDisposeForDisposableTestClass()
     {
         var disposeCalled = false;
         DummyTestClassWithDisposable.DisposeMethodBody = () => disposeCalled = true;
@@ -1046,12 +1046,12 @@ public class TestMethodInfoTests : TestContainer
         UTF.UnitTestOutcome testOutcome = UTF.UnitTestOutcome.Unknown;
         DummyTestClass.TestMethodBody = o => { throw new UTF.AssertInconclusiveException(); };
         DummyTestClass.TestCleanupMethodBody = c =>
-                    {
-                        if (DummyTestClass.GetTestContext() != null)
-                        {
-                            testOutcome = DummyTestClass.GetTestContext().CurrentTestOutcome;
-                        }
-                    };
+        {
+            if (DummyTestClass.GetTestContext() != null)
+            {
+                testOutcome = DummyTestClass.GetTestContext().CurrentTestOutcome;
+            }
+        };
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
         _testMethodOptions.ExpectedException = _expectedException;
         var testMethodInfo = new TestMethodInfo(_methodInfo, _testClassInfo, _testMethodOptions);
@@ -1334,7 +1334,7 @@ public class TestMethodInfoTests : TestContainer
             PlatformServiceProvider.Instance = testablePlatformServiceProvider;
 
             testablePlatformServiceProvider.MockThreadOperations.Setup(
-             to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Callback((Action action, int timeoOut, CancellationToken cancelToken) =>
+             to => to.Execute(It.IsAny<Action>(), It.IsAny<int>(), It.IsAny<CancellationToken>())).Callback((Action action, int timeout, CancellationToken cancelToken) =>
              {
                  try
                  {
@@ -1639,10 +1639,10 @@ public class TestMethodInfoTests : TestContainer
     /// </summary>
     public class CustomExpectedExceptionAttribute : UTF.ExpectedExceptionBaseAttribute
     {
-        public CustomExpectedExceptionAttribute(Type expectionType, string noExceptionMessage)
+        public CustomExpectedExceptionAttribute(Type exceptionType, string noExceptionMessage)
             : base(noExceptionMessage)
         {
-            ExceptionType = expectionType;
+            ExceptionType = exceptionType;
         }
 
         public bool IsVerifyInvoked { get; set; }
@@ -1668,10 +1668,10 @@ public class TestMethodInfoTests : TestContainer
     /// </summary>
     public class DerivedCustomExpectedExceptionAttribute : CustomExpectedExceptionAttribute
     {
-        public DerivedCustomExpectedExceptionAttribute(Type expectionType, string noExceptionMessage)
-            : base(expectionType, noExceptionMessage)
+        public DerivedCustomExpectedExceptionAttribute(Type exceptionType, string noExceptionMessage)
+            : base(exceptionType, noExceptionMessage)
         {
-            ExceptionType = expectionType;
+            ExceptionType = exceptionType;
         }
 
         public new Type ExceptionType { get; private set; }

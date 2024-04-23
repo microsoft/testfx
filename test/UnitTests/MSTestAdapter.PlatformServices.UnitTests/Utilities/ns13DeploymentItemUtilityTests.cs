@@ -90,14 +90,14 @@ public class DeploymentItemUtilityTests : TestContainer
                 _warnings);
 
         var expectedDeploymentItems = new DeploymentItem[]
-                                          {
-                                              new(
-                                                  deploymentItemAttributes[0].Key,
-                                                  deploymentItemAttributes[0].Value),
-                                              new(
-                                                  deploymentItemAttributes[1].Key,
-                                                  deploymentItemAttributes[1].Value),
-                                          };
+        {
+            new(
+                deploymentItemAttributes[0].Key,
+                deploymentItemAttributes[0].Value),
+            new(
+                deploymentItemAttributes[1].Key,
+                deploymentItemAttributes[1].Value),
+        };
 
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
     }
@@ -146,11 +146,11 @@ public class DeploymentItemUtilityTests : TestContainer
         var deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
 
         var expectedDeploymentItems = new DeploymentItem[]
-                                          {
-                                              new(
-                                                  _defaultDeploymentItemPath,
-                                                  _defaultDeploymentItemOutputDirectory),
-                                          };
+        {
+            new(
+                _defaultDeploymentItemPath,
+                _defaultDeploymentItemOutputDirectory),
+        };
 
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
         Verify(_warnings.Count == 1);

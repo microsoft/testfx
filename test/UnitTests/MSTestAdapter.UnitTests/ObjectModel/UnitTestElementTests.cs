@@ -100,7 +100,7 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.IsAsync = false;
         testCase = _unitTestElement.ToTestCase();
 
-        Verify((bool)testCase.GetPropertyValue(Constants.AsyncTestProperty) == false);
+        Verify(!(bool)testCase.GetPropertyValue(Constants.AsyncTestProperty));
     }
 
     public void ToTestCaseShouldSetTestCategoryIfPresent()

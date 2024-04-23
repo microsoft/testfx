@@ -144,11 +144,11 @@ public class ReflectHelperTests : TestContainer
     {
         var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
-        var attribs = new Attribute[] { new UTF.TestMethodAttribute() };
+        var attributes = new Attribute[] { new UTF.TestMethodAttribute() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
-            Returns(attribs);
+            Returns(attributes);
 
         Verify(rh.IsAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
     }
@@ -157,11 +157,11 @@ public class ReflectHelperTests : TestContainer
     {
         var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
-        var attribs = new Attribute[] { new UTF.TestClassAttribute() };
+        var attributes = new Attribute[] { new UTF.TestClassAttribute() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
-            Returns(attribs);
+            Returns(attributes);
 
         Verify(!rh.IsAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
     }
@@ -174,11 +174,11 @@ public class ReflectHelperTests : TestContainer
         var memberInfo = typeof(ReflectHelperTests).GetMethod("IsAttributeDefinedShouldReturnFromCache");
 
         // new Mock<MemberInfo>();
-        var attribs = new Attribute[] { new UTF.TestMethodAttribute() };
+        var attributes = new Attribute[] { new UTF.TestMethodAttribute() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(memberInfo, true)).
-            Returns(attribs);
+            Returns(attributes);
 
         Verify(rh.IsAttributeDefined<UTF.TestMethodAttribute>(memberInfo, true));
 
@@ -194,7 +194,7 @@ public class ReflectHelperTests : TestContainer
     {
         var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
-        var attribs = new Attribute[] { new UTF.TestMethodAttribute() };
+        var attributes = new Attribute[] { new UTF.TestMethodAttribute() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
@@ -202,7 +202,7 @@ public class ReflectHelperTests : TestContainer
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true)).
-            Returns(attribs);
+            Returns(attributes);
 
         Verify(rh.IsAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
     }
@@ -211,11 +211,11 @@ public class ReflectHelperTests : TestContainer
     {
         var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
-        var attribs = new Attribute[] { new TestableExtendedTestMethod() };
+        var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
-            Returns(attribs);
+            Returns(attributes);
 
         Verify(rh.HasAttributeDerivedFrom<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
     }
@@ -224,11 +224,11 @@ public class ReflectHelperTests : TestContainer
     {
         var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
-        var attribs = new Attribute[] { new TestableExtendedTestMethod() };
+        var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
-            Returns(attribs);
+            Returns(attributes);
 
         Verify(!rh.IsAttributeDefined<UTF.TestClassAttribute>(mockMemberInfo.Object, true));
     }
@@ -241,11 +241,11 @@ public class ReflectHelperTests : TestContainer
         var memberInfo = typeof(ReflectHelperTests).GetMethod("HasAttributeDerivedFromShouldReturnFromCache");
 
         // new Mock<MemberInfo>();
-        var attribs = new Attribute[] { new TestableExtendedTestMethod() };
+        var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(memberInfo, true)).
-            Returns(attribs);
+            Returns(attributes);
 
         Verify(rh.HasAttributeDerivedFrom<UTF.TestMethodAttribute>(memberInfo, true));
 
@@ -261,7 +261,7 @@ public class ReflectHelperTests : TestContainer
     {
         var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
-        var attribs = new Attribute[] { new TestableExtendedTestMethod() };
+        var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
@@ -269,7 +269,7 @@ public class ReflectHelperTests : TestContainer
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true)).
-            Returns(attribs);
+            Returns(attributes);
 
         Verify(!rh.IsAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
     }
@@ -278,7 +278,7 @@ public class ReflectHelperTests : TestContainer
     {
         var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
-        var attribs = new Attribute[] { new TestableExtendedTestMethod() };
+        var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
@@ -286,7 +286,7 @@ public class ReflectHelperTests : TestContainer
 
         _testablePlatformServiceProvider.MockReflectionOperations.
             Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(TestableExtendedTestMethod), true)).
-            Returns(attribs);
+            Returns(attributes);
 
         Verify(rh.IsAttributeDefined<TestableExtendedTestMethod>(mockMemberInfo.Object, true));
     }

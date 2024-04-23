@@ -394,7 +394,7 @@ public class TestExecutionManagerTests : TestContainer
     {
         int testsCount = 0;
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location, Assembly.GetExecutingAssembly().Location };
-        TestableTestExecutionManager testableTestExecutionmanager = new()
+        TestableTestExecutionManager testableTestExecutionManager = new()
         {
             ExecuteTestsWrapper = (tests, runContext, frameworkHandle, isDeploymentDone) =>
             {
@@ -402,7 +402,7 @@ public class TestExecutionManagerTests : TestContainer
             },
         };
 
-        testableTestExecutionmanager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
+        testableTestExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
         Verify(testsCount == 4);
     }
 

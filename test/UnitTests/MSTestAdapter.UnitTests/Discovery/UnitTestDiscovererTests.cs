@@ -232,7 +232,7 @@ public class UnitTestDiscovererTests : TestContainer
         VerifyNavigationDataIsPresent();
     }
 
-    public void SendTestCasesShouldUseNaigationSessionForDeclaredAssemblyName()
+    public void SendTestCasesShouldUseNavigationSessionForDeclaredAssemblyName()
     {
         // Setup mocks.
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))

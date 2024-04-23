@@ -256,24 +256,24 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyCleanupShouldNotInvokeIfAssemblyCleanupIsNull()
     {
-        var assemblycleanupCallCount = 0;
-        DummyTestClass.AssemblyCleanupMethodBody = () => assemblycleanupCallCount++;
+        var assemblyCleanupCallCount = 0;
+        DummyTestClass.AssemblyCleanupMethodBody = () => assemblyCleanupCallCount++;
 
         _testAssemblyInfo.AssemblyCleanupMethod = null;
 
         Verify(_testAssemblyInfo.RunAssemblyCleanup() is null);
-        Verify(assemblycleanupCallCount == 0);
+        Verify(assemblyCleanupCallCount == 0);
     }
 
     public void RunAssemblyCleanupShouldInvokeIfAssemblyCleanupMethod()
     {
-        var assemblycleanupCallCount = 0;
-        DummyTestClass.AssemblyCleanupMethodBody = () => assemblycleanupCallCount++;
+        var assemblyCleanupCallCount = 0;
+        DummyTestClass.AssemblyCleanupMethodBody = () => assemblyCleanupCallCount++;
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod");
 
         Verify(_testAssemblyInfo.RunAssemblyCleanup() is null);
-        Verify(assemblycleanupCallCount == 1);
+        Verify(assemblyCleanupCallCount == 1);
     }
 
     public void RunAssemblyCleanupShouldReturnAssertFailureExceptionDetails()

@@ -116,7 +116,7 @@ public class MSTestDiscovererTests : TestContainer
         Verify(ex.GetType() == typeof(NotSupportedException));
     }
 
-    public void DiscoverTestsShouldNotThrowIfdiscoveryContextIsNull()
+    public void DiscoverTestsShouldNotThrowIfDiscoveryContextIsNull()
     {
         var source = Assembly.GetExecutingAssembly().Location;
 
@@ -160,7 +160,7 @@ public class MSTestDiscovererTests : TestContainer
 
     public void DiscoveryShouldNotHappenIfTestSettingsIsGiven()
     {
-        string runSettingxml =
+        string runSettingsXml =
         @"<RunSettings>   
                     <MSTest>   
                         <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
@@ -169,7 +169,7 @@ public class MSTestDiscovererTests : TestContainer
                     </MSTest>
             </RunSettings>";
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
 
         var source = Assembly.GetExecutingAssembly().Location;
@@ -181,7 +181,7 @@ public class MSTestDiscovererTests : TestContainer
 
     public void DiscoveryShouldReportAndBailOutOnSettingsException()
     {
-        string runSettingxml =
+        string runSettingsXml =
         @"<RunSettings>   
                     <MSTest>   
                         <Parallelize>
@@ -190,7 +190,7 @@ public class MSTestDiscovererTests : TestContainer
                     </MSTest>
             </RunSettings>";
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
 
         var source = Assembly.GetExecutingAssembly().Location;

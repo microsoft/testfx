@@ -31,7 +31,7 @@ public class ThreadSafeStringWriterTests : TestContainer
                 stringWriter.WriteLine("content1");
                 stringWriter.WriteLine("content1");
                 stringWriter.WriteLine("content1");
-                while (_task2flag != true && timeout.Elapsed < TimeSpan.FromSeconds(5))
+                while (!_task2flag && timeout.Elapsed < TimeSpan.FromSeconds(5))
                 {
                 }
 
@@ -75,11 +75,11 @@ public class ThreadSafeStringWriterTests : TestContainer
 
     public void ThreadSafeStringWriterWritesLinesIntoDifferentWritesSeparately()
     {
-        // Suppress the flow of parent context here becuase this test method will run in
+        // Suppress the flow of parent context here because this test method will run in
         // a task already and we don't want the existing async context to interfere with this.
         using (ExecutionContext.SuppressFlow())
         {
-            // The string writer mixes output captured by different instances if they are in the same taks, or under the same task context
+            // The string writer mixes output captured by different instances if they are in the same task, or under the same task context
             // and use the same output type. In the any of the "out" writers we should see all the output from the writers marked as "out"
             // and in any of the debug writers we should see all "debug" output.
             using var stringWriter1 = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "out");

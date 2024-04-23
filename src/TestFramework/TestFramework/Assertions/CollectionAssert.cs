@@ -313,7 +313,7 @@ public sealed class CollectionAssert
         {
             if (current == null)
             {
-                if (foundNull == false)
+                if (!foundNull)
                 {
                     foundNull = true;
                 }
