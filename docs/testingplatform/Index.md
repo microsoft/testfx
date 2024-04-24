@@ -7,7 +7,7 @@
 1. How to write and register a testing framework
     1. [Register the testing framework](registertestframework.md)
     1. [Implement the ITestFramework](itestframework.md)
-    1. [Availale requests](irequest.md)
+    1. [Available requests](irequest.md)
         1. [Well known TestNodeUpdateMessage.TestNode properties](testnodeupdatemessage.md)
 1. [Capabilities](capabilities.md)
 1. Services
