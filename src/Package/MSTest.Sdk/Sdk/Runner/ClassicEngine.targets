@@ -34,11 +34,6 @@
     <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " Sdk="MSTest" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(EnablePlaywright)' == 'true' ">
-    <PackageReference Include="Microsoft.Playwright.MSTest" Version="$(MicrosoftPlaywrightVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " Sdk="MSTest" />
-  </ItemGroup>
-
   <!-- Extensions -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " Sdk="MSTest" />
@@ -48,5 +43,8 @@
     <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$(MicrosoftTestingExtensionsHotReloadVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' " Sdk="MSTest" />
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingExtensionsRetryVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " Sdk="MSTest" />
   </ItemGroup>
+
+  <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspire)' == 'true' " />
+  <Import Project="$(MSBuildThisFileDirectory)../Features/Playwright.targets" Condition=" '$(EnablePlaywright)' == 'true' " />
 
 </Project>

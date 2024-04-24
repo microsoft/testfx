@@ -4,7 +4,11 @@
   <Import Project="$(MSBuildThisFileDirectory)Common.targets"/>
 
   <Target Name="_MSTestSDKValidatePlaywright" BeforeTargets="Build">
-    <Error Condition=" '$(EnablePlaywright)' == 'true' " Text="Playwright currently doesn't support NativeAOT mode." />
+    <Error Condition=" '$(EnablePlaywright)' == 'true' " Text="Playwright MSTest currently doesn't support NativeAOT mode." />
+  </Target>
+
+  <Target Name="_MSTestSDKValidateAspire" BeforeTargets="Build">
+    <Error Condition=" '$(EnableAspire)' == 'true' " Text="Aspire MSTest currently doesn't support NativeAOT mode." />
   </Target>
 
   <!-- Core -->

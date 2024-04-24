@@ -5,6 +5,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Product dependencies">
+    <AspireHostingTestingVersion>9.0.0-preview.3.24210.17</AspireHostingTestingVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>17.9.0</MicrosoftNETTestSdkVersion>
     <!-- UWP and WinUI dependencies -->
