@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
@@ -13,6 +14,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 internal static class MethodRunner
 {
     internal static TestFailedException? RunWithTimeoutAndCancellation(
+        Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
+        string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
+        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
+            ? RunWithTimeoutAndCancellationWithCustomThread(action, cancellationTokenSource, timeout, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat)
+            : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeout, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat);
+
+    private static TestFailedException? RunWithTimeoutAndCancellationWithThreadPool(
         Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
         string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
     {
@@ -84,6 +92,67 @@ internal static class MethodRunner
             }
 
             throw;
+        }
+    }
+
+#if NET6_0_OR_GREATER
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+#endif
+    private static TestFailedException? RunWithTimeoutAndCancellationWithCustomThread(
+        Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
+        string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
+    {
+        Thread executionThread = new(new ThreadStart(action))
+        {
+            IsBackground = true,
+            Name = "MSTest Fixture Execution Thread",
+        };
+
+        executionThread.SetApartmentState(Thread.CurrentThread.GetApartmentState());
+        executionThread.Start();
+
+        try
+        {
+            // Creates a Task<bool> that represents the results of the execution thread.
+            var executionTask = Task.Run(
+                () =>
+                {
+                    if (timeout.HasValue)
+                    {
+                        return executionThread.Join(timeout.Value);
+                    }
+
+                    executionThread.Join();
+                    return true;
+                },
+                cancellationTokenSource.Token);
+            executionTask.Wait(cancellationTokenSource.Token);
+
+            // If the execution thread completes before the timeout, the task will return true, otherwise false.
+            if (executionTask.Result)
+            {
+                return null;
+            }
+
+            // Timed out. For cancellation, either OCE or AggregateException with TCE will be thrown.
+            return new(
+                UnitTestOutcome.Timeout,
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    methodTimedOutMessageFormat,
+                    methodInfo.DeclaringType!.FullName,
+                    methodInfo.Name));
+        }
+        catch (Exception ex) when
+
+            // This exception occurs when the cancellation happens before the task is actually started.
+            ((ex is TaskCanceledException tce && tce.CancellationToken == cancellationTokenSource.Token)
+            || (ex is OperationCanceledException oce && oce.CancellationToken == cancellationTokenSource.Token)
+            || (ex is AggregateException aggregateEx && aggregateEx.InnerExceptions.OfType<TaskCanceledException>().Any()))
+        {
+            return new(
+                UnitTestOutcome.Timeout,
+                string.Format(CultureInfo.InvariantCulture, methodCancelledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
         }
     }
 }
