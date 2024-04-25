@@ -180,7 +180,7 @@ public sealed class ThreadingTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Passed!");
     }
 
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
     public async Task LifecycleAttributesValueTaskThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string tfm)
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -217,7 +217,7 @@ public sealed class ThreadingTests : AcceptanceTestBase
 
         public string LifecycleAttributesTaskProjectPath => GetAssetPath(LifecycleAttributesTaskProjectName);
 
-        public string LifecycleAttributesValueTaskProjectPath => GetAssetPath(LifecycleAttributesTaskProjectName);
+        public string LifecycleAttributesValueTaskProjectPath => GetAssetPath(LifecycleAttributesValueTaskProjectName);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
@@ -346,7 +346,7 @@ public class UnitTest1
     }
 #endif
 
-    private void AssertCorrectThreadApartmentState()
+    private static void AssertCorrectThreadApartmentState()
     {
         var apartmentState = Thread.CurrentThread.GetApartmentState();
         if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
@@ -427,14 +427,14 @@ public static class Program
 
 </Project>
 
-#file UnitTest1.cs
+#file LifecycleAttributesVoid.cs
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
-public class LifecycleMethodsVoid
+public class LifecycleAttributesVoid
 {
     [AssemblyInitialize]
     public static void AssemblyInitialize(TestContext context)
@@ -477,7 +477,7 @@ public class LifecycleMethodsVoid
     {
     }
 
-    private void AssertCorrectThreadApartmentState()
+    private static void AssertCorrectThreadApartmentState()
     {
         var apartmentState = Thread.CurrentThread.GetApartmentState();
         if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
@@ -509,7 +509,7 @@ public class LifecycleMethodsVoid
     </RunConfiguration>
 </RunSettings>
 
-#file LifecycleMethodsTask.csproj
+#file LifecycleAttributesTask.csproj
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -537,14 +537,14 @@ public class LifecycleMethodsVoid
 
 </Project>
 
-#file UnitTest1.cs
+#file LifecycleAttributesTask.cs
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
-public class LifecycleMethodsTask
+public class LifecycleAttributesTask
 {
     [AssemblyInitialize]
     public static Task AssemblyInitialize(TestContext context)
@@ -593,7 +593,7 @@ public class LifecycleMethodsTask
     {
     }
 
-    private void AssertCorrectThreadApartmentState()
+    private static void AssertCorrectThreadApartmentState()
     {
         var apartmentState = Thread.CurrentThread.GetApartmentState();
         if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
@@ -653,14 +653,14 @@ public class LifecycleMethodsTask
 
 </Project>
 
-#file UnitTest1.cs
+#file LifecycleAttributesValueTask.cs
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 [TestClass]
-public class LifecycleMethodsValueTask
+public class LifecycleAttributesValueTask
 {
     [AssemblyInitialize]
     public static ValueTask AssemblyInitialize(TestContext context)
@@ -709,7 +709,7 @@ public class LifecycleMethodsValueTask
     {
     }
 
-    private void AssertCorrectThreadApartmentState()
+    private static void AssertCorrectThreadApartmentState()
     {
         var apartmentState = Thread.CurrentThread.GetApartmentState();
         if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
