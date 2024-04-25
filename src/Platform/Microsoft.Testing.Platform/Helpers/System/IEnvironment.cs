@@ -25,6 +25,8 @@ internal interface IEnvironment
 
     IDictionary GetEnvironmentVariables();
 
+    string GetFolderPath(Environment.SpecialFolder folder, Environment.SpecialFolderOption option);
+
     void FailFast(string? message, Exception? exception);
 
     void FailFast(string? message);

@@ -27,6 +27,8 @@ internal sealed class SystemEnvironment : IEnvironment
 
     public IDictionary GetEnvironmentVariables() => Environment.GetEnvironmentVariables();
 
+    public string GetFolderPath(Environment.SpecialFolder folder, Environment.SpecialFolderOption option) => Environment.GetFolderPath(folder, option);
+
     public void FailFast(string? message, Exception? exception) => Environment.FailFast(message, exception);
 
     public void FailFast(string? message) => Environment.FailFast(message);
