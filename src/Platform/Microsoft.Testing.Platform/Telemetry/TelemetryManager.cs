@@ -26,7 +26,7 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
     public void AddTelemetryCollectorProvider(Func<IServiceProvider, ITelemetryCollector> telemetryFactory)
     {
-        ApplicationStateGuard.Ensure(_telemetryFactory is null, PlatformResources.TelemetryProviderAlreadySetErrorMessage);
+        ArgumentGuard.IsNotNull(telemetryFactory);
         _telemetryFactory = telemetryFactory;
     }
 
@@ -51,22 +51,21 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
         // If the environment variable is not set or is set to 0, telemetry is opted in.
         ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
-        bool dontShowLogo = commandLineOptions.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
+        bool doNotShowLogo = commandLineOptions.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
 
-        string? noBanner = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER} environment variable: '{noBanner}'");
-        dontShowLogo = (noBanner is not null and ("1" or "true")) || dontShowLogo;
+        string? noBannerEnvVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
+        await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER} environment variable: '{noBannerEnvVar}'");
+        doNotShowLogo = (noBannerEnvVar is not null and ("1" or "true")) || doNotShowLogo;
 
-        string? dotnet_noLogo = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
-        await logger.LogInformationAsync($"{EnvironmentVariableConstants.DOTNET_NOLOGO} environment variable: '{dotnet_noLogo}'");
-        dontShowLogo = (dotnet_noLogo is not null and ("1" or "true")) || dontShowLogo;
+        string? dotnetNoLogoEnvVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
+        await logger.LogInformationAsync($"{EnvironmentVariableConstants.DOTNET_NOLOGO} environment variable: '{dotnetNoLogoEnvVar}'");
+        doNotShowLogo = (dotnetNoLogoEnvVar is not null and ("1" or "true")) || doNotShowLogo;
 
         await logger.LogInformationAsync($"Telemetry is '{(!isTelemetryOptedOut ? "ENABLED" : "DISABLED")}'");
 
-        if (!isTelemetryOptedOut && !dontShowLogo)
+        if (!isTelemetryOptedOut && !doNotShowLogo)
         {
             ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
-            string fileName = Path.ChangeExtension(Path.GetFileName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), "testingPlatformFirstTimeUseSentinel");
             string? directory = environment.GetEnvironmentVariable("LOCALAPPDATA") ?? environment.GetEnvironmentVariable("HOME");
             if (directory is not null)
             {
@@ -74,11 +73,12 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
             }
 
             IFileSystem fileSystem = serviceProvider.GetFileSystem();
+            string fileName = Path.ChangeExtension(Path.GetFileName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), "testingPlatformFirstTimeUseSentinel");
             bool sentinelIsNotPresent =
                 RoslynString.IsNullOrWhiteSpace(directory)
                 || !fileSystem.Exists(Path.Combine(directory, fileName));
 
-            if (!dontShowLogo && sentinelIsNotPresent)
+            if (!doNotShowLogo && sentinelIsNotPresent)
             {
                 IOutputDevice outputDevice = serviceProvider.GetOutputDevice();
                 await outputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.TelemetryNotice));
@@ -105,18 +105,11 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
             }
         }
 
-        if (!isTelemetryOptedOut)
-        {
-            serviceProvider.TryAddService(new TelemetryInformation(true, TelemetryProperties.VersionValue));
-        }
-        else
-        {
-            serviceProvider.TryAddService(new TelemetryInformation(false, TelemetryProperties.VersionValue));
-        }
+        serviceProvider.TryAddService(new TelemetryInformation(!isTelemetryOptedOut, TelemetryProperties.VersionValue));
 
-        ITelemetryCollector telemetryCollector = _telemetryFactory is null
+        ITelemetryCollector telemetryCollector = _telemetryFactory is null || isTelemetryOptedOut
             ? new NopTelemetryService(!isTelemetryOptedOut)
-            : !isTelemetryOptedOut ? _telemetryFactory(serviceProvider) : new NopTelemetryService(!isTelemetryOptedOut);
+            : _telemetryFactory(serviceProvider);
 
         if (!isTelemetryOptedOut)
         {
