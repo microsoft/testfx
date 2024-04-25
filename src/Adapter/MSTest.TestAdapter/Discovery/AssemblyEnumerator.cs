@@ -306,6 +306,15 @@ internal class AssemblyEnumerator : MarshalByRefObject
             var discoveredTests = new List<UnitTestElement>();
             var index = 0;
 
+            // trying to handle the test that comes without data by ignoring it but still doesn't work geting another issue
+            if (!data.Any())
+            {
+                var discoveredTest = test.Clone();
+                discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
+                discoveredTest.Ignored = true;
+                tests.Add(discoveredTest);
+            }
+
             foreach (var d in data)
             {
                 var discoveredTest = test.Clone();

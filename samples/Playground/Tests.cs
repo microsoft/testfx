@@ -13,7 +13,16 @@ namespace Playground;
 public class TestClass
 {
     [TestMethod]
+    [DynamicData(nameof(AdditionData))]
     public void Test()
     {
+    }
+
+    public static IEnumerable<object[]> AdditionData
+    {
+        get
+        {
+            return Array.Empty<object[]>();
+        }
     }
 }

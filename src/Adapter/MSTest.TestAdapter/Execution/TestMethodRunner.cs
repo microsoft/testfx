@@ -217,6 +217,7 @@ internal class TestMethodRunner
         }
 
         // Set a result in case no result is present.
+        // check here the error with the test doesn't run even skipping that gives an error
         if (results.Count == 0)
         {
             TestResult emptyResult = new()

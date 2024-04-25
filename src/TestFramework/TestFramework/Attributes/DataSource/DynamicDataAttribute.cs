@@ -148,7 +148,8 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                     _dynamicDataDeclaringType.FullName));
         }
 
-        if (!data.Any())
+        // adding check if env var is set with returning back the !
+        if (data.Any())
         {
             throw new ArgumentException(
                 string.Format(
