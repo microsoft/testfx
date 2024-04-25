@@ -66,7 +66,9 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         if (!isTelemetryOptedOut && !doNotShowLogo)
         {
             ITestApplicationModuleInfo testApplicationModuleInfo = serviceProvider.GetTestApplicationModuleInfo();
-            string? directory = environment.GetEnvironmentVariable("LOCALAPPDATA") ?? environment.GetEnvironmentVariable("HOME");
+#pragma warning disable RS0030 // Do not use banned APIs - There is no easy way to disable it for all members
+            string? directory = environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create);
+#pragma warning restore RS0030 // Do not use banned APIs
             if (directory is not null)
             {
                 directory = Path.Combine(directory, "Microsoft", "TestingPlatform");
