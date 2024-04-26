@@ -102,13 +102,25 @@ internal static class MethodRunner
         Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
         string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
     {
-        Thread executionThread = new(new ThreadStart(action))
+        Exception? realException = null;
+        Thread executionThread = new(new ThreadStart(() =>
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                realException = ex;
+                throw;
+            }
+        }))
         {
             IsBackground = true,
             Name = "MSTest Fixture Execution Thread",
         };
 
-        executionThread.SetApartmentState(Thread.CurrentThread.GetApartmentState());
+        executionThread.SetApartmentState(ApartmentState.STA);
         executionThread.Start();
 
         try
@@ -131,7 +143,9 @@ internal static class MethodRunner
             // If the execution thread completes before the timeout, the task will return true, otherwise false.
             if (executionTask.Result)
             {
-                return null;
+                return realException is not null
+                    ? throw realException
+                    : null;
             }
 
             // Timed out. For cancellation, either OCE or AggregateException with TCE will be thrown.
@@ -153,6 +167,16 @@ internal static class MethodRunner
             return new(
                 UnitTestOutcome.Timeout,
                 string.Format(CultureInfo.InvariantCulture, methodCancelledMessageFormat, methodInfo.DeclaringType!.FullName, methodInfo.Name));
+        }
+        catch (Exception)
+        {
+            // We throw the real exception to have the original stack trace to elaborate up the chain.
+            if (realException is not null)
+            {
+                throw realException;
+            }
+
+            throw;
         }
     }
 }
