@@ -308,7 +308,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
             catch (Exception ex)
             {
-                // if dataSource is empty without setting the `MarkTestsWithMissingDynamicDataAsInconclusive` it would throw inside GetData function.
                 if (ex is ArgumentException && MSTestSettings.CurrentSettings.MarkTestsWithMissingDynamicDataAsInconclusive)
                 {
                     var discoveredTest = test.Clone();

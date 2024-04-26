@@ -303,7 +303,6 @@ internal class TestMethodRunner
                     }
                     catch (Exception ex)
                     {
-                        // if dataSource is empty with setting the `MarkTestsWithMissingDynamicDataAsInconclusive` it would throw inside GetData function.
                         if (ex is ArgumentException && MSTestSettings.CurrentSettings.MarkTestsWithMissingDynamicDataAsInconclusive)
                         {
                             var inconclusiveResult = new TestResult
