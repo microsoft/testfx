@@ -85,9 +85,13 @@ public class FormatterUtilitiesTests : TestBase
             var actual = Deserialize(deserializer, json);
             object expected = CreateInstance(type);
 
-            if (type == typeof(DiscoverRequestArgs) || type == typeof(RunRequestArgs))
+            if (type == typeof(DiscoverRequestArgs))
             {
-                AssertRequestArgs(type, actual, expected);
+                AssertRequestArgs(type, (DiscoverRequestArgs)actual, (DiscoverRequestArgs)expected);
+            }
+            else if (type == typeof(RunRequestArgs))
+            {
+                AssertRequestArgs(type, (RunRequestArgs)actual, (RunRequestArgs)expected);
             }
             else
             {
@@ -99,9 +103,8 @@ public class FormatterUtilitiesTests : TestBase
     private void AssertRequestArgs<TRequestArgs>(Type type, TRequestArgs actualRequest, TRequestArgs expectedRequest)
         where TRequestArgs : RequestArgsBase
     {
-
-        Assert.AreEqual(expectedRequest.RunId, actualRequest?.RunId);
-        Assert.AreEqual(expectedRequest.TestNodes?.Count, actualRequest?.TestNodes?.Count);
+        Assert.AreEqual(expectedRequest.RunId, actualRequest.RunId);
+        Assert.AreEqual(expectedRequest.TestNodes?.Count, actualRequest.TestNodes?.Count);
 
         var actualTestNodes = actualRequest.TestNodes?.ToArray();
         var expectedTestNodes = expectedRequest.TestNodes?.ToArray();
