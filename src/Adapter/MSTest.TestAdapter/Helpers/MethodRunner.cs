@@ -17,7 +17,7 @@ internal static class MethodRunner
         Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
         string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
         => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
-            ? RunWithTimeoutAndCancellationWithCustomThread(action, cancellationTokenSource, timeout, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat)
+            ? RunWithTimeoutAndCancellationWithSTAThread(action, cancellationTokenSource, timeout, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat)
             : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeout, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat);
 
     private static TestFailedException? RunWithTimeoutAndCancellationWithThreadPool(
@@ -98,7 +98,7 @@ internal static class MethodRunner
 #if NET6_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 #endif
-    private static TestFailedException? RunWithTimeoutAndCancellationWithCustomThread(
+    private static TestFailedException? RunWithTimeoutAndCancellationWithSTAThread(
         Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
         string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
     {
