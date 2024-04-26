@@ -96,20 +96,9 @@ public class FormatterUtilitiesTests : TestBase
         }
     }
 
-    private void AssertRequestArgs(Type type, object actual, object expected)
+    private void AssertRequestArgs<TRequestArgs>(Type type, TRequestArgs actualRequest, TRequestArgs expectedRequest)
+        where TRequestArgs : RequestArgsBase
     {
-        RequestArgsBase? actualRequest = null;
-        RequestArgsBase? expectedRequest = null;
-        if (type == typeof(DiscoverRequestArgs))
-        {
-            actualRequest = (DiscoverRequestArgs)actual;
-            expectedRequest = (DiscoverRequestArgs)expected;
-        }
-        else if (type == typeof(RunRequestArgs))
-        {
-            actualRequest = (RunRequestArgs)actual;
-            expectedRequest = (RunRequestArgs)expected;
-        }
 
         Assert.AreEqual(expectedRequest?.RunId, actualRequest?.RunId);
         Assert.AreEqual(expectedRequest?.TestNodes?.Count, actualRequest?.TestNodes?.Count);
