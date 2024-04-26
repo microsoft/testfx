@@ -301,19 +301,30 @@ internal class AssemblyEnumerator : MarshalByRefObject
     {
         foreach (var dataSource in testDataSources)
         {
-            var data = dataSource.GetData(methodInfo);
+            IEnumerable<object?[]>? data = null;
+            try
+            {
+                data = dataSource.GetData(methodInfo);
+            }
+            catch (Exception ex)
+            {
+                // if dataSource is empty without setting the `MarkTestsWithMissingDynamicDataAsInconclusive` it would throw inside GetData function.
+                if (ex is ArgumentException && MSTestSettings.CurrentSettings.MarkTestsWithMissingDynamicDataAsInconclusive)
+                {
+                    var discoveredTest = test.Clone();
+                    discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
+                    tests.Add(discoveredTest);
+                    continue;
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
             var testDisplayNameFirstSeen = new Dictionary<string, int>();
             var discoveredTests = new List<UnitTestElement>();
             var index = 0;
-
-            // trying to handle the test that comes without data by ignoring it but still doesn't work geting another issue
-            if (!data.Any())
-            {
-                var discoveredTest = test.Clone();
-                discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
-                discoveredTest.Ignored = true;
-                tests.Add(discoveredTest);
-            }
 
             foreach (var d in data)
             {

@@ -217,7 +217,6 @@ internal class TestMethodRunner
         }
 
         // Set a result in case no result is present.
-        // check here the error with the test doesn't run even skipping that gives an error
         if (results.Count == 0)
         {
             TestResult emptyResult = new()
@@ -289,13 +288,39 @@ internal class TestMethodRunner
         else
         {
             var testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>();
+            Stopwatch watch = new();
 
             if (testDataSources != null)
             {
                 foreach (var testDataSource in testDataSources)
                 {
                     isDataDriven = true;
-                    foreach (var data in testDataSource.GetData(_testMethodInfo.MethodInfo))
+                    watch.Start();
+                    IEnumerable<object?[]>? dataSource = null;
+                    try
+                    {
+                        dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
+                    }
+                    catch (Exception ex)
+                    {
+                        // if dataSource is empty with setting the `MarkTestsWithMissingDynamicDataAsInconclusive` it would throw inside GetData function.
+                        if (ex is ArgumentException && MSTestSettings.CurrentSettings.MarkTestsWithMissingDynamicDataAsInconclusive)
+                        {
+                            var inconclusiveResult = new TestResult
+                            {
+                                Outcome = UTF.UnitTestOutcome.Inconclusive,
+                                Duration = watch.Elapsed,
+                            };
+                            results.Add(inconclusiveResult);
+                            continue;
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
+
+                    foreach (var data in dataSource)
                     {
                         try
                         {
