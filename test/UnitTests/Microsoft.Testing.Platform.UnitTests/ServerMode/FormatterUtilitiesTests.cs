@@ -100,18 +100,18 @@ public class FormatterUtilitiesTests : TestBase
         where TRequestArgs : RequestArgsBase
     {
 
-        Assert.AreEqual(expectedRequest?.RunId, actualRequest?.RunId);
-        Assert.AreEqual(expectedRequest?.TestNodes?.Count, actualRequest?.TestNodes?.Count);
+        Assert.AreEqual(expectedRequest.RunId, actualRequest?.RunId);
+        Assert.AreEqual(expectedRequest.TestNodes?.Count, actualRequest?.TestNodes?.Count);
 
-        var actualTestNodes = actualRequest?.TestNodes?.ToArray();
-        var expectedTestNodes = expectedRequest?.TestNodes?.ToArray();
+        var actualTestNodes = actualRequest.TestNodes?.ToArray();
+        var expectedTestNodes = expectedRequest.TestNodes?.ToArray();
 
-        for (int i = 0; i < actualRequest?.TestNodes?.Count; i++)
+        for (int i = 0; i < actualRequest.TestNodes?.Count; i++)
         {
             CustomAssert(typeof(TestNode), actualTestNodes?[i]!, expectedTestNodes?[i]!);
         }
 
-        Assert.AreEqual(expectedRequest?.GraphFilter, actualRequest?.GraphFilter);
+        Assert.AreEqual(expectedRequest.GraphFilter, actualRequest.GraphFilter);
     }
 
     private static void CustomAssert(Type type, object instanceDeserialized, object originalObject)
