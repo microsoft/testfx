@@ -308,7 +308,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
             catch (Exception ex)
             {
-                if (ex is ArgumentException && MSTestSettings.CurrentSettings.MarkTestsWithMissingDynamicDataAsInconclusive)
+                if (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
                 {
                     var discoveredTest = test.Clone();
                     discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;

@@ -56,7 +56,7 @@ public class MSTestSettings
         ForcedLegacyMode = false;
         TestSettingsFile = null;
         DisableParallelization = false;
-        MarkTestsWithMissingDynamicDataAsInconclusive = false;
+        ConsiderEmptyDataSourceAsInconclusive = false;
         TestTimeout = 0;
         AssemblyInitializeTimeout = 0;
         ClassInitializeTimeout = 0;
@@ -164,7 +164,7 @@ public class MSTestSettings
     /// <summary>
     ///  Gets a value indicating whether to enable marking tests with missing dynamic data as Inconclusive.
     /// </summary>
-    internal bool MarkTestsWithMissingDynamicDataAsInconclusive { get; private set; }
+    internal bool ConsiderEmptyDataSourceAsInconclusive { get; private set; }
 
     /// <summary>
     ///  Gets specified global ClassInitializeTimeout timeout.
@@ -217,7 +217,7 @@ public class MSTestSettings
         CurrentSettings.TreatClassAndAssemblyCleanupWarningsAsErrors = settings.TreatClassAndAssemblyCleanupWarningsAsErrors;
         CurrentSettings.AssemblyInitializeTimeout = settings.AssemblyInitializeTimeout;
         CurrentSettings.AssemblyCleanupTimeout = settings.AssemblyCleanupTimeout;
-        CurrentSettings.MarkTestsWithMissingDynamicDataAsInconclusive = settings.MarkTestsWithMissingDynamicDataAsInconclusive;
+        CurrentSettings.ConsiderEmptyDataSourceAsInconclusive = settings.ConsiderEmptyDataSourceAsInconclusive;
         CurrentSettings.ClassInitializeTimeout = settings.ClassInitializeTimeout;
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
@@ -481,11 +481,11 @@ public class MSTestSettings
                             break;
                         }
 
-                    case "MARKTESTSWITHMISSINGDYNAMICDATAASINCONCLUSIVE":
+                    case "CONSIDEREMPTYDATASOURCEASINCONCLUSIVE   ConsiderEmptyDataSourceAsInconclusive":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out bool markTestsWithMissingDynamicDataAsInconclusive) && markTestsWithMissingDynamicDataAsInconclusive)
+                            if (bool.TryParse(reader.ReadInnerXml(), out bool considerEmptyDataSourceAsInconclusive) && considerEmptyDataSourceAsInconclusive)
                             {
-                                settings.MarkTestsWithMissingDynamicDataAsInconclusive = markTestsWithMissingDynamicDataAsInconclusive;
+                                settings.ConsiderEmptyDataSourceAsInconclusive = considerEmptyDataSourceAsInconclusive;
                             }
 
                             break;
