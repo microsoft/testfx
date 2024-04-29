@@ -132,9 +132,7 @@ public sealed class TelemetryManagerTests : TestBase
         }
     }
 
-    [Arguments("LOCALAPPDATA")]
-    [Arguments("HOME")]
-    public async Task TelemetryManager_SentinelIsWrittenPerUserAndAvoidsShowingNoticeOnSubsequentRuns(string variable)
+    public async Task TelemetryManager_SentinelIsWrittenPerUserAndAvoidsShowingNoticeOnSubsequentRuns()
     {
         // Arrange
         var options = new TestApplicationOptions();
@@ -143,7 +141,8 @@ public sealed class TelemetryManagerTests : TestBase
         var fileSystemMock = new Mock<IFileSystem>();
         var environmentMock = new Mock<IEnvironment>();
         var commandLineOptions = new Mock<ICommandLineOptions>();
-        environmentMock.Setup(s => s.GetEnvironmentVariable(variable)).Returns("sentinelDir");
+        environmentMock.Setup(s => s.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create))
+            .Returns("sentinelDir");
         var outputDevice = new Mock<IOutputDevice>();
 
         var testApplicationModuleInfoMock = new Mock<ITestApplicationModuleInfo>();
@@ -194,9 +193,7 @@ public sealed class TelemetryManagerTests : TestBase
         fileSystemMock.Verify(f => f.NewFileStream(path, It.IsAny<FileMode>(), It.IsAny<FileAccess>()), Times.Never);
     }
 
-    [Arguments("LOCALAPPDATA")]
-    [Arguments("HOME")]
-    public async Task TelemetryManager_SentinelIsWrittenOnlyWhenUserWouldSeeTheMessage(string variable)
+    public async Task TelemetryManager_SentinelIsWrittenOnlyWhenUserWouldSeeTheMessage()
     {
         // Arrange
         var options = new TestApplicationOptions();
@@ -205,7 +202,8 @@ public sealed class TelemetryManagerTests : TestBase
         var fileSystemMock = new Mock<IFileSystem>();
         var environmentMock = new Mock<IEnvironment>();
         var commandLineOptions = new Mock<ICommandLineOptions>();
-        environmentMock.Setup(s => s.GetEnvironmentVariable(variable)).Returns("sentinelDir");
+        environmentMock.Setup(s => s.GetFolderPath(Environment.SpecialFolder.LocalApplicationData, Environment.SpecialFolderOption.Create))
+            .Returns("sentinelDir");
         var outputDevice = new Mock<IOutputDevice>();
 
         var testApplicationModuleInfoMock = new Mock<ITestApplicationModuleInfo>();

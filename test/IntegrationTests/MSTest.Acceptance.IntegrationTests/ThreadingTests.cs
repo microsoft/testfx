@@ -142,16 +142,82 @@ public sealed class ThreadingTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Passed!");
     }
 
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task LifecycleAttributesVoidThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string tfm)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        TestHost testHost = TestHost.LocateFrom(_testAssetFixture.LifecycleAttributesVoidProjectPath, TestAssetFixture.LifecycleAttributesVoidProjectName, tfm);
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
+        {
+            ["MSTEST_THREAD_STATE_IS_STA"] = "1",
+        });
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContains("Passed!");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task LifecycleAttributesTaskThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string tfm)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        TestHost testHost = TestHost.LocateFrom(_testAssetFixture.LifecycleAttributesTaskProjectPath, TestAssetFixture.LifecycleAttributesTaskProjectName, tfm);
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
+        {
+            ["MSTEST_THREAD_STATE_IS_STA"] = "1",
+        });
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContains("Passed!");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.Net), typeof(TargetFrameworks))]
+    public async Task LifecycleAttributesValueTaskThreading_WhenMainIsNotSTA_RunsettingsAsksForSTA_OnWindows_ThreadIsSTA(string tfm)
+    {
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            return;
+        }
+
+        TestHost testHost = TestHost.LocateFrom(_testAssetFixture.LifecycleAttributesValueTaskProjectPath, TestAssetFixture.LifecycleAttributesValueTaskProjectName, tfm);
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, "sta.runsettings");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new()
+        {
+            ["MSTEST_THREAD_STATE_IS_STA"] = "1",
+        });
+
+        testHostResult.AssertExitCodeIs(0);
+        testHostResult.AssertOutputContains("Passed!");
+    }
+
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture)
         : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
         public const string ProjectName = "TestThreading";
         public const string STAThreadProjectName = "STATestThreading";
+        public const string LifecycleAttributesVoidProjectName = "LifecycleAttributesVoid";
+        public const string LifecycleAttributesTaskProjectName = "LifecycleAttributesTask";
+        public const string LifecycleAttributesValueTaskProjectName = "LifecycleAttributesValueTask";
 
         public string ProjectPath => GetAssetPath(ProjectName);
 
         public string STAThreadProjectPath => GetAssetPath(STAThreadProjectName);
+
+        public string LifecycleAttributesVoidProjectPath => GetAssetPath(LifecycleAttributesVoidProjectName);
+
+        public string LifecycleAttributesTaskProjectPath => GetAssetPath(LifecycleAttributesTaskProjectName);
+
+        public string LifecycleAttributesValueTaskProjectPath => GetAssetPath(LifecycleAttributesValueTaskProjectName);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
@@ -168,6 +234,24 @@ public sealed class ThreadingTests : AcceptanceTestBase
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$ProjectName$", STAThreadProjectName)
                 .PatchCodeWithReplace("$GenerateEntryPoint$", "false")
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (LifecycleAttributesVoidProjectName, LifecycleAttributesVoidProjectName,
+                LifecycleAttributesVoidSource
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (LifecycleAttributesTaskProjectName, LifecycleAttributesTaskProjectName,
+                LifecycleAttributesTaskSource
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (LifecycleAttributesValueTaskProjectName, LifecycleAttributesValueTaskProjectName,
+                LifecycleAttributesValueTaskSource
+                .PatchTargetFrameworks(TargetFrameworks.Net)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
@@ -262,7 +346,7 @@ public class UnitTest1
     }
 #endif
 
-    private void AssertCorrectThreadApartmentState()
+    private static void AssertCorrectThreadApartmentState()
     {
         var apartmentState = Thread.CurrentThread.GetApartmentState();
         if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
@@ -294,6 +378,348 @@ public static class Program
         Microsoft.VisualStudio.TestTools.UnitTesting.TestingPlatformBuilderHook.AddExtensions(builder, args);
         using ITestApplication app = builder.BuildAsync().GetAwaiter().GetResult();
         return app.RunAsync().GetAwaiter().GetResult();
+    }
+}
+""";
+
+        private const string LifecycleAttributesVoidSource = """
+#file sta.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <ExecutionThreadApartmentState>STA</ExecutionThreadApartmentState>
+    </RunConfiguration>
+</RunSettings>
+
+#file mta.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <ExecutionThreadApartmentState>MTA</ExecutionThreadApartmentState>
+    </RunConfiguration>
+</RunSettings>
+
+#file LifecycleAttributesVoid.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <GenerateTestingPlatformEntryPoint>true</GenerateTestingPlatformEntryPoint>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="sta.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="mta.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
+
+#file LifecycleAttributesVoid.cs
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class LifecycleAttributesVoid
+{
+    [AssemblyInitialize]
+    public static void AssemblyInitialize(TestContext context)
+    {
+        AssertCorrectThreadApartmentState();
+    }
+
+    [AssemblyCleanup]
+    public static void AssemblyCleanup()
+    {
+        AssertCorrectThreadApartmentState();
+    }
+
+    [ClassInitialize]
+    public static void ClassInitialize(TestContext context)
+    {
+        AssertCorrectThreadApartmentState();
+    }
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        AssertCorrectThreadApartmentState();
+    }
+
+    [TestInitialize]
+    public void TestInitialize()
+    {
+        AssertCorrectThreadApartmentState();
+    }
+
+    [TestCleanup]
+    public void TestCleanup()
+    {
+        AssertCorrectThreadApartmentState();
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
+    }
+
+    private static void AssertCorrectThreadApartmentState()
+    {
+        var apartmentState = Thread.CurrentThread.GetApartmentState();
+        if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
+        {
+            Assert.AreEqual(ApartmentState.STA, apartmentState);
+        }
+        else
+        {
+            Assert.AreNotEqual(ApartmentState.STA, apartmentState);
+        }
+    }
+}
+""";
+
+        private const string LifecycleAttributesTaskSource = """
+#file sta.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <ExecutionThreadApartmentState>STA</ExecutionThreadApartmentState>
+    </RunConfiguration>
+</RunSettings>
+
+#file mta.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <ExecutionThreadApartmentState>MTA</ExecutionThreadApartmentState>
+    </RunConfiguration>
+</RunSettings>
+
+#file LifecycleAttributesTask.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <GenerateTestingPlatformEntryPoint>true</GenerateTestingPlatformEntryPoint>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="sta.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="mta.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
+
+#file LifecycleAttributesTask.cs
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class LifecycleAttributesTask
+{
+    [AssemblyInitialize]
+    public static Task AssemblyInitialize(TestContext context)
+    {
+        AssertCorrectThreadApartmentState();
+        return Task.CompletedTask;
+    }
+
+    [AssemblyCleanup]
+    public static Task AssemblyCleanup()
+    {
+        AssertCorrectThreadApartmentState();
+        return Task.CompletedTask;
+    }
+
+    [ClassInitialize]
+    public static Task ClassInitialize(TestContext context)
+    {
+        AssertCorrectThreadApartmentState();
+        return Task.CompletedTask;
+    }
+
+    [ClassCleanup]
+    public static Task ClassCleanup()
+    {
+        AssertCorrectThreadApartmentState();
+        return Task.CompletedTask;
+    }
+
+    [TestInitialize]
+    public Task TestInitialize()
+    {
+        AssertCorrectThreadApartmentState();
+        return Task.CompletedTask;
+    }
+
+    [TestCleanup]
+    public Task TestCleanup()
+    {
+        AssertCorrectThreadApartmentState();
+        return Task.CompletedTask;
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
+    }
+
+    private static void AssertCorrectThreadApartmentState()
+    {
+        var apartmentState = Thread.CurrentThread.GetApartmentState();
+        if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
+        {
+            Assert.AreEqual(ApartmentState.STA, apartmentState);
+        }
+        else
+        {
+            Assert.AreNotEqual(ApartmentState.STA, apartmentState);
+        }
+    }
+}
+""";
+
+        private const string LifecycleAttributesValueTaskSource = """
+#file sta.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <ExecutionThreadApartmentState>STA</ExecutionThreadApartmentState>
+    </RunConfiguration>
+</RunSettings>
+
+#file mta.runsettings
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+        <ExecutionThreadApartmentState>MTA</ExecutionThreadApartmentState>
+    </RunConfiguration>
+</RunSettings>
+
+#file LifecycleAttributesValueTask.csproj
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <GenerateTestingPlatformEntryPoint>true</GenerateTestingPlatformEntryPoint>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest.TestAdapter" Version="$MSTestVersion$" />
+    <PackageReference Include="MSTest.TestFramework" Version="$MSTestVersion$" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$MicrosoftTestingPlatformVersion$" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="sta.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="mta.runsettings">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
+
+#file LifecycleAttributesValueTask.cs
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+[TestClass]
+public class LifecycleAttributesValueTask
+{
+    [AssemblyInitialize]
+    public static ValueTask AssemblyInitialize(TestContext context)
+    {
+        AssertCorrectThreadApartmentState();
+        return ValueTask.CompletedTask;
+    }
+
+    [AssemblyCleanup]
+    public static ValueTask AssemblyCleanup()
+    {
+        AssertCorrectThreadApartmentState();
+        return ValueTask.CompletedTask;
+    }
+
+    [ClassInitialize]
+    public static ValueTask ClassInitialize(TestContext context)
+    {
+        AssertCorrectThreadApartmentState();
+        return ValueTask.CompletedTask;
+    }
+
+    [ClassCleanup]
+    public static ValueTask ClassCleanup()
+    {
+        AssertCorrectThreadApartmentState();
+        return ValueTask.CompletedTask;
+    }
+
+    [TestInitialize]
+    public ValueTask TestInitialize()
+    {
+        AssertCorrectThreadApartmentState();
+        return ValueTask.CompletedTask;
+    }
+
+    [TestCleanup]
+    public ValueTask TestCleanup()
+    {
+        AssertCorrectThreadApartmentState();
+        return ValueTask.CompletedTask;
+    }
+
+    [TestMethod]
+    public void TestMethod()
+    {
+    }
+
+    private static void AssertCorrectThreadApartmentState()
+    {
+        var apartmentState = Thread.CurrentThread.GetApartmentState();
+        if (Environment.GetEnvironmentVariable("MSTEST_THREAD_STATE_IS_STA") == "1")
+        {
+            Assert.AreEqual(ApartmentState.STA, apartmentState);
+        }
+        else
+        {
+            Assert.AreNotEqual(ApartmentState.STA, apartmentState);
+        }
     }
 }
 """;
