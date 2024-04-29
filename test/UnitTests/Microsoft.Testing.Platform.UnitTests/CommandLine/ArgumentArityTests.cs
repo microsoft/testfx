@@ -47,7 +47,7 @@ public class ArgumentArityTests : TestBase
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
             Assert.AreEqual($"Option '--zeroArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments{Environment.NewLine}", ((TextOutputDeviceData)data).Text, StringComparer.Ordinal));
 
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -63,7 +63,7 @@ public class ArgumentArityTests : TestBase
         string[] args = ["--exactlyOneArgumentsOption arg1", "arg2"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -82,7 +82,7 @@ public class ArgumentArityTests : TestBase
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
             Assert.AreEqual($"Option '--exactlyOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments{Environment.NewLine}", ((TextOutputDeviceData)data).Text, StringComparer.Ordinal));
 
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -101,7 +101,7 @@ public class ArgumentArityTests : TestBase
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
             Assert.AreEqual($"Option '--zeroOrOneArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at most 1 arguments{Environment.NewLine}", ((TextOutputDeviceData)data).Text, StringComparer.Ordinal));
 
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -120,7 +120,7 @@ public class ArgumentArityTests : TestBase
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
             Assert.AreEqual($"Option '--oneOrMoreArgumentsOption' from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) expects at least 1 arguments{Environment.NewLine}", ((TextOutputDeviceData)data).Text, StringComparer.Ordinal));
 
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -135,7 +135,7 @@ public class ArgumentArityTests : TestBase
         // Arrange
         string[] args = ["--zeroArgumentsOption", "--zeroOrOneArgumentsOption", "--zeroOrMoreArgumentsOption arg2", "--exactlyOneArgumentsOption arg1", "oneOrMoreArgumentsOption arg1"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -161,20 +161,17 @@ public class ArgumentArityTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-            => new CommandLineOption[]
-            {
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => new CommandLineOption[]
+                    {
                 new("zeroArgumentsOption", "Show command line zeroArgumentsOption.", ArgumentArity.Zero, false),
                 new("zeroOrOneArgumentsOption", "Show command line zeroOrOneArgumentsOption.", ArgumentArity.ZeroOrOne, false),
                 new("zeroOrMoreArgumentsOption", "Show command line zeroOrMoreArgumentsOption.", ArgumentArity.ZeroOrMore, false),
                 new("exactlyOneArgumentsOption", "Show command line exactlyOneArgumentsOption.", ArgumentArity.ExactlyOne, false),
                 new("oneOrMoreArgumentsOption", "Show command line oneOrMoreArgumentsOption.", ArgumentArity.OneOrMore, false),
-            };
+                    };
 
-        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-            => ValidationResult.ValidTask;
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.ValidTask;
 
-        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-            => ValidationResult.ValidTask;
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
     }
 }

@@ -13,7 +13,7 @@ public static class ProcessFactory
         string workingDirectory = config.WorkingDirectory
             .OrDefault(Path.GetDirectoryName(config.FileName).OrDefault(Directory.GetCurrentDirectory()));
 
-        var processStartInfo = new ProcessStartInfo()
+        ProcessStartInfo processStartInfo = new()
         {
             FileName = fullPath,
             Arguments = config.Arguments,
@@ -44,7 +44,7 @@ public static class ProcessFactory
             }
         }
 
-        var process = new Process()
+        Process process = new()
         {
             StartInfo = processStartInfo,
             EnableRaisingEvents = true,
@@ -55,8 +55,8 @@ public static class ProcessFactory
         // so we start the process, try to grab the needed info and set it.
         // And then we give the call reference to ProcessHandle, but not to ProcessHandleInfo
         // so they can easily get the info, but cannot change it.
-        var processHandleInfo = new ProcessHandleInfo();
-        var processHandle = new ProcessHandle(process, processHandleInfo);
+        ProcessHandleInfo processHandleInfo = new();
+        ProcessHandle processHandle = new(process, processHandleInfo);
 
         process.Exited += (s, e) => config?.OnExit?.Invoke(processHandle, process.ExitCode);
 

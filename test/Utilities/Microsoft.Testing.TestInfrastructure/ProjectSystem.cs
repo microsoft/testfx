@@ -63,7 +63,7 @@ EndGlobal
 
     public CSharpProject CreateCSharpProject(string projectName, params string[] tfm)
     {
-        var newProject = new CSharpProject(FolderPath, projectName, tfm);
+        CSharpProject newProject = new(FolderPath, projectName, tfm);
         Projects.Add(newProject);
 
         var projectGuid = Guid.NewGuid();
@@ -141,7 +141,7 @@ public class CSharpProject : Project
 
 public abstract class Project : Folder
 {
-    public Project(string projectFolder)
+    protected Project(string projectFolder)
         : base(projectFolder)
     {
     }
@@ -149,7 +149,7 @@ public abstract class Project : Folder
 
 public abstract class Folder
 {
-    public Folder(string? folderPath)
+    protected Folder(string? folderPath)
     {
         if (string.IsNullOrEmpty(folderPath))
         {

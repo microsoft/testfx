@@ -18,14 +18,14 @@ public class TreeNodeFilterTests : TestBase
 
     public void MatchAllFilter_MatchesAnyPath()
     {
-        var filter = new TreeNodeFilter("/**");
+        TreeNodeFilter filter = new("/**");
         Assert.IsTrue(filter.MatchesFilter("/Any/Path", new PropertyBag()));
         Assert.IsTrue(filter.MatchesFilter("/Path/Of/The/Test", new PropertyBag()));
     }
 
     public void MatchAllFilter_MatchesSubpaths()
     {
-        var filter = new TreeNodeFilter("/Path/**");
+        TreeNodeFilter filter = new("/Path/**");
         Assert.IsTrue(filter.MatchesFilter("/Path/Of/The/Test", new PropertyBag()));
     }
 
@@ -35,7 +35,7 @@ public class TreeNodeFilterTests : TestBase
 
     public void MatchWildcard_MatchesSubstrings()
     {
-        var filter = new TreeNodeFilter("/*.UnitTests");
+        TreeNodeFilter filter = new("/*.UnitTests");
         Assert.IsTrue(filter.MatchesFilter("/ProjectA.UnitTests", new PropertyBag()));
         Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag()));
         Assert.IsFalse(filter.MatchesFilter("/ProjectB.FunctionalTests", new PropertyBag()));
@@ -43,7 +43,7 @@ public class TreeNodeFilterTests : TestBase
 
     public void EscapeSequences_SupportsWildcard()
     {
-        var filter = new TreeNodeFilter("/*.\\*UnitTests");
+        TreeNodeFilter filter = new("/*.\\*UnitTests");
         Assert.IsTrue(filter.MatchesFilter("/ProjectA.*UnitTests", new PropertyBag()));
         Assert.IsTrue(filter.MatchesFilter("/ProjectB.*UnitTests", new PropertyBag()));
         Assert.IsFalse(filter.MatchesFilter("/ProjectB.AUnitTests", new PropertyBag()));
@@ -51,7 +51,7 @@ public class TreeNodeFilterTests : TestBase
 
     public void EscapeSequences_SupportsParentheses()
     {
-        var filter = new TreeNodeFilter("/*.\\(UnitTests\\)");
+        TreeNodeFilter filter = new("/*.\\(UnitTests\\)");
         Assert.IsTrue(filter.MatchesFilter("/ProjectA.(UnitTests)", new PropertyBag()));
         Assert.IsTrue(filter.MatchesFilter("/ProjectB.(UnitTests)", new PropertyBag()));
         Assert.IsFalse(filter.MatchesFilter("/ProjectB.(UnitTests", new PropertyBag()));
@@ -61,7 +61,7 @@ public class TreeNodeFilterTests : TestBase
 
     public void OrExpression_WorksForLiteralStrings()
     {
-        var filter = new TreeNodeFilter("/A|B");
+        TreeNodeFilter filter = new("/A|B");
         Assert.IsTrue(filter.MatchesFilter("/A", new PropertyBag()));
         Assert.IsTrue(filter.MatchesFilter("/B", new PropertyBag()));
         Assert.IsFalse(filter.MatchesFilter("/C", new PropertyBag()));
@@ -69,7 +69,7 @@ public class TreeNodeFilterTests : TestBase
 
     public void AndExpression()
     {
-        var filter = new TreeNodeFilter("/(*.UnitTests)&(*ProjectB*)");
+        TreeNodeFilter filter = new("/(*.UnitTests)&(*ProjectB*)");
         Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag()));
         Assert.IsTrue(filter.MatchesFilter("/Hello.ProjectB.UnitTests", new PropertyBag()));
         Assert.IsFalse(filter.MatchesFilter("/ProjectC.UnitTests", new PropertyBag()));
@@ -78,7 +78,7 @@ public class TreeNodeFilterTests : TestBase
 
     public void Parentheses_EnsuresOrdering()
     {
-        var filter = new TreeNodeFilter("/((*.UnitTests)&(*ProjectB*))|C");
+        TreeNodeFilter filter = new("/((*.UnitTests)&(*ProjectB*))|C");
         Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag()));
         Assert.IsTrue(filter.MatchesFilter("/Hello.ProjectB.UnitTests", new PropertyBag()));
         Assert.IsTrue(filter.MatchesFilter("/C", new PropertyBag()));
@@ -91,23 +91,19 @@ public class TreeNodeFilterTests : TestBase
 
     public void Parameters_PropertyCheck()
     {
-        var filter = new TreeNodeFilter("/*.UnitTests[Tag=Fast]");
+        TreeNodeFilter filter = new("/*.UnitTests[Tag=Fast]");
         Assert.IsTrue(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag(new KeyValuePairStringProperty("Tag", "Fast"))));
         Assert.IsFalse(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag(new KeyValuePairStringProperty("Tag", "Slow"))));
         Assert.IsFalse(filter.MatchesFilter("/ProjectB.UnitTests", new PropertyBag()));
     }
 
-    public void Parameters_DisallowAtStart()
-        => Assert.Throws<InvalidOperationException>(() => _ = new TreeNodeFilter("/[Tag=Fast]"));
+    public void Parameters_DisallowAtStart() => Assert.Throws<InvalidOperationException>(() => _ = new TreeNodeFilter("/[Tag=Fast]"));
 
-    public void Parameters_DisallowEmpty()
-        => Assert.Throws<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[]"));
+    public void Parameters_DisallowEmpty() => Assert.Throws<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[]"));
 
-    public void Parameters_DisallowMultiple()
-        => Assert.Throws<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[Prop=2][Prop=B]"));
+    public void Parameters_DisallowMultiple() => Assert.Throws<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[Prop=2][Prop=B]"));
 
-    public void Parameters_DisallowNested()
-        => Assert.Throws<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[X=[Y=1]]"));
+    public void Parameters_DisallowNested() => Assert.Throws<InvalidOperationException>(() => _ = new TreeNodeFilter("/Path[X=[Y=1]]"));
 
     [Arguments("/A/B", "/A/B", true)]
     [Arguments("/A/B", "/A%2FB", false)]
@@ -115,8 +111,8 @@ public class TreeNodeFilterTests : TestBase
     [Arguments("/A%2FB", "/A%2FB", true)]
     public void TestNodeFilterNeedsUrlEncodingOfSlashes(string filter, string nodePath, bool isMatched)
     {
-        var filterInstance = new TreeNodeFilter(filter);
-        var nodeProperties = new PropertyBag();
+        TreeNodeFilter filterInstance = new(filter);
+        PropertyBag nodeProperties = new();
 
         if (isMatched)
         {
@@ -138,8 +134,8 @@ public class TreeNodeFilterTests : TestBase
     [Arguments("/A%2FB[Other%2Fthing=KeyWithSlash]", "/A%2FB", false)]
     public void PropertiesDoNotNeedUrlEncodingOfSlashes(string filter, string nodePath, bool isMatched)
     {
-        var filterInstance = new TreeNodeFilter(filter);
-        var nodeProperties = new PropertyBag(
+        TreeNodeFilter filterInstance = new(filter);
+        PropertyBag nodeProperties = new(
             new KeyValuePairStringProperty("Tag", "Fast"),
             new KeyValuePairStringProperty("ValueWithSlash", "Some/thing"),
             new KeyValuePairStringProperty("Other/thing", "KeyWithSlash"));

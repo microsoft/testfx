@@ -142,7 +142,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             _messageHandler = await _messageHandlerFactory.CreateMessageHandlerAsync(_testApplicationCancellationTokenSource.CancellationToken);
 
             // Initialize the ServerLoggerForwarderProvider, it can be null if diagnostic is disabled.
-            var serviceLoggerForwarder = ServiceProvider.GetService<ServerLoggerForwarderProvider>();
+            ServerLoggerForwarderProvider? serviceLoggerForwarder = ServiceProvider.GetService<ServerLoggerForwarderProvider>();
             if (serviceLoggerForwarder is not null)
             {
                 await serviceLoggerForwarder.InitializeAsync(this);
@@ -247,7 +247,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                         break;
 
                     case ErrorMessage error:
-                        var exception = new RemoteInvocationException();
+                        RemoteInvocationException exception = new();
                         CompleteRequest(ref _serverToClientRequests, error.Id, completion => completion.TrySetException(exception));
                         break;
                     default:
@@ -332,7 +332,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         {
             // We enqueue the request before to "unlink" the current thread so we're sure that we
             // correctly handle the completion also after the "exit"
-            var rpcState = new RpcInvocationState();
+            RpcInvocationState rpcState = new();
             _clientToServerRequests.TryAdd(request.Id, rpcState);
 
             // Note: Yield, so that the main message reading loop can continue.
@@ -457,7 +457,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
         // Note: Currently the request generation and filtering isn't extensible
         // in server mode, we create NoOp services, so that they're always available.
-        var requestFactory = new ServerTestExecutionRequestFactory(session =>
+        ServerTestExecutionRequestFactory requestFactory = new(session =>
         {
             ICollection<TestNode>? testNodes = args.TestNodes;
             string? filter = args.GraphFilter;
@@ -475,9 +475,9 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         });
 
         // Build the per request objects
-        var filterFactory = new ServerTestExecutionFilterFactory();
-        var invoker = new TestHostTestFrameworkInvoker(perRequestServiceProvider);
-        var testNodeUpdateProcessor = new PerRequestServerDataConsumer(perRequestServiceProvider, this, args.RunId, perRequestServiceProvider.GetTask());
+        ServerTestExecutionFilterFactory filterFactory = new();
+        TestHostTestFrameworkInvoker invoker = new(perRequestServiceProvider);
+        PerRequestServerDataConsumer testNodeUpdateProcessor = new(perRequestServiceProvider, this, args.RunId, perRequestServiceProvider.GetTask());
 
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
 
@@ -611,7 +611,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     private async Task SendErrorAsync(int reqId, int errorCode, string message, object? data, CancellationToken cancellationToken)
     {
         AssertInitialized();
-        var error = new ErrorMessage(reqId, errorCode, message, data);
+        ErrorMessage error = new(reqId, errorCode, message, data);
 
         using (await _messageMonitor.LockAsync(cancellationToken))
         {
@@ -622,7 +622,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     private async Task SendResponseAsync(int reqId, object result, CancellationToken cancellationToken)
     {
         AssertInitialized();
-        var response = new ResponseMessage(reqId, result);
+        ResponseMessage response = new(reqId, result);
 
         using (await _messageMonitor.LockAsync(cancellationToken))
         {
@@ -640,7 +640,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         _requestCounter.AddCount();
         try
         {
-            var notification = new NotificationMessage(method, @params);
+            NotificationMessage notification = new(method, @params);
 
             using (await _messageMonitor.LockAsync(cancellationToken))
             {
@@ -698,8 +698,8 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     {
         AssertInitialized();
         int requestId = Interlocked.Increment(ref _serverToClientRequestId);
-        var request = new RequestMessage(requestId, method, @params);
-        var invocationState = new RpcInvocationState();
+        RequestMessage request = new(requestId, method, @params);
+        RpcInvocationState invocationState = new();
 
         _serverToClientRequests.TryAdd(requestId, invocationState);
 

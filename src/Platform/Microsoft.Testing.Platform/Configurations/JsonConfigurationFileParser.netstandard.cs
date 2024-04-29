@@ -32,7 +32,7 @@ internal sealed class JsonConfigurationFileParser
 
     private (Dictionary<string, string?> SingleValueData, Dictionary<string, string?> PropertyToAllChildren) ParseStream(Stream input)
     {
-        using var reader = new StreamReader(input);
+        using StreamReader reader = new(input);
         var doc = (JsonObject)Jsonite.Json.Deserialize(reader.ReadToEnd(), _settings);
         if (doc is not null)
         {

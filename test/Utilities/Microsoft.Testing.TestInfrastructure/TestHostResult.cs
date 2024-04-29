@@ -23,7 +23,7 @@ public sealed class TestHostResult(string command, int exitCode, string standard
 
     public override string ToString()
     {
-        var stringBuilder = new StringBuilder();
+        StringBuilder stringBuilder = new();
         stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Command: {Command}");
         stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"====================");
         stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"ExitCode: {ExitCode}");

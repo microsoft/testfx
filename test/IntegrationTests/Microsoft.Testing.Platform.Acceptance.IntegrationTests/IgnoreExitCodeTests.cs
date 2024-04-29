@@ -108,12 +108,12 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
         .PatchCodeWithReplace("$TargetFramework$", tfm)
         .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
-        var compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         compilationResult = await DotnetCli.RunAsync(
             $"build -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-        var testHostResult = await testHost.ExecuteAsync(
+        TestHostResult testHostResult = await testHost.ExecuteAsync(
             command: commandLine,
             environmentVariables: environmentVariable is null ? null : new Dictionary<string, string>()
             {
