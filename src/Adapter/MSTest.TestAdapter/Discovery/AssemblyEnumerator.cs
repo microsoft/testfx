@@ -306,19 +306,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
             {
                 data = dataSource.GetData(methodInfo);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
             {
-                if (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
-                {
-                    var discoveredTest = test.Clone();
-                    discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
-                    tests.Add(discoveredTest);
-                    continue;
-                }
-                else
-                {
-                    throw;
-                }
+                var discoveredTest = test.Clone();
+                discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
+                tests.Add(discoveredTest);
+                continue;
             }
 
             var testDisplayNameFirstSeen = new Dictionary<string, int>();

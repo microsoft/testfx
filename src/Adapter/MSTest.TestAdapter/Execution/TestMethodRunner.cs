@@ -299,21 +299,14 @@ internal class TestMethodRunner
                     {
                         dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
                     }
-                    catch (Exception ex)
+                    catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
                     {
-                        if (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                        var inconclusiveResult = new TestResult
                         {
-                            var inconclusiveResult = new TestResult
-                            {
-                                Outcome = UTF.UnitTestOutcome.Inconclusive,
-                            };
-                            results.Add(inconclusiveResult);
-                            continue;
-                        }
-                        else
-                        {
-                            throw;
-                        }
+                            Outcome = UTF.UnitTestOutcome.Inconclusive,
+                        };
+                        results.Add(inconclusiveResult);
+                        continue;
                     }
 
                     foreach (var data in dataSource)
