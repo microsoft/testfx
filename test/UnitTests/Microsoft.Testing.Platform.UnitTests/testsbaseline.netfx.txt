@@ -114,6 +114,8 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLo
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Log_WhenSyncFlush_StreamWriterIsCalledOnlyWhenLogLevelAllowsIt(Microsoft.Testing.Platform.Logging.LogLevel, Microsoft.Testing.Platform.Logging.LogLevel) [6]
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FileLoggerTests.Write_IfMalformedUTF8_ShouldNotCrash()
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FormatterUtilitiesTests.CanDeserializeTaskResponse()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FormatterUtilitiesTests.DeserializeSpecificTypes(System.Type) (type: typeof(Microsoft.Testing.Platform.ServerMode.DiscoverRequestArgs))
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FormatterUtilitiesTests.DeserializeSpecificTypes(System.Type) (type: typeof(Microsoft.Testing.Platform.ServerMode.RunRequestArgs))
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FormatterUtilitiesTests.SerializeDeserialize_Succeed(System.Type) (Artifact)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FormatterUtilitiesTests.SerializeDeserialize_Succeed(System.Type) (AttachDebuggerInfoArgs)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.FormatterUtilitiesTests.SerializeDeserialize_Succeed(System.Type) (CancelRequestArgs)

@@ -550,7 +550,7 @@ internal sealed class Json
             string runId = json.Bind<string>(jsonElement, JsonRpcStrings.RunId);
             _ = Guid.TryParse(runId, out Guid result);
 
-            json.TryBind(jsonElement, out ICollection<TestNode>? testNodes, JsonRpcStrings.Tests);
+            json.TryArrayBind(jsonElement, out TestNode[]? testNodes, JsonRpcStrings.Tests);
             json.TryBind(jsonElement, out string? graphFilter, JsonRpcStrings.Filter);
 
             return new DiscoverRequestArgs(
@@ -564,7 +564,7 @@ internal sealed class Json
             string runId = json.Bind<string>(jsonElement, JsonRpcStrings.RunId);
             _ = Guid.TryParse(runId, out Guid result);
 
-            json.TryBind(jsonElement, out ICollection<TestNode>? testNodes, JsonRpcStrings.Tests);
+            json.TryArrayBind(jsonElement, out TestNode[]? testNodes, JsonRpcStrings.Tests);
             json.TryBind(jsonElement, out string? graphFilter, JsonRpcStrings.Filter);
 
             return new RunRequestArgs(
@@ -723,6 +723,18 @@ internal sealed class Json
         }
 
         value = Deserialize<T>(element);
+        return true;
+    }
+
+    internal bool TryArrayBind<T>(JsonElement element, out T[]? value, string? property = null)
+    {
+        if (property is not null && !element.TryGetProperty(property, out element))
+        {
+            value = default;
+            return false;
+        }
+
+        value = element.EnumerateArray().Select(x => Deserialize<T>(x)).ToArray();
         return true;
     }
 
