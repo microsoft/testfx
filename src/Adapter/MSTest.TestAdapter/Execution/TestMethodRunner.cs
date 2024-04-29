@@ -288,14 +288,12 @@ internal class TestMethodRunner
         else
         {
             var testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>();
-            Stopwatch watch = new();
 
             if (testDataSources != null)
             {
                 foreach (var testDataSource in testDataSources)
                 {
                     isDataDriven = true;
-                    watch.Start();
                     IEnumerable<object?[]>? dataSource = null;
                     try
                     {
@@ -308,7 +306,6 @@ internal class TestMethodRunner
                             var inconclusiveResult = new TestResult
                             {
                                 Outcome = UTF.UnitTestOutcome.Inconclusive,
-                                Duration = watch.Elapsed,
                             };
                             results.Add(inconclusiveResult);
                             continue;
