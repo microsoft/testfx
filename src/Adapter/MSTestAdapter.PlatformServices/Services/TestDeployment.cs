@@ -77,14 +77,12 @@ public class TestDeployment : ITestDeployment
     /// <param name="type"> The type. </param>
     /// <param name="warnings"> The warnings. </param>
     /// <returns> A string of deployment items. </returns>
-    public KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings)
-    {
+    public KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings) =>
 #if WINDOWS_UWP
-        return null;
+        null;
 #else
-        return _deploymentItemUtility.GetDeploymentItems(method, _deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
+        _deploymentItemUtility.GetDeploymentItems(method, _deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
 #endif
-    }
 
     /// <summary>
     /// Cleanup deployment item directories.
@@ -136,7 +134,7 @@ public class TestDeployment : ITestDeployment
 
         _adapterSettings = MSTestSettingsProvider.Settings;
         bool canDeploy = CanDeploy();
-        var hasDeploymentItems = tests.Any(test => DeploymentItemUtility.HasDeploymentItems(test));
+        bool hasDeploymentItems = tests.Any(test => DeploymentItemUtility.HasDeploymentItems(test));
 
         // deployment directories should not be created in this case,simply return
         if (!canDeploy && hasDeploymentItems)
@@ -209,10 +207,7 @@ public class TestDeployment : ITestDeployment
     /// <summary>
     /// Reset the static variable to default values. Used only for testing purposes.
     /// </summary>
-    internal static void Reset()
-    {
-        RunDirectories = null;
-    }
+    internal static void Reset() => RunDirectories = null;
 
     /// <summary>
     /// Returns whether deployment can happen or not.
