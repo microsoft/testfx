@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
-
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests.Helpers;
 using Microsoft.Testing.Platform.Helpers;
@@ -41,7 +39,6 @@ public class DynamicDataTests : AcceptanceTestBase
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
         File.WriteAllText(runSettingsFilePath, runSettings);
 
-        Stopwatch stopwatch = Stopwatch.StartNew();
         var testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
