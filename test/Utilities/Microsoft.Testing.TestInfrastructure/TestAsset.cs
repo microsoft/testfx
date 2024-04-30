@@ -85,7 +85,7 @@ public class TestAsset : IDisposable
             <packageSource key="nuget.org">
                 <package pattern="*" />
             </packageSource>
-                <packageSource key="test-tools">
+            <packageSource key="test-tools">
                 <package pattern="*" />
             </packageSource>
             """
