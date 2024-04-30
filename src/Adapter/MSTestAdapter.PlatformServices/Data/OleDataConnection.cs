@@ -26,28 +26,16 @@ internal sealed class OleDataConnection : TestDataConnectionSql
         _isMSSql = Connection != null && IsMSSql(Connection.Provider);
     }
 
-    public new OleDbCommandBuilder CommandBuilder
-    {
-        get { return (OleDbCommandBuilder)base.CommandBuilder; }
-    }
+    public new OleDbCommandBuilder CommandBuilder => (OleDbCommandBuilder)base.CommandBuilder;
 
-    public new OleDbConnection Connection
-    {
-        get { return (OleDbConnection)base.Connection; }
-    }
+    public new OleDbConnection Connection => (OleDbConnection)base.Connection;
 
     /// <summary>
     /// This is overridden because we need manually get quote literals, OleDb does not fill those automatically.
     /// </summary>
-    public override void GetQuoteLiterals()
-    {
-        GetQuoteLiteralsHelper();
-    }
+    public override void GetQuoteLiterals() => GetQuoteLiteralsHelper();
 
-    public override string? GetDefaultSchema()
-    {
-        return _isMSSql ? GetDefaultSchemaMSSql() : base.GetDefaultSchema();
-    }
+    public override string? GetDefaultSchema() => _isMSSql ? GetDefaultSchemaMSSql() : base.GetDefaultSchema();
 
     protected override SchemaMetaData[] GetSchemaMetaData()
     {

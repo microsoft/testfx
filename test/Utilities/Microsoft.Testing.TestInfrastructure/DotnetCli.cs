@@ -34,10 +34,7 @@ public static class DotnetCli
 
     public static int MaxOutstandingCommands
     {
-        get
-        {
-            return s_maxOutstandingCommand;
-        }
+        get => s_maxOutstandingCommand;
 
         set
         {
@@ -92,18 +89,15 @@ public static class DotnetCli
 
             if (DoNotRetry)
             {
-                return await CallTheMuxer(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero);
+                return await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero);
             }
             else
             {
-                var delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 1.5);
+                IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 1.5);
                 return await Policy
                     .Handle<Exception>()
                     .WaitAndRetryAsync(delay)
-                    .ExecuteAsync(async () =>
-                    {
-                        return await CallTheMuxer(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero);
-                    });
+                    .ExecuteAsync(async () => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero));
             }
         }
         finally
@@ -112,15 +106,15 @@ public static class DotnetCli
         }
     }
 
-    private static async Task<DotnetMuxerResult> CallTheMuxer(string args, Dictionary<string, string> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
+    private static async Task<DotnetMuxerResult> CallTheMuxerAsync(string args, Dictionary<string, string> environmentVariables, string? workingDirectory, int timeoutInSeconds, bool failIfReturnValueIsNotZero)
     {
         if (args.StartsWith("dotnet ", StringComparison.OrdinalIgnoreCase))
         {
             throw new InvalidOperationException("Command should not start with 'dotnet'");
         }
 
-        using var dotnet = new DotnetMuxer(environmentVariables);
-        int exitCode = await dotnet.Args(args, workingDirectory, timeoutInSeconds);
+        using DotnetMuxer dotnet = new(environmentVariables);
+        int exitCode = await dotnet.ExecuteAsync(args, workingDirectory, timeoutInSeconds);
 
         return exitCode != 0 && failIfReturnValueIsNotZero
             ? throw new InvalidOperationException($"Command 'dotnet {args}' failed.\n\nStandardOutput:\n{dotnet.StandardOutput}\nStandardError:\n{dotnet.StandardError}")

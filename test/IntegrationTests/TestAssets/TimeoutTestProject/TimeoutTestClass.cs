@@ -46,10 +46,7 @@ public class TimeoutTestClass
 
     [TestMethod]
     [Timeout(500)]
-    public void TimeoutTest_WhenTimeoutReached_ForcesTestAbort()
-    {
-        Thread.Sleep(100_000);
-    }
+    public void TimeoutTest_WhenTimeoutReached_ForcesTestAbort() => Thread.Sleep(100_000);
 
     private void ExecuteLong()
     {

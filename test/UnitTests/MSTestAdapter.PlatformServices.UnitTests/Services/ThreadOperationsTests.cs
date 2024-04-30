@@ -20,10 +20,7 @@ public class ThreadOperationsTests : TestContainer
     public void ExecuteShouldStartTheActionOnANewThread()
     {
         int actionThreadID = 0;
-        void Action()
-        {
-            actionThreadID = Environment.CurrentManagedThreadId;
-        }
+        void Action() => actionThreadID = Environment.CurrentManagedThreadId;
 
         CancellationTokenSource tokenSource = new();
         Verify(_asyncOperations.Execute(Action, 1000, tokenSource.Token));

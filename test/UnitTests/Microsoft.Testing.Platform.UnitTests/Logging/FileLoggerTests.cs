@@ -223,8 +223,5 @@ public class FileLoggerTests : TestBase, IDisposable
         }
     }
 
-    public void Dispose()
-    {
-        _memoryStream.Dispose();
-    }
+    public void Dispose() => _memoryStream.Dispose();
 }

@@ -115,10 +115,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <returns>
     /// The <see cref="ITraceListener"/>.
     /// </returns>
-    public ITraceListener GetTraceListener(TextWriter textWriter)
-    {
-        return new TraceListenerWrapper(textWriter);
-    }
+    public ITraceListener GetTraceListener(TextWriter textWriter) => new TraceListenerWrapper(textWriter);
 
     /// <summary>
     /// Gets an instance to the platform service trace-listener manager which updates the output/error streams
@@ -133,10 +130,7 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <returns>
     /// The manager for trace listeners.
     /// </returns>
-    public ITraceListenerManager GetTraceListenerManager(TextWriter outputWriter, TextWriter errorWriter)
-    {
-        return new TraceListenerManager(outputWriter, errorWriter);
-    }
+    public ITraceListenerManager GetTraceListenerManager(TextWriter outputWriter, TextWriter errorWriter) => new TraceListenerManager(outputWriter, errorWriter);
 
     /// <summary>
     /// Gets the TestContext object for a platform.
@@ -156,8 +150,5 @@ internal class PlatformServiceProvider : IPlatformServiceProvider
     /// <remarks>
     /// This was required for compatibility reasons since the TestContext object that the V1 adapter had for desktop is not .Net Core compliant.
     /// </remarks>
-    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties)
-    {
-        return new TestContextImplementation(testMethod, writer, properties);
-    }
+    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object?> properties) => new TestContextImplementation(testMethod, writer, properties);
 }

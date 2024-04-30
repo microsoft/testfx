@@ -58,9 +58,6 @@ public class RecursiveDirectoryPath : MarshalByRefObject
     [Obsolete]
 #pragma warning restore CA1041 // Provide ObsoleteAttribute message
 #endif
-    public override object InitializeLifetimeService()
-    {
-        return null!;
-    }
+    public override object InitializeLifetimeService() => null!;
 }
 #endif

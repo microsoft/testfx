@@ -15,7 +15,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 {
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgument_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -34,7 +34,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndWithDataTestMethodAttribute_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -53,7 +53,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndWithDerivedTestMethodAttribute_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public class DerivedTestMethod : TestMethodAttribute
@@ -76,7 +76,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArguments_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -95,7 +95,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArgumentsAndMethodHasParamsArgument_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -114,7 +114,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArgumentsAndMethodHasArrayArgument_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -133,7 +133,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowPassesOneItemAndParameterExpectsArray_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -156,7 +156,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowHasThreeArgumentsAndMethodHasAnIntegerAndAnArrayArgument_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -179,7 +179,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndMethodHasAPrimitiveTypeAndAParamsArgument_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -198,7 +198,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithThreeArgumentsAndMethodHasAPrimitiveTypeAndAParamsArgument_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -217,7 +217,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndMethodHasAPrimitiveTypeAndAParamsStringArgument_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -236,7 +236,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndMethodHasAPrimitiveTypeAndADefaultArgument_NoDiagnostic()
     {
-        var code = """
+        string code = """
             #nullable enable
 
             using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -257,7 +257,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndIntegersAreAssignableToDoubles_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -276,7 +276,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndCharsAreAssignableToIntegers_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -295,7 +295,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsCorrectlyDefinedWithOneArgumentAndNullsAreAssignableToIntegers_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -314,7 +314,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowHasOneNullArgumentAndMethodHasNoArguments_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -337,7 +337,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowIsNotSetOnATestMethod_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -356,7 +356,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowHasNoArgsButMethodHasOneArgument_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -380,7 +380,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowHasArgumentMismatchWithTestMethod_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -404,7 +404,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowHasArgumentMismatchWithTestMethod2_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -428,7 +428,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowHasArgumentMismatchWithTestMethod3_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -452,7 +452,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task WhenDataRowHasTypeMismatchWithTestMethod_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -476,7 +476,7 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
     public async Task DefaultArguments()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]

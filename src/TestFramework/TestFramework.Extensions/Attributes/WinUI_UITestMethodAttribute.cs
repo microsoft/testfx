@@ -57,7 +57,7 @@ public class UITestMethodAttribute : TestMethodAttribute
     /// </exception>
     public override TestResult[] Execute(ITestMethod testMethod)
     {
-        var attribute = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
+        AsyncStateMachineAttribute[] attribute = testMethod.GetAttributes<AsyncStateMachineAttribute>(false);
         if (attribute.Length > 0)
         {
             throw new NotSupportedException(FrameworkMessages.AsyncUITestMethodNotSupported);
@@ -67,7 +67,7 @@ public class UITestMethodAttribute : TestMethodAttribute
 
         // TODO: Code seems to be assuming DeclaringType is never null, but it can be null.
         // Using 'bang' notation for now to ensure same behavior.
-        var dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType!.Assembly) ?? throw new InvalidOperationException(FrameworkMessages.AsyncUITestMethodWithNoDispatcherQueue);
+        DispatcherQueue dispatcher = GetDispatcherQueue(testMethod.MethodInfo.DeclaringType!.Assembly) ?? throw new InvalidOperationException(FrameworkMessages.AsyncUITestMethodWithNoDispatcherQueue);
         if (dispatcher.HasThreadAccess)
         {
             try
@@ -108,7 +108,7 @@ public class UITestMethodAttribute : TestMethodAttribute
 
     private static Type? GetApplicationType(Assembly assembly)
     {
-        var attribute = assembly.GetCustomAttribute<WinUITestTargetAttribute>();
+        WinUITestTargetAttribute? attribute = assembly.GetCustomAttribute<WinUITestTargetAttribute>();
         return attribute == null || attribute.ApplicationType == null ? null : attribute.ApplicationType;
     }
 
@@ -124,7 +124,7 @@ public class UITestMethodAttribute : TestMethodAttribute
             return null;
         }
 
-        var applicationType = GetApplicationType(assembly);
+        Type? applicationType = GetApplicationType(assembly);
         if (applicationType == null)
         {
             return null;
@@ -135,7 +135,7 @@ public class UITestMethodAttribute : TestMethodAttribute
         {
             // We need to execute all module initializers before doing any WinRT calls.
             // This will cause the [ModuleInitializer]s to execute, if they haven't yet.
-            var id = applicationType.Assembly.GetType("Microsoft.WindowsAppSDK.Runtime.Identity");
+            Type? id = applicationType.Assembly.GetType("Microsoft.WindowsAppSDK.Runtime.Identity");
             if (id != null)
             {
                 _ = Activator.CreateInstance(id);

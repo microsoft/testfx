@@ -82,7 +82,7 @@ public class PropertyBagTests : TestBase
     public void SingleOrDefault_Should_Return_CorrectObject()
     {
         PropertyBag property = new();
-        var prop = new DummyProperty();
+        DummyProperty prop = new();
         property.Add(prop);
         property.Add(PassedTestNodeStateProperty.CachedInstance);
 
@@ -97,7 +97,7 @@ public class PropertyBagTests : TestBase
     public void Single_Should_Return_CorrectObject()
     {
         PropertyBag property = new();
-        var prop = new DummyProperty();
+        DummyProperty prop = new();
         property.Add(prop);
         property.Add(PassedTestNodeStateProperty.CachedInstance);
 
@@ -123,8 +123,8 @@ public class PropertyBagTests : TestBase
     public void AsEnumerable_Should_Return_CorrectItems()
     {
         PropertyBag property = new();
-        var objA = new DummyProperty();
-        var objB = new DummyProperty();
+        DummyProperty objA = new();
+        DummyProperty objB = new();
         property.Add(objA);
         property.Add(objB);
         property.Add(PassedTestNodeStateProperty.CachedInstance);

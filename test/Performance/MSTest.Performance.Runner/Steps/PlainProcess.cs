@@ -45,9 +45,9 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
             var result = new
             {
                 ElapsedTime = process.ExitTime - process.StartTime,
-                TotalProcessorTime = process.TotalProcessorTime,
-                ProcessorCount = Environment.ProcessorCount,
-                TotalAvailableMemoryBytes = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes,
+                process.TotalProcessorTime,
+                Environment.ProcessorCount,
+                GC.GetGCMemoryInfo().TotalAvailableMemoryBytes,
             };
 
             results.Add(result);

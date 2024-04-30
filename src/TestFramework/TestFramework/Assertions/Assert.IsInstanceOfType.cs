@@ -125,8 +125,8 @@ public sealed partial class Assert
             ThrowAssertFailed("Assert.IsInstanceOfType", BuildUserMessage(message, parameters));
         }
 
-        var elementTypeInfo = value.GetType().GetTypeInfo();
-        var expectedTypeInfo = expectedType.GetTypeInfo();
+        TypeInfo elementTypeInfo = value.GetType().GetTypeInfo();
+        TypeInfo expectedTypeInfo = expectedType.GetTypeInfo();
         if (!expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
         {
             string userMessage = BuildUserMessage(message, parameters);
@@ -260,8 +260,8 @@ public sealed partial class Assert
             return;
         }
 
-        var elementTypeInfo = value.GetType().GetTypeInfo();
-        var expectedTypeInfo = wrongType.GetTypeInfo();
+        TypeInfo elementTypeInfo = value.GetType().GetTypeInfo();
+        TypeInfo expectedTypeInfo = wrongType.GetTypeInfo();
         if (expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
         {
             string userMessage = BuildUserMessage(message, parameters);

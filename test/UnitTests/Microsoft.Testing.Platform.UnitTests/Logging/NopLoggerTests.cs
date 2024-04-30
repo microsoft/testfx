@@ -25,9 +25,7 @@ public class NopLoggerTests(ITestExecutionContext testExecutionContext) : TestBa
 
     [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevels), typeof(LogTestHelpers))]
     public void NopLogger_CheckDisabled(LogLevel logLevel)
-    {
-        Assert.IsFalse(_nopLogger.IsEnabled(logLevel));
-    }
+        => Assert.IsFalse(_nopLogger.IsEnabled(logLevel));
 
     [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevels), typeof(LogTestHelpers))]
     public void NopLogger_Log_NoFormatterCalls(LogLevel logLevel)

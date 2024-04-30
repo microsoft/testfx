@@ -12,11 +12,11 @@ public class FSharpTestProjectTests : CLITestBase
     public void TestFSharpTestsWithSpaceAndDotInName()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName, targetFramework: "net472");
+        string assemblyPath = GetAssetFullPath(TestAssetName, targetFramework: "net472");
 
         // Act
-        var testCases = DiscoverTests(assemblyPath);
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(testResults, "Test method passing with a . in it");

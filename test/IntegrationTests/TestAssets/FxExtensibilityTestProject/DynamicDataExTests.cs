@@ -9,23 +9,11 @@ namespace FxExtensibilityTestProject;
 public class DynamicDataExTests
 {
 #pragma warning disable IDE0051 // Remove unused private members
-    private static IEnumerable<object[]> ReusableTestDataProperty
-#pragma warning restore IDE0051 // Remove unused private members
-    {
-        get
-        {
-            return new[] { new object[] { "string", 2, true } };
-        }
-    }
+    private static IEnumerable<object[]> ReusableTestDataProperty => new[] { new object[] { "string", 2, true } };
 
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
 #pragma warning disable IDE0051 // Remove unused private members
-    private static IEnumerable<object[]> ReusableTestDataMethod()
-#pragma warning restore IDE0051 // Remove unused private members
-#pragma warning restore CA1859 // Use concrete types when possible for improved performance
-    {
-        return new[] { new object[] { "string", 4, true } };
-    }
+    private static IEnumerable<object[]> ReusableTestDataMethod() => new[] { new object[] { "string", 4, true } };
 
     // Property ReusableTestDataProperty can be used as data source for test data with data driven test case.
     [TestMethod]

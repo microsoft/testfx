@@ -51,8 +51,8 @@ public class UnitTestResultTests : TestContainer
         };
 
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-        var startTime = DateTimeOffset.Now;
-        var endTime = DateTimeOffset.Now;
+        DateTimeOffset startTime = DateTimeOffset.Now;
+        DateTimeOffset endTime = DateTimeOffset.Now;
 
         string runSettingsXml =
         @"<RunSettings>
@@ -204,7 +204,7 @@ public class UnitTestResultTests : TestContainer
     {
         var executionId = Guid.NewGuid();
         var parentExecId = Guid.NewGuid();
-        var innerResultsCount = 5;
+        int innerResultsCount = 5;
 
         UnitTestResult result = new()
         {

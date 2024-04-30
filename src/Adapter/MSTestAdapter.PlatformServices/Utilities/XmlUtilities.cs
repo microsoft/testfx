@@ -25,10 +25,10 @@ internal class XmlUtilities
     /// <returns> A byte array of the config file with the redirections added. </returns>
     internal byte[] AddAssemblyRedirection(string configFile, AssemblyName assemblyName, string oldVersion, string newVersion)
     {
-        var doc = GetXmlDocument(configFile);
+        XmlDocument doc = GetXmlDocument(configFile);
 
-        var configurationElement = FindOrCreateElement(doc, doc, "configuration");
-        var assemblyBindingSection = FindOrCreateAssemblyBindingSection(doc, configurationElement);
+        XmlElement configurationElement = FindOrCreateElement(doc, doc, "configuration");
+        XmlElement assemblyBindingSection = FindOrCreateAssemblyBindingSection(doc, configurationElement);
         AddAssemblyBindingRedirect(doc, assemblyBindingSection, assemblyName, oldVersion, newVersion);
         using var ms = new MemoryStream();
         doc.Save(ms);
@@ -56,7 +56,7 @@ internal class XmlUtilities
 
     private static XmlElement FindOrCreateElement(XmlDocument doc, XmlNode parent, string name)
     {
-        var ret = parent[name];
+        XmlElement? ret = parent[name];
 
         if (ret != null)
         {
@@ -74,10 +74,10 @@ internal class XmlUtilities
         // we don't end up with xmlns="" on each element.
 
         // Find or create the runtime section (this one should not have an xmlns on it).
-        var runtimeSection = FindOrCreateElement(doc, configurationElement, "runtime");
+        XmlElement runtimeSection = FindOrCreateElement(doc, configurationElement, "runtime");
 
         // Use the assemblyBinding section if it exists; otherwise, create one.
-        var assemblyBindingSection = runtimeSection["assemblyBinding"];
+        XmlElement? assemblyBindingSection = runtimeSection["assemblyBinding"];
         if (assemblyBindingSection != null)
         {
             return assemblyBindingSection;
@@ -111,11 +111,11 @@ internal class XmlUtilities
 
         // Convert the public key token into a string.
         StringBuilder? publicKeyTokenString = null;
-        var publicKeyToken = assemblyName.GetPublicKeyToken();
+        byte[] publicKeyToken = assemblyName.GetPublicKeyToken();
         if (publicKeyToken != null)
         {
             publicKeyTokenString = new StringBuilder(publicKeyToken.GetLength(0) * 2);
-            for (var i = 0; i < publicKeyToken.GetLength(0); i++)
+            for (int i = 0; i < publicKeyToken.GetLength(0); i++)
             {
                 publicKeyTokenString.AppendFormat(
                     System.Globalization.CultureInfo.InvariantCulture,
@@ -125,18 +125,18 @@ internal class XmlUtilities
         }
 
         // Get the culture as a string.
-        var cultureString = assemblyName.CultureInfo.ToString();
+        string cultureString = assemblyName.CultureInfo.ToString();
         if (StringEx.IsNullOrEmpty(cultureString))
         {
             cultureString = "neutral";
         }
 
         // Add the dependentAssembly section.
-        var dependentAssemblySection = doc.CreateElement("dependentAssembly", XmlNamespace);
+        XmlElement dependentAssemblySection = doc.CreateElement("dependentAssembly", XmlNamespace);
         assemblyBindingSection.AppendChild(dependentAssemblySection);
 
         // Add the assemblyIdentity element.
-        var assemblyIdentityElement = doc.CreateElement("assemblyIdentity", XmlNamespace);
+        XmlElement assemblyIdentityElement = doc.CreateElement("assemblyIdentity", XmlNamespace);
         assemblyIdentityElement.SetAttribute("name", assemblyName.Name);
         if (publicKeyTokenString != null)
         {
@@ -146,7 +146,7 @@ internal class XmlUtilities
         assemblyIdentityElement.SetAttribute("culture", cultureString);
         dependentAssemblySection.AppendChild(assemblyIdentityElement);
 
-        var bindingRedirectElement = doc.CreateElement("bindingRedirect", XmlNamespace);
+        XmlElement bindingRedirectElement = doc.CreateElement("bindingRedirect", XmlNamespace);
         bindingRedirectElement.SetAttribute("oldVersion", fromVersion);
         bindingRedirectElement.SetAttribute("newVersion", toVersion);
         dependentAssemblySection.AppendChild(bindingRedirectElement);

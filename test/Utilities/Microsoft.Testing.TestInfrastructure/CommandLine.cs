@@ -28,10 +28,7 @@ public sealed class CommandLine : IDisposable
 
     public static int MaxOutstandingCommands
     {
-        get
-        {
-            return s_maxOutstandingCommand;
-        }
+        get => s_maxOutstandingCommand;
 
         set
         {
@@ -45,7 +42,7 @@ public sealed class CommandLine : IDisposable
         string commandLine,
         IDictionary<string, string>? environmentVariables = null)
     {
-        int exitCode = await RunAsyncAndReturnExitCode(commandLine, environmentVariables);
+        int exitCode = await RunAsyncAndReturnExitCodeAsync(commandLine, environmentVariables);
         if (exitCode != 0)
         {
             throw new InvalidOperationException(
@@ -57,7 +54,7 @@ public sealed class CommandLine : IDisposable
         }
     }
 
-    public async Task<int> RunAsyncAndReturnExitCode(
+    public async Task<int> RunAsyncAndReturnExitCodeAsync(
         string commandLine,
         IDictionary<string, string>? environmentVariables = null,
         string? workingDirectory = null,
@@ -73,7 +70,7 @@ public sealed class CommandLine : IDisposable
             string arguments = string.Join(" ", tokens.Skip(1));
             _errorOutputLines.Clear();
             _standardOutputLines.Clear();
-            var startInfo = new ProcessConfiguration(command)
+            ProcessConfiguration startInfo = new(command)
             {
                 Arguments = arguments,
                 EnvironmentVariables = environmentVariables,
@@ -85,7 +82,7 @@ public sealed class CommandLine : IDisposable
 
             Task<int> exited = _process.WaitForExitAsync();
             int seconds = timeoutInSeconds;
-            var stopTheTimer = new CancellationTokenSource();
+            CancellationTokenSource stopTheTimer = new();
             var timedOut = Task.Delay(TimeSpan.FromSeconds(seconds), stopTheTimer.Token);
             if (await Task.WhenAny(exited, timedOut) == exited)
             {

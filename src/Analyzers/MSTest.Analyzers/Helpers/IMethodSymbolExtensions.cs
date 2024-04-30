@@ -17,7 +17,7 @@ internal static class IMethodSymbolExtensions
             return false;
         }
 
-        var resultantVisibility = methodSymbol.GetResultantVisibility();
+        SymbolVisibility resultantVisibility = methodSymbol.GetResultantVisibility();
         return canDiscoverInternals
             ? resultantVisibility is SymbolVisibility.Public or SymbolVisibility.Internal
             : resultantVisibility is SymbolVisibility.Public;

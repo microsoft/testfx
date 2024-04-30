@@ -25,10 +25,7 @@ public sealed class TestHost
 
     public static int MaxOutstandingExecutions
     {
-        get
-        {
-            return s_maxOutstandingExecutions;
-        }
+        get => s_maxOutstandingExecutions;
 
         set
         {
@@ -80,14 +77,14 @@ public sealed class TestHost
 
             string finalArguments = command ?? string.Empty;
 
-            var delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 1.5);
+            IEnumerable<TimeSpan> delay = Backoff.ExponentialBackoff(TimeSpan.FromSeconds(3), retryCount: 5, factor: 1.5);
             return await Policy
                 .Handle<Exception>()
                 .WaitAndRetryAsync(delay)
                 .ExecuteAsync(async () =>
                 {
                     CommandLine commandLine = new();
-                    int exitCode = await commandLine.RunAsyncAndReturnExitCode(
+                    int exitCode = await commandLine.RunAsyncAndReturnExitCodeAsync(
                         $"{FullName} {finalArguments}",
                         environmentVariables: environmentVariables,
                         workingDirectory: null,

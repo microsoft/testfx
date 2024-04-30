@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
@@ -22,8 +22,8 @@ internal static class ExceptionExtensions
             return string.Empty;
         }
 
-        var exceptionString = exception.Message;
-        var inner = exception.InnerException;
+        string exceptionString = exception.Message;
+        Exception? inner = exception.InnerException;
         while (inner != null)
         {
             exceptionString += Environment.NewLine + inner.Message;

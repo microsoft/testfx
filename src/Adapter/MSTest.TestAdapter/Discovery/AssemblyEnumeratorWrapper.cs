@@ -36,13 +36,13 @@ internal class AssemblyEnumeratorWrapper
             return null;
         }
 
-        var fullFilePath = PlatformServiceProvider.Instance.FileOperations.GetFullFilePath(assemblyFileName);
+        string fullFilePath = PlatformServiceProvider.Instance.FileOperations.GetFullFilePath(assemblyFileName);
 
         try
         {
             if (!PlatformServiceProvider.Instance.FileOperations.DoesFileExist(fullFilePath))
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_FileDoesNotExist, fullFilePath);
                 throw new FileNotFoundException(message);
             }
 
@@ -56,7 +56,7 @@ internal class AssemblyEnumeratorWrapper
         }
         catch (FileNotFoundException ex)
         {
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
             warnings.Add(message);
 
@@ -64,14 +64,14 @@ internal class AssemblyEnumeratorWrapper
         }
         catch (ReflectionTypeLoadException ex)
         {
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.ExceptionsThrown);
             warnings.Add(message);
 
             if (ex.LoaderExceptions != null)
             {
-                foreach (var loaderEx in ex.LoaderExceptions)
+                foreach (Exception? loaderEx in ex.LoaderExceptions)
                 {
                     PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning("{0}", loaderEx);
                 }
@@ -91,7 +91,7 @@ internal class AssemblyEnumeratorWrapper
             // Assembly.Load() fails to load the managed cpp executable, with FileLoadException. It can load the dll
             // successfully though. This is known CLR issue.
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(AssemblyEnumeratorWrapper)}.{nameof(this.GetTests)}: {Resource.TestAssembly_AssemblyDiscoveryFailure}", fullFilePath, ex);
-            var message = ex is FileNotFoundException fileNotFoundEx ? fileNotFoundEx.Message : string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
+            string message = ex is FileNotFoundException fileNotFoundEx ? fileNotFoundEx.Message : string.Format(CultureInfo.CurrentCulture, Resource.TestAssembly_AssemblyDiscoveryFailure, fullFilePath, ex.Message);
 
             warnings.Add(message);
             return null;
@@ -100,7 +100,7 @@ internal class AssemblyEnumeratorWrapper
 
     private static ICollection<UnitTestElement> GetTestsInIsolation(string fullFilePath, IRunSettings? runSettings, out ICollection<string> warnings)
     {
-        using var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null);
+        using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null);
 
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var assemblyEnumerator = (AssemblyEnumerator)isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings })!;

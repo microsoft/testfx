@@ -12,54 +12,39 @@ public partial class AssertTests
     public void InstanceOfTypeShouldFailWhenValueIsNull()
     {
         static void Action() => Assert.IsInstanceOfType(null, typeof(AssertTests));
-        var ex = VerifyThrows(Action);
+        Exception ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
     public void InstanceOfTypeShouldFailWhenTypeIsNull()
     {
         static void Action() => Assert.IsInstanceOfType(5, null);
-        var ex = VerifyThrows(Action);
+        Exception ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
-    public void InstanceOfTypeShouldPassOnSameInstance()
-    {
-        Assert.IsInstanceOfType(5, typeof(int));
-    }
+    public void InstanceOfTypeShouldPassOnSameInstance() => Assert.IsInstanceOfType(5, typeof(int));
 
-    public void InstanceOfTypeShouldPassOnHigherInstance()
-    {
-        Assert.IsInstanceOfType(5, typeof(object));
-    }
+    public void InstanceOfTypeShouldPassOnHigherInstance() => Assert.IsInstanceOfType(5, typeof(object));
 
-    public void InstanceNotOfTypeShouldFailWhenValueIsNull()
-    {
-        Assert.IsNotInstanceOfType(null, typeof(object));
-    }
+    public void InstanceNotOfTypeShouldFailWhenValueIsNull() => Assert.IsNotInstanceOfType(null, typeof(object));
 
     public void InstanceNotOfTypeShouldFailWhenTypeIsNull()
     {
         static void Action() => Assert.IsNotInstanceOfType(5, null);
-        var ex = VerifyThrows(Action);
+        Exception ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
-    public void InstanceNotOfTypeShouldPassOnWrongInstance()
-    {
-        Assert.IsNotInstanceOfType(5L, typeof(int));
-    }
+    public void InstanceNotOfTypeShouldPassOnWrongInstance() => Assert.IsNotInstanceOfType(5L, typeof(int));
 
-    public void InstanceNotOfTypeShouldPassOnSubInstance()
-    {
-        Assert.IsNotInstanceOfType(new object(), typeof(int));
-    }
+    public void InstanceNotOfTypeShouldPassOnSubInstance() => Assert.IsNotInstanceOfType(new object(), typeof(int));
 
     [TestMethod]
     public void IsInstanceOfTypeUsingGenericType_WhenValueIsNull_Fails()
     {
         static void Action() => Assert.IsInstanceOfType<AssertTests>(null);
-        var ex = VerifyThrows(Action);
+        Exception ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
     }
 
@@ -68,16 +53,13 @@ public partial class AssertTests
     {
         AssertTests? assertTests = null;
         void Action() => Assert.IsInstanceOfType<AssertTests>(null, out assertTests);
-        var ex = VerifyThrows(Action);
+        Exception ex = VerifyThrows(Action);
         Verify(ex is AssertFailedException);
         Verify(assertTests is null);
     }
 
     [TestMethod]
-    public void IsInstanceOfTypeUsingGenericType_OnSameInstance_DoesNotThrow()
-    {
-        Assert.IsInstanceOfType<int>(5);
-    }
+    public void IsInstanceOfTypeUsingGenericType_OnSameInstance_DoesNotThrow() => Assert.IsInstanceOfType<int>(5);
 
     [TestMethod]
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_OnSameInstance_DoesNotThrow()
@@ -95,10 +77,7 @@ public partial class AssertTests
     }
 
     [TestMethod]
-    public void IsInstanceOfTypeUsingGenericType_OnHigherInstance_DoesNotThrow()
-    {
-        Assert.IsInstanceOfType<object>(5);
-    }
+    public void IsInstanceOfTypeUsingGenericType_OnHigherInstance_DoesNotThrow() => Assert.IsInstanceOfType<object>(5);
 
     [TestMethod]
     public void IsInstanceOfTypeUsingGenericTypeWithOutParameter_OnHigherInstance_DoesNotThrow()
@@ -109,22 +88,13 @@ public partial class AssertTests
     }
 
     [TestMethod]
-    public void IsNotInstanceOfTypeUsingGenericType_WhenValueIsNull_DoesNotThrow()
-    {
-        Assert.IsNotInstanceOfType<object>(null);
-    }
+    public void IsNotInstanceOfTypeUsingGenericType_WhenValueIsNull_DoesNotThrow() => Assert.IsNotInstanceOfType<object>(null);
 
     [TestMethod]
-    public void IsNotInstanceOfType_OnWrongInstanceUsingGenericType_DoesNotThrow()
-    {
-        Assert.IsNotInstanceOfType<int>(5L);
-    }
+    public void IsNotInstanceOfType_OnWrongInstanceUsingGenericType_DoesNotThrow() => Assert.IsNotInstanceOfType<int>(5L);
 
     [TestMethod]
-    public void IsNotInstanceOfTypeUsingGenericType_OnSubInstance_DoesNotThrow()
-    {
-        Assert.IsNotInstanceOfType<int>(new object());
-    }
+    public void IsNotInstanceOfTypeUsingGenericType_OnSubInstance_DoesNotThrow() => Assert.IsNotInstanceOfType<int>(new object());
 
     [TestMethod]
     public void IsInstanceOfType_WhenNonNullNullableValue_LearnNonNull()

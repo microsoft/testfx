@@ -68,8 +68,8 @@ public class DeploymentItemTests : TestContainer
 
     public void GetHashCodeShouldConsiderSourcePathAndRelativeOutputDirectory()
     {
-        var sourcePath = "e:\\temp\\temp1.dll";
-        var relativeOutputDirectory = "foo1";
+        string sourcePath = "e:\\temp\\temp1.dll";
+        string relativeOutputDirectory = "foo1";
         DeploymentItem item = new(sourcePath, relativeOutputDirectory);
 
         Verify(sourcePath.GetHashCode() + relativeOutputDirectory.GetHashCode() == item.GetHashCode());
@@ -77,7 +77,7 @@ public class DeploymentItemTests : TestContainer
 
     public void ToStringShouldReturnDeploymentItemIfRelativeOutputDirectoryIsNotSpecified()
     {
-        var sourcePath = "e:\\temp\\temp1.dll";
+        string sourcePath = "e:\\temp\\temp1.dll";
         DeploymentItem item = new(sourcePath);
 
         Verify(string.Format(CultureInfo.InvariantCulture, Resource.DeploymentItem, sourcePath) == item.ToString());
@@ -85,8 +85,8 @@ public class DeploymentItemTests : TestContainer
 
     public void ToStringShouldReturnDeploymentItemAndRelativeOutputDirectory()
     {
-        var sourcePath = "e:\\temp\\temp1.dll";
-        var relativeOutputDirectory = "foo1";
+        string sourcePath = "e:\\temp\\temp1.dll";
+        string relativeOutputDirectory = "foo1";
         DeploymentItem item = new(sourcePath, relativeOutputDirectory);
 
         Verify(string.Format(CultureInfo.InvariantCulture, Resource.DeploymentItemWithOutputDirectory, sourcePath, relativeOutputDirectory) == item.ToString());

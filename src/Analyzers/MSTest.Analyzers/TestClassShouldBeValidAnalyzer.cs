@@ -41,14 +41,14 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out var testClassAttributeSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
             {
                 bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
-                var testMethodAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute);
-                var testInitializeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute);
-                var testCleanupAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute);
-                var classInitializeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute);
-                var classCleanupAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute);
+                INamedTypeSymbol? testMethodAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute);
+                INamedTypeSymbol? testInitializeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute);
+                INamedTypeSymbol? testCleanupAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute);
+                INamedTypeSymbol? classInitializeAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassInitializeAttribute);
+                INamedTypeSymbol? classCleanupAttributeSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingClassCleanupAttribute);
                 context.RegisterSymbolAction(
                     context => AnalyzeSymbol(context, testClassAttributeSymbol, canDiscoverInternals, testMethodAttributeSymbol,
                         testInitializeAttributeSymbol, testCleanupAttributeSymbol, classInitializeAttributeSymbol, classCleanupAttributeSymbol),
@@ -82,7 +82,7 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         if (namedTypeSymbol.IsStatic)
         {
-            foreach (var member in namedTypeSymbol.GetMembers())
+            foreach (ISymbol member in namedTypeSymbol.GetMembers())
             {
                 if (member.Kind != SymbolKind.Method)
                 {
@@ -95,7 +95,7 @@ public sealed class TestClassShouldBeValidAnalyzer : DiagnosticAnalyzer
                     continue;
                 }
 
-                foreach (var attribute in method.GetAttributes())
+                foreach (AttributeData attribute in method.GetAttributes())
                 {
                     if (SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, testInitializeAttributeSymbol)
                         || SymbolEqualityComparer.Default.Equals(attribute.AttributeClass, testCleanupAttributeSymbol)

@@ -75,17 +75,11 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
     /// <summary>
     /// Gets the message to include in the test result if the test fails due to not throwing an exception.
     /// </summary>
-    protected internal override string NoExceptionMessage
-    {
-        get
-        {
-            return string.Format(
+    protected internal override string NoExceptionMessage => string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.UTF_TestMethodNoException,
                 ExceptionType.FullName,
                 SpecifiedNoExceptionMessage);
-        }
-    }
 
     #endregion
 

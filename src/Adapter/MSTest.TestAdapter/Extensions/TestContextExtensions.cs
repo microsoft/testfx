@@ -14,7 +14,7 @@ internal static class TestContextExtensions
     /// <returns>The diagnostic messages.</returns>
     internal static string? GetAndClearDiagnosticMessages(this ITestContext testContext)
     {
-        var messages = testContext.GetDiagnosticMessages();
+        string? messages = testContext.GetDiagnosticMessages();
 
         testContext.ClearDiagnosticMessages();
 

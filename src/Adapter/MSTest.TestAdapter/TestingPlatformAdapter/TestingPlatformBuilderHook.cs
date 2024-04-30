@@ -11,10 +11,6 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public static class TestingPlatformBuilderHook
 {
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] arguments)
-#pragma warning restore IDE0060 // Remove unused parameter
-    {
-        testApplicationBuilder.AddMSTest(() => new[] { Assembly.GetEntryAssembly()! });
-    }
+    public static void AddExtensions(ITestApplicationBuilder testApplicationBuilder, string[] arguments) => testApplicationBuilder.AddMSTest(() => new[] { Assembly.GetEntryAssembly()! });
 }
 #endif

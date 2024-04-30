@@ -15,7 +15,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
 {
     public async Task WhenUsingLiterals()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Collections.Generic;
 
@@ -92,7 +92,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
 
     public async Task LiteralUsingNamedArgument()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -153,7 +153,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
 
     public async Task ConstantValue()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -227,7 +227,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
 
     public async Task ActualAsLocalVariableOrNot()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -289,7 +289,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
 
     public async Task ActualOrExpectedPrefix()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -391,7 +391,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzerTests(ITest
 
     public async Task MethodCalls()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]

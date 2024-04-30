@@ -36,18 +36,18 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
 
     public async Task ConsumeAsync_WithSessionFileArtifact()
     {
-        var sessionFileArtifact = new SessionFileArtifact(new SessionUid("1"), new FileInfo("file"), "name", "description");
-        var producer = new DataProducer();
+        SessionFileArtifact sessionFileArtifact = new(new SessionUid("1"), new FileInfo("file"), "name", "description");
+        DataProducer producer = new();
 
         await _service.ConsumeAsync(producer, sessionFileArtifact, CancellationToken.None).ConfigureAwait(false);
 
         List<Artifact> actual = _service.Artifacts;
-        var expected = new List<Artifact>
+        List<Artifact> expected = new()
         {
             new("file", nameof(DataProducer), "file", "name", "description"),
         };
 
-        var actualUri = new Uri(actual[0].Uri);
+        Uri actualUri = new(actual[0].Uri);
 
         Assert.AreEqual(expected[0].Uri, Path.GetFileName(actualUri.AbsolutePath));
         Assert.IsTrue(actualUri.IsAbsoluteUri);
@@ -59,8 +59,8 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
 
     public async Task ConsumeAsync_WithTestNodeUpdatedMessage()
     {
-        var testNode = new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
-        var producer = new DataProducer();
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
+        DataProducer producer = new();
 
         await _service.ConsumeAsync(producer, testNode, CancellationToken.None).ConfigureAwait(false);
 
@@ -70,7 +70,7 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
 
     public void PopulateTestNodeStatistics_WithMissingNodeType()
     {
-        var testNode = new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty });
 
         _service.PopulateTestNodeStatistics(testNode);
 
@@ -82,10 +82,10 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
 
     public void PopulateTestNodeStatistics_WithDuplicateDiscoveredEvents()
     {
-        var properties = new PropertyBag(
+        PropertyBag properties = new(
             DiscoveredTestNodeStateProperty.CachedInstance);
 
-        var testNode = new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
 
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(testNode);
@@ -98,15 +98,15 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
 
     public void PopulateTestNodeStatistics_WithDiscoveredAndPassedEventsForSameUid()
     {
-        var properties = new PropertyBag(
+        PropertyBag properties = new(
             DiscoveredTestNodeStateProperty.CachedInstance);
 
-        var testNode = new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
 
-        var otherProperties = new PropertyBag(
+        PropertyBag otherProperties = new(
             PassedTestNodeStateProperty.CachedInstance);
 
-        var otherTestNode = new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = otherProperties });
+        TestNodeUpdateMessage otherTestNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = otherProperties });
 
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(otherTestNode);
@@ -119,9 +119,9 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
 
     public void PopulateTestNodeStatistics_WithDuplicatePassedEvents()
     {
-        var properties = new PropertyBag(PassedTestNodeStateProperty.CachedInstance);
+        PropertyBag properties = new(PassedTestNodeStateProperty.CachedInstance);
 
-        var testNode = new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
 
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(testNode);
@@ -136,15 +136,15 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
 
     public void PopulateTestNodeStatistics_WithEventsForSameUid()
     {
-        var properties = new PropertyBag(
+        PropertyBag properties = new(
             new FailedTestNodeStateProperty("failed"));
 
-        var testNode = new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = properties });
 
-        var otherProperties = new PropertyBag(
+        PropertyBag otherProperties = new(
             PassedTestNodeStateProperty.CachedInstance);
 
-        var otherTestNode = new TestNodeUpdateMessage(new SessionUid(string.Empty), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = otherProperties });
+        TestNodeUpdateMessage otherTestNode = new(new SessionUid(string.Empty), new TestNode { Uid = new TestNodeUid("test()"), DisplayName = string.Empty, Properties = otherProperties });
 
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(otherTestNode);
@@ -159,15 +159,15 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
 
     public void PopulateTestNodeStatistics_WithEventsForDifferentUids()
     {
-        var properties = new PropertyBag(
+        PropertyBag properties = new(
             PassedTestNodeStateProperty.CachedInstance);
 
-        var testNode = new TestNodeUpdateMessage(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test1()"), DisplayName = string.Empty, Properties = properties });
+        TestNodeUpdateMessage testNode = new(new SessionUid("1"), new TestNode { Uid = new TestNodeUid("test1()"), DisplayName = string.Empty, Properties = properties });
 
-        var otherProperties = new PropertyBag(
+        PropertyBag otherProperties = new(
             new FailedTestNodeStateProperty("failed"));
 
-        var otherTestNode = new TestNodeUpdateMessage(new SessionUid(string.Empty), new TestNode { Uid = new TestNodeUid("test2()"), DisplayName = string.Empty, Properties = otherProperties });
+        TestNodeUpdateMessage otherTestNode = new(new SessionUid(string.Empty), new TestNode { Uid = new TestNodeUid("test2()"), DisplayName = string.Empty, Properties = otherProperties });
 
         _service.PopulateTestNodeStatistics(testNode);
         _service.PopulateTestNodeStatistics(otherTestNode);
@@ -188,10 +188,7 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         }
     }
 
-    public void Dispose()
-    {
-        _service.Dispose();
-    }
+    public void Dispose() => _service.Dispose();
 
     private sealed class DataProducer : IDataProducer
     {

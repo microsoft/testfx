@@ -115,7 +115,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Verify(_testContextImplementation.TryGetPropertyValue("TestName", out var propValue));
+        Verify(_testContextImplementation.TryGetPropertyValue("TestName", out object propValue));
         Verify("M".Equals(propValue));
     }
 
@@ -123,7 +123,7 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        Verify(!_testContextImplementation.TryGetPropertyValue("Random", out var propValue));
+        Verify(!_testContextImplementation.TryGetPropertyValue("Random", out object propValue));
         Verify(propValue is null);
     }
 
@@ -140,7 +140,7 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        var exception =
+        Exception exception =
             VerifyThrows(() => _testContextImplementation.AddResultFile(null));
 
         Verify(typeof(ArgumentException) == exception.GetType());
@@ -151,7 +151,7 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        var exception =
+        Exception exception =
             VerifyThrows(() => _testContextImplementation.AddResultFile(string.Empty));
 
         Verify(typeof(ArgumentException) == exception.GetType());
@@ -164,7 +164,7 @@ public class TestContextImplementationTests : TestContainer
 
         _testContextImplementation.AddResultFile("C:\\temp.txt");
 
-        var resultsFiles = _testContextImplementation.GetResultFiles();
+        IList<string> resultsFiles = _testContextImplementation.GetResultFiles();
 
         Verify(resultsFiles.Contains("C:\\temp.txt"));
     }
@@ -176,7 +176,7 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.AddResultFile("C:\\files\\file1.txt");
         _testContextImplementation.AddResultFile("C:\\files\\files2.html");
 
-        var resultsFiles = _testContextImplementation.GetResultFiles();
+        IList<string> resultsFiles = _testContextImplementation.GetResultFiles();
 
         Verify(resultsFiles.Contains("C:\\files\\file1.txt"));
         Verify(resultsFiles.Contains("C:\\files\\files2.html"));
@@ -376,7 +376,7 @@ public class TestContextImplementationTests : TestContainer
     {
         _testContextImplementation = new TestContextImplementation(_testMethod.Object, new ThreadSafeStringWriter(null, "test"), _properties);
 
-        var resultFiles = _testContextImplementation.GetResultFiles();
+        IList<string> resultFiles = _testContextImplementation.GetResultFiles();
 
         Verify(resultFiles is null);
     }
@@ -388,7 +388,7 @@ public class TestContextImplementationTests : TestContainer
         _testContextImplementation.AddResultFile("C:\\files\\myfile.txt");
         _testContextImplementation.AddResultFile("C:\\files\\myfile2.txt");
 
-        var resultFiles = _testContextImplementation.GetResultFiles();
+        IList<string> resultFiles = _testContextImplementation.GetResultFiles();
 
         Verify(resultFiles.Count > 0, "GetResultFiles returned added elements");
         Verify(resultFiles.Contains("C:\\files\\myfile.txt"));

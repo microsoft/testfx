@@ -83,7 +83,7 @@ internal sealed class TestApplicationResult(
 
     public ILogger CreateLogger(string categoryName)
     {
-        var logger = new TestApplicationResultLogger(categoryName);
+        TestApplicationResultLogger logger = new(categoryName);
         _testApplicationResultLoggers.Add(logger);
 
         return logger;

@@ -15,28 +15,16 @@ public class UnitTest2
     public TestContext TestContext { get; set; }
 
     [ClassInitialize]
-    public static void ClassInitialize(TestContext testContext)
-    {
-        WriteLines("UnitTest2 - ClassInitialize");
-    }
+    public static void ClassInitialize(TestContext testContext) => WriteLines("UnitTest2 - ClassInitialize");
 
     [TestInitialize]
-    public void TestInitialize()
-    {
-        WriteLines("UnitTest2 - TestInitialize");
-    }
+    public void TestInitialize() => WriteLines("UnitTest2 - TestInitialize");
 
     [TestCleanup]
-    public void TestCleanup()
-    {
-        WriteLines("UnitTest2 - TestCleanup");
-    }
+    public void TestCleanup() => WriteLines("UnitTest2 - TestCleanup");
 
     [ClassCleanup]
-    public static void ClassCleanup()
-    {
-        WriteLines("UnitTest2 - ClassCleanup");
-    }
+    public static void ClassCleanup() => WriteLines("UnitTest2 - ClassCleanup");
 
     [TestMethod]
     public async Task TestMethod1()

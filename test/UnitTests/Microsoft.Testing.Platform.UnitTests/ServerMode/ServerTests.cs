@@ -30,38 +30,36 @@ public class ServerTests : TestBase
         }
     }
 
-    private static bool IsHotReloadEnabled(SystemEnvironment environment)
-     => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
-    || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
+    private static bool IsHotReloadEnabled(SystemEnvironment environment) => environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_WATCH) == "1"
+        || environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_HOTRELOAD_ENABLED) == "1";
 
-    public async Task ServerCanBeStartedAndAborted_TcpIp()
-        => await RetryHelper.RetryAsync(
-            async () =>
-            {
-                using var server = TcpServer.Create();
+    public async Task ServerCanBeStartedAndAborted_TcpIp() => await RetryHelper.RetryAsync(
+                async () =>
+                {
+                    using var server = TcpServer.Create();
 
-                var testApplicationHooks = new TestApplicationHooks();
-                string[] args = ["--no-banner", "--server", "--client-host", "localhost", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
-                ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
-                builder.TestHost.AddTestApplicationLifecycleCallbacks(_ => testApplicationHooks);
-                builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
-                var testApplication = (TestApplication)await builder.BuildAsync();
-                testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
-                Task<int> serverTask = testApplication.RunAsync();
+                    TestApplicationHooks testApplicationHooks = new();
+                    string[] args = ["--no-banner", "--server", "--client-host", "localhost", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
+                    ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
+                    builder.TestHost.AddTestApplicationLifecycleCallbacks(_ => testApplicationHooks);
+                    builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
+                    var testApplication = (TestApplication)await builder.BuildAsync();
+                    testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
+                    Task<int> serverTask = testApplication.RunAsync();
 
-                await testApplicationHooks.WaitForBeforeRunAsync();
-                ITestApplicationCancellationTokenSource stopService = testApplication.ServiceProvider.GetTestApplicationCancellationTokenSource();
+                    await testApplicationHooks.WaitForBeforeRunAsync();
+                    ITestApplicationCancellationTokenSource stopService = testApplication.ServiceProvider.GetTestApplicationCancellationTokenSource();
 
-                stopService.Cancel();
-                Assert.AreEqual(ExitCodes.TestSessionAborted, await serverTask);
-            }, 3, TimeSpan.FromSeconds(10));
+                    stopService.Cancel();
+                    Assert.AreEqual(ExitCodes.TestSessionAborted, await serverTask);
+                }, 3, TimeSpan.FromSeconds(10));
 
     public async Task ServerCanInitialize()
     {
         using var server = TcpServer.Create();
 
         string[] args = ["--no-banner", $"--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
-        var testApplicationHooks = new TestApplicationHooks();
+        TestApplicationHooks testApplicationHooks = new();
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
         builder.TestHost.AddTestApplicationLifecycleCallbacks(_ => testApplicationHooks);
         builder.RegisterTestFramework(_ => new TestFrameworkCapabilities(), (_, __) => new MockTestAdapter());
@@ -69,11 +67,11 @@ public class ServerTests : TestBase
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
         var serverTask = Task.Run(() => testApplication.RunAsync());
 
-        using var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
         using TcpClient client = await server.WaitForConnectionAsync(timeout.Token);
         using NetworkStream stream = client.GetStream();
-        using var writer = new StreamWriter(stream, Encoding.UTF8);
-        var messageHandler = new TcpMessageHandler(
+        using StreamWriter writer = new(stream, Encoding.UTF8);
+        TcpMessageHandler messageHandler = new(
                 client,
                 clientToServerStream: client.GetStream(),
                 serverToClientStream: client.GetStream(),
@@ -116,7 +114,7 @@ public class ServerTests : TestBase
 
         InitializeResponseArgs resultJson = SerializerUtilities.Deserialize<InitializeResponseArgs>((IDictionary<string, object?>)((ResponseMessage)msg).Result!);
 
-        var expectedResponse = new InitializeResponseArgs(
+        InitializeResponseArgs expectedResponse = new(
                    new ServerInfo("test-anywhere", "this is dynamic"),
                    new ServerCapabilities(new ServerTestingCapabilities(SupportsDiscovery: true, MultiRequestSupport: false, VSTestProviderSupport: false)));
 
@@ -125,7 +123,7 @@ public class ServerTests : TestBase
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
 
-        var result = await serverTask;
+        int result = await serverTask;
         Assert.AreEqual(0, result);
     }
 
@@ -133,8 +131,8 @@ public class ServerTests : TestBase
     {
         using var server = TcpServer.Create();
 
-        var discoveryStartedTaskCompletionSource = new TaskCompletionSource<bool>();
-        var discoveryCanceledTaskCompletionSource = new TaskCompletionSource<bool>();
+        TaskCompletionSource<bool> discoveryStartedTaskCompletionSource = new();
+        TaskCompletionSource<bool> discoveryCanceledTaskCompletionSource = new();
 
         string[] args = ["--no-banner", $"--server", "--client-port", $"{server.Port}", "--internal-testingplatform-skipbuildercheck"];
         ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
@@ -153,11 +151,11 @@ public class ServerTests : TestBase
         testApplication.ServiceProvider.GetRequiredService<SystemConsole>().SuppressOutput();
         var serverTask = Task.Run(() => testApplication.RunAsync());
 
-        using var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout);
+        using CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout);
         using TcpClient client = await server.WaitForConnectionAsync(timeout.Token);
         using NetworkStream stream = client.GetStream();
-        using var writer = new StreamWriter(stream, Encoding.UTF8);
-        var messageHandler = new TcpMessageHandler(
+        using StreamWriter writer = new(stream, Encoding.UTF8);
+        TcpMessageHandler messageHandler = new(
                 client,
                 clientToServerStream: client.GetStream(),
                 serverToClientStream: client.GetStream(),
@@ -219,7 +217,7 @@ public class ServerTests : TestBase
 
         await WriteMessageAsync(writer, """{ "jsonrpc": "2.0", "method": "exit", "params": { } }""");
 
-        var result = await serverTask;
+        int result = await serverTask;
         Assert.AreEqual(0, result);
     }
 
@@ -267,8 +265,7 @@ public class ServerTests : TestBase
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public Task WaitForBeforeRunAsync()
-            => _waitForBeforeRunAsync.WaitAsync();
+        public Task WaitForBeforeRunAsync() => _waitForBeforeRunAsync.WaitAsync();
 
         public Task AfterRunAsync(int returnValue, CancellationToken cancellationToken) => Task.CompletedTask;
 
@@ -301,8 +298,7 @@ public class ServerTests : TestBase
 
         public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context) => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
 
-        public Task ExecuteRequestAsync(ExecuteRequestContext context)
-            => DiscoveryAction is not null ? DiscoveryAction(context) : Task.CompletedTask;
+        public Task ExecuteRequestAsync(ExecuteRequestContext context) => DiscoveryAction is not null ? DiscoveryAction(context) : Task.CompletedTask;
     }
 
     private sealed class TcpServer : IDisposable
@@ -331,8 +327,8 @@ public class ServerTests : TestBase
 
         internal static TcpServer Create()
         {
-            var endPoint = new IPEndPoint(IPAddress.Loopback, port: 0);
-            var listener = new TcpListener(endPoint);
+            IPEndPoint endPoint = new(IPAddress.Loopback, port: 0);
+            TcpListener listener = new(endPoint);
             listener.Start();
 
             return new(listener);

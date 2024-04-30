@@ -15,7 +15,7 @@ public sealed class PublicClassShouldBeTestClassAnalyzerTests(ITestExecutionCont
 {
     public async Task WhenTypeIsPublicAndNotTestClass_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public class [|MyTestClass|]
@@ -36,7 +36,7 @@ public sealed class PublicClassShouldBeTestClassAnalyzerTests(ITestExecutionCont
 
     public async Task WhenTypeIsNotPublicAndNotTestClass_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             internal class MyClass
