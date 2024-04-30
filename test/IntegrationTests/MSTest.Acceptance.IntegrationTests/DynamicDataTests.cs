@@ -30,7 +30,7 @@ public class DynamicDataTests : AcceptanceTestBase
     <RunConfiguration>
     </RunConfiguration>
     <MSTest>
-        <ConsiderEmptyDataSourceAsInconclusive>True</ConsiderEmptyDataSourceAsInconclusive>
+        <ConsiderEmptyDataSourceAsInconclusive>true</ConsiderEmptyDataSourceAsInconclusive>
     </MSTest>
 </RunSettings>
 """;
