@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -131,7 +131,10 @@ public sealed partial class Assert
     /// </returns>
     public static T ThrowsException<T>(Func<object?> action, string message, params object?[]? parameters)
         where T : Exception
-        => ThrowsException<T>(() => _ = action(), message, parameters);
+#pragma warning disable IDE0053 // Use expression body for lambda expression
+        // Despite the discard, using lambda makes the action considered as Func and so recursing on the same method
+        => ThrowsException<T>(() => { _ = action(); }, message, parameters);
+#pragma warning restore IDE0053 // Use expression body for lambda expression
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
