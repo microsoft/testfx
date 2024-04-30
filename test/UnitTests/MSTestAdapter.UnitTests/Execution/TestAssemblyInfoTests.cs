@@ -42,7 +42,7 @@ public class TestAssemblyInfoTests : TestContainer
             _testAssemblyInfo.AssemblyInitializeMethod = _dummyMethodInfo;
         }
 
-        var ex = VerifyThrows(Action);
+        Exception ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(TypeInspectionException));
     }
 
@@ -54,14 +54,11 @@ public class TestAssemblyInfoTests : TestContainer
             _testAssemblyInfo.AssemblyCleanupMethod = _dummyMethodInfo;
         }
 
-        var ex = VerifyThrows(Action);
+        Exception ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(TypeInspectionException));
     }
 
-    public void TestAssemblyHasExecutableCleanupMethodShouldReturnFalseIfAssemblyHasNoCleanupMethod()
-    {
-        Verify(!_testAssemblyInfo.HasExecutableCleanupMethod);
-    }
+    public void TestAssemblyHasExecutableCleanupMethodShouldReturnFalseIfAssemblyHasNoCleanupMethod() => Verify(!_testAssemblyInfo.HasExecutableCleanupMethod);
 
     public void TestAssemblyHasExecutableCleanupMethodShouldReturnTrueEvenIfAssemblyInitializationThrewAnException()
     {
@@ -82,7 +79,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldNotInvokeIfAssemblyInitializeIsNull()
     {
-        var assemblyInitCallCount = 0;
+        int assemblyInitCallCount = 0;
         DummyTestClass.AssemblyInitializeMethodBody = (tc) => assemblyInitCallCount++;
 
         _testAssemblyInfo.AssemblyInitializeMethod = null;
@@ -100,13 +97,13 @@ public class TestAssemblyInfoTests : TestContainer
 
         void Action() => _testAssemblyInfo.RunAssemblyInitialize(null);
 
-        var ex = VerifyThrows(Action);
+        Exception ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(NullReferenceException));
     }
 
     public void RunAssemblyInitializeShouldNotExecuteAssemblyInitializeIfItHasAlreadyExecuted()
     {
-        var assemblyInitCallCount = 0;
+        int assemblyInitCallCount = 0;
         DummyTestClass.AssemblyInitializeMethodBody = (tc) => assemblyInitCallCount++;
 
         _testAssemblyInfo.IsAssemblyInitializeExecuted = true;
@@ -119,7 +116,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldExecuteAssemblyInitialize()
     {
-        var assemblyInitCallCount = 0;
+        int assemblyInitCallCount = 0;
         DummyTestClass.AssemblyInitializeMethodBody = (tc) => assemblyInitCallCount++;
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
@@ -144,7 +141,7 @@ public class TestAssemblyInfoTests : TestContainer
         DummyTestClass.AssemblyInitializeMethodBody = (tc) => UTF.Assert.Inconclusive("Test Inconclusive");
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
-        var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
+        Exception exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext));
 
         Verify(_testAssemblyInfo.AssemblyInitializationException is not null);
     }
@@ -187,7 +184,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = tc => { throw new ArgumentException("Some actualErrorMessage message", new InvalidOperationException("Inner actualErrorMessage message")); };
+        DummyTestClass.AssemblyInitializeMethodBody = tc => throw new ArgumentException("Some actualErrorMessage message", new InvalidOperationException("Inner actualErrorMessage message"));
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
         var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
@@ -207,12 +204,10 @@ public class TestAssemblyInfoTests : TestContainer
     public void RunAssemblyInitializeShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
     {
         DummyTestClass.AssemblyInitializeMethodBody = tc =>
-        {
             // This helper calls inner helper, and the inner helper ctor throws.
             // We want to see the real exception on screen, and not TypeInitializationException
             // which has no info about what failed.
             FailingStaticHelper.DoWork();
-        };
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
         var exception = VerifyThrows(() => _testAssemblyInfo.RunAssemblyInitialize(_testContext)) as TestFailedException;
@@ -244,7 +239,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
     {
-        DummyTestClass.AssemblyInitializeMethodBody = (tc) => { Verify(tc == _testContext); };
+        DummyTestClass.AssemblyInitializeMethodBody = (tc) => Verify(tc == _testContext);
         _testAssemblyInfo.AssemblyInitializeMethod = typeof(DummyTestClass).GetMethod("AssemblyInitializeMethod");
 
         _testAssemblyInfo.RunAssemblyInitialize(_testContext);
@@ -256,7 +251,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyCleanupShouldNotInvokeIfAssemblyCleanupIsNull()
     {
-        var assemblyCleanupCallCount = 0;
+        int assemblyCleanupCallCount = 0;
         DummyTestClass.AssemblyCleanupMethodBody = () => assemblyCleanupCallCount++;
 
         _testAssemblyInfo.AssemblyCleanupMethod = null;
@@ -267,7 +262,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyCleanupShouldInvokeIfAssemblyCleanupMethod()
     {
-        var assemblyCleanupCallCount = 0;
+        int assemblyCleanupCallCount = 0;
         DummyTestClass.AssemblyCleanupMethodBody = () => assemblyCleanupCallCount++;
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod");
@@ -298,7 +293,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
     {
-        DummyTestClass.AssemblyCleanupMethodBody = () => { throw new ArgumentException("Argument Exception"); };
+        DummyTestClass.AssemblyCleanupMethodBody = () => throw new ArgumentException("Argument Exception");
 
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod");
         Verify(
@@ -309,15 +304,13 @@ public class TestAssemblyInfoTests : TestContainer
     public void RunAssemblyCleanupShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
     {
         DummyTestClass.AssemblyCleanupMethodBody = () =>
-        {
             // This helper calls inner helper, and the inner helper ctor throws.
             // We want to see the real exception on screen, and not TypeInitializationException
             // which has no info about what failed.
             FailingStaticHelper.DoWork();
-        };
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod");
 
-        var actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();
+        string actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();
 
         Verify(actualErrorMessage.StartsWith("Assembly Cleanup method DummyTestClass.AssemblyCleanupMethod failed. Error Message: System.InvalidOperationException: I fail.. StackTrace:", StringComparison.Ordinal));
         Verify(actualErrorMessage.Contains("at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestAssemblyInfoTests.FailingStaticHelper..cctor()"));
@@ -334,15 +327,9 @@ public class TestAssemblyInfoTests : TestContainer
 
         public UTFExtension.TestContext TestContext { get; set; }
 
-        public static void AssemblyInitializeMethod(UTFExtension.TestContext testContext)
-        {
-            AssemblyInitializeMethodBody.Invoke(testContext);
-        }
+        public static void AssemblyInitializeMethod(UTFExtension.TestContext testContext) => AssemblyInitializeMethodBody.Invoke(testContext);
 
-        public static void AssemblyCleanupMethod()
-        {
-            AssemblyCleanupMethodBody.Invoke();
-        }
+        public static void AssemblyCleanupMethod() => AssemblyCleanupMethodBody.Invoke();
     }
 
     private static class FailingStaticHelper

@@ -77,12 +77,12 @@ public class FormatterUtilitiesTests : TestBase
     [Arguments(typeof(RunRequestArgs))]
     public void DeserializeSpecificTypes(Type type)
     {
-        var json = CreateSerializedInstance(type);
+        string json = CreateSerializedInstance(type);
         Type? deserializer = SerializerUtilities.DeserializerTypes.SingleOrDefault(x => x == type);
 
         if (deserializer is not null)
         {
-            var actual = Deserialize(deserializer, json);
+            object actual = Deserialize(deserializer, json);
             object expected = CreateInstance(type);
 
             if (type == typeof(DiscoverRequestArgs))
@@ -106,8 +106,8 @@ public class FormatterUtilitiesTests : TestBase
         Assert.AreEqual(expectedRequest.RunId, actualRequest.RunId);
         Assert.AreEqual(expectedRequest.TestNodes?.Count, actualRequest.TestNodes?.Count);
 
-        var actualTestNodes = actualRequest.TestNodes?.ToArray();
-        var expectedTestNodes = expectedRequest.TestNodes?.ToArray();
+        TestNode[]? actualTestNodes = actualRequest.TestNodes?.ToArray();
+        TestNode[]? expectedTestNodes = expectedRequest.TestNodes?.ToArray();
 
         for (int i = 0; i < actualRequest.TestNodes?.Count; i++)
         {
@@ -129,8 +129,7 @@ public class FormatterUtilitiesTests : TestBase
         }
     }
 
-    internal static TestArgumentsEntry<Type> FormatSerializerTypes(TestArgumentsContext testArgumentsContext)
-        => new((Type)testArgumentsContext.Arguments, ((Type)testArgumentsContext.Arguments).Name);
+    internal static TestArgumentsEntry<Type> FormatSerializerTypes(TestArgumentsContext testArgumentsContext) => new((Type)testArgumentsContext.Arguments, ((Type)testArgumentsContext.Arguments).Name);
 
     private static void AssertSerialize(Type type, string instanceSerialized)
     {
@@ -264,9 +263,7 @@ public class FormatterUtilitiesTests : TestBase
         throw new NotImplementedException($"Assertion not implemented '{type}', value to assert:\n{instanceSerialized}");
     }
 
-    private static string CreateSerializedInstance(Type type)
-    {
-        return type == typeof(DiscoverRequestArgs) || type == typeof(RunRequestArgs)
+    private static string CreateSerializedInstance(Type type) => type == typeof(DiscoverRequestArgs) || type == typeof(RunRequestArgs)
             ? """
             {
                 "runId":"00000000-0000-0000-0000-000000000000",
@@ -282,7 +279,6 @@ public class FormatterUtilitiesTests : TestBase
                 }
             """
             : throw new NotImplementedException($"Serialized instance doesn't exist for '{type}'");
-    }
 
     private static object CreateInstance(Type type)
     {

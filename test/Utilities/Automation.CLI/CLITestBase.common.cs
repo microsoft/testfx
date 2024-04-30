@@ -25,8 +25,8 @@ public partial class CLITestBase : TestContainer
 
     protected static XmlDocument ReadCPMFile()
     {
-        var cpmFilePath = Path.Combine(GetArtifactsBinFolderPath(), "..", "..", "Directory.Packages.props");
-        using var fileStream = File.OpenRead(cpmFilePath);
+        string cpmFilePath = Path.Combine(GetArtifactsBinFolderPath(), "..", "..", "Directory.Packages.props");
+        using FileStream fileStream = File.OpenRead(cpmFilePath);
 #pragma warning disable CA3075 // Insecure DTD processing in XML
         using var xmlTextReader = new XmlTextReader(fileStream) { Namespaces = false };
 #pragma warning restore CA3075 // Insecure DTD processing in XML
@@ -38,17 +38,17 @@ public partial class CLITestBase : TestContainer
 
     protected static string GetTestPlatformVersion()
     {
-        var cpmXml = ReadCPMFile();
-        var testSdkVersion = cpmXml.DocumentElement.SelectSingleNode($"PropertyGroup/MicrosoftNETTestSdkVersion");
+        XmlDocument cpmXml = ReadCPMFile();
+        XmlNode testSdkVersion = cpmXml.DocumentElement.SelectSingleNode($"PropertyGroup/MicrosoftNETTestSdkVersion");
 
         return testSdkVersion.InnerText;
     }
 
     protected static string GetArtifactsBinFolderPath()
     {
-        var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
-        var artifactsBinFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\.."));
+        string artifactsBinFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\.."));
         Directory.Exists(artifactsBinFolder).Should().BeTrue();
 
         return artifactsBinFolder;
@@ -56,12 +56,12 @@ public partial class CLITestBase : TestContainer
 
     protected static string GetArtifactsTestResultsFolderPath()
     {
-        var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
-        var artifactsFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\..\.."));
+        string artifactsFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\..\.."));
         Directory.Exists(artifactsFolder).Should().BeTrue();
 
-        var testResultsFolder = Path.Combine(artifactsFolder, "TestResults", Configuration);
+        string testResultsFolder = Path.Combine(artifactsFolder, "TestResults", Configuration);
         Directory.CreateDirectory(testResultsFolder);
 
         return testResultsFolder;
@@ -71,7 +71,7 @@ public partial class CLITestBase : TestContainer
     {
         configuration ??= Configuration;
         targetFramework ??= DefaultTargetFramework;
-        var assetPath = Path.GetFullPath(Path.Combine(GetArtifactsBinFolderPath(), assetName, configuration, targetFramework, assetName + ".dll"));
+        string assetPath = Path.GetFullPath(Path.Combine(GetArtifactsBinFolderPath(), assetName, configuration, targetFramework, assetName + ".dll"));
         File.Exists(assetPath).Should().BeTrue($"asset '{assetPath}' should exist");
 
         return assetPath;

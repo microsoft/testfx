@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -52,7 +52,7 @@ public class Logger
             : string.Format(CultureInfo.InvariantCulture, format, args);
 
         // Making sure all event handlers are called in sync on same thread.
-        foreach (var invoker in OnLogMessage.GetInvocationList())
+        foreach (Delegate? invoker in OnLogMessage.GetInvocationList())
         {
             try
             {

@@ -50,7 +50,7 @@ public class RunConfigurationSettings
             return new RunConfigurationSettings();
         }
 
-        var settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
+        RunConfigurationSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
 
         return settings ?? new RunConfigurationSettings();
     }
@@ -64,7 +64,7 @@ public class RunConfigurationSettings
     internal static RunConfigurationSettings? GetSettings(string runsettingsXml, string settingName)
     {
         using var stringReader = new StringReader(runsettingsXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
 
         // read to the fist child
         XmlReaderUtilities.ReadToRootNode(reader);
@@ -118,7 +118,7 @@ public class RunConfigurationSettings
                 {
                     case "COLLECTSOURCEINFORMATION":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out var result))
+                            if (bool.TryParse(reader.ReadInnerXml(), out bool result))
                             {
                                 settings.CollectSourceInformation = result;
                                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
@@ -24,7 +24,9 @@ public class AdapterTraceLogger : IAdapterTraceLogger
             EqtTrace.Error(PrependAdapterName(format), args);
         }
 #else
+#pragma warning disable IDE0022 // Use expression body for method
         EqtTrace.ErrorIf(EqtTrace.IsErrorEnabled, format, args);
+#pragma warning restore IDE0022 // Use expression body for method
 #endif
     }
 
@@ -41,7 +43,9 @@ public class AdapterTraceLogger : IAdapterTraceLogger
             EqtTrace.Warning(PrependAdapterName(format), args);
         }
 #else
+#pragma warning disable IDE0022 // Use expression body for method
         EqtTrace.WarningIf(EqtTrace.IsWarningEnabled, format, args);
+#pragma warning restore IDE0022 // Use expression body for method
 #endif
     }
 
@@ -58,14 +62,13 @@ public class AdapterTraceLogger : IAdapterTraceLogger
             EqtTrace.Info(PrependAdapterName(format), args);
         }
 #else
+#pragma warning disable IDE0022 // Use expression body for method
         EqtTrace.InfoIf(EqtTrace.IsInfoEnabled, format, args);
+#pragma warning restore IDE0022 // Use expression body for method
 #endif
     }
 
 #if !WINDOWS_UWP && !WIN_UI
-    private static string PrependAdapterName(string format)
-    {
-        return $"MSTest - {format}";
-    }
+    private static string PrependAdapterName(string format) => $"MSTest - {format}";
 #endif
 }

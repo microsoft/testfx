@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Xml;
@@ -37,10 +37,7 @@ public class MSTestSettingsProvider : ISettingsProvider
     /// <summary>
     /// Reset the settings to its default.
     /// </summary>
-    public static void Reset()
-    {
-        s_settings = null;
-    }
+    public static void Reset() => s_settings = null;
 #endif
 
     /// <summary>
@@ -56,11 +53,9 @@ public class MSTestSettingsProvider : ISettingsProvider
     }
 
     public IDictionary<string, object> GetProperties(string source)
-    {
 #if !WINDOWS_UWP
-        return TestDeployment.GetDeploymentInformation(source);
+        => TestDeployment.GetDeploymentInformation(source);
 #else
-        return new Dictionary<string, object>();
+        => new Dictionary<string, object>();
 #endif
-    }
 }

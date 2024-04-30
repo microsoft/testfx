@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK || NET
@@ -146,10 +146,7 @@ class AssemblyResolver :
     /// </returns>
     [SecurityCritical]
     [SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.Infrastructure)]
-    public override object? InitializeLifetimeService()
-    {
-        return null;
-    }
+    public override object? InitializeLifetimeService() => null;
 #endif
 
     /// <summary>
@@ -171,7 +168,7 @@ class AssemblyResolver :
             return;
         }
 
-        foreach (var recPath in recursiveDirectoryPath)
+        foreach (RecursiveDirectoryPath recPath in recursiveDirectoryPath)
         {
             _directoryList.Enqueue(recPath);
         }
@@ -185,9 +182,7 @@ class AssemblyResolver :
     /// <param name="args"> The args. </param>
     /// <returns> The <see cref="Assembly"/>. </returns>
     internal Assembly? ReflectionOnlyOnResolve(object sender, ResolveEventArgs args)
-    {
-        return OnResolveInternal(sender, args, true);
-    }
+        => OnResolveInternal(sender, args, true);
 #endif
 
     /// <summary>
@@ -217,10 +212,10 @@ class AssemblyResolver :
         if (DoesDirectoryExist(path))
         {
             // Get the directories in the path provided.
-            var directories = GetDirectories(path);
+            string[] directories = GetDirectories(path);
 
             // Add each directory and its subdirectories to the collection.
-            foreach (var directory in directories)
+            foreach (string directory in directories)
             {
                 searchDirectories.Add(directory);
 
@@ -271,10 +266,7 @@ class AssemblyResolver :
 #else
     private static
 #endif
-    bool DoesDirectoryExist(string path)
-    {
-        return Directory.Exists(path);
-    }
+    bool DoesDirectoryExist(string path) => Directory.Exists(path);
 
     /// <summary>
     /// Gets the directories from a path.
@@ -287,36 +279,24 @@ class AssemblyResolver :
 #else
     private static
 #endif
-    string[] GetDirectories(string path)
-    {
-        return Directory.GetDirectories(path);
-    }
+    string[] GetDirectories(string path) => Directory.GetDirectories(path);
 
 #if NETFRAMEWORK
     protected virtual
 #else
     private static
 #endif
-    bool DoesFileExist(string filePath)
-    {
-        return File.Exists(filePath);
-    }
+    bool DoesFileExist(string filePath) => File.Exists(filePath);
 
 #if NETFRAMEWORK
     protected virtual
 #else
     private static
 #endif
-    Assembly LoadAssemblyFrom(string path)
-    {
-        return Assembly.LoadFrom(path);
-    }
+    Assembly LoadAssemblyFrom(string path) => Assembly.LoadFrom(path);
 
 #if NETFRAMEWORK
-    protected virtual Assembly ReflectionOnlyLoadAssemblyFrom(string path)
-    {
-        return Assembly.ReflectionOnlyLoadFrom(path);
-    }
+    protected virtual Assembly ReflectionOnlyLoadAssemblyFrom(string path) => Assembly.ReflectionOnlyLoadFrom(path);
 #endif
 
     /// <summary>
@@ -366,7 +346,7 @@ class AssemblyResolver :
 
         DebugEx.Assert(requestedName != null && !StringEx.IsNullOrEmpty(requestedName.Name), "AssemblyResolver.OnResolve: requested is null or name is empty!");
 
-        foreach (var dir in searchDirectorypaths)
+        foreach (string dir in searchDirectorypaths)
         {
             if (StringEx.IsNullOrEmpty(dir))
             {
@@ -383,11 +363,11 @@ class AssemblyResolver :
                     }
                 });
 
-            foreach (var extension in new string[] { ".dll", ".exe" })
+            foreach (string extension in new string[] { ".dll", ".exe" })
             {
-                var assemblyPath = Path.Combine(dir, requestedName.Name + extension);
+                string assemblyPath = Path.Combine(dir, requestedName.Name + extension);
 
-                var assembly = SearchAndLoadAssembly(assemblyPath, name, requestedName, isReflectionOnly);
+                Assembly? assembly = SearchAndLoadAssembly(assemblyPath, name, requestedName, isReflectionOnly);
                 if (assembly != null)
                 {
                     return assembly;
@@ -410,16 +390,16 @@ class AssemblyResolver :
         DebugEx.Assert(requestedName != null, "requested assembly name should not be null.");
         DebugEx.Assert(foundName != null, "found assembly name should not be null.");
 
-        var requestedPublicKey = requestedName.GetPublicKeyToken();
+        byte[]? requestedPublicKey = requestedName.GetPublicKeyToken();
         if (requestedPublicKey != null)
         {
-            var foundPublicKey = foundName.GetPublicKeyToken();
+            byte[]? foundPublicKey = foundName.GetPublicKeyToken();
             if (foundPublicKey == null)
             {
                 return false;
             }
 
-            for (var i = 0; i < requestedPublicKey.Length; ++i)
+            for (int i = 0; i < requestedPublicKey.Length; ++i)
             {
                 if (requestedPublicKey[i] != foundPublicKey[i])
                 {
@@ -496,7 +476,7 @@ class AssemblyResolver :
         lock (_syncLock)
         {
             // Since both normal and reflection only cache are accessed in same block, putting only one lock should be sufficient.
-            if (TryLoadFromCache(assemblyNameToLoad, isReflectionOnly, out var assembly))
+            if (TryLoadFromCache(assemblyNameToLoad, isReflectionOnly, out Assembly? assembly))
             {
                 return assembly;
             }
@@ -515,7 +495,7 @@ class AssemblyResolver :
                 while (assembly == null && _directoryList.Count > 0)
                 {
                     // instead of loading whole search directory in one time, we are adding directory on the basis of need
-                    var currentNode = _directoryList.Dequeue();
+                    RecursiveDirectoryPath currentNode = _directoryList.Dequeue();
 
                     List<string> incrementalSearchDirectory = [];
 

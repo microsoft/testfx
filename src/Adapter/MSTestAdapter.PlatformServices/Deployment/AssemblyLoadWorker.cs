@@ -77,11 +77,9 @@ internal class AssemblyLoadWorker : MarshalByRefObject
     /// initialize the lifetime service.
     /// </summary>
     /// <returns> The <see cref="object"/>. </returns>
-    public override object? InitializeLifetimeService()
-    {
+    public override object? InitializeLifetimeService() =>
         // Infinite.
-        return null;
-    }
+        null;
 
     /// <summary>
     /// Get the target dotNet framework string for the assembly.
@@ -128,7 +126,7 @@ internal class AssemblyLoadWorker : MarshalByRefObject
                 continue;
             }
 
-            var declaringType = data.NamedArguments[0].MemberInfo.DeclaringType;
+            Type declaringType = data.NamedArguments[0].MemberInfo.DeclaringType;
             if (declaringType == null)
             {
                 continue;

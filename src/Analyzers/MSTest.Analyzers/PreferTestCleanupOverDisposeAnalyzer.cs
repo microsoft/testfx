@@ -37,10 +37,10 @@ public sealed class PreferTestCleanupOverDisposeAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIDisposable, out var idisposableSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIDisposable, out INamedTypeSymbol? idisposableSymbol))
             {
-                var iasyncDisposableSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIAsyncDisposable);
-                var valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
+                INamedTypeSymbol? iasyncDisposableSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIAsyncDisposable);
+                INamedTypeSymbol? valueTaskSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask);
                 context.RegisterSymbolAction(context => AnalyzeSymbol(context, idisposableSymbol, iasyncDisposableSymbol, valueTaskSymbol), SymbolKind.Method);
             }
         });
@@ -49,7 +49,7 @@ public sealed class PreferTestCleanupOverDisposeAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol idisposableSymbol, INamedTypeSymbol? iasyncDisposableSymbol,
         INamedTypeSymbol? valueTaskSymbol)
     {
-        IMethodSymbol methodSymbol = (IMethodSymbol)context.Symbol;
+        var methodSymbol = (IMethodSymbol)context.Symbol;
 
         if (methodSymbol.IsAsyncDisposeImplementation(iasyncDisposableSymbol, valueTaskSymbol)
             || methodSymbol.IsDisposeImplementation(idisposableSymbol))

@@ -29,7 +29,7 @@ public class PrivateType
     {
         _ = assemblyName ?? throw new ArgumentNullException(nameof(assemblyName));
         _ = typeName ?? throw new ArgumentNullException(nameof(typeName));
-        Assembly asm = Assembly.Load(assemblyName);
+        var asm = Assembly.Load(assemblyName);
 
         ReferencedType = asm.GetType(typeName, true);
     }
@@ -55,10 +55,7 @@ public class PrivateType
     /// <param name="name">Name of the member to InvokeHelper.</param>
     /// <param name="args">Arguments to the invocation.</param>
     /// <returns>Result of invocation.</returns>
-    public object InvokeStatic(string name, params object?[]? args)
-    {
-        return InvokeStatic(name, null, args, CultureInfo.InvariantCulture);
-    }
+    public object InvokeStatic(string name, params object?[]? args) => InvokeStatic(name, null, args, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Invokes static member.
@@ -67,10 +64,7 @@ public class PrivateType
     /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
     /// <param name="args">Arguments to the invocation.</param>
     /// <returns>Result of invocation.</returns>
-    public object InvokeStatic(string name, Type[]? parameterTypes, object?[]? args)
-    {
-        return InvokeStatic(name, parameterTypes, args, CultureInfo.InvariantCulture);
-    }
+    public object InvokeStatic(string name, Type[]? parameterTypes, object?[]? args) => InvokeStatic(name, parameterTypes, args, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Invokes static member.
@@ -80,10 +74,7 @@ public class PrivateType
     /// <param name="args">Arguments to the invocation.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
     /// <returns>Result of invocation.</returns>
-    public object InvokeStatic(string name, Type[]? parameterTypes, object?[]? args, Type[] typeArguments)
-    {
-        return InvokeStatic(name, BindToEveryThing, parameterTypes, args, CultureInfo.InvariantCulture, typeArguments);
-    }
+    public object InvokeStatic(string name, Type[]? parameterTypes, object?[]? args, Type[] typeArguments) => InvokeStatic(name, BindToEveryThing, parameterTypes, args, CultureInfo.InvariantCulture, typeArguments);
 
     /// <summary>
     /// Invokes the static method.
@@ -92,10 +83,7 @@ public class PrivateType
     /// <param name="args">Arguments to the invocation.</param>
     /// <param name="culture">Culture.</param>
     /// <returns>Result of invocation.</returns>
-    public object InvokeStatic(string name, object?[]? args, CultureInfo? culture)
-    {
-        return InvokeStatic(name, null, args, culture);
-    }
+    public object InvokeStatic(string name, object?[]? args, CultureInfo? culture) => InvokeStatic(name, null, args, culture);
 
     /// <summary>
     /// Invokes the static method.
@@ -105,10 +93,7 @@ public class PrivateType
     /// <param name="args">Arguments to the invocation.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of invocation.</returns>
-    public object InvokeStatic(string name, Type[]? parameterTypes, object?[]? args, CultureInfo? culture)
-    {
-        return InvokeStatic(name, BindingFlags.InvokeMethod, parameterTypes, args, culture);
-    }
+    public object InvokeStatic(string name, Type[]? parameterTypes, object?[]? args, CultureInfo? culture) => InvokeStatic(name, BindingFlags.InvokeMethod, parameterTypes, args, culture);
 
     /// <summary>
     /// Invokes the static method.
@@ -117,10 +102,7 @@ public class PrivateType
     /// <param name="bindingFlags">Additional invocation attributes.</param>
     /// <param name="args">Arguments to the invocation.</param>
     /// <returns>Result of invocation.</returns>
-    public object InvokeStatic(string name, BindingFlags bindingFlags, params object?[]? args)
-    {
-        return InvokeStatic(name, bindingFlags, null, args, CultureInfo.InvariantCulture);
-    }
+    public object InvokeStatic(string name, BindingFlags bindingFlags, params object?[]? args) => InvokeStatic(name, bindingFlags, null, args, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Invokes the static method.
@@ -130,10 +112,7 @@ public class PrivateType
     /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to invoke.</param>
     /// <param name="args">Arguments to the invocation.</param>
     /// <returns>Result of invocation.</returns>
-    public object InvokeStatic(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args)
-    {
-        return InvokeStatic(name, bindingFlags, parameterTypes, args, CultureInfo.InvariantCulture);
-    }
+    public object InvokeStatic(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args) => InvokeStatic(name, bindingFlags, parameterTypes, args, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Invokes the static method.
@@ -143,10 +122,7 @@ public class PrivateType
     /// <param name="args">Arguments to the invocation.</param>
     /// <param name="culture">Culture.</param>
     /// <returns>Result of invocation.</returns>
-    public object InvokeStatic(string name, BindingFlags bindingFlags, object?[]? args, CultureInfo? culture)
-    {
-        return InvokeStatic(name, bindingFlags, null, args, culture);
-    }
+    public object InvokeStatic(string name, BindingFlags bindingFlags, object?[]? args, CultureInfo? culture) => InvokeStatic(name, bindingFlags, null, args, culture);
 
     /// <summary>
     /// Invokes the static method.
@@ -157,10 +133,7 @@ public class PrivateType
     /// <param name="args">Arguments to the invocation.</param>
     /// <param name="culture">Culture.</param>
     /// <returns>Result of invocation.</returns>
-    public object InvokeStatic(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args, CultureInfo? culture)
-    {
-        return InvokeStatic(name, bindingFlags, parameterTypes, args, culture, null);
-    }
+    public object InvokeStatic(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args, CultureInfo? culture) => InvokeStatic(name, bindingFlags, parameterTypes, args, culture, null);
 
     /// <summary>
     /// Invokes the static method.
@@ -248,7 +221,7 @@ public class PrivateType
     public object GetStaticArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        Array arr = (Array)InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.GetProperty | bindingFlags, null, CultureInfo.InvariantCulture);
+        var arr = (Array)InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.GetProperty | bindingFlags, null, CultureInfo.InvariantCulture);
         return arr.GetValue(indices);
     }
 
@@ -265,7 +238,7 @@ public class PrivateType
     public void SetStaticArrayElement(string name, BindingFlags bindingFlags, object value, params int[] indices)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        Array arr = (Array)InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Static | bindingFlags, null, CultureInfo.InvariantCulture);
+        var arr = (Array)InvokeHelperStatic(name, BindingFlags.GetField | BindingFlags.GetProperty | BindingFlags.Static | bindingFlags, null, CultureInfo.InvariantCulture);
         arr.SetValue(value, indices);
     }
 
@@ -367,10 +340,7 @@ public class PrivateType
     /// <param name="name">Name of the field or property.</param>
     /// <param name="args">Arguments to the invocation.</param>
     /// <returns>The static property.</returns>
-    public object GetStaticProperty(string name, params object?[]? args)
-    {
-        return GetStaticProperty(name, BindToEveryThing, args);
-    }
+    public object GetStaticProperty(string name, params object?[]? args) => GetStaticProperty(name, BindToEveryThing, args);
 
     /// <summary>
     /// Sets the static property.
@@ -378,10 +348,7 @@ public class PrivateType
     /// <param name="name">Name of the property.</param>
     /// <param name="value">Value to be set to field or property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetStaticProperty(string name, object value, params object?[]? args)
-    {
-        SetStaticProperty(name, BindToEveryThing, value, null, args);
-    }
+    public void SetStaticProperty(string name, object value, params object?[]? args) => SetStaticProperty(name, BindToEveryThing, value, null, args);
 
     /// <summary>
     /// Sets the static property.
@@ -390,10 +357,7 @@ public class PrivateType
     /// <param name="value">Value to be set to field or property.</param>
     /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetStaticProperty(string name, object value, Type[]? parameterTypes, object?[]? args)
-    {
-        SetStaticProperty(name, BindingFlags.SetProperty, value, parameterTypes, args);
-    }
+    public void SetStaticProperty(string name, object value, Type[]? parameterTypes, object?[]? args) => SetStaticProperty(name, BindingFlags.SetProperty, value, parameterTypes, args);
 
     /// <summary>
     /// Gets the static property.
@@ -402,10 +366,7 @@ public class PrivateType
     /// <param name="bindingFlags">Additional invocation attributes.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The static property.</returns>
-    public object GetStaticProperty(string name, BindingFlags bindingFlags, params object?[]? args)
-    {
-        return GetStaticProperty(name, BindingFlags.GetProperty | BindingFlags.Static | bindingFlags, null, args);
-    }
+    public object GetStaticProperty(string name, BindingFlags bindingFlags, params object?[]? args) => GetStaticProperty(name, BindingFlags.GetProperty | BindingFlags.Static | bindingFlags, null, args);
 
     /// <summary>
     /// Gets the static property.
@@ -434,10 +395,7 @@ public class PrivateType
     /// <param name="bindingFlags">Additional invocation attributes.</param>
     /// <param name="value">Value to be set to field or property.</param>
     /// <param name="args">Optional index values for indexed properties. The indexes of indexed properties are zero-based. This value should be null for non-indexed properties. </param>
-    public void SetStaticProperty(string name, BindingFlags bindingFlags, object value, params object?[]? args)
-    {
-        SetStaticProperty(name, bindingFlags, value, null, args);
-    }
+    public void SetStaticProperty(string name, BindingFlags bindingFlags, object value, params object?[]? args) => SetStaticProperty(name, bindingFlags, value, null, args);
 
     /// <summary>
     /// Sets the static property.

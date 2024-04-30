@@ -72,10 +72,7 @@ internal class UnitTestRunner : MarshalByRefObject
 #if NET5_0_OR_GREATER
     [Obsolete]
 #endif
-    public override object InitializeLifetimeService()
-    {
-        return null!;
-    }
+    public override object InitializeLifetimeService() => null!;
 
     /// <summary>
     /// Initialized the class cleanup manager for the unit test runner. Note, this can run over process-isolation,
@@ -87,7 +84,7 @@ internal class UnitTestRunner : MarshalByRefObject
     {
         // We can't transport the Enum across AppDomain boundaries because of backwards and forwards compatibility.
         // So we're converting here if we can, or falling back to the default.
-        var lifecycle = ClassCleanupBehavior.EndOfAssembly;
+        ClassCleanupBehavior lifecycle = ClassCleanupBehavior.EndOfAssembly;
         if (classCleanupLifecycle != null && Enum.IsDefined(typeof(ClassCleanupBehavior), classCleanupLifecycle))
         {
             lifecycle = (ClassCleanupBehavior)classCleanupLifecycle;
@@ -117,11 +114,11 @@ internal class UnitTestRunner : MarshalByRefObject
         {
             using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
             var properties = new Dictionary<string, object?>(testContextProperties);
-            var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
+            ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
             testContext.SetOutcome(UTF.UnitTestOutcome.InProgress);
 
             // Get the testMethod
-            var testMethodInfo = _typeCache.GetTestMethodInfo(
+            TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(
                 testMethod,
                 testContext,
                 MSTestSettings.CurrentSettings.CaptureDebugTraces);
@@ -131,7 +128,7 @@ internal class UnitTestRunner : MarshalByRefObject
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFoundClassCleanup);
             }
 
-            if (!IsTestMethodRunnable(testMethod, testMethodInfo, out var notRunnableResult))
+            if (!IsTestMethodRunnable(testMethod, testMethodInfo, out UnitTestResult[]? notRunnableResult))
             {
                 if (_classCleanupManager is null)
                 {
@@ -145,7 +142,7 @@ internal class UnitTestRunner : MarshalByRefObject
 
             DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
-            var result = testMethodRunner.Execute();
+            UnitTestResult[] result = testMethodRunner.Execute();
             RunRequiredCleanups(testContext, testMethodInfo, testMethod, result);
             return result;
         }
@@ -175,14 +172,14 @@ internal class UnitTestRunner : MarshalByRefObject
 
             if (shouldRunClassAndAssemblyCleanup)
             {
-                var classInfoCache = _typeCache.ClassInfoListWithExecutableCleanupMethods;
-                foreach (var classInfo in classInfoCache)
+                IEnumerable<TestClassInfo> classInfoCache = _typeCache.ClassInfoListWithExecutableCleanupMethods;
+                foreach (TestClassInfo classInfo in classInfoCache)
                 {
                     classInfo.ExecuteClassCleanup();
                 }
 
-                var assemblyInfoCache = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
-                foreach (var assemblyInfo in assemblyInfoCache)
+                IEnumerable<TestAssemblyInfo> assemblyInfoCache = _typeCache.AssemblyInfoListWithExecutableCleanupMethods;
+                foreach (TestAssemblyInfo assemblyInfo in assemblyInfoCache)
                 {
                     assemblyInfo.ExecuteAssemblyCleanup();
                 }
@@ -197,18 +194,18 @@ internal class UnitTestRunner : MarshalByRefObject
                 return;
             }
 
-            var lastResult = results[results.Length - 1];
+            UnitTestResult lastResult = results[results.Length - 1];
             lastResult.Outcome = ObjectModel.UnitTestOutcome.Failed;
             lastResult.ErrorMessage = ex.Message;
             lastResult.ErrorStackTrace = ex.StackTrace;
         }
         finally
         {
-            var cleanupTestContextMessages = testContext.GetAndClearDiagnosticMessages();
+            string? cleanupTestContextMessages = testContext.GetAndClearDiagnosticMessages();
 
             if (results.Length > 0)
             {
-                var lastResult = results[results.Length - 1];
+                UnitTestResult lastResult = results[results.Length - 1];
                 lastResult.StandardOut += logListener.StandardOutput;
                 lastResult.StandardError += logListener.StandardError;
                 lastResult.DebugTrace += logListener.DebugTrace;
@@ -256,9 +253,9 @@ internal class UnitTestRunner : MarshalByRefObject
         }
 
         string? ignoreMessage = null;
-        var isIgnoreAttributeOnClass =
+        bool isIgnoreAttributeOnClass =
             _reflectHelper.IsAttributeDefined<IgnoreAttribute>(testMethodInfo.Parent.ClassType, false);
-        var isIgnoreAttributeOnMethod =
+        bool isIgnoreAttributeOnMethod =
             _reflectHelper.IsAttributeDefined<IgnoreAttribute>(testMethodInfo.TestMethod, false);
 
         if (isIgnoreAttributeOnClass)
@@ -311,7 +308,7 @@ internal class UnitTestRunner : MarshalByRefObject
         {
             shouldRunEndOfClassCleanup = false;
             shouldRunEndOfAssemblyCleanup = false;
-            if (!_remainingTestsByClass.TryGetValue(testMethodInfo.TestClassName, out var testsByClass))
+            if (!_remainingTestsByClass.TryGetValue(testMethodInfo.TestClassName, out HashSet<string>? testsByClass))
             {
                 return;
             }
@@ -324,7 +321,7 @@ internal class UnitTestRunner : MarshalByRefObject
                     _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
                     if (testMethodInfo.Parent.HasExecutableCleanupMethod)
                     {
-                        var cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)
+                        ClassCleanupBehavior cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)
                             ?? _lifecycleFromMsTest
                             ?? _lifecycleFromAssembly;
 

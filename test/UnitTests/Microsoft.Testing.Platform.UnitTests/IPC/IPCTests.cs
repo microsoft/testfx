@@ -175,7 +175,7 @@ public sealed class IPCTests : TestBase
     {
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
 
-        var pipes = new List<NamedPipeServer>();
+        List<NamedPipeServer> pipes = new();
         for (int i = 0; i < 3; i++)
         {
             pipes.Add(new(
@@ -201,7 +201,7 @@ public sealed class IPCTests : TestBase
         Assert.Contains("All pipe instances are busy.", exception.Message);
 #pragma warning restore CA1806 // Do not ignore method results
 
-        var waitConnectionTask = new List<Task>();
+        List<Task> waitConnectionTask = new();
         int connectionCompleted = 0;
         foreach (NamedPipeServer namedPipeServer in pipes)
         {
@@ -212,7 +212,7 @@ public sealed class IPCTests : TestBase
             }));
         }
 
-        var connectedClients = new List<NamedPipeClient>();
+        List<NamedPipeClient> connectedClients = new();
         for (int i = 0; i < waitConnectionTask.Count; i++)
         {
             NamedPipeClient namedPipeClient = new(pipeNameDescription.Name);

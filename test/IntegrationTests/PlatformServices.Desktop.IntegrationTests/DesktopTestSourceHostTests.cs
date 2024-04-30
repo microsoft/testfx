@@ -74,7 +74,7 @@ public class DesktopTestSourceHostTests : TestContainer
         _testSourceHost.SetupHost();
 
         var asm = Assembly.LoadFrom(sampleProjectPath);
-        var type = asm.GetType("SampleProjectForAssemblyResolution.SerializableTypeThatShouldBeLoaded");
+        Type type = asm.GetType("SampleProjectForAssemblyResolution.SerializableTypeThatShouldBeLoaded");
 
         // Creating instance of SampleProjectForAssemblyResolution should not throw.
         // It is present in  <Directory path = ".\ComponentTests" />  specified in runsettings
@@ -83,7 +83,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
     public void DisposeShouldUnloadChildAppDomain()
     {
-        var testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug");
+        string testSource = GetTestAssemblyPath("DesktopTestProjectx86Debug");
         _testSourceHost = new TestSourceHost(testSource, null, null);
         _testSourceHost.SetupHost();
 
@@ -97,7 +97,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
     private static string GetArtifactsBinDir()
     {
-        var artifactsBinDirPath = Path.GetFullPath(Path.Combine(
+        string artifactsBinDirPath = Path.GetFullPath(Path.Combine(
             typeof(DesktopTestSourceHostTests).Assembly.Location,
             "..",
             "..",
@@ -110,7 +110,7 @@ public class DesktopTestSourceHostTests : TestContainer
 
     private static string GetTestAssemblyPath(string assetName)
     {
-        var testAssetPath = Path.Combine(
+        string testAssetPath = Path.Combine(
             GetArtifactsBinDir(),
             assetName,
 #if DEBUG
@@ -132,7 +132,7 @@ public class DesktopTestSourceHostTests : TestContainer
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingXml);
 
         StringReader stringReader = new(runSettingXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         MSTestSettingsProvider mstestSettingsProvider = new();
         reader.ReadToFollowing("MSTestV2");
         mstestSettingsProvider.Load(reader);

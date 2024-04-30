@@ -20,7 +20,7 @@ public class TestCaseExtensionsTests : TestContainer
         {
             DisplayName = "DummyDisplayName",
         };
-        var testCategories = new[] { "DummyCategory" };
+        string[] testCategories = new[] { "DummyCategory" };
 
         testCase.SetPropertyValue(Constants.AsyncTestProperty, true);
         testCase.SetPropertyValue(Constants.PriorityProperty, 2);

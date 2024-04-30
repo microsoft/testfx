@@ -17,7 +17,7 @@ internal static class CountDownEventExtensions
         CancellationTokenRegistration tokenRegistration = default;
         try
         {
-            var tcs = new TaskCompletionSource<bool>();
+            TaskCompletionSource<bool> tcs = new();
 
             // https://learn.microsoft.com/dotnet/api/system.threading.threadpool.registerwaitforsingleobject?view=net-7.0
 #pragma warning disable SA1115 // Parameter should follow comma

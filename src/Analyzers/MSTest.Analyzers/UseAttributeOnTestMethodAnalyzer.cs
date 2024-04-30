@@ -139,7 +139,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             // test methods, nothing to check.
             if (!context.Compilation.TryGetOrCreateTypeByMetadataName(
                 WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute,
-                out var testMethodAttributeSymbol))
+                out INamedTypeSymbol? testMethodAttributeSymbol))
             {
                 return;
             }
@@ -147,9 +147,9 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             // Get a list of attributes and associated rules that are found in the current compilation
             // context.
             List<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> attributeRuleTuples = new();
-            foreach (var (attributeFullyQualifiedName, rule) in RuleTuples)
+            foreach ((string attributeFullyQualifiedName, DiagnosticDescriptor rule) in RuleTuples)
             {
-                if (context.Compilation.TryGetOrCreateTypeByMetadataName(attributeFullyQualifiedName, out var attributeSymbol))
+                if (context.Compilation.TryGetOrCreateTypeByMetadataName(attributeFullyQualifiedName, out INamedTypeSymbol? attributeSymbol))
                 {
                     attributeRuleTuples.Add((attributeSymbol, rule));
                 }
@@ -170,10 +170,10 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol testMethodAttributeSymbol,
         IEnumerable<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> attributeRuleTuples)
     {
-        IMethodSymbol methodSymbol = (IMethodSymbol)context.Symbol;
+        var methodSymbol = (IMethodSymbol)context.Symbol;
 
         List<(AttributeData AttributeData, DiagnosticDescriptor Rule)> attributes = new();
-        foreach (var methodAttribute in methodSymbol.GetAttributes())
+        foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
         {
             // Current method should be a test method or should inherit from the TestMethod attribute.
             // If it is, the current analyzer will trigger no diagnostic so it exits.
@@ -183,7 +183,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
             }
 
             // Get all test attributes decorating the current method.
-            foreach (var (attributeSymbol, rule) in attributeRuleTuples)
+            foreach ((INamedTypeSymbol attributeSymbol, DiagnosticDescriptor rule) in attributeRuleTuples)
             {
                 if (SymbolEqualityComparer.Default.Equals(methodAttribute.AttributeClass, attributeSymbol))
                 {
@@ -194,7 +194,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
 
         // If there's any test attributes decorating a non-test method we report diagnostics on the
         // said test attribute.
-        foreach (var attribute in attributes)
+        foreach ((AttributeData AttributeData, DiagnosticDescriptor Rule) attribute in attributes)
         {
             if (attribute.AttributeData.ApplicationSyntaxReference?.GetSyntax() is { } syntax)
             {

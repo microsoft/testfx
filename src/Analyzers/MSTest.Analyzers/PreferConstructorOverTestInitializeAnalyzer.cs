@@ -37,7 +37,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzer : DiagnosticAnal
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute, out var testInitAttributeSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestInitializeAttribute, out INamedTypeSymbol? testInitAttributeSymbol))
             {
                 context.RegisterSymbolAction(context => AnalyzeSymbol(context, testInitAttributeSymbol), SymbolKind.Method);
             }
@@ -46,7 +46,7 @@ public sealed class PreferConstructorOverTestInitializeAnalyzer : DiagnosticAnal
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testInitAttributeSymbol)
     {
-        IMethodSymbol methodSymbol = (IMethodSymbol)context.Symbol;
+        var methodSymbol = (IMethodSymbol)context.Symbol;
 
         if (methodSymbol.IsTestInitializeMethod(testInitAttributeSymbol) && methodSymbol.ReturnsVoid)
         {

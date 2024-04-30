@@ -14,7 +14,7 @@ public class UserService
 {
     public User ParseUserData(string data)
     {
-        var splitData = data.Split(';');
+        string[] splitData = data.Split(';');
 
         return new User()
         {

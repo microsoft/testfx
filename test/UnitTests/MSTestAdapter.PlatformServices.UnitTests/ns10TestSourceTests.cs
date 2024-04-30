@@ -18,15 +18,9 @@ public class TestSourceTests : TestContainer
         _testSource = new TestSource();
     }
 
-    public void ValidSourceExtensionsShouldContainDllExtensions()
-    {
-        Verify(_testSource.ValidSourceExtensions.ToList().Contains(".dll"));
-    }
+    public void ValidSourceExtensionsShouldContainDllExtensions() => Verify(_testSource.ValidSourceExtensions.ToList().Contains(".dll"));
 
-    public void ValidSourceExtensionsShouldContainExeExtensions()
-    {
-        Verify(_testSource.ValidSourceExtensions.ToList().Contains(".exe"));
-    }
+    public void ValidSourceExtensionsShouldContainExeExtensions() => Verify(_testSource.ValidSourceExtensions.ToList().Contains(".exe"));
 
     public void IsAssemblyReferencedShouldReturnTrueIfSourceOrAssemblyNameIsNull()
     {
@@ -35,10 +29,7 @@ public class TestSourceTests : TestContainer
         Verify(_testSource.IsAssemblyReferenced(new AssemblyName(), null));
     }
 
-    public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames()
-    {
-        Verify(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
-    }
+    public void IsAssemblyReferencedShouldReturnTrueForAllSourceOrAssemblyNames() => Verify(_testSource.IsAssemblyReferenced(new AssemblyName("ReferenceAssembly"), "SourceAssembly"));
 }
 
 #pragma warning restore SA1649 // SA1649FileNameMustMatchTypeName

@@ -15,14 +15,11 @@ internal class Context : IContext, IDisposable
         Properties = properties;
     }
 
-    public void AddDisposable(IDisposable disposable)
-    {
-        _disposables.Add(disposable);
-    }
+    public void AddDisposable(IDisposable disposable) => _disposables.Add(disposable);
 
     public void Dispose()
     {
-        foreach (var item in _disposables)
+        foreach (IDisposable item in _disposables)
         {
             Console.WriteLine($"Disposing: '{item.GetType()}'");
             item.Dispose();

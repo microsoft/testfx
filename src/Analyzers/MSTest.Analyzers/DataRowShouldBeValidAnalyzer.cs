@@ -49,14 +49,14 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
             // test methods, nothing to check.
             if (!context.Compilation.TryGetOrCreateTypeByMetadataName(
                 WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute,
-                out var testMethodAttributeSymbol))
+                out INamedTypeSymbol? testMethodAttributeSymbol))
             {
                 return;
             }
 
             if (!context.Compilation.TryGetOrCreateTypeByMetadataName(
                 WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDataRowAttribute,
-                out var dataRowAttributeSymbol))
+                out INamedTypeSymbol? dataRowAttributeSymbol))
             {
                 return;
             }
@@ -72,11 +72,11 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol testMethodAttributeSymbol,
         INamedTypeSymbol dataRowAttributeSymbol)
     {
-        IMethodSymbol methodSymbol = (IMethodSymbol)context.Symbol;
+        var methodSymbol = (IMethodSymbol)context.Symbol;
 
         bool isTestMethod = false;
         List<AttributeData> dataRowAttributes = new();
-        foreach (var methodAttribute in methodSymbol.GetAttributes())
+        foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
         {
             // Current method should be a test method or should inherit from the TestMethod attribute.
             // If it is, the current analyzer will trigger no diagnostic so it exits.
@@ -103,7 +103,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         }
 
         // Check each data row attribute.
-        foreach (var attribute in dataRowAttributes)
+        foreach (AttributeData attribute in dataRowAttributes)
         {
             AnalyzeAttribute(context, attribute, methodSymbol);
         }

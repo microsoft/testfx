@@ -26,7 +26,7 @@ public class UnitTestElementTests : TestContainer
 
     public void UnitTestElementConstructorShouldThrowIfTestMethodIsNull()
     {
-        var ex = VerifyThrows(() => _ = new UnitTestElement(null));
+        Exception ex = VerifyThrows(() => _ = new UnitTestElement(null));
         Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
@@ -231,8 +231,8 @@ public class UnitTestElementTests : TestContainer
     [Obsolete("Remove test case when enum entry is removed")]
     public void ToTestCase_WhenStrategyIsDisplayName_ExamplesOfTestCaseIdUniqueness()
     {
-        var testIdStrategy = TestIdGenerationStrategy.DisplayName;
-        var testCases = new[]
+        TestIdGenerationStrategy testIdStrategy = TestIdGenerationStrategy.DisplayName;
+        TestCase[] testCases = new[]
         {
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy))
@@ -272,8 +272,8 @@ public class UnitTestElementTests : TestContainer
     [Obsolete("Remove test case when enum entry is removed")]
     public void ToTestCase_WhenStrategyIsDisplayName_ExamplesOfTestCaseIdCollision()
     {
-        var testIdStrategy = TestIdGenerationStrategy.DisplayName;
-        var testCases = new[]
+        TestIdGenerationStrategy testIdStrategy = TestIdGenerationStrategy.DisplayName;
+        TestCase[] testCases = new[]
         {
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
@@ -316,8 +316,8 @@ public class UnitTestElementTests : TestContainer
 
     public void ToTestCase_WhenStrategyIsFullyQualifiedTest_ExamplesOfTestCaseIdUniqueness()
     {
-        var testIdStrategy = TestIdGenerationStrategy.FullyQualified;
-        var testCases = new[]
+        TestIdGenerationStrategy testIdStrategy = TestIdGenerationStrategy.FullyQualified;
+        TestCase[] testCases = new[]
         {
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy))

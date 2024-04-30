@@ -11,21 +11,18 @@ using Microsoft.CodeAnalysis.Operations;
 namespace MSTest.Analyzers.RoslynAnalyzerHelpers;
 internal static class IOperationExtensions
 {
-    public static ISymbol? GetReferencedMemberOrLocalOrParameter(this IOperation? operation)
+    public static ISymbol? GetReferencedMemberOrLocalOrParameter(this IOperation? operation) => operation switch
     {
-        return operation switch
-        {
-            IMemberReferenceOperation memberReference => memberReference.Member,
+        IMemberReferenceOperation memberReference => memberReference.Member,
 
-            IParameterReferenceOperation parameterReference => parameterReference.Parameter,
+        IParameterReferenceOperation parameterReference => parameterReference.Parameter,
 
-            ILocalReferenceOperation localReference => localReference.Local,
+        ILocalReferenceOperation localReference => localReference.Local,
 
-            IParenthesizedOperation parenthesized => parenthesized.Operand.GetReferencedMemberOrLocalOrParameter(),
+        IParenthesizedOperation parenthesized => parenthesized.Operand.GetReferencedMemberOrLocalOrParameter(),
 
-            IConversionOperation conversion => conversion.Operand.GetReferencedMemberOrLocalOrParameter(),
+        IConversionOperation conversion => conversion.Operand.GetReferencedMemberOrLocalOrParameter(),
 
-            _ => null,
-        };
-    }
+        _ => null,
+    };
 }

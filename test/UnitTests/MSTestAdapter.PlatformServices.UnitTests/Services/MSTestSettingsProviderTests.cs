@@ -26,7 +26,7 @@ public class DesktopSettingsProviderTests : TestContainer
     {
         // this is a base case and we just validating that properties does not remain un-initialized,
         // so passing 'null' source will also suffice.
-        var properties = _settingsProvider.GetProperties(null);
+        IDictionary<string, object> properties = _settingsProvider.GetProperties(null);
 
         Verify(properties is not null);
         Verify(properties.Count > 0);
@@ -34,7 +34,7 @@ public class DesktopSettingsProviderTests : TestContainer
 
     public void SettingsShouldReturnDefaultSettingsIfNotInitialized()
     {
-        var settings = MSTestSettingsProvider.Settings;
+        MSTestAdapterSettings settings = MSTestSettingsProvider.Settings;
 
         Verify(settings is not null);
         Verify(settings.DeploymentEnabled);
@@ -47,7 +47,7 @@ public class DesktopSettingsProviderTests : TestContainer
                         <DeploymentEnabled>False</DeploymentEnabled>
                   </MSTestV2>";
         StringReader stringReader = new(runSettingxml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         _settingsProvider.Load(reader);
         Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);
@@ -55,7 +55,7 @@ public class DesktopSettingsProviderTests : TestContainer
 
     public void LoadShouldThrowIfReaderIsNull()
     {
-        var exception = VerifyThrows(() => _settingsProvider.Load(null));
+        Exception exception = VerifyThrows(() => _settingsProvider.Load(null));
         Verify(exception is ArgumentNullException);
     }
 
@@ -66,7 +66,7 @@ public class DesktopSettingsProviderTests : TestContainer
                         <DeploymentEnabled>False</DeploymentEnabled>
                   </MSTestV2>";
         StringReader stringReader = new(runSettingxml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
         _settingsProvider.Load(reader);
         Verify(!MSTestSettingsProvider.Settings.DeploymentEnabled);

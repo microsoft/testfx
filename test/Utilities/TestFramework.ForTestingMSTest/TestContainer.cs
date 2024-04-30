@@ -19,7 +19,7 @@ public abstract class TestContainer : IDisposable
     /// Initializes a new instance of the <see cref="TestContainer"/> class.
     /// Constructor is used to provide some initialization before each test.
     /// </summary>
-    public TestContainer()
+    protected TestContainer()
     {
     }
 
@@ -87,9 +87,7 @@ public abstract class TestContainer : IDisposable
         [CallerMemberName] string? caller = default,
         [CallerFilePath] string? filePath = default,
         [CallerLineNumber] int lineNumber = default)
-    {
-        Throw(string.Empty, caller, filePath, lineNumber);
-    }
+        => Throw(string.Empty, caller, filePath, lineNumber);
 
     [DoesNotReturn]
     private static void Throw(string? expression, string? caller, string? filePath, int lineNumber)

@@ -147,8 +147,8 @@ public class AssemblyResolverTests : TestContainer
 
     public void ReflectionOnlyOnResolveShouldNotReturnACachedDefaultLoadedAssembly()
     {
-        var currentAssembly = typeof(AssemblyResolverTests).Assembly;
-        var currentAssemblyPath = Path.GetDirectoryName(currentAssembly.Location);
+        Assembly currentAssembly = typeof(AssemblyResolverTests).Assembly;
+        string currentAssemblyPath = Path.GetDirectoryName(currentAssembly.Location);
         var assemblyResolver = new TestableAssemblyResolver(new List<string> { currentAssemblyPath });
 
         bool isAssemblyLoaded = false;
@@ -206,38 +206,20 @@ public class TestableAssemblyResolver : AssemblyResolver
 
     public Func<List<string>, string, bool, Assembly> SearchAssemblySetter { get; internal set; }
 
-    protected override bool DoesDirectoryExist(string path)
-    {
-        return DoesDirectoryExistSetter == null ? base.DoesDirectoryExist(path) : DoesDirectoryExistSetter(path);
-    }
+    protected override bool DoesDirectoryExist(string path) => DoesDirectoryExistSetter == null ? base.DoesDirectoryExist(path) : DoesDirectoryExistSetter(path);
 
-    protected override string[] GetDirectories(string path)
-    {
-        return GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
-    }
+    protected override string[] GetDirectories(string path) => GetDirectoriesSetter == null ? base.GetDirectories(path) : GetDirectoriesSetter(path);
 
-    protected override Assembly SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly)
-    {
-        return SearchAssemblySetter == null
+    protected override Assembly SearchAssembly(List<string> searchDirectorypaths, string name, bool isReflectionOnly) => SearchAssemblySetter == null
             ? base.SearchAssembly(searchDirectorypaths, name, isReflectionOnly)
             : SearchAssemblySetter(searchDirectorypaths, name, isReflectionOnly);
-    }
 
-    protected override bool DoesFileExist(string filePath)
-    {
-        return DoesFileExistSetter == null ? base.DoesFileExist(filePath) : DoesFileExistSetter(filePath);
-    }
+    protected override bool DoesFileExist(string filePath) => DoesFileExistSetter == null ? base.DoesFileExist(filePath) : DoesFileExistSetter(filePath);
 
-    protected override Assembly LoadAssemblyFrom(string path)
-    {
-        return LoadAssemblyFromSetter == null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
-    }
+    protected override Assembly LoadAssemblyFrom(string path) => LoadAssemblyFromSetter == null ? base.LoadAssemblyFrom(path) : LoadAssemblyFromSetter(path);
 
-    protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path)
-    {
-        return ReflectionOnlyLoadAssemblyFromSetter == null
+    protected override Assembly ReflectionOnlyLoadAssemblyFrom(string path) => ReflectionOnlyLoadAssemblyFromSetter == null
             ? base.ReflectionOnlyLoadAssemblyFrom(path)
             : ReflectionOnlyLoadAssemblyFromSetter(path);
-    }
 }
 #endif

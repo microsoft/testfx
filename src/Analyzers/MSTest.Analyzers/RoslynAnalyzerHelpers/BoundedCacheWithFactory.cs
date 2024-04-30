@@ -25,11 +25,11 @@ namespace Analyzer.Utilities
         {
             lock (_weakReferencedEntries)
             {
-                var indexToSetTarget = -1;
-                for (var i = 0; i < _weakReferencedEntries.Count; i++)
+                int indexToSetTarget = -1;
+                for (int i = 0; i < _weakReferencedEntries.Count; i++)
                 {
-                    var weakReferencedEntry = _weakReferencedEntries[i];
-                    if (!weakReferencedEntry.TryGetTarget(out var cachedEntry) ||
+                    WeakReference<Entry?> weakReferencedEntry = _weakReferencedEntries[i];
+                    if (!weakReferencedEntry.TryGetTarget(out Entry? cachedEntry) ||
                         cachedEntry == null)
                     {
                         if (indexToSetTarget == -1)

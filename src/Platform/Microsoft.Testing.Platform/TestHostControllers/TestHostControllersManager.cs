@@ -81,8 +81,8 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             // Check if we have already extensions of the same type with same id registered
             if (environmentVariableProviders.Any(x => x.TestHostEnvironmentVariableProvider.Uid == envVarProvider.Uid))
             {
-                (ITestHostEnvironmentVariableProvider TestHostEnvironmentVariableProvider, int _) currentRegisteredExtension = environmentVariableProviders.Single(x => x.TestHostEnvironmentVariableProvider.Uid == envVarProvider.Uid);
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, envVarProvider.Uid, currentRegisteredExtension.TestHostEnvironmentVariableProvider.GetType()));
+                (ITestHostEnvironmentVariableProvider testHostEnvironmentVariableProvider, int _) = environmentVariableProviders.Single(x => x.TestHostEnvironmentVariableProvider.Uid == envVarProvider.Uid);
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, envVarProvider.Uid, testHostEnvironmentVariableProvider.GetType()));
             }
 
             // We initialize only if enabled
@@ -110,8 +110,8 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 // Check if we have already extensions of the same type with same id registered
                 if (environmentVariableProviders.Any(x => x.TestHostEnvironmentVariableProvider.Uid == instance.Uid))
                 {
-                    (ITestHostEnvironmentVariableProvider TestHostEnvironmentVariableProvider, int _) currentRegisteredExtension = environmentVariableProviders.Single(x => x.TestHostEnvironmentVariableProvider.Uid == instance.Uid);
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.TestHostEnvironmentVariableProvider.GetType()));
+                    (ITestHostEnvironmentVariableProvider testHostEnvironmentVariableProvider, int _) = environmentVariableProviders.Single(x => x.TestHostEnvironmentVariableProvider.Uid == instance.Uid);
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, testHostEnvironmentVariableProvider.GetType()));
                 }
 
                 // We initialize only if enabled
@@ -154,8 +154,8 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             // Check if we have already extensions of the same type with same id registered
             if (lifetimeHandlers.Any(x => x.TestHostProcessLifetimeHandler.Uid == lifetimeHandler.Uid))
             {
-                (ITestHostProcessLifetimeHandler TestHostProcessLifetimeHandler, int _) currentRegisteredExtension = lifetimeHandlers.Single(x => x.TestHostProcessLifetimeHandler.Uid == lifetimeHandler.Uid);
-                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, lifetimeHandler.Uid, currentRegisteredExtension.TestHostProcessLifetimeHandler.GetType()));
+                (ITestHostProcessLifetimeHandler testHostProcessLifetimeHandler, int _) = lifetimeHandlers.Single(x => x.TestHostProcessLifetimeHandler.Uid == lifetimeHandler.Uid);
+                throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, lifetimeHandler.Uid, testHostProcessLifetimeHandler.GetType()));
             }
 
             // We initialize only if enabled
@@ -182,8 +182,8 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
 
                 if (lifetimeHandlers.Any(x => x.TestHostProcessLifetimeHandler.Uid == instance.Uid))
                 {
-                    (ITestHostProcessLifetimeHandler TestHostProcessLifetimeHandler, int _) currentRegisteredExtension = lifetimeHandlers.Single(x => x.TestHostProcessLifetimeHandler.Uid == instance.Uid);
-                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, currentRegisteredExtension.TestHostProcessLifetimeHandler.GetType()));
+                    (ITestHostProcessLifetimeHandler testHostProcessLifetimeHandler, int _) = lifetimeHandlers.Single(x => x.TestHostProcessLifetimeHandler.Uid == instance.Uid);
+                    throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.ExtensionWithSameUidAlreadyRegisteredErrorMessage, instance.Uid, testHostProcessLifetimeHandler.GetType()));
                 }
 
                 // We initialize only if enabled

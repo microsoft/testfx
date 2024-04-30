@@ -29,7 +29,7 @@ internal static class SerializerUtilities
         Serializers[typeof(object)] = new ObjectSerializer<object>(o => new Dictionary<string, object?>());
         Serializers[typeof(KeyValuePair<string, string>)] = new ObjectSerializer<KeyValuePair<string, string>>(o =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 { o.Key, o.Value },
             };
@@ -39,7 +39,7 @@ internal static class SerializerUtilities
         // Serialize response types.
         Serializers[typeof(RequestMessage)] = new ObjectSerializer<RequestMessage>(req =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.JsonRpc] = "2.0",
                 [JsonRpcStrings.Id] = req.Id,
@@ -52,7 +52,7 @@ internal static class SerializerUtilities
 
         Serializers[typeof(ResponseMessage)] = new ObjectSerializer<ResponseMessage>(res =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.JsonRpc] = "2.0",
                 [JsonRpcStrings.Id] = res.Id,
@@ -64,7 +64,7 @@ internal static class SerializerUtilities
 
         Serializers[typeof(NotificationMessage)] = new ObjectSerializer<NotificationMessage>(notification =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.JsonRpc] = "2.0",
                 [JsonRpcStrings.Method] = notification.Method,
@@ -76,7 +76,7 @@ internal static class SerializerUtilities
 
         Serializers[typeof(ErrorMessage)] = new ObjectSerializer<ErrorMessage>(error =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.JsonRpc] = "2.0",
                 [JsonRpcStrings.Code] = error.ErrorCode,
@@ -94,7 +94,7 @@ internal static class SerializerUtilities
 
         Serializers[typeof(InitializeResponseArgs)] = new ObjectSerializer<InitializeResponseArgs>(res =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.ServerInfo] = Serialize(res.ServerInfo),
                 [JsonRpcStrings.Capabilities] = Serialize(res.Capabilities),
@@ -105,7 +105,7 @@ internal static class SerializerUtilities
 
         Serializers[typeof(ServerInfo)] = new ObjectSerializer<ServerInfo>(info =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.Name] = info.Name,
                 [JsonRpcStrings.Version] = info.Version,
@@ -145,7 +145,7 @@ internal static class SerializerUtilities
         Serializers[typeof(TestNodeUpdateMessage)] = new ObjectSerializer<TestNodeUpdateMessage>(ev =>
         {
             // TODO: Fill in the node properties
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.Node] = Serialize(ev.TestNode),
                 [JsonRpcStrings.Parent] = ev.ParentTestNodeUid?.Value,
@@ -157,7 +157,7 @@ internal static class SerializerUtilities
         // Serialize event types.
         Serializers[typeof(TestNodeStateChangedEventArgs)] = new ObjectSerializer<TestNodeStateChangedEventArgs>(ev =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.RunId] = ev.RunId,
                 [JsonRpcStrings.Changes] = ev.Changes?.Select(ch => Serialize(ch))?.ToList<object>(),
@@ -170,7 +170,7 @@ internal static class SerializerUtilities
             n =>
             {
                 // RECALL TO UPDATE TESTS INSIDE FormatterUtilitiesTests.cs
-                var properties = new Dictionary<string, object?>
+                Dictionary<string, object?> properties = new()
                 {
                     [JsonRpcStrings.Uid] = n.Uid.Value,
                     [JsonRpcStrings.DisplayName] = n.DisplayName,
@@ -253,25 +253,25 @@ internal static class SerializerUtilities
                         properties["node-type"] = "action";
                         switch (property)
                         {
-                            case DiscoveredTestNodeStateProperty _:
+                            case DiscoveredTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "discovered";
                                     break;
                                 }
 
-                            case InProgressTestNodeStateProperty _:
+                            case InProgressTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "in-progress";
                                     break;
                                 }
 
-                            case PassedTestNodeStateProperty _:
+                            case PassedTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "passed";
                                     break;
                                 }
 
-                            case SkippedTestNodeStateProperty _:
+                            case SkippedTestNodeStateProperty:
                                 {
                                     properties["execution-state"] = "skipped";
                                     break;
@@ -354,7 +354,7 @@ internal static class SerializerUtilities
 
         Serializers[typeof(LogEventArgs)] = new ObjectSerializer<LogEventArgs>(ev =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.Level] = ev.LogMessage.Level.ToString(),
                 [JsonRpcStrings.Message] = ev.LogMessage.Message,
@@ -365,7 +365,7 @@ internal static class SerializerUtilities
 
         Serializers[typeof(CancelRequestArgs)] = new ObjectSerializer<CancelRequestArgs>(ev =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.Id] = ev.CancelRequestId,
             };
@@ -375,7 +375,7 @@ internal static class SerializerUtilities
 
         Serializers[typeof(TelemetryEventArgs)] = new ObjectSerializer<TelemetryEventArgs>(ev =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.EventName] = ev.EventName,
                 [JsonRpcStrings.Metrics] = ev.Metrics,
@@ -386,7 +386,7 @@ internal static class SerializerUtilities
 
         Serializers[typeof(ProcessInfoArgs)] = new ObjectSerializer<ProcessInfoArgs>(ev =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.Program] = ev.Program,
                 [JsonRpcStrings.Args] = ev.Args,
@@ -417,7 +417,7 @@ internal static class SerializerUtilities
 
         Serializers[typeof(AttachDebuggerInfoArgs)] = new ObjectSerializer<AttachDebuggerInfoArgs>(ev =>
         {
-            var values = new Dictionary<string, object?>
+            Dictionary<string, object?> values = new()
             {
                 [JsonRpcStrings.ProcessId] = ev.ProcessId,
             };
@@ -572,7 +572,7 @@ internal static class SerializerUtilities
             {
                 string uid = string.Empty;
                 string displayName = string.Empty;
-                var propertyBag = new PropertyBag();
+                PropertyBag propertyBag = new();
 
                 foreach (KeyValuePair<string, object?> p in properties)
                 {
@@ -596,7 +596,7 @@ internal static class SerializerUtilities
                     {
                         ApplicationStateGuard.Ensure(location_lineStart is not null);
                         ApplicationStateGuard.Ensure(location_lineEnd is not null);
-                        var testFileLocationProperty = new TestFileLocationProperty(
+                        TestFileLocationProperty testFileLocationProperty = new(
                             (string)location_file,
                             new LinePositionSpan(new LinePosition((int)location_lineStart, 0), new LinePosition((int)location_lineEnd, 0)));
                         propertyBag.Add(testFileLocationProperty);

@@ -13,21 +13,15 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Assertions
 
 public class StringAssertTests : TestContainer
 {
-    public void ThatShouldReturnAnInstanceOfStringAssert()
-    {
-        Verify(StringAssert.That is not null);
-    }
+    public void ThatShouldReturnAnInstanceOfStringAssert() => Verify(StringAssert.That is not null);
 
-    public void ThatShouldCacheStringAssertInstance()
-    {
-        Verify(StringAssert.That == StringAssert.That);
-    }
+    public void ThatShouldCacheStringAssertInstance() => Verify(StringAssert.That == StringAssert.That);
 
     public void StringAssertContains()
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
-        var ex = VerifyThrows(() => StringAssert.Contains(actual, notInString));
+        Exception ex = VerifyThrows(() => StringAssert.Contains(actual, notInString));
         Verify(ex!.Message.Contains("StringAssert.Contains failed"));
     }
 
@@ -35,7 +29,7 @@ public class StringAssertTests : TestContainer
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
-        var ex = VerifyThrows(() => StringAssert.StartsWith(actual, notInString));
+        Exception ex = VerifyThrows(() => StringAssert.StartsWith(actual, notInString));
         Verify(ex!.Message.Contains("StringAssert.StartsWith failed"));
     }
 
@@ -43,7 +37,7 @@ public class StringAssertTests : TestContainer
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         string notInString = "I'm not in the string above";
-        var ex = VerifyThrows(() => StringAssert.EndsWith(actual, notInString));
+        Exception ex = VerifyThrows(() => StringAssert.EndsWith(actual, notInString));
         Verify(ex!.Message.Contains("StringAssert.EndsWith failed"));
     }
 
@@ -51,7 +45,7 @@ public class StringAssertTests : TestContainer
     {
         string actual = "The quick brown fox jumps over the lazy dog.";
         Regex doesMatch = new("quick brown fox");
-        var ex = VerifyThrows(() => StringAssert.DoesNotMatch(actual, doesMatch));
+        Exception ex = VerifyThrows(() => StringAssert.DoesNotMatch(actual, doesMatch));
         Verify(ex!.Message.Contains("StringAssert.DoesNotMatch failed"));
     }
 
@@ -79,21 +73,21 @@ public class StringAssertTests : TestContainer
     // See https://github.com/dotnet/sdk/issues/25373
     public void StringAssertContainsDoesNotThrowFormatException()
     {
-        var ex = VerifyThrows(() => StringAssert.Contains(":-{", "x"));
+        Exception ex = VerifyThrows(() => StringAssert.Contains(":-{", "x"));
         Verify(ex!.Message.Contains("StringAssert.Contains failed"));
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
     public void StringAssertContainsDoesNotThrowFormatExceptionWithArguments()
     {
-        var ex = VerifyThrows(() => StringAssert.Contains("{", "x", "message {0}", "arg"));
+        Exception ex = VerifyThrows(() => StringAssert.Contains("{", "x", "message {0}", "arg"));
         Verify(ex!.Message.Contains("StringAssert.Contains failed"));
     }
 
     // See https://github.com/dotnet/sdk/issues/25373
     public void StringAssertContainsFailsIfMessageIsInvalidStringFormatComposite()
     {
-        var ex = VerifyThrows(() => StringAssert.Contains("a", "b", "message {{0}", "arg"));
+        Exception ex = VerifyThrows(() => StringAssert.Contains("a", "b", "message {{0}", "arg"));
         Verify(ex is FormatException);
     }
 

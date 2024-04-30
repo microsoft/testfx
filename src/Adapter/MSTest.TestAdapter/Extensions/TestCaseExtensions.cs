@@ -51,10 +51,10 @@ internal static class TestCaseExtensions
     /// <returns> The test name, without the class name, if provided. </returns>
     internal static string GetTestName(this TestCase testCase, string? testClassName)
     {
-        var fullyQualifiedName = testCase.FullyQualifiedName;
+        string fullyQualifiedName = testCase.FullyQualifiedName;
 
         // Not using Replace because there can be multiple instances of that string.
-        var name = fullyQualifiedName.StartsWith($"{testClassName}.", StringComparison.Ordinal)
+        string name = fullyQualifiedName.StartsWith($"{testClassName}.", StringComparison.Ordinal)
             ? fullyQualifiedName.Remove(0, $"{testClassName}.".Length)
             : fullyQualifiedName;
 
@@ -69,9 +69,9 @@ internal static class TestCaseExtensions
     /// <returns> The converted <see cref="UnitTestElement"/>. </returns>
     internal static UnitTestElement ToUnitTestElement(this TestCase testCase, string source)
     {
-        var isAsync = (testCase.GetPropertyValue(Constants.AsyncTestProperty) as bool?) ?? false;
-        var testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
-        var name = testCase.GetTestName(testClassName);
+        bool isAsync = (testCase.GetPropertyValue(Constants.AsyncTestProperty) as bool?) ?? false;
+        string? testClassName = testCase.GetPropertyValue(Constants.TestClassNameProperty) as string;
+        string name = testCase.GetTestName(testClassName);
         var testIdGenerationStrategy = (TestIdGenerationStrategy)testCase.GetPropertyValue(
             Constants.TestIdGenerationStrategyProperty,
             (int)TestIdGenerationStrategy.FullyQualified);
@@ -82,7 +82,7 @@ internal static class TestCaseExtensions
         var dataType = (DynamicDataType)testCase.GetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)DynamicDataType.None);
         if (dataType != DynamicDataType.None)
         {
-            var data = testCase.GetPropertyValue<string[]>(Constants.TestDynamicDataProperty, null);
+            string[]? data = testCase.GetPropertyValue<string[]>(Constants.TestDynamicDataProperty, null);
 
             testMethod.DataType = dataType;
             testMethod.SerializedData = data;
@@ -108,31 +108,31 @@ internal static class TestCaseExtensions
             testElement.Traits = testCase.Traits.ToArray();
         }
 
-        var cssIteration = testCase.GetPropertyValue<string>(Constants.CssIterationProperty, null);
+        string? cssIteration = testCase.GetPropertyValue<string>(Constants.CssIterationProperty, null);
         if (!StringEx.IsNullOrWhiteSpace(cssIteration))
         {
             testElement.CssIteration = cssIteration;
         }
 
-        var cssProjectStructure = testCase.GetPropertyValue<string>(Constants.CssProjectStructureProperty, null);
+        string? cssProjectStructure = testCase.GetPropertyValue<string>(Constants.CssProjectStructureProperty, null);
         if (!StringEx.IsNullOrWhiteSpace(cssProjectStructure))
         {
             testElement.CssProjectStructure = cssProjectStructure;
         }
 
-        var description = testCase.GetPropertyValue<string>(Constants.DescriptionProperty, null);
+        string? description = testCase.GetPropertyValue<string>(Constants.DescriptionProperty, null);
         if (!StringEx.IsNullOrWhiteSpace(description))
         {
             testElement.Description = description;
         }
 
-        var workItemIds = testCase.GetPropertyValue<string[]>(Constants.WorkItemIdsProperty, null);
+        string[]? workItemIds = testCase.GetPropertyValue<string[]>(Constants.WorkItemIdsProperty, null);
         if (workItemIds != null && workItemIds.Length > 0)
         {
             testElement.WorkItemIds = workItemIds;
         }
 
-        var deploymentItems = testCase.GetPropertyValue<KeyValuePair<string, string>[]>(Constants.DeploymentItemsProperty, null);
+        KeyValuePair<string, string>[]? deploymentItems = testCase.GetPropertyValue<KeyValuePair<string, string>[]>(Constants.DeploymentItemsProperty, null);
         if (deploymentItems != null && deploymentItems.Length > 0)
         {
             testElement.DeploymentItems = deploymentItems;

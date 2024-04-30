@@ -44,7 +44,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
     [ArgumentsProvider(nameof(GetAttributeUsageExamples))]
     public async Task WhenMethodIsMarkedWithTestMethodAndTestAttributes_NoDiagnosticAsync(string attributeUsageExample)
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -64,7 +64,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
     [ArgumentsProvider(nameof(GetAttributeUsageExampleAndRuleTuples))]
     public async Task WhenMethodIsMarkedWithTestAttributeButNotWithTestMethod_DiagnosticAsync(DiagnosticDescriptor rule, string attributeUsageExample)
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -87,7 +87,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
         DiagnosticDescriptor rule2,
         string attributeUsageExample2)
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -107,7 +107,7 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
     [ArgumentsProvider(nameof(GetAttributeUsageExamples))]
     public async Task WhenMethodIsMarkedWithTestAttributeAndCustomTestMethod_NoDiagnosticAsync(string attributeUsageExample)
     {
-        var code = $$"""
+        string code = $$"""
             using System;
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 

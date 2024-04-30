@@ -12,7 +12,7 @@ internal sealed class ServerTelemetry(IServerTestHost serverTestHost) : ITelemet
 
     public async Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap)
     {
-        var logMessage = new TelemetryEventArgs(eventName, paramsMap);
+        TelemetryEventArgs logMessage = new(eventName, paramsMap);
         await PushTelemetryToServerTestHostAsync(logMessage);
     }
 
