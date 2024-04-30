@@ -43,10 +43,7 @@ public class DynamicDataTests : AcceptanceTestBase
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
-        // testHostResult.AssertOutputContains($"""
-        //    Name: MSTest
-        //    Version: {MSTestVersion}
-        // """);
+        testHostResult.AssertOutputContains("skipped Test");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
