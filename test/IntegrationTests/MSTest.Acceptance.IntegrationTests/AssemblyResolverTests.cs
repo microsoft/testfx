@@ -23,7 +23,7 @@ public class AssemblyResolverTests : AcceptanceTestBase
 
     public async Task DiscoverTests_FindsAllTests()
     {
-        var testHost =  TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetFramework[0].Arguments);
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetFramework[0].Arguments);
 
         var testHostResult = await testHost.ExecuteAsync();
 
