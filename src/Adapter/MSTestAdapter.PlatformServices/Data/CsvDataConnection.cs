@@ -33,14 +33,9 @@ internal sealed class CsvDataConnection : TestDataConnection
         _fileName = fileName;
     }
 
-    private string TableName
-    {
-        get
-        {
+    private string TableName =>
             // Only one table based on the name of the file, with dots converted to # signs
-            return Path.GetFileName(_fileName).Replace('.', '#');
-        }
-    }
+            Path.GetFileName(_fileName).Replace('.', '#');
 
     public override List<string> GetDataTablesAndViews()
     {
@@ -153,9 +148,6 @@ internal sealed class CsvDataConnection : TestDataConnection
         return table;
     }
 
-    public override DataTable ReadTable(string tableName, IEnumerable? columns)
-    {
-        return ReadTable(tableName, columns, -1);
-    }
+    public override DataTable ReadTable(string tableName, IEnumerable? columns) => ReadTable(tableName, columns, -1);
 }
 #endif

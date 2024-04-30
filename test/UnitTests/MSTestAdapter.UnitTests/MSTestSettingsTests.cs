@@ -52,7 +52,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(!adapterSettings.MapInconclusiveToFailed);
     }
@@ -65,7 +65,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.MapNotRunnableToFailed);
     }
@@ -79,7 +79,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.MapInconclusiveToFailed);
     }
@@ -93,7 +93,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.MapNotRunnableToFailed);
     }
@@ -106,7 +106,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTest>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
 
         Verify(!adapterSettings.ForcedLegacyMode);
     }
@@ -120,7 +120,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTest>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
 
         Verify(adapterSettings.ForcedLegacyMode);
     }
@@ -133,7 +133,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTest>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
 
         Verify(adapterSettings.TestSettingsFile is null);
     }
@@ -147,7 +147,7 @@ public class MSTestSettingsTests : TestContainer
                  </MSTest>
                </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
 
         Verify(adapterSettings.TestSettingsFile is not null);
     }
@@ -160,7 +160,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
     }
@@ -174,7 +174,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.EnableBaseClassTestMethodsFromOtherAssemblies);
     }
@@ -187,7 +187,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.CaptureDebugTraces);
     }
@@ -201,7 +201,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(!adapterSettings.CaptureDebugTraces);
     }
@@ -215,7 +215,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.TestTimeout == 4000);
     }
@@ -228,7 +228,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.TestTimeout == 0);
     }
@@ -241,7 +241,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(!adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
     }
@@ -255,7 +255,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.TreatClassAndAssemblyCleanupWarningsAsErrors);
     }
@@ -268,7 +268,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(!adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
@@ -282,7 +282,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.TreatDiscoveryWarningsAsErrors);
     }
@@ -295,7 +295,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(!adapterSettings.ParallelizationWorkers.HasValue);
         Verify(!adapterSettings.ParallelizationScope.HasValue);
@@ -312,7 +312,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        var exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
@@ -330,7 +330,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        var exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
@@ -348,7 +348,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.ParallelizationWorkers == 2);
     }
@@ -364,7 +364,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
     }
@@ -379,7 +379,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
         Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.ClassLevel);
@@ -394,7 +394,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(Environment.ProcessorCount == adapterSettings.ParallelizationWorkers);
         Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.ClassLevel);
@@ -412,7 +412,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.ParallelizationWorkers == 127);
         Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.MethodLevel);
@@ -429,7 +429,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        var exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
@@ -447,7 +447,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.ParallelizationScope == UTF.ExecutionScope.MethodLevel);
     }
@@ -463,7 +463,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        var exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
+        Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
         Verify(exception is not null);
         Verify(typeof(AdapterSettingsException).FullName == exception.GetType().FullName);
@@ -481,7 +481,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.TestSettingsFile is not null);
     }
@@ -499,7 +499,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.TestSettingsFile is not null);
         Verify(adapterSettings.ParallelizationWorkers == 127);
@@ -516,7 +516,7 @@ public class MSTestSettingsTests : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
         Verify(adapterSettings.TestSettingsFile is not null);
     }
@@ -573,7 +573,7 @@ public class MSTestSettingsTests : TestContainer
                 }
             });
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
         _testablePlatformServiceProvider.MockSettingsProvider.Verify(sp => sp.Load(It.IsAny<XmlReader>()), Times.Once);
     }
 
@@ -631,7 +631,7 @@ public class MSTestSettingsTests : TestContainer
                         {
                             case "DUMMYPLATFORMSPECIFICSETTING":
                                 {
-                                    if (bool.TryParse(reader.ReadInnerXml(), out var result))
+                                    if (bool.TryParse(reader.ReadInnerXml(), out bool result))
                                     {
                                         dummyPlatformSpecificSetting = result;
                                     }
@@ -687,7 +687,7 @@ public class MSTestSettingsTests : TestContainer
                         {
                             case "DUMMYPLATFORMSPECIFICSETTING":
                                 {
-                                    if (bool.TryParse(reader.ReadInnerXml(), out var result))
+                                    if (bool.TryParse(reader.ReadInnerXml(), out bool result))
                                     {
                                         dummyPlatformSpecificSetting = result;
                                     }
@@ -726,7 +726,7 @@ public class MSTestSettingsTests : TestContainer
                       <BadElement>Bad</BadElement>
                     </RunSettings>";
 
-        var outOfScopeCall = false;
+        bool outOfScopeCall = false;
 
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader reader) =>
@@ -795,7 +795,7 @@ public class MSTestSettingsTests : TestContainer
                         {
                             case "DUMMYPLATFORMSPECIFICSETTING":
                                 {
-                                    if (bool.TryParse(reader.ReadInnerXml(), out var result))
+                                    if (bool.TryParse(reader.ReadInnerXml(), out bool result))
                                     {
                                         dummyPlatformSpecificSetting = result;
                                     }
@@ -829,7 +829,7 @@ public class MSTestSettingsTests : TestContainer
     public void CurrentSettingShouldReturnDefaultSettingsIfNotSet()
     {
         MSTestSettings.Reset();
-        var adapterSettings = MSTestSettings.CurrentSettings;
+        MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
         Verify(adapterSettings is not null);
 
@@ -850,8 +850,8 @@ public class MSTestSettingsTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
-        var adapterSettings = MSTestSettings.CurrentSettings;
-        var adapterSettings2 = MSTestSettings.CurrentSettings;
+        MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
+        MSTestSettings adapterSettings2 = MSTestSettings.CurrentSettings;
 
         Verify(adapterSettings is not null);
         Verify(!string.IsNullOrEmpty(adapterSettings.TestSettingsFile));
@@ -941,7 +941,7 @@ public class MSTestSettingsTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
-        var adapterSettings = MSTestSettings.CurrentSettings;
+        MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
         Verify(adapterSettings is not null);
 
@@ -966,7 +966,7 @@ public class MSTestSettingsTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
-        var adapterSettings = MSTestSettings.CurrentSettings;
+        MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
         Verify(adapterSettings is not null);
 
@@ -994,7 +994,7 @@ public class MSTestSettingsTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
-        var adapterSettings = MSTestSettings.CurrentSettings;
+        MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
         Verify(adapterSettings is not null);
 
@@ -1025,7 +1025,7 @@ public class MSTestSettingsTests : TestContainer
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
 
-        var adapterSettings = MSTestSettings.CurrentSettings;
+        MSTestSettings adapterSettings = MSTestSettings.CurrentSettings;
 
         Verify(adapterSettings is not null);
 

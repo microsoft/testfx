@@ -102,10 +102,7 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
         Process process = Process.Start(startCollection)!;
         process.EnableRaisingEvents = true;
         process.BeginOutputReadLine();
-        process.OutputDataReceived += (sender, args) =>
-        {
-            Console.WriteLine(args.Data);
-        };
+        process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
         await process.WaitForExitAsync();
 
         // Wait for process exit
@@ -123,10 +120,7 @@ internal class ConcurrencyVisualizer : IStep<BuildArtifact, Files>
         process = Process.Start(stopCollection)!;
         process.EnableRaisingEvents = true;
         process.BeginOutputReadLine();
-        process.OutputDataReceived += (sender, args) =>
-        {
-            Console.WriteLine(args.Data);
-        };
+        process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
         await process.WaitForExitAsync();
 
         string sample = Path.Combine(Path.GetTempPath(), _reportFileName);

@@ -43,7 +43,7 @@ public class RunConfigurationSettingsTests : TestContainer
                   </RunConfiguration>
                   </RunSettings>";
 
-        RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
+        var configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
         Verify(configurationSettings.CollectSourceInformation);
     }
 
@@ -58,7 +58,7 @@ public class RunConfigurationSettingsTests : TestContainer
                      </RunConfiguration>
                 </RunSettings>";
 
-        RunConfigurationSettings configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
+        var configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
         Verify(!configurationSettings.CollectSourceInformation);
     }
 
@@ -69,7 +69,7 @@ public class RunConfigurationSettingsTests : TestContainer
     public void ConfigurationSettingsShouldReturnDefaultSettingsIfNotSet()
     {
         MSTestSettings.Reset();
-        var settings = MSTestSettings.RunConfigurationSettings;
+        RunConfigurationSettings settings = MSTestSettings.RunConfigurationSettings;
 
         Verify(settings is not null);
 

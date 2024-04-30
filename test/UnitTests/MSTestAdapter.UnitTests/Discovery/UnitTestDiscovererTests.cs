@@ -62,10 +62,10 @@ public class UnitTestDiscovererTests : TestContainer
 
     public void DiscoverTestsShouldDiscoverForAllSources()
     {
-        var sources = new string[] { "DummyAssembly1.dll", "DummyAssembly2.dll" };
+        string[] sources = new string[] { "DummyAssembly1.dll", "DummyAssembly2.dll" };
 
         // Setup mocks.
-        foreach (var source in sources)
+        foreach (string source in sources)
         {
             _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(source))
                 .Returns(source);
@@ -333,7 +333,7 @@ public class UnitTestDiscovererTests : TestContainer
     /// </summary>
     public void SendTestCasesShouldNotSendAnyTestCasesIfFilterError()
     {
-        TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => { throw new TestPlatformFormatException("DummyException"); });
+        TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => throw new TestPlatformFormatException("DummyException"));
 
         var test1 = new UnitTestElement(new TestMethod("M1", "C", "A", false));
         var test2 = new UnitTestElement(new TestMethod("M2", "C", "A", false));
@@ -427,10 +427,7 @@ internal class TestableDiscoveryContextWithGetTestCaseFilter : IDiscoveryContext
 
     public ITestCaseFilterExpression GetTestCaseFilter(
         IEnumerable<string> supportedProperties,
-        Func<string, TestProperty> propertyProvider)
-    {
-        return _getFilter();
-    }
+        Func<string, TestProperty> propertyProvider) => _getFilter();
 }
 
 internal sealed class TestableDiscoveryContextWithoutGetTestCaseFilter : IDiscoveryContext
@@ -449,8 +446,5 @@ internal sealed class TestableTestCaseFilterExpression : ITestCaseFilterExpressi
 
     public string TestCaseFilterValue { get; }
 
-    public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
-    {
-        return _matchTest(testCase);
-    }
+    public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider) => _matchTest(testCase);
 }

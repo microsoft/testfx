@@ -117,7 +117,7 @@ namespace Analyzer.Utilities.PooledObjects
 
         private T CreateInstance()
         {
-            var inst = _factory();
+            T inst = _factory();
             return inst;
         }
 
@@ -155,7 +155,7 @@ namespace Analyzer.Utilities.PooledObjects
 
         private T AllocateSlow()
         {
-            var items = _items;
+            Element[] items = _items;
 
             for (int i = 0; i < items.Length; i++)
             {
@@ -208,7 +208,7 @@ namespace Analyzer.Utilities.PooledObjects
 
         private void FreeSlow(T obj)
         {
-            var items = _items;
+            Element[] items = _items;
             for (int i = 0; i < items.Length; i++)
             {
                 if (items[i].Value == null)
@@ -268,10 +268,10 @@ namespace Analyzer.Utilities.PooledObjects
         {
             Debug.Assert(_firstItem != obj, "freeing twice?");
 
-            var items = _items;
+            Element[] items = _items;
             for (int i = 0; i < items.Length; i++)
             {
-                var value = items[i].Value;
+                T? value = items[i].Value;
                 if (value == null)
                 {
                     return;

@@ -38,11 +38,11 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out var testClassAttributeSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
             {
-                var testMethodAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute);
-                var assemblyInitializationAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute);
-                var assemblyCleanupAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute);
+                INamedTypeSymbol? testMethodAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute);
+                INamedTypeSymbol? assemblyInitializationAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyInitializeAttribute);
+                INamedTypeSymbol? assemblyCleanupAttributeSymbol = context.Compilation.GetTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssemblyCleanupAttribute);
                 context.RegisterSymbolAction(
                     context => AnalyzeSymbol(context, testClassAttributeSymbol, testMethodAttributeSymbol, assemblyInitializationAttributeSymbol, assemblyCleanupAttributeSymbol),
                     SymbolKind.NamedType);
@@ -56,7 +56,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
         var classSymbol = (INamedTypeSymbol)context.Symbol;
 
         bool isTestClass = false;
-        foreach (var classAttribute in classSymbol.GetAttributes())
+        foreach (AttributeData classAttribute in classSymbol.GetAttributes())
         {
             if (classAttribute.AttributeClass.Inherits(testClassAttributeSymbol))
             {
@@ -73,12 +73,12 @@ public sealed class TestClassShouldHaveTestMethodAnalyzer : DiagnosticAnalyzer
         bool hasAssemblyAttribute = false;
         bool hasTestMethod = false;
 
-        var currentType = classSymbol;
+        INamedTypeSymbol? currentType = classSymbol;
         do
         {
-            foreach (var classMember in currentType.GetMembers())
+            foreach (ISymbol classMember in currentType.GetMembers())
             {
-                foreach (var attribute in classMember.GetAttributes())
+                foreach (AttributeData attribute in classMember.GetAttributes())
                 {
                     if (attribute.AttributeClass.Inherits(testMethodAttributeSymbol))
                     {

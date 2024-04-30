@@ -11,7 +11,7 @@ public partial class AssertTests
     // See https://github.com/dotnet/sdk/issues/25373
     public void ThrowAssertFailedDoesNotThrowIfMessageContainsInvalidStringFormatComposite()
     {
-        var ex = VerifyThrows(() => Assert.ThrowAssertFailed("name", "{"));
+        Exception ex = VerifyThrows(() => Assert.ThrowAssertFailed("name", "{"));
 
         Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
@@ -22,7 +22,7 @@ public partial class AssertTests
     #region ThrowsException tests
     public void ThrowsExceptionWithLambdaExpressionsShouldThrowAssertionOnNoException()
     {
-        var ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => { }));
+        Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => { }));
 
         Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
@@ -31,11 +31,8 @@ public partial class AssertTests
 
     public void ThrowsExceptionWithLambdaExpressionsShouldThrowAssertionOnWrongException()
     {
-        var ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(
-             () =>
-             {
-                 throw new FormatException();
-             }));
+        Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(
+             () => throw new FormatException()));
 
         Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
@@ -44,7 +41,7 @@ public partial class AssertTests
 
     public void ThrowsException_FuncArgument_AllowsToReturnNull()
     {
-        var ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null));
+        Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null));
 
         Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
@@ -53,7 +50,7 @@ public partial class AssertTests
 
     public void ThrowsException_FuncArgumentOverloadWithMessage_AllowsToReturnNull()
     {
-        var ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null, "message"));
+        Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null, "message"));
 
         Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
@@ -62,7 +59,7 @@ public partial class AssertTests
 
     public void ThrowsException_FuncArgumentOverloadWithMessagesAndParameters_AllowsToReturnNull()
     {
-        var ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null, "message {0}", 1));
+        Exception ex = VerifyThrows(() => Assert.ThrowsException<ArgumentException>(() => null, "message {0}", 1));
 
         Verify(ex is not null);
         Verify(typeof(AssertFailedException) == ex.GetType());
@@ -87,15 +84,12 @@ public partial class AssertTests
     public void ThrowsExceptionAsyncShouldThrowAssertionOnNoException()
     {
         Task t = Assert.ThrowsExceptionAsync<ArgumentException>(
-            async () =>
-            {
-                await Task.Delay(5).ConfigureAwait(false);
-            });
-        var ex = VerifyThrows(() => t.Wait());
+            async () => await Task.Delay(5).ConfigureAwait(false));
+        Exception ex = VerifyThrows(() => t.Wait());
 
         Verify(ex is not null);
 
-        var innerException = ex.InnerException;
+        Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
         Verify(typeof(AssertFailedException) == innerException.GetType());
@@ -110,11 +104,11 @@ public partial class AssertTests
                 await Task.Delay(5).ConfigureAwait(false);
                 throw new FormatException();
             });
-        var ex = VerifyThrows(() => t.Wait());
+        Exception ex = VerifyThrows(() => t.Wait());
 
         Verify(ex is not null);
 
-        var innerException = ex.InnerException;
+        Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
         Assert.AreEqual(typeof(AssertFailedException), innerException.GetType());
@@ -124,16 +118,13 @@ public partial class AssertTests
     public void ThrowsExceptionAsyncWithMessageShouldThrowAssertionOnNoException()
     {
         Task t = Assert.ThrowsExceptionAsync<ArgumentException>(
-            async () =>
-            {
-                await Task.Delay(5).ConfigureAwait(false);
-            },
+            async () => await Task.Delay(5).ConfigureAwait(false),
             "The world is not on fire.");
-        var ex = VerifyThrows(() => t.Wait());
+        Exception ex = VerifyThrows(() => t.Wait());
 
         Verify(ex is not null);
 
-        var innerException = ex.InnerException;
+        Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
         Assert.AreEqual(typeof(AssertFailedException), innerException.GetType());
@@ -149,11 +140,11 @@ public partial class AssertTests
                 throw new FormatException();
             },
             "Happily ever after.");
-        var ex = VerifyThrows(() => t.Wait());
+        Exception ex = VerifyThrows(() => t.Wait());
 
         Verify(ex is not null);
 
-        var innerException = ex.InnerException;
+        Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
         Assert.AreEqual(typeof(AssertFailedException), innerException.GetType());
@@ -168,11 +159,11 @@ public partial class AssertTests
             t.Wait();
         }
 
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
 
         Verify(ex is not null);
 
-        var innerException = ex.InnerException;
+        Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
         Verify(typeof(ArgumentNullException) == innerException.GetType());
@@ -182,15 +173,15 @@ public partial class AssertTests
     {
         static void A()
         {
-            Task t = Assert.ThrowsExceptionAsync<ArgumentException>(async () => { await Task.FromResult(true).ConfigureAwait(false); }, null, null);
+            Task t = Assert.ThrowsExceptionAsync<ArgumentException>(async () => await Task.FromResult(true).ConfigureAwait(false), null, null);
             t.Wait();
         }
 
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
 
         Verify(ex is not null);
 
-        var innerException = ex.InnerException;
+        Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
         Verify(typeof(ArgumentNullException) == innerException.GetType());
@@ -199,19 +190,16 @@ public partial class AssertTests
     public void ThrowsExceptionAsyncWithMessageAndParamsShouldThrowAssertionOnNoException()
     {
         Task t = Assert.ThrowsExceptionAsync<ArgumentException>(
-            async () =>
-            {
-                await Task.Delay(5).ConfigureAwait(false);
-            },
+            async () => await Task.Delay(5).ConfigureAwait(false),
             "The world is not on fire {0}.{1}-{2}.",
             "ta",
             "da",
             123);
-        var ex = VerifyThrows(() => t.Wait());
+        Exception ex = VerifyThrows(() => t.Wait());
 
         Verify(ex is not null);
 
-        var innerException = ex.InnerException;
+        Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
         Assert.AreEqual(typeof(AssertFailedException), innerException.GetType());
@@ -229,11 +217,11 @@ public partial class AssertTests
             "Happily ever after. {0} {1}.",
             "The",
             "End");
-        var ex = VerifyThrows(() => t.Wait());
+        Exception ex = VerifyThrows(() => t.Wait());
 
         Verify(ex is not null);
 
-        var innerException = ex.InnerException;
+        Exception innerException = ex.InnerException;
 
         Verify(innerException is not null);
         Assert.AreEqual(typeof(AssertFailedException), innerException.GetType());

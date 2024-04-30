@@ -22,17 +22,13 @@ public static class AssertEx
     /// <returns>True if object is of the given type.</returns>
     /// <exception cref="AssertFailedException">If object is not of the given type.</exception>
 #pragma warning disable IDE0060 // Remove unused parameter
-    public static bool IsOfType<T>(this Assert assert, object obj)
-#pragma warning restore IDE0060 // Remove unused parameter
-    {
-        return obj is T
+    public static bool IsOfType<T>(this Assert assert, object obj) => obj is T
             ? true
             : throw new AssertFailedException(string.Format(
                 CultureInfo.InvariantCulture,
                 "Expected object of type {0} but found object of type {1}",
                 typeof(T),
                 obj ?? obj.GetType()));
-    }
 
     /// <summary>
     /// A chain/grouping of assert statements.

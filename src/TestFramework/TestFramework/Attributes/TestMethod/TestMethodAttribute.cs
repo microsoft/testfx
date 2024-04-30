@@ -39,8 +39,5 @@ public class TestMethodAttribute : Attribute
     /// <param name="testMethod">The test method to execute.</param>
     /// <returns>An array of TestResult objects that represent the outcome(s) of the test.</returns>
     /// <remarks>Extensions can override this method to customize running a TestMethod.</remarks>
-    public virtual TestResult[] Execute(ITestMethod testMethod)
-    {
-        return [testMethod.Invoke(null)];
-    }
+    public virtual TestResult[] Execute(ITestMethod testMethod) => [testMethod.Invoke(null)];
 }

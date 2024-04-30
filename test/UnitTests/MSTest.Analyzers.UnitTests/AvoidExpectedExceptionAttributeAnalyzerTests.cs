@@ -15,7 +15,7 @@ public sealed class AvoidExpectedExceptionAttributeAnalyzerTests(ITestExecutionC
 {
     public async Task WhenUsed_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]

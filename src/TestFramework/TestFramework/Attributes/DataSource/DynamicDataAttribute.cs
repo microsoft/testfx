@@ -95,7 +95,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
         switch (_dynamicDataSourceType)
         {
             case DynamicDataSourceType.Property:
-                var property = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(_dynamicDataSourceName)
+                PropertyInfo property = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(_dynamicDataSourceName)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
                 if (property.GetGetMethod(true) is not { } getMethod
                     || !getMethod.IsStatic)
@@ -111,7 +111,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
                 break;
 
             case DynamicDataSourceType.Method:
-                var method = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(_dynamicDataSourceName)
+                MethodInfo method = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredMethod(_dynamicDataSourceName)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {_dynamicDataSourceName}");
                 if (!method.IsStatic
                     || method.ContainsGenericParameters
@@ -167,12 +167,12 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
     {
         if (DynamicDataDisplayName != null)
         {
-            var dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
+            Type? dynamicDisplayNameDeclaringType = DynamicDataDisplayNameDeclaringType ?? methodInfo.DeclaringType;
             DebugEx.Assert(dynamicDisplayNameDeclaringType is not null, "Declaring type of test data cannot be null.");
 
-            var method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName)
+            MethodInfo method = dynamicDisplayNameDeclaringType.GetTypeInfo().GetDeclaredMethod(DynamicDataDisplayName)
                 ?? throw new ArgumentNullException($"{DynamicDataSourceType.Method} {DynamicDataDisplayName}");
-            var parameters = method.GetParameters();
+            ParameterInfo[] parameters = method.GetParameters();
             return parameters.Length != 2 ||
                 parameters[0].ParameterType != typeof(MethodInfo) ||
                 parameters[1].ParameterType != typeof(object[]) ||
@@ -213,7 +213,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
         if (dataSource is IEnumerable enumerable)
         {
             List<object[]> objects = new();
-            foreach (var entry in enumerable)
+            foreach (object? entry in enumerable)
             {
                 if (entry is not ITuple tuple
                     || (objects.Count > 0 && objects[^1].Length != tuple.Length))

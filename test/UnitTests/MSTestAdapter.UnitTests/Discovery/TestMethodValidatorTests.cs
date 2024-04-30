@@ -69,7 +69,7 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnFalseForNonPublicMethods()
     {
         SetupTestMethod();
-        var methodInfo = typeof(DummyTestClass).GetMethod(
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "InternalTestMethod",
             BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -79,7 +79,7 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnFalseForAbstractMethods()
     {
         SetupTestMethod();
-        var methodInfo = typeof(DummyTestClass).GetMethod(
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AbstractTestMethod",
             BindingFlags.Instance | BindingFlags.Public);
 
@@ -89,7 +89,7 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnFalseForStaticMethods()
     {
         SetupTestMethod();
-        var methodInfo = typeof(DummyTestClass).GetMethod(
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "StaticTestMethod",
             BindingFlags.Static | BindingFlags.Public);
 
@@ -107,7 +107,7 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnFalseForAsyncMethodsWithNonTaskReturnType()
     {
         SetupTestMethod();
-        var methodInfo = typeof(DummyTestClass).GetMethod(
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AsyncMethodWithVoidReturnType",
             BindingFlags.Instance | BindingFlags.Public);
 
@@ -117,7 +117,7 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnFalseForMethodsWithNonVoidReturnType()
     {
         SetupTestMethod();
-        var methodInfo = typeof(DummyTestClass).GetMethod(
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "MethodWithIntReturnType",
             BindingFlags.Instance | BindingFlags.Public);
 
@@ -127,7 +127,7 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnTrueForAsyncMethodsWithTaskReturnType()
     {
         SetupTestMethod();
-        var methodInfo = typeof(DummyTestClass).GetMethod(
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "AsyncMethodWithTaskReturnType",
             BindingFlags.Instance | BindingFlags.Public);
 
@@ -137,7 +137,7 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnTrueForNonAsyncMethodsWithTaskReturnType()
     {
         SetupTestMethod();
-        var methodInfo = typeof(DummyTestClass).GetMethod(
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "MethodWithTaskReturnType",
             BindingFlags.Instance | BindingFlags.Public);
 
@@ -147,7 +147,7 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnTrueForMethodsWithVoidReturnType()
     {
         SetupTestMethod();
-        var methodInfo = typeof(DummyTestClass).GetMethod(
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "MethodWithVoidReturnType",
             BindingFlags.Instance | BindingFlags.Public);
 
@@ -159,7 +159,7 @@ public class TestMethodValidatorTests : TestContainer
     public void WhenDiscoveryOfInternalsIsEnabledIsValidTestMethodShouldReturnTrueForInternalMethods()
     {
         SetupTestMethod();
-        var methodInfo = typeof(DummyTestClass).GetMethod(
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "InternalTestMethod",
             BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -171,7 +171,7 @@ public class TestMethodValidatorTests : TestContainer
     public void WhenDiscoveryOfInternalsIsEnabledIsValidTestMethodShouldReturnFalseForPrivateMethods()
     {
         SetupTestMethod();
-        var methodInfo = typeof(DummyTestClass).GetMethod(
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod(
             "PrivateTestMethod",
             BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -182,11 +182,8 @@ public class TestMethodValidatorTests : TestContainer
 
     #endregion
 
-    private void SetupTestMethod()
-    {
-        _mockReflectHelper.Setup(
+    private void SetupTestMethod() => _mockReflectHelper.Setup(
             rh => rh.IsAttributeDefined<UTF.TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(true);
-    }
 }
 
 #region Dummy types
@@ -207,25 +204,13 @@ internal abstract class DummyTestClass
     public abstract void AbstractTestMethod();
 
     [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Done on purpose")]
-    public async void AsyncMethodWithVoidReturnType()
-    {
-        await Task.FromResult(true);
-    }
+    public async void AsyncMethodWithVoidReturnType() => await Task.FromResult(true);
 
-    public async Task AsyncMethodWithTaskReturnType()
-    {
-        await Task.Delay(TimeSpan.Zero);
-    }
+    public async Task AsyncMethodWithTaskReturnType() => await Task.Delay(TimeSpan.Zero);
 
-    public Task MethodWithTaskReturnType()
-    {
-        return Task.Delay(TimeSpan.Zero);
-    }
+    public Task MethodWithTaskReturnType() => Task.Delay(TimeSpan.Zero);
 
-    public int MethodWithIntReturnType()
-    {
-        return 0;
-    }
+    public int MethodWithIntReturnType() => 0;
 
     public void MethodWithVoidReturnType()
     {

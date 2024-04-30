@@ -22,10 +22,7 @@ public class PlatformServiceProviderTests : TestContainer
         }
     }
 
-    public void ProviderServiceInstanceShouldReturnAnObjectOfItselfByDefault()
-    {
-        Verify(PlatformServiceProvider.Instance.GetType() == typeof(PlatformServiceProvider));
-    }
+    public void ProviderServiceInstanceShouldReturnAnObjectOfItselfByDefault() => Verify(PlatformServiceProvider.Instance.GetType() == typeof(PlatformServiceProvider));
 
     public void ProviderServiceInstanceShouldReturnTheInstanceSet()
     {
@@ -35,32 +32,23 @@ public class PlatformServiceProviderTests : TestContainer
         Verify(PlatformServiceProvider.Instance.GetType() == typeof(TestablePlatformServiceProvider));
     }
 
-    public void TestSourceShouldReturnANonNullInstance()
-    {
-        Verify(PlatformServiceProvider.Instance is not null);
-    }
+    public void TestSourceShouldReturnANonNullInstance() => Verify(PlatformServiceProvider.Instance is not null);
 
-    public void TestSourceShouldReturnAValidTestSource()
-    {
-        Verify(PlatformServiceProvider.Instance.TestSource.GetType() == typeof(TestSource));
-    }
+    public void TestSourceShouldReturnAValidTestSource() => Verify(PlatformServiceProvider.Instance.TestSource.GetType() == typeof(TestSource));
 
     public void TestSourceShouldBeCached()
     {
-        var testSourceInstance = PlatformServiceProvider.Instance.TestSource;
+        PlatformServices.Interface.ITestSource testSourceInstance = PlatformServiceProvider.Instance.TestSource;
 
         Verify(testSourceInstance is not null);
         Verify(testSourceInstance == PlatformServiceProvider.Instance.TestSource);
     }
 
-    public void ReflectionOperationsShouldReturnAValidInstance()
-    {
-        Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations));
-    }
+    public void ReflectionOperationsShouldReturnAValidInstance() => Verify(PlatformServiceProvider.Instance.ReflectionOperations.GetType() == typeof(ReflectionOperations));
 
     public void ReflectionOperationsShouldBeCached()
     {
-        var reflectionOperationsInstance = PlatformServiceProvider.Instance.ReflectionOperations;
+        PlatformServices.Interface.IReflectionOperations reflectionOperationsInstance = PlatformServiceProvider.Instance.ReflectionOperations;
 
         Verify(reflectionOperationsInstance is not null);
         Verify(reflectionOperationsInstance == PlatformServiceProvider.Instance.ReflectionOperations);
@@ -76,7 +64,7 @@ public class PlatformServiceProviderTests : TestContainer
         testMethod.Setup(tm => tm.Name).Returns("M");
 
         // Act.
-        var testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, writer, properties);
+        PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod.Object, writer, properties);
 
         // Assert.
         Verify(testContext.Context.FullyQualifiedTestClassName == "A.C.M");

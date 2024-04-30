@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -108,14 +108,12 @@ public class TestDeployment : ITestDeployment
     /// Gets the deployment output directory where the source file along with all its dependencies is dropped.
     /// </summary>
     /// <returns> The deployment output directory. </returns>
-    public string? GetDeploymentDirectory()
-    {
+    public string? GetDeploymentDirectory() =>
 #if WINDOWS_UWP
-        return null;
+        null;
 #else
-        return RunDirectories?.OutDirectory;
+        RunDirectories?.OutDirectory;
 #endif
-    }
 
     /// <summary>
     /// Deploy files related to the list of tests specified.
@@ -165,7 +163,7 @@ public class TestDeployment : ITestDeployment
                                 group test by test.Source into testGroup
                                 select new { Source = testGroup.Key, Tests = testGroup };
 
-            var runDirectories = RunDirectories;
+            TestRunDirectories runDirectories = RunDirectories;
             foreach (var group in testsBySource)
             {
                 // do the deployment

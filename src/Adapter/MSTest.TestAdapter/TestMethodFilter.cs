@@ -67,7 +67,7 @@ internal class TestMethodFilter
     /// <returns>a TestProperty instance.</returns>
     internal TestProperty PropertyProvider(string propertyName)
     {
-        _supportedProperties.TryGetValue(propertyName, out var testProperty);
+        _supportedProperties.TryGetValue(propertyName, out TestProperty? testProperty);
         DebugEx.Assert(testProperty != null, "Invalid property queried");
         return testProperty;
     }
@@ -82,7 +82,7 @@ internal class TestMethodFilter
     {
         if (currentTest != null && propertyName != null)
         {
-            if (_supportedProperties.TryGetValue(propertyName, out var testProperty))
+            if (_supportedProperties.TryGetValue(propertyName, out TestProperty? testProperty))
             {
                 // Test case might not have defined this property. In that case GetPropertyValue()
                 // would return default value. For filtering, if property is not defined return null.
@@ -101,10 +101,7 @@ internal class TestMethodFilter
     /// </summary>
     /// <param name="context">Run context.</param>
     /// <returns>Filter expression.</returns>
-    private ITestCaseFilterExpression? GetTestCaseFilterFromRunContext(IRunContext context)
-    {
-        return context.GetTestCaseFilter(_supportedProperties.Keys, PropertyProvider);
-    }
+    private ITestCaseFilterExpression? GetTestCaseFilterFromRunContext(IRunContext context) => context.GetTestCaseFilter(_supportedProperties.Keys, PropertyProvider);
 
     /// <summary>
     /// Gets filter expression from discovery context.

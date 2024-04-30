@@ -13,10 +13,7 @@ public class DataRowTests_OverriddenGetDisplayName
     [TestCategory("OverriddenGetDisplayName")]
     [DummyDataRow]
     [TestMethod]
-    public void TestMethod()
-    {
-        Assert.IsTrue(true);
-    }
+    public void TestMethod() => Assert.IsTrue(true);
 
     private class DummyDataRowAttribute : DataRowAttribute
     {
@@ -25,9 +22,6 @@ public class DataRowTests_OverriddenGetDisplayName
         {
         }
 
-        public override string GetDisplayName(MethodInfo methodInfo, object[] data)
-        {
-            return "Overridden DisplayName";
-        }
+        public override string GetDisplayName(MethodInfo methodInfo, object[] data) => "Overridden DisplayName";
     }
 }

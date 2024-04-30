@@ -12,7 +12,7 @@ public class DirectoryDeploymentTests
     [DeploymentItem(@"TestFiles1/")]
     public void DirectoryWithForwardSlash()
     {
-        var fs = File.Open(@"some_file1", FileMode.Open);
+        FileStream fs = File.Open(@"some_file1", FileMode.Open);
         fs.Close();
     }
 
@@ -20,7 +20,7 @@ public class DirectoryDeploymentTests
     [DeploymentItem(@"TestFiles2\")]
     public void DirectoryWithBackSlash()
     {
-        var fs = File.Open(@"some_file2", FileMode.Open);
+        FileStream fs = File.Open(@"some_file2", FileMode.Open);
         fs.Close();
     }
 }

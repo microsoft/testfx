@@ -131,7 +131,7 @@ public sealed partial class Assert
     /// </returns>
     public static T ThrowsException<T>(Func<object?> action, string message, params object?[]? parameters)
         where T : Exception
-        => ThrowsException<T>(() => { _ = action(); }, message, parameters);
+        => ThrowsException<T>(() => _ = action(), message, parameters);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception

@@ -20,19 +20,16 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
 #if NET5_0_OR_GREATER
     [Obsolete]
 #endif
-    public override object InitializeLifetimeService()
-    {
-        return null!;
-    }
+    public override object InitializeLifetimeService() => null!;
 
     internal static TestAssemblySettings GetSettings(string source)
     {
         var testAssemblySettings = new TestAssemblySettings();
 
         // Load the source.
-        var testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
+        System.Reflection.Assembly testAssembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(source, isReflectionOnly: false);
 
-        var parallelizeAttribute = ReflectHelper.GetParallelizeAttribute(testAssembly);
+        TestTools.UnitTesting.ParallelizeAttribute? parallelizeAttribute = ReflectHelper.GetParallelizeAttribute(testAssembly);
 
         if (parallelizeAttribute != null)
         {
@@ -47,7 +44,7 @@ internal class TestAssemblySettingsProvider : MarshalByRefObject
 
         testAssemblySettings.CanParallelizeAssembly = !ReflectHelper.IsDoNotParallelizeSet(testAssembly);
 
-        var classCleanupSequencingAttribute = ReflectHelper.GetClassCleanupAttribute(testAssembly);
+        TestTools.UnitTesting.ClassCleanupExecutionAttribute? classCleanupSequencingAttribute = ReflectHelper.GetClassCleanupAttribute(testAssembly);
         if (classCleanupSequencingAttribute != null)
         {
             testAssemblySettings.ClassCleanupLifecycle = classCleanupSequencingAttribute.CleanupBehavior;

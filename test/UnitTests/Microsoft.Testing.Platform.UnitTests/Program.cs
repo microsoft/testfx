@@ -61,7 +61,7 @@ internal sealed class GlobalTasks : ITestApplicationLifecycleCallbacks
 #else
         TestsRunWatchDog.BaselineFile = Path.Combine(AppContext.BaseDirectory, "testsbaseline.netfx.txt");
 #endif
-        await TestsRunWatchDog.Verify(skip: _commandLineOptions.IsServerMode(), fixBaseLine: true);
+        await TestsRunWatchDog.VerifyAsync(skip: _commandLineOptions.IsServerMode(), fixBaseLine: true);
     }
 
     public Task BeforeRunAsync(CancellationToken cancellationToken) => Task.CompletedTask;

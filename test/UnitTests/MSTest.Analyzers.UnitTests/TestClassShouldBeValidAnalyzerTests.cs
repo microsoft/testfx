@@ -15,7 +15,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 {
     public async Task WhenClassIsPublicAndTestClass_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -29,7 +29,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsInternalAndTestClass_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -49,7 +49,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
     [Arguments("internal")]
     public async Task WhenClassIsInnerAndNotPublicTestClass_Diagnostic(string accessibility)
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public class OuterClass
@@ -70,7 +70,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsInternalAndNotTestClass_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             internal class MyTestClass
@@ -83,7 +83,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsPublicAndTestClassAsInnerOfInternalClass_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             internal class OuterClass
@@ -104,7 +104,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsGeneric_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -118,7 +118,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenDiscoverInternalsAndTypeIsInternal_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: DiscoverInternals]
@@ -134,7 +134,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenDiscoverInternalsAndTypeIsPrivate_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: DiscoverInternals]
@@ -157,7 +157,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsStaticAndEmpty_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -171,7 +171,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsStaticAndContainsAssemblyInitialize_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -189,7 +189,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsStaticAndContainsAssemblyCleanup_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -207,7 +207,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsStaticAndContainsClassInitialize_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -229,7 +229,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsStaticAndContainsClassCleanup_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -251,7 +251,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsStaticAndContainsTestInitialize_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -273,7 +273,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsStaticAndContainsTestCleanup_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -295,7 +295,7 @@ public sealed class TestClassShouldBeValidAnalyzerTests(ITestExecutionContext te
 
     public async Task WhenClassIsStaticAndContainsTestMethod_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]

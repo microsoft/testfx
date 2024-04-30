@@ -29,10 +29,7 @@ internal class EntryPoint
             pipelineNameFilter,
         };
         executeTests.SetHandler(
-            pipelineNameFilter =>
-        {
-            _ = Pipelines(pipelineNameFilter);
-        }, pipelineNameFilter);
+            pipelineNameFilter => _ = Pipelines(pipelineNameFilter), pipelineNameFilter);
 
         rootCommand.AddCommand(executeTests);
 

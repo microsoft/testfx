@@ -63,8 +63,8 @@ internal class ReflectionUtility
             List<object> nonUniqueAttributes = [];
             Dictionary<string, object> uniqueAttributes = [];
 
-            var inheritanceThreshold = 10;
-            var inheritanceLevel = 0;
+            int inheritanceThreshold = 10;
+            int inheritanceLevel = 0;
 
             if (inherit && memberInfo.MemberType == MemberTypes.TypeInfo)
             {
@@ -73,7 +73,7 @@ internal class ReflectionUtility
 
                 do
                 {
-                    var attributes = CustomAttributeData.GetCustomAttributes(tempTypeInfo);
+                    IList<CustomAttributeData> attributes = CustomAttributeData.GetCustomAttributes(tempTypeInfo);
                     AddNewAttributes(
                         attributes,
                         shouldGetAllAttributes,
@@ -93,14 +93,14 @@ internal class ReflectionUtility
 
                 do
                 {
-                    var attributes = CustomAttributeData.GetCustomAttributes(tempMethodInfo);
+                    IList<CustomAttributeData> attributes = CustomAttributeData.GetCustomAttributes(tempMethodInfo);
                     AddNewAttributes(
                         attributes,
                         shouldGetAllAttributes,
                         type!,
                         uniqueAttributes,
                         nonUniqueAttributes);
-                    var baseDefinition = tempMethodInfo!.GetBaseDefinition();
+                    MethodInfo? baseDefinition = tempMethodInfo!.GetBaseDefinition();
 
                     if (baseDefinition != null
                         && string.Equals(
@@ -119,7 +119,7 @@ internal class ReflectionUtility
             {
                 // Ideally we should not be reaching here. We only query for attributes on types/methods currently.
                 // Return the attributes that CustomAttributeData returns in this cases not considering inheritance.
-                var firstLevelAttributes =
+                IList<CustomAttributeData> firstLevelAttributes =
                 CustomAttributeData.GetCustomAttributes(memberInfo);
                 AddNewAttributes(firstLevelAttributes, shouldGetAllAttributes, type!, uniqueAttributes, nonUniqueAttributes);
             }
@@ -146,7 +146,7 @@ internal class ReflectionUtility
 
         List<Attribute> attributesArray = [];
 
-        foreach (var attribute in customAttributes)
+        foreach (CustomAttributeData attribute in customAttributes)
         {
             if (!IsTypeInheriting(attribute.Constructor.DeclaringType, type)
                     && !attribute.Constructor.DeclaringType.AssemblyQualifiedName.Equals(
@@ -177,13 +177,13 @@ internal class ReflectionUtility
         {
             // Create instance of attribute. For some case, constructor param is returned as ReadOnlyCollection
             // instead of array. So convert it to array else constructor invoke will fail.
-            Type attributeType = Type.GetType(attributeData.Constructor.DeclaringType.AssemblyQualifiedName);
+            var attributeType = Type.GetType(attributeData.Constructor.DeclaringType.AssemblyQualifiedName);
 
             List<Type> constructorParameters = [];
             List<object> constructorArguments = [];
-            foreach (var parameter in attributeData.ConstructorArguments)
+            foreach (CustomAttributeTypedArgument parameter in attributeData.ConstructorArguments)
             {
-                Type parameterType = Type.GetType(parameter.ArgumentType.AssemblyQualifiedName);
+                var parameterType = Type.GetType(parameter.ArgumentType.AssemblyQualifiedName);
                 constructorParameters.Add(parameterType);
                 if (!parameterType.IsArray
                     || parameter.Value is not IEnumerable enumerable)
@@ -193,7 +193,7 @@ internal class ReflectionUtility
                 }
 
                 ArrayList list = [];
-                foreach (var item in enumerable)
+                foreach (object? item in enumerable)
                 {
                     if (item is CustomAttributeTypedArgument argument)
                     {
@@ -211,7 +211,7 @@ internal class ReflectionUtility
             ConstructorInfo constructor = attributeType.GetConstructor(constructorParameters.ToArray());
             attribute = constructor.Invoke(constructorArguments.ToArray());
 
-            foreach (var namedArgument in attributeData.NamedArguments)
+            foreach (CustomAttributeNamedArgument namedArgument in attributeData.NamedArguments)
             {
                 attributeType.GetProperty(namedArgument.MemberInfo.Name).SetValue(attribute, namedArgument.TypedValue.Value, null);
             }
@@ -238,7 +238,7 @@ internal class ReflectionUtility
         Dictionary<string, object> uniqueAttributes,
         List<object> nonUniqueAttributes)
     {
-        foreach (var attribute in customAttributes)
+        foreach (CustomAttributeData attribute in customAttributes)
         {
             if (!shouldGetAllAttributes
                 && !IsTypeInheriting(attribute.Constructor.DeclaringType, type)
@@ -254,7 +254,7 @@ internal class ReflectionUtility
                 continue;
             }
 
-            var attributeUsageAttributes = GetCustomAttributes(
+            IReadOnlyList<object> attributeUsageAttributes = GetCustomAttributes(
                 attributeInstance.GetType().GetTypeInfo(),
                 typeof(AttributeUsageAttribute),
                 true);
