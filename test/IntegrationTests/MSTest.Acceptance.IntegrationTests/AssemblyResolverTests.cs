@@ -23,6 +23,12 @@ public class AssemblyResolverTests : AcceptanceTestBase
 
     public async Task RunningTests_DoesNotHitResourceRecursionIssueAndDoesNotCrashTheRunner()
     {
+        if (!OperatingSystem.IsWindows())
+        {
+            // This test is for .NET Framework only.
+            return;
+        }
+
         var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetFramework[0].Arguments);
 
         var testHostResult = await testHost.ExecuteAsync();
