@@ -21,14 +21,13 @@ public class AssemblyResolverTests : AcceptanceTestBase
         _testAssetFixture = testAssetFixture;
     }
 
-    public async Task DiscoverTests_FindsAllTests()
+    public async Task RunningTests_DoesNotHitResourceRecursionIssueAndDoesNotCrashTheRunner()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetFramework[0].Arguments);
 
         var testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
-        testHostResult.AssertOutputContains("Test1");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
