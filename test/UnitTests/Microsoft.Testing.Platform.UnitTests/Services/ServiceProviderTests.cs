@@ -91,11 +91,9 @@ public sealed class ServiceProviderTests : TestBase
         Assert.AreEqual(_serviceProvider.Services.ToArray()[0].GetType(), typeof(TestHostProcessLifetimeHandler));
     }
 
-    public void AddService_TestFramework_ShouldFail()
-        => _ = Assert.Throws<ArgumentException>(() => _serviceProvider.AddService(new TestFramework()));
+    public void AddService_TestFramework_ShouldFail() => _ = Assert.Throws<ArgumentException>(() => _serviceProvider.AddService(new TestFramework()));
 
-    public void TryAddService_TestFramework_ShouldFail()
-        => _ = Assert.Throws<ArgumentException>(() => _serviceProvider.TryAddService(new TestFramework()));
+    public void TryAddService_TestFramework_ShouldFail() => _ = Assert.Throws<ArgumentException>(() => _serviceProvider.TryAddService(new TestFramework()));
 
     public void AddService_TestFramework_ShouldNotFail()
     {
@@ -111,35 +109,35 @@ public sealed class ServiceProviderTests : TestBase
 
     public void AddService_SameInstance_ShouldFail()
     {
-        var instance = new TestHostProcessLifetimeHandler();
+        TestHostProcessLifetimeHandler instance = new();
         _serviceProvider.AddService(instance);
         _ = Assert.Throws<InvalidOperationException>(() => _serviceProvider.AddService(instance));
     }
 
     public void AddService_SameInstance_ShouldNotFail()
     {
-        var instance = new TestHostProcessLifetimeHandler();
+        TestHostProcessLifetimeHandler instance = new();
         _serviceProvider.AddService(instance);
         _serviceProvider.AddService(instance, throwIfSameInstanceExit: false);
     }
 
     public void AddServices_SameInstance_ShouldFail()
     {
-        var instance = new TestHostProcessLifetimeHandler();
+        TestHostProcessLifetimeHandler instance = new();
         _serviceProvider.AddServices(new[] { instance });
         _ = Assert.Throws<InvalidOperationException>(() => _serviceProvider.AddServices(new[] { instance }));
     }
 
     public void AddServices_SameInstance_ShouldNotFail()
     {
-        var instance = new TestHostProcessLifetimeHandler();
+        TestHostProcessLifetimeHandler instance = new();
         _serviceProvider.AddServices(new[] { instance });
         _serviceProvider.AddServices(new[] { instance }, throwIfSameInstanceExit: false);
     }
 
     public void TryAddService_SameInstance_ShouldReturnFalse()
     {
-        var instance = new TestHostProcessLifetimeHandler();
+        TestHostProcessLifetimeHandler instance = new();
         Assert.IsTrue(_serviceProvider.TryAddService(instance));
         Assert.IsFalse(_serviceProvider.TryAddService(instance));
     }

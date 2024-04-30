@@ -49,8 +49,8 @@ public static class VSInstallationUtilities
                     // Use the Setup API to find the installation folder for currently running VS instance.
                     if (new SetupConfiguration() is ISetupConfiguration setupConfiguration)
                     {
-                        var currentConfiguration = setupConfiguration.GetInstanceForCurrentProcess();
-                        var currentInstallationPath = currentConfiguration.GetInstallationPath();
+                        ISetupInstance currentConfiguration = setupConfiguration.GetInstanceForCurrentProcess();
+                        string currentInstallationPath = currentConfiguration.GetInstallationPath();
                         s_vsInstallPath = Path.Combine(currentInstallationPath, @"Common7\IDE");
                     }
                 }
@@ -98,13 +98,13 @@ public static class VSInstallationUtilities
     public static bool IsProcessRunningInPortableMode(string? exeName)
     {
         // Get the directory of the exe
-        var exeDir = Path.GetDirectoryName(exeName);
+        string exeDir = Path.GetDirectoryName(exeName);
         return !IsNullOrEmpty(exeDir) && File.Exists(Path.Combine(exeDir, PortableVsTestManifestFilename));
     }
 
     private static string? GetFullPath(string folderName)
     {
-        var vsInstallDir = VSInstallPath;
+        string? vsInstallDir = VSInstallPath;
         return IsNullOrWhiteSpace(vsInstallDir?.Trim()) ? null : Path.Combine(vsInstallDir, folderName);
     }
 

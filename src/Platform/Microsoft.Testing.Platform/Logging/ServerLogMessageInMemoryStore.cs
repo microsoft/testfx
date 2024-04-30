@@ -35,7 +35,7 @@ internal sealed class ServerLogMessageInMemoryStore(LogLevel logLevel) : ILogger
         }
 
         string message = formatter(state, exception);
-        var logMessage = new ServerLogMessage(logLevel, message);
+        ServerLogMessage logMessage = new(logLevel, message);
 
         if (_serverTestHost is not null)
         {
@@ -56,7 +56,7 @@ internal sealed class ServerLogMessageInMemoryStore(LogLevel logLevel) : ILogger
         }
 
         string message = formatter(state, exception);
-        var logMessage = new ServerLogMessage(logLevel, message);
+        ServerLogMessage logMessage = new(logLevel, message);
 
         if (_serverTestHost is not null)
         {
@@ -68,12 +68,11 @@ internal sealed class ServerLogMessageInMemoryStore(LogLevel logLevel) : ILogger
         }
     }
 
-    public void Clean()
-    {
+    public void Clean() =>
 #if NETCOREAPP
         _values.Clear();
 #else
         _values = new();
 #endif
-    }
+
 }

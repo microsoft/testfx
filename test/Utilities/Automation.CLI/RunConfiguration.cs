@@ -39,14 +39,14 @@ public class RunConfiguration
 
         if (TestResultsDirectory is not null)
         {
-            var resultsDirectory = doc.CreateElement("ResultsDirectory");
+            XmlElement resultsDirectory = doc.CreateElement("ResultsDirectory");
             resultsDirectory.InnerText = TestResultsDirectory;
             root.AppendChild(resultsDirectory);
         }
 
-        foreach (var p in TestAdaptersPaths)
+        foreach (string p in TestAdaptersPaths)
         {
-            var testAdaptersPaths = doc.CreateElement("TestAdaptersPaths");
+            XmlElement testAdaptersPaths = doc.CreateElement("TestAdaptersPaths");
             testAdaptersPaths.InnerText = p;
 
             root.AppendChild(testAdaptersPaths);

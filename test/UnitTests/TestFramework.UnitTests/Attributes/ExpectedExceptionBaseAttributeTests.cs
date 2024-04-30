@@ -26,7 +26,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
     {
         void A() => _sut.RethrowIfAssertException(new AssertFailedException());
 
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex is AssertFailedException);
     }
 
@@ -37,7 +37,7 @@ public class ExpectedExceptionBaseAttributeTests : TestContainer
     {
         void A() => _sut.RethrowIfAssertException(new AssertInconclusiveException());
 
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex is AssertInconclusiveException);
     }
 
@@ -76,19 +76,13 @@ public class TestableExpectedExceptionBaseAttributeClass : ExpectedExceptionBase
     {
     }
 
-    public string GetNoExceptionMessage()
-    {
-        return SpecifiedNoExceptionMessage;
-    }
+    public string GetNoExceptionMessage() => SpecifiedNoExceptionMessage;
 
     /// <summary>
     /// Re-throw the exception if it is an AssertFailedException or an AssertInconclusiveException.
     /// </summary>
     /// <param name="exception">The exception to re-throw if it is an assertion exception.</param>
-    public new void RethrowIfAssertException(Exception exception)
-    {
-        base.RethrowIfAssertException(exception);
-    }
+    public new void RethrowIfAssertException(Exception exception) => base.RethrowIfAssertException(exception);
 
     protected internal override void Verify(Exception exception)
     {

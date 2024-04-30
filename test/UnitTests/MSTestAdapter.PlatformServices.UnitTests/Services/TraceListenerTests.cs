@@ -18,7 +18,7 @@ public class TraceListenerTests : TestContainer
     {
         StringWriter writer = new(new StringBuilder("DummyTrace"));
         var traceListener = new TraceListenerWrapper(writer);
-        var returnedWriter = traceListener.GetWriter();
+        TextWriter returnedWriter = traceListener.GetWriter();
         Verify(returnedWriter.ToString() == "DummyTrace");
     }
 
@@ -30,7 +30,7 @@ public class TraceListenerTests : TestContainer
 
         // Trying to write after disposing textWriter should throw exception
         void ShouldThrowException() => writer.WriteLine("Try to write something");
-        var ex = VerifyThrows(ShouldThrowException);
+        Exception ex = VerifyThrows(ShouldThrowException);
         Verify(ex is ObjectDisposedException);
     }
 }

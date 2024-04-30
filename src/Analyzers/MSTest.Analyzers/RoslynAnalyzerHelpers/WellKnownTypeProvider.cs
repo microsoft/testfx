@@ -28,13 +28,10 @@ namespace Analyzer.Utilities
             Compilation = compilation;
             _fullNameToTypeMap = new ConcurrentDictionary<string, INamedTypeSymbol?>(StringComparer.Ordinal);
             _referencedAssemblies = new Lazy<ImmutableArray<IAssemblySymbol>>(
-                () =>
-                {
-                    return Compilation.Assembly.Modules
+                () => Compilation.Assembly.Modules
                         .SelectMany(m => m.ReferencedAssemblySymbols)
                         .Distinct<IAssemblySymbol>(SymbolEqualityComparer.Default)
-                        .ToImmutableArray();
-                },
+                        .ToImmutableArray(),
                 LazyThreadSafetyMode.ExecutionAndPublication);
         }
 
@@ -146,7 +143,7 @@ namespace Analyzer.Utilities
                                 continue;
                             }
 
-                            var currentType = referencedAssembly.GetTypeByMetadataName(fullyQualifiedMetadataName);
+                            INamedTypeSymbol? currentType = referencedAssembly.GetTypeByMetadataName(fullyQualifiedMetadataName);
                             if (currentType is null)
                             {
                                 continue;
@@ -197,20 +194,17 @@ namespace Analyzer.Utilities
         /// <param name="typeArgumentPredicate">Predicate to check the <paramref name="typeSymbol"/>'s type argument.</param>
         /// <returns>True if <paramref name="typeSymbol"/> is a <see cref="System.Threading.Tasks.Task{TResult}"/> with its
         /// type argument satisfying <paramref name="typeArgumentPredicate"/>, false otherwise.</returns>
-        internal bool IsTaskOfType([NotNullWhen(returnValue: true)] ITypeSymbol? typeSymbol, Func<ITypeSymbol, bool> typeArgumentPredicate)
-        {
-            return typeSymbol != null
+        internal bool IsTaskOfType([NotNullWhen(returnValue: true)] ITypeSymbol? typeSymbol, Func<ITypeSymbol, bool> typeArgumentPredicate) => typeSymbol != null
                 && typeSymbol.OriginalDefinition != null
                 && SymbolEqualityComparer.Default.Equals(typeSymbol.OriginalDefinition,
                     GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask1))
                 && typeSymbol is INamedTypeSymbol namedTypeSymbol
                 && namedTypeSymbol.TypeArguments.Length == 1
                 && typeArgumentPredicate(namedTypeSymbol.TypeArguments[0]);
-        }
 
         private static ImmutableArray<string> GetNamespaceNamesFromFullTypeName(string fullTypeName)
         {
-            using ArrayBuilder<string> namespaceNamesBuilder = ArrayBuilder<string>.GetInstance();
+            using var namespaceNamesBuilder = ArrayBuilder<string>.GetInstance();
             RoslynDebug.Assert(namespaceNamesBuilder != null);
 
             int prevStartIndex = 0;

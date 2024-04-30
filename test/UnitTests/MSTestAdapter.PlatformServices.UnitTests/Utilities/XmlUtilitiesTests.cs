@@ -19,16 +19,16 @@ public class XmlUtilitiesTests : TestContainer
     public void AddAssemblyRedirectionShouldAddRedirectionToAnEmptyXml()
     {
         _testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>";
-        var assemblyName = Assembly.GetExecutingAssembly().GetName();
+        AssemblyName assemblyName = Assembly.GetExecutingAssembly().GetName();
 
-        var configBytes = _testableXmlUtilities.AddAssemblyRedirection(
+        byte[] configBytes = _testableXmlUtilities.AddAssemblyRedirection(
             "foo.xml",
             assemblyName,
             "99.99.99.99",
             assemblyName.Version.ToString());
 
         // Assert.
-        var expectedXml = """
+        string expectedXml = """
             <?xml version="1.0" encoding="utf-8"?>
             <configuration>
                 <runtime>
@@ -59,16 +59,16 @@ public class XmlUtilitiesTests : TestContainer
         _testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
 <configuration>
 </configuration>";
-        var assemblyName = Assembly.GetExecutingAssembly().GetName();
+        AssemblyName assemblyName = Assembly.GetExecutingAssembly().GetName();
 
-        var configBytes = _testableXmlUtilities.AddAssemblyRedirection(
+        byte[] configBytes = _testableXmlUtilities.AddAssemblyRedirection(
             "foo.xml",
             assemblyName,
             "99.99.99.99",
             assemblyName.Version.ToString());
 
         // Assert.
-        var expectedXml = """
+        string expectedXml = """
             <?xml version="1.0" encoding="utf-8"?>
             <configuration>
                 <runtime>
@@ -101,16 +101,16 @@ public class XmlUtilitiesTests : TestContainer
 <runtime>
 </runtime>
 </configuration>";
-        var assemblyName = Assembly.GetExecutingAssembly().GetName();
+        AssemblyName assemblyName = Assembly.GetExecutingAssembly().GetName();
 
-        var configBytes = _testableXmlUtilities.AddAssemblyRedirection(
+        byte[] configBytes = _testableXmlUtilities.AddAssemblyRedirection(
             "foo.xml",
             assemblyName,
             "99.99.99.99",
             assemblyName.Version.ToString());
 
         // Assert.
-        var expectedXml = """
+        string expectedXml = """
             <?xml version="1.0" encoding="utf-8"?>
             <configuration>
                 <runtime>
@@ -153,16 +153,16 @@ public class XmlUtilitiesTests : TestContainer
                 </runtime>
             </configuration>
             """;
-        var assemblyName = Assembly.GetExecutingAssembly().GetName();
+        AssemblyName assemblyName = Assembly.GetExecutingAssembly().GetName();
 
-        var configBytes = _testableXmlUtilities.AddAssemblyRedirection(
+        byte[] configBytes = _testableXmlUtilities.AddAssemblyRedirection(
             "foo.xml",
             assemblyName,
             "99.99.99.99",
             assemblyName.Version.ToString());
 
         // Assert.
-        var expectedXml = """
+        string expectedXml = """
             <?xml version="1.0" encoding="utf-8"?>
             <configuration>
                 <runtime>

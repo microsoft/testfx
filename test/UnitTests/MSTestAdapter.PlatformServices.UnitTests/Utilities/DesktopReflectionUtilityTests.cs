@@ -17,21 +17,21 @@ public class ReflectionUtilityTests : TestContainer
 {
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
     {
-        var asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
+        Assembly asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
 
-        var attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
+        List<Attribute> attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
-        var expectedAttributes = new string[] { "DummyA : a1", "DummyA : a2" };
+        string[] expectedAttributes = new string[] { "DummyA : a1", "DummyA : a2" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     internal static string[] GetAttributeValuePairs(IEnumerable attributes)
     {
         var attribValuePairs = new List<string>();
-        foreach (var attrib in attributes)
+        foreach (object attrib in attributes)
         {
             if (attrib is DummySingleAAttribute)
             {

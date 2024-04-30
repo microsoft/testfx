@@ -57,7 +57,7 @@ internal sealed partial class ServerModeManager
         {
             await _outputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.ConnectingToClientHost, clientHost, clientPort)));
 
-            var client = new TcpClient();
+            TcpClient client = new();
 
 #if NETCOREAPP
             await client.ConnectAsync(host: clientHost, port: clientPort, cancellationToken);
@@ -71,8 +71,8 @@ internal sealed partial class ServerModeManager
         private async Task<IMessageHandler> StartTestPlatformServerAsync(int? port, CancellationToken cancellationToken)
         {
             port ??= 0;
-            var endPoint = new IPEndPoint(IPAddress.Loopback, port.Value);
-            var listener = new TcpListener(endPoint);
+            IPEndPoint endPoint = new(IPAddress.Loopback, port.Value);
+            TcpListener listener = new(endPoint);
 
             listener.Start();
             try

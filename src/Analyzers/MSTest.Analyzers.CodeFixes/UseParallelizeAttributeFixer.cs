@@ -15,15 +15,11 @@ public sealed class UseParallelizeAttributeFixer : CodeFixProvider
 {
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; } = ImmutableArray<string>.Empty;
 
-    public override FixAllProvider GetFixAllProvider()
-    {
+    public override FixAllProvider GetFixAllProvider() =>
         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
-        return WellKnownFixAllProviders.BatchFixer;
-    }
+        WellKnownFixAllProviders.BatchFixer;
 
-    public override Task RegisterCodeFixesAsync(CodeFixContext context)
-    {
+    public override Task RegisterCodeFixesAsync(CodeFixContext context) =>
         // Fixer not yet implemented.
-        return Task.CompletedTask;
-    }
+        Task.CompletedTask;
 }

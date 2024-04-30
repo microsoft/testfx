@@ -18,7 +18,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void GetExceptionMessageShouldReturnInnerExceptionMessageAsWell()
     {
         Exception ex = new("something bad happened", new Exception("inner exception", new Exception("the real exception")));
-        var expectedMessage = string.Concat(
+        string expectedMessage = string.Concat(
             "something bad happened",
             Environment.NewLine,
             "inner exception",

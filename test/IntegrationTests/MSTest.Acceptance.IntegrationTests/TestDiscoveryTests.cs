@@ -26,7 +26,7 @@ public class TestDiscoveryTests : AcceptanceTestBase
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
 
-        var testHostResult = await testHost.ExecuteAsync("--list-tests");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("Test1");
@@ -38,7 +38,7 @@ public class TestDiscoveryTests : AcceptanceTestBase
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
 
-        var testHostResult = await testHost.ExecuteAsync("--list-tests --filter Name=Test1");
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--list-tests --filter Name=Test1");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
         testHostResult.AssertOutputContains("Test1");

@@ -40,7 +40,7 @@ public class CommandLineHandlerTests : TestBase
         // Arrange
         string[] args = ["option1", "'a'"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         _outputDisplayMock.Setup(x => x.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()))
@@ -62,7 +62,7 @@ public class CommandLineHandlerTests : TestBase
         // Arrange
         string[] args = [];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
              _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -79,7 +79,7 @@ public class CommandLineHandlerTests : TestBase
         // Arrange
         string[] args = ["--help"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -96,7 +96,7 @@ public class CommandLineHandlerTests : TestBase
         // Arrange
         string[] args = ["--info"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -113,7 +113,7 @@ public class CommandLineHandlerTests : TestBase
         // Arrange
         string[] args = ["--version"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -128,8 +128,8 @@ public class CommandLineHandlerTests : TestBase
     public void GetOptionValue_OptionExists_ReturnsOptionValue()
     {
         // Arrange
-        var optionRecord = new OptionRecord("name", ["value1", "value2"]);
-        var commandLineHandler = new CommandLineHandler([], new CommandLineParseResult(string.Empty, [optionRecord], [], []),
+        OptionRecord optionRecord = new("name", ["value1", "value2"]);
+        CommandLineHandler commandLineHandler = new([], new CommandLineParseResult(string.Empty, [optionRecord], [], []),
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -156,7 +156,7 @@ public class CommandLineHandlerTests : TestBase
                 Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Unexpected argument"));
             });
 
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -181,7 +181,7 @@ public class CommandLineHandlerTests : TestBase
             new ExtensionCommandLineProviderMockInvalidConfiguration("userOption"),
             new ExtensionCommandLineProviderMockInvalidConfiguration("userOption"),
         };
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
            extensionCommandLineOptionsProviders, [], _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -200,7 +200,7 @@ public class CommandLineHandlerTests : TestBase
             .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
                 Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option '--diagnostic-verbosity' has invalid arguments: '--diagnostic-verbosity' expects a single level argument ('Trace', 'Debug', 'Information', 'Warning', 'Error', or 'Critical'){Environment.NewLine}", StringComparison.Ordinal)));
 
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -219,7 +219,7 @@ public class CommandLineHandlerTests : TestBase
             .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
                 Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option '--help' from provider 'Platform command line provider' (UID: PlatformCommandLineProvider) expects no arguments{Environment.NewLine}", StringComparison.Ordinal)));
 
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -242,7 +242,7 @@ public class CommandLineHandlerTests : TestBase
         {
             new ExtensionCommandLineProviderMockReservedOptions(),
         };
-        var commandLineHandler = new CommandLineHandler(args, parseResult, extensionCommandLineProvider,
+        CommandLineHandler commandLineHandler = new(args, parseResult, extensionCommandLineProvider,
             _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -265,7 +265,7 @@ public class CommandLineHandlerTests : TestBase
         {
             new ExtensionCommandLineProviderMockInvalidConfiguration("--internal-customextension"),
         };
-        var commandLineHandler = new CommandLineHandler(args, parseResult, extensionCommandLineProvider,
+        CommandLineHandler commandLineHandler = new(args, parseResult, extensionCommandLineProvider,
             _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
@@ -285,7 +285,7 @@ public class CommandLineHandlerTests : TestBase
         {
             new ExtensionCommandLineProviderMockUnknownOption(),
         };
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             extensionCommandLineProvider, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object,
             _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
@@ -310,7 +310,7 @@ public class CommandLineHandlerTests : TestBase
         {
             new ExtensionCommandLineProviderMockInvalidConfiguration(),
         };
-        var commandLineHandler = new CommandLineHandler(args, parseResult,
+        CommandLineHandler commandLineHandler = new(args, parseResult,
             extensionCommandLineProvider, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object,
             _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
@@ -339,17 +339,14 @@ public class CommandLineHandlerTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => new CommandLineOption[]
-        {
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => new CommandLineOption[]
+                {
             new(HelpOption, "Show command line help.", ArgumentArity.ZeroOrOne, false),
-        };
+                };
 
-        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-            => throw new NotImplementedException();
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
 
-        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-            => ValidationResult.ValidTask;
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
     }
 
     private sealed class ExtensionCommandLineProviderMockUnknownOption : ICommandLineOptionsProvider
@@ -370,17 +367,14 @@ public class CommandLineHandlerTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => new CommandLineOption[]
-        {
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => new CommandLineOption[]
+                {
             new(Option, "Show command line option.", ArgumentArity.ZeroOrOne, false),
-        };
+                };
 
-        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-            => throw new NotImplementedException();
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => throw new NotImplementedException();
 
-        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-            => ValidationResult.ValidTask;
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
     }
 
     private sealed class ExtensionCommandLineProviderMockInvalidConfiguration : ICommandLineOptionsProvider
@@ -406,16 +400,13 @@ public class CommandLineHandlerTests : TestBase
         /// <inheritdoc />
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
-        => new CommandLineOption[]
-        {
+        public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions() => new CommandLineOption[]
+                {
             new(_option, "Show command line option.", ArgumentArity.ZeroOrOne, false),
-        };
+                };
 
-        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-            => ValidationResult.InvalidTask("Invalid configuration errorMessage");
+        public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions) => ValidationResult.InvalidTask("Invalid configuration errorMessage");
 
-        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-            => ValidationResult.ValidTask;
+        public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments) => ValidationResult.ValidTask;
     }
 }

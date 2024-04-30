@@ -170,14 +170,14 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
     private async Task RunAndAssertTestWasCancelledAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)
     {
         var testHost = TestHost.LocateFrom(rootFolder, assetName, tfm);
-        var testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { { envVarPrefix + InfoByKind[entryKind].EnvVarSuffix, "1" } });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { { envVarPrefix + InfoByKind[entryKind].EnvVarSuffix, "1" } });
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' was cancelled");
     }
 
     private async Task RunAndAssertTestTimedOutAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)
     {
         var testHost = TestHost.LocateFrom(rootFolder, assetName, tfm);
-        var testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { { envVarPrefix + InfoByKind[entryKind].EnvVarSuffix, "1" } });
+        TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { { envVarPrefix + InfoByKind[entryKind].EnvVarSuffix, "1" } });
         testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out");
     }
 
@@ -195,14 +195,14 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
 </RunSettings>
 """;
 
-        var testHost = assertAttributePrecedence
+        TestHost testHost = assertAttributePrecedence
             ? TestHost.LocateFrom(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm)
             : TestHost.LocateFrom(_testAssetFixture.CodeWithNoTimeoutAssetPath, TestAssetFixture.CodeWithNoTimeout, tfm);
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
         File.WriteAllText(runSettingsFilePath, runSettings);
 
-        Stopwatch stopwatch = Stopwatch.StartNew();
-        var testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new() { { $"TIMEOUT_{InfoByKind[entryKind].EnvVarSuffix}", "1" } });
+        var stopwatch = Stopwatch.StartNew();
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}", environmentVariables: new() { { $"TIMEOUT_{InfoByKind[entryKind].EnvVarSuffix}", "1" } });
         stopwatch.Stop();
 
         if (assertAttributePrecedence)

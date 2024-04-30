@@ -26,7 +26,7 @@ internal static class TestCaseFilterFactory
             throw new FormatException($"Invalid filter, empty parenthesis: {filterString}");
         }
 
-        var tokens = TokenizeFilter(filterString);
+        IEnumerable<string> tokens = TokenizeFilter(filterString);
 
         var ops = new Stack<Operator>();
         var exp = new Stack<Expression<Func<Func<string, object>, bool>>>();
@@ -35,9 +35,9 @@ internal static class TestCaseFilterFactory
 
         // This is based on standard parsing of in order expression using two stacks (operand stack and operator stack)
         // Precedence(And) > Precedence(Or)
-        foreach (var t in tokens)
+        foreach (string t in tokens)
         {
-            var token = t.Trim();
+            string token = t.Trim();
             if (string.IsNullOrEmpty(token))
             {
                 continue;
@@ -47,8 +47,8 @@ internal static class TestCaseFilterFactory
             {
                 case "&":
                 case "|":
-                    var op = token == "&" ? Operator.And : Operator.Or;
-                    var top = ops.Count == 0 ? Operator.None : ops.Peek();
+                    Operator op = token == "&" ? Operator.And : Operator.Or;
+                    Operator top = ops.Count == 0 ? Operator.None : ops.Peek();
                     if (ops.Count == 0 || top == Operator.OpenBrace || top < op)
                     {
                         ops.Push(op);
@@ -81,7 +81,7 @@ internal static class TestCaseFilterFactory
                     continue;
 
                 default:
-                    var e = ConditionExpresion(token);
+                    Expression<Func<Func<string, object>, bool>> e = ConditionExpresion(token);
                     exp.Push(e);
                     break;
             }
@@ -97,7 +97,7 @@ internal static class TestCaseFilterFactory
             throw new FormatException($"Invalid filter, missing operator: {filterString}");
         }
 
-        var lambda = exp.Pop().Compile();
+        Func<Func<string, object>, bool> lambda = exp.Pop().Compile();
 
         return new TestFilterExpression(filterString, lambda);
     }
@@ -130,9 +130,9 @@ internal static class TestCaseFilterFactory
             throw new ArgumentException($"Unexpected expression tree: {exp.Count} elements, expected 2.", nameof(exp));
         }
 
-        var parameter = Expression.Parameter(typeof(Func<string, object>), "value");
-        var right = Expression.Invoke(exp.Pop(), parameter);
-        var left = Expression.Invoke(exp.Pop(), parameter);
+        ParameterExpression parameter = Expression.Parameter(typeof(Func<string, object>), "value");
+        InvocationExpression right = Expression.Invoke(exp.Pop(), parameter);
+        InvocationExpression left = Expression.Invoke(exp.Pop(), parameter);
 
         Expression body = op == Operator.And ? Expression.And(left, right) : Expression.Or(left, right);
 
@@ -145,10 +145,10 @@ internal static class TestCaseFilterFactory
     {
         var token = new StringBuilder(filterString.Length);
 
-        var escaping = false;
+        bool escaping = false;
         for (int i = 0; i < filterString.Length; i++)
         {
-            var c = filterString[i];
+            char c = filterString[i];
 
             if (escaping)
             {
@@ -193,10 +193,10 @@ internal static class TestCaseFilterFactory
         ValidateArg.NotNullOrEmpty(conditionString, nameof(conditionString));
         var token = new StringBuilder(conditionString.Length);
 
-        var escaped = false;
+        bool escaped = false;
         for (int i = 0; i < conditionString.Length; i++)
         {
-            var c = conditionString[i];
+            char c = conditionString[i];
 
             if (escaped)
             {
@@ -218,7 +218,7 @@ internal static class TestCaseFilterFactory
 
                     if (c == '!')
                     {
-                        var op = conditionString[i + 1];
+                        char op = conditionString[i + 1];
 
                         if (op is '~' or '=')
                         {
@@ -263,7 +263,7 @@ internal static class TestCaseFilterFactory
             return false;
         }
 
-        foreach (var v in values)
+        foreach (string v in values)
         {
             if (v.Equals(value, StringComparison.OrdinalIgnoreCase))
             {
@@ -281,7 +281,7 @@ internal static class TestCaseFilterFactory
             return false;
         }
 
-        foreach (var v in values)
+        foreach (string v in values)
         {
             if (v.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0)
             {
@@ -296,7 +296,7 @@ internal static class TestCaseFilterFactory
     {
         ValidateArg.NotNull(conditionString, nameof(conditionString));
 
-        var condition = TokenizeCondition(conditionString).ToArray();
+        string[] condition = TokenizeCondition(conditionString).ToArray();
 
         Expression parameterName, expectedValue, parameterValueProvider, expression;
         string op;

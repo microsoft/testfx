@@ -15,10 +15,9 @@ public static class TestsRunWatchDog
 
     public static string? BaselineFile { get; set; }
 
-    public static void AddTestRun(TestNodeUid testNodeUid)
-        => TestNodes.AddOrUpdate(testNodeUid, 1, (_, count) => count + 1);
+    public static void AddTestRun(TestNodeUid testNodeUid) => TestNodes.AddOrUpdate(testNodeUid, 1, (_, count) => count + 1);
 
-    public static async Task Verify(bool skip = false, bool fixBaseLine = false)
+    public static async Task VerifyAsync(bool skip = false, bool fixBaseLine = false)
     {
         if (skip)
         {
@@ -35,11 +34,11 @@ public static class TestsRunWatchDog
             throw new InvalidOperationException("No tests were executed. Have you called 'TestsRunWatchDog.AddTestRun'?");
         }
 
-        var expectedTestsDidNotRun = new List<string>();
-        var unexpectedRanTests = new List<string>();
+        List<string> expectedTestsDidNotRun = new();
+        List<string> unexpectedRanTests = new();
         using (FileStream fs = File.OpenRead(BaselineFile))
         {
-            using var streamReader = new StreamReader(fs);
+            using StreamReader streamReader = new(fs);
             string? testFullyQualifiedName;
             while ((testFullyQualifiedName = await streamReader.ReadLineAsync()) != null)
             {

@@ -45,7 +45,7 @@ public sealed class TestMethod : ITestMethod
         AssemblyName = assemblyName;
         IsAsync = isAsync;
 
-        var hierarchy = new string?[HierarchyConstants.Levels.TotalLevelCount];
+        string?[] hierarchy = new string?[HierarchyConstants.Levels.TotalLevelCount];
         hierarchy[HierarchyConstants.Levels.ContainerIndex] = null;
         hierarchy[HierarchyConstants.Levels.NamespaceIndex] = fullClassName;
         hierarchy[HierarchyConstants.Levels.ClassIndex] = name;
@@ -71,7 +71,7 @@ public sealed class TestMethod : ITestMethod
             throw new ArgumentNullException(nameof(method));
         }
 
-        ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out var hierarchyValues);
+        ManagedNameHelper.GetManagedName(method, out string managedType, out string managedMethod, out string?[]? hierarchyValues);
         hierarchyValues[HierarchyConstants.Levels.ContainerIndex] = null; // This one will be set by test windows to current test project name.
 
         ManagedTypeName = managedType;

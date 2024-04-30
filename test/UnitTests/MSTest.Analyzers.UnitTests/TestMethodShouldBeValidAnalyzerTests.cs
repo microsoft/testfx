@@ -15,7 +15,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 {
     public async Task WhenTestMethodIsPublic_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -37,7 +37,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
     [Arguments("private")]
     public async Task WhenTestMethodIsNotPublic_Diagnostic(string accessibility)
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -59,7 +59,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 
     public async Task WhenMethodIsNotPublicAndNotTestMethod_NoDiagnostic()
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -88,7 +88,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 
     public async Task WhenTestMethodIsStatic_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -110,7 +110,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 
     public async Task WhenTestMethodIsAbstract_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -130,7 +130,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 
     public async Task WhenTestMethodIsGeneric_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -152,7 +152,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 
     public async Task WhenTestMethodIsNotOrdinary_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -174,7 +174,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 
     public async Task WhenTestMethodReturnTypeIsNotValid_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 
@@ -225,7 +225,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 
     public async Task WhenTestMethodReturnTypeIsValid_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 
@@ -256,7 +256,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 
     public async Task WhenTestMethodIsAsyncVoid_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 
@@ -280,7 +280,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 
     public async Task WhenTestMethodIsInternalAndDiscoverInternals_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 
@@ -319,7 +319,7 @@ public sealed class TestMethodShouldBeValidAnalyzerTests(ITestExecutionContext t
 
     public async Task WhenTestMethodIsPrivateAndDiscoverInternals_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 

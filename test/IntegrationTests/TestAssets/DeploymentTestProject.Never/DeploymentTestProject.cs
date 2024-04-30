@@ -11,15 +11,11 @@ public class DeploymentTestProject
 {
     [TestMethod]
     public void PassIfFilePresent()
-    {
-        Assert.IsTrue(File.Exists("EmptyDataFile.xml"));
-    }
+        => Assert.IsTrue(File.Exists("EmptyDataFile.xml"));
 
     [TestMethod]
     public void FailIfFilePresent()
-    {
-        Assert.IsFalse(File.Exists("EmptyDataFile.xml"));
-    }
+        => Assert.IsFalse(File.Exists("EmptyDataFile.xml"));
 
     [DeploymentItem(@"..\..\..\..\..\test\IntegrationTests\TestAssets\DeploymentTestProject.Never\TestCaseDeploymentFile.xml")]
     [TestMethod]

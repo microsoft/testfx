@@ -28,7 +28,7 @@ public class TelemetryTests : AcceptanceTestBase
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
@@ -51,7 +51,7 @@ public class TelemetryTests : AcceptanceTestBase
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--diagnostic",
             new Dictionary<string, string>()
@@ -80,7 +80,7 @@ public class TelemetryTests : AcceptanceTestBase
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPath, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             "--diagnostic",
             new Dictionary<string, string>()
@@ -109,7 +109,7 @@ public class TelemetryTests : AcceptanceTestBase
         string diagPath = Path.Combine(_testAssetFixture.TargetAssetPathWithDisableTelemetry, "bin", "Release", tfm, AggregatedConfiguration.DefaultTestResultFolderName);
         string diagPathPattern = Path.Combine(diagPath, @"log_.*.diag").Replace(@"\", @"\\");
 
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithDisableTelemetry, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPathWithDisableTelemetry, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--diagnostic", disableTelemetry: false);
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);

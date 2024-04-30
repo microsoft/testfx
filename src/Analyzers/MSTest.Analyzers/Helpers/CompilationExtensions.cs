@@ -18,7 +18,7 @@ internal static class CompilationExtensions
 
         // Local functions
         static bool GetCanDiscoverInternals(Compilation compilation)
-            => compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute, out var discoverInternalsAttributeSymbol)
+            => compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDiscoverInternalsAttribute, out INamedTypeSymbol? discoverInternalsAttributeSymbol)
             && compilation.Assembly.GetAttributes().Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, discoverInternalsAttributeSymbol));
     }
 }

@@ -25,7 +25,7 @@ public sealed class ServerTelemetryTests : TestBase
 
     public async Task LogEvent_ForDiscovery()
     {
-        var metadata = new Dictionary<string, object>
+        Dictionary<string, object> metadata = new()
         {
             [TelemetryProperties.RequestProperties.TotalDiscoveredTestsPropertyName] = 1L,
             [TelemetryProperties.RequestProperties.IsFilterEnabledPropertyName] = TelemetryProperties.False,
@@ -37,7 +37,7 @@ public sealed class ServerTelemetryTests : TestBase
 
     public async Task LogEvent_ForRun()
     {
-        var metadata = new Dictionary<string, object>
+        Dictionary<string, object> metadata = new()
         {
             [TelemetryProperties.RequestProperties.TotalRanTestsPropertyName] = 2L,
             [TelemetryProperties.RequestProperties.TotalFailedTestsPropertyName] = 1L,

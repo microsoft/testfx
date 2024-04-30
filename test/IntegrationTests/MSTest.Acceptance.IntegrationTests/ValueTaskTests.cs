@@ -19,7 +19,7 @@ public sealed class ValueTaskTests : AcceptanceTestBase
 
     public async Task CanUseValueTaskForAllKnownLocations()
     {
-        TestHost testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
+        var testHost = TestHost.LocateFrom(_testAssetFixture.ProjectPath, TestAssetFixture.ProjectName, TargetFrameworks.NetCurrent.Arguments);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         // Assert

@@ -15,7 +15,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests(ITestExecutionCont
 {
     public async Task WhenTestMethodIsNotIgnored_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -33,7 +33,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests(ITestExecutionCont
 
     public async Task UsingIgnoreWithoutTestMethod_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -51,7 +51,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests(ITestExecutionCont
 
     public async Task WhenTestMethodIsIgnored_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -74,7 +74,7 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzerTests(ITestExecutionCont
 
     public async Task WhenDerivedTestMethodAttributeIsIgnored_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public class DerivedTestMethod : TestMethodAttribute

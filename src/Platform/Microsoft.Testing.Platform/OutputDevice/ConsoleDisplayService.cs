@@ -145,7 +145,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                 stringBuilder.Append(".NET Testing Platform");
                 if (_runtimeFeature.IsDynamicCodeSupported)
                 {
-                    var version = (AssemblyInformationalVersionAttribute?)Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
+                    AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
                     if (version is not null)
                     {
                         string informationalVersion = version.InformationalVersion;
@@ -159,9 +159,8 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                             stringBuilder.Append(CultureInfo.InvariantCulture, $" v{informationalVersion}");
                         }
 
-                        var buildTime = Assembly.GetExecutingAssembly()
-                            .GetCustomAttributes(typeof(AssemblyMetadataAttribute))
-                            .OfType<AssemblyMetadataAttribute>()
+                        AssemblyMetadataAttribute? buildTime = Assembly.GetExecutingAssembly()
+                            .GetCustomAttributes<AssemblyMetadataAttribute>()
                             .FirstOrDefault(x => x.Key == BUILDTIME_ATTRIBUTE_NAME);
 
                         if (buildTime is not null && !RoslynString.IsNullOrEmpty(buildTime.Value))
@@ -578,7 +577,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
             return null;
         }
 
-        TimeSpan time = TimeSpan.FromMilliseconds(durationInMs.Value);
+        var time = TimeSpan.FromMilliseconds(durationInMs.Value);
 
         StringBuilder stringBuilder = new();
         bool hasParentValue = false;

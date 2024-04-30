@@ -56,45 +56,45 @@ public class TestMethodFilterTests : TestContainer
 
     public void PropertyProviderValueForInvalidTestCaseReturnsNull()
     {
-        var result = TestMethodFilter.PropertyValueProvider(null, "Hello");
+        object result = TestMethodFilter.PropertyValueProvider(null, "Hello");
         Verify(result is null);
     }
 
     public void PropertyProviderValueForInvalidPropertyNameReturnsNull()
     {
-        var type = typeof(DummyTestClassWithTestMethods);
-        var fullName = $"{type.FullName}.{"TestMethod"}";
+        Type type = typeof(DummyTestClassWithTestMethods);
+        string fullName = $"{type.FullName}.{"TestMethod"}";
         TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 
-        var result = TestMethodFilter.PropertyValueProvider(testCase, null);
+        object result = TestMethodFilter.PropertyValueProvider(testCase, null);
         Verify(result is null);
     }
 
     public void PropertyProviderValueForSupportedPropertyNameWhichIsNotSetReturnsNull()
     {
-        var type = typeof(DummyTestClassWithTestMethods);
-        var fullName = $"{type.FullName}.{"TestMethod"}";
+        Type type = typeof(DummyTestClassWithTestMethods);
+        string fullName = $"{type.FullName}.{"TestMethod"}";
 
         TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
-        var result = TestMethodFilter.PropertyValueProvider(testCase, "Priority");
+        object result = TestMethodFilter.PropertyValueProvider(testCase, "Priority");
         Verify(result is null);
     }
 
     public void PropertyProviderValueForValidTestAndSupportedPropertyNameReturnsValue()
     {
-        var type = typeof(DummyTestClassWithTestMethods);
-        var fullName = $"{type.FullName}.{"TestMethod"}";
+        Type type = typeof(DummyTestClassWithTestMethods);
+        string fullName = $"{type.FullName}.{"TestMethod"}";
 
         TestCase testCase = new(fullName, MSTest.TestAdapter.Constants.ExecutorUri, Assembly.GetExecutingAssembly().FullName);
 
-        var result = TestMethodFilter.PropertyValueProvider(testCase, "FullyQualifiedName");
+        object result = TestMethodFilter.PropertyValueProvider(testCase, "FullyQualifiedName");
         Verify(fullName.Equals(result));
     }
 
     public void GetFilterExpressionForNullRunContextReturnsNull()
     {
         TestableTestExecutionRecorder recorder = new();
-        var filterExpression = TestMethodFilter.GetFilterExpression(null, recorder, out var filterHasError);
+        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(null, recorder, out bool filterHasError);
 
         Verify(filterExpression is null);
         Verify(!filterHasError);
@@ -105,7 +105,7 @@ public class TestMethodFilterTests : TestContainer
         TestableTestExecutionRecorder recorder = new();
         var dummyFilterExpression = new TestableTestCaseFilterExpression();
         TestableRunContext runContext = new(() => dummyFilterExpression);
-        var filterExpression = TestMethodFilter.GetFilterExpression(runContext, recorder, out var filterHasError);
+        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(runContext, recorder, out bool filterHasError);
 
         Verify(dummyFilterExpression == filterExpression);
         Verify(!filterHasError);
@@ -119,7 +119,7 @@ public class TestMethodFilterTests : TestContainer
         TestableTestExecutionRecorder recorder = new();
         var dummyFilterExpression = new TestableTestCaseFilterExpression();
         TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => dummyFilterExpression);
-        var filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out var filterHasError);
+        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
 
         Verify(dummyFilterExpression == filterExpression);
         Verify(!filterHasError);
@@ -132,7 +132,7 @@ public class TestMethodFilterTests : TestContainer
     {
         TestableTestExecutionRecorder recorder = new();
         TestableDiscoveryContextWithoutGetTestCaseFilter discoveryContext = new();
-        var filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out var filterHasError);
+        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
 
         Verify(filterExpression is null);
         Verify(!filterHasError);
@@ -141,8 +141,8 @@ public class TestMethodFilterTests : TestContainer
     public void GetFilterExpressionForRunContextGetTestCaseFilterThrowingExceptionReturnsNullWithFilterHasErrorTrue()
     {
         TestableTestExecutionRecorder recorder = new();
-        TestableRunContext runContext = new(() => { throw new TestPlatformFormatException("DummyException"); });
-        var filterExpression = TestMethodFilter.GetFilterExpression(runContext, recorder, out var filterHasError);
+        TestableRunContext runContext = new(() => throw new TestPlatformFormatException("DummyException"));
+        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(runContext, recorder, out bool filterHasError);
 
         Verify(filterExpression is null);
         Verify(filterHasError);
@@ -156,8 +156,8 @@ public class TestMethodFilterTests : TestContainer
     public void GetFilterExpressionForDiscoveryContextWithGetTestCaseFilterThrowingExceptionReturnsNullWithFilterHasErrorTrue()
     {
         TestableTestExecutionRecorder recorder = new();
-        TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => { throw new TestPlatformFormatException("DummyException"); });
-        var filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out var filterHasError);
+        TestableDiscoveryContextWithGetTestCaseFilter discoveryContext = new(() => throw new TestPlatformFormatException("DummyException"));
+        ITestCaseFilterExpression filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, recorder, out bool filterHasError);
 
         Verify(filterExpression is null);
         Verify(filterHasError);
@@ -214,10 +214,7 @@ public class TestMethodFilterTests : TestContainer
 
         public ITestCaseFilterExpression GetTestCaseFilter(
             IEnumerable<string> supportedProperties,
-            Func<string, TestProperty> propertyProvider)
-        {
-            return _getFilter();
-        }
+            Func<string, TestProperty> propertyProvider) => _getFilter();
     }
 
     private class TestableDiscoveryContextWithGetTestCaseFilter : IDiscoveryContext
@@ -231,10 +228,7 @@ public class TestMethodFilterTests : TestContainer
 
         public IRunSettings RunSettings { get; }
 
-        public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
-        {
-            return _getFilter();
-        }
+        public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider) => _getFilter();
     }
 
     private class TestableDiscoveryContextWithoutGetTestCaseFilter : IDiscoveryContext
@@ -246,10 +240,7 @@ public class TestMethodFilterTests : TestContainer
     {
         public string TestCaseFilterValue { get; }
 
-        public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider)
-        {
-            throw new NotImplementedException();
-        }
+        public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider) => throw new NotImplementedException();
     }
 
     private class DummyTestClassAttribute : UTF.TestClassAttribute

@@ -14,15 +14,9 @@ public class OutputTests : CLITestBase
 {
     private const string TestAssetName = "OutputTestProject";
 
-    public void OutputIsNotMixedWhenTestsRunInParallel()
-    {
-        ValidateOutputForClass("UnitTest1");
-    }
+    public void OutputIsNotMixedWhenTestsRunInParallel() => ValidateOutputForClass("UnitTest1");
 
-    public void OutputIsNotMixedWhenAsyncTestsRunInParallel()
-    {
-        ValidateOutputForClass("UnitTest2");
-    }
+    public void OutputIsNotMixedWhenAsyncTestsRunInParallel() => ValidateOutputForClass("UnitTest2");
 
     private void ValidateOutputForClass(string className)
     {
@@ -30,21 +24,21 @@ public class OutputTests : CLITestBase
         // This allows us to capture output from tasks even when they are running in parallel.
 
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
         var testCases = DiscoverTests(assemblyPath).Where(tc => tc.FullyQualifiedName.Contains(className)).ToList();
         testCases.Should().HaveCount(3);
         testCases.Should().NotContainNulls();
 
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<TestResult> testResults = RunTests(testCases);
         testResults.Should().HaveCount(3);
         testResults.Should().NotContainNulls();
 
         // Assert
         // Ensure that some tests are running in parallel, because otherwise the output just works correctly.
-        var firstEnd = testResults.Min(t => t.EndTime);
-        var someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
+        DateTimeOffset firstEnd = testResults.Min(t => t.EndTime);
+        bool someStartedBeforeFirstEnded = testResults.Where(t => t.EndTime != firstEnd).Any(t => firstEnd > t.StartTime);
         someStartedBeforeFirstEnded.Should().BeTrue("Tests must run in parallel, but there were no other tests that started, before the first one ended.");
 
         ValidateOutputsAreNotMixed(testResults, "TestMethod1", ["TestMethod2", "TestMethod3"]);
@@ -76,11 +70,11 @@ public class OutputTests : CLITestBase
     private static void ValidateOutputIsNotMixed(IEnumerable<TestResult> testResults, string methodName, string[] shouldNotContain, Func<TestResultMessage, bool> messageFilter)
     {
         // Make sure that the output between methods is not mixed. And that every method has test initialize and cleanup.
-        var testMethod = testResults.Single(t => t.DisplayName == methodName);
+        TestResult testMethod = testResults.Single(t => t.DisplayName == methodName);
 
         // Test method {methodName} was not found.
         testMethod.Should().NotBeNull();
-        var message = testMethod.Messages.SingleOrDefault(messageFilter);
+        TestResultMessage message = testMethod.Messages.SingleOrDefault(messageFilter);
 
         // Message for {testMethod.DisplayName} was not found. All messages: { string.Join(Environment.NewLine, testMethod.Messages.Select(m => $"{m.Category} - {m.Text}")) }
         message.Should().NotBeNull();
@@ -93,7 +87,7 @@ public class OutputTests : CLITestBase
     private static void ValidateInitializeAndCleanup(IEnumerable<TestResult> testResults, Func<TestResultMessage, bool> messageFilter)
     {
         // It is not deterministic where the class initialize and class cleanup will run, so we look at all tests, to make sure it is includes somewhere.
-        var output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));
+        string output = string.Join(Environment.NewLine, testResults.SelectMany(r => r.Messages).Where(messageFilter).Select(m => m.Text));
         output.Should().NotBeNull();
         output.Should().Contain("ClassInitialize");
         output.Should().Contain("ClassCleanup");
