@@ -481,9 +481,9 @@ public class MSTestSettings
                             break;
                         }
 
-                    case "CONSIDEREMPTYDATASOURCEASINCONCLUSIVE   ConsiderEmptyDataSourceAsInconclusive":
+                    case "CONSIDEREMPTYDATASOURCEASINCONCLUSIVE":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out bool considerEmptyDataSourceAsInconclusive) && considerEmptyDataSourceAsInconclusive)
+                            if (bool.TryParse(reader.ReadInnerXml(), out bool considerEmptyDataSourceAsInconclusive))
                             {
                                 settings.ConsiderEmptyDataSourceAsInconclusive = considerEmptyDataSourceAsInconclusive;
                             }
