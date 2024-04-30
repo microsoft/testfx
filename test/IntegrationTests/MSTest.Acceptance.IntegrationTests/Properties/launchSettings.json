@@ -2,7 +2,7 @@
   "profiles": {
     "MSTest.Acceptance.IntegrationTests": {
       "commandName": "Project",
-      "commandLineArgs": "--treenode-filter /*/*/*/DiscoverTests_FindsAllTests"
+      "commandLineArgs": "--treenode-filter /*/*/*/**"
     }
   }
 }
