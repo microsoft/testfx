@@ -42,7 +42,6 @@ public class AssemblyResolverTests : AcceptanceTestBase
                 SourceCode
                 .PatchTargetFrameworks(TargetFrameworks.NetFramework)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
-                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
         }
 
