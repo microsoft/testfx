@@ -89,17 +89,12 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class TestClass
 {
     [TestMethod]
-    [DynamicData(nameof(AdditionData))]
+    [DynamicData(nameof(AdditionalData))]
     public void Test()
     {
     }
 
-    public static IEnumerable<int> AdditionData
-    {
-    get
-    {
-        return Array.Empty<int>();
-    }
+    public static IEnumerable<int> AdditionalData =>Array.Empty<int>();
 }
 }
 """;
