@@ -18,7 +18,7 @@ public static class TargetFrameworks
 
     public static TestArgumentsEntry<string> NetCurrent { get; } = Net[0];
 
-    public static TestArgumentsEntry<string>[] NetFramework { get; } = new TestArgumentsEntry<string>[] { new("net462", "net462") };
+    public static TestArgumentsEntry<string>[] NetFramework { get; } = new TestArgumentsEntry<string>[] { new("net462") };
 
     public static TestArgumentsEntry<string>[] All { get; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
         ? Net.Concat(NetFramework).ToArray()
