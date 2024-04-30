@@ -293,6 +293,8 @@ internal class TestMethodRunner
             {
                 foreach (var testDataSource in testDataSources)
                 {
+                    Stopwatch watch = new();
+                    watch.Start();
                     isDataDriven = true;
                     IEnumerable<object?[]>? dataSource = null;
                     try
@@ -304,6 +306,7 @@ internal class TestMethodRunner
                         var inconclusiveResult = new TestResult
                         {
                             Outcome = UTF.UnitTestOutcome.Inconclusive,
+                            Duration = watch.Elapsed,
                         };
                         results.Add(inconclusiveResult);
                         continue;
