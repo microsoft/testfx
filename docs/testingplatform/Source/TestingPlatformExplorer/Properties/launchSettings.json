@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "TestingPlatformExplorer": {
-      "commandName": "Project",
-      "commandLineArgs": "--dop 1000 --generatereport --reportfilename report"
-    }
-  }
-}
