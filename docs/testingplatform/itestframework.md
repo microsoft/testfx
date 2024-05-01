@@ -78,7 +78,7 @@ public sealed class ExecuteRequestContext
 ```mermaid
 sequenceDiagram
     Testing platform->>ITestFramework: adapterFactory() from 'RegisterTestFramework'
-    ITestFramework-->>Testing platform:
+    ITestFramework-->>Testing platform: 
     Testing platform->>ITestFramework: CreateTestSessionAsync(CreateTestSessionContext)
     ITestFramework-->>Testing platform: CreateTestSessionResult
     Testing platform->>ITestFramework: ExecuteRequestAsync(ExecuteRequestContext_1)
