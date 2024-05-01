@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.Builder;
 
 using TestingPlatformExplorer.TestingFramework;
 
+// Create the test application builder
 ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 
 // Register the testing framework

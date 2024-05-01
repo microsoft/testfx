@@ -4,9 +4,11 @@
 using System.Globalization;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
+using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Requests;
@@ -17,6 +19,7 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
 {
     private readonly TestingFrameworkCapabilities _capabilities;
     private readonly ICommandLineOptions _commandLineOptions;
+    private readonly IConfiguration _configuration;
     private readonly Assembly[] _assemblies;
     private readonly SemaphoreSlim _dop;
     private readonly string _reportFile = string.Empty;
@@ -24,10 +27,12 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
     public TestingFramework(
         ITestFrameworkCapabilities capabilities,
         ICommandLineOptions commandLineOptions,
+        IConfiguration configuration,
         Assembly[] assemblies)
     {
         _capabilities = (TestingFrameworkCapabilities)capabilities;
         _commandLineOptions = commandLineOptions;
+        _configuration = configuration;
         _assemblies = assemblies;
 
         if (_commandLineOptions.TryGetOptionArgumentList(TestingFrameworkCommandLineOptions.DopOption, out string[]? argumentList))
@@ -38,6 +43,12 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
         else
         {
             _dop = new SemaphoreSlim(int.MaxValue, int.MaxValue);
+        }
+
+        if (_configuration["TestingFramework:DisableParallelism"] == bool.TrueString)
+        {
+            _dop?.Dispose();
+            _dop = new SemaphoreSlim(1, 1);
         }
 
         if (_commandLineOptions.IsOptionSet(TestingFrameworkCommandLineOptions.GenerateReportOption))
