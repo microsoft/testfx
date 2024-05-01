@@ -31,10 +31,12 @@ The JSON file follows a hierarchical structure. To access child properties, you 
 The code snippet would look something like this:
 
 ```cs
-  if (_configuration["CustomTestingFramework:DisableParallelism"] == bool.TrueString)
-  {
-    ...
-  }
+IServiceProvider serviceProvider = ...get the service provider...
+IConfiguration configuration = serviceProvider.GetConfiguration();
+if (configuration["CustomTestingFramework:DisableParallelism"] == bool.TrueString)
+{
+  ...
+}
 ```
 
 In the case of an array, such as:
@@ -53,7 +55,9 @@ In the case of an array, such as:
 The syntax to access to the fist element ("ThreadPool") is:
 
 ```cs
-var fistElement = _configuration["CustomTestingFramework:Engine:0"];
+IServiceProvider serviceProvider = ...get the service provider...
+IConfiguration configuration = serviceProvider.GetConfiguration();
+var fistElement = configuration["CustomTestingFramework:Engine:0"];
 ```
 
 ## Environment variables

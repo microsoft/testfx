@@ -9,39 +9,45 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
+using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 
 namespace TestingPlatformExplorer.TestingFramework;
 
-internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposable
+internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposable, IOutputDeviceDataProducer
 {
     private readonly TestingFrameworkCapabilities _capabilities;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IConfiguration _configuration;
     private readonly ILogger<TestingFramework> _logger;
+    private readonly IOutputDevice _outputDevice;
     private readonly Assembly[] _assemblies;
     private readonly SemaphoreSlim _dop;
     private readonly string _reportFile = string.Empty;
+    private readonly int _dopValue;
 
     public TestingFramework(
         ITestFrameworkCapabilities capabilities,
         ICommandLineOptions commandLineOptions,
         IConfiguration configuration,
         ILogger<TestingFramework> logger,
+        IOutputDevice outputDevice,
         Assembly[] assemblies)
     {
         _capabilities = (TestingFrameworkCapabilities)capabilities;
         _commandLineOptions = commandLineOptions;
         _configuration = configuration;
         _logger = logger;
+        _outputDevice = outputDevice;
         _assemblies = assemblies;
 
         if (_commandLineOptions.TryGetOptionArgumentList(TestingFrameworkCommandLineOptions.DopOption, out string[]? argumentList))
         {
-            int dop = int.Parse(argumentList[0], CultureInfo.InvariantCulture);
-            _dop = new SemaphoreSlim(dop, dop);
+            _dopValue = int.Parse(argumentList[0], CultureInfo.InvariantCulture);
+            _dop = new SemaphoreSlim(_dopValue, _dopValue);
         }
         else
         {
@@ -52,6 +58,7 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
         {
             _dop?.Dispose();
             _dop = new SemaphoreSlim(1, 1);
+            _dopValue = 1;
         }
 
         if (_commandLineOptions.IsOptionSet(TestingFrameworkCommandLineOptions.GenerateReportOption))
@@ -118,6 +125,8 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                 {
                     try
                     {
+                        await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"TestingFramework version '{Version}' running tests with parallelism of {_dopValue}") { ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green } });
+
                         StringBuilder reportBody = new();
                         MethodInfo[] tests = GetTestsMethodFromAssemblies();
                         List<Task> results = new();
