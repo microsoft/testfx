@@ -4,13 +4,13 @@
 using System.Globalization;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
+using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Requests;
 
 namespace TestingPlatformExplorer.TestingFramework;
@@ -20,6 +20,7 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
     private readonly TestingFrameworkCapabilities _capabilities;
     private readonly ICommandLineOptions _commandLineOptions;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<TestingFramework> _logger;
     private readonly Assembly[] _assemblies;
     private readonly SemaphoreSlim _dop;
     private readonly string _reportFile = string.Empty;
@@ -28,11 +29,13 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
         ITestFrameworkCapabilities capabilities,
         ICommandLineOptions commandLineOptions,
         IConfiguration configuration,
+        ILogger<TestingFramework> logger,
         Assembly[] assemblies)
     {
         _capabilities = (TestingFrameworkCapabilities)capabilities;
         _commandLineOptions = commandLineOptions;
         _configuration = configuration;
+        _logger = logger;
         _assemblies = assemblies;
 
         if (_commandLineOptions.TryGetOptionArgumentList(TestingFrameworkCommandLineOptions.DopOption, out string[]? argumentList))
@@ -78,6 +81,11 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
 
     public async Task ExecuteRequestAsync(ExecuteRequestContext context)
     {
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            await _logger.LogInformationAsync($"Executing request of type '{context.Request}'");
+        }
+
         switch (context.Request)
         {
             case DiscoverTestExecutionRequest discoverTestExecutionRequest:

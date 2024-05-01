@@ -2,8 +2,8 @@
   "profiles": {
     "TestingPlatformExplorer": {
       "commandName": "Project",
-      "commandLineArgs": "--dop 1 --generatereport --reportfilename testframeworkreport.txt",
-      "environmentVariables": { "TestingFramework__DisableParallelism" : "True" }
+      "commandLineArgs": "--dop 1 --generatereport --reportfilename testframeworkreport.txt --diagnostic",
+      "environmentVariables": { "TestingFramework__DisableParallelism": "True" }
     }
   }
 }
