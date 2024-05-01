@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TestingPlatformExplorer": {
+      "commandName": "Project",
+      "commandLineArgs": "--dop 1 --generatereport --reportfilename testframeworkreport.txt"
+    }
+  }
+}

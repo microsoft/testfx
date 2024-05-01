@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using System.Reflection;
+using System.Text;
 
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
@@ -56,7 +57,7 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
 
     public string Description => "Testing framework sample";
 
-    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesProduced => new[] { typeof(TestNodeUpdateMessage), typeof(SessionFileArtifact) };
 
     public Task<CloseTestSessionResult> CloseTestSessionAsync(CloseTestSessionContext context)
         => Task.FromResult(new CloseTestSessionResult() { IsSuccess = true });
@@ -98,6 +99,7 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                 {
                     try
                     {
+                        StringBuilder reportBody = new();
                         MethodInfo[] tests = GetTestsMethodFromAssemblies();
                         List<Task> results = new();
                         foreach (MethodInfo test in tests)
@@ -112,6 +114,8 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                 };
 
                                 await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, skippedTestNode));
+
+                                reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {skippedTestNode.Uid} skipped");
 
                                 continue;
                             }
@@ -134,6 +138,8 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                         };
 
                                         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, successfulTestNode));
+
+                                        reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {successfulTestNode.Uid} succeeded");
                                     }
                                     catch (TargetInvocationException ex) when (ex.InnerException is AssertionException assertionException)
                                     {
@@ -145,6 +151,8 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                         };
 
                                         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, assertionFailedTestNode));
+
+                                        reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {assertionFailedTestNode.Uid} failed");
                                     }
                                     catch (TargetInvocationException ex)
                                     {
@@ -156,6 +164,8 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                                         };
 
                                         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, failedTestNode));
+
+                                        reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {failedTestNode.Uid} failed");
                                     }
                                 }
                                 finally
@@ -166,6 +176,12 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
                         }
 
                         await Task.WhenAll(results);
+
+                        if (!string.IsNullOrEmpty(_reportFile))
+                        {
+                            File.WriteAllText(_reportFile, reportBody.ToString());
+                            await context.MessageBus.PublishAsync(this, new SessionFileArtifact(runTestExecutionRequest.Session.SessionUid, new FileInfo(_reportFile), "Testing framework report"));
+                        }
                     }
                     finally
                     {
