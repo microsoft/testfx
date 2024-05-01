@@ -16,5 +16,6 @@ public static class TestingFrameworkExtensions
                 serviceProvider.GetCommandLineOptions(),
                 serviceProvider.GetConfiguration(),
                 serviceProvider.GetLoggerFactory().CreateLogger<TestingFramework>(),
+                serviceProvider.GetOutputDevice(),
                 assemblies));
 }

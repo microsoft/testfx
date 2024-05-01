@@ -10,7 +10,7 @@ public interface ICommandLineOptions
 }
 ```
 
-The `ICommandLineOptions` can be obtained through certain APIs, such as the [ICommandLineOptionsProvider](icommandlineoptionsprovider.md), or you can retrieve an instance of it from the [IServiceProvider](iserviceprovider.md).
+The `ICommandLineOptions` can be obtained through certain APIs, such as the [ICommandLineOptionsProvider](icommandlineoptionsprovider.md), or you can retrieve an instance of it from the [IServiceProvider](iserviceprovider.md) via the extension method `serviceProvider.GetCommandLineOptions()`.
 
 `ICommandLineOptions.IsOptionSet(string optionName)`: This method allows you to verify whether a specific option has been specified. When specifying the `optionName`, omit the `--` prefix. For example, if the user inputs `--myOption`, you should simply pass `myOption`.
 

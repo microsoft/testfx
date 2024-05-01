@@ -18,4 +18,5 @@
     1. [ILoggerFactory](iloggerfactory.md)
     1. [IMessageBus](imessagebus.md)
     1. [ICommandLineOptions](icommandlineoptions.md)
+    1. [IOutputDevice](ioutputdevice.md)
 1. [Code sample](codesample.md)
