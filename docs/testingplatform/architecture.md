@@ -7,9 +7,9 @@ In a console project `Contoso.UnitTests.exe` the following `Main` method defines
 ```c#
 public static async Task<int> Main(string[] args)
 {
-    var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+    ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
     testApplicationBuilder.RegisterTestFramework(/* test framework registration factories */);
-    using var testApplication = await testApplicationBuilder.BuildAsync();
+    using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
     return await testApplication.RunAsync();
 }
 ```
@@ -46,10 +46,10 @@ The testing platform accommodates this by having **out-of-process** extensions. 
 The following example demonstrates how to register a code coverage feature using a **TestHostController** extension.
 
 ```c#
-var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 testApplicationBuilder.RegisterTestFramework(/* test framework registration factories */);
 testApplicationBuilder.AddCodeCoverage();
-using var testApplication = await testApplicationBuilder.BuildAsync();
+using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();
 ```
 
