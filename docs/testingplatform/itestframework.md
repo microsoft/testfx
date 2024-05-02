@@ -117,6 +117,6 @@ For a comprehensive list of information that can be published to the testing pla
 >> [!WARNING]
 >> Neglecting to invoke `Complete()` on the request will result in the test application becoming unresponsive.
 
-To customize your test framework according to your requirements or those of your users, you can use a personalized section inside the [configuration](configuration.md) file or with custom [command line options](icommandlineoptions.md).
+To customize your test framework according to your requirements or those of your users, you can use a personalized section inside the [configuration](configuration.md) file or with custom [command line options](icommandlineoptionsprovider.md).
 
 A practical example of a test framework can be found in the [code sample](codesample.md) section.
