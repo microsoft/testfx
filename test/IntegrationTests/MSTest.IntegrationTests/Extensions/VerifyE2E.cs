@@ -59,7 +59,7 @@ public static class VerifyE2E
             discoveredTests.Should().HaveSameCount(expectedTests);
         }
 
-        foreach (var test in expectedTests)
+        foreach (string test in expectedTests)
         {
             // Test Discovery run was expecting to discover \"{test}\", but it has not discovered.
             discoveredTests.Should().Contain(
@@ -74,11 +74,11 @@ public static class VerifyE2E
     {
         if (matchCount)
         {
-            var expectedCount = expectedTests.Count();
+            int expectedCount = expectedTests.Count();
             AssertOutcomeCount(tests, expectedOutcome, expectedCount);
         }
 
-        foreach (var test in expectedTests)
+        foreach (string test in expectedTests)
         {
             tests.Should().Contain(
                 p => test.Equals(p.TestCase.FullyQualifiedName, System.StringComparison.Ordinal)
@@ -92,18 +92,15 @@ public static class VerifyE2E
     {
         if (matchCount)
         {
-            var expectedCount = expectedTests.Length;
+            int expectedCount = expectedTests.Length;
             AssertOutcomeCount(tests, expectedOutcome, expectedCount);
         }
 
-        foreach (var test in expectedTests)
+        foreach (string test in expectedTests)
         {
             tests.Should().Contain(p => p.DisplayName == test);
         }
     }
 
-    private static void AssertOutcomeCount(IEnumerable<TestResult> actual, TestOutcome expectedOutcome, int expectedCount)
-    {
-        actual.Where(i => i.Outcome == expectedOutcome).Should().HaveCount(expectedCount);
-    }
+    private static void AssertOutcomeCount(IEnumerable<TestResult> actual, TestOutcome expectedOutcome, int expectedCount) => actual.Where(i => i.Outcome == expectedOutcome).Should().HaveCount(expectedCount);
 }

@@ -43,7 +43,7 @@ public sealed class SdkTests : AcceptanceTestBase
 </Project>
 """);
 
-        var compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
         compilationResult.AssertOutputRegEx(@"Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1, Duration: .* ms - MSTestSdk.dll \(net8\.0\)");
@@ -79,7 +79,7 @@ public sealed class SdkTests : AcceptanceTestBase
 </Project>
 """);
 
-        var compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
 
         compilationResult.AssertOutputRegEx(@"Tests succeeded: .* \[net8\.0|x64\]");
@@ -115,12 +115,12 @@ public sealed class SdkTests : AcceptanceTestBase
 </Project>
 """);
 
-        var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
-        foreach (var tfm in multiTfm.Split(";"))
+        foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            var testHostResult = await testHost.ExecuteAsync();
+            TestHostResult testHostResult = await testHost.ExecuteAsync();
             testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
         }
     }
@@ -148,12 +148,12 @@ public sealed class SdkTests : AcceptanceTestBase
 </Project>
 """);
 
-        var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
-        foreach (var tfm in multiTfm.Split(";"))
+        foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            var testHostResult = await testHost.ExecuteAsync();
+            TestHostResult testHostResult = await testHost.ExecuteAsync();
             testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
         }
     }
@@ -225,12 +225,12 @@ public sealed class SdkTests : AcceptanceTestBase
 </Project>
 """);
 
-        var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
-        foreach (var tfm in multiTfm.Split(";"))
+        foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            var testHostResult = await testHost.ExecuteAsync(command: enableCommandLineArg);
+            TestHostResult testHostResult = await testHost.ExecuteAsync(command: enableCommandLineArg);
             testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
 
             testHostResult = await testHost.ExecuteAsync(command: invalidCommandLineArg);
@@ -261,12 +261,12 @@ public sealed class SdkTests : AcceptanceTestBase
 </Project>
 """);
 
-        var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
-        foreach (var tfm in multiTfm.Split(";"))
+        foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            var testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump");
+            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --retry-failed-tests 3 --report-trx --crashdump --hangdump");
             testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
         }
     }
@@ -308,12 +308,12 @@ public sealed class SdkTests : AcceptanceTestBase
 </Project>
 """);
 
-        var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
-        foreach (var tfm in multiTfm.Split(";"))
+        foreach (string tfm in multiTfm.Split(";"))
         {
             var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-            var testHostResult = await testHost.ExecuteAsync(command: "--coverage --report-trx");
+            TestHostResult testHostResult = await testHost.ExecuteAsync(command: "--coverage --report-trx");
             if (enableDefaultExtensions)
             {
                 testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
@@ -348,13 +348,12 @@ public sealed class SdkTests : AcceptanceTestBase
 </Project>
 """);
 
-        var compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
         Assert.AreEqual(1, compilationResult.ExitCode);
         compilationResult.AssertOutputContains("Invalid value for property TestingExtensionsProfile. Valid values are 'Default', 'AllMicrosoft' and 'None'.");
     }
 
-    public async Task NativeAot_Smoke_Test_On_Windows()
-    {
+    public async Task NativeAot_Smoke_Test_On_Windows() =>
         // Sometimes we got strange error from the compilers like "fatal error LNK1136: invalid or corrupt file"
         // I suppose due to the load on the build machines. So, we retry the test a few times.
         await RetryHelper.RetryAsync(
@@ -388,15 +387,14 @@ public sealed class SdkTests : AcceptanceTestBase
 </Project>
 """);
 
-            var compilationResult = await DotnetCli.RunAsync($"publish -r {RID} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"publish -r {RID} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
             compilationResult.AssertOutputNotContains("warning");
             compilationResult.AssertOutputContains("Generating native code");
             var testHost = TestHost.LocateFrom(generator.TargetAssetPath, AssetName, TargetFrameworks.NetCurrent.Arguments, verb: Verb.publish);
-            var testHostResult = await testHost.ExecuteAsync();
+            TestHostResult testHostResult = await testHost.ExecuteAsync();
             testHostResult.AssertExitCodeIs(ExitCodes.Success);
             testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
         }, 3, TimeSpan.FromSeconds(5));
-    }
 
     private const string SourceCode = """
 #file MSTestSdk.csproj

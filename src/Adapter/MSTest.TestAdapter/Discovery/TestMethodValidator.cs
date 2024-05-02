@@ -57,24 +57,24 @@ internal class TestMethodValidator
         // Generic method Definitions are not valid.
         if (testMethodInfo.IsGenericMethodDefinition)
         {
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, testMethodInfo.DeclaringType!.FullName, testMethodInfo.Name);
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorGenericTestMethod, testMethodInfo.DeclaringType!.FullName, testMethodInfo.Name);
             warnings.Add(message);
             return false;
         }
 
-        var isAccessible = testMethodInfo.IsPublic
+        bool isAccessible = testMethodInfo.IsPublic
             || (_discoverInternals && testMethodInfo.IsAssembly);
 
         // Todo: Decide whether parameter count matters.
         // The isGenericMethod check below id to verify that there are no closed generic methods slipping through.
         // Closed generic methods being GenericMethod<int> and open being GenericMethod<TAttribute>.
-        var isValidTestMethod = isAccessible && !testMethodInfo.IsAbstract && !testMethodInfo.IsStatic
+        bool isValidTestMethod = isAccessible && !testMethodInfo.IsAbstract && !testMethodInfo.IsStatic
                                 && !testMethodInfo.IsGenericMethod
                                 && testMethodInfo.IsValidReturnType();
 
         if (!isValidTestMethod)
         {
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorIncorrectTestMethodSignature, type.FullName, testMethodInfo.Name);
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorIncorrectTestMethodSignature, type.FullName, testMethodInfo.Name);
             warnings.Add(message);
             return false;
         }

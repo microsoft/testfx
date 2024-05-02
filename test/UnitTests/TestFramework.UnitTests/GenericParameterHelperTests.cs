@@ -54,7 +54,7 @@ public class GenericParameterHelperTests : TestContainer
 
         void A() => _sut.CompareTo(objectToCompare);
 
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex is NotSupportedException);
     }
 
@@ -65,7 +65,7 @@ public class GenericParameterHelperTests : TestContainer
         int expectedLenghtOfList = 5;  // (15%10)
         int result = 0;
 
-        foreach (var x in _sut)
+        foreach (object x in _sut)
         {
             result++;
         }

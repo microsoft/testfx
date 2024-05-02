@@ -50,7 +50,7 @@ namespace Analyzer.Utilities.Extensions
 
             if (!baseTypesOnly && candidateBaseType.TypeKind == TypeKind.Interface)
             {
-                var allInterfaces = symbol.AllInterfaces.OfType<ITypeSymbol>();
+                IEnumerable<ITypeSymbol> allInterfaces = symbol.AllInterfaces.OfType<ITypeSymbol>();
                 if (SymbolEqualityComparer.Default.Equals(candidateBaseType.OriginalDefinition, candidateBaseType))
                 {
                     // Candidate base type is not a constructed generic type, so use original definition for interfaces.
@@ -66,7 +66,7 @@ namespace Analyzer.Utilities.Extensions
             if (checkTypeParameterConstraints && symbol.TypeKind == TypeKind.TypeParameter)
             {
                 var typeParameterSymbol = (ITypeParameterSymbol)symbol;
-                foreach (var constraintType in typeParameterSymbol.ConstraintTypes)
+                foreach (ITypeSymbol constraintType in typeParameterSymbol.ConstraintTypes)
                 {
                     if (constraintType.DerivesFrom(candidateBaseType, baseTypesOnly, checkTypeParameterConstraints))
                     {

@@ -25,8 +25,7 @@ public class AggregatedConfigurationTests(ITestExecutionContext testExecutionCon
     [Arguments(PlatformConfigurationConstants.PlatformResultDirectory)]
     [Arguments(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]
     [Arguments(PlatformConfigurationConstants.PlatformTestHostWorkingDirectory)]
-    public void IndexerTest_DirectoryNotSetAndNoConfigurationProviders_DirectoryIsNull(string key)
-        => Assert.IsNull(new AggregatedConfiguration([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object)[key]);
+    public void IndexerTest_DirectoryNotSetAndNoConfigurationProviders_DirectoryIsNull(string key) => Assert.IsNull(new AggregatedConfiguration([], _testApplicationModuleInfoMock.Object, _fileSystemMock.Object)[key]);
 
     [Arguments(PlatformConfigurationConstants.PlatformResultDirectory)]
     [Arguments(PlatformConfigurationConstants.PlatformCurrentWorkingDirectory)]

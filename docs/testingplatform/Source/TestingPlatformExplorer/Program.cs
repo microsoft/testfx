@@ -7,10 +7,14 @@ using Microsoft.Testing.Platform.Builder;
 
 using TestingPlatformExplorer.TestingFramework;
 
-var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+// Create the test application builder
+ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 
 // Register the testing framework
 testApplicationBuilder.AddTestingFramework(new[] { Assembly.GetExecutingAssembly() });
 
-using var testApplication = await testApplicationBuilder.BuildAsync();
+// Register the testing framework command line options
+testApplicationBuilder.CommandLine.AddProvider(() => new TestingFrameworkCommandLineOptions());
+
+using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();

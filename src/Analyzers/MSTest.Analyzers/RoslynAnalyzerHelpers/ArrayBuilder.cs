@@ -64,10 +64,7 @@ namespace Analyzer.Utilities.PooledObjects
         /// <summary>
         /// Realizes the array.
         /// </summary>
-        public ImmutableArray<T> ToImmutable()
-        {
-            return _builder.ToImmutable();
-        }
+        public ImmutableArray<T> ToImmutable() => _builder.ToImmutable();
 
         public int Count
         {
@@ -102,15 +99,9 @@ namespace Analyzer.Utilities.PooledObjects
             }
         }
 
-        public void Add(T item)
-        {
-            _builder.Add(item);
-        }
+        public void Add(T item) => _builder.Add(item);
 
-        public void Insert(int index, T item)
-        {
-            _builder.Insert(index, item);
-        }
+        public void Insert(int index, T item) => _builder.Insert(index, item);
 
         public void EnsureCapacity(int capacity)
         {
@@ -120,30 +111,15 @@ namespace Analyzer.Utilities.PooledObjects
             }
         }
 
-        public void Clear()
-        {
-            _builder.Clear();
-        }
+        public void Clear() => _builder.Clear();
 
-        public bool Contains(T item)
-        {
-            return _builder.Contains(item);
-        }
+        public bool Contains(T item) => _builder.Contains(item);
 
-        public int IndexOf(T item)
-        {
-            return _builder.IndexOf(item);
-        }
+        public int IndexOf(T item) => _builder.IndexOf(item);
 
-        public int IndexOf(T item, IEqualityComparer<T> equalityComparer)
-        {
-            return _builder.IndexOf(item, 0, _builder.Count, equalityComparer);
-        }
+        public int IndexOf(T item, IEqualityComparer<T> equalityComparer) => _builder.IndexOf(item, 0, _builder.Count, equalityComparer);
 
-        public int IndexOf(T item, int startIndex, int count)
-        {
-            return _builder.IndexOf(item, startIndex, count);
-        }
+        public int IndexOf(T item, int startIndex, int count) => _builder.IndexOf(item, startIndex, count);
 
         public int FindIndex(Predicate<T> match)
             => FindIndex(0, Count, match);
@@ -165,65 +141,33 @@ namespace Analyzer.Utilities.PooledObjects
             return -1;
         }
 
-        public void RemoveAt(int index)
-        {
-            _builder.RemoveAt(index);
-        }
+        public void RemoveAt(int index) => _builder.RemoveAt(index);
 
-        public void RemoveLast()
-        {
-            _builder.RemoveAt(_builder.Count - 1);
-        }
+        public void RemoveLast() => _builder.RemoveAt(_builder.Count - 1);
 
-        public void ReverseContents()
-        {
-            _builder.Reverse();
-        }
+        public void ReverseContents() => _builder.Reverse();
 
-        public void Sort()
-        {
-            _builder.Sort();
-        }
+        public void Sort() => _builder.Sort();
 
-        public void Sort(IComparer<T> comparer)
-        {
-            _builder.Sort(comparer);
-        }
+        public void Sort(IComparer<T> comparer) => _builder.Sort(comparer);
 
         public void Sort(Comparison<T> compare)
             => Sort(Comparer<T>.Create(compare));
 
-        public void Sort(int startIndex, IComparer<T> comparer)
-        {
-            _builder.Sort(startIndex, _builder.Count - startIndex, comparer);
-        }
+        public void Sort(int startIndex, IComparer<T> comparer) => _builder.Sort(startIndex, _builder.Count - startIndex, comparer);
 
-        public T[] ToArray()
-        {
-            return _builder.ToArray();
-        }
+        public T[] ToArray() => _builder.ToArray();
 
-        public void CopyTo(T[] array, int start)
-        {
-            _builder.CopyTo(array, start);
-        }
+        public void CopyTo(T[] array, int start) => _builder.CopyTo(array, start);
 
-        public T Last()
-        {
+        public T Last() =>
 #pragma warning disable IDE0056
-            return _builder[_builder.Count - 1];
+            _builder[_builder.Count - 1];
 #pragma warning restore IDE0056
-        }
 
-        public T First()
-        {
-            return _builder[0];
-        }
+        public T First() => _builder[0];
 
-        public bool Any()
-        {
-            return _builder.Count > 0;
-        }
+        public bool Any() => _builder.Count > 0;
 
         /// <summary>
         /// Realizes the array.
@@ -250,7 +194,7 @@ namespace Analyzer.Utilities.PooledObjects
             }
 
             var tmp = ArrayBuilder<U>.GetInstance(Count);
-            foreach (var i in _builder)
+            foreach (T i in _builder)
             {
                 tmp.Add((U)i!);
             }
@@ -279,7 +223,7 @@ namespace Analyzer.Utilities.PooledObjects
 
         public T[] ToArrayAndFree()
         {
-            var result = ToArray();
+            T[] result = ToArray();
             Free();
             return result;
         }
@@ -292,7 +236,7 @@ namespace Analyzer.Utilities.PooledObjects
         // 1) Expose Freeing primitive.
         private void Free()
         {
-            var pool = _pool;
+            ObjectPool<ArrayBuilder<T>>? pool = _pool;
             if (pool != null)
             {
                 // According to the statistics of a C# compiler self-build, the most commonly used builder size is 0.  (808003 uses).
@@ -326,21 +270,21 @@ namespace Analyzer.Utilities.PooledObjects
         private static readonly ObjectPool<ArrayBuilder<T>> s_poolInstance = CreatePool();
         public static ArrayBuilder<T> GetInstance()
         {
-            var builder = s_poolInstance.Allocate();
+            ArrayBuilder<T> builder = s_poolInstance.Allocate();
             Debug.Assert(builder.Count == 0);
             return builder;
         }
 
         public static ArrayBuilder<T> GetInstance(int capacity)
         {
-            var builder = GetInstance();
+            ArrayBuilder<T> builder = GetInstance();
             builder.EnsureCapacity(capacity);
             return builder;
         }
 
         public static ArrayBuilder<T> GetInstance(int capacity, T fillWithValue)
         {
-            var builder = GetInstance();
+            ArrayBuilder<T> builder = GetInstance();
             builder.EnsureCapacity(capacity);
 
             for (int i = 0; i < capacity; i++)
@@ -351,10 +295,7 @@ namespace Analyzer.Utilities.PooledObjects
             return builder;
         }
 
-        internal static ObjectPool<ArrayBuilder<T>> CreatePool()
-        {
-            return CreatePool(128); // we rarely need more than 10
-        }
+        internal static ObjectPool<ArrayBuilder<T>> CreatePool() => CreatePool(128); // we rarely need more than 10
 
         internal static ObjectPool<ArrayBuilder<T>> CreatePool(int size)
         {
@@ -365,20 +306,11 @@ namespace Analyzer.Utilities.PooledObjects
 
         #endregion
 
-        internal Enumerator GetEnumerator()
-        {
-            return new Enumerator(this);
-        }
+        internal Enumerator GetEnumerator() => new(this);
 
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
 
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
         internal Dictionary<K, ImmutableArray<T>> ToDictionary<K>(Func<T, K> keySelector, IEqualityComparer<K>? comparer = null)
             where K : notnull
@@ -401,9 +333,9 @@ namespace Analyzer.Utilities.PooledObjects
             var accumulator = new Dictionary<K, ArrayBuilder<T>>(Count, comparer);
             for (int i = 0; i < Count; i++)
             {
-                var item = this[i];
-                var key = keySelector(item);
-                if (!accumulator.TryGetValue(key, out var bucket))
+                T? item = this[i];
+                K key = keySelector(item);
+                if (!accumulator.TryGetValue(key, out ArrayBuilder<T>? bucket))
                 {
                     bucket = ArrayBuilder<T>.GetInstance();
                     accumulator.Add(key, bucket);
@@ -415,7 +347,7 @@ namespace Analyzer.Utilities.PooledObjects
             var dictionary = new Dictionary<K, ImmutableArray<T>>(accumulator.Count, comparer);
 
             // freeze
-            foreach (var pair in accumulator)
+            foreach (KeyValuePair<K, ArrayBuilder<T>> pair in accumulator)
             {
                 dictionary.Add(pair.Key, pair.Value.ToImmutableAndFree());
             }
@@ -423,30 +355,15 @@ namespace Analyzer.Utilities.PooledObjects
             return dictionary;
         }
 
-        public void AddRange(ArrayBuilder<T> items)
-        {
-            _builder.AddRange(items._builder);
-        }
+        public void AddRange(ArrayBuilder<T> items) => _builder.AddRange(items._builder);
 
-        public void AddRange<U>(ArrayBuilder<U> items) where U : T
-        {
-            _builder.AddRange(items._builder);
-        }
+        public void AddRange<U>(ArrayBuilder<U> items) where U : T => _builder.AddRange(items._builder);
 
-        public void AddRange(ImmutableArray<T> items)
-        {
-            _builder.AddRange(items);
-        }
+        public void AddRange(ImmutableArray<T> items) => _builder.AddRange(items);
 
-        public void AddRange(ImmutableArray<T> items, int length)
-        {
-            _builder.AddRange(items, length);
-        }
+        public void AddRange(ImmutableArray<T> items, int length) => _builder.AddRange(items, length);
 
-        public void AddRange<S>(ImmutableArray<S> items) where S : class, T
-        {
-            AddRange(ImmutableArray<T>.CastUp(items));
-        }
+        public void AddRange<S>(ImmutableArray<S> items) where S : class, T => AddRange(ImmutableArray<T>.CastUp(items));
 
         public void AddRange(T[] items, int start, int length)
         {
@@ -456,20 +373,11 @@ namespace Analyzer.Utilities.PooledObjects
             }
         }
 
-        public void AddRange(IEnumerable<T> items)
-        {
-            _builder.AddRange(items);
-        }
+        public void AddRange(IEnumerable<T> items) => _builder.AddRange(items);
 
-        public void AddRange(params T[] items)
-        {
-            _builder.AddRange(items);
-        }
+        public void AddRange(params T[] items) => _builder.AddRange(items);
 
-        public void AddRange(T[] items, int length)
-        {
-            _builder.AddRange(items, length);
-        }
+        public void AddRange(T[] items, int length) => _builder.AddRange(items, length);
 
         public void Clip(int limit)
         {
@@ -513,9 +421,9 @@ namespace Analyzer.Utilities.PooledObjects
             using var result = ArrayBuilder<S>.GetInstance(Count);
             using var set = PooledHashSet<S>.GetInstance();
 
-            foreach (var item in _builder)
+            foreach (T? item in _builder)
             {
-                var selected = selector(item);
+                S? selected = selector(item);
                 if (set.Add(selected))
                 {
                     result.Add(selected);

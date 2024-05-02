@@ -19,7 +19,7 @@ public abstract class TestAssetFixtureBase : IDisposable, IAsyncInitializable
     }
 
     public string GetAssetPath(string assetID)
-        => !_testAssets.TryGetValue(assetID, out var testAsset)
+        => !_testAssets.TryGetValue(assetID, out TestAsset? testAsset)
             ? throw new ArgumentNullException(nameof(assetID), $"Cannot find target path for test asset '{assetID}'")
             : testAsset.TargetAssetPath;
 
@@ -27,16 +27,16 @@ public abstract class TestAssetFixtureBase : IDisposable, IAsyncInitializable
 #if NET
         => await Parallel.ForEachAsync(GetAssetsToGenerate(), async (asset, _) =>
         {
-            var testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
-            var result = await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path);
+            TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         });
 #else
         => await Task.WhenAll(GetAssetsToGenerate().Select(async asset =>
         {
-            var testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
-            var result = await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path);
+            TestAsset testAsset = await TestAsset.GenerateAssetAsync(asset.Name, asset.Code);
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {testAsset.TargetAssetPath} -c Release", _nugetGlobalPackagesDirectory.Path);
             testAsset.DotnetResult = result;
             _testAssets.TryAdd(asset.ID, testAsset);
         }));

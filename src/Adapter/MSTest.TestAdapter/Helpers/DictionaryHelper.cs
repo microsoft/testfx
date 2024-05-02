@@ -34,7 +34,7 @@ internal static class DictionaryHelper
         var destination = source.ToDictionary(p => p.Key, p => p.Value);
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("DictionaryHelper.ConcatWithOverwrites: Taking all keys from {0}: {1}.", sourceFriendlyName, string.Join(", ", source.Keys));
         var overwrites = new List<TKey>();
-        foreach (var k in overwrite.Keys)
+        foreach (TKey k in overwrite.Keys)
         {
 #pragma warning disable CA1854 // Prefer the 'IDictionary.TryGetValue(TKey, out TValue)' method | False-positive
             if (destination.ContainsKey(k))

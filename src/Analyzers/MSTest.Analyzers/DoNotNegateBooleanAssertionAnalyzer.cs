@@ -38,7 +38,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out var assertSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol))
             {
                 context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol), OperationKind.Invocation);
             }
@@ -47,14 +47,14 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol)
     {
-        IInvocationOperation invocationOperation = (IInvocationOperation)context.Operation;
+        var invocationOperation = (IInvocationOperation)context.Operation;
         if (invocationOperation.TargetMethod.Name is not "IsTrue" and not "IsFalse"
             || !SymbolEqualityComparer.Default.Equals(invocationOperation.TargetMethod.ContainingType, assertSymbol))
         {
             return;
         }
 
-        var conditionArgument = invocationOperation.Arguments.FirstOrDefault(x => x.Parameter?.Name == "condition");
+        IArgumentOperation? conditionArgument = invocationOperation.Arguments.FirstOrDefault(x => x.Parameter?.Name == "condition");
         if (conditionArgument != null
             && conditionArgument.Children.Any(op => op is IUnaryOperation unary && unary.OperatorKind == UnaryOperatorKind.Not))
         {

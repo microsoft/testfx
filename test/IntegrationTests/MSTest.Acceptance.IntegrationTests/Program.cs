@@ -75,7 +75,7 @@ internal sealed class GlobalTasks : ITestApplicationLifecycleCallbacks
             ? Path.Combine(AppContext.BaseDirectory, "testsbaseline.txt")
             : Path.Combine(AppContext.BaseDirectory, "testsbaseline.notwin.txt");
 
-        await TestsRunWatchDog.Verify(skip: _commandLineOptions.IsServerMode() || Debugger.IsAttached, fixBaseLine: true);
+        await TestsRunWatchDog.VerifyAsync(skip: _commandLineOptions.IsServerMode() || Debugger.IsAttached, fixBaseLine: true);
     }
 
     public Task BeforeRunAsync(CancellationToken cancellationToken) => Task.CompletedTask;

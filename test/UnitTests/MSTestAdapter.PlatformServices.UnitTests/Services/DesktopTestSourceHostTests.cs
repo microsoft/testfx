@@ -102,7 +102,7 @@ public class DesktopTestSourceHostTests : TestContainer
         // Arrange
         _ = new DummyClass();
 
-        var location = typeof(TestSourceHost).Assembly.Location;
+        string location = typeof(TestSourceHost).Assembly.Location;
         Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
 
         try
@@ -131,7 +131,7 @@ public class DesktopTestSourceHostTests : TestContainer
                 </RunConfiguration>  
             </RunSettings>";
 
-        var location = typeof(TestSourceHost).Assembly.Location;
+        string location = typeof(TestSourceHost).Assembly.Location;
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
@@ -157,7 +157,7 @@ public class DesktopTestSourceHostTests : TestContainer
         // Arrange
         DummyClass dummyClass = new();
 
-        var location = typeof(TestSourceHost).Assembly.Location;
+        string location = typeof(TestSourceHost).Assembly.Location;
         Mock<TestSourceHost> sourceHost = new(location, null, null) { CallBase = true };
 
         try
@@ -203,7 +203,7 @@ public class DesktopTestSourceHostTests : TestContainer
                 </RunConfiguration>  
             </RunSettings>";
 
-        var location = typeof(TestSourceHost).Assembly.Location;
+        string location = typeof(TestSourceHost).Assembly.Location;
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
@@ -232,7 +232,7 @@ public class DesktopTestSourceHostTests : TestContainer
                 </RunConfiguration>  
             </RunSettings>";
 
-        var location = typeof(TestSourceHost).Assembly.Location;
+        string location = typeof(TestSourceHost).Assembly.Location;
         var mockRunSettings = new Mock<IRunSettings>();
         mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
@@ -253,20 +253,8 @@ public class DesktopTestSourceHostTests : TestContainer
 
 public class DummyClass : MarshalByRefObject
 {
-    public int AppDomainId
-    {
-        get
-        {
-            return AppDomain.CurrentDomain.Id;
-        }
-    }
+    public int AppDomainId => AppDomain.CurrentDomain.Id;
 
-    public string AppDomainAppBase
-    {
-        get
-        {
-            return AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
-        }
-    }
+    public string AppDomainAppBase => AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
 }
 #endif

@@ -199,7 +199,7 @@ public class UnitTestResult
         if (ResultFiles != null && ResultFiles.Count > 0)
         {
             AttachmentSet attachmentSet = new(Constants.ExecutorUri, Resource.AttachmentSetDisplayName);
-            foreach (var resultFile in ResultFiles)
+            foreach (string resultFile in ResultFiles)
             {
                 string pathToResultFile = PlatformServiceProvider.Instance.FileOperations.GetFullFilePath(resultFile);
                 UriDataAttachment attachment = new(new Uri(pathToResultFile), resultFile);

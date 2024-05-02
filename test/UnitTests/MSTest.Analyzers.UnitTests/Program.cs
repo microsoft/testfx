@@ -54,7 +54,7 @@ internal sealed class GlobalTasks : ITestApplicationLifecycleCallbacks
     {
         // Check if any tests are missing that were supposed to run.
         TestsRunWatchDog.BaselineFile = Path.Combine(AppContext.BaseDirectory, "testsbaseline.txt");
-        await TestsRunWatchDog.Verify(skip: _commandLineOptions.IsServerMode(), fixBaseLine: true);
+        await TestsRunWatchDog.VerifyAsync(skip: _commandLineOptions.IsServerMode(), fixBaseLine: true);
     }
 
     public Task BeforeRunAsync(CancellationToken cancellationToken) => Task.CompletedTask;

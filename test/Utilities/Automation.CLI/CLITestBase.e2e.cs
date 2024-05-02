@@ -62,7 +62,7 @@ public partial class CLITestBase : TestContainer
 
     public static string GetNugetPackageFolder()
     {
-        var nugetPackagesFolderPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
+        string nugetPackagesFolderPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES");
         if (!string.IsNullOrEmpty(nugetPackagesFolderPath))
         {
             Directory.Exists(nugetPackagesFolderPath).Should().BeTrue($"Found environment variable 'NUGET_PACKAGES' and NuGet package folder '{nugetPackagesFolderPath}' should exist");
@@ -70,7 +70,7 @@ public partial class CLITestBase : TestContainer
             return nugetPackagesFolderPath;
         }
 
-        var userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
+        string userProfile = Environment.GetEnvironmentVariable("USERPROFILE");
         nugetPackagesFolderPath = Path.Combine(userProfile, ".nuget", "packages");
         Directory.Exists(nugetPackagesFolderPath).Should().BeTrue($"NuGet package folder '{nugetPackagesFolderPath}' should exist");
 
@@ -83,7 +83,7 @@ public partial class CLITestBase : TestContainer
     /// <returns>Full path to <c>vstest.console.exe</c>.</returns>
     public string GetConsoleRunnerPath()
     {
-        var testPlatformNuGetPackageFolder = Path.Combine(
+        string testPlatformNuGetPackageFolder = Path.Combine(
             GetNugetPackageFolder(),
             TestPlatformCLIPackageName,
             GetTestPlatformVersion());
@@ -92,7 +92,7 @@ public partial class CLITestBase : TestContainer
             throw new DirectoryNotFoundException($"Test platform NuGet package folder '{testPlatformNuGetPackageFolder}' does not exist");
         }
 
-        var vstestConsolePath = Path.Combine(
+        string vstestConsolePath = Path.Combine(
             testPlatformNuGetPackageFolder,
             "tools",
             "net462",
@@ -112,9 +112,9 @@ public partial class CLITestBase : TestContainer
     /// <param name="discoveredTestsList">List of tests expected to be discovered.</param>
     public void ValidateDiscoveredTests(params string[] discoveredTestsList)
     {
-        foreach (var test in discoveredTestsList)
+        foreach (string test in discoveredTestsList)
         {
-            var flag = _discoveryEventsHandler.Tests.Contains(test)
+            bool flag = _discoveryEventsHandler.Tests.Contains(test)
                        || _discoveryEventsHandler.Tests.Contains(GetTestMethodName(test));
             flag.Should().BeTrue("Test '{0}' does not appear in discovered tests list.", test);
         }
@@ -134,11 +134,9 @@ public partial class CLITestBase : TestContainer
         ValidatePassedTestsContain(passedTests);
     }
 
-    public void ValidatePassedTestsCount(int expectedPassedTestsCount)
-    {
+    public void ValidatePassedTestsCount(int expectedPassedTestsCount) =>
         // Make sure only expected number of tests passed and not more.
         RunEventsHandler.PassedTests.Should().HaveCount(expectedPassedTestsCount);
-    }
 
     /// <summary>
     /// Validates if the test results have the specified set of failed tests.
@@ -173,11 +171,9 @@ public partial class CLITestBase : TestContainer
     /// Validates the count of failed tests.
     /// </summary>
     /// <param name="expectedFailedTestsCount">Expected failed tests count.</param>
-    public void ValidateFailedTestsCount(int expectedFailedTestsCount)
-    {
+    public void ValidateFailedTestsCount(int expectedFailedTestsCount) =>
         // Make sure only expected number of tests failed and not more.
         RunEventsHandler.FailedTests.Should().HaveCount(expectedFailedTestsCount);
-    }
 
     /// <summary>
     /// Validates if the test results have the specified set of skipped tests.
@@ -200,23 +196,23 @@ public partial class CLITestBase : TestContainer
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
     public void ValidatePassedTestsContain(params string[] passedTests)
     {
-        var passedTestResults = RunEventsHandler.PassedTests;
-        var failedTestResults = RunEventsHandler.FailedTests;
-        var skippedTestsResults = RunEventsHandler.SkippedTests;
+        System.Collections.ObjectModel.ReadOnlyCollection<VisualStudio.TestPlatform.ObjectModel.TestResult> passedTestResults = RunEventsHandler.PassedTests;
+        System.Collections.ObjectModel.ReadOnlyCollection<VisualStudio.TestPlatform.ObjectModel.TestResult> failedTestResults = RunEventsHandler.FailedTests;
+        System.Collections.ObjectModel.ReadOnlyCollection<VisualStudio.TestPlatform.ObjectModel.TestResult> skippedTestsResults = RunEventsHandler.SkippedTests;
 
-        foreach (var test in passedTests)
+        foreach (string test in passedTests)
         {
-            var isFailed = failedTestResults.Any(
+            bool isFailed = failedTestResults.Any(
                 p => test.Equals(p.TestCase?.FullyQualifiedName, StringComparison.Ordinal)
                      || test.Equals(p.DisplayName, StringComparison.Ordinal)
                      || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal));
 
-            var isSkipped = skippedTestsResults.Any(
+            bool isSkipped = skippedTestsResults.Any(
                 p => test.Equals(p.TestCase?.FullyQualifiedName, StringComparison.Ordinal)
                      || test.Equals(p.DisplayName, StringComparison.Ordinal)
                      || test.Equals(p.TestCase.DisplayName, StringComparison.Ordinal));
 
-            var failedOrSkippedMessage = isFailed ? " (Test failed)" : isSkipped ? " (Test skipped)" : string.Empty;
+            string failedOrSkippedMessage = isFailed ? " (Test failed)" : isSkipped ? " (Test skipped)" : string.Empty;
 
             passedTestResults.Should().Contain(
                 p => test.Equals(p.TestCase.FullyQualifiedName, StringComparison.Ordinal)
@@ -238,9 +234,9 @@ public partial class CLITestBase : TestContainer
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
     public void ValidateFailedTestsContain(bool validateStackTraceInfo, params string[] failedTests)
     {
-        foreach (var test in failedTests)
+        foreach (string test in failedTests)
         {
-            var testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName, StringComparison.Ordinal) ||
+            VisualStudio.TestPlatform.ObjectModel.TestResult testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName, StringComparison.Ordinal) ||
                        test.Equals(f.DisplayName, StringComparison.Ordinal));
             testFound.Should().NotBeNull("Test '{0}' does not appear in failed tests list.", test);
 
@@ -267,7 +263,7 @@ public partial class CLITestBase : TestContainer
     [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
     public void ValidateSkippedTestsContain(params string[] skippedTests)
     {
-        foreach (var test in skippedTests)
+        foreach (string test in skippedTests)
         {
             RunEventsHandler.SkippedTests.Should().Contain(
                 s => test.Equals(s.TestCase.FullyQualifiedName, StringComparison.Ordinal) || test.Equals(s.DisplayName, StringComparison.Ordinal),
@@ -277,7 +273,7 @@ public partial class CLITestBase : TestContainer
 
     public void ValidateTestRunTime(int thresholdTime)
     {
-        var time = RunEventsHandler.ElapsedTimeInRunningTests >= 0 && RunEventsHandler.ElapsedTimeInRunningTests < thresholdTime;
+        bool time = RunEventsHandler.ElapsedTimeInRunningTests >= 0 && RunEventsHandler.ElapsedTimeInRunningTests < thresholdTime;
         time.Should().BeTrue($"Test Run was expected to not exceed {thresholdTime} but it took {RunEventsHandler.ElapsedTimeInRunningTests}");
     }
 
@@ -290,7 +286,7 @@ public partial class CLITestBase : TestContainer
     {
         string testMethodName = string.Empty;
 
-        var splits = testFullName.Split('.');
+        string[] splits = testFullName.Split('.');
         if (splits.Length >= 3)
         {
             testMethodName = splits[2];
@@ -305,9 +301,9 @@ public partial class CLITestBase : TestContainer
     /// <param name="paths">An array of file paths, elements may be modified to absolute paths.</param>
     private void ExpandTestSourcePaths(string[] paths, string targetFramework = null)
     {
-        for (var i = 0; i < paths.Length; i++)
+        for (int i = 0; i < paths.Length; i++)
         {
-            var path = paths[i];
+            string path = paths[i];
 
             paths[i] = !Path.IsPathRooted(path) ? GetAssetFullPath(path, targetFramework: targetFramework) : Path.GetFullPath(path);
         }

@@ -94,7 +94,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
         }
 
         string message = formatter(state, exception);
-        var logMessage = new ServerLogMessage(logLevel, message);
+        ServerLogMessage logMessage = new(logLevel, message);
         EnsureAsyncLogObjectsAreNotNull();
 #if NETCOREAPP
         if (!_channel.Writer.TryWrite(logMessage))
@@ -114,7 +114,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
         }
 
         string message = formatter(state, exception);
-        var logMessage = new ServerLogMessage(logLevel, message);
+        ServerLogMessage logMessage = new(logLevel, message);
         await PushServerLogMessageToTheMessageBusAsync(logMessage);
     }
 
@@ -147,7 +147,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
         EnsureAsyncLogObjectsAreNotNull();
 #if NETCOREAPP
         // Wait for all logs to be written
-        var result = _channel.Writer.TryComplete();
+        bool result = _channel.Writer.TryComplete();
         if (!_logLoop.Wait(TimeoutHelper.DefaultHangTimeSpanTimeout))
         {
             throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.TimeoutFlushingLogsErrorMessage, TimeoutHelper.DefaultHangTimeoutSeconds));

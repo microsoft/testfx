@@ -45,10 +45,10 @@ public class DesktopTestDeploymentTests : TestContainer
 
     public void DeployShouldDeployFilesInASourceAndReturnTrue()
     {
-        var testCase = GetTestCase(Assembly.GetExecutingAssembly().Location);
+        TestCase testCase = GetTestCase(Assembly.GetExecutingAssembly().Location);
 
         // Setup mocks.
-        var testDeployment = CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
+        TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -56,7 +56,7 @@ public class DesktopTestDeploymentTests : TestContainer
         Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
         string warning;
-        var sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
+        string sourceFile = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
         _mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
@@ -68,12 +68,12 @@ public class DesktopTestDeploymentTests : TestContainer
 
     public void DeployShouldDeployFilesInMultipleSourcesAndReturnTrue()
     {
-        var testCase1 = GetTestCase(Assembly.GetExecutingAssembly().Location);
-        var sourceFile2 = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "a.dll");
-        var testCase2 = GetTestCase(sourceFile2);
+        TestCase testCase1 = GetTestCase(Assembly.GetExecutingAssembly().Location);
+        string sourceFile2 = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "a.dll");
+        TestCase testCase2 = GetTestCase(sourceFile2);
 
         // Setup mocks.
-        var testDeployment = CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
+        TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -81,7 +81,7 @@ public class DesktopTestDeploymentTests : TestContainer
         Verify(testDeployment.Deploy(new List<TestCase> { testCase1, testCase2 }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
         string warning;
-        var sourceFile1 = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
+        string sourceFile1 = Assembly.GetExecutingAssembly().GetName().Name + ".dll";
         _mockFileUtility.Verify(
             fu =>
             fu.CopyFileOverwrite(
@@ -100,10 +100,10 @@ public class DesktopTestDeploymentTests : TestContainer
 
     public void DeployShouldCreateDeploymentDirectories()
     {
-        var testCase = GetTestCase(typeof(DesktopTestDeploymentTests).GetTypeInfo().Assembly.Location);
+        TestCase testCase = GetTestCase(typeof(DesktopTestDeploymentTests).GetTypeInfo().Assembly.Location);
 
         // Setup mocks.
-        var testDeployment = CreateAndSetupDeploymentRelatedUtilities(out var testRunDirectories);
+        TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
 
         var mockRunContext = new Mock<IRunContext>();
         mockRunContext.Setup(rc => rc.TestRunDirectory).Returns(testRunDirectories.RootDeploymentDirectory);
@@ -124,7 +124,7 @@ public class DesktopTestDeploymentTests : TestContainer
     {
         var deploymentItemAttributes = new List<DeploymentItemAttribute>();
 
-        foreach (var deploymentItem in deploymentItems)
+        foreach (KeyValuePair<string, string> deploymentItem in deploymentItems)
         {
             deploymentItemAttributes.Add(new DeploymentItemAttribute(deploymentItem.Key, deploymentItem.Value));
         }
@@ -139,7 +139,7 @@ public class DesktopTestDeploymentTests : TestContainer
     private TestCase GetTestCase(string source)
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), source);
-        var kvpArray = new[]
+        KeyValuePair<string, string>[] kvpArray = new[]
                 {
                     new KeyValuePair<string, string>(
                         DefaultDeploymentItemPath,
@@ -152,7 +152,7 @@ public class DesktopTestDeploymentTests : TestContainer
 
     private TestDeployment CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories)
     {
-        var currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        string currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
         testRunDirectories = new TestRunDirectories(currentExecutingFolder);
 

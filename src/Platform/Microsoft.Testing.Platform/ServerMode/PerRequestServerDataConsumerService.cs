@@ -63,7 +63,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
     public TestNodeStatistics GetTestNodeStatistics()
     {
-        var nodeStatistics = new TestNodeStatistics(_discoveredTestNodeUids.Count, 0, 0, 0, 0);
+        TestNodeStatistics nodeStatistics = new(_discoveredTestNodeUids.Count, 0, 0, 0, 0);
         foreach (KeyValuePair<TestNodeUid, TestNodeStateStatistics> entry in _testNodeUidToStateStatistics)
         {
             TestNodeStateStatistics statistics = entry.Value;

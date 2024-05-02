@@ -12,11 +12,11 @@ public class DynamicDataTests : CLITestBase
     public void ExecuteDynamicDataTests()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath);
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(
@@ -55,11 +55,11 @@ public class DynamicDataTests : CLITestBase
     public void ExecuteDynamicDataTestsWithCategoryFilter()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "TestCategory~DynamicDataWithCategory");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~DynamicDataWithCategory");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.ContainsTestsPassed(

@@ -22,7 +22,7 @@ internal sealed class MSTestExtension : IExtension
 
     private static string GetExtensionUid()
     {
-        var assemblyMetadataAttributes = Assembly.GetEntryAssembly()?.GetCustomAttributes<AssemblyMetadataAttribute>();
+        IEnumerable<AssemblyMetadataAttribute>? assemblyMetadataAttributes = Assembly.GetEntryAssembly()?.GetCustomAttributes<AssemblyMetadataAttribute>();
         return assemblyMetadataAttributes?.FirstOrDefault(x => x.Key == "MSTest.Extension.Uid")?.Value ?? nameof(MSTestExtension);
     }
 }

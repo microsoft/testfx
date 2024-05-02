@@ -21,7 +21,7 @@ public class FileOperationsTests : TestContainer
 
     public void LoadAssemblyShouldThrowExceptionIfTheFileNameHasInvalidCharacters()
     {
-        var filePath = "temp<>txt";
+        string filePath = "temp<>txt";
         void A() => _fileOperations.LoadAssembly(filePath, false);
 
         Type expectedException;
@@ -31,21 +31,21 @@ public class FileOperationsTests : TestContainer
         expectedException = typeof(ArgumentException);
 #endif
 
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex.GetType() == expectedException);
     }
 
     public void LoadAssemblyShouldThrowExceptionIfFileIsNotFound()
     {
-        var filePath = "temptxt";
+        string filePath = "temptxt";
         void A() => _fileOperations.LoadAssembly(filePath, false);
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex is FileNotFoundException);
     }
 
     public void LoadAssemblyShouldLoadAssemblyInCurrentContext()
     {
-        var filePath = typeof(FileOperationsTests).GetTypeInfo().Assembly.Location;
+        string filePath = typeof(FileOperationsTests).GetTypeInfo().Assembly.Location;
 
         // This should not throw.
         _fileOperations.LoadAssembly(filePath, false);

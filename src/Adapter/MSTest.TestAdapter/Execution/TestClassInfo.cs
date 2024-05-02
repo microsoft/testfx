@@ -97,7 +97,7 @@ public class TestClassInfo
         {
             if (_classInitializeMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassInit, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -165,7 +165,7 @@ public class TestClassInfo
         {
             if (_classCleanupMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassClean, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -207,7 +207,7 @@ public class TestClassInfo
         {
             if (_testInitializeMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiInit, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -226,7 +226,7 @@ public class TestClassInfo
         {
             if (_testCleanupMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClean, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -287,7 +287,7 @@ public class TestClassInfo
 
                         while (baseClassInitializeStack.Count > 0)
                         {
-                            var baseInitCleanupMethods = baseClassInitializeStack.Pop();
+                            Tuple<MethodInfo?, MethodInfo?> baseInitCleanupMethods = baseClassInitializeStack.Pop();
                             initializeMethod = baseInitCleanupMethods.Item1;
 
                             ClassInitializationException = initializeMethod is not null ? InvokeInitializeMethod(initializeMethod, testContext) : null;
@@ -334,20 +334,20 @@ public class TestClassInfo
         }
 
         // Fail the current test if it was a failure.
-        var realException = ClassInitializationException.GetRealException();
+        Exception realException = ClassInitializationException.GetRealException();
 
-        var outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
+        ObjectModelUnitTestOutcome outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
 
         // Do not use StackTraceHelper.GetFormattedExceptionMessage(realException) as it prefixes the message with the exception type name.
-        var exceptionMessage = realException.TryGetMessage();
-        var errorMessage = string.Format(
+        string exceptionMessage = realException.TryGetMessage();
+        string errorMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.UTA_ClassInitMethodThrows,
             ClassType.FullName,
             failedClassInitializeMethodName,
             realException.GetType().ToString(),
             exceptionMessage);
-        var exceptionStackTraceInfo = realException.GetStackTraceInformation();
+        StackTraceInformation? exceptionStackTraceInfo = realException.GetStackTraceInformation();
 
         var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo, realException);
         ClassInitializationException = testFailedException;
@@ -358,7 +358,7 @@ public class TestClassInfo
     private TestFailedException? InvokeInitializeMethod(MethodInfo methodInfo, TestContext testContext)
     {
         int? timeout = null;
-        if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
+        if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
         {
             timeout = localTimeout;
         }
@@ -427,14 +427,14 @@ public class TestClassInfo
             return null;
         }
 
-        var realException = ClassCleanupException.GetRealException();
+        Exception realException = ClassCleanupException.GetRealException();
 
         // special case AssertFailedException to trim off part of the stack trace
         string errorMessage = realException is AssertFailedException or AssertInconclusiveException
             ? realException.Message
             : realException.GetFormattedExceptionMessage();
 
-        var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
+        StackTraceInformation? exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
 
         errorMessage = string.Format(
             CultureInfo.CurrentCulture,
@@ -510,14 +510,14 @@ public class TestClassInfo
             throw ClassCleanupException;
         }
 
-        var realException = ClassCleanupException.GetRealException();
+        Exception realException = ClassCleanupException.GetRealException();
 
         // special case AssertFailedException to trim off part of the stack trace
         string errorMessage = realException is AssertFailedException or AssertInconclusiveException
             ? realException.Message
             : realException.GetFormattedExceptionMessage();
 
-        var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
+        StackTraceInformation? exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
 
         var testFailedException = new TestFailedException(
             ObjectModelUnitTestOutcome.Failed,
@@ -538,7 +538,7 @@ public class TestClassInfo
     private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo)
     {
         int? timeout = null;
-        if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
+        if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
         {
             timeout = localTimeout;
         }

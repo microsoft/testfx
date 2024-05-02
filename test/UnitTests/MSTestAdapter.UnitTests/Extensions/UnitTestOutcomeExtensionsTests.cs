@@ -14,7 +14,7 @@ public class UnitTestOutcomeExtensionsTests : TestContainer
 {
     public void ToUnitTestOutComeForPassedTestResultsConvertsToPassedUnitTestOutCome()
     {
-        var frameworkOutcome = UTF.UnitTestOutcome.Passed;
+        UTF.UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.Passed;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
         Verify(convertedOutcome == AdapterTestOutcome.Passed);
@@ -22,7 +22,7 @@ public class UnitTestOutcomeExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForFailedTestResultsConvertsToFailedUnitTestResults()
     {
-        var frameworkOutcome = UTF.UnitTestOutcome.Failed;
+        UTF.UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.Failed;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
         Verify(convertedOutcome == AdapterTestOutcome.Failed);
@@ -30,7 +30,7 @@ public class UnitTestOutcomeExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForInProgressTestResultsConvertsToInProgressUnitTestResults()
     {
-        var frameworkOutcome = UTF.UnitTestOutcome.InProgress;
+        UTF.UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.InProgress;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
         Verify(convertedOutcome == AdapterTestOutcome.InProgress);
@@ -38,7 +38,7 @@ public class UnitTestOutcomeExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForInconclusiveTestResultsConvertsToInconclusiveUnitTestResults()
     {
-        var frameworkOutcome = UTF.UnitTestOutcome.Inconclusive;
+        UTF.UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.Inconclusive;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
         Verify(convertedOutcome == AdapterTestOutcome.Inconclusive);
@@ -46,7 +46,7 @@ public class UnitTestOutcomeExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForTimeoutTestResultsConvertsToTimeoutUnitTestResults()
     {
-        var frameworkOutcome = UTF.UnitTestOutcome.Timeout;
+        UTF.UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.Timeout;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
         Verify(convertedOutcome == AdapterTestOutcome.Timeout);
@@ -54,7 +54,7 @@ public class UnitTestOutcomeExtensionsTests : TestContainer
 
     public void ToUnitTestResultsForUnknownTestResultsConvertsToErrorUnitTestResults()
     {
-        var frameworkOutcome = UTF.UnitTestOutcome.Unknown;
+        UTF.UnitTestOutcome frameworkOutcome = UTF.UnitTestOutcome.Unknown;
         var convertedOutcome = frameworkOutcome.ToUnitTestOutcome();
 
         Verify(convertedOutcome == AdapterTestOutcome.Error);
@@ -62,25 +62,25 @@ public class UnitTestOutcomeExtensionsTests : TestContainer
 
     public void GetMoreImportantOutcomeShouldReturnFailIfTwoOutcomesAreFailedAndInconclusive()
     {
-        var resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed, UTF.UnitTestOutcome.Inconclusive);
+        UTF.UnitTestOutcome resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed, UTF.UnitTestOutcome.Inconclusive);
         Verify(resultOutcome == UTF.UnitTestOutcome.Failed);
     }
 
     public void GetMoreImportantOutcomeShouldReturnInconclusiveIfTwoOutcomesArePassedAndInconclusive()
     {
-        var resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Passed, UTF.UnitTestOutcome.Inconclusive);
+        UTF.UnitTestOutcome resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Passed, UTF.UnitTestOutcome.Inconclusive);
         Verify(resultOutcome == UTF.UnitTestOutcome.Inconclusive);
     }
 
     public void GetMoreImportantOutcomeShouldReturnFailedIfTwoOutcomesArePassedAndFailed()
     {
-        var resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Passed, UTF.UnitTestOutcome.Failed);
+        UTF.UnitTestOutcome resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Passed, UTF.UnitTestOutcome.Failed);
         Verify(resultOutcome == UTF.UnitTestOutcome.Failed);
     }
 
     public void GetMoreImportantOutcomeShouldReturnFailedIfBothOutcomesAreFailed()
     {
-        var resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed, UTF.UnitTestOutcome.Failed);
+        UTF.UnitTestOutcome resultOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(UTF.UnitTestOutcome.Failed, UTF.UnitTestOutcome.Failed);
         Verify(resultOutcome == UTF.UnitTestOutcome.Failed);
     }
 }

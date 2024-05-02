@@ -60,7 +60,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// false otherwise.</returns>
     public override bool Equals(object? obj)
     {
-        GenericParameterHelper? other = obj as GenericParameterHelper;
+        var other = obj as GenericParameterHelper;
 
         return Data == other?.Data;
     }
@@ -69,10 +69,7 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// Returns a hashcode for this object.
     /// </summary>
     /// <returns>The hash code.</returns>
-    public override int GetHashCode()
-    {
-        return Data.GetHashCode();
-    }
+    public override int GetHashCode() => Data.GetHashCode();
 
     /// <summary>
     /// Compares the data of the two <see cref="GenericParameterHelper"/> objects.
@@ -84,12 +81,9 @@ public class GenericParameterHelper : IComparable, IEnumerable
     /// <exception cref="NotSupportedException">
     /// Thrown when the object passed in is not an instance of <see cref="GenericParameterHelper"/>.
     /// </exception>
-    public int CompareTo(object? obj)
-    {
-        return obj is GenericParameterHelper gpf
+    public int CompareTo(object? obj) => obj is GenericParameterHelper gpf
             ? Data.CompareTo(gpf.Data)
             : throw new NotSupportedException("GenericParameterHelper object is designed to compare objects of GenericParameterHelper type only.");
-    }
 
     /// <summary>
     /// Returns an IEnumerator object whose length is derived from

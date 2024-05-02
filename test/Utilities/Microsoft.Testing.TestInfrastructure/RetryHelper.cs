@@ -7,13 +7,11 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public class RetryHelper
 {
-    public static async Task RetryAsync(Func<Task> action, uint times, TimeSpan every, Func<Exception, bool>? predicate = null)
-        => await Policy.Handle<Exception>(exception => predicate is null || predicate(exception))
-           .WaitAndRetryAsync((int)times, _ => every)
-           .ExecuteAsync(action);
+    public static async Task RetryAsync(Func<Task> action, uint times, TimeSpan every, Func<Exception, bool>? predicate = null) => await Policy.Handle<Exception>(exception => predicate is null || predicate(exception))
+                .WaitAndRetryAsync((int)times, _ => every)
+                .ExecuteAsync(action);
 
-    public static async Task<T> RetryAsync<T>(Func<Task<T>> action, uint times, TimeSpan every, Func<Exception, bool>? predicate = null)
-        => await Policy.Handle<Exception>(exception => predicate is null || predicate(exception))
-            .WaitAndRetryAsync((int)times, _ => every)
-            .ExecuteAsync(action);
+    public static async Task<T> RetryAsync<T>(Func<Task<T>> action, uint times, TimeSpan every, Func<Exception, bool>? predicate = null) => await Policy.Handle<Exception>(exception => predicate is null || predicate(exception))
+                .WaitAndRetryAsync((int)times, _ => every)
+                .ExecuteAsync(action);
 }

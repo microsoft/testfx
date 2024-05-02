@@ -96,7 +96,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
             string reportDirectory = Path.GetDirectoryName(payload.TestHost.FullName)!;
             string dataFileDirectory = Path.Combine(reportDirectory, "DataFile");
             Directory.CreateDirectory(dataFileDirectory);
-            foreach (var item in Directory.GetFiles(reportDirectory, "DataFile.*"))
+            foreach (string item in Directory.GetFiles(reportDirectory, "DataFile.*"))
             {
                 File.Move(item, Path.Combine(dataFileDirectory, Path.GetFileName(item)!));
             }

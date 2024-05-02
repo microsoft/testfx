@@ -120,7 +120,7 @@ internal class RuntimeTypeHelper
         int i;
         int j;
 
-        Type[] realTypes = new Type[types.Length];
+        var realTypes = new Type[types.Length];
         for (i = 0; i < types.Length; i++)
         {
             realTypes[i] = types[i].UnderlyingSystemType;

@@ -19,7 +19,7 @@ public class ExpectedExceptionAttributeTests : TestContainer
     {
         static void A() => _ = new ExpectedExceptionAttribute(null, "Dummy");
 
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex is ArgumentNullException);
     }
 
@@ -30,23 +30,20 @@ public class ExpectedExceptionAttributeTests : TestContainer
     {
         static void A() => _ = new ExpectedExceptionAttribute(typeof(ExpectedExceptionAttributeTests), "Dummy");
 
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex is ArgumentException);
     }
 
     /// <summary>
     /// ExpectedExceptionAttribute constructor should not throw exception when parameter exceptionType = typeof(AnyClassDerivedFromExceptionClass).
     /// </summary>
-    public void ExpectedExceptionAttributeConstructerShouldNotThrowAnyException()
-    {
-        _ = new ExpectedExceptionAttribute(typeof(DummyTestClassDerivedFromException), "Dummy");
-    }
+    public void ExpectedExceptionAttributeConstructerShouldNotThrowAnyException() => _ = new ExpectedExceptionAttribute(typeof(DummyTestClassDerivedFromException), "Dummy");
 
     public void GetExceptionMsgShouldReturnExceptionMessage()
     {
         Exception ex = new("Dummy Exception");
-        var actualMessage = UtfHelper.GetExceptionMsg(ex);
-        var expectedMessage = "System.Exception: Dummy Exception";
+        string actualMessage = UtfHelper.GetExceptionMsg(ex);
+        string expectedMessage = "System.Exception: Dummy Exception";
         Verify(expectedMessage == actualMessage);
     }
 
@@ -54,8 +51,8 @@ public class ExpectedExceptionAttributeTests : TestContainer
     {
         Exception innerException = new DivideByZeroException();
         Exception ex = new("Dummy Exception", innerException);
-        var actualMessage = UtfHelper.GetExceptionMsg(ex);
-        var expectedMessage = "System.Exception: Dummy Exception ---> System.DivideByZeroException: Attempted to divide by zero.";
+        string actualMessage = UtfHelper.GetExceptionMsg(ex);
+        string expectedMessage = "System.Exception: Dummy Exception ---> System.DivideByZeroException: Attempted to divide by zero.";
         Verify(expectedMessage == actualMessage);
     }
 
@@ -64,8 +61,8 @@ public class ExpectedExceptionAttributeTests : TestContainer
         Exception recursiveInnerException = new IndexOutOfRangeException("ThirdLevelException");
         Exception innerException = new DivideByZeroException("SecondLevel Exception", recursiveInnerException);
         Exception ex = new("FirstLevelException", innerException);
-        var actualMessage = UtfHelper.GetExceptionMsg(ex);
-        var expectedMessage = "System.Exception: FirstLevelException ---> System.DivideByZeroException: SecondLevel Exception ---> System.IndexOutOfRangeException: ThirdLevelException";
+        string actualMessage = UtfHelper.GetExceptionMsg(ex);
+        string expectedMessage = "System.Exception: FirstLevelException ---> System.DivideByZeroException: SecondLevel Exception ---> System.IndexOutOfRangeException: ThirdLevelException";
         Verify(expectedMessage == actualMessage);
     }
 }

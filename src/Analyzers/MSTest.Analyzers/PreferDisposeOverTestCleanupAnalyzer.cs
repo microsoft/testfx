@@ -37,9 +37,9 @@ public sealed class PreferDisposeOverTestCleanupAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute, out var testCleanupAttributeSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestCleanupAttribute, out INamedTypeSymbol? testCleanupAttributeSymbol))
             {
-                var iasyncDisposableSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIAsyncDisposable);
+                INamedTypeSymbol? iasyncDisposableSymbol = context.Compilation.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemIAsyncDisposable);
                 context.RegisterSymbolAction(context => AnalyzeSymbol(context, testCleanupAttributeSymbol, iasyncDisposableSymbol), SymbolKind.Method);
             }
         });
@@ -48,7 +48,7 @@ public sealed class PreferDisposeOverTestCleanupAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testCleanupAttributeSymbol,
         INamedTypeSymbol? iasyncDisposableSymbol)
     {
-        IMethodSymbol methodSymbol = (IMethodSymbol)context.Symbol;
+        var methodSymbol = (IMethodSymbol)context.Symbol;
 
         if (methodSymbol.IsTestCleanupMethod(testCleanupAttributeSymbol))
         {

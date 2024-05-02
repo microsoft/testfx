@@ -19,10 +19,10 @@ public class TraceListenerManagerTests : TestContainer
         var stringWriter = new StringWriter();
         var traceListenerManager = new TraceListenerManager(stringWriter, stringWriter);
         var traceListener = new TraceListenerWrapper(stringWriter);
-        var originalCount = Trace.Listeners.Count;
+        int originalCount = Trace.Listeners.Count;
 
         traceListenerManager.Add(traceListener);
-        var newCount = Trace.Listeners.Count;
+        int newCount = Trace.Listeners.Count;
 
         Verify(originalCount + 1 == newCount);
         Verify(Trace.Listeners.Contains(traceListener));
@@ -33,13 +33,13 @@ public class TraceListenerManagerTests : TestContainer
         var stringWriter = new StringWriter();
         var traceListenerManager = new TraceListenerManager(stringWriter, stringWriter);
         var traceListener = new TraceListenerWrapper(stringWriter);
-        var originalCount = Trace.Listeners.Count;
+        int originalCount = Trace.Listeners.Count;
 
         traceListenerManager.Add(traceListener);
-        var countAfterAdding = Trace.Listeners.Count;
+        int countAfterAdding = Trace.Listeners.Count;
 
         traceListenerManager.Remove(traceListener);
-        var countAfterRemoving = Trace.Listeners.Count;
+        int countAfterRemoving = Trace.Listeners.Count;
 
         Verify(originalCount + 1 == countAfterAdding);
         Verify(countAfterAdding - 1 == countAfterRemoving);
@@ -58,7 +58,7 @@ public class TraceListenerManagerTests : TestContainer
 
         // Trying to write after closing textWriter should throw exception
         void ShouldThrowException() => writer.WriteLine("Try to write something");
-        var ex = VerifyThrows(ShouldThrowException);
+        Exception ex = VerifyThrows(ShouldThrowException);
         Verify(ex is ObjectDisposedException);
     }
 }

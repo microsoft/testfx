@@ -60,7 +60,7 @@ public class TestAsset : IDisposable
 
     public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, bool addDefaultNuGetConfigFile = true, bool addPublicFeeds = false)
     {
-        var testAsset = new TestAsset(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNuGetConfig(addPublicFeeds)) : code);
+        TestAsset testAsset = new(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNuGetConfig(addPublicFeeds)) : code);
         string[] splitFiles = testAsset._assetCode.Split(new string[] { FileTag }, StringSplitOptions.RemoveEmptyEntries);
         foreach (string fileContent in splitFiles)
         {
@@ -80,6 +80,17 @@ public class TestAsset : IDisposable
             """
             : string.Empty;
 
+        string publicFeedsMapping = addPublicFeeds
+            ? """
+            <packageSource key="nuget.org">
+                <package pattern="*" />
+            </packageSource>
+            <packageSource key="test-tools">
+                <package pattern="*" />
+            </packageSource>
+            """
+            : string.Empty;
+
         string defaultNuGetConfig = $"""
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
@@ -95,6 +106,7 @@ public class TestAsset : IDisposable
         <add key="globalPackagesFolder" value=".packages" />
     </config>
     <packageSourceMapping>
+        {publicFeedsMapping}
         <packageSource key="local-nonshipping">
             <package pattern="*" />
         </packageSource>

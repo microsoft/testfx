@@ -48,6 +48,5 @@ public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHa
         return Task.CompletedTask;
     }
 
-    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
-        => Task.CompletedTask;
+    public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => Task.CompletedTask;
 }

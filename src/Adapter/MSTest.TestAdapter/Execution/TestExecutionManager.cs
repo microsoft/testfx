@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
@@ -76,7 +76,7 @@ public class TestExecutionManager
 
         _cancellationToken = runCancellationToken;
 
-        var isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
+        bool isDeploymentDone = PlatformServiceProvider.Instance.TestDeployment.Deploy(tests, runContext, frameworkHandle);
 
         // Placing this after deployment since we need information post deployment that we pass in as properties.
         CacheSessionParameters(runContext, frameworkHandle);
@@ -99,7 +99,7 @@ public class TestExecutionManager
         var tests = new List<TestCase>();
 
         // deploy everything first.
-        foreach (var source in sources)
+        foreach (string source in sources)
         {
             if (_cancellationToken.Canceled)
             {
@@ -149,15 +149,12 @@ public class TestExecutionManager
         }
     }
 
-    internal virtual UnitTestDiscoverer GetUnitTestDiscoverer()
-    {
-        return new();
-    }
+    internal virtual UnitTestDiscoverer GetUnitTestDiscoverer() => new();
 
     internal void SendTestResults(TestCase test, IEnumerable<UnitTestResult> unitTestResults, DateTimeOffset startTime, DateTimeOffset endTime,
         ITestExecutionRecorder testExecutionRecorder)
     {
-        foreach (var unitTestResult in unitTestResults)
+        foreach (UnitTestResult unitTestResult in unitTestResults)
         {
             if (test == null)
             {
@@ -227,7 +224,7 @@ public class TestExecutionManager
             source = Path.Combine(PlatformServiceProvider.Instance.TestDeployment.GetDeploymentDirectory()!, Path.GetFileName(source));
         }
 
-        using var isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
+        using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(source, runContext?.RunSettings, frameworkHandle);
 
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
@@ -237,7 +234,7 @@ public class TestExecutionManager
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
         // Default test set is filtered tests based on user provided filter criteria
-        var filterExpression = TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out var filterHasError);
+        ITestCaseFilterExpression? filterExpression = TestMethodFilter.GetFilterExpression(runContext, frameworkHandle, out bool filterHasError);
         if (filterHasError)
         {
             // Bail out without processing everything else below.
@@ -246,7 +243,7 @@ public class TestExecutionManager
 
         // this is done so that appropriate values of test context properties are set at source level
         // and are merged with session level parameters
-        var sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
+        IDictionary<string, object> sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
 
         if (_sessionParameters != null && _sessionParameters.Count > 0)
         {
@@ -266,10 +263,10 @@ public class TestExecutionManager
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Could not create TestAssemblySettingsProvider instance in child app-domain", ex);
         }
 
-        var sourceSettings = (sourceSettingsProvider != null) ? TestAssemblySettingsProvider.GetSettings(source) : new TestAssemblySettings();
-        var parallelWorkers = sourceSettings.Workers;
-        var parallelScope = sourceSettings.Scope;
-        var testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, TestMethodFilter)).ToArray();
+        TestAssemblySettings sourceSettings = (sourceSettingsProvider != null) ? TestAssemblySettingsProvider.GetSettings(source) : new TestAssemblySettings();
+        int parallelWorkers = sourceSettings.Workers;
+        ExecutionScope parallelScope = sourceSettings.Scope;
+        TestCase[] testsToRun = tests.Where(t => MatchTestFilter(filterExpression, t, TestMethodFilter)).ToArray();
         InitializeClassCleanupManager(source, testRunner, testsToRun, sourceSettings);
 
         if (MSTestSettings.CurrentSettings.ParallelizationWorkers.HasValue)
@@ -298,8 +295,8 @@ public class TestExecutionManager
             // Parallel and not parallel sets.
             testSets = testsToRun.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, false));
 
-            var parallelizableTestSet = testSets.FirstOrDefault(g => !g.Key);
-            var nonParallelizableTestSet = testSets.FirstOrDefault(g => g.Key);
+            IGrouping<bool, TestCase>? parallelizableTestSet = testSets.FirstOrDefault(g => !g.Key);
+            IGrouping<bool, TestCase>? nonParallelizableTestSet = testSets.FirstOrDefault(g => g.Key);
 
             if (parallelizableTestSet != null)
             {
@@ -362,7 +359,7 @@ public class TestExecutionManager
         try
         {
             // We need the call to ToArray as the test runner is serializable
-            var unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
+            UnitTestElement[] unitTestElements = testsToRun.Select(e => e.ToUnitTestElement(source)).ToArray();
             testRunner.InitializeClassCleanupManager(unitTestElements, (int)sourceSettings.ClassCleanupLifecycle);
         }
         catch (Exception ex)
@@ -382,7 +379,7 @@ public class TestExecutionManager
         IDictionary<string, object> sourceLevelParameters,
         UnitTestRunner testRunner)
     {
-        foreach (var currentTest in tests)
+        foreach (TestCase currentTest in tests)
         {
             if (_cancellationToken != null && _cancellationToken.Canceled)
             {
@@ -393,18 +390,18 @@ public class TestExecutionManager
 
             testExecutionRecorder.RecordStart(currentTest);
 
-            var startTime = DateTimeOffset.Now;
+            DateTimeOffset startTime = DateTimeOffset.Now;
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
 
             // Run single test passing test context properties to it.
-            var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
-            var testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
-            var unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
+            IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
+            Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
+            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 
-            var endTime = DateTimeOffset.Now;
+            DateTimeOffset endTime = DateTimeOffset.Now;
 
             SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
         }
@@ -423,13 +420,13 @@ public class TestExecutionManager
         var testContextProperties = new Dictionary<string, object?>();
 
         // Add tcm properties.
-        foreach (var propertyPair in tcmProperties)
+        foreach (KeyValuePair<TestProperty, object?> propertyPair in tcmProperties)
         {
             testContextProperties[propertyPair.Key.Id] = propertyPair.Value;
         }
 
         // Add source level parameters.
-        foreach (var propertyPair in sourceLevelParameters)
+        foreach (KeyValuePair<string, object> propertyPair in sourceLevelParameters)
         {
             testContextProperties[propertyPair.Key] = propertyPair.Value;
         }
@@ -447,13 +444,13 @@ public class TestExecutionManager
 
         try
         {
-            var testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
+            Dictionary<string, object> testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
             if (testRunParameters != null)
             {
                 // Clear sessionParameters to prevent key collisions of test run parameters in case
                 // "Keep Test Execution Engine Alive" is selected in VS.
                 _sessionParameters.Clear();
-                foreach (var kvp in testRunParameters)
+                foreach (KeyValuePair<string, object> kvp in testRunParameters)
                 {
                     _sessionParameters.Add(kvp);
                 }

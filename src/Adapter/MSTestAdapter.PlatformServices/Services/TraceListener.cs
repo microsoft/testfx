@@ -63,12 +63,11 @@ public class TraceListenerWrapper :
     /// Gets the text writer of System.Diagnostics.TextWriterTraceListener.Writer
     /// that receives the tracing or debugging output.
     /// </summary>
-    public TextWriter? GetWriter()
-    {
+    public TextWriter? GetWriter() =>
 #if !WINDOWS_UWP && !WIN_UI
-        return Writer;
+        Writer;
 #else
-        return null;
+        null;
 #endif
-    }
+
 }
