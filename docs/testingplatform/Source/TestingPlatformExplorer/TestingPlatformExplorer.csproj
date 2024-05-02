@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,11 +6,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RootNamespace>TestingPlatformExplorer</RootNamespace>
+    <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Update to the last version if needed -->
     <PackageReference Include="Microsoft.Testing.Platform" Version="1.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="TestingPlatformExplorer.testingplatformconfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

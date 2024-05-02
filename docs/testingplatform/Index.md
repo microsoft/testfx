@@ -10,10 +10,13 @@
     1. [Available requests](irequest.md)
         1. [Well known TestNodeUpdateMessage.TestNode properties](testnodeupdatemessage.md)
 1. [Capabilities](capabilities.md)
+1. Extensions
+    1. [ICommandLineOptionsProvider](icommandlineoptionsprovider.md)
 1. Services
     1. [IServiceProvider](iserviceprovider.md)
     1. [IConfiguration](configuration.md)
     1. [ILoggerFactory](iloggerfactory.md)
-    1. [ICommandLineOptions](icommandlineoptions.md)
     1. [IMessageBus](imessagebus.md)
+    1. [ICommandLineOptions](icommandlineoptions.md)
+    1. [IOutputDevice](ioutputdevice.md)
 1. [Code sample](codesample.md)
