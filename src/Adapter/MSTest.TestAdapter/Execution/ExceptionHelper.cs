@@ -198,7 +198,7 @@ internal static class ExceptionHelper
             return CreateStackTraceInformation(ex.InnerException, checkInnerExceptions, stackTraceString);
         }
 
-        var stackTrace = TrimStackTrace(stackTraceString);
+        string stackTrace = TrimStackTrace(stackTraceString);
 
         return !StringEx.IsNullOrEmpty(stackTrace) ? new StackTraceInformation(stackTrace, null, 0, 0) : null;
     }
@@ -214,7 +214,7 @@ internal static class ExceptionHelper
     /// </returns>
     internal static bool HasReferenceToUTF(string stackFrame)
     {
-        foreach (var type in TypesToBeExcluded)
+        foreach (string type in TypesToBeExcluded)
         {
             if (stackFrame.IndexOf(type, StringComparison.Ordinal) > -1)
             {

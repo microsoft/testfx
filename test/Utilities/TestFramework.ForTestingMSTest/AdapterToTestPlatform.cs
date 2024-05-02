@@ -30,16 +30,13 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
             }
         }
 
-        foreach (var testCase in DiscoverTests(sources, logger))
+        foreach (TestCase testCase in DiscoverTests(sources, logger))
         {
             discoverySink.SendTestCase(testCase);
         }
     }
 
-    public void Cancel()
-    {
-        _testRunCancellationTokenSource?.Cancel();
-    }
+    public void Cancel() => _testRunCancellationTokenSource?.Cancel();
 
     public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
     {
@@ -61,14 +58,14 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
 
         // TODO: Group by assembly/type or use some dictionary for quick lookup.
         // TODO: Run in parallel?
-        foreach (var testCase in tests)
+        foreach (TestCase testCase in tests)
         {
             try
             {
                 var testResult = new TestResult(testCase);
                 _testRunCancellationTokenSource.Token.ThrowIfCancellationRequested();
-                if (!TryFindMethodsToRun(testCase, frameworkHandle, out var testContainerType, out var setupMethod,
-                    out var teardownMethod, out var testMethod))
+                if (!TryFindMethodsToRun(testCase, frameworkHandle, out TypeInfo? testContainerType, out ConstructorInfo? setupMethod,
+                    out MethodInfo? teardownMethod, out MethodInfo? testMethod))
                 {
                     testResult.Outcome = TestOutcome.NotFound;
                     frameworkHandle?.RecordResult(testResult);
@@ -78,7 +75,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
                 _testRunCancellationTokenSource.Token.ThrowIfCancellationRequested();
                 frameworkHandle?.RecordStart(testCase);
                 if (TryRunTestSetup(setupMethod, testCase.DisplayName, testContainerType.FullName, testResult, frameworkHandle,
-                    out var testClassInstance))
+                    out object? testClassInstance))
                 {
                     // Only run test if test setup was successful.
                     TryRunTestAsync(testMethod, testClassInstance, testCase.DisplayName, testResult, frameworkHandle)
@@ -117,7 +114,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
             }
         }
 
-        var testCases = DiscoverTests(sources, frameworkHandle);
+        IEnumerable<TestCase> testCases = DiscoverTests(sources, frameworkHandle);
         RunTests(testCases, runContext, frameworkHandle);
     }
 
@@ -162,27 +159,27 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
         }
 
         // TODO: Discover in parallel?
-        foreach (var assemblyName in assemblies)
+        foreach (string assemblyName in assemblies)
         {
             LogMessage(logger, TestMessageLevel.Informational, $"Discovering tests in assembly '{assemblyName}'");
 
             var assembly = Assembly.LoadFrom(assemblyName);
-            var assemblyTestContainerTypes = assembly.DefinedTypes.Where(typeInfo =>
+            IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(typeInfo =>
                 IsTestContainer(typeInfo));
 
             // TODO: Fail if no container?
-            foreach (var testContainerType in assemblyTestContainerTypes)
+            foreach (TypeInfo? testContainerType in assemblyTestContainerTypes)
             {
                 LogMessage(logger, TestMessageLevel.Informational,
                     $"Discovering tests for container '{testContainerType.FullName}'");
 
-                var testContainerPublicMethods = testContainerType.DeclaredMethods.Where(memberInfo =>
+                IEnumerable<MethodInfo> testContainerPublicMethods = testContainerType.DeclaredMethods.Where(memberInfo =>
                     memberInfo.IsPublic
                     && (memberInfo.ReturnType == typeof(void) || memberInfo.ReturnType == typeof(Task))
                     && memberInfo.GetParameters().Length == 0);
 
                 // TODO: Fail if no public method?
-                foreach (var publicMethod in testContainerPublicMethods)
+                foreach (MethodInfo? publicMethod in testContainerPublicMethods)
                 {
                     LogMessage(logger, TestMessageLevel.Informational, $"Found test '{publicMethod.Name}'");
                     yield return new(MakeFullyQualifiedName(testContainerType, publicMethod), new(Constants.ExecutorUri), assemblyName);
@@ -210,7 +207,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
                 ctorInfo.IsPublic
                 && ctorInfo.GetParameters().Length == 0);
             teardownMethod = testContainerType.BaseType.GetMethod("Dispose");
-            var type = testContainerType;
+            TypeInfo type = testContainerType;
             testMethod = testContainerType.DeclaredMethods.Single(methodInfo =>
                 string.Equals(MakeFullyQualifiedName(type, methodInfo), testCase.FullyQualifiedName, StringComparison.Ordinal));
 
@@ -243,7 +240,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
         }
         catch (Exception ex)
         {
-            var realException = ex.InnerException ?? ex;
+            Exception realException = ex.InnerException ?? ex;
             LogMessage(logger, TestMessageLevel.Error, $"Error during test setup: {realException}");
             testResult.Outcome = TestOutcome.Failed;
             testResult.ErrorMessage = $"Error during test setup: {realException.Message}";
@@ -269,7 +266,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
         }
         catch (Exception ex)
         {
-            var realException = ex.InnerException ?? ex;
+            Exception realException = ex.InnerException ?? ex;
             LogMessage(logger, TestMessageLevel.Error, $"Error during test: {realException}");
             testResult.Outcome = TestOutcome.Failed;
             testResult.ErrorMessage = $"Error during test: {realException.Message}";
@@ -295,7 +292,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
         }
         catch (Exception ex)
         {
-            var realException = ex.InnerException ?? ex;
+            Exception realException = ex.InnerException ?? ex;
             LogMessage(logger, TestMessageLevel.Error, $"Error during test teardown: {realException}");
             testResult.Outcome = TestOutcome.Failed;
 

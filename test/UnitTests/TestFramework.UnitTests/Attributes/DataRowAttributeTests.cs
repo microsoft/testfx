@@ -77,13 +77,13 @@ public class DataRowAttributeTests : TestContainer
         var dataRowAttribute = new DataRowAttribute(null);
 
         var dummyTestClass = new DummyTestClass();
-        var testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
+        MethodInfo testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
 
-        var data = new string[] { "First", "Second", null };
-        var data1 = new string[] { null, "First", "Second" };
-        var data2 = new string[] { "First", null, "Second" };
+        string[] data = new string[] { "First", "Second", null };
+        string[] data1 = new string[] { null, "First", "Second" };
+        string[] data2 = new string[] { "First", null, "Second" };
 
-        var displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
+        string displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
         Verify(displayName == "DataRowTestMethod (First,Second,)");
 
         displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data1);
@@ -101,11 +101,11 @@ public class DataRowAttributeTests : TestContainer
         };
 
         var dummyTestClass = new DummyTestClass();
-        var testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
+        MethodInfo testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
 
-        var data = new string[] { "First", "Second", null };
+        string[] data = new string[] { "First", "Second", null };
 
-        var displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
+        string displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
         Verify(displayName == "DataRowTestWithDisplayName");
     }
 
@@ -117,7 +117,7 @@ public class DataRowAttributeTests : TestContainer
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
-        var displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "MyMethod (System.String[])");
@@ -130,7 +130,7 @@ public class DataRowAttributeTests : TestContainer
         var methodInfoMock = new Mock<MethodInfo>();
 
         // Act
-        var displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "Overridden DisplayName");
@@ -144,7 +144,7 @@ public class DataRowAttributeTests : TestContainer
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
-        var displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "MyMethod (System.String[])");
@@ -158,7 +158,7 @@ public class DataRowAttributeTests : TestContainer
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
-        var displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "MyMethod (System.String[],System.String[])");
@@ -172,7 +172,7 @@ public class DataRowAttributeTests : TestContainer
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
         // Act
-        var displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
         Verify(displayName == "MyMethod (System.String[],System.String[])");
@@ -185,9 +185,6 @@ public class DataRowAttributeTests : TestContainer
         {
         }
 
-        public override string GetDisplayName(MethodInfo methodInfo, object[] data)
-        {
-            return "Overridden DisplayName";
-        }
+        public override string GetDisplayName(MethodInfo methodInfo, object[] data) => "Overridden DisplayName";
     }
 }

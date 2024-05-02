@@ -33,14 +33,14 @@ public class TcmTestPropertiesProviderTests : TestContainer
 
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIsNull()
     {
-        var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(null);
+        IDictionary<TestProperty, object> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(null);
         Verify(tcmProperties.Count == 0);
     }
 
     public void GetTcmPropertiesShouldReturnEmptyDictionaryIfTestCaseIdIsZero()
     {
         var testCase = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
-        var propertiesValue = new object[]
+        object[] propertiesValue = new object[]
         {
             32, 534, 5, "sample build directory", "sample build flavor",
             "132456", "sample build platform", "http://sampleBuildUri/",
@@ -49,14 +49,14 @@ public class TcmTestPropertiesProviderTests : TestContainer
         };
         SetTestCaseProperties(testCase, propertiesValue);
 
-        var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
+        IDictionary<TestProperty, object> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
         Verify(tcmProperties.Count == 0);
     }
 
     public void GetTcmPropertiesShouldGetAllPropertiesFromTestCase()
     {
         var testCase = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
-        var propertiesValue = new object[]
+        object[] propertiesValue = new object[]
         {
             32, 534, 5, "sample build directory", "sample build flavor",
             "132456", "sample build platform", "http://sampleBuildUri/",
@@ -65,7 +65,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
         };
         SetTestCaseProperties(testCase, propertiesValue);
 
-        var tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
+        IDictionary<TestProperty, object> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(testCase);
 
         VerifyTcmProperties(tcmProperties, testCase);
     }
@@ -74,7 +74,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
     {
         // Verify 1st call.
         var testCase1 = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
-        var propertiesValue1 = new object[]
+        object[] propertiesValue1 = new object[]
         {
             32, 534, 5, "sample build directory", "sample build flavor",
             "132456", "sample build platform", "http://sampleBuildUri/",
@@ -82,12 +82,12 @@ public class TcmTestPropertiesProviderTests : TestContainer
             1401, 54, "sample configuration name", 345,
         };
         SetTestCaseProperties(testCase1, propertiesValue1);
-        var tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
+        IDictionary<TestProperty, object> tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
         VerifyTcmProperties(tcmProperties1, testCase1);
 
         // Verify 2nd call.
         var testCase2 = new TestCase("PassingTestFomTestCase2", new Uri("http://sampleUri2/"), "unittestproject2.dll");
-        var propertiesValue2 = new object[]
+        object[] propertiesValue2 = new object[]
         {
             33, 535, 6, "sample build directory 2", "sample build flavor 2",
             "132457", "sample build platform 2", "http://sampleBuildUri2/",
@@ -95,7 +95,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
             1403, 55, "sample configuration name 2", 346,
         };
         SetTestCaseProperties(testCase2, propertiesValue2);
-        var tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
+        IDictionary<TestProperty, object> tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
         VerifyTcmProperties(tcmProperties2, testCase2);
     }
 
@@ -103,7 +103,7 @@ public class TcmTestPropertiesProviderTests : TestContainer
     {
         // Verify 1st call.
         var testCase1 = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
-        var propertiesValue1 = new object[]
+        object[] propertiesValue1 = new object[]
         {
             32, 534, 5, "sample build directory", "sample build flavor",
             "132456", "sample build platform", "http://sampleBuildUri/",
@@ -111,12 +111,12 @@ public class TcmTestPropertiesProviderTests : TestContainer
             1401, 54, "sample configuration name", 345,
         };
         SetTestCaseProperties(testCase1, propertiesValue1);
-        var tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
+        IDictionary<TestProperty, object> tcmProperties1 = TcmTestPropertiesProvider.GetTcmProperties(testCase1);
         VerifyTcmProperties(tcmProperties1, testCase1);
 
         // Verify 2nd call.
         var testCase2 = new TestCase("PassingTestFomTestCase", new Uri("http://sampleUri/"), "unittestproject1.dll");
-        var propertiesValue2 = new object[]
+        object[] propertiesValue2 = new object[]
         {
             33, 535, 6, "sample build directory 2", "sample build flavor 2",
             "132457", "sample build platform 2", "http://sampleBuildUri2/",
@@ -124,12 +124,12 @@ public class TcmTestPropertiesProviderTests : TestContainer
             1403, 55, "sample configuration name 2", 346,
         };
         SetTestCaseProperties(testCase2, propertiesValue2);
-        var tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
+        IDictionary<TestProperty, object> tcmProperties2 = TcmTestPropertiesProvider.GetTcmProperties(testCase2);
         VerifyTcmProperties(tcmProperties2, testCase2);
 
         // Verify 3rd call.
         var testCase3 = new TestCase("PassingTestFomTestCase2", new Uri("http://sampleUri/"), "unittestproject2.dll");
-        var propertiesValue3 = new object[]
+        object[] propertiesValue3 = new object[]
         {
             34, 536, 7, "sample build directory 3", "sample build flavor 3",
             "132458", "sample build platform 3", "http://sampleBuildUri3/",
@@ -137,26 +137,26 @@ public class TcmTestPropertiesProviderTests : TestContainer
             1404, 55, "sample configuration name 3", 347,
         };
         SetTestCaseProperties(testCase3, propertiesValue3);
-        var tcmProperties3 = TcmTestPropertiesProvider.GetTcmProperties(testCase3);
+        IDictionary<TestProperty, object> tcmProperties3 = TcmTestPropertiesProvider.GetTcmProperties(testCase3);
         VerifyTcmProperties(tcmProperties3, testCase3);
     }
 
     private void SetTestCaseProperties(TestCase testCase, object[] propertiesValue)
     {
-        var tcmKnownPropertiesEnumerator = _tcmKnownProperties.GetEnumerator();
+        System.Collections.IEnumerator tcmKnownPropertiesEnumerator = _tcmKnownProperties.GetEnumerator();
 
-        var propertiesValueEnumerator = propertiesValue.GetEnumerator();
+        System.Collections.IEnumerator propertiesValueEnumerator = propertiesValue.GetEnumerator();
         while (tcmKnownPropertiesEnumerator.MoveNext() && propertiesValueEnumerator.MoveNext())
         {
-            var property = tcmKnownPropertiesEnumerator.Current;
-            var value = propertiesValueEnumerator.Current;
+            object property = tcmKnownPropertiesEnumerator.Current;
+            object value = propertiesValueEnumerator.Current;
             testCase.SetPropertyValue(property as TestProperty, value);
         }
     }
 
     private void VerifyTcmProperties(IDictionary<TestProperty, object> tcmProperties, TestCase testCase)
     {
-        foreach (var property in _tcmKnownProperties)
+        foreach (TestProperty property in _tcmKnownProperties)
         {
             Verify(testCase.GetPropertyValue(property).Equals(tcmProperties[property]));
         }

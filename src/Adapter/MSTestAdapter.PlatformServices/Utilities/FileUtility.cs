@@ -181,10 +181,7 @@ internal class FileUtility
         return null;
     }
 
-    public virtual List<string> AddFilesFromDirectory(string directoryPath, bool ignoreIOExceptions)
-    {
-        return AddFilesFromDirectory(directoryPath, null, ignoreIOExceptions);
-    }
+    public virtual List<string> AddFilesFromDirectory(string directoryPath, bool ignoreIOExceptions) => AddFilesFromDirectory(directoryPath, null, ignoreIOExceptions);
 
     public virtual List<string> AddFilesFromDirectory(string directoryPath, Func<string, bool>? ignoreDirectory, bool ignoreIOExceptions)
     {
@@ -192,7 +189,7 @@ internal class FileUtility
 
         try
         {
-            var files = GetFilesInADirectory(directoryPath);
+            string[] files = GetFilesInADirectory(directoryPath);
             fileContents.AddRange(files);
         }
         catch (IOException)
@@ -203,14 +200,14 @@ internal class FileUtility
             }
         }
 
-        foreach (var subDirectoryPath in GetDirectoriesInADirectory(directoryPath))
+        foreach (string subDirectoryPath in GetDirectoriesInADirectory(directoryPath))
         {
             if (ignoreDirectory != null && ignoreDirectory(subDirectoryPath))
             {
                 continue;
             }
 
-            var subDirectoryContents = AddFilesFromDirectory(subDirectoryPath, ignoreDirectory, true);
+            List<string> subDirectoryContents = AddFilesFromDirectory(subDirectoryPath, ignoreDirectory, true);
             if (subDirectoryContents?.Count > 0)
             {
                 fileContents.AddRange(subDirectoryContents);
@@ -252,30 +249,15 @@ internal class FileUtility
         }
     }
 
-    public virtual bool DoesDirectoryExist(string deploymentDirectory)
-    {
-        return Directory.Exists(deploymentDirectory);
-    }
+    public virtual bool DoesDirectoryExist(string deploymentDirectory) => Directory.Exists(deploymentDirectory);
 
-    public virtual bool DoesFileExist(string testSource)
-    {
-        return File.Exists(testSource);
-    }
+    public virtual bool DoesFileExist(string testSource) => File.Exists(testSource);
 
-    public virtual void SetAttributes(string path, FileAttributes fileAttributes)
-    {
-        File.SetAttributes(path, fileAttributes);
-    }
+    public virtual void SetAttributes(string path, FileAttributes fileAttributes) => File.SetAttributes(path, fileAttributes);
 
-    public virtual string[] GetFilesInADirectory(string directoryPath)
-    {
-        return Directory.GetFiles(directoryPath);
-    }
+    public virtual string[] GetFilesInADirectory(string directoryPath) => Directory.GetFiles(directoryPath);
 
-    public virtual string[] GetDirectoriesInADirectory(string directoryPath)
-    {
-        return Directory.GetDirectories(directoryPath);
-    }
+    public virtual string[] GetDirectoriesInADirectory(string directoryPath) => Directory.GetDirectories(directoryPath);
 
     /// <summary>
     /// Returns either PDB file name from inside compiled binary or null if this cannot be done.

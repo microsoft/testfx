@@ -28,7 +28,7 @@ internal sealed class TestableReflectHelper : ReflectHelper
 
     public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
     {
-        var hashCode = type.FullName.GetHashCode() + memberTypes.GetHashCode();
+        int hashCode = type.FullName.GetHashCode() + memberTypes.GetHashCode();
         _customAttributes[hashCode] = _customAttributes.TryGetValue(hashCode, out Attribute[] value)
             ? value.Concat(values).ToArray()
             : values;
@@ -36,7 +36,7 @@ internal sealed class TestableReflectHelper : ReflectHelper
 
     internal override TAttribute[] GetCustomAttributeForAssembly<TAttribute>(MemberInfo memberInfo)
     {
-        var hashCode = MemberTypes.All.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
+        int hashCode = MemberTypes.All.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
 
         return _customAttributes.TryGetValue(hashCode, out Attribute[] value)
             ? value.OfType<TAttribute>().ToArray()
@@ -45,7 +45,7 @@ internal sealed class TestableReflectHelper : ReflectHelper
 
     internal override TAttribute[] GetCustomAttributes<TAttribute>(MemberInfo memberInfo)
     {
-        var hashCode = memberInfo.MemberType.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
+        int hashCode = memberInfo.MemberType.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
 
         return _customAttributes.TryGetValue(hashCode, out Attribute[] value)
             ? value.OfType<TAttribute>().ToArray()

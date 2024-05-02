@@ -234,7 +234,7 @@ public class MSTestSettings
             return;
         }
 
-        var aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias);
+        MSTestSettings? aliasSettings = GetSettings(context.RunSettings.SettingsXml, SettingsNameAlias);
 
         // If a user specifies MSTestV2 in the runsettings, then prefer that over the v1 settings.
         if (aliasSettings != null)
@@ -243,7 +243,7 @@ public class MSTestSettings
         }
         else
         {
-            var settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
+            MSTestSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
 
             CurrentSettings = settings ?? new MSTestSettings();
         }
@@ -281,7 +281,7 @@ public class MSTestSettings
         }
 
         using var stringReader = new StringReader(runSettingsXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
 
         // read to the fist child
         XmlReaderUtilities.ReadToRootNode(reader);
@@ -381,7 +381,7 @@ public class MSTestSettings
 
                     case "CLASSCLEANUPLIFECYCLE":
                         {
-                            var value = reader.ReadInnerXml();
+                            string value = reader.ReadInnerXml();
                             settings.ClassCleanupLifecycle = TryParseEnum(value, out ClassCleanupBehavior lifecycle)
                                 ? (ClassCleanupBehavior?)lifecycle
                                 : throw new AdapterSettingsException(
@@ -563,7 +563,7 @@ public class MSTestSettings
                 {
                     case "WORKERS":
                         {
-                            var value = reader.ReadInnerXml();
+                            string value = reader.ReadInnerXml();
                             settings.ParallelizationWorkers = int.TryParse(value, out int parallelWorkers)
                                 ? parallelWorkers == 0
                                     ? Environment.ProcessorCount
@@ -584,7 +584,7 @@ public class MSTestSettings
 
                     case "SCOPE":
                         {
-                            var value = reader.ReadInnerXml();
+                            string value = reader.ReadInnerXml();
                             settings.ParallelizationScope = TryParseEnum(value, out ExecutionScope scope)
                                 ? (ExecutionScope?)scope
                                 : throw new AdapterSettingsException(
@@ -623,21 +623,18 @@ public class MSTestSettings
     }
 
     private static bool TryParseEnum<T>(string value, out T result)
-        where T : struct, Enum
-    {
-        return Enum.TryParse(value, true, out result) && Enum.IsDefined(typeof(T), result);
-    }
+        where T : struct, Enum => Enum.TryParse(value, true, out result) && Enum.IsDefined(typeof(T), result);
 
     private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings)
     {
-        var runConfigElement = XDocument.Parse(runsettingsXml)?.Element("RunSettings")?.Element("RunConfiguration");
+        XElement? runConfigElement = XDocument.Parse(runsettingsXml)?.Element("RunSettings")?.Element("RunConfiguration");
 
         if (runConfigElement == null)
         {
             return;
         }
 
-        var disableParallelizationString = runConfigElement.Element("DisableParallelization")?.Value;
+        string? disableParallelizationString = runConfigElement.Element("DisableParallelization")?.Value;
         if (bool.TryParse(disableParallelizationString, out bool disableParallelization))
         {
             settings.DisableParallelization = disableParallelization;

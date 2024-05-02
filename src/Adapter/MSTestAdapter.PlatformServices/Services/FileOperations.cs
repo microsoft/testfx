@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -44,11 +44,12 @@ public class FileOperations : IFileOperations
             return Assembly.LoadFrom(assemblyName);
         }
 #endif
-        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
+        string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
         return Assembly.Load(new AssemblyName(fileNameWithoutExtension));
 #elif NETFRAMEWORK
-
+#pragma warning disable IDE0022 // Use expression body for method
         return isReflectionOnly ? Assembly.ReflectionOnlyLoadFrom(assemblyName) : Assembly.LoadFrom(assemblyName);
+#pragma warning restore IDE0022 // Use expression body for method
 #endif
     }
 
@@ -58,13 +59,11 @@ public class FileOperations : IFileOperations
     /// <param name="assembly">The assembly.</param>
     /// <returns>Path to the .DLL of the assembly.</returns>
     public string? GetAssemblyPath(Assembly assembly)
-    {
 #if NETSTANDARD || NETCOREAPP || NETFRAMEWORK
-        return assembly.Location;
+        => assembly.Location;
 #elif WINDOWS_UWP
-        return null; // TODO: what are the options here?
+        => null; // TODO: what are the options here?
 #endif
-    }
 
     /// <summary>
     /// Verifies if file exists in context.
@@ -81,12 +80,12 @@ public class FileOperations : IFileOperations
 #elif NETFRAMEWORK
         return (SafeInvoke(() => File.Exists(assemblyFileName)) as bool?) ?? false;
 #elif WINDOWS_UWP
-        var fileExists = false;
+        bool fileExists = false;
 
         try
         {
-            var fileNameWithoutPath = Path.GetFileName(assemblyFileName);
-            var searchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFileAsync(fileNameWithoutPath).AsTask();
+            string fileNameWithoutPath = Path.GetFileName(assemblyFileName);
+            Task<Windows.Storage.StorageFile> searchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFileAsync(fileNameWithoutPath).AsTask();
             searchTask.Wait();
             fileExists = searchTask.Result != null;
         }
@@ -97,7 +96,7 @@ public class FileOperations : IFileOperations
 
         return fileExists;
 #elif WIN_UI
-        var path = GetFullFilePath(assemblyFileName);
+        string path = GetFullFilePath(assemblyFileName);
         return File.Exists(path);
 #endif
     }
@@ -113,7 +112,7 @@ public class FileOperations : IFileOperations
 #if NETSTANDARD || (NETCOREAPP && !WIN_UI) || WINDOWS_UWP || WIN_UI
         return DiaSessionOperations.CreateNavigationSession(source);
 #elif NETFRAMEWORK
-        var messageFormatOnException =
+        string messageFormatOnException =
             string.Join("MSTestDiscoverer:DiaSession: Could not create diaSession for source:", source, ". Reason:{0}");
         return SafeInvoke(() => new DiaSession(source), messageFormatOnException) as DiaSession;
 #endif
@@ -136,7 +135,7 @@ public class FileOperations : IFileOperations
         minLineNumber = -1;
 
         var diaSession = navigationSession as DiaSession;
-        var navigationData = diaSession?.GetNavigationData(className, methodName);
+        DiaNavigationData? navigationData = diaSession?.GetNavigationData(className, methodName);
 
         if (navigationData != null)
         {
@@ -171,7 +170,7 @@ public class FileOperations : IFileOperations
 #if NETSTANDARD || (NETCOREAPP && !WIN_UI) || WINDOWS_UWP
         return assemblyFileName;
 #elif WIN_UI
-        var packagePath = AppModel.GetCurrentPackagePath();
+        string? packagePath = AppModel.GetCurrentPackagePath();
         return packagePath == null ? assemblyFileName : Path.Combine(packagePath, assemblyFileName);
 #elif NETFRAMEWORK
 

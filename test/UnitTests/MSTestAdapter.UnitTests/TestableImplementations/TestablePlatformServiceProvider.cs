@@ -113,39 +113,18 @@ public class TestablePlatformServiceProvider : IPlatformServiceProvider
 
     public IThreadOperations ThreadOperations => MockThreadOperations.Object;
 
-    public IReflectionOperations ReflectionOperations
-    {
-        get
-        {
-            return MockReflectionOperations != null ? MockReflectionOperations.Object : (_reflectionOperations ??= new ReflectionOperations());
-        }
-    }
+    public IReflectionOperations ReflectionOperations => MockReflectionOperations != null ? MockReflectionOperations.Object : (_reflectionOperations ??= new ReflectionOperations());
 
     public ITestDataSource TestDataSource => MockTestDataSource.Object;
 
-    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties)
-    {
-        return new TestContextImplementation(testMethod, writer, properties);
-    }
+    public ITestContext GetTestContext(ITestMethod testMethod, StringWriter writer, IDictionary<string, object> properties) => new TestContextImplementation(testMethod, writer, properties);
 
-    public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle)
-    {
-        return MockTestSourceHost.Object;
-    }
+    public ITestSourceHost CreateTestSourceHost(string source, TestPlatform.ObjectModel.Adapter.IRunSettings runSettings, TestPlatform.ObjectModel.Adapter.IFrameworkHandle frameworkHandle) => MockTestSourceHost.Object;
 
-    public ITraceListener GetTraceListener(TextWriter textWriter)
-    {
-        return MockTraceListener.Object;
-    }
+    public ITraceListener GetTraceListener(TextWriter textWriter) => MockTraceListener.Object;
 
     [SuppressMessage("Naming", "CA1725:Parameter names should match base declaration", Justification = "Part of the public API")]
-    public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter)
-    {
-        return MockTraceListenerManager.Object;
-    }
+    public ITraceListenerManager GetTraceListenerManager(TextWriter standardOutputWriter, TextWriter standardErrorWriter) => MockTraceListenerManager.Object;
 
-    public void SetupMockReflectionOperations()
-    {
-        MockReflectionOperations = new Mock<IReflectionOperations>();
-    }
+    public void SetupMockReflectionOperations() => MockReflectionOperations = new Mock<IReflectionOperations>();
 }

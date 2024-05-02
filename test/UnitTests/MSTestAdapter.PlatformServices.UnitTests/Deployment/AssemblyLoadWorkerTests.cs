@@ -32,10 +32,10 @@ public class AssemblyLoadWorkerTests : TestContainer
         var worker = new AssemblyLoadWorker(mockAssemblyUtility.Object);
 
         // Act.
-        var dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out var warnings);
+        IReadOnlyCollection<string> dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out IList<string> warnings);
 
         // Assert.
-        var utfAssembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
+        string utfAssembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
         Verify(dependentAssemblies.Contains(utfAssembly));
     }
 
@@ -91,10 +91,10 @@ public class AssemblyLoadWorkerTests : TestContainer
         var worker = new AssemblyLoadWorker(mockAssemblyUtility.Object);
 
         // Act.
-        var dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out var warnings);
+        IReadOnlyCollection<string> dependentAssemblies = worker.GetFullPathToDependentAssemblies("C:\\temp\\test3424.dll", out IList<string> warnings);
 
         // Assert.
-        var utfAssembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
+        string utfAssembly = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll");
         Verify(dependentAssemblies.Contains(utfAssembly));
     }
 
@@ -114,51 +114,27 @@ public class AssemblyLoadWorkerTests : TestContainer
                 Name = string.Concat(assemblyName, ".dll");
             }
 
-            FullNameSetter = () => { return assemblyName; };
+            FullNameSetter = () => assemblyName;
         }
 
         public Func<AssemblyName[]> GetReferencedAssembliesSetter { get; set; }
 
         public Func<string> FullNameSetter { get; set; }
 
-        public override AssemblyName[] GetReferencedAssemblies()
-        {
-            return GetReferencedAssembliesSetter != null ? GetReferencedAssembliesSetter.Invoke() : Array.Empty<AssemblyName>();
-        }
+        public override AssemblyName[] GetReferencedAssemblies() => GetReferencedAssembliesSetter != null ? GetReferencedAssembliesSetter.Invoke() : Array.Empty<AssemblyName>();
 
         public string Name
         {
             get; set;
         }
 
-        public override string FullName
-        {
-            get
-            {
-                return FullNameSetter != null ? FullNameSetter.Invoke() : GetExecutingAssembly().FullName;
-            }
-        }
+        public override string FullName => FullNameSetter != null ? FullNameSetter.Invoke() : GetExecutingAssembly().FullName;
 
-        public override bool GlobalAssemblyCache
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public override bool GlobalAssemblyCache => false;
 
-        public override string Location
-        {
-            get
-            {
-                return Path.Combine(Path.GetDirectoryName(GetExecutingAssembly().Location), Name);
-            }
-        }
+        public override string Location => Path.Combine(Path.GetDirectoryName(GetExecutingAssembly().Location), Name);
 
-        public override Module[] GetModules(bool getResourceModules)
-        {
-            return Array.Empty<Module>();
-        }
+        public override Module[] GetModules(bool getResourceModules) => Array.Empty<Module>();
     }
 
     #endregion

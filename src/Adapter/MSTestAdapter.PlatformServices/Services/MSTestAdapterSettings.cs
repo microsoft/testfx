@@ -133,10 +133,10 @@ public class MSTestAdapterSettings
         }
 
         StringReader stringReader = new(settingsXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
 
         return reader.ReadToFollowing("DisableAppDomain")
-            && bool.TryParse(reader.ReadInnerXml(), out var disableAppDomain)
+            && bool.TryParse(reader.ReadInnerXml(), out bool disableAppDomain)
             && disableAppDomain;
     }
 
@@ -247,10 +247,7 @@ public class MSTestAdapterSettings
     /// <param name="path">path.</param>
     /// <returns>True if directory exists.</returns>
     /// <remarks>Only present for unit testing scenarios.</remarks>
-    protected virtual bool DoesDirectoryExist(string path)
-    {
-        return Directory.Exists(path);
-    }
+    protected virtual bool DoesDirectoryExist(string path) => Directory.Exists(path);
 
     /// <summary>
     /// Expands any environment variables in the path provided.
@@ -258,10 +255,7 @@ public class MSTestAdapterSettings
     /// <param name="path">path.</param>
     /// <returns>expanded string.</returns>
     /// <remarks>Only present for unit testing scenarios.</remarks>
-    protected virtual string ExpandEnvironmentVariables(string path)
-    {
-        return Environment.ExpandEnvironmentVariables(path);
-    }
+    protected virtual string ExpandEnvironmentVariables(string path) => Environment.ExpandEnvironmentVariables(path);
 
     private void ReadAssemblyResolutionPath(XmlReader reader)
     {
@@ -291,7 +285,7 @@ public class MSTestAdapterSettings
                     if (!StringEx.IsNullOrEmpty(path))
                     {
                         // Do we have to look in sub directory for dependent dll.
-                        var includeSubDirectories = string.Equals(recursiveAttribute, "true", StringComparison.OrdinalIgnoreCase);
+                        bool includeSubDirectories = string.Equals(recursiveAttribute, "true", StringComparison.OrdinalIgnoreCase);
                         SearchDirectories.Add(new RecursiveDirectoryPath(path, includeSubDirectories));
                     }
                 }

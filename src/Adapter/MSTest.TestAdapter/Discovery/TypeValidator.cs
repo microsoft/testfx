@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -61,7 +61,7 @@ internal class TypeValidator
         // inaccessible class
         if (!TypeHasValidAccessibility(typeInfo, _discoverInternals))
         {
-            var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
+            string warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorNonPublicTestClass, type.FullName);
             warnings.Add(warning);
             return false;
         }
@@ -70,7 +70,7 @@ internal class TypeValidator
         if (typeInfo.IsGenericTypeDefinition && !typeInfo.IsAbstract)
         {
             // In IDE generic classes that are not abstract are treated as not runnable. Keep consistence.
-            var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorTestClassIsGenericNonAbstract, type.FullName);
+            string warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorTestClassIsGenericNonAbstract, type.FullName);
             warnings.Add(warning);
             return false;
         }
@@ -78,7 +78,7 @@ internal class TypeValidator
         // Class is not valid if the testContext property is incorrect
         if (!HasCorrectTestContextSignature(type))
         {
-            var warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInValidTestContextSignature, type.FullName);
+            string warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInValidTestContextSignature, type.FullName);
             warnings.Add(warning);
             return false;
         }
@@ -103,10 +103,10 @@ internal class TypeValidator
     {
         DebugEx.Assert(type != null, "HasCorrectTestContextSignature type is null");
 
-        var propertyInfoEnumerable = type.GetTypeInfo().DeclaredProperties;
+        IEnumerable<PropertyInfo> propertyInfoEnumerable = type.GetTypeInfo().DeclaredProperties;
         var propertyInfo = new List<PropertyInfo>();
 
-        foreach (var pinfo in propertyInfoEnumerable)
+        foreach (PropertyInfo pinfo in propertyInfoEnumerable)
         {
             // PropertyType.FullName can be null if the property is a generic type.
             if (TestContextFullName.Equals(pinfo.PropertyType.FullName, StringComparison.Ordinal))
@@ -120,9 +120,9 @@ internal class TypeValidator
             return true;
         }
 
-        foreach (var pinfo in propertyInfo)
+        foreach (PropertyInfo pinfo in propertyInfo)
         {
-            var setInfo = pinfo.SetMethod;
+            MethodInfo? setInfo = pinfo.SetMethod;
             if (setInfo == null)
             {
                 // we have a getter, but not a setter.
@@ -168,7 +168,7 @@ internal class TypeValidator
         // FamilyORAssembly == protected internal,
         // Public == public.
         // So this reads IsNestedInternal || IsNestedPublic:
-        var isNestedPublicOrInternal = type.IsNestedAssembly || type.IsNestedPublic;
+        bool isNestedPublicOrInternal = type.IsNestedAssembly || type.IsNestedPublic;
 
         if (!isNestedPublicOrInternal)
         {
@@ -180,11 +180,11 @@ internal class TypeValidator
         // where some of the parent types is private (or other modifier that is not public and is not internal)
         // if we looked for just public types we could just look at IsVisible, but internal type nested in internal type
         // is not Visible, so we need to check all the parents and make sure they are all either public or internal.
-        var parentsArePublicOrInternal = true;
-        var declaringType = type.DeclaringType;
+        bool parentsArePublicOrInternal = true;
+        Type? declaringType = type.DeclaringType;
         while (declaringType != null && parentsArePublicOrInternal)
         {
-            var declaringTypeIsPublicOrInternal =
+            bool declaringTypeIsPublicOrInternal =
 
                 // Declaring type is non-nested type, and we are looking for internal or public, which are the only
                 // two valid options that non-nested type can be.

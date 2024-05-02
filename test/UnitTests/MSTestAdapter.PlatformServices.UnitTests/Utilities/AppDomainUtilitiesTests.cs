@@ -33,7 +33,7 @@ public class AppDomainUtilitiesTests : TestContainer
     public void SetConfigurationFileShouldSetOMRedirectionIfConfigFileIsPresent()
     {
         AppDomainSetup setup = new();
-        var configFile = @"C:\temp\foo.dll.config";
+        string configFile = @"C:\temp\foo.dll.config";
 
         // Setup mocks.
         _testableXmlUtilities.ConfigXml = @"<?xml version=""1.0"" encoding=""utf-8"" ?>
@@ -46,10 +46,10 @@ public class AppDomainUtilitiesTests : TestContainer
         Verify(configFile == setup.ConfigurationFile);
 
         // Assert Config Bytes.
-        var expectedRedir = "<dependentAssembly><assemblyIdentity name=\"Microsoft.VisualStudio.TestPlatform.ObjectModel\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"11.0.0.0\" newVersion=\"15.0.0.0\" />";
+        string expectedRedir = "<dependentAssembly><assemblyIdentity name=\"Microsoft.VisualStudio.TestPlatform.ObjectModel\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"11.0.0.0\" newVersion=\"15.0.0.0\" />";
 
-        var observedConfigBytes = setup.GetConfigurationBytes();
-        var observedXml = System.Text.Encoding.UTF8.GetString(observedConfigBytes);
+        byte[] observedConfigBytes = setup.GetConfigurationBytes();
+        string observedXml = System.Text.Encoding.UTF8.GetString(observedConfigBytes);
 
         Verify(observedXml.Replace("\r\n", string.Empty).Replace(" ", string.Empty).Contains(expectedRedir.Replace(" ", string.Empty)), "Config must have OM redirection");
     }
@@ -70,7 +70,7 @@ public class AppDomainUtilitiesTests : TestContainer
     {
         var expected = new Version();
 
-        var version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETPortable,Version=v4.5,Profile=Profile259");
+        Version version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETPortable,Version=v4.5,Profile=Profile259");
 
         Verify(expected.Major == version.Major);
         Verify(expected.Minor == version.Minor);
@@ -80,7 +80,7 @@ public class AppDomainUtilitiesTests : TestContainer
     {
         var expected = new Version("4.5");
 
-        var version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETFramework,Version=v4.5");
+        Version version = AppDomainUtilities.GetTargetFrameworkVersionFromVersionString(".NETFramework,Version=v4.5");
 
         Verify(expected.Major == version.Major);
         Verify(expected.Minor == version.Minor);

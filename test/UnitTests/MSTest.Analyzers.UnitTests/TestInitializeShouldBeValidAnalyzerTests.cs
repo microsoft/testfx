@@ -15,7 +15,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 {
     public async Task WhenTestInitializeIsPublic_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -33,7 +33,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
     public async Task WhenTestInitializeIsNotOrdinary_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -55,7 +55,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
     public async Task WhenTestInitializeIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: DiscoverInternals]
@@ -75,7 +75,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
     public async Task WhenTestInitializeIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: DiscoverInternals]
@@ -103,7 +103,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
     [Arguments("private")]
     public async Task WhenTestInitializeIsNotPublic_Diagnostic(string accessibility)
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -125,7 +125,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
     public async Task WhenTestInitializeIsAbstract_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -145,7 +145,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
     public async Task WhenTestInitializeIsGeneric_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -167,7 +167,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
     public async Task WhenTestInitializeIsStatic_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -189,7 +189,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
     public async Task WhenTestInitializeHasParameters_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -211,7 +211,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
     public async Task WhenTestInitializeReturnTypeIsNotValid_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 
@@ -262,7 +262,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
     public async Task WhenTestInitializeReturnTypeIsValid_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 
@@ -293,7 +293,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
     public async Task WhenTestInitializeIsAsyncVoid_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 

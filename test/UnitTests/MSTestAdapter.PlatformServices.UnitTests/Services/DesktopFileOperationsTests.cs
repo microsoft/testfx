@@ -20,26 +20,23 @@ public class DesktopFileOperationsTests : TestContainer
         _fileOperations = new FileOperations();
     }
 
-    public void CreateNavigationSessionShouldReturnNullIfSourceIsNull()
-    {
-        Verify(_fileOperations.CreateNavigationSession(null) is null);
-    }
+    public void CreateNavigationSessionShouldReturnNullIfSourceIsNull() => Verify(_fileOperations.CreateNavigationSession(null) is null);
 
     public void CreateNavigationSessionShouldReturnDiaSession()
     {
-        var diaSession = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
+        object diaSession = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
         Verify(diaSession is DiaSession);
     }
 
     public void GetNavigationDataShouldReturnDataFromNavigationSession()
     {
-        var diaSession = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
+        object diaSession = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
         _fileOperations.GetNavigationData(
             diaSession,
             typeof(DesktopFileOperationsTests).FullName,
             "GetNavigationDataShouldReturnDataFromNavigationSession",
-            out var minLineNumber,
-            out var fileName);
+            out int minLineNumber,
+            out string fileName);
 
         Verify(minLineNumber != -1);
         Verify(fileName is not null);
@@ -51,8 +48,8 @@ public class DesktopFileOperationsTests : TestContainer
             null,
             typeof(DesktopFileOperationsTests).FullName,
             "GetNavigationDataShouldReturnDataFromNavigationSession",
-            out var minLineNumber,
-            out var fileName);
+            out int minLineNumber,
+            out string fileName);
 
         Verify(minLineNumber == -1);
         Verify(fileName is null);
@@ -60,7 +57,7 @@ public class DesktopFileOperationsTests : TestContainer
 
     public void DisposeNavigationSessionShouldDisposeNavigationSessionInstance()
     {
-        var session = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
+        object session = _fileOperations.CreateNavigationSession(Assembly.GetExecutingAssembly().Location);
         _fileOperations.DisposeNavigationSession(session);
         var diaSession = session as DiaSession;
         bool isExceptionThrown = false;
@@ -79,36 +76,25 @@ public class DesktopFileOperationsTests : TestContainer
         Verify(isExceptionThrown);
     }
 
-    public void DisposeNavigationSessionShouldNotThrowOnNullNavigationSession()
-    {
+    public void DisposeNavigationSessionShouldNotThrowOnNullNavigationSession() =>
         // This should not throw.
         _fileOperations.DisposeNavigationSession(null);
-    }
 
-    public void DoesFileExistReturnsFalseIfAssemblyNameIsNull()
-    {
-        Verify(!_fileOperations.DoesFileExist(null));
-    }
+    public void DoesFileExistReturnsFalseIfAssemblyNameIsNull() => Verify(!_fileOperations.DoesFileExist(null));
 
-    public void DoesFileExistReturnsFalseIfFileDoesNotExist()
-    {
-        Verify(!_fileOperations.DoesFileExist("C:\\temp1foobar.txt"));
-    }
+    public void DoesFileExistReturnsFalseIfFileDoesNotExist() => Verify(!_fileOperations.DoesFileExist("C:\\temp1foobar.txt"));
 
-    public void DoesFileExistReturnsTrueIfFileExists()
-    {
-        Verify(_fileOperations.DoesFileExist(Assembly.GetExecutingAssembly().Location));
-    }
+    public void DoesFileExistReturnsTrueIfFileExists() => Verify(_fileOperations.DoesFileExist(Assembly.GetExecutingAssembly().Location));
 
     public void GetFullFilePathShouldReturnAssemblyFileNameOnException()
     {
-        var filePath = "temp<>txt";
+        string filePath = "temp<>txt";
         Verify(filePath == _fileOperations.GetFullFilePath(filePath));
     }
 
     public void GetFullFilePathShouldReturnFullFilePathForAFile()
     {
-        var filePath = "temp1.txt";
+        string filePath = "temp1.txt";
         Verify(Path.GetFullPath(filePath) == _fileOperations.GetFullFilePath(filePath));
     }
 }

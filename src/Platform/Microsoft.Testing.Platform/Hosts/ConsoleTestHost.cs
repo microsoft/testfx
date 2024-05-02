@@ -139,7 +139,7 @@ internal sealed class ConsoleTestHost(
         if (telemetryInformation.IsEnabled)
         {
             DateTimeOffset consoleRunStop = _clock.UtcNow;
-            var metrics = new Dictionary<string, object>
+            Dictionary<string, object> metrics = new()
             {
                 { TelemetryProperties.HostProperties.RunStart, consoleRunStart },
                 { TelemetryProperties.HostProperties.RunStop, consoleRunStop },

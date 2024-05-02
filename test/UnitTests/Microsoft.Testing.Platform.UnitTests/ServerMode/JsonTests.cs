@@ -19,8 +19,8 @@ public class JsonTests : TestBase
     public JsonTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        var serializers = new Dictionary<Type, JsonSerializer>();
-        var deserializers = new Dictionary<Type, JsonDeserializer>();
+        Dictionary<Type, JsonSerializer> serializers = new();
+        Dictionary<Type, JsonDeserializer> deserializers = new();
 
         foreach (Type serializableType in SerializerUtilities.SerializerTypes)
         {
@@ -41,9 +41,9 @@ public class JsonTests : TestBase
     public async Task Serialize_TestNodeAsync()
     {
         // Arrange
-        var bag = new PropertyBag(new SerializableKeyValuePairStringProperty("hello", "my friend"));
+        PropertyBag bag = new(new SerializableKeyValuePairStringProperty("hello", "my friend"));
 
-        var testNode = new TestNode
+        TestNode testNode = new()
         {
             DisplayName = "test",
             Properties = bag,
@@ -60,7 +60,7 @@ public class JsonTests : TestBase
     public async Task Serialize_Array()
     {
         // Arrange
-        var json = new Json();
+        Json json = new();
 
         // Act
         string actual = await json.SerializeAsync(new int[] { 1, 2, 3 });
@@ -72,7 +72,7 @@ public class JsonTests : TestBase
     public async Task Serialize_DateTimeOffset()
     {
         // Arrange
-        var json = new Json();
+        Json json = new();
 
         // Act
         string actual = await json.SerializeAsync(new DateTimeOffset(2023, 01, 01, 01, 01, 01, 01, TimeSpan.Zero));
@@ -84,7 +84,7 @@ public class JsonTests : TestBase
     public async Task Serialize_ArrayOfObjects()
     {
         // Arrange
-        var converters = new Dictionary<Type, JsonSerializer>
+        Dictionary<Type, JsonSerializer> converters = new()
         {
             [typeof(Person)] = new JsonObjectSerializer<Person>(
                 n => new (string Key, object? Value)[]
@@ -94,7 +94,7 @@ public class JsonTests : TestBase
                 }),
         };
 
-        var person = new Person
+        Person person = new()
         {
             Name = "Thomas",
             Children =
@@ -106,7 +106,7 @@ public class JsonTests : TestBase
             ],
         };
 
-        var json = new Json(converters);
+        Json json = new(converters);
 
         // Act
         string actual = await json.SerializeAsync(new object[] { person, new[] { 2 }, 3 });
@@ -118,7 +118,7 @@ public class JsonTests : TestBase
     public void DeserializePerson()
     {
         // Arrange
-        var json = new Json(null, new Dictionary<Type, JsonDeserializer>
+        Json json = new(null, new Dictionary<Type, JsonDeserializer>
         {
             [typeof(Person)] = new JsonElementDeserializer<Person>((json, jsonElement) => new Person
             {
@@ -142,7 +142,7 @@ public class JsonTests : TestBase
     public void DeserializePersonList()
     {
         // Arrange
-        var json = new Json(null, new Dictionary<Type, JsonDeserializer>
+        Json json = new(null, new Dictionary<Type, JsonDeserializer>
         {
             [typeof(Person)] = new JsonElementDeserializer<Person>((json, jsonElement) => new Person
             {

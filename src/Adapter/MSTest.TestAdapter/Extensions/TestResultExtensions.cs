@@ -19,12 +19,12 @@ public static class TestResultExtensions
 
     internal static UnitTestResult[] ToUnitTestResults(this IReadOnlyCollection<UTF.TestResult> testResults)
     {
-        UnitTestResult[] unitTestResults = new UnitTestResult[testResults.Count];
+        var unitTestResults = new UnitTestResult[testResults.Count];
 
         int i = 0;
-        foreach (var testResult in testResults)
+        foreach (UTF.TestResult testResult in testResults)
         {
-            UnitTestOutcome outcome = testResult.Outcome.ToUnitTestOutcome();
+            var outcome = testResult.Outcome.ToUnitTestOutcome();
 
             UnitTestResult unitTestResult = testResult.TestFailureException is { } testFailureException
                 ? new UnitTestResult(

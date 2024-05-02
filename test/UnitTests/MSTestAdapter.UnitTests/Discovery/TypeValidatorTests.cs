@@ -40,10 +40,7 @@ public class TypeValidatorTests : TestContainer
 
     #region Type is class, TestClassAttribute or attribute derived from TestClassAttribute
 
-    public void IsValidTestClassShouldReturnFalseForNonClassTypes()
-    {
-        Verify(!_typeValidator.IsValidTestClass(typeof(IDummyInterface), _warnings));
-    }
+    public void IsValidTestClassShouldReturnFalseForNonClassTypes() => Verify(!_typeValidator.IsValidTestClass(typeof(IDummyInterface), _warnings));
 
     public void IsValidTestClassShouldReturnFalseForClassesNotHavingTestClassAttributeOrDerivedAttributeTypes()
     {
@@ -136,7 +133,7 @@ public class TypeValidatorTests : TestContainer
     {
         var typeValidator = new TypeValidator(_mockReflectHelper.Object, true);
 
-        var nestedPrivateClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "NestedPrivateClass");
+        Type nestedPrivateClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "NestedPrivateClass");
 
         SetupTestClass();
         Verify(!typeValidator.IsValidTestClass(nestedPrivateClassType, _warnings));
@@ -146,7 +143,7 @@ public class TypeValidatorTests : TestContainer
     {
         var typeValidator = new TypeValidator(_mockReflectHelper.Object, true);
 
-        var inaccessibleClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "InaccessiblePublicClass");
+        Type inaccessibleClassType = Assembly.GetExecutingAssembly().GetTypes().First(t => t.Name == "InaccessiblePublicClass");
 
         SetupTestClass();
         Verify(!typeValidator.IsValidTestClass(inaccessibleClassType, _warnings));
@@ -231,40 +228,19 @@ public class TypeValidatorTests : TestContainer
 
     #region HasCorrectTestContext tests
 
-    public void HasCorrectTestContextSignatureShouldReturnTrueForClassesWithNoTestContextProperty()
-    {
-        Verify(TypeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnTrueForClassesWithNoTestContextProperty() => Verify(TypeValidator.HasCorrectTestContextSignature(typeof(PublicTestClass)));
 
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithNoSetters()
-    {
-        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithNoSetters() => Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextGetterOnly)));
 
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithPrivateSetter()
-    {
-        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithPrivateSetter() => Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithTestContextPrivateSetter)));
 
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithStaticSetter()
-    {
-        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithStaticSetter() => Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithStaticTestContext)));
 
-    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithAbstractSetter()
-    {
-        Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnFalseForTestContextsWithAbstractSetter() => Verify(!TypeValidator.HasCorrectTestContextSignature(typeof(ClassWithAbstractTestContext)));
 
-    public void HasCorrectTestContextSignatureShouldNotThrowForAGenericClassWithRandomProperties()
-    {
-        Verify(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>)));
-    }
+    public void HasCorrectTestContextSignatureShouldNotThrowForAGenericClassWithRandomProperties() => Verify(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithProperty<>)));
 
-    public void HasCorrectTestContextSignatureShouldReturnTrueForAGenericClassWithTestContext()
-    {
-        Verify(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>)));
-    }
+    public void HasCorrectTestContextSignatureShouldReturnTrueForAGenericClassWithTestContext() => Verify(TypeValidator.HasCorrectTestContextSignature(typeof(GenericClassWithTestContext<>)));
 
     #endregion
 
@@ -274,11 +250,11 @@ public class TypeValidatorTests : TestContainer
     {
         // The names of private types are not accessible by nameof or typeof, ensure that we have them in the
         // list of our test types, to avoid bugs caused by typos.
-        var allTypes = GetAllTestTypes().Select(t => t.Name).ToArray();
-        var privateTypes = typeof(PrivateClassNames).GetProperties().Select(n => n.Name).ToArray();
+        string[] allTypes = GetAllTestTypes().Select(t => t.Name).ToArray();
+        string[] privateTypes = typeof(PrivateClassNames).GetProperties().Select(n => n.Name).ToArray();
         Verify(privateTypes.Length >= 1);
 
-        foreach (var type in privateTypes)
+        foreach (string type in privateTypes)
         {
             Verify(allTypes.Contains(type));
         }
@@ -288,7 +264,7 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        var expectedDiscoveredTypes = new[]
+        string[] expectedDiscoveredTypes = new[]
         {
             nameof(PublicClass2),
             nameof(PublicClass3),
@@ -297,8 +273,8 @@ public class TypeValidatorTests : TestContainer
             nameof(PublicClass3.PublicClassNestedInPublicClass.PublicClassNestedInPublicClassNestedInPublicClass),
         };
 
-        var discoverInternal = false;
-        var actualDiscoveredTypes = allTypes
+        bool discoverInternal = false;
+        string[] actualDiscoveredTypes = allTypes
             .Where(t => TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
@@ -311,7 +287,7 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        var expectedNonDiscoveredTypes = new[]
+        string[] expectedNonDiscoveredTypes = new[]
         {
             nameof(InternalClass),
             nameof(InternalClass.PublicClassNestedInInternalClass),
@@ -340,8 +316,8 @@ public class TypeValidatorTests : TestContainer
             nameof(PrivateClassNames.PrivateClassNestedInInternalClass),
         };
 
-        var discoverInternal = false;
-        var actualDiscoveredTypes = allTypes
+        bool discoverInternal = false;
+        string[] actualDiscoveredTypes = allTypes
             .Where(t => !TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
@@ -354,7 +330,7 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        var expectedDiscoveredTypes = new[]
+        string[] expectedDiscoveredTypes = new[]
         {
             nameof(PublicClass2),
             nameof(PublicClass3),
@@ -375,8 +351,8 @@ public class TypeValidatorTests : TestContainer
             nameof(InternalClass2.InternalClassNestedInInternalClass.InternalClassNestedInInternalClassNestedInInternalClass),
         };
 
-        var discoverInternal = true;
-        var actualDiscoveredTypes = allTypes
+        bool discoverInternal = true;
+        string[] actualDiscoveredTypes = allTypes
             .Where(t => TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
@@ -389,7 +365,7 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        var expectedNonDiscoveredTypes = new[]
+        string[] expectedNonDiscoveredTypes = new[]
         {
             nameof(PrivateClassNames.ProtectedInteralNestedClassInPublicClass),
             nameof(PrivateClassNames.ProtectedNestedClassInPublicClass),
@@ -405,8 +381,8 @@ public class TypeValidatorTests : TestContainer
             nameof(PrivateClassNames.PrivateClassNestedInInternalClass),
         };
 
-        var discoverInternal = true;
-        var actualDiscoveredTypes = allTypes
+        bool discoverInternal = true;
+        string[] actualDiscoveredTypes = allTypes
             .Where(t => !TypeValidator.TypeHasValidAccessibility(t.GetTypeInfo(), discoverInternal))
             .Select(t => t.Name).ToArray();
 
@@ -417,20 +393,17 @@ public class TypeValidatorTests : TestContainer
 
     private static Type[] GetAllTestTypes()
     {
-        var types = new[] { typeof(PublicClass2), typeof(PublicClass3), typeof(InternalClass), typeof(InternalClass2) };
-        var nestedTypes = types.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)).ToArray();
-        var nestedNestedTypes = nestedTypes.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)).ToArray();
-        var allTypes = new[] { types, nestedTypes, nestedNestedTypes }.SelectMany(t => t).ToArray();
+        Type[] types = new[] { typeof(PublicClass2), typeof(PublicClass3), typeof(InternalClass), typeof(InternalClass2) };
+        Type[] nestedTypes = types.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)).ToArray();
+        Type[] nestedNestedTypes = nestedTypes.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)).ToArray();
+        Type[] allTypes = new[] { types, nestedTypes, nestedNestedTypes }.SelectMany(t => t).ToArray();
         return allTypes;
     }
     #endregion
 
     #region private methods
 
-    private void SetupTestClass()
-    {
-        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<UTF.TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(true);
-    }
+    private void SetupTestClass() => _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<UTF.TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(true);
 
     #endregion
 }

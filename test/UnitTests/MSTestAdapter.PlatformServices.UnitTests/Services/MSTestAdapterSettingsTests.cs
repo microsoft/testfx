@@ -197,7 +197,7 @@ public class MSTestAdapterSettingsTests : TestContainer
                   </MSTestV2>";
 
         StringReader stringReader = new(runSettingsXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
 
         MSTestAdapterSettings.ToSettings(reader);
@@ -215,12 +215,12 @@ public class MSTestAdapterSettingsTests : TestContainer
                   </MSTestV2>";
 
         StringReader stringReader = new(runSettingsXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
 
         void ShouldThrowException() => MSTestAdapterSettings.ToSettings(reader);
 
-        var ex = VerifyThrows(ShouldThrowException);
+        Exception ex = VerifyThrows(ShouldThrowException);
         Verify(ex is SettingsException);
     }
 
@@ -234,9 +234,9 @@ public class MSTestAdapterSettingsTests : TestContainer
             @"<MSTestV2>
                   </MSTestV2>";
         StringReader stringReader = new(runSettingsXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
-        MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
+        var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
         Verify(adapterSettings.DeploymentEnabled);
     }
 
@@ -247,9 +247,9 @@ public class MSTestAdapterSettingsTests : TestContainer
                         <DeploymentEnabled>False</DeploymentEnabled>
                   </MSTestV2>";
         StringReader stringReader = new(runSettingsXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
-        MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
+        var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
         Verify(!adapterSettings.DeploymentEnabled);
     }
 
@@ -263,9 +263,9 @@ public class MSTestAdapterSettingsTests : TestContainer
             @"<MSTestV2>
                   </MSTestV2>";
         StringReader stringReader = new(runSettingsXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
-        MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
+        var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
         Verify(adapterSettings.DeployTestSourceDependencies);
     }
 
@@ -276,9 +276,9 @@ public class MSTestAdapterSettingsTests : TestContainer
                      <DeployTestSourceDependencies>False</DeployTestSourceDependencies>
                   </MSTestV2>";
         StringReader stringReader = new(runSettingsXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
-        MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
+        var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
         Verify(!adapterSettings.DeployTestSourceDependencies);
     }
 
@@ -289,9 +289,9 @@ public class MSTestAdapterSettingsTests : TestContainer
                      <DeployTestSourceDependencies>True</DeployTestSourceDependencies>
                   </MSTestV2>";
         StringReader stringReader = new(runSettingsXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
         reader.Read();
-        MSTestAdapterSettings adapterSettings = MSTestAdapterSettings.ToSettings(reader);
+        var adapterSettings = MSTestAdapterSettings.ToSettings(reader);
         Verify(adapterSettings.DeployTestSourceDependencies);
     }
 
@@ -313,13 +313,7 @@ public class TestableMSTestAdapterSettings : MSTestAdapterSettings
 
     public Func<string, string> ExpandEnvironmentVariablesSetter { get; set; }
 
-    protected override bool DoesDirectoryExist(string path)
-    {
-        return DoesDirectoryExistSetter == null ? base.DoesDirectoryExist(path) : DoesDirectoryExistSetter(path);
-    }
+    protected override bool DoesDirectoryExist(string path) => DoesDirectoryExistSetter == null ? base.DoesDirectoryExist(path) : DoesDirectoryExistSetter(path);
 
-    protected override string ExpandEnvironmentVariables(string path)
-    {
-        return ExpandEnvironmentVariablesSetter == null ? base.ExpandEnvironmentVariables(path) : ExpandEnvironmentVariablesSetter(path);
-    }
+    protected override string ExpandEnvironmentVariables(string path) => ExpandEnvironmentVariablesSetter == null ? base.ExpandEnvironmentVariables(path) : ExpandEnvironmentVariablesSetter(path);
 }

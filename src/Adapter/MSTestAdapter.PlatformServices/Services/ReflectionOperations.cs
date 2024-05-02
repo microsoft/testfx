@@ -23,14 +23,12 @@ public class ReflectionOperations : IReflectionOperations
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
     [return: NotNullIfNotNull(nameof(memberInfo))]
-    public object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit)
-    {
+    public object[]? GetCustomAttributes(MemberInfo memberInfo, bool inherit) =>
 #if NETFRAMEWORK
-        return ReflectionUtility.GetCustomAttributes(memberInfo, inherit).ToArray();
+        ReflectionUtility.GetCustomAttributes(memberInfo, inherit).ToArray();
 #else
-        return memberInfo.GetCustomAttributes(inherit);
+        memberInfo.GetCustomAttributes(inherit);
 #endif
-    }
 
     /// <summary>
     /// Gets all the custom attributes of a given type adorned on a member.
@@ -40,14 +38,12 @@ public class ReflectionOperations : IReflectionOperations
     /// <param name="inherit"> True to inspect the ancestors of element; otherwise, false. </param>
     /// <returns> The list of attributes on the member. Empty list if none found. </returns>
     [return: NotNullIfNotNull(nameof(memberInfo))]
-    public object[]? GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit)
-    {
+    public object[]? GetCustomAttributes(MemberInfo memberInfo, Type type, bool inherit) =>
 #if NETFRAMEWORK
-        return ReflectionUtility.GetCustomAttributes(memberInfo, type, inherit).ToArray();
+        ReflectionUtility.GetCustomAttributes(memberInfo, type, inherit).ToArray();
 #else
-        return memberInfo.GetCustomAttributes(type, inherit);
+        memberInfo.GetCustomAttributes(type, inherit);
 #endif
-    }
 
     /// <summary>
     /// Gets all the custom attributes of a given type on an assembly.
@@ -55,12 +51,10 @@ public class ReflectionOperations : IReflectionOperations
     /// <param name="assembly"> The assembly. </param>
     /// <param name="type"> The attribute type. </param>
     /// <returns> The list of attributes of the given type on the member. Empty list if none found. </returns>
-    public object[] GetCustomAttributes(Assembly assembly, Type type)
-    {
+    public object[] GetCustomAttributes(Assembly assembly, Type type) =>
 #if NETFRAMEWORK
-        return ReflectionUtility.GetCustomAttributes(assembly, type).ToArray();
+        ReflectionUtility.GetCustomAttributes(assembly, type).ToArray();
 #else
-        return assembly.GetCustomAttributes(type).ToArray<object>();
+        assembly.GetCustomAttributes(type).ToArray<object>();
 #endif
-    }
 }

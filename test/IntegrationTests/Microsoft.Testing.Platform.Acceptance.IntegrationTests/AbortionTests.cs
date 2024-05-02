@@ -33,7 +33,7 @@ public class AbortionTests : AcceptanceTestBase
                     return;
                 }
 
-                TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+                var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
                 TestHostResult testHostResult = await testHost.ExecuteAsync();
 
                 testHostResult.AssertExitCodeIs(ExitCodes.TestSessionAborted);

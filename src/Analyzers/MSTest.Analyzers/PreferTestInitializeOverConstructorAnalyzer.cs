@@ -37,7 +37,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzer : DiagnosticAnal
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out var testClassAttributeSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
             {
                 context.RegisterSymbolAction(context => AnalyzeSymbol(context, testClassAttributeSymbol), SymbolKind.NamedType);
             }
@@ -46,7 +46,7 @@ public sealed class PreferTestInitializeOverConstructorAnalyzer : DiagnosticAnal
 
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testClassAttributeSymbol)
     {
-        INamedTypeSymbol namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
+        var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
 
         if (namedTypeSymbol.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testClassAttributeSymbol))
             && namedTypeSymbol.InstanceConstructors.FirstOrDefault(x => !x.IsImplicitlyDeclared && x.Parameters.Length == 0) is { } parameterlessExplicitCtor)

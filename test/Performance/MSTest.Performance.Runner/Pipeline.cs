@@ -11,7 +11,7 @@ internal static class Pipeline
        where TOutput : class, IPayload
     {
         AsyncLocal.Value!.Init(bagParameters);
-        var stepInstance = step();
+        IStep<NoInputOutput, TOutput> stepInstance = step();
         WriteConsole($"Execute step: '{stepInstance.Description}'");
         return stepInstance.ExecuteAsync(NoInputOutput.NoInputOutputInstance, AsyncLocal.Value!).Result;
     }
@@ -20,14 +20,14 @@ internal static class Pipeline
         where TInput : class, IPayload
         where TOutput : class, IPayload
     {
-        var stepInstance = step();
+        IStep<TInput, TOutput> stepInstance = step();
         WriteConsole($"Execute step: '{stepInstance.Description}'");
         return stepInstance.ExecuteAsync(input, AsyncLocal.Value!).Result;
     }
 
     private static void WriteConsole(string message)
     {
-        var color = Console.ForegroundColor;
+        ConsoleColor color = Console.ForegroundColor;
         try
         {
             Console.ForegroundColor = ConsoleColor.Green;

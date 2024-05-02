@@ -321,7 +321,7 @@ public sealed class CollectionAssert
                 {
                     // Found a second occurrence of null.
                     string userMessage = Assert.BuildUserMessage(message, parameters);
-                    var finalMessage = string.Format(
+                    string finalMessage = string.Format(
                         CultureInfo.CurrentCulture,
                         FrameworkMessages.AllItemsAreUniqueFailMsg,
                         userMessage,
@@ -623,10 +623,10 @@ public sealed class CollectionAssert
         }
 
         // Search for a mismatched element.
-        if (FindMismatchedElement(expected, actual, out var expectedCount, out var actualCount, out var mismatchedElement))
+        if (FindMismatchedElement(expected, actual, out int expectedCount, out int actualCount, out object? mismatchedElement))
         {
             string userMessage = Assert.BuildUserMessage(message, parameters);
-            var finalMessage = string.Format(
+            string finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.ActualHasMismatchedElements,
                 userMessage,
@@ -730,7 +730,7 @@ public sealed class CollectionAssert
         if (ReferenceEquals(expected, actual))
         {
             string userMessage = Assert.BuildUserMessage(message, parameters);
-            var finalMessage = string.Format(
+            string finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.BothCollectionsSameReference,
                 userMessage);
@@ -758,7 +758,7 @@ public sealed class CollectionAssert
         if (!FindMismatchedElement(expected, actual, out _, out _, out _))
         {
             string userMessage = Assert.BuildUserMessage(message, parameters);
-            var finalMessage = string.Format(
+            string finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.BothSameElements,
                 userMessage);
@@ -854,7 +854,7 @@ public sealed class CollectionAssert
                 && !expectedTypeInfo.IsAssignableFrom(elementTypeInfo))
             {
                 string userMessage = Assert.BuildUserMessage(message, parameters);
-                var finalMessage = string.Format(
+                string finalMessage = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.ElementTypesAtIndexDontMatch,
                     userMessage,
@@ -1255,8 +1255,8 @@ public sealed class CollectionAssert
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
         // Count the occurrences of each object in both collections.
-        Dictionary<object, int> subsetElements = GetElementCounts(subset, out var subsetNulls);
-        Dictionary<object, int> supersetElements = GetElementCounts(superset, out var supersetNulls);
+        Dictionary<object, int> subsetElements = GetElementCounts(subset, out int subsetNulls);
+        Dictionary<object, int> supersetElements = GetElementCounts(superset, out int supersetNulls);
 
         if (subsetNulls > supersetNulls)
         {
@@ -1267,8 +1267,8 @@ public sealed class CollectionAssert
         // in the superset.
         foreach (object? element in subsetElements.Keys)
         {
-            subsetElements.TryGetValue(element, out var subsetCount);
-            supersetElements.TryGetValue(element, out var supersetCount);
+            subsetElements.TryGetValue(element, out int subsetCount);
+            supersetElements.TryGetValue(element, out int supersetCount);
 
             if (subsetCount > supersetCount)
             {
@@ -1309,7 +1309,7 @@ public sealed class CollectionAssert
                 continue;
             }
 
-            elementCounts.TryGetValue(element, out var value);
+            elementCounts.TryGetValue(element, out int value);
             value++;
             elementCounts[element] = value;
         }
@@ -1359,8 +1359,8 @@ public sealed class CollectionAssert
         // $ CONSIDER: comparison, which should result in ~n*log(n) + m*log(m) + n.
 
         // Count the occurrences of each object in the both collections
-        Dictionary<object, int> expectedElements = GetElementCounts(expected, out var expectedNulls);
-        Dictionary<object, int> actualElements = GetElementCounts(actual, out var actualNulls);
+        Dictionary<object, int> expectedElements = GetElementCounts(expected, out int expectedNulls);
+        Dictionary<object, int> actualElements = GetElementCounts(actual, out int actualNulls);
 
         if (actualNulls != expectedNulls)
         {

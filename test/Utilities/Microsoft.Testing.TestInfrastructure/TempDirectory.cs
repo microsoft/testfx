@@ -50,20 +50,18 @@ public class TempDirectory : IDisposable
         _isDisposed = true;
     }
 
-    public DirectoryInfo CreateDirectory(string dir)
-        => Directory.CreateDirectory(System.IO.Path.Combine(Path, dir));
+    public DirectoryInfo CreateDirectory(string dir) => Directory.CreateDirectory(System.IO.Path.Combine(Path, dir));
 
     public static async Task WriteFileAsync(string targetDirectory, string fileName, string fileContents)
     {
         string finalFile = System.IO.Path.Combine(targetDirectory, fileName);
         Directory.CreateDirectory(System.IO.Path.GetDirectoryName(finalFile)!);
-        using var fs = new FileStream(finalFile, FileMode.CreateNew);
-        using var stream = new StreamWriter(fs);
+        using FileStream fs = new(finalFile, FileMode.CreateNew);
+        using StreamWriter stream = new(fs);
         await stream.WriteLineAsync(fileContents);
     }
 
-    public async Task CopyDirectoryAsync(string sourceDirectory, string targetDirectory, bool retainAttributes = false)
-        => await CopyDirectoryAsync(new DirectoryInfo(sourceDirectory), new DirectoryInfo(targetDirectory), retainAttributes);
+    public async Task CopyDirectoryAsync(string sourceDirectory, string targetDirectory, bool retainAttributes = false) => await CopyDirectoryAsync(new DirectoryInfo(sourceDirectory), new DirectoryInfo(targetDirectory), retainAttributes);
 
     public static async Task CopyDirectoryAsync(DirectoryInfo source, DirectoryInfo target, bool retainAttributes = false)
     {
@@ -79,7 +77,7 @@ public class TempDirectory : IDisposable
             else
             {
                 using FileStream fileStream = File.OpenRead(fi.FullName);
-                using var destinationStream = new FileStream(
+                using FileStream destinationStream = new(
                     System.IO.Path.Combine(target.FullName, fi.Name),
                     FileMode.CreateNew);
                 await fileStream.CopyToAsync(destinationStream);
@@ -94,8 +92,7 @@ public class TempDirectory : IDisposable
         }
     }
 
-    public void CopyDirectory(string sourceDirectory, string targetDirectory)
-        => CopyDirectory(new DirectoryInfo(sourceDirectory), new DirectoryInfo(targetDirectory));
+    public void CopyDirectory(string sourceDirectory, string targetDirectory) => CopyDirectory(new DirectoryInfo(sourceDirectory), new DirectoryInfo(targetDirectory));
 
     public static void CopyDirectory(DirectoryInfo source, DirectoryInfo target)
     {
@@ -120,7 +117,7 @@ public class TempDirectory : IDisposable
     /// </summary>
     public string[] CopyFile(params string[] filePaths)
     {
-        var paths = new List<string>(filePaths.Length);
+        List<string> paths = new(filePaths.Length);
         foreach (string filePath in filePaths)
         {
             string destination = System.IO.Path.Combine(Path, System.IO.Path.GetFileName(filePath));
@@ -228,9 +225,8 @@ public class TempDirectory : IDisposable
     //
     // System.IO.Path.GetTempPath is banned from the rest of the code. This is the only
     // place where we are allowed to use it. All other methods should use our GetTempPath (this method).
-    private static string GetTempPath()
-        => Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
-        ?? System.IO.Path.GetTempPath();
+    private static string GetTempPath() => Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
+            ?? System.IO.Path.GetTempPath();
 
     public void Clean()
     {

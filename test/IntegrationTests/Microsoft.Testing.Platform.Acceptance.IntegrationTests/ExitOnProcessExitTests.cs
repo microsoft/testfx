@@ -20,7 +20,7 @@ public class ExitOnProcessExitTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public void ExitOnProcessExit_Succeed(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
 
         // Create the mutex name used to wait for the PID file created by the test host.
         string waitPid = Guid.NewGuid().ToString("N");
@@ -33,10 +33,10 @@ public class ExitOnProcessExitTests : AcceptanceTestBase
             Thread.Sleep(500);
 
             // Look for the pid file created by the test host.
-            var pidFile = Directory.GetFiles(Path.GetDirectoryName(testHost.FullName)!, "PID").ToArray();
+            string[] pidFile = Directory.GetFiles(Path.GetDirectoryName(testHost.FullName)!, "PID").ToArray();
             if (pidFile.Length > 0)
             {
-                var pid = File.ReadAllText(pidFile[0]);
+                string pid = File.ReadAllText(pidFile[0]);
                 if (int.TryParse(pid, out int pidValue))
                 {
                     // Create the process object from the test host one.

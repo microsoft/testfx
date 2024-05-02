@@ -20,178 +20,178 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetCustomAttributesShouldReturnAllAttributes()
     {
-        var methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
 
-        var attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
-        var expectedAttributes = new string[] { "DummyA : base", "DummySingleA : base" };
+        string[] expectedAttributes = new string[] { "DummyA : base", "DummySingleA : base" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
-        var expectedAttributes = new string[] { "DummyA : derived", "DummySingleA : derived" };
+        string[] expectedAttributes = new string[] { "DummyA : derived", "DummySingleA : derived" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
-        var methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attributes = _reflectionOperations.GetCustomAttributes(methodInfo, true);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, true);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 3);
 
         // Notice that the DummySingleA on the base method does not show up since it can only be defined once.
-        var expectedAttributes = new string[] { "DummyA : derived", "DummySingleA : derived", "DummyA : base", };
+        string[] expectedAttributes = new string[] { "DummyA : derived", "DummySingleA : derived", "DummyA : base", };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributes()
     {
-        var typeInfo = typeof(DummyBaseTestClass).GetTypeInfo();
+        TypeInfo typeInfo = typeof(DummyBaseTestClass).GetTypeInfo();
 
-        var attributes = _reflectionOperations.GetCustomAttributes(typeInfo, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(typeInfo, false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
-        var expectedAttributes = new string[] { "DummyA : ba" };
+        string[] expectedAttributes = new string[] { "DummyA : ba" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var typeInfo = typeof(DummyTestClass).GetTypeInfo();
+        TypeInfo typeInfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attributes = _reflectionOperations.GetCustomAttributes(typeInfo, false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(typeInfo, false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
-        var expectedAttributes = new string[] { "DummyA : a" };
+        string[] expectedAttributes = new string[] { "DummyA : a" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
-        var methodInfo = typeof(DummyTestClass).GetTypeInfo();
+        TypeInfo methodInfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attributes = _reflectionOperations.GetCustomAttributes(methodInfo, true);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, true);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
-        var expectedAttributes = new string[] { "DummyA : a", "DummyA : ba" };
+        string[] expectedAttributes = new string[] { "DummyA : a", "DummyA : ba" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributes()
     {
-        var methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyBaseTestClass).GetMethod("DummyVTestMethod1");
 
-        var attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
-        var expectedAttributes = new string[] { "DummyA : base" };
+        string[] expectedAttributes = new string[] { "DummyA : base" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
-        var expectedAttributes = new string[] { "DummyA : derived" };
+        string[] expectedAttributes = new string[] { "DummyA : derived" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetSpecificCustomAttributesShouldReturnAllAttributesWithBaseInheritance()
     {
-        var methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
+        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("DummyVTestMethod1");
 
-        var attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
-        var expectedAttributes = new string[] { "DummyA : derived", "DummyA : base", };
+        string[] expectedAttributes = new string[] { "DummyA : derived", "DummyA : base", };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributes()
     {
-        var typeInfo = typeof(DummyBaseTestClass).GetTypeInfo();
+        TypeInfo typeInfo = typeof(DummyBaseTestClass).GetTypeInfo();
 
-        var attributes = _reflectionOperations.GetCustomAttributes(typeInfo, typeof(DummyAAttribute), false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(typeInfo, typeof(DummyAAttribute), false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
-        var expectedAttributes = new string[] { "DummyA : ba" };
+        string[] expectedAttributes = new string[] { "DummyA : ba" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesIgnoringBaseInheritance()
     {
-        var typeInfo = typeof(DummyTestClass).GetTypeInfo();
+        TypeInfo typeInfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attributes = _reflectionOperations.GetCustomAttributes(typeInfo, typeof(DummyAAttribute), false);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(typeInfo, typeof(DummyAAttribute), false);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
-        var expectedAttributes = new string[] { "DummyA : a" };
+        string[] expectedAttributes = new string[] { "DummyA : a" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetSpecificCustomAttributesOnTypeShouldReturnAllAttributesWithBaseInheritance()
     {
-        var methodInfo = typeof(DummyTestClass).GetTypeInfo();
+        TypeInfo methodInfo = typeof(DummyTestClass).GetTypeInfo();
 
-        var attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
+        object[] attributes = _reflectionOperations.GetCustomAttributes(methodInfo, typeof(DummyAAttribute), true);
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
-        var expectedAttributes = new string[] { "DummyA : a", "DummyA : ba" };
+        string[] expectedAttributes = new string[] { "DummyA : a", "DummyA : ba" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
     {
-        var asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
+        Assembly asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
 
-        var attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(DummyAAttribute));
+        object[] attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
-        var expectedAttributes = new string[] { "DummyA : a1", "DummyA : a2" };
+        string[] expectedAttributes = new string[] { "DummyA : a1", "DummyA : a2" };
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
     private static string[] GetAttributeValuePairs(object[] attributes)
     {
         var attribValuePairs = new List<string>();
-        foreach (var attrib in attributes)
+        foreach (object attrib in attributes)
         {
             if (attrib is DummySingleAAttribute)
             {

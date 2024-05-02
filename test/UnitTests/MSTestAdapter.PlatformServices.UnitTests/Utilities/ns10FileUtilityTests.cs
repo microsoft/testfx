@@ -21,13 +21,13 @@ public class FileUtilityTests : TestContainer
 
     public void ReplaceInvalidFileNameCharactersShouldReturnFileNameIfItHasNoInvalidChars()
     {
-        var fileName = "galaxy";
+        string fileName = "galaxy";
         Verify(fileName == FileUtility.ReplaceInvalidFileNameCharacters(fileName));
     }
 
     public void ReplaceInvalidFileNameCharactersShouldReplaceInvalidChars()
     {
-        var fileName = "galaxy<>far:far?away";
+        string fileName = "galaxy<>far:far?away";
         Verify(FileUtility.ReplaceInvalidFileNameCharacters(fileName) == "galaxy__far_far_away");
     }
 
@@ -35,19 +35,19 @@ public class FileUtilityTests : TestContainer
 
     public void AddFilesInADirectoryShouldReturnAllTopLevelFilesInADirectory()
     {
-        var topLevelFiles = new string[] { "tick.txt", "tock.tick.txt" };
+        string[] topLevelFiles = new string[] { "tick.txt", "tock.tick.txt" };
 
         _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns(topLevelFiles);
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns(Array.Empty<string>());
 
-        var files = _fileUtility.Object.AddFilesFromDirectory("C:\\randomclock", false);
+        List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\randomclock", false);
 
         Verify(topLevelFiles.SequenceEqual(files));
     }
 
     public void AddFilesInADirectoryShouldReturnAllFilesUnderSubFolders()
     {
-        var allFiles = new string[]
+        string[] allFiles = new string[]
         {
             "MainClock\\tickmain.txt", "MainClock\\tock.tick.txt",
             "MainClock\\Folder1\\tick.txt", "MainClock\\Folder1\\tock.tick.txt",
@@ -57,14 +57,14 @@ public class FileUtilityTests : TestContainer
 
         SetupMockFileAPIs(allFiles);
 
-        var files = _fileUtility.Object.AddFilesFromDirectory("MainClock", false);
+        List<string> files = _fileUtility.Object.AddFilesFromDirectory("MainClock", false);
 
         Verify(allFiles.SequenceEqual(files));
     }
 
     public void AddFilesInADirectoryShouldReturnAllFilesUnderSubFoldersEvenIfAFolderIsEmpty()
     {
-        var allFiles = new string[]
+        string[] allFiles = new string[]
         {
             "MainClock\\tickmain.txt", "MainClock\\tock.tick.txt",
             "MainClock\\Folder1\\tick.txt", "MainClock\\Folder1\\tock.tick.txt",
@@ -74,9 +74,9 @@ public class FileUtilityTests : TestContainer
 
         SetupMockFileAPIs(allFiles);
 
-        var files = _fileUtility.Object.AddFilesFromDirectory("MainClock", false);
+        List<string> files = _fileUtility.Object.AddFilesFromDirectory("MainClock", false);
 
-        var expectedFiles = new string[allFiles.Length - 1];
+        string[] expectedFiles = new string[allFiles.Length - 1];
         Array.Copy(allFiles, 0, expectedFiles, 0, 6);
 
         Verify(expectedFiles.SequenceEqual(files));
@@ -85,7 +85,7 @@ public class FileUtilityTests : TestContainer
     public void AddFilesWithIgnoreDirectory()
     {
         // Setup
-        var allFiles = new string[]
+        string[] allFiles = new string[]
         {
             "c:\\MainClock\\Results\\tickmain.trx", "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
             "c:\\MainClock\\tickmain.txt", "c:\\MainClock\\tock.tick.txt",
@@ -95,20 +95,17 @@ public class FileUtilityTests : TestContainer
 
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
         {
-            var directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select((file) => Path.GetDirectoryName(file)).Distinct();
+            IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select((file) => Path.GetDirectoryName(file)).Distinct();
             return directories.ToArray();
         });
 
-        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
-        {
-            return allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray();
-        });
+        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) => allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
 
         // Act
-        var files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", (directory) => directory.Contains("Results"), false);
+        List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", (directory) => directory.Contains("Results"), false);
 
         // Validate
-        foreach (var sourceFile in allFiles)
+        foreach (string sourceFile in allFiles)
         {
             Console.WriteLine($"File to validate {sourceFile}");
             if (sourceFile.Contains("Results"))
@@ -125,7 +122,7 @@ public class FileUtilityTests : TestContainer
     public void AddFilesWithNoIgnoreDirectory()
     {
         // Setup
-        var allFiles = new string[]
+        string[] allFiles = new string[]
         {
             "c:\\MainClock\\Results\\tickmain.trx", "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
             "c:\\MainClock\\tickmain.txt", "c:\\MainClock\\tock.tick.txt",
@@ -135,20 +132,17 @@ public class FileUtilityTests : TestContainer
 
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
         {
-            var directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select((file) => Path.GetDirectoryName(file)).Distinct();
+            IEnumerable<string> directories = allFiles.Where(file => IsFileUnderDirectory(directory, file)).Select((file) => Path.GetDirectoryName(file)).Distinct();
             return directories.ToArray();
         });
 
-        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
-        {
-            return allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray();
-        });
+        _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns<string>((directory) => allFiles.Where((file) => Path.GetDirectoryName(file).Equals(directory, StringComparison.OrdinalIgnoreCase)).Distinct().ToArray());
 
         // Act
-        var files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", false);
+        List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\MainClock", false);
 
         // Validate
-        foreach (var sourceFile in allFiles)
+        foreach (string sourceFile in allFiles)
         {
             Verify(files.Any((file) => file.Equals(sourceFile, StringComparison.OrdinalIgnoreCase)), $"{sourceFile} not returned in the list from AddFilesFromDirectory");
         }
@@ -164,29 +158,21 @@ public class FileUtilityTests : TestContainer
     private void SetupMockFileAPIs(string[] files)
     {
         _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns((string dp) =>
-        {
 #pragma warning disable CA1865 // Use char overload
-            return
-                files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') == (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length) && !f.EndsWith("\\", StringComparison.Ordinal))
-                    .ToArray();
-#pragma warning restore CA1865 // Use char overload
-        });
-        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) =>
-        {
-            return
-                files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') > (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length))
+            files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') == (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length) && !f.EndsWith("\\", StringComparison.Ordinal))
+                    .ToArray());
+        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns((string dp) => files.Where(f => f.Contains(dp) && f.LastIndexOf('\\') > (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length))
                     .Select(f =>
                     {
 #pragma warning disable IDE0057 // Use range operator
-                        var val = f.Substring(
+                        string val = f.Substring(
                             f.IndexOf(dp, StringComparison.Ordinal) + dp.Length + 1,
                             f.Length - (f.IndexOf(dp, StringComparison.Ordinal) + dp.Length + 1));
                         return f.Substring(0, dp.Length + 1 + val.IndexOf('\\'));
 #pragma warning restore IDE0057 // Use range operator
                     })
                     .Distinct()
-                    .ToArray();
-        });
+                    .ToArray());
     }
 
     #endregion

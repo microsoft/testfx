@@ -175,7 +175,7 @@ public sealed partial class Assert
     public static void AreEqual<T>(T? expected, T? actual, IEqualityComparer<T>? comparer,
         string? message, params object?[]? parameters)
     {
-        var localComparer = comparer ?? EqualityComparer<T>.Default;
+        IEqualityComparer<T> localComparer = comparer ?? EqualityComparer<T>.Default;
         if (localComparer.Equals(expected!, actual!))
         {
             return;
@@ -464,7 +464,7 @@ public sealed partial class Assert
     public static void AreNotEqual<T>(T? notExpected, T? actual, IEqualityComparer<T>? comparer,
         string? message, params object?[]? parameters)
     {
-        var localComparer = comparer ?? EqualityComparer<T>.Default;
+        IEqualityComparer<T> localComparer = comparer ?? EqualityComparer<T>.Default;
         if (!localComparer.Equals(notExpected!, actual!))
         {
             return;
@@ -668,7 +668,7 @@ public sealed partial class Assert
         if (Math.Abs(notExpected - actual) <= delta)
         {
             string userMessage = BuildUserMessage(message, parameters);
-            var finalMessage = string.Format(
+            string finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreNotEqualDeltaFailMsg,
                 userMessage,
@@ -854,7 +854,7 @@ public sealed partial class Assert
         if (Math.Abs(notExpected - actual) <= delta)
         {
             string userMessage = BuildUserMessage(message, parameters);
-            var finalMessage = string.Format(
+            string finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreNotEqualDeltaFailMsg,
                 userMessage,
@@ -1040,7 +1040,7 @@ public sealed partial class Assert
         if (Math.Abs(notExpected - actual) <= delta)
         {
             string userMessage = BuildUserMessage(message, parameters);
-            var finalMessage = string.Format(
+            string finalMessage = string.Format(
                 CultureInfo.CurrentCulture,
                 FrameworkMessages.AreNotEqualDeltaFailMsg,
                 userMessage,

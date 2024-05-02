@@ -53,7 +53,9 @@ public class TraceListenerManager : ITraceListenerManager
 #if !WINDOWS_UWP && !WIN_UI
         // NOTE: Listeners will not get Debug events in dotnet core due to platform limitation.
         // Refer https://github.com/Microsoft/testfx/pull/218 for more details.
+#pragma warning disable IDE0022 // Use expression body for method
         Trace.Listeners.Add((TextWriterTraceListener)traceListener);
+#pragma warning restore IDE0022 // Use expression body for method
 #endif
     }
 
@@ -64,7 +66,9 @@ public class TraceListenerManager : ITraceListenerManager
     public void Remove(ITraceListener traceListener)
     {
 #if !WINDOWS_UWP && !WIN_UI
+#pragma warning disable IDE0022 // Use expression body for method
         Trace.Listeners.Remove(traceListener as TextWriterTraceListener);
+#pragma warning restore IDE0022 // Use expression body for method
 #endif
     }
 

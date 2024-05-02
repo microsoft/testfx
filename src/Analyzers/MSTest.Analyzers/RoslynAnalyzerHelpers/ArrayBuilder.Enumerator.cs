@@ -34,10 +34,7 @@ namespace Analyzer.Utilities.PooledObjects
 
             readonly object? System.Collections.IEnumerator.Current => Current;
 
-            public void Reset()
-            {
-                _index = -1;
-            }
+            public void Reset() => _index = -1;
         }
     }
 }

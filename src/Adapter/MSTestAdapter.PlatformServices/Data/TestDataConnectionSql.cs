@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if NETFRAMEWORK
@@ -127,10 +127,7 @@ internal class TestDataConnectionSql : TestDataConnection
             return _quotePrefix;
         }
 
-        set
-        {
-            _quotePrefix = value;
-        }
+        set => _quotePrefix = value;
     }
 
     [MemberNotNull(nameof(_quoteSuffix))]
@@ -146,10 +143,7 @@ internal class TestDataConnectionSql : TestDataConnection
             return _quoteSuffix;
         }
 
-        set
-        {
-            _quoteSuffix = value;
-        }
+        set => _quoteSuffix = value;
     }
 
     private char CatalogSeparatorChar
@@ -372,10 +366,7 @@ internal class TestDataConnectionSql : TestDataConnection
         QuoteSuffix = parts[1];
     }
 
-    private string MaybeQuote(string identifier, bool force)
-    {
-        return force || FindSeparators(identifier, 0) != -1 ? QuoteIdentifier(identifier) : identifier;
-    }
+    private string MaybeQuote(string identifier, bool force) => force || FindSeparators(identifier, 0) != -1 ? QuoteIdentifier(identifier) : identifier;
 
     /// <summary>
     /// Find the first separator in a string.
@@ -383,10 +374,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// <param name="text">The string.</param>
     /// <param name="from">Index.</param>
     /// <returns>Location of the separator.</returns>
-    private int FindSeparators(string text, int from)
-    {
-        return text.IndexOfAny([SchemaSeparatorChar, CatalogSeparatorChar], from);
-    }
+    private int FindSeparators(string text, int from) => text.IndexOfAny([SchemaSeparatorChar, CatalogSeparatorChar], from);
 
     /// <summary>
     /// Given a string and a position in that string, assumed
@@ -469,10 +457,7 @@ internal class TestDataConnectionSql : TestDataConnection
     /// Can throw.
     /// </summary>
     /// <returns>The default database schema.</returns>
-    public virtual string? GetDefaultSchema()
-    {
-        return null;
-    }
+    public virtual string? GetDefaultSchema() => null;
 
 #pragma warning restore SA1202 // Elements must be ordered by access
 
@@ -583,7 +568,7 @@ internal class TestDataConnectionSql : TestDataConnection
         WriteDiagnostics("GetColumns for {0}", tableName);
         try
         {
-            SplitTableName(tableName, out var targetSchema, out var targetName);
+            SplitTableName(tableName, out string? targetSchema, out string? targetName);
 
             // This lets us specifically query for columns from the appropriate table name
             // but assumes all databases have the same restrictions on all the column
@@ -702,24 +687,17 @@ internal class TestDataConnectionSql : TestDataConnection
     #region Helpers
 
 #pragma warning disable SA1202 // Elements must be ordered by access
-    public bool IsOpen()
-#pragma warning restore SA1202 // Elements must be ordered by access
-    {
-        return _connection != null && _connection.State == ConnectionState.Open;
-    }
+    public bool IsOpen() => _connection != null && _connection.State == ConnectionState.Open;
 
     /// <summary>
     /// Returns true when given provider (OLEDB or ODBC) is for MSSql.
     /// </summary>
     /// <param name="providerName">OLEDB or ODBC provider.</param>
     /// <returns>True if provider is for MSSql.</returns>
-    protected static bool IsMSSql(string providerName)
-    {
-        return (!StringEx.IsNullOrEmpty(providerName) &&
+    protected static bool IsMSSql(string providerName) => (!StringEx.IsNullOrEmpty(providerName) &&
             (providerName.StartsWith(KnownOleDbProviderNames.SqlOleDb, StringComparison.OrdinalIgnoreCase) ||
              providerName.StartsWith(KnownOleDbProviderNames.MSSqlNative, StringComparison.OrdinalIgnoreCase))) ||
              string.Equals(providerName, KnownOdbcDrivers.MSSql, StringComparison.OrdinalIgnoreCase);
-    }
 
     /// <summary>
     /// Classify a table schema as being hidden from the user
@@ -727,11 +705,9 @@ internal class TestDataConnectionSql : TestDataConnection
     /// </summary>
     /// <param name="tableSchema">A candidate table schema.</param>
     /// <returns>True always.</returns>
-    protected virtual bool IsUserSchema(string tableSchema)
-    {
+    protected virtual bool IsUserSchema(string tableSchema) =>
         // Default is to allow all schemas
-        return true;
-    }
+        true;
 
     /// <summary>
     /// Returns default database schema. Returns null for error
@@ -745,8 +721,8 @@ internal class TestDataConnectionSql : TestDataConnection
 
         try
         {
-            OleDbConnection? oleDbConnection = Connection as OleDbConnection;
-            OdbcConnection? odbcConnection = Connection as OdbcConnection;
+            var oleDbConnection = Connection as OleDbConnection;
+            var odbcConnection = Connection as OdbcConnection;
             DebugEx.Assert(
                 Connection is SqlConnection ||
                 (oleDbConnection != null && IsMSSql(oleDbConnection.Provider)) ||
