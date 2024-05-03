@@ -315,7 +315,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.IsTrue(GetBoolean());
+                    Assert.IsFalse(GetBoolean());
                 }
 
                 private static bool GetBoolean() => true;
@@ -336,7 +336,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.IsTrue(GetBoolean(), "message");
+                    Assert.IsFalse(GetBoolean(), "message");
                 }
 
                 private static bool GetBoolean() => true;
@@ -357,7 +357,7 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzerTests(ITest
                 [TestMethod]
                 public void TestMethod()
                 {
-                    Assert.IsTrue(message: "message", condition: GetBoolean());
+                    Assert.IsFalse(message: "message", condition: GetBoolean());
                 }
 
                 private static bool GetBoolean() => true;
