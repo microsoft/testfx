@@ -4,6 +4,71 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [3.4.0] - WIP
+
+See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
+
+### Added
+
+* MSTEST0017: Assertion arguments should be passed in the correct order by @Evangelink in [#2256](https://github.com/microsoft/testfx/pull/2256)
+* Support "Central Package Management" with the MSTest.Sdk by @MarcoRossignoli in [#2581](https://github.com/microsoft/testfx/pull/2581)
+* MSTEST0019: Prefer TestInitialize over ctor by @Evangelink in [#2580](https://github.com/microsoft/testfx/pull/2580)
+* MSTEST0020: Prefer ctors over TestInitialize methods by @Evangelink in [#2582](https://github.com/microsoft/testfx/pull/2582)
+* MSTEST0021: Prefer Dispose over TestCleanup methods by @Evangelink in [#2585](https://github.com/microsoft/testfx/pull/2585)
+* MSTEST0022: Prefer 'TestCleanup' methods over Dispose by @Evangelink in [#2586](https://github.com/microsoft/testfx/pull/2586)
+* MSTEST0023: Do not negate boolean assertions by @Evangelink in [#2594](https://github.com/microsoft/testfx/pull/2594)
+* MSTEST0024: Do not store TestContext in static members by @Evangelink in [#2597](https://github.com/microsoft/testfx/pull/2597)
+* Use System.Text.Json instead of Jsonite y @mariam-abdulla in [#2564](https://github.com/microsoft/testfx/pull/2564)
+* Update MSTest.Sdk to handle playwright by @Evangelink in [#2598](https://github.com/microsoft/testfx/pull/2598)
+* Add support for runner in WinUI mode by @Evangelink in [#2617](https://github.com/microsoft/testfx/pull/2617)
+* Init and cleanup timeout by @engyebrahim in [#2570](https://github.com/microsoft/testfx/pull/2570)
+* Add project samples for MSTest.Sdk by @Evangelink in [#2675](https://github.com/microsoft/testfx/pull/2675)
+* Cache CommandLineOption from the providers by @MarcoRossignoli in [#2680](https://github.com/microsoft/testfx/pull/2680)
+* Simplify Microsoft.Testing.Platform banner by @Evangelink in [#2686](https://github.com/microsoft/testfx/pull/2686)
+* Add support for STA thread by @Evangelink in [#2682](https://github.com/microsoft/testfx/pull/2682)
+* Improve error message when dynamic data source layout is invalid by @Evangelink in [#2690](https://github.com/microsoft/testfx/pull/2690)
+* Add global using feature in MSTest.Sdk by @Varorbc in [#2701](https://github.com/microsoft/testfx/pull/2701)
+* Added AssertInstanceOf overloads with out parameter by @Mrxx99 in [#2717](https://github.com/microsoft/testfx/pull/2717)
+* Improve error message for mismatched data driven test by @Evangelink in [#2691](https://github.com/microsoft/testfx/pull/2691)
+* SDK: add playwright default using by @Evangelink in [#2730](https://github.com/microsoft/testfx/pull/2730)
+* SDK: add global usings to VSTest targets by @Evangelink in [#2731](https://github.com/microsoft/testfx/pull/2731)
+* MSTest.Sdk: add support for Aspire by @Evangelink in [#2758](https://github.com/microsoft/testfx/pull/2758)
+* Ensure that fixtures also support sta threading by @Evangelink in [#2769](https://github.com/microsoft/testfx/pull/2769)
+
+### Fixed
+
+* Get real exception in case of error in AssemblyInitialize by @nohwnd in [#2571](https://github.com/microsoft/testfx/pull/2571)
+* Fix MSTEST0014 to handle optional parameters by @Evangelink in [#2574](https://github.com/microsoft/testfx/pull/2574)
+* Get real exception for AssemblyCleanup/ClassInitialize/ClassCleanup by @Evangelink in [#2576](https://github.com/microsoft/testfx/pull/2576)
+* Fix MSTEST0014 problems with arrays by @Evangelink in [#2607](https://github.com/microsoft/testfx/pull/2607)
+* Fix MSTest version under testing platform by @Evangelink in [#2629](https://github.com/microsoft/testfx/pull/2629)
+* Fix MSTEST0005 to report only inside test classes by @Evangelink in [#2641](https://github.com/microsoft/testfx/pull/2641)
+* Fix TestHostControllersTestHost startup by @MarcoRossignoli in [#2659](https://github.com/microsoft/testfx/pull/2659)
+* Fix ITestHostEnvironmentVariableProvider tests by @MarcoRossignoli in [#2660](https://github.com/microsoft/testfx/pull/2660)
+* Simplify added logic for AssemblyResolution in netcore by @Evangelink in [#2654](https://github.com/microsoft/testfx/pull/2654)
+* add Tests for --list-tests does not work with --filter by @engyebrahim in [#2699](https://github.com/microsoft/testfx/pull/2699)
+* Fix false positive in TestClassShouldHaveTestMethodAnalyzer (MSTEST0016) for derived class by @engyebrahim in [#2715](https://github.com/microsoft/testfx/pull/2715)
+* Fix ThreadOperations to handle TaskCanceledException by @Evangelink in [#2722](https://github.com/microsoft/testfx/pull/2722)
+* Update PackageReferences to be properly defined by @dansiegel in [#2727](https://github.com/microsoft/testfx/pull/2727)
+* Tests for --info shows incorrect version for MSTest by @engyebrahim in [#2745](https://github.com/microsoft/testfx/pull/2745)
+* Fix typo by @thomhurst in [#2749](https://github.com/microsoft/testfx/pull/2749)
+* Fix localappdata folder for Linux and Mac by @Evangelink in [#2765](https://github.com/microsoft/testfx/pull/2765)
+* Fix deserializers for DiscoveryRequestArgs and RunRequestArgs by @mariam-abdulla in [#2768](https://github.com/microsoft/testfx/pull/2768)
+
+### Housekeeping
+
+* Use dotnet-public instead of nuget feed for samples by @Evangelink in [#2623](https://github.com/microsoft/testfx/pull/2623)
+* Update NativeAOT runner example by @nohwnd in [#2634](https://github.com/microsoft/testfx/pull/2634)
+* Use Platform.MSBuild to setup nativeAot example by @nohwnd in [#2645](https://github.com/microsoft/testfx/pull/2645)
+* Remove IsPackable from the DemoMSTestSdk by @Varorbc in [#2696](https://github.com/microsoft/testfx/pull/2696)
+* allow rollForward of sdk to latestFeature by @SimonCropp in [#2714](https://github.com/microsoft/testfx/pull/2714)
+* Onboard Central Package Management by @Evangelink in [#2728](https://github.com/microsoft/testfx/pull/2728)
+* Add dependabot by @Evangelink in [#2737](https://github.com/microsoft/testfx/pull/2737)
+* perf: reduce allocations and calls to ToArray by @Evangelink in [#2747](https://github.com/microsoft/testfx/pull/2747)
+* Add test for resource recursion problem by @nohwnd in [#2778](https://github.com/microsoft/testfx/pull/2778)
+
+### Artifacts
+
 ## [3.3.1] - 2024-04-04
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.3.0...v3.3.1)
