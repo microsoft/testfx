@@ -127,11 +127,20 @@ public class TestClass
 {
     [TestMethod]
     [DynamicData(nameof(AdditionalData))]
+    [DynamicData(nameof(AdditionalData2))]
     public void Test()
     {
     }
 
     public static IEnumerable<int> AdditionalData => Array.Empty<int>();
+
+    public static IEnumerable<int> AdditionalData2
+    {
+        get
+        {
+            yield return 2;
+        }
+    }
 }
 """;
     }
