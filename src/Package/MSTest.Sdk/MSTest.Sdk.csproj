@@ -35,7 +35,7 @@
   </ItemGroup>
   <Target Name="GenerateTemplates" AfterTargets="PrepareForBuild">
     <PropertyGroup>
-      <_TemplateProperties>MSTestEngineVersion=$(MSTestEngineVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(MicrosoftTestingPlatformVersion);MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion)</_TemplateProperties>
+      <_TemplateProperties>MSTestEngineVersion=$(MSTestEngineVersion);MSTestVersion=$(Version);MicrosoftTestingPlatformVersion=$(MicrosoftTestingPlatformVersion);MicrosoftNETTestSdkVersion=$(MicrosoftNETTestSdkVersion);MicrosoftTestingExtensionsCodeCoverageVersion=$(MicrosoftTestingExtensionsCodeCoverageVersion);MicrosoftPlaywrightVersion=$(MicrosoftPlaywrightVersion);AspireHostingTestingVersion=$(AspireHostingTestingVersion)</_TemplateProperties>
     </PropertyGroup>
 
     <!--

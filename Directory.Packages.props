@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <PropertyGroup Label="Product dependencies">
+    <AspireHostingTestingVersion>9.0.0-preview.3.24210.17</AspireHostingTestingVersion>
+    <!-- Test Platform, .NET Test SDK and Object Model  -->
+    <MicrosoftNETTestSdkVersion>17.9.0</MicrosoftNETTestSdkVersion>
+    <!-- UWP and WinUI dependencies -->
+    <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
+    <!-- / UWP and WinUI dependencies -->
+    <!-- CVE-2017-0247 -->
+    <SystemNetWebSocketsClientVersion>4.3.1</SystemNetWebSocketsClientVersion>
+    <SystemTextRegularExpressionsVersion>4.3.1</SystemTextRegularExpressionsVersion>
+    <MicrosoftCodeAnalysisAnalyzersVersion>3.11.0-beta1.24072.1</MicrosoftCodeAnalysisAnalyzersVersion>
+    <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
+    <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>$(MicrosoftCodeAnalysisAnalyzersVersion)</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
+    <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
+    <MicrosoftPlaywrightVersion>1.42.0</MicrosoftPlaywrightVersion>
+  </PropertyGroup>
+  <PropertyGroup Label="Test dependencies">
+    <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.2-beta1.24074.2</MicrosoftCodeAnalysisAnalyzerTestingVersion>
+  </PropertyGroup>
+  <ItemGroup Label="Product dependencies">
+    <PackageVersion Include="FluentAssertions" Version="6.12.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="$(MicrosoftCodeAnalysisAnalyzersVersion)" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="$(MicrosoftCodeAnalysisVersion)" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeRefactoring.Testing" Version="$(MicrosoftCodeAnalysisAnalyzerTestingVersion)" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="$(MicrosoftCodeAnalysisVersion)" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)" />
+    <PackageVersion Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisVersion)" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.VSTestBridge" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageVersion Include="Microsoft.Testing.Internal.Framework.SourceGeneration" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageVersion Include="Microsoft.Testing.Internal.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
+    <PackageVersion Include="Microsoft.TestPlatform.AdapterUtilities" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageVersion Include="Microsoft.TestPlatform.TranslationLayer" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.9.28" />
+    <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+    <!-- CVE-2019-0820 -->
+    <PackageVersion Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
+    <!-- CVE-2019-0981, CVE-2019-0980, CVE-2019-0657 -->
+    <PackageVersion Include="System.Private.Uri" Version="4.3.2" />
+    <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+  <ItemGroup Label="Test dependencies">
+    <PackageVersion Include="FSharp.Core" Version="8.0.101" />
+    <!-- Pinned to 4.18.4 for security -->
+    <PackageVersion Include="Moq" Version="4.18.4" />
+    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="8.0.0" />
+    <PackageVersion Include="MSBuild.StructuredLogger" Version="2.2.169" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
+    <PackageVersion Include="NuGet.Packaging" Version="6.3.4" />
+    <PackageVersion Include="Polly" Version="8.3.0" />
+    <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
+    <PackageVersion Include="StreamJsonRpc" Version="2.17.11" />
+    <PackageVersion Include="StrongNamer" Version="0.2.5" />
+    <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    <PackageVersion Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
+</Project>

@@ -12,11 +12,11 @@ public class DataRowTests : CLITestBase
     public void ExecuteOnlyDerivedClassDataRowsWhenBothBaseAndDerivedClassHasDataRows_SimpleDataRows()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSimple");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSimple");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -31,11 +31,11 @@ public class DataRowTests : CLITestBase
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -47,11 +47,11 @@ public class DataRowTests : CLITestBase
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSomeOptional");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowSomeOptional");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -64,11 +64,11 @@ public class DataRowTests : CLITestBase
     public void DataRowsExecuteWithParamsArrayParameter()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowParamsArgument");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "TestCategory~DataRowParamsArgument");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -82,14 +82,14 @@ public class DataRowTests : CLITestBase
     public void DataRowsFailWhenInvalidArgumentsProvided()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular&TestCategory~DataRowOptionalInvalidArguments");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular&TestCategory~DataRowOptionalInvalidArguments");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
-        VerifyE2E.TestsPassed(
+        VerifyE2E.TestsFailed(
             testResults,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
@@ -99,11 +99,11 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldSerializeDoublesProperly()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular.DataRowTestDouble");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular.DataRowTestDouble");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -115,11 +115,11 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldSerializeMixedTypesProperly()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowTestMixed");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowTestMixed");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -130,11 +130,11 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldSerializeEnumsProperly()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowEnums");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowEnums");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -148,11 +148,11 @@ public class DataRowTests : CLITestBase
     public void DataRowsShouldHandleNonSerializableValues()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowNonSerializable");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_DerivedClass.DataRowNonSerializable");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsDiscovered(
@@ -169,11 +169,11 @@ public class DataRowTests : CLITestBase
     public void ExecuteDataRowTests_Enums()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Enums");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Enums");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -244,11 +244,11 @@ public class DataRowTests : CLITestBase
     public void ExecuteDataRowTests_NonSerializablePaths()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_NonSerializablePaths");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_NonSerializablePaths");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -262,11 +262,11 @@ public class DataRowTests : CLITestBase
     public void ExecuteDataRowTests_Regular()
     {
         // Arrange
-        var assemblyPath = GetAssetFullPath(TestAssetName);
+        string assemblyPath = GetAssetFullPath(TestAssetName);
 
         // Act
-        var testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular");
-        var testResults = RunTests(testCases);
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestCase> testCases = DiscoverTests(assemblyPath, "FullyQualifiedName~DataRowTests_Regular");
+        System.Collections.Immutable.ImmutableArray<Microsoft.VisualStudio.TestPlatform.ObjectModel.TestResult> testResults = RunTests(testCases);
 
         // Assert
         VerifyE2E.TestsPassed(
@@ -279,9 +279,6 @@ public class DataRowTests : CLITestBase
             "DataRow2 (20,String parameter,True,False)",
             "DataRow2 (30,String parameter,True,False)",
             "DataRow2 (40,String parameter,True,False)",
-            "DataRowTestMethodFailsWithInvalidArguments ()",
-            "DataRowTestMethodFailsWithInvalidArguments (2)",
-            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)",
             "DataRowTestDouble (10.01,20.01)",
             "DataRowTestDouble (10.02,20.02)",
             "DataRowTestMixed (1,10,10,10,10,10,10,10,10)",
@@ -311,6 +308,10 @@ public class DataRowTests : CLITestBase
             "SixteenObjectArrays (System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[],System.Object[])",
             "MultipleIntegersWrappedWithParams (1,2,3,4,5)");
 
-        VerifyE2E.FailedTestCount(testResults, 0);
+        VerifyE2E.TestsFailed(
+            testResults,
+            "DataRowTestMethodFailsWithInvalidArguments ()",
+            "DataRowTestMethodFailsWithInvalidArguments (2)",
+            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
     }
 }

@@ -125,7 +125,7 @@ internal class UnitTestElement
         // string testFullName = this.TestMethod.HasManagedMethodAndTypeProperties
         //                 ? string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.ManagedTypeName, this.TestMethod.ManagedMethodName)
         //                 : string.Format(CultureInfo.InvariantCulture, "{0}.{1}", this.TestMethod.FullClassName, this.TestMethod.Name);
-        var testFullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", TestMethod.FullClassName, TestMethod.Name);
+        string testFullName = string.Format(CultureInfo.InvariantCulture, "{0}.{1}", TestMethod.FullClassName, TestMethod.Name);
 
         TestCase testCase = new(testFullName, Constants.ExecutorUri, TestMethod.AssemblyName)
         {
@@ -143,7 +143,7 @@ internal class UnitTestElement
             testCase.SetPropertyValue(Constants.TestClassNameProperty, TestMethod.FullClassName);
         }
 
-        var hierarchy = TestMethod.Hierarchy;
+        IReadOnlyCollection<string?> hierarchy = TestMethod.Hierarchy;
         if (hierarchy != null && hierarchy.Count > 0)
         {
             testCase.SetHierarchy(hierarchy.ToArray());
@@ -213,7 +213,7 @@ internal class UnitTestElement
         // Store resolved data if any
         if (TestMethod.DataType != DynamicDataType.None)
         {
-            var data = TestMethod.SerializedData;
+            string?[]? data = TestMethod.SerializedData;
 
             testCase.SetPropertyValue(Constants.TestDynamicDataTypeProperty, (int)TestMethod.DataType);
             testCase.SetPropertyValue(Constants.TestDynamicDataProperty, data);
@@ -325,7 +325,7 @@ internal class UnitTestElement
 
         if (TestMethod.SerializedData != null)
         {
-            foreach (var item in TestMethod.SerializedData)
+            foreach (string? item in TestMethod.SerializedData)
             {
                 idProvider.AppendString(item ?? "null");
             }
@@ -334,8 +334,5 @@ internal class UnitTestElement
         return idProvider.GetId();
     }
 
-    private string GetDisplayName()
-    {
-        return StringEx.IsNullOrWhiteSpace(DisplayName) ? TestMethod.Name : DisplayName;
-    }
+    private string GetDisplayName() => StringEx.IsNullOrWhiteSpace(DisplayName) ? TestMethod.Name : DisplayName;
 }

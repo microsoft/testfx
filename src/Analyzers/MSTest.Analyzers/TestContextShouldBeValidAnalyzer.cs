@@ -43,16 +43,25 @@ public sealed class TestContextShouldBeValidAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out var testContextSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out INamedTypeSymbol? testContextSymbol)
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
             {
                 bool canDiscoverInternals = context.Compilation.CanDiscoverInternals();
-                context.RegisterSymbolAction(context => AnalyzeSymbol(context, testContextSymbol, canDiscoverInternals), SymbolKind.Field, SymbolKind.Property);
+                context.RegisterSymbolAction(
+                    context => AnalyzeSymbol(context, testContextSymbol, testClassAttributeSymbol, canDiscoverInternals),
+                    SymbolKind.Field, SymbolKind.Property);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testContextSymbol, bool canDiscoverInternals)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testContextSymbol, INamedTypeSymbol testClassAttributeSymbol,
+        bool canDiscoverInternals)
     {
+        if (!context.Symbol.ContainingType.GetAttributes().Any(attr => attr.AttributeClass.Inherits(testClassAttributeSymbol)))
+        {
+            return;
+        }
+
         if (context.Symbol is IFieldSymbol fieldSymbol)
         {
             AnalyzeFieldSymbol(context, fieldSymbol, testContextSymbol);

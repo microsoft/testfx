@@ -58,9 +58,10 @@ public class UnitTest1
 
     static AcceptanceTestBase()
     {
-        XDocument versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
-        MicrosoftNETTestSdkVersion = versionsPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
+        var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
+        MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
 
+        var versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
 #if MSTEST_DOWNLOADED
         MSTestVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MicrosoftTestingPlatformNamePrefix);
@@ -145,7 +146,7 @@ public class UnitTest1
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
     {
-        var matches = Directory.GetFiles(rootFolder, packagePrefixName + "*" + NuGetPackageExtensionName, SearchOption.TopDirectoryOnly);
+        string[] matches = Directory.GetFiles(rootFolder, packagePrefixName + "*" + NuGetPackageExtensionName, SearchOption.TopDirectoryOnly);
 
         if (matches.Length > 1)
         {
@@ -166,13 +167,13 @@ public class UnitTest1
             throw new InvalidOperationException($"Was expecting to find a single NuGet package named '{packagePrefixName}' in '{rootFolder}' but found {matches.Length}.");
         }
 
-        var packageFullName = Path.GetFileName(matches[0]);
+        string packageFullName = Path.GetFileName(matches[0]);
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
 
     private static string ExtractVersionFromVersionPropsFile(XDocument versionPropsXmlDocument, string entryName)
     {
-        var matches = versionPropsXmlDocument.Descendants(entryName).ToArray();
+        XElement[] matches = versionPropsXmlDocument.Descendants(entryName).ToArray();
         return matches.Length != 1
             ? throw new InvalidOperationException($"Was expecting to find a single entry for '{entryName}' but found {matches.Length}.")
             : matches[0].Value;

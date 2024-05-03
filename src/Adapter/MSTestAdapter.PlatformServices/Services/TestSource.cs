@@ -57,11 +57,7 @@ public class TestSource : ITestSource
     /// <summary>
     /// Gets the set of valid extensions for sources targeting this platform.
     /// </summary>
-    public IEnumerable<string> ValidSourceExtensions
-    {
-        get
-        {
-            return new List<string>
+    public IEnumerable<string> ValidSourceExtensions => new List<string>
             {
                 Constants.DllExtension,
 #if NETFRAMEWORK
@@ -71,8 +67,6 @@ public class TestSource : ITestSource
 #endif
                 Constants.ExeExtension,
             };
-        }
-    }
 
     /// <summary>
     /// Verifies if the assembly provided is referenced by the source.
@@ -111,12 +105,12 @@ public class TestSource : ITestSource
         {
             List<string> newSources = [];
 
-            var fileSearchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFilesAsync().AsTask();
+            Task<IReadOnlyList<Windows.Storage.StorageFile>> fileSearchTask = Windows.ApplicationModel.Package.Current.InstalledLocation.GetFilesAsync().AsTask();
             fileSearchTask.Wait();
-            foreach (var filePath in fileSearchTask.Result)
+            foreach (Windows.Storage.StorageFile? filePath in fileSearchTask.Result)
             {
-                var fileName = filePath.Name;
-                var isExtSupported =
+                string fileName = filePath.Name;
+                bool isExtSupported =
                     ExecutableExtensions.Any(ext => fileName.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
 
                 if (isExtSupported && !fileName.StartsWith(SystemAssembliesPrefix, StringComparison.OrdinalIgnoreCase)
@@ -137,14 +131,14 @@ public class TestSource : ITestSource
         string? appxSource;
         if ((appxSource = FindAppxSource(sources)) != null)
         {
-            var appxSourceDirectory = Path.GetDirectoryName(appxSource)!;
+            string appxSourceDirectory = Path.GetDirectoryName(appxSource)!;
 
             List<string> newSources = [];
 
-            var files = Directory.GetFiles(AppModel.GetCurrentPackagePath()!);
-            foreach (var filePath in files)
+            string[] files = Directory.GetFiles(AppModel.GetCurrentPackagePath()!);
+            foreach (string filePath in files)
             {
-                var isExtSupported = ExecutableExtensions.Any(ext => filePath.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
+                bool isExtSupported = ExecutableExtensions.Any(ext => filePath.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
 
                 if (isExtSupported && !filePath.StartsWith(SystemAssembliesPrefix, StringComparison.OrdinalIgnoreCase)
                         && !PlatformAssemblies.Contains(filePath.ToUpperInvariant())

@@ -10,7 +10,6 @@ using Microsoft.Testing.Extensions.VSTestBridge.Requests;
 using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.Messages;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -32,11 +31,7 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        if (MSTestDiscovererHelpers.InitializeDiscovery(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger))
-        {
-            new UnitTestDiscoverer().DiscoverTests(request.AssemblyPaths, request.MessageLogger, request.DiscoverySink, request.DiscoveryContext);
-        }
-
+        new MSTestDiscoverer().DiscoverTests(request.AssemblyPaths, request.DiscoveryContext, request.MessageLogger, request.DiscoverySink);
         return Task.CompletedTask;
     }
 
@@ -50,24 +45,15 @@ internal sealed class MSTestBridgedTestFramework : SynchronizedSingleSessionVSTe
             Debugger.Launch();
         }
 
-        if (!MSTestDiscovererHelpers.InitializeDiscovery(request.AssemblyPaths, request.RunContext, request.FrameworkHandle))
-        {
-            return Task.CompletedTask;
-        }
+        MSTestExecutor testExecutor = new(cancellationToken);
 
-#pragma warning disable CA1859 // Use concrete types when possible for improved performance
-        ITestExecutor testExecutor = new MSTestExecutor();
-#pragma warning restore CA1859 // Use concrete types when possible for improved performance
-        using (cancellationToken.Register(testExecutor.Cancel))
+        if (request.VSTestFilter.TestCases is { } testCases)
         {
-            if (request.VSTestFilter.TestCases is { } testCases)
-            {
-                testExecutor.RunTests(testCases, request.RunContext, request.FrameworkHandle);
-            }
-            else
-            {
-                testExecutor.RunTests(request.AssemblyPaths, request.RunContext, request.FrameworkHandle);
-            }
+            testExecutor.RunTests(testCases, request.RunContext, request.FrameworkHandle);
+        }
+        else
+        {
+            testExecutor.RunTests(request.AssemblyPaths, request.RunContext, request.FrameworkHandle);
         }
 
         return Task.CompletedTask;

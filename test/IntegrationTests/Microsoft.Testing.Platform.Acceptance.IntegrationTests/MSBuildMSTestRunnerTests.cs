@@ -22,7 +22,7 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
     {
         foreach (TestArgumentsEntry<(string SingleTfmOrMultiTfm, BuildConfiguration BuildConfiguration, bool IsMultiTfm)> entry in GetBuildMatrixSingleAndMultiTfmBuildConfiguration())
         {
-            foreach (var command in new string[]
+            foreach (string command in new string[]
             {
                 "build --no-restore /t:Test",
                 DotnetTestVerb,
@@ -71,9 +71,9 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
         }
 
         // Build the solution
-        var restoreResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult restoreResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {solution.SolutionFile} --configfile {nugetFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         restoreResult.AssertOutputNotContains("An approximate best match of");
-        var testResult = await DotnetCli.RunAsync($"{command} -m:1 -nodeReuse:false {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult testResult = await DotnetCli.RunAsync($"{command} -m:1 -nodeReuse:false {solution.SolutionFile}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         if (isMultiTfm)
         {

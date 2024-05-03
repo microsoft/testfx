@@ -2,6 +2,16 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="ko">
     <body>
+      <trans-unit id="AssemblyCleanupTimedOut">
+        <source>Assembly cleanup method '{0}.{1}' timed out</source>
+        <target state="translated">어셈블리 정리 메서드 '{0}.{1}'이(가) 시간 초과되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupWasCancelled">
+        <source>Assembly cleanup method '{0}.{1}' was cancelled</source>
+        <target state="translated">어셈블리 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
         <source>Assembly initialize method '{0}.{1}' timed out</source>
         <target state="translated">'{0}.{1}' 어셈블리 초기화 메서드의 시간이 초과되었습니다.</target>
@@ -10,6 +20,30 @@
       <trans-unit id="AssemblyInitializeWasCancelled">
         <source>Assembly initialize method '{0}.{1}' was cancelled</source>
         <target state="translated">'{0}.{1}' 어셈블리 초기화 메서드가 취소되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRunTestArgumentsMismatchError">
+        <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
+Test expected {2} parameter(s), with types '{3}',
+but received {4} argument(s), with types '{5}'.</source>
+        <target state="translated">테스트 메서드 '{0}{1}'을(를) 실행할 수 없음: 테스트 데이터가 메서드 매개 변수와 일치하지 않습니다. 개수 또는 형식이 다릅니다.
+테스트에 {2} 매개 변수로 ‘{3}’ 형식이 필요하지만,
+{4} 인수의 ‘{5}’ 형식을 받았습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRunTestMethodNoDataError">
+        <source>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</source>
+        <target state="translated">테스트 메서드 '{0}{1}'을(를) 실행할 수 없음: 메서드에 매개 변수가 있지만 테스트 원본을 정의하지 않습니다. '[DataRow]', '[DynamicData]' 또는 사용자 지정 'ITestDataSource' 데이터 원본을 사용하여 테스트 데이터를 제공합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupTimedOut">
+        <source>Class cleanup method '{0}.{1}' timed out</source>
+        <target state="translated">클래스 정리 메서드 '{0}.{1}'이(가) 시간 초과되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupWasCancelled">
+        <source>Class cleanup method '{0}.{1}' was cancelled</source>
+        <target state="translated">클래스 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
@@ -27,10 +61,35 @@
         <target state="translated">'{0}' 테스트가 실행 시간 제한을 초과했습니다.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
+        <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
+        <target state="translated">Runsettings 항목 '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;'는 Windows 이외의 OS에서는 지원되지 않습니다.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="SourcesNotSupported">
         <source>Running tests in any of the provided sources is not supported for the selected platform</source>
         <target state="translated">선택된 플랫폼의 경우 제공된 소스에서 테스트를 실행할 수 없습니다.</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="TestCleanupTimedOut">
+        <source>Test cleanup method '{0}.{1}' timed out</source>
+        <target state="translated">테스트 정리 메서드 '{0}.{1}'이(가) 시간 초과되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestCleanupWasCancelled">
+        <source>Test cleanup method '{0}.{1}' was cancelled</source>
+        <target state="translated">테스트 정리 메서드 '{0}.{1}'이(가) 취소되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeTimedOut">
+        <source>Test initialize method '{0}.{1}' timed out</source>
+        <target state="translated">'{0}.{1}' 테스트 초기화 메서드의 시간이 초과되었습니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeWasCancelled">
+        <source>Test initialize method '{0}.{1}' was cancelled</source>
+        <target state="translated">'{0}.{1}' 테스트 초기화 메서드가 취소되었습니다.</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
         <source>TestCleanup method {0}.{1} threw exception. {2}.</source>
@@ -331,11 +390,6 @@ Error: {1}</source>
       <trans-unit id="TestAssembly_AssemblyDiscoveryFailure">
         <source>Failed to discover tests from assembly {0}. Reason:{1}</source>
         <target state="translated">어셈블리 {0}에서 테스트를 검색하지 못했습니다. 이유:{1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_TestMethodExpectedParameters">
-        <source>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</source>
-        <target state="translated">데이터 기반 테스트 메서드에만 매개 변수를 포함할 수 있습니다. [DataRow] 또는 [DynamicData]을(를) 사용하려고 했습니까?</target>
         <note></note>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">

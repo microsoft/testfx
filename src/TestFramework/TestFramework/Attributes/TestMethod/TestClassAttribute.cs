@@ -15,9 +15,7 @@ public class TestClassAttribute : Attribute
     /// <param name="testMethodAttribute">The test method attribute instance defined on this method.</param>
     /// <returns>The <see cref="TestMethodAttribute"/> to be used to run this test.</returns>
     /// <remarks>Extensions can override this method to customize how all methods in a class are run.</remarks>
-    public virtual TestMethodAttribute? GetTestMethodAttribute(TestMethodAttribute? testMethodAttribute)
-    {
+    public virtual TestMethodAttribute? GetTestMethodAttribute(TestMethodAttribute? testMethodAttribute) =>
         // If TestMethod is not extended by derived class then return back the original TestMethodAttribute
-        return testMethodAttribute;
-    }
+        testMethodAttribute;
 }

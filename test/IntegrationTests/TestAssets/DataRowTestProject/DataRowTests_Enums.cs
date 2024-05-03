@@ -88,73 +88,49 @@ public class DataRowTests_Enums
     [DataRow(SByteEnum.Alfa)]
     [DataRow(SByteEnum.Beta)]
     [DataRow(SByteEnum.Gamma)]
-    public void DataRowEnums_SByte(SByteEnum testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_SByte(SByteEnum testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(ByteEnum.Alfa)]
     [DataRow(ByteEnum.Beta)]
     [DataRow(ByteEnum.Gamma)]
-    public void DataRowEnums_Byte(ByteEnum testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_Byte(ByteEnum testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(ShortEnum.Alfa)]
     [DataRow(ShortEnum.Beta)]
     [DataRow(ShortEnum.Gamma)]
-    public void DataRowEnums_Short(ShortEnum testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_Short(ShortEnum testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(UShortEnum.Alfa)]
     [DataRow(UShortEnum.Beta)]
     [DataRow(UShortEnum.Gamma)]
-    public void DataRowEnums_UShort(UShortEnum testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_UShort(UShortEnum testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(IntEnum.Alfa)]
     [DataRow(IntEnum.Beta)]
     [DataRow(IntEnum.Gamma)]
-    public void DataRowEnums_Int(IntEnum testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_Int(IntEnum testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(UIntEnum.Alfa)]
     [DataRow(UIntEnum.Beta)]
     [DataRow(UIntEnum.Gamma)]
-    public void DataRowEnums_UInt(UIntEnum testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_UInt(UIntEnum testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(LongEnum.Alfa)]
     [DataRow(LongEnum.Beta)]
     [DataRow(LongEnum.Gamma)]
-    public void DataRowEnum_Long(LongEnum testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnum_Long(LongEnum testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(ULongEnum.Alfa)]
     [DataRow(ULongEnum.Beta)]
     [DataRow(ULongEnum.Gamma)]
-    public void DataRowEnum_ULong(ULongEnum testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnum_ULong(ULongEnum testEnum) => Assert.IsTrue(true);
     #endregion
 
     #region Basic Tests (Nullable)
@@ -163,80 +139,56 @@ public class DataRowTests_Enums
     [DataRow(SByteEnum.Alfa)]
     [DataRow(SByteEnum.Beta)]
     [DataRow(SByteEnum.Gamma)]
-    public void DataRowEnums_Nullable_SByte(SByteEnum? testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_Nullable_SByte(SByteEnum? testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(null)]
     [DataRow(ByteEnum.Alfa)]
     [DataRow(ByteEnum.Beta)]
     [DataRow(ByteEnum.Gamma)]
-    public void DataRowEnums_Nullable_Byte(ByteEnum? testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_Nullable_Byte(ByteEnum? testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(null)]
     [DataRow(ShortEnum.Alfa)]
     [DataRow(ShortEnum.Beta)]
     [DataRow(ShortEnum.Gamma)]
-    public void DataRowEnums_Nullable_Short(ShortEnum? testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_Nullable_Short(ShortEnum? testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(null)]
     [DataRow(UShortEnum.Alfa)]
     [DataRow(UShortEnum.Beta)]
     [DataRow(UShortEnum.Gamma)]
-    public void DataRowEnums_Nullable_UShort(UShortEnum? testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_Nullable_UShort(UShortEnum? testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(null)]
     [DataRow(IntEnum.Alfa)]
     [DataRow(IntEnum.Beta)]
     [DataRow(IntEnum.Gamma)]
-    public void DataRowEnums_Nullable_Int(IntEnum? testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_Nullable_Int(IntEnum? testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(null)]
     [DataRow(UIntEnum.Alfa)]
     [DataRow(UIntEnum.Beta)]
     [DataRow(UIntEnum.Gamma)]
-    public void DataRowEnums_Nullable_UInt(UIntEnum? testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_Nullable_UInt(UIntEnum? testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(null)]
     [DataRow(LongEnum.Alfa)]
     [DataRow(LongEnum.Beta)]
     [DataRow(LongEnum.Gamma)]
-    public void DataRowEnums_Nullable_Long(LongEnum? testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_Nullable_Long(LongEnum? testEnum) => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(null)]
     [DataRow(ULongEnum.Alfa)]
     [DataRow(ULongEnum.Beta)]
     [DataRow(ULongEnum.Gamma)]
-    public void DataRowEnums_Nullable_ULong(ULongEnum? testEnum)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_Nullable_ULong(ULongEnum? testEnum) => Assert.IsTrue(true);
     #endregion
 
     #region Mixed Types
@@ -244,9 +196,6 @@ public class DataRowTests_Enums
     [DataRow(ByteEnum.Alfa, true, 1)]
     [DataRow(ByteEnum.Beta, false, 2)]
     [DataRow(ByteEnum.Gamma, true, 3)]
-    public void DataRowEnums_MixedTypes_Byte(ByteEnum testEnum, bool arg1, int arg2)
-    {
-        Assert.IsTrue(true);
-    }
+    public void DataRowEnums_MixedTypes_Byte(ByteEnum testEnum, bool arg1, int arg2) => Assert.IsTrue(true);
     #endregion
 }

@@ -89,7 +89,7 @@ public sealed class TestApplication : ITestApplication
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, systemEnvironment);
         TestHostControllerInfo testHostControllerInfo = new(parseResult);
         SystemProcessHandler systemProcess = new();
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), systemEnvironment, systemProcess);
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(systemEnvironment, systemProcess);
 
         // Create the UnhandledExceptionHandler that will be set inside the TestHostBuilder.
         LazyInitializer.EnsureInitialized(ref s_unhandledExceptionHandler, () => new UnhandledExceptionHandler(systemEnvironment, new SystemConsole(), parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey)));
@@ -129,7 +129,7 @@ public sealed class TestApplication : ITestApplication
         string[] args)
     {
         // Log useful information
-        var version = (AssemblyInformationalVersionAttribute?)Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
+        AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         if (version is not null)
         {
             await logger.LogInformationAsync($"Version: {version.InformationalVersion}");
@@ -299,7 +299,11 @@ public sealed class TestApplication : ITestApplication
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, out string[]? verbosity))
         {
+#if NET
+            logLevel = Enum.Parse<LogLevel>(verbosity[0], true);
+#else
             logLevel = (LogLevel)Enum.Parse(typeof(LogLevel), verbosity[0], true);
+#endif
         }
 
         // Override the log level if the environment variable is set

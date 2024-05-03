@@ -38,7 +38,7 @@ public sealed class DoNotStoreStaticTestContextAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out var testContextSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext, out INamedTypeSymbol? testContextSymbol))
             {
                 context.RegisterOperationAction(context => AnalyzeOperation(context, testContextSymbol), OperationKind.SimpleAssignment);
             }
@@ -47,7 +47,7 @@ public sealed class DoNotStoreStaticTestContextAnalyzer : DiagnosticAnalyzer
 
     private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol testContextSymbol)
     {
-        ISimpleAssignmentOperation assignmentOperation = (ISimpleAssignmentOperation)context.Operation;
+        var assignmentOperation = (ISimpleAssignmentOperation)context.Operation;
 
         if (assignmentOperation.Target is IMemberReferenceOperation memberReferenceOperation
             && memberReferenceOperation.Instance is null

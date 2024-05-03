@@ -38,7 +38,7 @@ public abstract class CaseInsensitivityTests<T>
     [TestMethod]
     public void EqualityIsCaseInsensitive()
     {
-        var tuple = EquivalentInstancesDistinctInCase;
+        Tuple<T, T> tuple = EquivalentInstancesDistinctInCase;
 
         Assert.AreEqual(tuple.Item1, tuple.Item2);
     }

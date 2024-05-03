@@ -37,8 +37,8 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzer : DiagnosticAnalyzer
         context.EnableConcurrentExecution();
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingIgnoreAttribute, out var ignoreAttributeSymbol)
-                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out var testMethodAttributeSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingIgnoreAttribute, out INamedTypeSymbol? ignoreAttributeSymbol)
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol))
             {
                 context.RegisterSymbolAction(
                     context => AnalyzeSymbol(context, ignoreAttributeSymbol, testMethodAttributeSymbol),
@@ -50,10 +50,10 @@ public sealed class TestMethodShouldNotBeIgnoredAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol testMethodAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        var methodAttributes = methodSymbol.GetAttributes();
+        ImmutableArray<AttributeData> methodAttributes = methodSymbol.GetAttributes();
         bool isTestMethod = false;
         bool isMethodIgnored = false;
-        foreach (var methodAttribute in methodAttributes)
+        foreach (AttributeData methodAttribute in methodAttributes)
         {
             // Current method should be a test method or should inherit from the TestMethod attribute.
             if (methodAttribute.AttributeClass.Inherits(testMethodAttributeSymbol))

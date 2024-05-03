@@ -26,15 +26,12 @@ namespace Analyzer.Utilities.Extensions
         /// <remarks>
         /// For example, <see cref="SymbolVisibility.Public"/> is at least as visible as <see cref="SymbolVisibility.Internal"/>, but <see cref="SymbolVisibility.Private"/> is not as visible as <see cref="SymbolVisibility.Public"/>.
         /// </remarks>
-        public static bool IsAtLeastAsVisibleAs(this SymbolVisibility typeVisibility, SymbolVisibility comparisonVisibility)
+        public static bool IsAtLeastAsVisibleAs(this SymbolVisibility typeVisibility, SymbolVisibility comparisonVisibility) => typeVisibility switch
         {
-            return typeVisibility switch
-            {
-                SymbolVisibility.Public => true,
-                SymbolVisibility.Internal => comparisonVisibility != SymbolVisibility.Public,
-                SymbolVisibility.Private => comparisonVisibility == SymbolVisibility.Private,
-                _ => throw new ArgumentOutOfRangeException(nameof(typeVisibility), typeVisibility, null),
-            };
-        }
+            SymbolVisibility.Public => true,
+            SymbolVisibility.Internal => comparisonVisibility != SymbolVisibility.Public,
+            SymbolVisibility.Private => comparisonVisibility == SymbolVisibility.Private,
+            _ => throw new ArgumentOutOfRangeException(nameof(typeVisibility), typeVisibility, null),
+        };
     }
 }

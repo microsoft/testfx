@@ -41,19 +41,13 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
         }
     }
 
-    public void GetTestsShouldReturnNullIfAssemblyNameIsNull()
-    {
-        Verify(_testableAssemblyEnumeratorWrapper.GetTests(null, null, out _warnings) is null);
-    }
+    public void GetTestsShouldReturnNullIfAssemblyNameIsNull() => Verify(_testableAssemblyEnumeratorWrapper.GetTests(null, null, out _warnings) is null);
 
-    public void GetTestsShouldReturnNullIfAssemblyNameIsEmpty()
-    {
-        Verify(_testableAssemblyEnumeratorWrapper.GetTests(string.Empty, null, out _warnings) is null);
-    }
+    public void GetTestsShouldReturnNullIfAssemblyNameIsEmpty() => Verify(_testableAssemblyEnumeratorWrapper.GetTests(string.Empty, null, out _warnings) is null);
 
     public void GetTestsShouldReturnNullIfSourceFileDoesNotExistInContext()
     {
-        var assemblyName = "DummyAssembly.dll";
+        string assemblyName = "DummyAssembly.dll";
 
         // Setup mocks.
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(assemblyName))
@@ -65,11 +59,11 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
         // Also validate that we give a warning when this happens.
         Verify(_warnings is not null);
-        var innerMessage = string.Format(
+        string innerMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.TestAssembly_FileDoesNotExist,
             assemblyName);
-        var message = string.Format(
+        string message = string.Format(
             CultureInfo.CurrentCulture,
             Resource.TestAssembly_AssemblyDiscoveryFailure,
             assemblyName,
@@ -79,7 +73,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
     public void GetTestsShouldReturnNullIfSourceDoesNotReferenceUnitTestFrameworkAssembly()
     {
-        var assemblyName = "DummyAssembly.dll";
+        string assemblyName = "DummyAssembly.dll";
 
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: false);
@@ -89,12 +83,12 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
     public void GetTestsShouldReturnTestElements()
     {
-        var assemblyName = Assembly.GetExecutingAssembly().FullName;
+        string assemblyName = Assembly.GetExecutingAssembly().FullName;
 
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);
 
-        var tests = _testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings);
+        ICollection<MSTest.TestAdapter.ObjectModel.UnitTestElement> tests = _testableAssemblyEnumeratorWrapper.GetTests(assemblyName, null, out _warnings);
 
         Verify(tests is not null);
 
@@ -104,7 +98,7 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
     public void GetTestsShouldCreateAnIsolatedInstanceOfAssemblyEnumerator()
     {
-        var assemblyName = Assembly.GetExecutingAssembly().FullName;
+        string assemblyName = Assembly.GetExecutingAssembly().FullName;
 
         // Setup mocks.
         SetupMocks(assemblyName, doesFileExist: true, isAssemblyReferenced: true);
@@ -118,8 +112,8 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
     public void GetTestsShouldReturnNullIfSourceFileCannotBeLoaded()
     {
-        var assemblyName = "DummyAssembly.dll";
-        var fullFilePath = Path.Combine(@"C:\temp", assemblyName);
+        string assemblyName = "DummyAssembly.dll";
+        string fullFilePath = Path.Combine(@"C:\temp", assemblyName);
 
         // Setup mocks.
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(assemblyName))
@@ -134,8 +128,8 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
     public void GetTestsShouldReturnNullIfSourceFileLoadThrowsABadImageFormatException()
     {
-        var assemblyName = "DummyAssembly.dll";
-        var fullFilePath = Path.Combine(@"C:\temp", assemblyName);
+        string assemblyName = "DummyAssembly.dll";
+        string fullFilePath = Path.Combine(@"C:\temp", assemblyName);
 
         // Setup mocks.
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(assemblyName))
@@ -150,8 +144,8 @@ public class AssemblyEnumeratorWrapperTests : TestContainer
 
     public void GetTestsShouldReturnNullIfThereIsAReflectionTypeLoadException()
     {
-        var assemblyName = "DummyAssembly.dll";
-        var fullFilePath = Path.Combine(@"C:\temp", assemblyName);
+        string assemblyName = "DummyAssembly.dll";
+        string fullFilePath = Path.Combine(@"C:\temp", assemblyName);
 
         // Setup mocks.
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.GetFullFilePath(assemblyName))

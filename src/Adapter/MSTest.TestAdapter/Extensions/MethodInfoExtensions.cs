@@ -1,6 +1,7 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -94,7 +95,7 @@ internal static class MethodInfoExtensions
         DebugEx.Assert(method != null, "method should not be null.");
 
         // There should be one and only one TimeoutAttribute.
-        var attributes = ReflectHelper.GetCustomAttributes<TimeoutAttribute>(method, false);
+        TimeoutAttribute[] attributes = ReflectHelper.GetCustomAttributes<TimeoutAttribute>(method, false);
         if (attributes?.Length != 1)
         {
             return false;
@@ -110,13 +111,11 @@ internal static class MethodInfoExtensions
     /// <param name="method">The method to verify.</param>
     /// <returns>True if the method has a void/task return type..</returns>
     internal static bool IsValidReturnType(this MethodInfo method)
-    {
-        return ReflectHelper.MatchReturnType(method, typeof(Task))
+        => ReflectHelper.MatchReturnType(method, typeof(Task))
 #if NETCOREAPP
-            || ReflectHelper.MatchReturnType(method, typeof(ValueTask))
+        || ReflectHelper.MatchReturnType(method, typeof(ValueTask))
 #endif
-            || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName() == null);
-    }
+        || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName() == null);
 
     /// <summary>
     /// For async methods compiler generates different type and method.
@@ -126,7 +125,7 @@ internal static class MethodInfoExtensions
     /// <returns>Compiler generated type name for given async test method..</returns>
     internal static string? GetAsyncTypeName(this MethodInfo method)
     {
-        var asyncStateMachineAttribute = ReflectHelper.GetCustomAttributes<AsyncStateMachineAttribute>(method, false).FirstOrDefault();
+        AsyncStateMachineAttribute? asyncStateMachineAttribute = ReflectHelper.GetCustomAttributes<AsyncStateMachineAttribute>(method, false).FirstOrDefault();
 
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
@@ -140,27 +139,87 @@ internal static class MethodInfoExtensions
     /// <param name="classInstance">
     /// Instance of the on which methodInfo is invoked.
     /// </param>
-    /// <param name="parameters">
+    /// <param name="arguments">
     /// Arguments for the methodInfo invoke.
     /// </param>
-    internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? parameters)
+    internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
     {
-        var methodParameters = methodInfo.GetParameters();
+        ParameterInfo[]? methodParameters = methodInfo.GetParameters();
 
         // check if test method expected parameter values but no test data was provided,
         // throw error with appropriate message.
-        if (methodParameters != null && methodParameters.Length > 0 && parameters == null)
+        if (methodParameters != null && methodParameters.Length > 0 && arguments == null)
         {
-            throw new TestFailedException(ObjectModel.UnitTestOutcome.Error, Resource.UTA_TestMethodExpectedParameters);
+            throw new TestFailedException(
+                ObjectModel.UnitTestOutcome.Error,
+                string.Format(
+                    CultureInfo.InvariantCulture,
+                    Resource.CannotRunTestMethodNoDataError,
+                    methodInfo.DeclaringType!.FullName,
+                    methodInfo.Name));
         }
 
-        Task? task = parameters is not null
-            && methodParameters?.Length == 1
-            && methodParameters[0].ParameterType == typeof(object[])
-            ? methodInfo.Invoke(classInstance, new[] { parameters }) as Task
-            : methodInfo.Invoke(classInstance, parameters) as Task;
+        Task? task;
 
-        // If methodInfo is an Async method, wait for returned task
+        if (arguments is not null
+            && methodParameters?.Length == 1
+            && methodParameters[0].ParameterType == typeof(object[]))
+        {
+            task = methodInfo.Invoke(classInstance, new[] { arguments }) as Task;
+        }
+        else
+        {
+            int methodParametersLengthOrZero = methodParameters?.Length ?? 0;
+            int argumentsLengthOrZero = arguments?.Length ?? 0;
+            if (methodParametersLengthOrZero != argumentsLengthOrZero
+                || !AreArgumentAndParameterTypesAssignable(arguments, methodParameters))
+            {
+                throw new TestFailedException(
+                    ObjectModel.UnitTestOutcome.Error,
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        Resource.CannotRunTestArgumentsMismatchError,
+                        methodInfo.DeclaringType!.FullName,
+                        methodInfo.Name,
+                        methodParametersLengthOrZero,
+                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>()),
+                        argumentsLengthOrZero,
+                        string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())));
+            }
+
+            task = methodInfo.Invoke(classInstance, arguments) as Task;
+        }
+
+        // If methodInfo is an async method, wait for returned task
         task?.GetAwaiter().GetResult();
+    }
+
+    private static bool AreArgumentAndParameterTypesAssignable(object?[]? arguments, ParameterInfo[]? parameters)
+    {
+        if (arguments is null or { Length: 0 } && parameters is null or { Length: 0 })
+        {
+            return true;
+        }
+
+        if (arguments is null)
+        {
+            return false;
+        }
+
+        if (parameters is null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < parameters.Length; i++)
+        {
+            if (arguments[i] is { } argument
+                && !parameters[i].ParameterType.IsAssignableFrom(argument.GetType()))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

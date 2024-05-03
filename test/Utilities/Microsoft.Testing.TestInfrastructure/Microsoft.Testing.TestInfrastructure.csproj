@@ -7,9 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Internal.Framework" Version="$(MicrosoftTestingPlatformVersion)" />
-    <PackageReference Include="Polly" Version="$(PollyVersion)" />
-    <PackageReference Include="Polly.Contrib.WaitAndRetry" Version="$(PollyContribWaitAndRetryVersion)" />
+    <PackageReference Include="Microsoft.Testing.Internal.Framework" />
+    <PackageReference Include="Polly" />
+    <PackageReference Include="Polly.Contrib.WaitAndRetry" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- This is not a test project despite it references Microsoft.Testing.Internal.Framework -->
+    <ProjectCapability Remove="TestContainer" />
+    <ProjectCapability Remove="TestingPlatformServer" />
   </ItemGroup>
 
 </Project>

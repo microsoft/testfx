@@ -2,6 +2,16 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="pt-BR">
     <body>
+      <trans-unit id="AssemblyCleanupTimedOut">
+        <source>Assembly cleanup method '{0}.{1}' timed out</source>
+        <target state="translated">O método de limpeza do assembly '{0}.{1}' atingiu o tempo limite</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupWasCancelled">
+        <source>Assembly cleanup method '{0}.{1}' was cancelled</source>
+        <target state="translated">O método de inicialização do assembly '{0}.{1}' foi cancelado</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
         <source>Assembly initialize method '{0}.{1}' timed out</source>
         <target state="translated">Método de inicialização de montagem “{0}.{1}” tempo esgotado</target>
@@ -10,6 +20,30 @@
       <trans-unit id="AssemblyInitializeWasCancelled">
         <source>Assembly initialize method '{0}.{1}' was cancelled</source>
         <target state="translated">Método de inicialização de montagem “{0}.{1}” foi cancelado</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRunTestArgumentsMismatchError">
+        <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
+Test expected {2} parameter(s), with types '{3}',
+but received {4} argument(s), with types '{5}'.</source>
+        <target state="translated">Não é possível executar o método de teste '{0}.{1}': Os dados de teste não correspondem aos parâmetros do método. A contagem ou os tipos são diferentes.
+Testar {2} parâmetros esperados, com tipos '{3}',
+mas {4} argumentos recebidos, com tipos '{5}'.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRunTestMethodNoDataError">
+        <source>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</source>
+        <target state="translated">Não é possível executar o método de teste '{0}.{1}': o método tem parâmetros, mas não define nenhuma fonte de teste. Use '[DataRow]', '[DynamicData]' ou uma fonte de dados 'ITestDataSource' personalizada para fornecer dados de teste.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupTimedOut">
+        <source>Class cleanup method '{0}.{1}' timed out</source>
+        <target state="translated">O método de limpeza de classe '{0}.{1}' atingiu o tempo limite</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupWasCancelled">
+        <source>Class cleanup method '{0}.{1}' was cancelled</source>
+        <target state="translated">O método de limpeza de classe '{0}.{1}' foi cancelado</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
@@ -27,10 +61,35 @@
         <target state="translated">Teste '{0}' ultrapassou o período de tempo limite de execução.</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
+        <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
+        <target state="translated">Não há suporte para a entrada runsettings "&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;" em sistemas operacionais que não sejam Windows.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="SourcesNotSupported">
         <source>Running tests in any of the provided sources is not supported for the selected platform</source>
         <target state="translated">Não há suporte para execução de teste em qualquer uma das origens fontes fornecidas para a plataforma selecionada</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="TestCleanupTimedOut">
+        <source>Test cleanup method '{0}.{1}' timed out</source>
+        <target state="translated">Testar o método de limpeza '{0}.{1}' atingiu o tempo limite</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestCleanupWasCancelled">
+        <source>Test cleanup method '{0}.{1}' was cancelled</source>
+        <target state="translated">Testar o método de limpeza '{0}.{1}' foi cancelado</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeTimedOut">
+        <source>Test initialize method '{0}.{1}' timed out</source>
+        <target state="translated">Testar o método de inicialização '{0}.{1}' atingiu o tempo limite</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeWasCancelled">
+        <source>Test initialize method '{0}.{1}' was cancelled</source>
+        <target state="translated">Testar método de inicialização '{0}.{1}' foi cancelado</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
         <source>TestCleanup method {0}.{1} threw exception. {2}.</source>
@@ -331,11 +390,6 @@ Erro: {1}</target>
       <trans-unit id="TestAssembly_AssemblyDiscoveryFailure">
         <source>Failed to discover tests from assembly {0}. Reason:{1}</source>
         <target state="translated">Falha ao descobrir testes por meio do assembly {0}. Motivo: {1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_TestMethodExpectedParameters">
-        <source>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</source>
-        <target state="translated">Apenas os métodos de teste controlados por dados podem ter parâmetros. Você pretendia usar [DataRow] ou [DynamicData]?</target>
         <note></note>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">

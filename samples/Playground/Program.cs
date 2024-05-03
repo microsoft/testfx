@@ -15,12 +15,12 @@ public class Program
         // Opt-out telemetry
         Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
-        var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+        ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
         testApplicationBuilder.AddMSTest(() => new[] { Assembly.GetEntryAssembly()! });
 
         // Enable Trx
         // testApplicationBuilder.AddTrxReportProvider();
-        using var testApplication = await testApplicationBuilder.BuildAsync();
+        using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
         return await testApplication.RunAsync();
     }
 }

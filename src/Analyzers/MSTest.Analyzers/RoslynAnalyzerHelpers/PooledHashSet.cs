@@ -68,18 +68,18 @@ namespace Analyzer.Utilities.PooledObjects
 
         public static PooledHashSet<T> GetInstance(IEqualityComparer<T>? comparer = null)
         {
-            var pool = comparer == null ?
+            ObjectPool<PooledHashSet<T>> pool = comparer == null ?
                 s_poolInstance :
                 s_poolInstancesByComparer.GetOrAdd(comparer, CreatePool);
-            var instance = pool.Allocate();
+            PooledHashSet<T> instance = pool.Allocate();
             Debug.Assert(instance.Count == 0);
             return instance;
         }
 
         public static PooledHashSet<T> GetInstance(IEnumerable<T> initializer, IEqualityComparer<T>? comparer = null)
         {
-            var instance = GetInstance(comparer);
-            foreach (var value in initializer)
+            PooledHashSet<T> instance = GetInstance(comparer);
+            foreach (T? value in initializer)
             {
                 instance.Add(value);
             }

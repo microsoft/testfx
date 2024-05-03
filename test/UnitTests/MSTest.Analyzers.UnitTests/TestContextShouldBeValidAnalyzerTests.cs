@@ -31,7 +31,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
     [Arguments("TeStCoNtExT", "protected")]
     public async Task WhenTestContextCaseInsensitiveIsField_Diagnostic(string fieldName, string accessibility)
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -56,7 +56,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
     [Arguments("TeStCoNtExT", "internal")]
     public async Task WhenTestContextPropertyIsPrivateOrInternal_Diagnostic(string propertyName, string accessibility)
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -74,7 +74,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestContextPropertyIsValid_NoDiagnostic()
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -89,7 +89,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenDiscoverInternalsTestContextPropertyIsPrivate_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: DiscoverInternals]
@@ -111,7 +111,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
     [Arguments("internal")]
     public async Task WhenDiscoverInternalsTestContextPropertyIsPublicOrInternal_NoDiagnostic(string accessibility)
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: DiscoverInternals]
@@ -128,7 +128,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestContextPropertyIsStatic_Diagnostic()
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -146,7 +146,7 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestContextPropertyIsReadonly_Diagnostic()
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -160,5 +160,35 @@ public sealed class TestContextShouldBeValidAnalyzerTests(ITestExecutionContext 
             code,
             VerifyCS.Diagnostic(TestContextShouldBeValidAnalyzer.NotReadonlyRule)
                 .WithLocation(0));
+    }
+
+    [Arguments("TestContext", "private")]
+    [Arguments("TestContext", "public")]
+    [Arguments("TestContext", "internal")]
+    [Arguments("TestContext", "protected")]
+    [Arguments("testcontext", "private")]
+    [Arguments("testcontext", "public")]
+    [Arguments("testcontext", "internal")]
+    [Arguments("testcontext", "protected")]
+    [Arguments("TESTCONTEXT", "private")]
+    [Arguments("TESTCONTEXT", "public")]
+    [Arguments("TESTCONTEXT", "internal")]
+    [Arguments("TESTCONTEXT", "protected")]
+    [Arguments("TeStCoNtExT", "private")]
+    [Arguments("TeStCoNtExT", "public")]
+    [Arguments("TeStCoNtExT", "internal")]
+    [Arguments("TeStCoNtExT", "protected")]
+    public async Task WhenTestContextIsFieldNotOnTestClass_NoDiagnostic(string fieldName, string accessibility)
+    {
+        string code = $$"""
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            public class MyTestClass
+            {
+                {{accessibility}} TestContext {{fieldName}};
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
     }
 }

@@ -14,6 +14,7 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
 CommandLine.MaxOutstandingCommands = Environment.ProcessorCount;
+DotnetCli.DoNotRetry = Debugger.IsAttached;
 
 ITestApplicationBuilder builder = await TestApplication.CreateBuilderAsync(args);
 builder.TestHost.AddTestApplicationLifecycleCallbacks(sp => new GlobalTasks(sp.GetCommandLineOptions()));
@@ -74,8 +75,12 @@ internal sealed class GlobalTasks : ITestApplicationLifecycleCallbacks
             ? Path.Combine(AppContext.BaseDirectory, "testsbaseline.txt")
             : Path.Combine(AppContext.BaseDirectory, "testsbaseline.notwin.txt");
 
-        await TestsRunWatchDog.Verify(skip: _commandLineOptions.IsServerMode(), fixBaseLine: true);
+        await TestsRunWatchDog.VerifyAsync(skip: _commandLineOptions.IsServerMode(), fixBaseLine: true);
     }
 
-    public Task BeforeRunAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task BeforeRunAsync(CancellationToken cancellationToken)
+    {
+        Console.WriteLine($"Parallelism: '{(Debugger.IsAttached ? 1 : Environment.ProcessorCount)}'");
+        return Task.CompletedTask;
+    }
 }

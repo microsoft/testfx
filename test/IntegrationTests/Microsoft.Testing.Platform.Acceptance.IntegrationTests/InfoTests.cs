@@ -20,16 +20,13 @@ public class InfoTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Info_WhenNoExtensionRegistered_OutputDefaultInfoContent(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         string regexMatchPattern = $"""
-Microsoft\(R\) Testing Platform Execution Command Line Tool
-Version: .+
-RuntimeInformation: .+
-Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
+.NET Testing Platform v.+ \[.+\]
 Microsoft Testing Platform:
   Version: .+
   Dynamic Code Supported: True
@@ -141,7 +138,7 @@ Registered tools:
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Info_WhenMSTestExtensionRegistered_OutputInfoContentOfRegisteredExtension(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);

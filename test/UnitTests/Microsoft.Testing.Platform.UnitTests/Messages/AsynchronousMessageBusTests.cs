@@ -23,7 +23,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
     public async Task UnexpectedTypePublished_ShouldFail()
     {
         MessageBusProxy proxy = new();
-        var consumer = new InvalidTypePublished(proxy);
+        InvalidTypePublished consumer = new(proxy);
         AsynchronousMessageBus asynchronousMessageBus = new(
             [consumer],
             new CTRLPlusCCancellationTokenSource(),
@@ -83,8 +83,8 @@ public sealed class AsynchronousMessageBusTests : TestBase
         await asynchronousMessageBus.InitAsync();
         proxy.SetBuiltMessageBus(asynchronousMessageBus);
 
-        var consumerAData = new Data();
-        var consumerBData = new Data();
+        Data consumerAData = new();
+        Data consumerBData = new();
 
         await proxy.PublishAsync(consumerA, consumerAData);
         await proxy.PublishAsync(consumerB, consumerBData);
@@ -105,7 +105,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
         int totalPayloads = Environment.ProcessorCount * 3;
         using MessageBusProxy proxy = new();
         List<DummyConsumer> dummyConsumers = [];
-        var random = new Random();
+        Random random = new();
         for (int i = 0; i < totalConsumers; i++)
         {
             DummyConsumer dummyConsumer = new(async _ => await Task.Delay(random.Next(40, 80)));
@@ -122,7 +122,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
 
         proxy.SetBuiltMessageBus(asynchronousMessageBus);
 
-        var producer = new DummyConsumer.DummyProducer();
+        DummyConsumer.DummyProducer producer = new();
         await Task.WhenAll(Enumerable.Range(1, totalPayloads)
             .Select(i => Task.Run(async () => await proxy.PublishAsync(producer, new DummyConsumer.DummyData() { Data = i }))).ToArray());
 

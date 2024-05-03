@@ -87,21 +87,21 @@ public class MSTestDiscovererTests : TestContainer
     public void DiscoverTestsShouldThrowIfSourcesIsNull()
     {
         void A() => _discoverer.DiscoverTests(null, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void DiscoverTestsShouldThrowIfDiscoverySinkIsNull()
     {
         void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, null);
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
     public void DiscoverTestsShouldThrowIfLoggerIsNull()
     {
         void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, null, _mockTestCaseDiscoverySink.Object);
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex.GetType() == typeof(ArgumentNullException));
     }
 
@@ -112,13 +112,13 @@ public class MSTestDiscovererTests : TestContainer
             .Returns(new List<string> { });
 
         void A() => _discoverer.DiscoverTests(new List<string>(), _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex.GetType() == typeof(NotSupportedException));
     }
 
-    public void DiscoverTestsShouldNotThrowIfdiscoveryContextIsNull()
+    public void DiscoverTestsShouldNotThrowIfDiscoveryContextIsNull()
     {
-        var source = Assembly.GetExecutingAssembly().Location;
+        string source = Assembly.GetExecutingAssembly().Location;
 
         _testablePlatformServiceProvider.MockTestSourceValidator.Setup(tsv => tsv.ValidSourceExtensions)
             .Returns(new List<string> { ".dll" });
@@ -133,7 +133,7 @@ public class MSTestDiscovererTests : TestContainer
 
     public void DiscoverTestsShouldDiscoverTests()
     {
-        var source = Assembly.GetExecutingAssembly().Location;
+        string source = Assembly.GetExecutingAssembly().Location;
 
         // Setup mocks.
         _testablePlatformServiceProvider.MockTestSourceValidator.Setup(tsv => tsv.ValidSourceExtensions)
@@ -160,7 +160,7 @@ public class MSTestDiscovererTests : TestContainer
 
     public void DiscoveryShouldNotHappenIfTestSettingsIsGiven()
     {
-        string runSettingxml =
+        string runSettingsXml =
         @"<RunSettings>   
                     <MSTest>   
                         <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
@@ -169,10 +169,10 @@ public class MSTestDiscovererTests : TestContainer
                     </MSTest>
             </RunSettings>";
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
 
-        var source = Assembly.GetExecutingAssembly().Location;
+        string source = Assembly.GetExecutingAssembly().Location;
         _discoverer.DiscoverTests(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
 
         // Assert.
@@ -181,7 +181,7 @@ public class MSTestDiscovererTests : TestContainer
 
     public void DiscoveryShouldReportAndBailOutOnSettingsException()
     {
-        string runSettingxml =
+        string runSettingsXml =
         @"<RunSettings>   
                     <MSTest>   
                         <Parallelize>
@@ -190,10 +190,10 @@ public class MSTestDiscovererTests : TestContainer
                     </MSTest>
             </RunSettings>";
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
-        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
+        _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
 
-        var source = Assembly.GetExecutingAssembly().Location;
+        string source = Assembly.GetExecutingAssembly().Location;
         _discoverer.DiscoverTests(new List<string> { source }, _mockDiscoveryContext.Object, _mockMessageLogger.Object, _mockTestCaseDiscoverySink.Object);
 
         // Assert.
@@ -204,7 +204,7 @@ public class MSTestDiscovererTests : TestContainer
     public void AreValidSourcesShouldThrowIfPlatformsValidSourceExtensionsIsNull()
     {
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns((List<string>)null);
-        var ex = VerifyThrows(A);
+        Exception ex = VerifyThrows(A);
         Verify(ex.GetType() == typeof(ArgumentNullException));
 
         static void A() => MSTestDiscovererHelpers.AreValidSources(new List<string> { "dummy" });

@@ -86,10 +86,7 @@ internal abstract class TestDataConnection : IDisposable
     // It is critical that is class be disposed of properly, otherwise
     // data connections may be left open. In general it is best to use create instances
     // in a "using"
-    public virtual void Dispose()
-    {
-        GC.SuppressFinalize(this);
-    }
+    public virtual void Dispose() => GC.SuppressFinalize(this);
 
     internal static bool PathNeedsFixup(string path)
     {
@@ -157,10 +154,7 @@ internal abstract class TestDataConnection : IDisposable
         }
     }
 
-    protected string? FixPath(string path)
-    {
-        return FixPath(path, _dataFolders);
-    }
+    protected string? FixPath(string path) => FixPath(path, _dataFolders);
 }
 
 #endif

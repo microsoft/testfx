@@ -39,7 +39,7 @@ internal class UnitTestDiscoverer
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext discoveryContext)
     {
-        foreach (var source in sources)
+        foreach (string source in sources)
         {
             DiscoverTestsInSource(source, logger, discoverySink, discoveryContext);
         }
@@ -58,18 +58,18 @@ internal class UnitTestDiscoverer
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext? discoveryContext)
     {
-        var testElements = _assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out var warnings);
+        ICollection<UnitTestElement>? testElements = _assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out ICollection<string>? warnings);
 
-        var treatDiscoveryWarningsAsErrors = MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors;
+        bool treatDiscoveryWarningsAsErrors = MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors;
 
         // log the warnings
-        foreach (var warning in warnings)
+        foreach (string warning in warnings)
         {
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                 "MSTestDiscoverer: Warning during discovery from {0}. {1} ",
                 source,
                 warning);
-            var message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
+            string message = string.Format(CultureInfo.CurrentCulture, Resource.DiscoveryWarning, source, warning);
             logger.SendMessage(treatDiscoveryWarningsAsErrors ? TestMessageLevel.Error : TestMessageLevel.Warning, message);
         }
 
@@ -89,7 +89,7 @@ internal class UnitTestDiscoverer
 
     internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
     {
-        var shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
+        bool shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
 
         var navigationSessions = new Dictionary<string, object?>();
         try
@@ -100,18 +100,18 @@ internal class UnitTestDiscoverer
             }
 
             // Get filter expression and skip discovery in case filter expression has parsing error.
-            ITestCaseFilterExpression? filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, logger, out var filterHasError);
+            ITestCaseFilterExpression? filterExpression = TestMethodFilter.GetFilterExpression(discoveryContext, logger, out bool filterHasError);
             if (filterHasError)
             {
                 return;
             }
 
-            foreach (var testElement in testElements)
+            foreach (UnitTestElement testElement in testElements)
             {
                 var testCase = testElement.ToTestCase();
 
                 // Filter tests based on test case filters
-                if (filterExpression != null && filterExpression.MatchTestCase(testCase, (p) => TestMethodFilter.PropertyValueProvider(testCase, p)) == false)
+                if (filterExpression != null && !filterExpression.MatchTestCase(testCase, (p) => TestMethodFilter.PropertyValueProvider(testCase, p)))
                 {
                     continue;
                 }
@@ -124,7 +124,7 @@ internal class UnitTestDiscoverer
 
                 string testSource = testElement.TestMethod.DeclaringAssemblyName ?? source;
 
-                if (!navigationSessions.TryGetValue(testSource, out var testNavigationSession))
+                if (!navigationSessions.TryGetValue(testSource, out object? testNavigationSession))
                 {
                     testNavigationSession = PlatformServiceProvider.Instance.FileOperations.CreateNavigationSession(testSource);
                     navigationSessions.Add(testSource, testNavigationSession);
@@ -136,10 +136,10 @@ internal class UnitTestDiscoverer
                     continue;
                 }
 
-                var className = testElement.TestMethod.DeclaringClassFullName
+                string className = testElement.TestMethod.DeclaringClassFullName
                                 ?? testElement.TestMethod.FullClassName;
 
-                var methodName = testElement.TestMethod.Name;
+                string methodName = testElement.TestMethod.Name;
 
                 // If it is async test method use compiler generated type and method name for navigation data.
                 if (!StringEx.IsNullOrEmpty(testElement.AsyncTypeName))
@@ -154,8 +154,8 @@ internal class UnitTestDiscoverer
                     testNavigationSession,
                     className,
                     methodName,
-                    out var minLineNumber,
-                    out var fileName);
+                    out int minLineNumber,
+                    out string? fileName);
 
                 if (!StringEx.IsNullOrEmpty(fileName))
                 {

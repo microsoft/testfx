@@ -25,8 +25,8 @@ public sealed class TestApplicationBuilderTests : TestBase
     public TestApplicationBuilderTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)
     {
-        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemRuntimeFeature(), new SystemEnvironment(), new SystemProcessHandler());
-        var configuration = new AggregatedConfiguration(Array.Empty<IConfigurationProvider>(), testApplicationModuleInfo, new SystemFileSystem());
+        CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
+        AggregatedConfiguration configuration = new(Array.Empty<IConfigurationProvider>(), testApplicationModuleInfo, new SystemFileSystem());
         configuration.SetCurrentWorkingDirectory(string.Empty);
         configuration.SetCurrentWorkingDirectory(string.Empty);
         _serviceProvider.AddService(configuration);
@@ -90,7 +90,7 @@ public sealed class TestApplicationBuilderTests : TestBase
             : new(() => new TestSessionLifetimeHandlerPlusConsumer());
         testHostManager.AddTestSessionLifetimeHandle(compositeExtensionFactory);
         testHostManager.AddDataConsumer(compositeExtensionFactory);
-        var compositeExtensions = new List<ICompositeExtensionFactory>();
+        List<ICompositeExtensionFactory> compositeExtensions = new();
         IDataConsumer[] consumers = (await testHostManager.BuildDataConsumersAsync(_serviceProvider, compositeExtensions)).Select(x => (IDataConsumer)x.Consumer).ToArray();
         ITestSessionLifetimeHandler[] sessionLifetimeHandle = (await testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, compositeExtensions)).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler).ToArray();
         Assert.AreEqual(1, consumers.Length);
@@ -148,7 +148,7 @@ public sealed class TestApplicationBuilderTests : TestBase
             : new(() => new TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider());
         testHostControllerManager.AddEnvironmentVariableProvider(compositeExtensionFactory);
         testHostControllerManager.AddProcessLifetimeHandler(compositeExtensionFactory);
-        var compositeExtensions = new List<ICompositeExtensionFactory>();
+        List<ICompositeExtensionFactory> compositeExtensions = new();
         TestHostControllerConfiguration configuration = await testHostControllerManager.BuildAsync(_serviceProvider);
         Assert.IsTrue(configuration.RequireProcessRestart);
         Assert.AreEqual(1, configuration.LifetimeHandlers.Length);

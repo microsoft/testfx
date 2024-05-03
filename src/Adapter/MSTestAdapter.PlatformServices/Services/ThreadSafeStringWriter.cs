@@ -50,10 +50,7 @@ public class ThreadSafeStringWriter : StringWriter
         GetOrAddStringBuilder();
     }
 
-    public override StringBuilder GetStringBuilder()
-    {
-        throw new NotSupportedException("GetStringBuilder is not supported, because it does not allow us to clean the string builder in thread safe way.");
-    }
+    public override StringBuilder GetStringBuilder() => throw new NotSupportedException("GetStringBuilder is not supported, because it does not allow us to clean the string builder in thread safe way.");
 
     /// <inheritdoc/>
     public override string ToString()
@@ -138,7 +135,7 @@ public class ThreadSafeStringWriter : StringWriter
         {
             return State.Value == null
                 ? null
-                : !State.Value.TryGetValue(_outputType, out var stringBuilder) ? null : stringBuilder;
+                : !State.Value.TryGetValue(_outputType, out ThreadSafeStringBuilder? stringBuilder) ? null : stringBuilder;
         }
     }
 
@@ -155,7 +152,7 @@ public class ThreadSafeStringWriter : StringWriter
                 State.Value = new Dictionary<string, ThreadSafeStringBuilder> { [_outputType] = sb };
                 return sb;
             }
-            else if (!State.Value.TryGetValue(_outputType, out var stringBuilder))
+            else if (!State.Value.TryGetValue(_outputType, out ThreadSafeStringBuilder? stringBuilder))
             {
                 // The storage for the current async operation has the dictionary, but not the key
                 // for the output type, add it, and avoid looking up the value again.
@@ -232,7 +229,7 @@ public class ThreadSafeStringWriter : StringWriter
         {
             lock (_instanceLockObject)
             {
-                var output = _stringBuilder.ToString();
+                string output = _stringBuilder.ToString();
                 _stringBuilder.Clear();
                 return output;
             }

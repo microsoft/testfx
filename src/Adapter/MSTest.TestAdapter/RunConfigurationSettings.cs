@@ -5,6 +5,7 @@ using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Utilities;
+using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
@@ -30,6 +31,11 @@ public class RunConfigurationSettings
     public bool CollectSourceInformation { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating the requested platform apartment state.
+    /// </summary>
+    internal ApartmentState? ExecutionApartmentState { get; private set; }
+
+    /// <summary>
     /// Populate adapter settings from the context.
     /// </summary>
     /// <param name="context">
@@ -44,7 +50,7 @@ public class RunConfigurationSettings
             return new RunConfigurationSettings();
         }
 
-        var settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
+        RunConfigurationSettings? settings = GetSettings(context.RunSettings.SettingsXml, SettingsName);
 
         return settings ?? new RunConfigurationSettings();
     }
@@ -58,7 +64,7 @@ public class RunConfigurationSettings
     internal static RunConfigurationSettings? GetSettings(string runsettingsXml, string settingName)
     {
         using var stringReader = new StringReader(runsettingsXml);
-        XmlReader reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
+        var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
 
         // read to the fist child
         XmlReaderUtilities.ReadToRootNode(reader);
@@ -112,12 +118,27 @@ public class RunConfigurationSettings
                 {
                     case "COLLECTSOURCEINFORMATION":
                         {
-                            if (bool.TryParse(reader.ReadInnerXml(), out var result))
+                            if (bool.TryParse(reader.ReadInnerXml(), out bool result))
                             {
                                 settings.CollectSourceInformation = result;
                                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo(
                                 "CollectSourceInformation value Found : {0} ",
                                 result);
+                            }
+
+                            break;
+                        }
+
+                    case "EXECUTIONTHREADAPARTMENTSTATE":
+                        {
+                            if (Enum.TryParse(reader.ReadInnerXml(), out PlatformApartmentState platformApartmentState))
+                            {
+                                settings.ExecutionApartmentState = platformApartmentState switch
+                                {
+                                    PlatformApartmentState.STA => ApartmentState.STA,
+                                    PlatformApartmentState.MTA => ApartmentState.MTA,
+                                    _ => throw new NotSupportedException($"Platform apartment state '{platformApartmentState}' is not supported."),
+                                };
                             }
 
                             break;

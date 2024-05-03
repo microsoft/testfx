@@ -15,7 +15,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 {
     public async Task WhenTestCleanupIsPublic_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -33,7 +33,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestCleanupIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: DiscoverInternals]
@@ -53,7 +53,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestCleanupIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: DiscoverInternals]
@@ -81,7 +81,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
     [Arguments("private")]
     public async Task WhenTestCleanupIsNotPublic_Diagnostic(string accessibility)
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -103,7 +103,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestCleanupIsNotOrdinary_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -125,7 +125,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestCleanupIsAbstract_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -145,7 +145,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestCleanupIsGeneric_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -167,7 +167,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestCleanupIsStatic_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -189,7 +189,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestCleanupHasParameters_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -211,7 +211,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestCleanupReturnTypeIsNotValid_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 
@@ -262,7 +262,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestCleanupReturnTypeIsValid_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 
@@ -293,7 +293,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
     public async Task WhenTestCleanupIsAsyncVoid_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 

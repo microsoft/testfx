@@ -17,7 +17,7 @@ public class NoNamespaceTests : CLITestBase
     public void TestsAreDiscoveredWithExpectedHierarchy()
     {
         // Arrange & Act
-        var testCases = DiscoverTests(GetAssetFullPath(TestAssetName));
+        System.Collections.Immutable.ImmutableArray<TestCase> testCases = DiscoverTests(GetAssetFullPath(TestAssetName));
 
         // Assert
         testCases.Should().HaveCount(2);
@@ -28,7 +28,7 @@ public class NoNamespaceTests : CLITestBase
 
     private static void VerifyHierarchy(TestCase testCase, string expectedNamespace, string expectedClassName, string expectedMethodName)
     {
-        var hierarchy = testCase.GetPropertyValue(TestCaseExtensions.HierarchyProperty) as string[];
+        string[] hierarchy = testCase.GetPropertyValue(TestCaseExtensions.HierarchyProperty) as string[];
         hierarchy.Should().HaveCount(4);
 
         // This level is always null.

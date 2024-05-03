@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
@@ -130,7 +130,7 @@ internal class TestMethodRunner
         }
         finally
         {
-            var firstResult = result![0];
+            UnitTestResult firstResult = result![0];
             firstResult.StandardOut = initializationLogs + firstResult.StandardOut;
             firstResult.StandardError = initializationErrorLogs + firstResult.StandardError;
             firstResult.DebugTrace = initializationTrace + firstResult.DebugTrace;
@@ -150,15 +150,15 @@ internal class TestMethodRunner
         DebugEx.Assert(_testMethodInfo.TestMethod != null, "Test method should not be null.");
 
         List<TestResult> results = [];
-        var isDataDriven = false;
+        bool isDataDriven = false;
         var parentStopwatch = Stopwatch.StartNew();
 
         if (_testMethodInfo.TestMethodOptions.Executor != null)
         {
             if (_test.DataType == DynamicDataType.ITestDataSource)
             {
-                var data = DataSerializationHelper.Deserialize(_test.SerializedData);
-                var testResults = ExecuteTestWithDataSource(null, data);
+                object?[]? data = DataSerializationHelper.Deserialize(_test.SerializedData);
+                TestResult[] testResults = ExecuteTestWithDataSource(null, data);
                 results.AddRange(testResults);
             }
             else if (ExecuteDataSourceBasedTests(results))
@@ -167,9 +167,9 @@ internal class TestMethodRunner
             }
             else
             {
-                var testResults = ExecuteTest(_testMethodInfo);
+                TestResult[] testResults = ExecuteTest(_testMethodInfo);
 
-                foreach (var testResult in testResults)
+                foreach (TestResult testResult in testResults)
                 {
                     if (StringEx.IsNullOrWhiteSpace(testResult.DisplayName))
                     {
@@ -189,7 +189,7 @@ internal class TestMethodRunner
         }
 
         // Get aggregate outcome.
-        var aggregateOutcome = GetAggregateOutcome(results);
+        UTF.UnitTestOutcome aggregateOutcome = GetAggregateOutcome(results);
         _testContext.SetOutcome(aggregateOutcome);
 
         // In case of data driven, set parent info in results.
@@ -228,16 +228,12 @@ internal class TestMethodRunner
             results.Add(emptyResult);
         }
 
-        var unitTestResults = results
-            .ToArray()
-            .ToUnitTestResults();
-
-        return unitTestResults;
+        return results.ToUnitTestResults();
     }
 
     private bool ExecuteDataSourceBasedTests(List<TestResult> results)
     {
-        var isDataDriven = false;
+        bool isDataDriven = false;
 
         DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>(false);
         if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
@@ -291,21 +287,33 @@ internal class TestMethodRunner
         }
         else
         {
-            UTF.ITestDataSource[]? testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)
-                ?.Where(a => a is UTF.ITestDataSource)
-                .OfType<UTF.ITestDataSource>()
-                .ToArray();
+            IEnumerable<UTF.ITestDataSource>? testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>();
 
-            if (testDataSources != null && testDataSources.Length > 0)
+            if (testDataSources != null)
             {
-                isDataDriven = true;
-                foreach (var testDataSource in testDataSources)
+                foreach (UTF.ITestDataSource testDataSource in testDataSources)
                 {
-                    foreach (var data in testDataSource.GetData(_testMethodInfo.MethodInfo))
+                    isDataDriven = true;
+                    IEnumerable<object?[]>? dataSource = null;
+                    try
+                    {
+                        dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
+                    }
+                    catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                    {
+                        var inconclusiveResult = new TestResult
+                        {
+                            Outcome = UTF.UnitTestOutcome.Inconclusive,
+                        };
+                        results.Add(inconclusiveResult);
+                        continue;
+                    }
+
+                    foreach (object?[] data in dataSource)
                     {
                         try
                         {
-                            var testResults = ExecuteTestWithDataSource(testDataSource, data);
+                            TestResult[] testResults = ExecuteTestWithDataSource(testDataSource, data);
 
                             results.AddRange(testResults);
                         }
@@ -326,18 +334,18 @@ internal class TestMethodRunner
         var stopwatch = Stopwatch.StartNew();
 
         _testMethodInfo.SetArguments(data);
-        var testResults = ExecuteTest(_testMethodInfo);
+        TestResult[] testResults = ExecuteTest(_testMethodInfo);
         stopwatch.Stop();
 
-        var hasDisplayName = !StringEx.IsNullOrWhiteSpace(_test.DisplayName);
-        foreach (var testResult in testResults)
+        bool hasDisplayName = !StringEx.IsNullOrWhiteSpace(_test.DisplayName);
+        foreach (TestResult testResult in testResults)
         {
             if (testResult.Duration == TimeSpan.Zero)
             {
                 testResult.Duration = stopwatch.Elapsed;
             }
 
-            var displayName = _test.Name;
+            string? displayName = _test.Name;
             if (testDataSource != null)
             {
                 displayName = testDataSource.GetDisplayName(_testMethodInfo.MethodInfo, data);
@@ -355,7 +363,7 @@ internal class TestMethodRunner
 
     private TestResult[] ExecuteTestWithDataRow(object dataRow, int rowIndex)
     {
-        var displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, _test.DisplayName, rowIndex);
+        string displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, _test.DisplayName, rowIndex);
         Stopwatch? stopwatch = null;
 
         TestResult[]? testResults = null;
@@ -371,7 +379,7 @@ internal class TestMethodRunner
             _testContext.SetDataRow(null);
         }
 
-        foreach (var testResult in testResults)
+        foreach (TestResult testResult in testResults)
         {
             testResult.DisplayName = displayName;
             testResult.DatarowIndex = rowIndex;
@@ -416,8 +424,8 @@ internal class TestMethodRunner
         }
 
         // Get aggregate outcome.
-        var aggregateOutcome = results[0].Outcome;
-        foreach (var result in results)
+        UTF.UnitTestOutcome aggregateOutcome = results[0].Outcome;
+        foreach (TestResult result in results)
         {
             aggregateOutcome = UnitTestOutcomeExtensions.GetMoreImportantOutcome(aggregateOutcome, result.Outcome);
         }
@@ -442,7 +450,7 @@ internal class TestMethodRunner
         // UpdatedResults contain parent result at first position and remaining results has parent info updated.
         var updatedResults = new List<TestResult>();
 
-        foreach (var result in results)
+        foreach (TestResult result in results)
         {
             result.ExecutionId = Guid.NewGuid();
             result.ParentExecId = Guid.NewGuid();
@@ -473,7 +481,7 @@ internal class TestMethodRunner
         // UpdatedResults contain parent result at first position and remaining results has parent info updated.
         List<TestResult> updatedResults = [parentResult];
 
-        foreach (var result in results)
+        foreach (TestResult result in results)
         {
             result.ExecutionId = Guid.NewGuid();
             result.ParentExecId = parentResult.ExecutionId;

@@ -114,7 +114,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
 
     public object Clone(Func<object, bool> filter)
     {
-        var clone = new ServiceProvider();
+        ServiceProvider clone = new();
         foreach (object service in _services)
         {
             if (filter(service))
@@ -128,7 +128,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
 
     public object Clone()
     {
-        var clone = new ServiceProvider();
+        ServiceProvider clone = new();
         clone._services.AddRange(Services);
 
         return clone;

@@ -73,10 +73,10 @@ internal class TypeEnumerator
         var tests = new Collection<UnitTestElement>();
 
         // Test class is already valid. Verify methods.
-        foreach (var method in _type.GetRuntimeMethods())
+        foreach (MethodInfo method in _type.GetRuntimeMethods())
         {
-            var isMethodDeclaredInTestTypeAssembly = _reflectHelper.IsMethodDeclaredInSameAssemblyAsType(method, _type);
-            var enableMethodsFromOtherAssemblies = MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies;
+            bool isMethodDeclaredInTestTypeAssembly = _reflectHelper.IsMethodDeclaredInSameAssemblyAsType(method, _type);
+            bool enableMethodsFromOtherAssemblies = MSTestSettings.CurrentSettings.EnableBaseClassTestMethodsFromOtherAssemblies;
 
             if (!isMethodDeclaredInTestTypeAssembly && !enableMethodsFromOtherAssemblies)
             {
@@ -86,7 +86,7 @@ internal class TypeEnumerator
             if (_testMethodValidator.IsValidTestMethod(method, _type, warnings))
             {
                 foundDuplicateTests = foundDuplicateTests || !foundTests.Add(method.Name);
-                var testMethod = GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings);
+                UnitTestElement testMethod = GetTestFromMethod(method, isMethodDeclaredInTestTypeAssembly, warnings);
 
                 tests.Add(testMethod);
             }
@@ -100,7 +100,7 @@ internal class TypeEnumerator
         // Remove duplicate test methods by taking the first one of each name
         // that is declared closest to the test class in the hierarchy.
         var inheritanceDepths = new Dictionary<string, int>();
-        var currentType = _type;
+        Type? currentType = _type;
         int currentDepth = 0;
 
         while (currentType != null)
@@ -131,7 +131,7 @@ internal class TypeEnumerator
         DebugEx.Assert(_type.AssemblyQualifiedName != null, "AssemblyQualifiedName for method is null.");
 
         // This allows void returning async test method to be valid test method. Though they will be executed similar to non-async test method.
-        var isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
+        bool isAsync = ReflectHelper.MatchReturnType(method, typeof(Task));
 
         var testMethod = new TestMethod(method, method.Name, _type.FullName!, _assemblyFilePath, isAsync, _testIdGenerationStrategy);
 
@@ -158,18 +158,18 @@ internal class TypeEnumerator
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
         };
 
-        var traits = _reflectHelper.GetTestPropertiesAsTraits(method);
+        var traits = _reflectHelper.GetTestPropertiesAsTraits(method).ToList();
 
-        var ownerTrait = _reflectHelper.GetTestOwnerAsTraits(method);
+        TestPlatform.ObjectModel.Trait? ownerTrait = _reflectHelper.GetTestOwnerAsTraits(method);
         if (ownerTrait != null)
         {
-            traits = traits.Concat(new[] { ownerTrait });
+            traits.Add(ownerTrait);
         }
 
-        var priorityTrait = _reflectHelper.GetTestPriorityAsTraits(testElement.Priority);
+        TestPlatform.ObjectModel.Trait? priorityTrait = _reflectHelper.GetTestPriorityAsTraits(testElement.Priority);
         if (priorityTrait != null)
         {
-            traits = traits.Concat(new[] { priorityTrait });
+            traits.Add(priorityTrait);
         }
 
         testElement.Traits = traits.ToArray();
@@ -189,14 +189,14 @@ internal class TypeEnumerator
             testElement.Description = descriptionAttribute.Description;
         }
 
-        var workItemAttributes = _reflectHelper.GetCustomAttributes<WorkItemAttribute>(method);
+        WorkItemAttribute[] workItemAttributes = _reflectHelper.GetCustomAttributes<WorkItemAttribute>(method);
         if (workItemAttributes.Length != 0)
         {
             testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture)).ToArray();
         }
 
         // get DisplayName from TestMethodAttribute (or any inherited attribute)
-        var testMethodAttribute = _reflectHelper.GetCustomAttribute<TestMethodAttribute>(method);
+        TestMethodAttribute? testMethodAttribute = _reflectHelper.GetCustomAttribute<TestMethodAttribute>(method);
         testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
 
         return testElement;

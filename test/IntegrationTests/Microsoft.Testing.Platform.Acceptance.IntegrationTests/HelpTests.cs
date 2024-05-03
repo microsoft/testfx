@@ -20,16 +20,13 @@ public class HelpTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Help_WhenNoExtensionRegistered_OutputDefaultHelpContent(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string RegexMatchPattern = $"""
-Microsoft\(R\) Testing Platform Execution Command Line Tool
-Version: .+
-RuntimeInformation: .+
-Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
+.NET Testing Platform v.+ \[.+\]
 Usage {TestAssetFixture.NoExtensionAssetName}.* \[option providers\] \[extension option providers\]
 Execute a .NET Test Application\.
 Options:
@@ -57,7 +54,7 @@ Extension options:
     {
         const string UnknownOption = "aaa";
 
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync($"-{UnknownOption}");
 
         testHostResult.AssertExitCodeIs(ExitCodes.InvalidCommandLine);
@@ -89,16 +86,13 @@ Extension options:
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Help_WhenMSTestExtensionRegistered_OutputHelpContentOfRegisteredExtension(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--help");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
         const string RegexMatchPattern = $"""
-Microsoft\(R\) Testing Platform Execution Command Line Tool
-Version: .+
-RuntimeInformation: .+
-Copyright\(c\) Microsoft Corporation\.  All rights reserved\.
+.NET Testing Platform v.+ \[.+\]
 Usage {TestAssetFixture.MSTestAssetName}.* \[option providers\] \[extension option providers\]
 Execute a .NET Test Application\.
 Options:

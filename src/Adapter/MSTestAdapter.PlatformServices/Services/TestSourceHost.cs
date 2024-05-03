@@ -1,8 +1,8 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 #endif
 #if !WINDOWS_UWP
@@ -103,15 +103,29 @@ public class TestSourceHost : ITestSourceHost
     public void SetupHost()
     {
 #if NETFRAMEWORK || NET
-        List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
+        List<string> resolutionPaths = GetResolutionPaths(
+            _sourceFileName,
+#if NETFRAMEWORK
+            VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
+#else
+            false);
+#endif
 
         if (EqtTrace.IsInfoEnabled)
         {
-            EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths.ToArray()));
+            EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths));
         }
 
-        _parentDomainAssemblyResolver = new AssemblyResolver(resolutionPaths);
-        AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_parentDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName)!);
+        var assemblyResolver = new AssemblyResolver(resolutionPaths);
+        if (TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(assemblyResolver, Path.GetDirectoryName(_sourceFileName)!))
+        {
+            _parentDomainAssemblyResolver = assemblyResolver;
+        }
+        else
+        {
+            assemblyResolver.Dispose();
+        }
+
 #endif
 
 #if NETFRAMEWORK
@@ -124,7 +138,7 @@ public class TestSourceHost : ITestSourceHost
             AppDomainUtilities.SetAppDomainFrameworkVersionBasedOnTestSource(appDomainSetup, _targetFrameworkVersion);
 
             appDomainSetup.ApplicationBase = GetAppBaseAsPerPlatform();
-            var configFile = GetConfigFileForTestSource(_sourceFileName);
+            string? configFile = GetConfigFileForTestSource(_sourceFileName);
             AppDomainUtilities.SetConfigurationFile(appDomainSetup, configFile);
 
             EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating app-domain for source {0} with application base path {1}.", _sourceFileName, appDomainSetup.ApplicationBase);
@@ -141,7 +155,7 @@ public class TestSourceHost : ITestSourceHost
 
             EqtTrace.Info("DesktopTestSourceHost.SetupHost(): assemblyenumerator location: {0} , fullname: {1} ", assemblyResolverType.Assembly.Location, assemblyResolverType.FullName);
 
-            var resolver = AppDomainUtilities.CreateInstance(
+            object resolver = AppDomainUtilities.CreateInstance(
                 AppDomain,
                 assemblyResolverType,
                 new object[] { resolutionPaths });
@@ -153,7 +167,7 @@ public class TestSourceHost : ITestSourceHost
 
             _childDomainAssemblyResolver = (AssemblyResolver)resolver;
 
-            AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_childDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName));
+            _ = TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_childDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName));
         }
 #endif
     }
@@ -168,30 +182,30 @@ public class TestSourceHost : ITestSourceHost
     /// </param>
     /// <returns>  An instance of the type created in the host. </returns>
     /// <remarks> If a type is to be created in isolation then it needs to be a MarshalByRefObject. </remarks>
-    public object? CreateInstanceForType(Type type, object?[]? args)
-    {
+    public object? CreateInstanceForType(Type type, object?[]? args) =>
 #if NETFRAMEWORK
         // Honor DisableAppDomain setting if it is present in runsettings
-        return _isAppDomainCreationDisabled
+        _isAppDomainCreationDisabled
             ? Activator.CreateInstance(type, args)
             : AppDomainUtilities.CreateInstance(AppDomain!, type, args);
 #else
-        return Activator.CreateInstance(type, args);
+        Activator.CreateInstance(type, args);
 #endif
-    }
 
     /// <summary>
     /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
     /// </summary>
     public void Dispose()
     {
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NET
         if (_parentDomainAssemblyResolver != null)
         {
             _parentDomainAssemblyResolver.Dispose();
             _parentDomainAssemblyResolver = null;
         }
+#endif
 
+#if NETFRAMEWORK
         if (_childDomainAssemblyResolver != null)
         {
             _childDomainAssemblyResolver.Dispose();
@@ -252,7 +266,7 @@ public class TestSourceHost : ITestSourceHost
             // If the source is in the format of an assembly qualified name, then calls to
             // Path.GetDirectoryName will return empty string. But if we use Path.GetFullPath first
             // then directory resolution works properly.
-            var dirName = Path.GetDirectoryName(Path.GetFullPath(source));
+            string? dirName = Path.GetDirectoryName(Path.GetFullPath(source));
 #if WIN_UI
             if (StringEx.IsNullOrEmpty(dirName))
             {
@@ -315,14 +329,10 @@ public class TestSourceHost : ITestSourceHost
     }
 
     internal virtual string GetTargetFrameworkVersionString(string sourceFileName)
-    {
-        return AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
-    }
+        => AppDomainUtilities.GetTargetFrameworkVersionString(sourceFileName);
 
     private static string? GetConfigFileForTestSource(string sourceFileName)
-    {
-        return new DeploymentUtility().GetConfigFile(sourceFileName);
-    }
+        => new DeploymentUtility().GetConfigFile(sourceFileName);
 #endif
 
 #if NETFRAMEWORK || NET
@@ -351,6 +361,7 @@ public class TestSourceHost : ITestSourceHost
         {
             EqtTrace.Info("DesktopTestSourceHost.GetResolutionPaths(): Not running in portable mode");
 
+#if NETFRAMEWORK
             string? pathToPublicAssemblies = VSInstallationUtilities.PathToPublicAssemblies;
             if (!StringEx.IsNullOrWhiteSpace(pathToPublicAssemblies))
             {
@@ -362,6 +373,7 @@ public class TestSourceHost : ITestSourceHost
             {
                 resolutionPaths.Add(pathToPrivateAssemblies);
             }
+#endif
         }
 
         // Adding adapter folder to resolution paths
@@ -379,21 +391,22 @@ public class TestSourceHost : ITestSourceHost
         return resolutionPaths;
     }
 
-    private static void AddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(AssemblyResolver assemblyResolver, string baseDirectory)
+    private static bool TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(AssemblyResolver assemblyResolver, string baseDirectory)
     {
         // Check if user specified any adapter settings
         MSTestAdapterSettings adapterSettings = MSTestSettingsProvider.Settings;
         if (adapterSettings == null)
         {
-            return;
+            return false;
         }
 
         try
         {
-            var additionalSearchDirectories = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
+            List<RecursiveDirectoryPath> additionalSearchDirectories = adapterSettings.GetDirectoryListWithRecursiveProperty(baseDirectory);
             if (additionalSearchDirectories?.Count > 0)
             {
                 assemblyResolver.AddSearchDirectoriesFromRunSetting(additionalSearchDirectories);
+                return true;
             }
         }
         catch (Exception exception)
@@ -403,6 +416,8 @@ public class TestSourceHost : ITestSourceHost
                 exception,
                 exception.Message);
         }
+
+        return false;
     }
 #endif
 }

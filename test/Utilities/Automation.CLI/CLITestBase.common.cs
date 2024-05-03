@@ -11,8 +11,6 @@ namespace Microsoft.MSTestV2.CLIAutomation;
 
 public partial class CLITestBase : TestContainer
 {
-    private const string EngineeringFolder = "eng";
-
     private const string Configuration =
 #if DEBUG
         "Debug";
@@ -25,10 +23,10 @@ public partial class CLITestBase : TestContainer
 #pragma warning restore IDE0051 // Remove unused private members
     private const string DefaultTargetFramework = "net462";
 
-    protected static XmlDocument ReadVersionProps()
+    protected static XmlDocument ReadCPMFile()
     {
-        var versionPropsFilePath = Path.Combine(GetArtifactsBinFolderPath(), "..", "..", EngineeringFolder, "Versions.props");
-        using var fileStream = File.OpenRead(versionPropsFilePath);
+        string cpmFilePath = Path.Combine(GetArtifactsBinFolderPath(), "..", "..", "Directory.Packages.props");
+        using FileStream fileStream = File.OpenRead(cpmFilePath);
 #pragma warning disable CA3075 // Insecure DTD processing in XML
         using var xmlTextReader = new XmlTextReader(fileStream) { Namespaces = false };
 #pragma warning restore CA3075 // Insecure DTD processing in XML
@@ -40,27 +38,40 @@ public partial class CLITestBase : TestContainer
 
     protected static string GetTestPlatformVersion()
     {
-        var versionPropsXml = ReadVersionProps();
-        var testSdkVersion = versionPropsXml.DocumentElement.SelectSingleNode($"PropertyGroup/MicrosoftNETTestSdkVersion");
+        XmlDocument cpmXml = ReadCPMFile();
+        XmlNode testSdkVersion = cpmXml.DocumentElement.SelectSingleNode($"PropertyGroup/MicrosoftNETTestSdkVersion");
 
         return testSdkVersion.InnerText;
     }
 
     protected static string GetArtifactsBinFolderPath()
     {
-        var assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+        string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
 
-        var artifactsBinFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\.."));
+        string artifactsBinFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\.."));
         Directory.Exists(artifactsBinFolder).Should().BeTrue();
 
         return artifactsBinFolder;
+    }
+
+    protected static string GetArtifactsTestResultsFolderPath()
+    {
+        string assemblyLocation = System.Reflection.Assembly.GetExecutingAssembly().Location;
+
+        string artifactsFolder = Path.GetFullPath(Path.Combine(assemblyLocation, @"..\..\..\..\.."));
+        Directory.Exists(artifactsFolder).Should().BeTrue();
+
+        string testResultsFolder = Path.Combine(artifactsFolder, "TestResults", Configuration);
+        Directory.CreateDirectory(testResultsFolder);
+
+        return testResultsFolder;
     }
 
     protected static string GetAssetFullPath(string assetName, string configuration = null, string targetFramework = null)
     {
         configuration ??= Configuration;
         targetFramework ??= DefaultTargetFramework;
-        var assetPath = Path.GetFullPath(Path.Combine(GetArtifactsBinFolderPath(), assetName, configuration, targetFramework, assetName + ".dll"));
+        string assetPath = Path.GetFullPath(Path.Combine(GetArtifactsBinFolderPath(), assetName, configuration, targetFramework, assetName + ".dll"));
         File.Exists(assetPath).Should().BeTrue($"asset '{assetPath}' should exist");
 
         return assetPath;
@@ -87,16 +98,16 @@ public partial class CLITestBase : TestContainer
         }
 
         XmlElement root = doc.DocumentElement;
-        RunConfiguration runConfiguration = new(string.Empty);
-        XmlElement runConfigElement = runConfiguration.ToXml();
+        RunConfiguration runConfiguration = new(string.Empty) { TestResultsDirectory = GetArtifactsTestResultsFolderPath() };
+        XmlElement runConfigurationElement = runConfiguration.ToXml();
         if (root[runConfiguration.SettingsName] == null)
         {
-            XmlNode newNode = doc.ImportNode(runConfigElement, true);
+            XmlNode newNode = doc.ImportNode(runConfigurationElement, true);
             root.AppendChild(newNode);
         }
         else
         {
-            XmlNode newNode = doc.ImportNode(runConfigElement.FirstChild, true);
+            XmlNode newNode = doc.ImportNode(runConfigurationElement.FirstChild, true);
             root[runConfiguration.SettingsName].AppendChild(newNode);
         }
 

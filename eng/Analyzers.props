@@ -8,22 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"
-                      Version="$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)"
-                      PrivateAssets="all"
-                      Condition="'$(IsSourceProject)' == 'true'" />
-
-    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"
-                      Version="$(MicrosoftCodeAnalysisBannedApiAnalyzersVersion)"
-                      PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" Condition="'$(IsSourceProject)' == 'true'" />
+    <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="all" />
 
     <AdditionalFiles Include="$(RepositoryEngineeringDir)stylecop.json" Link="stylecop.json" />
-    <PackageReference Include="StyleCop.Analyzers"
-                      Version="$(StyleCopAnalyzersVersion)"
-                      PrivateAsset="all" />
+    <PackageReference Include="StyleCop.Analyzers" PrivateAsset="all" />
 
-    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers"
-                      Version="$(MicrosoftVisualStudioThreadingAnalyzersVersion)"
-                      PrivateAssets="all" />
+    <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" PrivateAssets="all" />
   </ItemGroup>
 </Project>

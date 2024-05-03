@@ -13,7 +13,7 @@ public class DataSerializationHelperTests : TestContainer
     {
         var source = new DateTimeOffset(628381323438126060, TimeSpan.FromHours(-8));
 
-        var actual = DataSerializationHelper.Deserialize(
+        object[] actual = DataSerializationHelper.Deserialize(
             DataSerializationHelper.Serialize(new object[] { source }));
 
         Verify(actual.Length == 1);
@@ -25,7 +25,7 @@ public class DataSerializationHelperTests : TestContainer
     {
         var source = new DateTime(628381323438126060);
 
-        var actual = DataSerializationHelper.Deserialize(
+        object[] actual = DataSerializationHelper.Deserialize(
             DataSerializationHelper.Serialize(new object[] { source }));
 
         Verify(actual.Length == 1);
@@ -38,7 +38,7 @@ public class DataSerializationHelperTests : TestContainer
     {
         var source = new DateTime(628381323438126060, DateTimeKind.Local);
 
-        var actual = DataSerializationHelper.Deserialize(
+        object[] actual = DataSerializationHelper.Deserialize(
             DataSerializationHelper.Serialize(new object[] { source }));
 
         Verify(actual.Length == 1);
@@ -51,7 +51,7 @@ public class DataSerializationHelperTests : TestContainer
     {
         var source = new DateTime(628381323438126060, DateTimeKind.Utc);
 
-        var actual = DataSerializationHelper.Deserialize(
+        object[] actual = DataSerializationHelper.Deserialize(
             DataSerializationHelper.Serialize(new object[] { source }));
 
         Verify(actual.Length == 1);

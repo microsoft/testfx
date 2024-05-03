@@ -51,8 +51,11 @@ public class TestClassInfo
         BaseClassCleanupMethodsStack = new Stack<MethodInfo>();
         BaseClassInitAndCleanupMethods = new Queue<Tuple<MethodInfo?, MethodInfo?>>();
         ClassInitializeMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
+        ClassCleanupMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
         BaseTestInitializeMethodsQueue = new Queue<MethodInfo>();
         BaseTestCleanupMethodsQueue = new Queue<MethodInfo>();
+        TestInitializeMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
+        TestCleanupMethodTimeoutMilliseconds = new Dictionary<MethodInfo, int>();
         Parent = parent;
         ClassAttribute = classAttribute;
         _testClassExecuteSyncObject = new object();
@@ -94,7 +97,7 @@ public class TestClassInfo
         {
             if (_classInitializeMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassInit, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -107,6 +110,24 @@ public class TestClassInfo
     /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
     /// </summary>
     internal Dictionary<MethodInfo, int> ClassInitializeMethodTimeoutMilliseconds { get; }
+
+    /// <summary>
+    /// Gets the timeout for the class cleanup methods.
+    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
+    /// </summary>
+    internal Dictionary<MethodInfo, int> ClassCleanupMethodTimeoutMilliseconds { get; }
+
+    /// <summary>
+    /// Gets the timeout for the test initialize methods.
+    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
+    /// </summary>
+    internal Dictionary<MethodInfo, int> TestInitializeMethodTimeoutMilliseconds { get; }
+
+    /// <summary>
+    /// Gets the timeout for the test cleanup methods.
+    /// We can use a dictionary because the MethodInfo is unique in an inheritance hierarchy.
+    /// </summary>
+    internal Dictionary<MethodInfo, int> TestCleanupMethodTimeoutMilliseconds { get; }
 
     /// <summary>
     /// Gets a value indicating whether class initialize has executed.
@@ -144,7 +165,7 @@ public class TestClassInfo
         {
             if (_classCleanupMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassClean, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -186,7 +207,7 @@ public class TestClassInfo
         {
             if (_testInitializeMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiInit, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -205,7 +226,7 @@ public class TestClassInfo
         {
             if (_testCleanupMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClean, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -266,10 +287,10 @@ public class TestClassInfo
 
                         while (baseClassInitializeStack.Count > 0)
                         {
-                            var baseInitCleanupMethods = baseClassInitializeStack.Pop();
+                            Tuple<MethodInfo?, MethodInfo?> baseInitCleanupMethods = baseClassInitializeStack.Pop();
                             initializeMethod = baseInitCleanupMethods.Item1;
 
-                            ClassInitializationException = InvokeInitializeMethod(initializeMethod, testContext);
+                            ClassInitializationException = initializeMethod is not null ? InvokeInitializeMethod(initializeMethod, testContext) : null;
                             if (ClassInitializationException is not null)
                             {
                                 break;
@@ -284,7 +305,7 @@ public class TestClassInfo
                         if (ClassInitializationException is null)
                         {
                             initializeMethod = null;
-                            ClassInitializationException = InvokeInitializeMethod(ClassInitializeMethod, testContext);
+                            ClassInitializationException = ClassInitializeMethod is not null ? InvokeInitializeMethod(ClassInitializeMethod, testContext) : null;
                         }
                     }
                     catch (Exception ex)
@@ -306,26 +327,27 @@ public class TestClassInfo
             return;
         }
 
+        // If the exception is already a `TestFailedException` we throw it as-is
         if (ClassInitializationException is TestFailedException)
         {
             throw ClassInitializationException;
         }
 
         // Fail the current test if it was a failure.
-        var realException = ClassInitializationException.GetRealException();
+        Exception realException = ClassInitializationException.GetRealException();
 
-        var outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
+        ObjectModelUnitTestOutcome outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
 
         // Do not use StackTraceHelper.GetFormattedExceptionMessage(realException) as it prefixes the message with the exception type name.
-        var exceptionMessage = realException.TryGetMessage();
-        var errorMessage = string.Format(
+        string exceptionMessage = realException.TryGetMessage();
+        string errorMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.UTA_ClassInitMethodThrows,
             ClassType.FullName,
             failedClassInitializeMethodName,
             realException.GetType().ToString(),
             exceptionMessage);
-        var exceptionStackTraceInfo = realException.GetStackTraceInformation();
+        StackTraceInformation? exceptionStackTraceInfo = realException.GetStackTraceInformation();
 
         var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo, realException);
         ClassInitializationException = testFailedException;
@@ -333,15 +355,10 @@ public class TestClassInfo
         throw testFailedException;
     }
 
-    private TestFailedException? InvokeInitializeMethod(MethodInfo? methodInfo, TestContext testContext)
+    private TestFailedException? InvokeInitializeMethod(MethodInfo methodInfo, TestContext testContext)
     {
-        if (methodInfo is null)
-        {
-            return null;
-        }
-
         int? timeout = null;
-        if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
+        if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
         {
             timeout = localTimeout;
         }
@@ -374,6 +391,7 @@ public class TestClassInfo
             return null;
         }
 
+        MethodInfo? classCleanupMethod = null;
         lock (_testClassExecuteSyncObject)
         {
             if (IsClassCleanupExecuted)
@@ -383,56 +401,57 @@ public class TestClassInfo
 
             if (IsClassInitializeExecuted || ClassInitializeMethod is null)
             {
-                MethodInfo? classCleanupMethod = null;
-
                 try
                 {
                     classCleanupMethod = ClassCleanupMethod;
-                    classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
-                    while (baseClassCleanupQueue.Count > 0)
+                    while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        classCleanupMethod?.InvokeAsSynchronousTask(null);
+                        ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
                     }
 
-                    IsClassCleanupExecuted = true;
-
-                    return null;
+                    IsClassCleanupExecuted = ClassCleanupException is null;
                 }
                 catch (Exception exception)
                 {
-                    var realException = exception.GetRealException();
-                    ClassCleanupException = realException;
-
-                    // special case AssertFailedException to trim off part of the stack trace
-                    string errorMessage = realException is AssertFailedException or AssertInconclusiveException
-                        ? realException.Message
-                        : realException.GetFormattedExceptionMessage();
-
-                    var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
-
-                    errorMessage = string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-                        classCleanupMethod!.DeclaringType!.Name,
-                        classCleanupMethod.Name,
-                        errorMessage,
-                        exceptionStackTraceInfo?.ErrorStackTrace);
-
-                    if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
-                    {
-                        var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
-                        ClassCleanupException = testFailedException;
-                        throw testFailedException;
-                    }
-
-                    return errorMessage;
+                    ClassCleanupException = exception;
                 }
             }
         }
 
-        return null;
+        // If ClassCleanup was successful, then don't do anything
+        if (ClassCleanupException == null)
+        {
+            return null;
+        }
+
+        Exception realException = ClassCleanupException.GetRealException();
+
+        // special case AssertFailedException to trim off part of the stack trace
+        string errorMessage = realException is AssertFailedException or AssertInconclusiveException
+            ? realException.Message
+            : realException.GetFormattedExceptionMessage();
+
+        StackTraceInformation? exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
+
+        errorMessage = string.Format(
+            CultureInfo.CurrentCulture,
+            Resource.UTA_ClassCleanupMethodWasUnsuccesful,
+            classCleanupMethod!.DeclaringType!.Name,
+            classCleanupMethod.Name,
+            errorMessage,
+            exceptionStackTraceInfo?.ErrorStackTrace);
+
+        if (classCleanupLifecycle == ClassCleanupBehavior.EndOfClass)
+        {
+            var testFailedException = new TestFailedException(ObjectModelUnitTestOutcome.Failed, errorMessage, exceptionStackTraceInfo);
+            ClassCleanupException = testFailedException;
+            throw testFailedException;
+        }
+
+        return errorMessage;
     }
 
     /// <summary>
@@ -450,6 +469,8 @@ public class TestClassInfo
             return;
         }
 
+        MethodInfo? classCleanupMethod = null;
+
         lock (_testClassExecuteSyncObject)
         {
             if (IsClassCleanupExecuted
@@ -458,50 +479,76 @@ public class TestClassInfo
                 return;
             }
 
-            MethodInfo? classCleanupMethod = null;
-
             try
             {
                 classCleanupMethod = ClassCleanupMethod;
-                classCleanupMethod?.InvokeAsSynchronousTask(null);
+                ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
                 var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
-                while (baseClassCleanupQueue.Count > 0)
+                while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                 {
                     classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                    classCleanupMethod?.InvokeAsSynchronousTask(null);
+                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
                 }
 
-                IsClassCleanupExecuted = true;
-
-                return;
+                IsClassCleanupExecuted = ClassCleanupException is null;
             }
             catch (Exception exception)
             {
-                var realException = exception.GetRealException();
-                ClassCleanupException = realException;
-
-                // special case AssertFailedException to trim off part of the stack trace
-                string errorMessage = realException is AssertFailedException or AssertInconclusiveException
-                    ? realException.Message
-                    : realException.GetFormattedExceptionMessage();
-
-                var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
-
-                var testFailedException = new TestFailedException(
-                    ObjectModelUnitTestOutcome.Failed,
-                    string.Format(
-                        CultureInfo.CurrentCulture,
-                        Resource.UTA_ClassCleanupMethodWasUnsuccesful,
-                        classCleanupMethod!.DeclaringType!.Name,
-                        classCleanupMethod.Name,
-                        errorMessage,
-                        exceptionStackTraceInfo?.ErrorStackTrace),
-                    exceptionStackTraceInfo,
-                    realException);
-                ClassCleanupException = testFailedException;
-
-                throw testFailedException;
+                ClassCleanupException = exception;
             }
         }
+
+        // If ClassCleanup was successful, then don't do anything
+        if (ClassCleanupException == null)
+        {
+            return;
+        }
+
+        // If the exception is already a `TestFailedException` we throw it as-is
+        if (ClassCleanupException is TestFailedException)
+        {
+            throw ClassCleanupException;
+        }
+
+        Exception realException = ClassCleanupException.GetRealException();
+
+        // special case AssertFailedException to trim off part of the stack trace
+        string errorMessage = realException is AssertFailedException or AssertInconclusiveException
+            ? realException.Message
+            : realException.GetFormattedExceptionMessage();
+
+        StackTraceInformation? exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
+
+        var testFailedException = new TestFailedException(
+            ObjectModelUnitTestOutcome.Failed,
+            string.Format(
+                CultureInfo.CurrentCulture,
+                Resource.UTA_ClassCleanupMethodWasUnsuccesful,
+                classCleanupMethod!.DeclaringType!.Name,
+                classCleanupMethod.Name,
+                errorMessage,
+                exceptionStackTraceInfo?.ErrorStackTrace),
+            exceptionStackTraceInfo,
+            realException);
+        ClassCleanupException = testFailedException;
+
+        throw testFailedException;
+    }
+
+    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo)
+    {
+        int? timeout = null;
+        if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
+        {
+            timeout = localTimeout;
+        }
+
+        return MethodRunner.RunWithTimeoutAndCancellation(
+            () => methodInfo.InvokeAsSynchronousTask(null),
+            new CancellationTokenSource(),
+            timeout,
+            methodInfo,
+            Resource.ClassCleanupWasCancelled,
+            Resource.ClassCleanupTimedOut);
     }
 }

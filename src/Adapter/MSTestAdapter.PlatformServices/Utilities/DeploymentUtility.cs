@@ -43,8 +43,8 @@ internal class DeploymentUtility : DeploymentUtilityBase
             ProcessNewStorage(testSource, deploymentItems, warnings);
 
             // Get the satellite assemblies
-            var satelliteItems = GetSatellites(deploymentItems, testSource, warnings);
-            foreach (var satelliteItem in satelliteItems)
+            IEnumerable<DeploymentItem> satelliteItems = GetSatellites(deploymentItems, testSource, warnings);
+            foreach (DeploymentItem satelliteItem in satelliteItems)
             {
                 DeploymentItemUtility.AddDeploymentItem(deploymentItems, satelliteItem);
             }
@@ -90,7 +90,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
 
         AddDependencies(deploymentItemFile, null, dependencies, warnings);
 
-        foreach (var dependencyItem in dependencies)
+        foreach (DeploymentItem dependencyItem in dependencies)
         {
             DebugEx.Assert(Path.IsPathRooted(dependencyItem.SourcePath), "Path of the dependency " + dependencyItem.SourcePath + " is not rooted.");
 
@@ -107,7 +107,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
     protected void ProcessNewStorage(string testSource, IList<DeploymentItem> deploymentItems, IList<string> warnings)
     {
         // Add deployment items and process .config files only for storages we have not processed before.
-        if (!DeploymentItemUtility.IsValidDeploymentItem(testSource, string.Empty, out var errorMessage))
+        if (!DeploymentItemUtility.IsValidDeploymentItem(testSource, string.Empty, out string? errorMessage))
         {
             warnings.Add(errorMessage);
             return;
@@ -120,7 +120,7 @@ internal class DeploymentUtility : DeploymentUtilityBase
         // and deploy AppConfig to <TestStorage>.config.
         if (AssemblyUtility.IsAssemblyExtension(Path.GetExtension(testSource)))
         {
-            var configFile = AddTestSourceConfigFileIfExists(testSource, deploymentItems);
+            string? configFile = AddTestSourceConfigFileIfExists(testSource, deploymentItems);
 
             // Deal with test dependencies: update dependencyDeploymentItems and missingDependentAssemblies.
             try
@@ -242,8 +242,8 @@ internal class DeploymentUtility : DeploymentUtilityBase
 
         // Note: if this is not an assembly we simply return empty array, also:
         //       we do recursive search and report missing.
-        string[] references = AssemblyUtility.GetFullPathToDependentAssemblies(testSource, configFile, out var warningList);
-        foreach (var warning in warningList)
+        IReadOnlyList<string> references = AssemblyUtility.GetFullPathToDependentAssemblies(testSource, configFile, out IList<string>? warningList);
+        foreach (string warning in warningList)
         {
             warnings.Add(warning);
         }

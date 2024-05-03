@@ -122,7 +122,7 @@ public class RunSettingsUtilitiesTests : TestContainer
                      </TestRunParameters>
                 </RunSettings>";
 
-        var ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
+        Exception ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
         Verify(ex.GetType() == typeof(SettingsException));
     }
 
@@ -142,7 +142,7 @@ public class RunSettingsUtilitiesTests : TestContainer
                      </TestRunParameters>
                 </RunSettings>";
 
-        var ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
+        Exception ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
         Verify(ex.GetType() == typeof(SettingsException));
     }
 

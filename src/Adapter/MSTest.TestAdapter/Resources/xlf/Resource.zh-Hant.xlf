@@ -2,6 +2,16 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="zh-Hant">
     <body>
+      <trans-unit id="AssemblyCleanupTimedOut">
+        <source>Assembly cleanup method '{0}.{1}' timed out</source>
+        <target state="translated">組件清理方法 '{0}.{1}' 已逾時</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssemblyCleanupWasCancelled">
+        <source>Assembly cleanup method '{0}.{1}' was cancelled</source>
+        <target state="translated">組件清理方法 '{0}.{1}' 已取消</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
         <source>Assembly initialize method '{0}.{1}' timed out</source>
         <target state="translated">組件初始化方法 '{0}.{1}' 已逾時</target>
@@ -10,6 +20,30 @@
       <trans-unit id="AssemblyInitializeWasCancelled">
         <source>Assembly initialize method '{0}.{1}' was cancelled</source>
         <target state="translated">組件初始化方法 '{0}.{1}' 已取消</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRunTestArgumentsMismatchError">
+        <source>Cannot run test method '{0}.{1}': Test data doesn't match method parameters. Either the count or types are different.
+Test expected {2} parameter(s), with types '{3}',
+but received {4} argument(s), with types '{5}'.</source>
+        <target state="translated">無法執行測試方法 '{0}.{1}': 測試資料不符合方法參數。計數或類型不同。
+測試預期的 {2} 參數，類型為 '{3}'，
+但收到 {4} 引數，類型為 '{5}'。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CannotRunTestMethodNoDataError">
+        <source>Cannot run test method '{0}.{1}': Method has parameters, but does not define any test source. Use '[DataRow]', '[DynamicData]', or a custom 'ITestDataSource' data source to provide test data.</source>
+        <target state="translated">無法執行測試方法 '{0}.{1}': 方法具有參數，但未定義任何測試來源。使用 '[DataRow]'、'[DynamicData]' 或自訂 'ITestDataSource' 資料來源來提供測試資料。</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupTimedOut">
+        <source>Class cleanup method '{0}.{1}' timed out</source>
+        <target state="translated">類別清理方法 '{0}.{1}' 已逾時</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ClassCleanupWasCancelled">
+        <source>Class cleanup method '{0}.{1}' was cancelled</source>
+        <target state="translated">類別清理方法 '{0}.{1}' 已取消</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
@@ -27,10 +61,35 @@
         <target state="translated">測試 '{0}' 超過執行逾時期限。</target>
         <note></note>
       </trans-unit>
+      <trans-unit id="STAIsOnlySupportedOnWindowsWarning">
+        <source>Runsettings entry '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;' is not supported on non-Windows OSes.</source>
+        <target state="translated">非 Windows OS 不支援 Runsettings 項目 '&lt;ExecutionApartmentState&gt;STA&lt;/ExecutionApartmentState&gt;'。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="SourcesNotSupported">
         <source>Running tests in any of the provided sources is not supported for the selected platform</source>
         <target state="translated">所選取的平台不支援在任何提供的來源中執行測試</target>
         <note></note>
+      </trans-unit>
+      <trans-unit id="TestCleanupTimedOut">
+        <source>Test cleanup method '{0}.{1}' timed out</source>
+        <target state="translated">測試清理方法 '{0}.{1}' 已逾時</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestCleanupWasCancelled">
+        <source>Test cleanup method '{0}.{1}' was cancelled</source>
+        <target state="translated">測試清理方法 '{0}.{1}' 已取消</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeTimedOut">
+        <source>Test initialize method '{0}.{1}' timed out</source>
+        <target state="translated">測試初始化方法 '{0}.{1}' 已逾時</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="TestInitializeWasCancelled">
+        <source>Test initialize method '{0}.{1}' was cancelled</source>
+        <target state="translated">測試初始化方法 '{0}.{1}' 已取消</target>
+        <note />
       </trans-unit>
       <trans-unit id="UTA_CleanupMethodThrows">
         <source>TestCleanup method {0}.{1} threw exception. {2}.</source>
@@ -331,11 +390,6 @@ Error: {1}</source>
       <trans-unit id="TestAssembly_AssemblyDiscoveryFailure">
         <source>Failed to discover tests from assembly {0}. Reason:{1}</source>
         <target state="translated">無法從組件 {0} 中探索測試。原因:{1}</target>
-        <note></note>
-      </trans-unit>
-      <trans-unit id="UTA_TestMethodExpectedParameters">
-        <source>Only data driven test methods can have parameters. Did you intend to use [DataRow] or [DynamicData]?</source>
-        <target state="translated">只有資料驅動的測試方法可以有參數。您想要使用的是否為 [DataRow] 或 [DynamicData]?</target>
         <note></note>
       </trans-unit>
       <trans-unit id="Execution_Test_Cancelled">

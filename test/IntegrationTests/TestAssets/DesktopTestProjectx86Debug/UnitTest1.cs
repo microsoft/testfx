@@ -12,19 +12,13 @@ public class UnitTest1
     /// The passing test.
     /// </summary>
     [TestMethod]
-    public void PassingTest()
-    {
-        Assert.AreEqual(2, 2);
-    }
+    public void PassingTest() => Assert.AreEqual(2, 2);
 
     /// <summary>
     /// The failing test.
     /// </summary>
     [TestMethod]
-    public void FailingTest()
-    {
-        Assert.AreEqual(2, 3);
-    }
+    public void FailingTest() => Assert.AreEqual(2, 3);
 
     /// <summary>
     /// The skipping test.

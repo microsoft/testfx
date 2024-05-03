@@ -1,23 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if NETFRAMEWORK || NET
+#if NETFRAMEWORK
 
-#if NETFRAMEWORK || NETCOREAPP3_1
 using System.Diagnostics;
-#endif
 using System.Runtime.InteropServices;
 
 using static System.String;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Utilities;
 
-#if NETFRAMEWORK
-public
-#else
-internal
-#endif
-    static class VSInstallationUtilities
+public static class VSInstallationUtilities
 {
     /// <summary>
     /// Public assemblies directory name.
@@ -56,8 +49,8 @@ internal
                     // Use the Setup API to find the installation folder for currently running VS instance.
                     if (new SetupConfiguration() is ISetupConfiguration setupConfiguration)
                     {
-                        var currentConfiguration = setupConfiguration.GetInstanceForCurrentProcess();
-                        var currentInstallationPath = currentConfiguration.GetInstallationPath();
+                        ISetupInstance currentConfiguration = setupConfiguration.GetInstanceForCurrentProcess();
+                        string currentInstallationPath = currentConfiguration.GetInstallationPath();
                         s_vsInstallPath = Path.Combine(currentInstallationPath, @"Common7\IDE");
                     }
                 }
@@ -95,11 +88,7 @@ internal
     /// </summary>
     /// <returns>True, if portable mode; false, otherwise.</returns>
     public static bool IsCurrentProcessRunningInPortableMode()
-#if NET6_0_OR_GREATER
-        => IsProcessRunningInPortableMode(Environment.ProcessPath);
-#else
         => IsProcessRunningInPortableMode(Process.GetCurrentProcess().MainModule.FileName);
-#endif
 
     /// <summary>
     /// Is the EXE specified running in Portable Mode.
@@ -109,13 +98,13 @@ internal
     public static bool IsProcessRunningInPortableMode(string? exeName)
     {
         // Get the directory of the exe
-        var exeDir = Path.GetDirectoryName(exeName);
+        string exeDir = Path.GetDirectoryName(exeName);
         return !IsNullOrEmpty(exeDir) && File.Exists(Path.Combine(exeDir, PortableVsTestManifestFilename));
     }
 
     private static string? GetFullPath(string folderName)
     {
-        var vsInstallDir = VSInstallPath;
+        string? vsInstallDir = VSInstallPath;
         return IsNullOrWhiteSpace(vsInstallDir?.Trim()) ? null : Path.Combine(vsInstallDir, folderName);
     }
 

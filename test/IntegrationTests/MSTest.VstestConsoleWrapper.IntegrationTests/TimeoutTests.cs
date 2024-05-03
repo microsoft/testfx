@@ -11,15 +11,9 @@ public class TimeoutTests : CLITestBase
 {
     private const string TestAssetName = "TimeoutTestProject";
 
-    public void ValidateTimeoutTests_net462()
-    {
-        ValidateTimeoutTests("net462");
-    }
+    public void ValidateTimeoutTests_net462() => ValidateTimeoutTests("net462");
 
-    public void ValidateTimeoutTests_netcoreapp31()
-    {
-        ValidateTimeoutTests("netcoreapp3.1");
-    }
+    public void ValidateTimeoutTests_netcoreapp31() => ValidateTimeoutTests("netcoreapp3.1");
 
     private void ValidateTimeoutTests(string targetFramework)
     {
@@ -44,7 +38,7 @@ public class TimeoutTests : CLITestBase
 
         // We should find the <TargetFramework>/TimeoutTestOutput.txt file, as it's our way to validate
         // that when the timeout expires it cancels the test context token.
-        var timeoutFile = Path.Combine(
+        string timeoutFile = Path.Combine(
             GetAssetFullPath(TestAssetName, targetFramework: targetFramework),
             "..",
             "TimeoutTestOutput.txt");

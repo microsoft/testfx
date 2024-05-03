@@ -74,8 +74,8 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
 
         public async Task InitializeAsync(InitializationContext context)
         {
-            var solution = CreateTestAsset();
-            var result = await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile} -c Release", acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+            VSSolution solution = CreateTestAsset();
+            DotnetMuxerResult result = await DotnetCli.RunAsync($"build -nodeReuse:false {solution.SolutionFile} -c Release", acceptanceFixture.NuGetGlobalPackagesFolder.Path);
             Assert.AreEqual(0, result.ExitCode);
 
             TestHost = TestHost.LocateFrom(solution.Projects.Skip(1).Single().FolderPath, TestProjectName, TargetFramework);
@@ -87,7 +87,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
             VSSolution solution = new(Path.Combine(_testAssetDirectory.Path, "MSTestSolution"), "MSTestSolution");
             solution.AddOrUpdateFileContent("NuGet.config", TestAsset.GetNuGetConfig(false, false));
 
-            var mainProject = solution.CreateCSharpProject(ProjectName, TargetFramework);
+            CSharpProject mainProject = solution.CreateCSharpProject(ProjectName, TargetFramework);
             mainProject.AddOrUpdateFileContent(mainProject.ProjectFile, $"""
                 <Project Sdk="Microsoft.NET.Sdk">
                     <PropertyGroup>
@@ -108,7 +108,7 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
                 }
                 """);
 
-            var testProject = solution.CreateCSharpProject(TestProjectName, TargetFramework);
+            CSharpProject testProject = solution.CreateCSharpProject(TestProjectName, TargetFramework);
             testProject.AddProjectReference(mainProject.ProjectFile);
             testProject.AddOrUpdateFileContent(testProject.ProjectFile, $"""
                 <Project Sdk="Microsoft.NET.Sdk">
@@ -153,11 +153,11 @@ public sealed class AssemblyResolutionTests : AcceptanceTestBase
 
         private TempDirectory MoveMainDllToDifferentTempDirectory()
         {
-            var sampleDllFilePath = Path.Combine(TestHost.DirectoryName, $"{ProjectName}.dll");
+            string sampleDllFilePath = Path.Combine(TestHost.DirectoryName, $"{ProjectName}.dll");
             Assert.IsTrue(File.Exists(sampleDllFilePath));
 
             TempDirectory tempDirectory2 = new();
-            var newSampleDllFilePath = tempDirectory2.CopyFile(sampleDllFilePath);
+            string newSampleDllFilePath = tempDirectory2.CopyFile(sampleDllFilePath);
             Assert.IsTrue(File.Exists(newSampleDllFilePath));
 
             File.Delete(sampleDllFilePath);

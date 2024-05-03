@@ -26,6 +26,8 @@ public class RunConfiguration
     /// </summary>
     public string[] TestAdaptersPaths { get; }
 
+    public string TestResultsDirectory { get; set; }
+
     /// <summary>
     /// Converts the setting to be an XmlElement.
     /// </summary>
@@ -35,9 +37,16 @@ public class RunConfiguration
         XmlDocument doc = new();
         XmlElement root = doc.CreateElement(SettingsName);
 
-        foreach (var p in TestAdaptersPaths)
+        if (TestResultsDirectory is not null)
         {
-            var testAdaptersPaths = doc.CreateElement("TestAdaptersPaths");
+            XmlElement resultsDirectory = doc.CreateElement("ResultsDirectory");
+            resultsDirectory.InnerText = TestResultsDirectory;
+            root.AppendChild(resultsDirectory);
+        }
+
+        foreach (string p in TestAdaptersPaths)
+        {
+            XmlElement testAdaptersPaths = doc.CreateElement("TestAdaptersPaths");
             testAdaptersPaths.InnerText = p;
 
             root.AppendChild(testAdaptersPaths);

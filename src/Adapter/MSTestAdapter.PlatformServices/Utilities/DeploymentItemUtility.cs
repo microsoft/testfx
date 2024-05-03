@@ -3,6 +3,7 @@
 
 #if !WINDOWS_UWP
 
+using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -45,7 +46,7 @@ internal class DeploymentItemUtility
     {
         if (!_classLevelDeploymentItems.TryGetValue(type, out IList<DeploymentItem>? value))
         {
-            var deploymentItemAttributes = _reflectionUtility.GetCustomAttributes(
+            IReadOnlyList<object> deploymentItemAttributes = _reflectionUtility.GetCustomAttributes(
                 type.GetTypeInfo(),
                 typeof(DeploymentItemAttribute));
             value = GetDeploymentItems(deploymentItemAttributes, warnings);
@@ -61,10 +62,10 @@ internal class DeploymentItemUtility
     /// <param name="classLevelDeploymentItems"> The class level deployment items. </param>
     /// <param name="warnings"> The warnings. </param>
     /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>.of deployment item information. </returns>
-    internal KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, IList<DeploymentItem> classLevelDeploymentItems,
+    internal KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, IEnumerable<DeploymentItem> classLevelDeploymentItems,
         ICollection<string> warnings)
     {
-        var testLevelDeploymentItems = GetDeploymentItems(_reflectionUtility.GetCustomAttributes(method, typeof(DeploymentItemAttribute)), warnings);
+        List<DeploymentItem> testLevelDeploymentItems = GetDeploymentItems(_reflectionUtility.GetCustomAttributes(method, typeof(DeploymentItemAttribute)), warnings);
 
         return ToKeyValuePairs(Concat(testLevelDeploymentItems, classLevelDeploymentItems));
     }
@@ -114,7 +115,7 @@ internal class DeploymentItemUtility
     /// <returns> True if has deployment items.</returns>
     internal static bool HasDeploymentItems(TestCase testCase)
     {
-        var deploymentItems = GetDeploymentItems(testCase);
+        KeyValuePair<string, string>[]? deploymentItems = GetDeploymentItems(testCase);
 
         return deploymentItems != null && deploymentItems.Length > 0;
     }
@@ -122,7 +123,7 @@ internal class DeploymentItemUtility
     internal static IList<DeploymentItem> GetDeploymentItems(IEnumerable<TestCase> tests)
     {
         List<DeploymentItem> allDeploymentItems = [];
-        foreach (var test in tests)
+        foreach (TestCase test in tests)
         {
             KeyValuePair<string, string>[]? items = GetDeploymentItems(test);
             if (items == null || items.Length == 0)
@@ -133,7 +134,7 @@ internal class DeploymentItemUtility
             IList<DeploymentItem>? deploymentItemsToBeAdded = FromKeyValuePairs(items);
 
             // TODO: Check if we can avoid potential NRE here.
-            foreach (var deploymentItemToBeAdded in deploymentItemsToBeAdded!)
+            foreach (DeploymentItem deploymentItemToBeAdded in deploymentItemsToBeAdded!)
             {
                 AddDeploymentItem(allDeploymentItems, deploymentItemToBeAdded);
             }
@@ -162,7 +163,7 @@ internal class DeploymentItemUtility
 
         try
         {
-            var fileName = Path.GetFileName(path);
+            string fileName = Path.GetFileName(path);
 
             if (fileName.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
             {
@@ -177,13 +178,13 @@ internal class DeploymentItemUtility
         return false;
     }
 
-    private static List<DeploymentItem> GetDeploymentItems(object[] deploymentItemAttributes, ICollection<string> warnings)
+    private static List<DeploymentItem> GetDeploymentItems(IEnumerable deploymentItemAttributes, ICollection<string> warnings)
     {
         var deploymentItems = new List<DeploymentItem>();
 
         foreach (DeploymentItemAttribute deploymentItemAttribute in deploymentItemAttributes.Cast<DeploymentItemAttribute>())
         {
-            if (IsValidDeploymentItem(deploymentItemAttribute.Path, deploymentItemAttribute.OutputDirectory, out var warning))
+            if (IsValidDeploymentItem(deploymentItemAttribute.Path, deploymentItemAttribute.OutputDirectory, out string? warning))
             {
                 AddDeploymentItem(deploymentItems, new DeploymentItem(deploymentItemAttribute.Path, deploymentItemAttribute.OutputDirectory));
             }
@@ -198,7 +199,7 @@ internal class DeploymentItemUtility
 
     [return: NotNullIfNotNull(nameof(deploymentItemList1))]
     [return: NotNullIfNotNull(nameof(deploymentItemList2))]
-    private static IList<DeploymentItem>? Concat(IList<DeploymentItem>? deploymentItemList1, IList<DeploymentItem>? deploymentItemList2)
+    private static IEnumerable<DeploymentItem>? Concat(IEnumerable<DeploymentItem>? deploymentItemList1, IEnumerable<DeploymentItem>? deploymentItemList2)
     {
         if (deploymentItemList1 == null && deploymentItemList2 == null)
         {
@@ -217,7 +218,7 @@ internal class DeploymentItemUtility
 
         IList<DeploymentItem> result = new List<DeploymentItem>(deploymentItemList1);
 
-        foreach (var item in deploymentItemList2)
+        foreach (DeploymentItem item in deploymentItemList2)
         {
             AddDeploymentItem(result, item);
         }
@@ -230,23 +231,19 @@ internal class DeploymentItemUtility
     /// </summary>
     /// <param name="testCase"> The test Case. </param>
     /// <returns> The <see cref="KeyValuePair{TKey,TValue}"/>. </returns>
-    private static KeyValuePair<string, string>[]? GetDeploymentItems(TestCase testCase)
-    {
-        return
-            testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as
+    private static KeyValuePair<string, string>[]? GetDeploymentItems(TestCase testCase) => testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as
             KeyValuePair<string, string>[];
-    }
 
-    private static KeyValuePair<string, string>[]? ToKeyValuePairs(IList<DeploymentItem> deploymentItemList)
+    private static KeyValuePair<string, string>[]? ToKeyValuePairs(IEnumerable<DeploymentItem> deploymentItemList)
     {
-        if (deploymentItemList == null || deploymentItemList.Count == 0)
+        if (deploymentItemList == null || !deploymentItemList.Any())
         {
             return null;
         }
 
         List<KeyValuePair<string, string>> result = [];
 
-        foreach (var deploymentItem in deploymentItemList)
+        foreach (DeploymentItem deploymentItem in deploymentItemList)
         {
             if (deploymentItem != null)
             {
@@ -266,7 +263,7 @@ internal class DeploymentItemUtility
 
         IList<DeploymentItem> result = new List<DeploymentItem>();
 
-        foreach (var deploymentItemData in deploymentItemsData)
+        foreach (KeyValuePair<string, string> deploymentItemData in deploymentItemsData)
         {
             AddDeploymentItem(result, new DeploymentItem(deploymentItemData.Key, deploymentItemData.Value));
         }

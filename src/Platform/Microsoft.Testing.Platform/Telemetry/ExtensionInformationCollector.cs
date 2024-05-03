@@ -42,7 +42,7 @@ internal static class ExtensionInformationCollector
         }
 
 #if NETCOREAPP
-        using var stream = new MemoryStream();
+        using MemoryStream stream = new();
         Utf8JsonWriter writer = new(stream);
         writer.WriteStartArray();
         foreach (ExtensionInformation extension in extensionsInformation)

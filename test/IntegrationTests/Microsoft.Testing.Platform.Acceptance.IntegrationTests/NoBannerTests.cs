@@ -11,12 +11,7 @@ public class NoBannerTests : AcceptanceTestBase
 {
     private const string AssetName = "NoBannerTest";
     private readonly TestAssetFixture _testAssetFixture;
-    private readonly string _bannerRegexMatchPattern = """
-\s*Microsoft\(R\) Testing Platform Execution Command Line Tool.*
-\s*Version:.*
-\s*RuntimeInformation:.*
-\s*Copyright\(c\) Microsoft Corporation[.]  All rights reserved[.].*
-""";
+    private readonly string _bannerRegexMatchPattern = @".NET Testing Platform v.+ \[.+\]";
 
     public NoBannerTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture)
         : base(testExecutionContext)
@@ -27,7 +22,7 @@ public class NoBannerTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task UsingNoBanner_TheBannerDoesNotAppear(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--no-banner");
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);
@@ -37,7 +32,7 @@ public class NoBannerTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task UsingNoBanner_InTheEnvironmentVars_TheBannerDoesNotAppear(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
             new Dictionary<string, string>()
@@ -52,7 +47,7 @@ public class NoBannerTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task UsingDotnetNoLogo_InTheEnvironmentVars_TheBannerDoesNotAppear(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(
             null,
             new Dictionary<string, string>()
@@ -67,7 +62,7 @@ public class NoBannerTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task WithoutUsingNoBanner_TheBannerAppears(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.ZeroTests);

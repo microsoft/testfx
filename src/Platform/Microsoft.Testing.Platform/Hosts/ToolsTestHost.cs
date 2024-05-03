@@ -184,7 +184,7 @@ internal sealed class ToolsTestHost(
         foreach (OptionRecord optionRecord in _parseResult.Options)
         {
             ICommandLineOptionsProvider extension = GetAllCommandLineOptionsProviderByOptionName(optionRecord.Option).Single();
-            var result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments);
+            ValidationResult result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments);
             if (!result.IsValid)
             {
                 stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Invalid arguments for option '--{optionRecord.Option}': {result.ErrorMessage}, tool {tool.DisplayName}");

@@ -40,8 +40,19 @@
       (i.e. `<None Remove="@(TestAdapterContent)" />`)
       -->
     <None Include="@(TestAdapterContent)" />
-    <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter" HintPath="$(MSBuildThisFileDirectory)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll" Condition=" '$(EnableMSTestRunner)' == 'true' " />
   </ItemGroup>
+
+  <Choose>
+    <!-- Avoid false warning about missing reference (msbuild bug) -->
+    <!-- https://github.com/dotnet/msbuild/issues/9698#issuecomment-1945763467 -->
+    <When Condition=" '$(EnableMSTestRunner)' == 'true' ">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter">
+          <HintPath>$(__TestAdapterPlatformServicesRoot)Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll</HintPath>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
 
   <Target Name="GetMSTestV2CultureHierarchy">
     <!--
