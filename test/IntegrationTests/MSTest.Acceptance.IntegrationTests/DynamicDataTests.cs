@@ -94,7 +94,7 @@ public class TestClass
     {
     }
 
-    public static IEnumerable<int> AdditionalData =>Array.Empty<int>();
+    public static IEnumerable<int> AdditionalData => Array.Empty<int>();
 }
 """;
     }
