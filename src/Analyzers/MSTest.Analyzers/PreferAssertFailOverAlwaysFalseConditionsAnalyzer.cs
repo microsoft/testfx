@@ -92,7 +92,6 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
 
     private static EqualityStatus GetEqualityStatus(IInvocationOperation operation, string expectedOrNotExpectedParameterName)
     {
-#pragma warning disable IDE0046 // Convert to conditional expression - more readable this way.
         if (GetArgumentWithName(operation, expectedOrNotExpectedParameterName) is { } expectedOrNotExpectedArgument &&
             GetArgumentWithName(operation, ActualParameterName) is { } actualArgument &&
             expectedOrNotExpectedArgument.Value.ConstantValue.HasValue &&
@@ -100,8 +99,8 @@ public sealed class PreferAssertFailOverAlwaysFalseConditionsAnalyzer : Diagnost
         {
             return Equals(expectedOrNotExpectedArgument.Value.ConstantValue.Value, actualArgument.Value.ConstantValue.Value) ? EqualityStatus.Equal : EqualityStatus.NotEqual;
         }
-#pragma warning restore IDE0046 // Convert to conditional expression
 
+        // We are not sure about the equality status
         return EqualityStatus.Unknown;
     }
 }
