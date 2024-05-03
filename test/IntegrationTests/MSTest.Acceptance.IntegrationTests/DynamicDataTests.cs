@@ -46,6 +46,43 @@ public class DynamicDataTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("skipped Test");
     }
 
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
+    {
+        string runSettings = $"""
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+    <RunConfiguration>
+    </RunConfiguration>
+    <MSTest>
+        <ConsiderEmptyDataSourceAsInconclusive>false</ConsiderEmptyDataSourceAsInconclusive>
+    </MSTest>
+</RunSettings>
+""";
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
+        File.WriteAllText(runSettingsFilePath, runSettings);
+
+        var testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+
+        testHostResult.AssertOutputContains("failed Test");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task SendingEmptyDataToDynamicDataTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        var testHostResult = await testHost.ExecuteAsync();
+
+        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
+
+        testHostResult.AssertOutputContains("failed Test");
+    }
+
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
