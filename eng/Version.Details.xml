@@ -21,13 +21,13 @@
       <Uri>https://github.com/microsoft/testanywhere</Uri>
       <Sha>445bda5374781f22ebd553dbc5c52d4c9c4176eb</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Testing.Platform" Version="1.2.0-preview.24253.1">
+    <Dependency Name="Microsoft.Testing.Platform" Version="1.2.0-preview.24253.3">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>c3e1514c694263fe8855e990bfdb00de284e72cf</Sha>
+      <Sha>196e80cdafe937b80ff2738fde9123a41fee7947</Sha>
     </Dependency>
-    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24253.1">
+    <Dependency Name="MSTest.Engine" Version="1.0.0-alpha.24253.3">
       <Uri>https://github.com/microsoft/testanywhere</Uri>
-      <Sha>c3e1514c694263fe8855e990bfdb00de284e72cf</Sha>
+      <Sha>196e80cdafe937b80ff2738fde9123a41fee7947</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
