@@ -588,6 +588,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.Fail&apos; instead of an always-failing &apos;Assert.{0}&apos; assert.
+        /// </summary>
+        internal static string PreferAssertFailOverAlwaysFalseConditionsMessageFormat {
+            get {
+                return ResourceManager.GetString("PreferAssertFailOverAlwaysFalseConditionsMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use &apos;Assert.Fail&apos; instead of an always-failing assert.
+        /// </summary>
+        internal static string PreferAssertFailOverAlwaysFalseConditionsTitle {
+            get {
+                return ResourceManager.GetString("PreferAssertFailOverAlwaysFalseConditionsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Prefer constructors over TestInitialize methods.
         /// </summary>
         internal static string PreferConstructorOverTestInitializeMessageFormat {

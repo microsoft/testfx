@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
@@ -294,7 +294,22 @@ internal class TestMethodRunner
                 foreach (UTF.ITestDataSource testDataSource in testDataSources)
                 {
                     isDataDriven = true;
-                    foreach (object?[] data in testDataSource.GetData(_testMethodInfo.MethodInfo))
+                    IEnumerable<object?[]>? dataSource = null;
+                    try
+                    {
+                        dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
+                    }
+                    catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+                    {
+                        var inconclusiveResult = new TestResult
+                        {
+                            Outcome = UTF.UnitTestOutcome.Inconclusive,
+                        };
+                        results.Add(inconclusiveResult);
+                        continue;
+                    }
+
+                    foreach (object?[] data in dataSource)
                     {
                         try
                         {
