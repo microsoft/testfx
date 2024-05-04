@@ -27,13 +27,13 @@ internal class DisplayTestSessionLifeTimeHandler : ITestSessionLifetimeHandler, 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
-        => _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("OnTestSessionStartingAsync()")
+        => _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("Hello from OnTestSessionStartingAsync")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.DarkGreen }
         });
 
     public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken)
-        => _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("OnTestSessionFinishingAsync()")
+        => _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData("Hello from OnTestSessionFinishingAsync")
         {
             ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.DarkGreen }
         });

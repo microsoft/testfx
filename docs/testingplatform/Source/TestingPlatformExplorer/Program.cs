@@ -20,6 +20,8 @@ testApplicationBuilder.AddTestingFramework(new[] { Assembly.GetExecutingAssembly
 testApplicationBuilder.CommandLine.AddProvider(() => new TestingFrameworkCommandLineOptions());
 
 // In-process extensions
+testApplicationBuilder.TestHost.AddTestApplicationLifecycleCallbacks(serviceProvider
+    => new DisplayTestApplicationLifecycleCallbacks(serviceProvider.GetOutputDevice()));
 testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(serviceProvider
     => new DisplayTestSessionLifeTimeHandler(serviceProvider.GetOutputDevice()));
 
