@@ -154,7 +154,7 @@ internal sealed class TestHostManager : ITestHostManager
 
     internal async Task<(IExtension Consumer, int RegistrationOrder)[]> BuildDataConsumersAsync(ServiceProvider serviceProvider, List<ICompositeExtensionFactory> alreadyBuiltServices)
     {
-        List<(IExtension Consumer, int RegistrtionOrder)> dataConsumers = [];
+        List<(IExtension Consumer, int RegistrationOrder)> dataConsumers = [];
         foreach (Func<IServiceProvider, IDataConsumer> dataConsumerFactory in _dataConsumerFactories)
         {
             IDataConsumer service = dataConsumerFactory(serviceProvider);
