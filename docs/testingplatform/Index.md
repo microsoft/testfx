@@ -11,7 +11,11 @@
         1. [Well known TestNodeUpdateMessage.TestNode properties](testnodeupdatemessage.md)
 1. [Capabilities](capabilities.md)
 1. Extensions
-    1. [ICommandLineOptionsProvider](icommandlineoptionsprovider.md)
+    1. [Introduction](extensionintro.md)
+    1. In-process & out-of-process
+        1. [ICommandLineOptionsProvider](icommandlineoptionsprovider.md)
+    1. In-process
+        1. [ITestSessionLifetimeHandler](itestsessionlifetimehandler.md)
 1. Services
     1. [IServiceProvider](iserviceprovider.md)
     1. [IConfiguration](configuration.md)
