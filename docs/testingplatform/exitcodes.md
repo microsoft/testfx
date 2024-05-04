@@ -7,7 +7,7 @@
 | `0` | The `0` exit code indicates success. All tests that were chosen to run ran to completion and there were no errors. |
 | `1` | The `1` exit code indicates unknown errors and acts as a _catch all_. To find additional error information and details, look in the output. |
 | `2` | An exit code of `2` is used to indicate that there was at least one test failure. |
-| `3` | The exit code `3` indicates that the test session was aborted. A session can be aborted using <kbd>Ctrl</kbd>+<kbd>C</kbd>, as an example. |
+| `3` | The exit code `3` indicates that the test session was aborted. A session can be aborted using Ctrl+C, as an example. |
 | `4` | The exit code `4` indicates that the setup of used extensions is invalid and the tests session cannot run. |
 | `5` | The exit code `5` indicates that the command line arguments passed to the test app are invalid. |
 | `6` | The exit code `6` indicates that the test session is using a nonimplemented feature. |
