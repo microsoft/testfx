@@ -4,7 +4,9 @@
 using System.Reflection;
 
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Services;
 
+using TestingPlatformExplorer.In_process_extensions;
 using TestingPlatformExplorer.TestingFramework;
 
 // Create the test application builder
@@ -13,8 +15,13 @@ ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBui
 // Register the testing framework
 testApplicationBuilder.AddTestingFramework(new[] { Assembly.GetExecutingAssembly() });
 
+// In-process & out-of-process extensions
 // Register the testing framework command line options
 testApplicationBuilder.CommandLine.AddProvider(() => new TestingFrameworkCommandLineOptions());
+
+// In-process extensions
+testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(serviceProvider
+    => new DisplayTestSessionLifeTimeHandler(serviceProvider.GetOutputDevice()));
 
 using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();
