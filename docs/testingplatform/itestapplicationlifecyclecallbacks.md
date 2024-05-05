@@ -14,8 +14,8 @@ testApplicationBuilder.TestHost.AddTestApplicationLifecycleCallbacks(serviceProv
 
 The factory utilizes the [IServiceProvider](iserviceprovider.md) to gain access to the suite of services offered by the testing platform.
 
->> [!IMPORTANT]
->> The sequence of registration is significant, as the APIs are called in the order they were registered.
+> [!IMPORTANT]
+> The sequence of registration is significant, as the APIs are called in the order they were registered.
 
 The `ITestApplicationLifecycleCallbacks` interface includes the following methods:
 

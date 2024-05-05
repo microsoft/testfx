@@ -50,8 +50,8 @@ public interface IProperty
 
 * `TestNode`: The `TestNode` is composed of three properties, one of which is the `Uid` of type `TestNodeUid`. This `Uid` serves as the **UNIQUE STABLE ID** for the node. The term **UNIQUE STABLE ID** implies that the same `TestNode` should maintain an **IDENTICAL** `Uid` across different runs and operating systems. The `TestNodeUid` is an **arbitrary opaque string** that the testing platform accepts as is.
 
->> [!IMPORTANT]
->> The stability and uniqueness of the ID are crucial in the testing domain. They enable the precise targeting of a single test for execution and allow the ID to serve as a persistent identifier for a test, facilitating powerful extensions and features.
+> [!IMPORTANT]
+> The stability and uniqueness of the ID are crucial in the testing domain. They enable the precise targeting of a single test for execution and allow the ID to serve as a persistent identifier for a test, facilitating powerful extensions and features.
 
 The second property is `DisplayName`, which is the human-friendly name for the test. For example, this name is displayed when you execute the `--list-tests` command line.
 
