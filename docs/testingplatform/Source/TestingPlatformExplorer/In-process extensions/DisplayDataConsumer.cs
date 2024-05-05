@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.OutputDevice;
 
-namespace TestingPlatformExplorer.In_process_extensions;
+namespace TestingPlatformExplorer.InProcess;
 internal class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProducer
 {
     private readonly IOutputDevice _outputDevice;
@@ -26,7 +26,7 @@ internal class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProducer
         _outputDevice = outputDevice;
     }
 
-    public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
+    public async Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken)
     {
         var testNodeUpdateMessage = (TestNodeUpdateMessage)value;
         string testNodeDisplayName = testNodeUpdateMessage.TestNode.DisplayName;
@@ -38,7 +38,7 @@ internal class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProducer
         {
             case InProgressTestNodeStateProperty _:
                 {
-                    _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is in progress")
+                    await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is in progress")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green }
                     });
@@ -46,7 +46,7 @@ internal class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProducer
                 }
             case PassedTestNodeStateProperty _:
                 {
-                    _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is completed")
+                    await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is completed")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Green }
                     });
@@ -54,7 +54,7 @@ internal class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProducer
                 }
             case FailedTestNodeStateProperty failedTestNodeStateProperty:
                 {
-                    _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is failed with '{failedTestNodeStateProperty?.Exception?.Message}'")
+                    await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is failed with '{failedTestNodeStateProperty?.Exception?.Message}'")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.Red }
                     });
@@ -62,7 +62,7 @@ internal class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProducer
                 }
             case SkippedTestNodeStateProperty _:
                 {
-                    _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is skipped")
+                    await _outputDevice.DisplayAsync(this, new FormattedTextOutputDeviceData($"[DisplayDataConsumer]TestNode '{testNodeId}' with display name '{testNodeDisplayName}' is skipped")
                     {
                         ForegroundColor = new SystemConsoleColor() { ConsoleColor = ConsoleColor.White }
                     });
@@ -71,8 +71,6 @@ internal class DisplayDataConsumer : IDataConsumer, IOutputDeviceDataProducer
             default:
                 break;
         }
-
-        return Task.CompletedTask;
     }
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 }

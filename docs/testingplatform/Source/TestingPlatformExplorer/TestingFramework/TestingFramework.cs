@@ -143,7 +143,10 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
 
                                 await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, skippedTestNode));
 
-                                reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {skippedTestNode.Uid} skipped");
+                                lock (reportBody)
+                                {
+                                    reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {skippedTestNode.Uid} skipped");
+                                }
 
                                 continue;
                             }
@@ -167,7 +170,10 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
 
                                         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, successfulTestNode));
 
-                                        reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {successfulTestNode.Uid} succeeded");
+                                        lock (reportBody)
+                                        {
+                                            reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {successfulTestNode.Uid} succeeded");
+                                        }
                                     }
                                     catch (TargetInvocationException ex) when (ex.InnerException is AssertionException assertionException)
                                     {
@@ -193,7 +199,10 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
 
                                         await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, failedTestNode));
 
-                                        reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {failedTestNode.Uid} failed");
+                                        lock (reportBody)
+                                        {
+                                            reportBody.AppendLine(CultureInfo.InvariantCulture, $"Test {failedTestNode.Uid} failed");
+                                        }
                                     }
                                 }
                                 finally

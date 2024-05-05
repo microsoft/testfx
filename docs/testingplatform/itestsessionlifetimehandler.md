@@ -44,3 +44,5 @@ Let's describe the api:
 `OnTestSessionFinishingAsync`: This method is invoked after the completion of the test session, ensuring that the [testing framework](itestframework.md) has finished executing all tests and has reported all relevant data to the platform. Typically, in this method, the extension employs the [`IMessageBus`](imessagebus.md) to transmit custom assets or data to the shared platform bus. This method can also signal to any custom *out-of-process* extension that the test session has concluded.
 
 Finally, both APIs take a `CancellationToken` which the extension is expected to honor.
+
+If your extension requires intensive initialization and you need to use the async/await pattern, you can refer to the [`Async extension initialization and cleanup`](asyncinitcleanup.md). If you need to *share state* between extension points, you can refer to the [`CompositeExtensionFactory<T>`](compositeextensionfactory.md) section.
