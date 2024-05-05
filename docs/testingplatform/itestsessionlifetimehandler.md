@@ -13,7 +13,7 @@ testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(serviceProvider => 
 
 The factory utilizes the [IServiceProvider](iserviceprovider.md) to gain access to the suite of services offered by the testing platform.
 
->> [!NOTE]
+>> [!IMPORTANT]
 >> The sequence of registration is significant, as the APIs are called in the order they were registered.
 
 The `ITestSessionLifeTimeHandler` interface includes the following methods:
