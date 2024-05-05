@@ -24,6 +24,8 @@ testApplicationBuilder.TestHost.AddTestApplicationLifecycleCallbacks(serviceProv
     => new DisplayTestApplicationLifecycleCallbacks(serviceProvider.GetOutputDevice()));
 testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(serviceProvider
     => new DisplayTestSessionLifeTimeHandler(serviceProvider.GetOutputDevice()));
+testApplicationBuilder.TestHost.AddDataConsumer(serviceProvider
+    => new DisplayDataConsumer(serviceProvider.GetOutputDevice()));
 
 using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();
