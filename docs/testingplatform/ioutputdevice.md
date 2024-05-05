@@ -4,8 +4,8 @@ The testing platform encapsulates the idea of an *output device*, allowing the t
 
 The most traditional example of an *output device* is the console output.
 
->> [!NOTE]
->> While the testing platform is engineered to support custom *output devices*, currently, this extension point is not available.
+> [!NOTE]
+> While the testing platform is engineered to support custom *output devices*, currently, this extension point is not available.
 
 To transmit data to the *output device*, you must obtain the `IOutputDevice` from the [`IServiceProvider`](iserviceprovider.md).
 The API consists of:
