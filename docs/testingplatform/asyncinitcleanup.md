@@ -22,6 +22,5 @@ public interface IAsyncCleanableExtension
 
 > [!IMPORTANT]
 > Similar to the standard `Dispose` method, `CleanupAsync` may be invoked multiple times. If an object's `CleanupAsync` method is called more than once, the object must ignore all calls after the first one. The object must not throw an exception if its `CleanupAsync` method is called multiple times.
-
 > [!NOTE]
 > By default, the testing platform will call `DisposeAsync` if it's available, or `Dispose` if it's implemented. It's important to note that the testing platform will not call both dispose methods but will prioritize the async one if implemented.
