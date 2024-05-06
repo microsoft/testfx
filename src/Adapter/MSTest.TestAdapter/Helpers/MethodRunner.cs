@@ -16,9 +16,18 @@ internal static class MethodRunner
     internal static TestFailedException? RunWithTimeoutAndCancellation(
         Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
         string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
-        => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
-            ? RunWithTimeoutAndCancellationWithSTAThread(action, cancellationTokenSource, timeout, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat)
-            : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeout, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat);
+    {
+        if (timeout is null)
+        {
+            action();
+            return null;
+        }
+
+        // We need to start a thread to handle "cancellation" and "timeout" scenarios.
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
+                ? RunWithTimeoutAndCancellationWithSTAThread(action, cancellationTokenSource, timeout, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat)
+                : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeout, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat);
+    }
 
     private static TestFailedException? RunWithTimeoutAndCancellationWithThreadPool(
         Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,

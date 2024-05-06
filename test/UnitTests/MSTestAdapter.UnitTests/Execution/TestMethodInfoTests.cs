@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -511,12 +511,7 @@ public class TestMethodInfoTests : TestContainer
             _testClassInfo.TestInitializeMethod.Name,
             "System.Exception: Outer ---> System.InvalidOperationException: Inner");
         Verify(expectedErrorMessage == exception.Message);
-
-#if NETFRAMEWORK
-        Verify(exception.StackTraceInformation is null);
-#else
-        Verify(exception.StackTraceInformation is null);
-#endif
+        Verify(exception.StackTraceInformation is not null);
     }
 
     public void TestMethodInfoInvokeWhenTestThrowsAssertFailReturnsExpectedResult()
@@ -614,17 +609,10 @@ public class TestMethodInfoTests : TestContainer
             "System.Exception: Outer ---> System.InvalidOperationException: Inner");
         Verify(errorMessage == exception.Message);
 
-#if NETFRAMEWORK
-        if (exception.StackTraceInformation != null)
+        if (exception.StackTraceInformation is null)
         {
-            throw new Exception($"Expected stack trace to be empty.");
+            throw new Exception("Expected stack trace not to be empty.");
         }
-#else
-        if (exception.StackTraceInformation != null)
-        {
-            throw new Exception($"Expected stack trace to be empty.");
-        }
-#endif
     }
 
     public void TestMethodInfoInvokeShouldCallTestCleanup()
