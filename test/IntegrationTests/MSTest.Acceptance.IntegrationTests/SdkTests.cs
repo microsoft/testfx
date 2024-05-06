@@ -14,10 +14,49 @@ public sealed class SdkTests : AcceptanceTestBase
 {
     private const string AssetName = "MSTestSdk";
 
-    public SdkTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture)
+    private const string ClassicSourceCode = """
+#file MSTestSdk.csproj
+<Project Sdk="MSTest.Sdk/$MSTestVersion$" >
+  <PropertyGroup>
+    $OutputType$
+    $TargetFramework$
+    $EnableMSTestRunner$
+    $TestingPlatformDotnetTestSupport$
+    $ExtraProperties$
+    <PlatformTarget>x64</PlatformTarget>
+    <NoWarn>$(NoWarn);NU1507</NoWarn>
+  </PropertyGroup>
+
+  <!-- Extensions -->
+  <PropertyGroup>
+    $Extensions$
+  </PropertyGroup>
+</Project>
+
+#file UnitTest1.cs
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+namespace MSTestSdkTest
+{
+    [TestClass]
+    public class UnitTest1
+    {
+        [TestMethod]
+        public void TestMethod1()
+        {
+        }
+    }
+}
+""";
+
+    private readonly AcceptanceFixture _acceptanceFixture;
+    private readonly TestAssetFixture _testAssetFixture;
+
+    public SdkTests(ITestExecutionContext testExecutionContext, AcceptanceFixture acceptanceFixture, TestAssetFixture testAssetFixture)
         : base(testExecutionContext)
     {
         _acceptanceFixture = acceptanceFixture;
+        _testAssetFixture = testAssetFixture;
     }
 
     [ArgumentsProvider(nameof(GetBuildMatrixMultiTfmFoldedBuildConfiguration))]
@@ -25,7 +64,7 @@ public sealed class SdkTests : AcceptanceTestBase
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SourceCode
+               ClassicSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -61,7 +100,7 @@ public sealed class SdkTests : AcceptanceTestBase
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SourceCode
+               ClassicSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -97,7 +136,7 @@ public sealed class SdkTests : AcceptanceTestBase
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SourceCode
+               ClassicSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -130,7 +169,7 @@ public sealed class SdkTests : AcceptanceTestBase
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SourceCode
+               ClassicSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -207,7 +246,7 @@ public sealed class SdkTests : AcceptanceTestBase
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SourceCode
+               ClassicSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -243,7 +282,7 @@ public sealed class SdkTests : AcceptanceTestBase
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SourceCode
+               ClassicSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -290,7 +329,7 @@ public sealed class SdkTests : AcceptanceTestBase
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SourceCode
+               ClassicSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -330,7 +369,7 @@ public sealed class SdkTests : AcceptanceTestBase
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               SourceCode
+               ClassicSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -366,7 +405,7 @@ public sealed class SdkTests : AcceptanceTestBase
 
             using TestAsset generator = await TestAsset.GenerateAssetAsync(
                    AssetName,
-                   SourceCode
+                   ClassicSourceCode
                    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                    .PatchCodeWithReplace("$OutputType$", string.Empty)
                    .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent.Arguments}</TargetFramework>")
@@ -396,41 +435,148 @@ public sealed class SdkTests : AcceptanceTestBase
             testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
         }, 3, TimeSpan.FromSeconds(5));
 
-    private const string SourceCode = """
-#file MSTestSdk.csproj
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task EnablePlaywrightProperty_WhenUsingRunner_AllowsToRunPlaywrightTests(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
+        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
+        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {testHost.FullName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        Assert.AreEqual(0, dotnetTestResult.ExitCode);
+        dotnetTestResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        // Ensure output contains the right platform banner
+        dotnetTestResult.AssertOutputContains("Microsoft (R) Test Execution Command Line Tool Version");
+    }
+
+    public async Task EnableAspireProperty_WhenUsingRunner_AllowsToRunAspireTests()
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent.UidFragment);
+        TestHostResult testHostResult = await testHost.ExecuteAsync();
+        testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+    }
+
+    public async Task EnableAspireProperty_WhenUsingVSTest_AllowsToRunAspireTests()
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent.UidFragment);
+        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {testHost.FullName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        Assert.AreEqual(0, dotnetTestResult.ExitCode);
+        dotnetTestResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
+        // Ensure output contains the right platform banner
+        dotnetTestResult.AssertOutputContains("Microsoft (R) Test Execution Command Line Tool Version");
+    }
+
+    [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
+    public sealed class TestAssetFixture(AcceptanceFixture _acceptanceFixture)
+        : TestAssetFixtureBase(_acceptanceFixture.NuGetGlobalPackagesFolder)
+    {
+        public const string AspireProjectName = "AspireProject";
+        public const string PlaywrightProjectName = "PlaywrightProject";
+
+        private const string AspireSourceCode = """
+#file AspireProject.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$" >
   <PropertyGroup>
-    $OutputType$
-    $TargetFramework$
-    $EnableMSTestRunner$
-    $TestingPlatformDotnetTestSupport$
-    $ExtraProperties$
-    <PlatformTarget>x64</PlatformTarget>
-    <NoWarn>$(NoWarn);NU1507</NoWarn>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Ensures that dotnet test uses VSTest so we can run tests with the 2 platforms -->
+    <TestingPlatformDotnetTestSupport>false</TestingPlatformDotnetTestSupport>
+    <!-- Disable all extensions by default -->
+    <TestingExtensionsProfile>None</TestingExtensionsProfile>
+    <EnableAspireTesting>true</EnableAspireTesting>
   </PropertyGroup>
 
-  <!-- Extensions -->
-  <PropertyGroup>
-    $Extensions$
-  </PropertyGroup>
+  <ItemGroup>
+    <Using Include="System.Threading.Tasks" />
+  </ItemGroup>
 </Project>
 
 #file UnitTest1.cs
+namespace AspireProject;
 
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace MSTestSdkTest
+[TestClass]
+public class IntegrationTest1
 {
-    [TestClass]
-    public class UnitTest1
+    [TestMethod]
+    public void GetWebResourceRootReturnsOkStatusCode()
     {
-        [TestMethod]
-        public void TestMethod1()
-        {
-        }
+        // TODO: Test could be improved to run a real Aspire app, their starter is a big multi-projects app
     }
 }
 """;
 
-    private readonly AcceptanceFixture _acceptanceFixture;
+        private const string PlaywrightSourceCode = """
+#file PlaywrightProject.csproj
+<Project Sdk="MSTest.Sdk/$MSTestVersion$" >
+  <PropertyGroup>
+    <TargetFrameworks>$TargetFrameworks$</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Ensures that dotnet test uses VSTest so we can run tests with the 2 platforms -->
+    <TestingPlatformDotnetTestSupport>false</TestingPlatformDotnetTestSupport>
+    <!-- Disable all extensions by default -->
+    <TestingExtensionsProfile>None</TestingExtensionsProfile>
+    <EnablePlaywright>true</EnablePlaywright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Include="System.Text.RegularExpressions" />
+    <Using Include="System.Threading.Tasks" />
+  </ItemGroup>
+</Project>
+
+#file UnitTest1.cs
+namespace PlaywrightProject;
+
+[TestClass]
+public class UnitTest1 : PageTest
+{
+    [TestMethod]
+    public async Task HomepageHasPlaywrightInTitleAndGetStartedLinkLinkingToTheIntroPage()
+    {
+        await Page.GotoAsync("https://playwright.dev");
+
+        // Expect a title "to contain" a substring.
+        await Expect(Page).ToHaveTitleAsync(new Regex("Playwright"));
+
+        // create a locator
+        var getStarted = Page.Locator("text=Get Started");
+
+        // Expect an attribute "to be strictly equal" to the value.
+        await Expect(getStarted).ToHaveAttributeAsync("href", "/docs/intro");
+
+        // Click the get started link.
+        await getStarted.ClickAsync();
+
+        // Expects the URL to contain intro.
+        await Expect(Page).ToHaveURLAsync(new Regex(".*intro"));
+    }
+}
+""";
+
+        public string AspireProjectPath => GetAssetPath(AspireProjectName);
+
+        public string PlaywrightProjectPath => GetAssetPath(PlaywrightProjectName);
+
+        public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
+        {
+            yield return (AspireProjectName, AspireProjectName,
+                AspireSourceCode
+                .PatchTargetFrameworks(TargetFrameworks.NetCurrent)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+
+            yield return (PlaywrightProjectName, PlaywrightProjectName,
+                PlaywrightSourceCode
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+        }
+    }
 }
