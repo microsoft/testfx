@@ -341,12 +341,12 @@
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
-        <target state="new">Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</target>
+        <target state="translated">使用 “Assert.Fail” 而不是始终失败的 “Assert.{0}” 断言</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsTitle">
         <source>Use 'Assert.Fail' instead of an always-failing assert</source>
-        <target state="new">Use 'Assert.Fail' instead of an always-failing assert</target>
+        <target state="translated">使用 “Assert.Fail” 而不是始终失败的断言</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
