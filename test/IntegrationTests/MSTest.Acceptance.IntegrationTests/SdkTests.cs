@@ -449,9 +449,9 @@ namespace MSTestSdkTest
         var testHost = TestHost.LocateFrom(_testAssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {testHost.FullName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, dotnetTestResult.ExitCode);
-        dotnetTestResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
         // Ensure output contains the right platform banner
-        dotnetTestResult.AssertOutputContains("Microsoft (R) Test Execution Command Line Tool Version");
+        dotnetTestResult.AssertOutputContains("Test Execution Command Line Tool");
+        dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
     }
 
     public async Task EnableAspireProperty_WhenUsingRunner_AllowsToRunAspireTests()
@@ -466,9 +466,9 @@ namespace MSTestSdkTest
         var testHost = TestHost.LocateFrom(_testAssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent.UidFragment);
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {testHost.FullName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, dotnetTestResult.ExitCode);
-        dotnetTestResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
         // Ensure output contains the right platform banner
-        dotnetTestResult.AssertOutputContains("Microsoft (R) Test Execution Command Line Tool Version");
+        dotnetTestResult.AssertOutputContains("Test Execution Command Line Tool");
+        dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
