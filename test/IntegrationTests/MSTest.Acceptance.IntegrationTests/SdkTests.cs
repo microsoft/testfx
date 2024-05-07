@@ -14,7 +14,7 @@ public sealed class SdkTests : AcceptanceTestBase
 {
     private const string AssetName = "MSTestSdk";
 
-    private const string ClassicSourceCode = """
+    private const string SingleTestSourceCode = """
 #file MSTestSdk.csproj
 <Project Sdk="MSTest.Sdk/$MSTestVersion$" >
   <PropertyGroup>
@@ -64,7 +64,7 @@ namespace MSTestSdkTest
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               ClassicSourceCode
+               SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -100,7 +100,7 @@ namespace MSTestSdkTest
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               ClassicSourceCode
+               SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -136,7 +136,7 @@ namespace MSTestSdkTest
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               ClassicSourceCode
+               SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -169,7 +169,7 @@ namespace MSTestSdkTest
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               ClassicSourceCode
+               SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -246,7 +246,7 @@ namespace MSTestSdkTest
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               ClassicSourceCode
+               SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -282,7 +282,7 @@ namespace MSTestSdkTest
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               ClassicSourceCode
+               SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -329,7 +329,7 @@ namespace MSTestSdkTest
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               ClassicSourceCode
+               SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -369,7 +369,7 @@ namespace MSTestSdkTest
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
                AssetName,
-               ClassicSourceCode
+               SingleTestSourceCode
                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                .PatchCodeWithReplace("$OutputType$", string.Empty)
                .PatchCodeWithReplace("$TargetFramework$", $"<TargetFrameworks>{multiTfm}</TargetFrameworks>")
@@ -405,7 +405,7 @@ namespace MSTestSdkTest
 
             using TestAsset generator = await TestAsset.GenerateAssetAsync(
                    AssetName,
-                   ClassicSourceCode
+                   SingleTestSourceCode
                    .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion)
                    .PatchCodeWithReplace("$OutputType$", string.Empty)
                    .PatchCodeWithReplace("$TargetFramework$", $"<TargetFramework>{TargetFrameworks.NetCurrent.Arguments}</TargetFramework>")
@@ -463,10 +463,10 @@ namespace MSTestSdkTest
     public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
-            $"test {testHost.FullName.Replace(".exe", ".dll")}",
-            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
-            failIfReturnValueIsNotZero: false);
+        string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? testHost.FullName
+            : testHost.FullName + ".dll";
+        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {exeOrDllName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path, failIfReturnValueIsNotZero: false);
 
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("Test Execution Command Line Tool");
@@ -499,7 +499,10 @@ namespace MSTestSdkTest
     public async Task EnableAspireProperty_WhenUsingVSTest_AllowsToRunAspireTests()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent.UidFragment);
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {testHost.FullName.Replace(".exe", ".dll")}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        string exeOrDllName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? testHost.FullName
+            : testHost.FullName + ".dll";
+        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {exeOrDllName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, dotnetTestResult.ExitCode);
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("Test Execution Command Line Tool");
