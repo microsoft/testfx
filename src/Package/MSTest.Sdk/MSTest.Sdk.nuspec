@@ -9,6 +9,8 @@
 
     <file src="$MSBuildProjectDirectory$/Sdk/Sdk.props" target="Sdk" />
     <file src="$MSBuildProjectDirectory$/Sdk/Sdk.targets" target="Sdk" />
+    <file src="$MSBuildProjectDirectory$/Sdk/Features/Aspire.targets" target="Sdk/Features" />
+    <file src="$MSBuildProjectDirectory$/Sdk/Features/Playwright.targets" target="Sdk/Features" />
     <file src="$MSBuildProjectDirectory$/Sdk/Runner/Runner.targets" target="Sdk/Runner" />
     <file src="$MSBuildProjectDirectory$/Sdk/Runner/Common.targets" target="Sdk/Runner" />
     <file src="$MSBuildProjectDirectory$/Sdk/Runner/ClassicEngine.targets" target="Sdk/Runner" />

@@ -27,7 +27,7 @@
   </PropertyGroup>
 
   <!-- Core -->
-  <ItemGroup Condition=" '$(EnablePlaywright)' == 'false' ">
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
@@ -44,7 +44,7 @@
     <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingExtensionsRetryVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " Sdk="MSTest" />
   </ItemGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspire)' == 'true' " />
+  <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspireTesting)' == 'true' " />
   <Import Project="$(MSBuildThisFileDirectory)../Features/Playwright.targets" Condition=" '$(EnablePlaywright)' == 'true' " />
 
 </Project>

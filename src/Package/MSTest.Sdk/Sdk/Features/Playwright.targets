@@ -3,7 +3,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Playwright.MSTest" Version="$(MicrosoftPlaywrightVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " Sdk="MSTest" />
   </ItemGroup>
 
   <!--
