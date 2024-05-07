@@ -205,5 +205,5 @@ internal static class MethodInfoExtensions
                 methodParametersLengthOrZero,
                 string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>()),
                 argumentsLengthOrZero,
-                string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())));
+                string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())), innerException);
 }
