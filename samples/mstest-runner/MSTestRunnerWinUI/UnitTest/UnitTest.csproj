@@ -36,12 +36,12 @@
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.3233" />
 
     <!-- We cannot use the v3.3.1 has it contains a bug in how the targets are importing the dll for WinUI -->
-    <PackageReference Include="MSTest.Analyzers" Version="3.4.0-preview.24225.1">
+    <PackageReference Include="MSTest.Analyzers" Version="3.4.0-preview.24257.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="MSTest.TestAdapter" Version="3.4.0-preview.24225.1" />
-    <PackageReference Include="MSTest.TestFramework" Version="3.4.0-preview.24225.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.4.0-preview.24257.4" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.4.0-preview.24257.4" />
   </ItemGroup>
 
   <!-- 
