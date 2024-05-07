@@ -10,7 +10,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
 
 ### Added
 
-* MSTEST0017: Assertion arguments should be passed in the correct order by @Evangelink in [#2556](https://github.com/microsoft/testfx/pull/2256)
+* MSTEST0017: Assertion arguments should be passed in the correct order by @Evangelink in [#2556](https://github.com/microsoft/testfx/pull/2556)
 * Support "Central Package Management" with the MSTest.Sdk by @MarcoRossignoli in [#2581](https://github.com/microsoft/testfx/pull/2581)
 * MSTEST0019: Prefer TestInitialize over ctor by @Evangelink in [#2580](https://github.com/microsoft/testfx/pull/2580)
 * MSTEST0020: Prefer ctors over TestInitialize methods by @Evangelink in [#2582](https://github.com/microsoft/testfx/pull/2582)
