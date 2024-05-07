@@ -180,11 +180,7 @@ internal static class MethodInfoExtensions
             {
                 task = methodInfo.Invoke(classInstance, arguments) as Task;
             }
-            catch (TargetParameterCountException ex)
-            {
-                throw GetParameterCountMismatchException(methodInfo, arguments, methodParameters, methodParametersLengthOrZero, argumentsLengthOrZero, ex);
-            }
-            catch (ArgumentException ex)
+            catch (Exception ex) when (ex is TargetParameterCountException or ArgumentException)
             {
                 throw GetParameterCountMismatchException(methodInfo, arguments, methodParameters, methodParametersLengthOrZero, argumentsLengthOrZero, ex);
             }
