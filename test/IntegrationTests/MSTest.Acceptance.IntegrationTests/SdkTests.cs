@@ -464,7 +464,7 @@ namespace MSTestSdkTest
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
         DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
-            $"test {testHost.FullName}",
+            $"test {testHost.FullName.Replace(".exe", ".dll")}",
             _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
             failIfReturnValueIsNotZero: false);
 
@@ -499,7 +499,7 @@ namespace MSTestSdkTest
     public async Task EnableAspireProperty_WhenUsingVSTest_AllowsToRunAspireTests()
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.AspireProjectPath, TestAssetFixture.AspireProjectName, TargetFrameworks.NetCurrent.UidFragment);
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {testHost.FullName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {testHost.FullName.Replace(".exe", ".dll")}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, dotnetTestResult.ExitCode);
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("Test Execution Command Line Tool");
