@@ -449,7 +449,7 @@ namespace MSTestSdkTest
                 testHostResult.AssertOutputContains("Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1");
                 break;
 
-            case 1:
+            case 2:
                 testHostResult.AssertOutputContains("Microsoft.Playwright.PlaywrightException: Executable doesn't exist");
                 break;
 
@@ -463,20 +463,29 @@ namespace MSTestSdkTest
     public async Task EnablePlaywrightProperty_WhenUsingVSTest_AllowsToRunPlaywrightTests(string tfm)
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.PlaywrightProjectPath, TestAssetFixture.PlaywrightProjectName, tfm);
-        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync($"test {testHost.FullName}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult dotnetTestResult = await DotnetCli.RunAsync(
+            $"test {testHost.FullName}",
+            _acceptanceFixture.NuGetGlobalPackagesFolder.Path,
+            failIfReturnValueIsNotZero: false);
 
         // Ensure output contains the right platform banner
         dotnetTestResult.AssertOutputContains("Test Execution Command Line Tool");
 
         // Depending on the machine, the test might fail due to the browser not being installed.
         // To avoid slowing down the tests, we will not run the installation so depending on machines we have different results.
-        if (dotnetTestResult.StandardOutput.Contains("Passed!"))
+        switch (dotnetTestResult.ExitCode)
         {
-            dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
-        }
-        else
-        {
-            dotnetTestResult.AssertOutputContains("Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1");
+            case 0:
+                dotnetTestResult.AssertOutputContains("Passed!  - Failed:     0, Passed:     1, Skipped:     0, Total:     1");
+                break;
+
+            case 1:
+                dotnetTestResult.AssertOutputContains("Failed!  - Failed:     1, Passed:     0, Skipped:     0, Total:     1");
+                break;
+
+            default:
+                Assert.Fail("Unexpected exit code");
+                break;
         }
     }
 
