@@ -171,55 +171,35 @@ internal static class MethodInfoExtensions
         {
             int methodParametersLengthOrZero = methodParameters?.Length ?? 0;
             int argumentsLengthOrZero = arguments?.Length ?? 0;
-            if (methodParametersLengthOrZero != argumentsLengthOrZero
-                || !AreArgumentAndParameterTypesAssignable(arguments, methodParameters))
+            if (methodParametersLengthOrZero != argumentsLengthOrZero)
             {
-                throw new TestFailedException(
-                    ObjectModel.UnitTestOutcome.Error,
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        Resource.CannotRunTestArgumentsMismatchError,
-                        methodInfo.DeclaringType!.FullName,
-                        methodInfo.Name,
-                        methodParametersLengthOrZero,
-                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>()),
-                        argumentsLengthOrZero,
-                        string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())));
+                throw GetParameterCountMismatchException(methodInfo, arguments, methodParameters, methodParametersLengthOrZero, argumentsLengthOrZero, innerException: null);
             }
 
-            task = methodInfo.Invoke(classInstance, arguments) as Task;
+            try
+            {
+                task = methodInfo.Invoke(classInstance, arguments) as Task;
+            }
+            catch (Exception ex) when (ex is TargetParameterCountException or ArgumentException)
+            {
+                throw GetParameterCountMismatchException(methodInfo, arguments, methodParameters, methodParametersLengthOrZero, argumentsLengthOrZero, ex);
+            }
         }
 
         // If methodInfo is an async method, wait for returned task
         task?.GetAwaiter().GetResult();
     }
 
-    private static bool AreArgumentAndParameterTypesAssignable(object?[]? arguments, ParameterInfo[]? parameters)
-    {
-        if (arguments is null or { Length: 0 } && parameters is null or { Length: 0 })
-        {
-            return true;
-        }
-
-        if (arguments is null)
-        {
-            return false;
-        }
-
-        if (parameters is null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < parameters.Length; i++)
-        {
-            if (arguments[i] is { } argument
-                && !parameters[i].ParameterType.IsAssignableFrom(argument.GetType()))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
+    private static TestFailedException GetParameterCountMismatchException(MethodInfo methodInfo, object?[]? arguments, ParameterInfo[]? methodParameters, int methodParametersLengthOrZero, int argumentsLengthOrZero, Exception? innerException) =>
+        new(
+            ObjectModel.UnitTestOutcome.Error,
+            string.Format(
+                CultureInfo.InvariantCulture,
+                Resource.CannotRunTestArgumentsMismatchError,
+                methodInfo.DeclaringType!.FullName,
+                methodInfo.Name,
+                methodParametersLengthOrZero,
+                string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>()),
+                argumentsLengthOrZero,
+                string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())), innerException);
 }

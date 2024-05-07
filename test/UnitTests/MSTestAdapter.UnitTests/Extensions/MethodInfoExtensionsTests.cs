@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -380,6 +380,66 @@ public class MethodInfoExtensionsTests : TestContainer
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
 
         void Action() => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 10, 20);
+        Action();
+    }
+
+    public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButIncorrectCountOfParametersWasProvided()
+    {
+        var dummyTestClass = new DummyTestClass2();
+        MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
+        try
+        {
+            // Should throw exception of type TestFailedException
+            dummyMethod.InvokeAsSynchronousTask(dummyTestClass, 1);
+        }
+        catch (TestFailedException ex)
+        {
+            Verify(ex.Outcome == UnitTestOutcome.Error);
+
+            // Error in English is:
+            //    Cannot run test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.
+            //    Test expected 2 parameter(s), with types 'Int32, Int32',
+            //    but received 1 argument(s), with types 'Int32'.
+            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters",
+                2, "Int32, Int32",
+                1, "Int32"));
+        }
+    }
+
+    public void InvokeAsSynchronousShouldThrowIfParametersWereExpectedButIncorrectTypesOfParametersWereProvided()
+    {
+        var dummyTestClass = new DummyTestClass2();
+        MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
+        try
+        {
+            // Should throw exception of type TestFailedException
+            dummyMethod.InvokeAsSynchronousTask(dummyTestClass, "10", "20");
+        }
+        catch (TestFailedException ex)
+        {
+            Verify(ex.Outcome == UnitTestOutcome.Error);
+
+            // Error in English is:
+            //    Cannot run test method 'Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2.PublicMethodWithParameters': Test data doesn't match method parameters. Either the count or types are different.
+            //    Test expected 2 parameter(s), with types 'Int32, Int32',
+            //    but received 2 argument(s), with types 'String, String'.
+            Verify(ex.TryGetMessage() == string.Format(CultureInfo.InvariantCulture, Resource.CannotRunTestArgumentsMismatchError, "Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Extensions.MethodInfoExtensionsTests+DummyTestClass2", "PublicMethodWithParameters",
+                2, "Int32, Int32",
+                2, "String, String"));
+        }
+    }
+
+    public void InvokeAsSynchronousShouldNotThrowIfParametersWereExpectedAndTheProvidedParametersCanImplicitlyConvertToTheExpectedParameters()
+    {
+        var dummyTestClass = new DummyTestClass2();
+        MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("PublicMethodWithParameters");
+
+        // The receiving method expects int, but we provide byte, which converts to int implicitly.
+        // If this test fails we are checking the parameters too much, and should rather let the runtime
+        // do its work.
+        byte ten = 10;
+        byte twenty = 20;
+        void Action() => dummyMethod.InvokeAsSynchronousTask(dummyTestClass, ten, twenty);
         Action();
     }
 
