@@ -493,6 +493,12 @@ internal class TypeCache : MarshalByRefObject
     private bool IsAssemblyOrClassInitializeMethod<TInitializeAttribute>(MethodInfo methodInfo)
         where TInitializeAttribute : Attribute
     {
+        // TODO: can we? it will then never throw for invalid, this is inconsitent in the codebase.
+        //if (!methodInfo.IsStatic)
+        //{
+        //    return false;
+        //}
+
         if (!_reflectionHelper.IsNonDerivedAttributeDefined<TInitializeAttribute>(methodInfo, false))
         {
             return false;
@@ -516,6 +522,12 @@ internal class TypeCache : MarshalByRefObject
     private bool IsAssemblyOrClassCleanupMethod<TCleanupAttribute>(MethodInfo methodInfo)
         where TCleanupAttribute : Attribute
     {
+        // TODO: can we? it will then never throw for invalid, this is inconsitent in the codebase.
+        //if (!methodInfo.IsStatic)
+        //{
+        //    return false;
+        //}
+
         if (!_reflectionHelper.IsNonDerivedAttributeDefined<TCleanupAttribute>(methodInfo, false))
         {
             return false;

@@ -201,6 +201,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Playground", "samples\Playg
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MSTest.Acceptance.IntegrationTests", "test\IntegrationTests\MSTest.Acceptance.IntegrationTests\MSTest.Acceptance.IntegrationTests.csproj", "{BCB42780-C559-40B6-8C4A-85EBC464AAA8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "mstest133", "..\..\t\mstest133\prj\mstest133.csproj", "{DD58B3FE-1EC4-47A4-9D81-CE6A66CBF3BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -427,6 +429,10 @@ Global
 		{BCB42780-C559-40B6-8C4A-85EBC464AAA8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BCB42780-C559-40B6-8C4A-85EBC464AAA8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BCB42780-C559-40B6-8C4A-85EBC464AAA8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD58B3FE-1EC4-47A4-9D81-CE6A66CBF3BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD58B3FE-1EC4-47A4-9D81-CE6A66CBF3BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD58B3FE-1EC4-47A4-9D81-CE6A66CBF3BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD58B3FE-1EC4-47A4-9D81-CE6A66CBF3BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

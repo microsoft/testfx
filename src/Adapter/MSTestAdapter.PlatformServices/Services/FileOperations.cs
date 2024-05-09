@@ -19,6 +19,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 public class FileOperations : IFileOperations
 {
+    Dictionary<string, Assembly> _assemblyCache = new();
+
 #if WIN_UI
     private readonly bool _isPackaged;
 
@@ -45,7 +47,15 @@ public class FileOperations : IFileOperations
         }
 #endif
         string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
-        return Assembly.Load(new AssemblyName(fileNameWithoutExtension));
+        if (_assemblyCache.TryGetValue(fileNameWithoutExtension, out Assembly? assembly))
+        {
+            return assembly;
+        }
+
+        var asm = Assembly.Load(new AssemblyName(fileNameWithoutExtension));
+        _assemblyCache.Add(fileNameWithoutExtension, asm);
+
+        return asm;
 #elif NETFRAMEWORK
 #pragma warning disable IDE0022 // Use expression body for method
         return isReflectionOnly ? Assembly.ReflectionOnlyLoadFrom(assemblyName) : Assembly.LoadFrom(assemblyName);

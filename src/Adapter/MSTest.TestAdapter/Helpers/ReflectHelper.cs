@@ -50,20 +50,6 @@ internal class ReflectHelper : MarshalByRefObject
 
         // Get attributes defined on the member from the cache.
         Attribute[] attributes = GetCustomAttributesCached(memberInfo, inherit);
-        string requiredAttributeQualifiedName = typeof(TAttribute).AssemblyQualifiedName!;
-        if (attributes == null)
-        {
-            // TODO:
-            bool a = true;
-            if (a)
-            {
-                throw new NotSupportedException("THIS FALLBACK!");
-            }
-
-            // If we could not obtain all attributes from cache, just get the one we need.
-            TAttribute[] specificAttributes = GetCustomAttributesOfTypeNotCached<TAttribute>(memberInfo, inherit);
-            return specificAttributes.Any(a => string.Equals(a.GetType().AssemblyQualifiedName, requiredAttributeQualifiedName, StringComparison.Ordinal));
-        }
 
         foreach (Attribute attribute in attributes)
         {
@@ -316,30 +302,6 @@ internal class ReflectHelper : MarshalByRefObject
     internal static bool MatchReturnType(MethodInfo method, Type returnType) => method == null
             ? throw new ArgumentNullException(nameof(method))
             : returnType == null ? throw new ArgumentNullException(nameof(returnType)) : method.ReturnType.Equals(returnType);
-
-    /// <summary>
-    /// Get custom attributes on a member for both normal and reflection only load.
-    /// </summary>
-    /// <typeparam name="TAttribute">Type of attribute to retrieve.</typeparam>
-    /// <param name="memberInfo">Member for which attributes needs to be retrieved.</param>
-    /// <param name="inherit">If inherited type of attribute.</param>
-    /// <returns>All attributes of give type on member.</returns>
-    [return: NotNullIfNotNull(nameof(memberInfo))]
-    internal static TAttribute[]? GetCustomAttributesOfTypeNotCached<TAttribute>(MemberInfo? memberInfo, bool inherit)
-        where TAttribute : Attribute
-    {
-        if (memberInfo == null)
-        {
-            return null;
-        }
-
-        object[] attributesArray = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
-            memberInfo,
-            typeof(TAttribute),
-            inherit);
-
-        return attributesArray!.OfType<TAttribute>().ToArray(); // TODO: Investigate if we rely on NRE
-    }
 
     /// <summary>
     /// Returns true when the method is declared in the assembly where the type is declared.
