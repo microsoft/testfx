@@ -21,8 +21,8 @@ internal class ReflectHelper : MarshalByRefObject
 #pragma warning restore RS0030 // Do not use banned APIs
 
     // Caches below could be unified by using ICustomAttributeProvider. But the underlying IReflectionOperations is public and we would have to change or duplicate it.
-    private readonly Dictionary<ICustomAttributeProvider, Dictionary<string, Attribute>> _inheritedAttributeCache = [];
-    private readonly Dictionary<ICustomAttributeProvider, Dictionary<string, Attribute>> _nonInheritedAttributeCache = [];
+    private readonly Dictionary<ICustomAttributeProvider, Attribute[]> _inheritedAttributeCache = [];
+    private readonly Dictionary<ICustomAttributeProvider, Attribute[]> _nonInheritedAttributeCache = [];
 
     internal /* for tests only */ ReflectHelper(INotCachedReflectHelper notCachedReflectHelper) =>
         NotCachedReflectHelper = notCachedReflectHelper;
@@ -49,7 +49,7 @@ internal class ReflectHelper : MarshalByRefObject
         }
 
         // Get attributes defined on the member from the cache.
-        Dictionary<string, Attribute>? attributes = GetCustomAttributesCached(memberInfo, inherit);
+        Attribute[] attributes = GetCustomAttributesCached(memberInfo, inherit);
         string requiredAttributeQualifiedName = typeof(TAttribute).AssemblyQualifiedName!;
         if (attributes == null)
         {
@@ -65,7 +65,15 @@ internal class ReflectHelper : MarshalByRefObject
             return specificAttributes.Any(a => string.Equals(a.GetType().AssemblyQualifiedName, requiredAttributeQualifiedName, StringComparison.Ordinal));
         }
 
-        return attributes.ContainsKey(requiredAttributeQualifiedName);
+        foreach (Attribute attribute in attributes)
+        {
+            if (AttributeComparer.IsNonDerived<TAttribute>(attribute))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -106,7 +114,7 @@ internal class ReflectHelper : MarshalByRefObject
         }
 
         // Get all attributes on the member.
-        Dictionary<string, Attribute>? attributes = GetCustomAttributesCached(memberInfo, inherit);
+        Attribute[] attributes = GetCustomAttributesCached(memberInfo, inherit);
         if (attributes == null)
         {
             // TODO:
@@ -122,7 +130,7 @@ internal class ReflectHelper : MarshalByRefObject
         }
 
         // Try to find the attribute that is derived from baseAttrType.
-        foreach (Attribute attribute in attributes.Values)
+        foreach (Attribute attribute in attributes)
         {
             DebugEx.Assert(attribute != null, $"{nameof(ReflectHelper)}.{nameof(GetCustomAttributesCached)}: internal error: wrong value in the attributes dictionary.");
 
@@ -206,15 +214,15 @@ internal class ReflectHelper : MarshalByRefObject
     public TAttribute? GetSingleNonDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit, bool nullOnMultiple)
         where TAttribute : Attribute
     {
-        Dictionary<string, Attribute> cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
+        Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
 
         int count = 0;
         TAttribute? foundAttribute = default;
-        foreach (KeyValuePair<string, Attribute> cachedAttribute in cachedAttributes)
+        foreach (Attribute cachedAttribute in cachedAttributes)
         {
             if (AttributeComparer.IsNonDerived<TAttribute>(cachedAttribute))
             {
-                foundAttribute = (TAttribute)cachedAttribute.Value;
+                foundAttribute = (TAttribute)cachedAttribute;
                 count++;
             }
         }
@@ -238,13 +246,13 @@ internal class ReflectHelper : MarshalByRefObject
     public TAttribute? GetFirstNonDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
     where TAttribute : Attribute
     {
-        Dictionary<string, Attribute> cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
+        Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
 
-        foreach (KeyValuePair<string, Attribute> cachedAttribute in cachedAttributes)
+        foreach (Attribute cachedAttribute in cachedAttributes)
         {
             if (AttributeComparer.IsNonDerived<TAttribute>(cachedAttribute))
             {
-                return (TAttribute)cachedAttribute.Value;
+                return (TAttribute)cachedAttribute;
             }
         }
 
@@ -254,15 +262,15 @@ internal class ReflectHelper : MarshalByRefObject
     public TAttribute? GetSingleDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit, bool nullOnMultiple)
     where TAttribute : Attribute
     {
-        Dictionary<string, Attribute> cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
+        Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
 
         int count = 0;
         TAttribute? foundAttribute = default;
-        foreach (KeyValuePair<string, Attribute> cachedAttribute in cachedAttributes)
+        foreach (Attribute cachedAttribute in cachedAttributes)
         {
             if (AttributeComparer.IsDerived<TAttribute>(cachedAttribute))
             {
-                foundAttribute = (TAttribute)cachedAttribute.Value;
+                foundAttribute = (TAttribute)cachedAttribute;
                 count++;
             }
         }
@@ -286,13 +294,13 @@ internal class ReflectHelper : MarshalByRefObject
     public TAttribute? GetFirstDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit)
     where TAttribute : Attribute
     {
-        Dictionary<string, Attribute> cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
+        Attribute[] cachedAttributes = GetCustomAttributesCached(attributeProvider, inherit);
 
-        foreach (KeyValuePair<string, Attribute> cachedAttribute in cachedAttributes)
+        foreach (Attribute cachedAttribute in cachedAttributes)
         {
             if (AttributeComparer.IsDerived<TAttribute>(cachedAttribute))
             {
-                return (TAttribute)cachedAttribute.Value;
+                return (TAttribute)cachedAttribute;
             }
         }
 
@@ -491,20 +499,15 @@ internal class ReflectHelper : MarshalByRefObject
     internal TAttributeType? GetDerivedAttribute<TAttributeType>(MemberInfo memberInfo, bool inherit)
         where TAttributeType : Attribute
     {
-        Dictionary<string, Attribute>? attributes = GetCustomAttributesCached(memberInfo, inherit);
-        if (attributes == null)
-        {
-            return null;
-        }
+        Attribute[] attributes = GetCustomAttributesCached(memberInfo, inherit);
 
-        // Try to find the attribute that is derived from baseAttrType.
-        foreach (Attribute attribute in attributes.Values)
+        foreach (Attribute attribute in attributes)
         {
             DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
 
             if (AttributeComparer.IsDerived<TAttributeType>(attribute))
             {
-                return attribute as TAttributeType;
+                return (TAttributeType)attribute;
             }
         }
 
@@ -521,20 +524,16 @@ internal class ReflectHelper : MarshalByRefObject
     internal IEnumerable<TAttributeType> GetDerivedAttributes<TAttributeType>(ICustomAttributeProvider attributeProvider, bool inherit)
         where TAttributeType : Attribute
     {
-        Dictionary<string, Attribute>? attributes = GetCustomAttributesCached(attributeProvider, inherit);
-        if (attributes == null)
-        {
-            yield break;
-        }
+        Attribute[] attributes = GetCustomAttributesCached(attributeProvider, inherit);
 
         // Try to find the attribute that is derived from baseAttrType.
-        foreach (Attribute attribute in attributes.Values)
+        foreach (Attribute attribute in attributes)
         {
             DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
 
             if (AttributeComparer.IsDerived<TAttributeType>(attribute))
             {
-                yield return attribute as TAttributeType;
+                yield return (TAttributeType)attribute;
             }
         }
     }
@@ -559,7 +558,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="attributeProvider">The member to inspect.</param>
     /// <param name="inherit">Look at inheritance chain.</param>
     /// <returns>attributes defined.</returns>
-    private Dictionary<string, Attribute> GetCustomAttributesCached(ICustomAttributeProvider attributeProvider, bool inherit)
+    private Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider, bool inherit)
     {
         if (inherit)
         {
@@ -578,22 +577,19 @@ internal class ReflectHelper : MarshalByRefObject
 
         // If the information is cached, then use it otherwise populate the cache using
         // the reflection APIs.
-        Dictionary<string, Attribute> GetOrAddAttributes(Dictionary<ICustomAttributeProvider, Dictionary<string, Attribute>> cache, ICustomAttributeProvider attributeProvider, bool inherit)
+        Attribute[] GetOrAddAttributes(Dictionary<ICustomAttributeProvider, Attribute[]> cache, ICustomAttributeProvider attributeProvider, bool inherit)
         {
-            if (cache.TryGetValue(attributeProvider, out Dictionary<string, Attribute>? attributes))
+            if (cache.TryGetValue(attributeProvider, out Attribute[]? attributes))
             {
                 return attributes;
             }
 
             // Populate the cache
-            attributes = [];
-
-            object[]? customAttributesArray = null;
             try
             {
                 // This is where we get the data for our cache. It required to use call to Reflection here.
 #pragma warning disable RS0030 // Do not use banned APIs
-                customAttributesArray = NotCachedReflectHelper.GetCustomAttributesNotCached(attributeProvider, inherit);
+                attributes = NotCachedReflectHelper.GetCustomAttributesNotCached(attributeProvider, inherit)?.Cast<Attribute>().ToArray() ?? Array.Empty<Attribute>();
 #pragma warning restore RS0030 // Do not use banned APIs
             }
             catch (Exception ex)
@@ -620,14 +616,7 @@ internal class ReflectHelper : MarshalByRefObject
                 return null;
             }
 
-            DebugEx.Assert(customAttributesArray != null, "attributes should not be null.");
-
-            foreach (object customAttribute in customAttributesArray)
-            {
-                Type attributeType = customAttribute.GetType();
-                // TODO: this overwrites any multiple attribute entry.
-                attributes[attributeType.AssemblyQualifiedName!] = (Attribute)customAttribute;
-            }
+            DebugEx.Assert(attributes != null, "attributes should not be null.");
 
             cache.Add(attributeProvider, attributes);
 
@@ -638,13 +627,13 @@ internal class ReflectHelper : MarshalByRefObject
     internal IEnumerable<TAttribute>? GetNonDerivedAttributes<TAttribute>(MethodInfo methodInfo, bool inherit)
         where TAttribute : Attribute
     {
-        Dictionary<string, Attribute> cachedAttributes = GetCustomAttributesCached(methodInfo, inherit);
+        Attribute[] cachedAttributes = GetCustomAttributesCached(methodInfo, inherit);
 
-        foreach (KeyValuePair<string, Attribute> cachedAttribute in cachedAttributes)
+        foreach (Attribute cachedAttribute in cachedAttributes)
         {
             if (AttributeComparer.IsNonDerived<TAttribute>(cachedAttribute))
             {
-                yield return (TAttribute)cachedAttribute.Value;
+                yield return (TAttribute)cachedAttribute;
             }
         }
     }
@@ -652,8 +641,8 @@ internal class ReflectHelper : MarshalByRefObject
 
 internal class AttributeComparer
 {
-    public static bool IsNonDerived<TAttribute>(KeyValuePair<string, Attribute> cachedAttribute) =>
-        typeof(TAttribute).AssemblyQualifiedName == cachedAttribute.Key;
+    public static bool IsNonDerived<TAttribute>(Attribute attribute) =>
+        attribute is TAttribute;
 
     public static bool IsDerived<TAttribute>(KeyValuePair<string, Attribute> cachedAttribute) =>
         IsDerived<TAttribute>(cachedAttribute.Value);

@@ -50,7 +50,7 @@ internal class TestMethodValidator
     {
         // Use non-caching reflection helper to check if a method is a valid test method. We don't want to retrieve
         // all attributes for every single method, and we also don't want to cache them for methods that we won't look at again.
-        if (!_reflectHelper.NotCachedReflectHelper.IsDerivedAttributeDefinedNotCached<TestMethodAttribute>(testMethodInfo, inherit: false))
+        if (!_reflectHelper.IsDerivedAttributeDefined<TestMethodAttribute>(testMethodInfo, inherit: false))
         {
             return false;
         }

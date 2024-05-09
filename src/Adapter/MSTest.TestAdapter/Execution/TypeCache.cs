@@ -306,11 +306,22 @@ internal class TypeCache : MarshalByRefObject
 
         foreach (MethodInfo methodInfo in classType.GetTypeInfo().DeclaredMethods)
         {
-            // Update test initialize/cleanup method
-            UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, false, instanceMethods);
+            if (KnownNonTestMethods.Methods.Contains(methodInfo.Name))
+            {
+                continue;
+            }
 
-            // Update class initialize/cleanup method
-            UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods);
+            if (methodInfo.IsPublic && !methodInfo.IsStatic)
+            {
+                // Update test initialize/cleanup method
+                UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, false, instanceMethods);
+            }
+
+            if (methodInfo.IsPublic && methodInfo.IsStatic)
+            {
+                // Update class initialize/cleanup method
+                UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods);
+            }
         }
 
         Type? baseType = classType.GetTypeInfo().BaseType;
@@ -318,6 +329,11 @@ internal class TypeCache : MarshalByRefObject
         {
             foreach (MethodInfo methodInfo in baseType.GetTypeInfo().DeclaredMethods)
             {
+                if (KnownNonTestMethods.Methods.Contains(methodInfo.Name))
+                {
+                    continue;
+                }
+
                 if (methodInfo.IsPublic && !methodInfo.IsStatic)
                 {
                     // Update test initialize/cleanup method from base type.
@@ -402,7 +418,7 @@ internal class TypeCache : MarshalByRefObject
             {
                 // Only examine classes which are TestClass or derives from TestClass attribute
                 TypeInfo typeInfo = t.GetTypeInfo();
-                if (!_reflectionHelper.NotCachedReflectHelper.IsDerivedAttributeDefinedNotCached<TestClassAttribute>(typeInfo, inherit: true))
+                if (!_reflectionHelper.IsDerivedAttributeDefined<TestClassAttribute>(typeInfo, inherit: true))
                 {
                     continue;
                 }
