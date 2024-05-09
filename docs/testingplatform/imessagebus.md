@@ -38,3 +38,6 @@ Let's discuss the parameters:
 This approach facilitates the evolution of the information exchange process, preventing breaking changes when an extension is unfamiliar with new data. **It allows different versions of extensions and the test framework to operate in harmony, based on their mutual understanding**.
 
 The opposite end of the bus is what we refer to as a [consumer](idataConsumer.md), which is subscribed to a specific type of data and can thus consume it.
+
+> [!IMPORTANT]
+> Always use *await* the call to `PublishAsync`. If you don't, the `IData` might not be processed correctly by the testing platform and extensions, which could lead to subtle bugs. It's only after you've returned from the *await* that you can be assured that the `IData` has been queued for processing on the message bus. Regardless of the extension point you're working on, ensure that you've awaited all `PublishAsync` calls before exiting the extension. For example, if you're implementing the [`testing framework`](itestframework.md), you should not call `Complete` on the [requests](irequest.md) until you've awaited all `PublishAsync` calls for that specific request.

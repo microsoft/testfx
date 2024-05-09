@@ -120,8 +120,26 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             testHostControllerIpc.RegisterAllSerializers();
             processStartInfo.EnvironmentVariables[$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}"] = testHostControllerIpc.PipeName.Name;
 
-            // Setup data consumers
-            await BuildAndRegisterTestControllersExtensionsAsync();
+            List<IDataConsumer> dataConsumersBuilder = [];
+            if (_testHostsInformation.DataConsumer.Length > 0)
+            {
+                dataConsumersBuilder.AddRange(_testHostsInformation.DataConsumer);
+            }
+
+            IPlatformOutputDevice? display = ServiceProvider.GetServiceInternal<IPlatformOutputDevice>();
+            if (display is not null and IDataConsumer dataConsumerDisplay)
+            {
+                dataConsumersBuilder.Add(dataConsumerDisplay);
+            }
+
+            AsynchronousMessageBus concreteMessageBusService = new(
+                dataConsumersBuilder.ToArray(),
+                ServiceProvider.GetTestApplicationCancellationTokenSource(),
+                ServiceProvider.GetTask(),
+                ServiceProvider.GetLoggerFactory(),
+                ServiceProvider.GetEnvironment());
+            await concreteMessageBusService.InitAsync();
+            ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
 
             // Apply the ITestHostEnvironmentVariableProvider
             if (_testHostsInformation.EnvironmentVariableProviders.Length > 0)
@@ -305,40 +323,6 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         }
 
         return exitCode;
-    }
-
-    private async Task BuildAndRegisterTestControllersExtensionsAsync()
-    {
-        await _logger.LogDebugAsync($"Setup data consumers");
-        List<IDataConsumer> dataConsumersBuilder = [];
-
-        foreach (ITestHostProcessLifetimeHandler item in _testHostsInformation.LifetimeHandlers)
-        {
-            if (item is IDataConsumer consumer)
-            {
-                dataConsumersBuilder.Add(consumer);
-            }
-        }
-
-        foreach (ITestHostEnvironmentVariableProvider item in _testHostsInformation.EnvironmentVariableProviders)
-        {
-            if (item is IDataConsumer consumer)
-            {
-                dataConsumersBuilder.Add(consumer);
-            }
-        }
-
-        ConsoleOutputDevice display = ServiceProvider.GetRequiredServiceInternal<ConsoleOutputDevice>();
-        dataConsumersBuilder.Add(display);
-
-        AsynchronousMessageBus concreteMessageBusService = new(
-            dataConsumersBuilder.ToArray(),
-            ServiceProvider.GetTestApplicationCancellationTokenSource(),
-            ServiceProvider.GetTask(),
-            ServiceProvider.GetLoggerFactory(),
-            ServiceProvider.GetEnvironment());
-        await concreteMessageBusService.InitAsync();
-        ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
     }
 
     private async Task DisposeServicesAsync()

@@ -3,10 +3,6 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.Testing" Version="$(AspireHostingTestingVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " Sdk="MSTest" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
   </ItemGroup>
 
   <!--

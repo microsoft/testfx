@@ -23,7 +23,7 @@ public class TestNode
     public PropertyBag Properties { get; init; } = new();
 }
 
-public sealed class TestNodeUid(string value) 
+public sealed class TestNodeUid(string value)
 
 public sealed partial class PropertyBag
 {
@@ -35,7 +35,7 @@ public sealed partial class PropertyBag
     public bool Any<TProperty>();
     public TProperty? SingleOrDefault<TProperty>();
     public TProperty Single<TProperty>();
-    public TProperty[] OfType<TProperty>();        
+    public TProperty[] OfType<TProperty>();
     public IEnumerable<IProperty> AsEnumerable();
     public IEnumerator<IProperty> GetEnumerator();
     ...
@@ -50,16 +50,18 @@ public interface IProperty
 
 * `TestNode`: The `TestNode` is composed of three properties, one of which is the `Uid` of type `TestNodeUid`. This `Uid` serves as the **UNIQUE STABLE ID** for the node. The term **UNIQUE STABLE ID** implies that the same `TestNode` should maintain an **IDENTICAL** `Uid` across different runs and operating systems. The `TestNodeUid` is an **arbitrary opaque string** that the testing platform accepts as is.
 
->> [!NOTE]
->> The stability and uniqueness of the ID are crucial in the testing domain. They enable the precise targeting of a single test for execution and allow the ID to serve as a persistent identifier for a test, facilitating powerful extensions and features.
+> [!IMPORTANT]
+> The stability and uniqueness of the ID are crucial in the testing domain. They enable the precise targeting of a single test for execution and allow the ID to serve as a persistent identifier for a test, facilitating powerful extensions and features.
 
 The second property is `DisplayName`, which is the human-friendly name for the test. For example, this name is displayed when you execute the `--list-tests` command line.
 
-The third attribute is `Properties`, which is a `PropertyBag` type. As demonstrated in the code, this is a specialized property bag that holds generic properties about the `TestNode`. This implies that you can append any property to the node that implements the placeholder interface `IProperty`.
+The third attribute is `Properties`, which is a `PropertyBag` type. As demonstrated in the code, this is a specialized property bag that holds generic properties about the `TestNodeUpdateMessage`. This implies that you can append any property to the node that implements the placeholder interface `IProperty`.
 
-***The testing platform identifies specific properties added to a `TestNode` to determine whether a test has passed, failed, or been skipped.***
+***The testing platform identifies specific properties added to a `TestNode.Properties` to determine whether a test has passed, failed, or been skipped.***
 
 You can find the current list of available properties with the relative description in the section [TestNodeUpdateMessage.TestNode](testnodeupdatemessage.md)
+
+The `PropertyBag` type is typically accessible in every `IData` and is utilized to store miscellaneous properties that can be queried by the platform and extensions. This mechanism allows us to enhance the platform with new information without introducing breaking changes. If a component recognizes the property, it can query it; otherwise, it will disregard it.
 
 Finally this section makes clear that you test framework implementaion needs to implement the `IDataProducer` that produces `TestNodeUpdateMessage`s like in the sample below:
 
@@ -168,7 +170,7 @@ var failedTestNode = new TestNode()
     Properties = new PropertyBag(new ErrorTestNodeStateProperty(ex.InnerException!)),
 };
 
-await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, failedTestNode));          
+await context.MessageBus.PublishAsync(this, new TestNodeUpdateMessage(runTestExecutionRequest.Session.SessionUid, failedTestNode));
 ```
 
 You can visit the [code sample](codesample.md) for a working execution sample.

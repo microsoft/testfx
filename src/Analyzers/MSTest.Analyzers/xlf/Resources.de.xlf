@@ -339,6 +339,16 @@
         <target state="translated">TestContext nicht in einem statischen Member speichern</target>
         <note />
       </trans-unit>
+      <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
+        <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
+        <target state="translated">Verwenden Sie „Assert.Fail“ anstelle einer Assert-Anweisung „Assert.{0}“, bei der immer ein Fehler auftritt.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsTitle">
+        <source>Use 'Assert.Fail' instead of an always-failing assert</source>
+        <target state="translated">Verwenden Sie „Assert.Fail“ anstelle einer Assert-Anweisung, bei der immer ein Fehler auftritt.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
         <source>Prefer constructors over TestInitialize methods</source>
         <target state="translated">Konstruktoren gegenüber TestInitialize-Methoden bevorzugen</target>

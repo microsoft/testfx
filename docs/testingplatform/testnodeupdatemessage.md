@@ -16,8 +16,8 @@ Certain properties are **required**, while others are optional. The mandatory pr
 
 Optional properties, on the other hand, enhance the testing experience by providing additional information. They are particularly useful in IDE scenarios (like VS, VSCode, etc.), console runs, or when supporting specific extensions that require more detailed information to function correctly. However, these optional properties do not affect the execution of the tests.
 
->> [!NOTE]
->> It's the responsibility of the extensions to notify the console or handle exceptions that require specific information to function correctly. If an extension lacks the necessary information, it should not cause the test execution to fail, but rather, it should simply opt-out.
+> [!NOTE]
+> Extensions are tasked with alerting and managing exceptions when they require specific information to operate correctly. If an extension lacks the necessary information, it should not cause the test execution to fail, but rather, it should simply opt-out.
 
 ## Generic information
 
@@ -42,8 +42,8 @@ public sealed record TestMethodIdentifierProperty(string AssemblyFullName, strin
 
 `TestMethodIdentifierProperty` is a unique identifier for a test method, adhering to the ECMA-335 standard.
 
->> [!NOTE]
->> The data needed to create this property can be conveniently obtained using the .NET reflection feature, using types from the `System.Reflection` namespace.
+> [!NOTE]
+> The data needed to create this property can be conveniently obtained using the .NET reflection feature, using types from the `System.Reflection` namespace.
 
 ```cs
 public sealed record TestMetadataProperty(string Key, string Value)
@@ -69,7 +69,7 @@ This property is **required**.
 ```cs
 public sealed record InProgressTestNodeStateProperty(string? Explanation = null)
 {
-    public static InProgressTestNodeStateProperty CachedInstance { get; } 
+    public static InProgressTestNodeStateProperty CachedInstance { get; }
 }
 ```
 

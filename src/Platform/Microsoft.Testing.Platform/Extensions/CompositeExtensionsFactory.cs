@@ -94,7 +94,7 @@ TestHost: IDataConsumer, ITestApplicationLifetime
         }
     }
 
-    private bool ContainsTestHostExtension() => _instance is IDataConsumer or ITestSessionLifetimeHandler;
+    private bool ContainsTestHostExtension() => _instance is ITestSessionLifetimeHandler;
 
     private bool ContainsTestHostControllerExtension() => _instance is ITestHostProcessLifetimeHandler or ITestHostEnvironmentVariableProvider;
 }

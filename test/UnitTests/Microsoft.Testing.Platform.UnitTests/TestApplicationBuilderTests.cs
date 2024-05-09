@@ -171,7 +171,7 @@ public sealed class TestApplicationBuilderTests : TestBase
     }
 
     [SuppressMessage("Design", "TA0001:Extension should not implement cross-functional areas", Justification = "Done on purpose for testing error")]
-    private sealed class InvalidComposition : ITestHostProcessLifetimeHandler, IDataConsumer
+    private sealed class InvalidComposition : ITestHostProcessLifetimeHandler, ITestSessionLifetimeHandler
     {
         private readonly IServiceProvider? _serviceProvider;
 
@@ -192,17 +192,17 @@ public sealed class TestApplicationBuilderTests : TestBase
 
         public string Description => nameof(InvalidComposition);
 
-        public Type[] DataTypesConsumed => Array.Empty<Type>();
-
         public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
-
-        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken) => throw new NotImplementedException();
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 
         public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
 
         public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+
+        public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+
+        public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
     }
 
     private sealed class TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider : ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariableProvider

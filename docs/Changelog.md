@@ -10,7 +10,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
 
 ### Added
 
-* MSTEST0017: Assertion arguments should be passed in the correct order by @Evangelink in [#2256](https://github.com/microsoft/testfx/pull/2256)
+* MSTEST0017: Assertion arguments should be passed in the correct order by @Evangelink in [#2556](https://github.com/microsoft/testfx/pull/2556)
 * Support "Central Package Management" with the MSTest.Sdk by @MarcoRossignoli in [#2581](https://github.com/microsoft/testfx/pull/2581)
 * MSTEST0019: Prefer TestInitialize over ctor by @Evangelink in [#2580](https://github.com/microsoft/testfx/pull/2580)
 * MSTEST0020: Prefer ctors over TestInitialize methods by @Evangelink in [#2582](https://github.com/microsoft/testfx/pull/2582)
@@ -34,6 +34,8 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
 * SDK: add global usings to VSTest targets by @Evangelink in [#2731](https://github.com/microsoft/testfx/pull/2731)
 * MSTest.Sdk: add support for Aspire by @Evangelink in [#2758](https://github.com/microsoft/testfx/pull/2758)
 * Ensure that fixtures also support sta threading by @Evangelink in [#2769](https://github.com/microsoft/testfx/pull/2769)
+* Add option to consider empty data of DynamicData as inconclusive by @engyebrahim in [#2771](https://github.com/microsoft/testfx/pull/2771)
+* Add PreferAssertFailOverAlwaysFalseConditionsAnalyzer by @Youssef1313 in [#2799](https://github.com/microsoft/testfx/pull/2799)
 
 ### Fixed
 
@@ -54,6 +56,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
 * Fix typo by @thomhurst in [#2749](https://github.com/microsoft/testfx/pull/2749)
 * Fix localappdata folder for Linux and Mac by @Evangelink in [#2765](https://github.com/microsoft/testfx/pull/2765)
 * Fix deserializers for DiscoveryRequestArgs and RunRequestArgs by @mariam-abdulla in [#2768](https://github.com/microsoft/testfx/pull/2768)
+* Don't start thread/task when not using timeout for fixture methods by @Evangelink in [#2825](https://github.com/microsoft/testfx/pull/2825)
 
 ### Housekeeping
 
@@ -66,6 +69,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
 * Add dependabot by @Evangelink in [#2737](https://github.com/microsoft/testfx/pull/2737)
 * perf: reduce allocations and calls to ToArray by @Evangelink in [#2747](https://github.com/microsoft/testfx/pull/2747)
 * Add test for resource recursion problem by @nohwnd in [#2778](https://github.com/microsoft/testfx/pull/2778)
+* Opt-out from CPM in samples by @Evangelink in [#2805](https://github.com/microsoft/testfx/pull/2805)
 
 ### Artifacts
 
