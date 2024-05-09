@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "UnitTest MSTest Runner (Package)": {
+      "commandName": "MsixPackage",
+      "commandLineArgs": "/p:EnableMSTestRunner=true"
+    },
+    "UnitTest MSTest Runner (Unpackaged)": {
+      "commandName": "Project",
+      "commandLineArgs": "/p:EnableMSTestRunner=true"
+    },
+    "UnitTest VSTest (Package)": {
+      "commandName": "MsixPackage",
+      "commandLineArgs": "/p:EnableMSTestRunner=false"
+    },
+    "UnitTest VSTest (Unpackaged)": {
+      "commandName": "Project",
+      "commandLineArgs": "/p:EnableMSTestRunner=false"
+    }
+  }
+}
