@@ -37,4 +37,6 @@ public interface IReflectionOperations
     /// <param name="type"> The attribute type. </param>
     /// <returns> The list of attributes of the given type on the member. Empty list if none found. </returns>
     object[] GetCustomAttributes(Assembly assembly, Type type);
+
+    public bool IsAttributeDefined(MemberInfo memberInfo, Type type, bool inherit);
 }

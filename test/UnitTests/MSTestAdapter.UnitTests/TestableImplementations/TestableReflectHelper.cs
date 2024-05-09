@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -22,33 +22,34 @@ internal sealed class TestableReflectHelper : ReflectHelper
     private readonly Dictionary<int, Attribute[]> _customAttributes;
 
     public TestableReflectHelper()
+        : base(new TestableReflectionAccessor())
     {
         _customAttributes = [];
     }
 
     public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
     {
+        // tODO:  Add the info to ours;
+        var ours = (TestableReflectionAccessor)this.NotCachedReflectHelper;
+
+
         int hashCode = type.FullName.GetHashCode() + memberTypes.GetHashCode();
         _customAttributes[hashCode] = _customAttributes.TryGetValue(hashCode, out Attribute[] value)
             ? value.Concat(values).ToArray()
             : values;
     }
+}
 
-    internal override TAttribute[] GetCustomAttributeForAssembly<TAttribute>(MemberInfo memberInfo)
+internal class TestableReflectionAccessor : INotCachedReflectHelper
+{
+    public TestableReflectionAccessor()
     {
-        int hashCode = MemberTypes.All.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
-
-        return _customAttributes.TryGetValue(hashCode, out Attribute[] value)
-            ? value.OfType<TAttribute>().ToArray()
-            : Array.Empty<TAttribute>();
     }
 
-    internal override TAttribute[] GetCustomAttributes<TAttribute>(MemberInfo memberInfo)
-    {
-        int hashCode = memberInfo.MemberType.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
+    // TODO: fix to fix tests.
+    public object[] GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit) => throw new NotImplementedException();
 
-        return _customAttributes.TryGetValue(hashCode, out Attribute[] value)
-            ? value.OfType<TAttribute>().ToArray()
-            : Array.Empty<TAttribute>();
-    }
+    public TAttribute[] GetCustomAttributesNotCached<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit) => throw new NotImplementedException();
+
+    public bool IsDerivedAttributeDefinedNotCached<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit) => throw new NotImplementedException();
 }

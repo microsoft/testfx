@@ -57,4 +57,7 @@ public class ReflectionOperations : IReflectionOperations
 #else
         assembly.GetCustomAttributes(type).ToArray<object>();
 #endif
+
+    public bool IsAttributeDefined(MemberInfo memberInfo, Type type, bool inherit) =>
+        memberInfo.IsDefined(type, inherit);
 }

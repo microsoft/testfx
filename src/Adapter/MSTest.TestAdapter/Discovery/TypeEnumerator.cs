@@ -151,10 +151,10 @@ internal class TypeEnumerator
         {
             // Get compiler generated type name for async test method (either void returning or task returning).
             AsyncTypeName = method.GetAsyncTypeName(),
-            TestCategory = _reflectHelper.GetCategories(method, _type),
+            TestCategory = _reflectHelper.GetTestCategories(method, _type),
             DoNotParallelize = _reflectHelper.IsDoNotParallelizeSet(method, _type),
             Priority = _reflectHelper.GetPriority(method),
-            Ignored = _reflectHelper.IsAttributeDefined<IgnoreAttribute>(method, false),
+            Ignored = _reflectHelper.IsNonDerivedAttributeDefined<IgnoreAttribute>(method, inherit: false),
             DeploymentItems = PlatformServiceProvider.Instance.TestDeployment.GetDeploymentItems(method, _type, warnings),
         };
 
@@ -174,29 +174,29 @@ internal class TypeEnumerator
 
         testElement.Traits = traits.ToArray();
 
-        if (_reflectHelper.GetCustomAttribute<CssIterationAttribute>(method) is CssIterationAttribute cssIteration)
+        if (_reflectHelper.GetFirstDerivedAttributeOrDefault<CssIterationAttribute>(method, inherit: true) is CssIterationAttribute cssIteration)
         {
             testElement.CssIteration = cssIteration.CssIteration;
         }
 
-        if (_reflectHelper.GetCustomAttribute<CssProjectStructureAttribute>(method) is CssProjectStructureAttribute cssProjectStructure)
+        if (_reflectHelper.GetFirstDerivedAttributeOrDefault<CssProjectStructureAttribute>(method, inherit: true) is CssProjectStructureAttribute cssProjectStructure)
         {
             testElement.CssProjectStructure = cssProjectStructure.CssProjectStructure;
         }
 
-        if (_reflectHelper.GetCustomAttribute<DescriptionAttribute>(method) is DescriptionAttribute descriptionAttribute)
+        if (_reflectHelper.GetFirstDerivedAttributeOrDefault<DescriptionAttribute>(method, inherit: true) is DescriptionAttribute descriptionAttribute)
         {
             testElement.Description = descriptionAttribute.Description;
         }
 
-        WorkItemAttribute[] workItemAttributes = _reflectHelper.GetCustomAttributes<WorkItemAttribute>(method);
+        WorkItemAttribute[] workItemAttributes = _reflectHelper.GetDerivedAttributes<WorkItemAttribute>(method, inherit: true).ToArray();
         if (workItemAttributes.Length != 0)
         {
             testElement.WorkItemIds = workItemAttributes.Select(x => x.Id.ToString(CultureInfo.InvariantCulture)).ToArray();
         }
 
         // get DisplayName from TestMethodAttribute (or any inherited attribute)
-        TestMethodAttribute? testMethodAttribute = _reflectHelper.GetCustomAttribute<TestMethodAttribute>(method);
+        TestMethodAttribute? testMethodAttribute = _reflectHelper.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(method, inherit: true);
         testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
 
         return testElement;

@@ -304,7 +304,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
         mockReflectHelper.Setup(
-            rh => rh.IsAttributeDefined<UTF.AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize"), It.IsAny<bool>()))
+            rh => rh.IsNonDerivedAttributeDefined<UTF.AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize"), It.IsAny<bool>()))
             .Returns(true);
 
         int validator = 1;

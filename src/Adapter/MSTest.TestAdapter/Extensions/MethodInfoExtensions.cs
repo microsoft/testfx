@@ -89,20 +89,17 @@ internal static class MethodInfoExtensions
     /// Checks whether test method has correct Timeout attribute.
     /// </summary>
     /// <param name="method">The method to verify.</param>
+    /// <param name="timeoutAttribute">The timeout attribute when we already have it.</param>
     /// <returns>True if the method has the right test timeout signature.</returns>
-    internal static bool HasCorrectTimeout(this MethodInfo method)
+    internal static bool HasCorrectTimeout(this MethodInfo method, TimeoutAttribute? timeoutAttribute = null)
     {
         DebugEx.Assert(method != null, "method should not be null.");
 
-        // There should be one and only one TimeoutAttribute.
-        TimeoutAttribute[] attributes = ReflectHelper.GetCustomAttributes<TimeoutAttribute>(method, false);
-        if (attributes?.Length != 1)
-        {
-            return false;
-        }
+        // TODO: redesign this, probably change this to GetTimeout? so we don't have to do this weird dance?
+        timeoutAttribute ??= ReflectHelper.Instance.GetSingleNonDerivedAttributeOrDefault<TimeoutAttribute>(method, inherit: false, nullOnMultiple: true);
 
         // Timeout cannot be less than 0.
-        return !(attributes[0]?.Timeout < 0);
+        return !(timeoutAttribute?.Timeout < 0);
     }
 
     /// <summary>
@@ -125,7 +122,7 @@ internal static class MethodInfoExtensions
     /// <returns>Compiler generated type name for given async test method..</returns>
     internal static string? GetAsyncTypeName(this MethodInfo method)
     {
-        AsyncStateMachineAttribute? asyncStateMachineAttribute = ReflectHelper.GetCustomAttributes<AsyncStateMachineAttribute>(method, false).FirstOrDefault();
+        AsyncStateMachineAttribute? asyncStateMachineAttribute = ReflectHelper.Instance.GetFirstNonDerivedAttributeOrDefault<AsyncStateMachineAttribute>(method, inherit: false);
 
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }

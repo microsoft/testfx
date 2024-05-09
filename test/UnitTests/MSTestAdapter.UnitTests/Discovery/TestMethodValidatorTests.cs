@@ -39,7 +39,7 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnFalseForMethodsWithoutATestMethodAttributeOrItsDerivedAttributes()
     {
         _mockReflectHelper.Setup(
-            rh => rh.IsAttributeDefined<UTF.TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(false);
+            rh => rh.IsNonDerivedAttributeDefined<UTF.TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(false);
         Verify(!_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
     }
 
@@ -183,7 +183,7 @@ public class TestMethodValidatorTests : TestContainer
     #endregion
 
     private void SetupTestMethod() => _mockReflectHelper.Setup(
-            rh => rh.IsAttributeDefined<UTF.TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(true);
+            rh => rh.IsNonDerivedAttributeDefined<UTF.TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(true);
 }
 
 #region Dummy types

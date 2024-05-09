@@ -51,9 +51,7 @@ internal class TypeValidator
     {
         TypeInfo typeInfo = type.GetTypeInfo();
 
-        if (!typeInfo.IsClass
-            || (!_reflectHelper.IsAttributeDefined<TestClassAttribute>(typeInfo, false)
-            && !_reflectHelper.HasAttributeDerivedFrom<TestClassAttribute>(typeInfo, false)))
+        if (!typeInfo.IsClass || !_reflectHelper.NotCachedReflectHelper.IsDerivedAttributeDefinedNotCached<TestClassAttribute>(typeInfo, false))
         {
             return false;
         }

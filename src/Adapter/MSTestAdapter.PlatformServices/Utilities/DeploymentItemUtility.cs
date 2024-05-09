@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #if !WINDOWS_UWP
@@ -19,6 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Uti
 /// </summary>
 internal class DeploymentItemUtility
 {
+    // REVIEW: it would be better if this was a ReflectionHelper, because helper is able to cache. But we don't have reflection helper here, because this is platform services dll.
     private readonly ReflectionUtility _reflectionUtility;
 
     /// <summary>

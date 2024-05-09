@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -48,8 +48,9 @@ internal class TestMethodValidator
     /// <returns> Return true if a method is a valid test method. </returns>
     internal virtual bool IsValidTestMethod(MethodInfo testMethodInfo, Type type, ICollection<string> warnings)
     {
-        if (!_reflectHelper.IsAttributeDefined<TestMethodAttribute>(testMethodInfo, false)
-            && !_reflectHelper.HasAttributeDerivedFrom<TestMethodAttribute>(testMethodInfo, false))
+        // Use non-caching reflection helper to check if a method is a valid test method. We don't want to retrieve
+        // all attributes for every single method, and we also don't want to cache them for methods that we won't look at again.
+        if (!_reflectHelper.NotCachedReflectHelper.IsDerivedAttributeDefinedNotCached<TestMethodAttribute>(testMethodInfo, inherit: false))
         {
             return false;
         }

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
@@ -82,11 +82,16 @@ public class TestMethodInfo : ITestMethod
     /// </summary>
     internal TestMethodOptions TestMethodOptions { get; }
 
-    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.GetCustomAttributes(TestMethod, inherit) as Attribute[];
+    // This is allowed because we don't know the usage.
+#pragma warning disable RS0030 // Do not use banned APIs
+    [Obsolete("don't use, but cannot remove")]
+    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.NotCachedReflectHelper.GetCustomAttributesNotCached(TestMethod, inherit) as Attribute[];
+#pragma warning restore RS0030 // Do not use banned APIs
 
+    [Obsolete("don't use, but cannot remove")]
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
-        => ReflectHelper.GetAttributes<TAttributeType>(TestMethod, inherit)
+        => ReflectHelper.Instance.NotCachedReflectHelper.GetCustomAttributesNotCached<TAttributeType>(TestMethod, inherit)
         ?? Array.Empty<TAttributeType>();
 
     /// <summary>
