@@ -102,7 +102,7 @@ internal class UnitTestDiscoverer
 #endif
         Console.WriteLine($"discovered: {testElements.Count} tests in {getTests.TotalMilliseconds} ms, sent them in {sendOverhead.TotalMilliseconds} ms, total: {sendOverhead.TotalMilliseconds + getTests.TotalMilliseconds} <<<");
 #if NET6_0_OR_GREATER
-        Console.WriteLine($"discovered: discovery alloc: {(afterDiscovery - beforeDiscovery) / 1024 * 1024} MB send alloc: {(afterSend- afterDiscovery) / 1024 * 1024} MB");
+        Console.WriteLine($"discovered: discovery alloc: {(afterDiscovery - beforeDiscovery) / (1024 * 1024)} MB send alloc: {(afterSend - afterDiscovery) / (1024 * 1024)} MB");
 #endif
     }
 

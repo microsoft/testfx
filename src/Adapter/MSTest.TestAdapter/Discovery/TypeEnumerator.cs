@@ -147,6 +147,22 @@ internal class TypeEnumerator
                     method.DeclaringType.GetTypeInfo().Assembly);
         }
 
+        // TODO: this needs a special method where we grab all attributes and compare them to a type to see if the attribute inherits from additional interface.
+        // We want to do first or default here, to see if we should go to the expensive path.
+        bool isDataDriven = false;
+        foreach (Attribute attribute in _reflectHelper.GetDerivedAttributes<Attribute>(method, inherit: true))
+        {
+            if (AttributeComparer.IsDerived<ITestDataSource>(attribute))
+            {
+                isDataDriven = true;
+                break;
+            }
+        }
+
+        testMethod.DataType = isDataDriven ? DynamicDataType.ITestDataSource : DynamicDataType.None;
+
+        // TODO end
+
         var testElement = new UnitTestElement(testMethod)
         {
             // Get compiler generated type name for async test method (either void returning or task returning).

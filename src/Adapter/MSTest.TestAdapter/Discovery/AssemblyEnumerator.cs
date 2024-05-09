@@ -263,6 +263,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
+        if (test.TestMethod.DataType != DynamicDataType.ITestDataSource)
+        {
+            return false;
+        }
+
         // NOTE: From this place we don't have any path that would let the user write a message on the TestContext and we don't do
         // anything with what would be printed anyway so we can simply use a simple StringWriter.
         using var writer = new StringWriter();
@@ -277,7 +282,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         MethodInfo methodInfo = testMethodInfo.MethodInfo;
         // TODO: this needs a special method where we grab all attributes and compare them to a type to see if the attribute inherits from additional interface.
         // We want to do first or default here, to see if we should go to the expensive path.
-        IEnumerable<FrameworkITestDataSource>? testDataSources = ReflectHelper.Instance.GetNonDerivedAttributes<Attribute>(methodInfo, inherit: false)?.OfType<FrameworkITestDataSource>();
+        IEnumerable<FrameworkITestDataSource>? testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(methodInfo, inherit: false)?.OfType<FrameworkITestDataSource>();
         if (testDataSources == null || !testDataSources.Any())
         {
             return false;
