@@ -31,7 +31,7 @@ public class AssemblyResolverTests : AcceptanceTestBase
 
         var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, TargetFrameworks.NetFramework[0].Arguments);
 
-        var testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
     }
