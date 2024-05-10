@@ -142,7 +142,7 @@ public class ReflectHelperTests : TestContainer
 
     public void IsAttributeDefinedShouldReturnTrueIfSpecifiedAttributeIsDefinedOnAMember()
     {
-        var rh = new ReflectHelper(new NotCachedReflectHelper());
+        var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
         var attributes = new Attribute[] { new UTF.TestMethodAttribute() };
 
@@ -155,7 +155,7 @@ public class ReflectHelperTests : TestContainer
 
     public void IsAttributeDefinedShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
     {
-        var rh = new ReflectHelper(new NotCachedReflectHelper());
+        var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
         var attributes = new Attribute[] { new UTF.TestClassAttribute() };
 
@@ -168,7 +168,7 @@ public class ReflectHelperTests : TestContainer
 
     public void IsAttributeDefinedShouldReturnFromCache()
     {
-        var rh = new ReflectHelper(new NotCachedReflectHelper());
+        var rh = new ReflectHelper();
 
         // Not using mocks here because for some reason a dictionary match of the mock is not returning true in the product code.
         MethodInfo memberInfo = typeof(ReflectHelperTests).GetMethod("IsAttributeDefinedShouldReturnFromCache");
@@ -190,26 +190,9 @@ public class ReflectHelperTests : TestContainer
         _testablePlatformServiceProvider.MockReflectionOperations.Verify(ro => ro.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<Type>(), It.IsAny<bool>()), Times.Never);
     }
 
-    public void IsAttributeDefinedShouldReturnTrueQueryingASpecificAttributesExistenceEvenIfGettingAllAttributesFail()
-    {
-        var rh = new ReflectHelper(new NotCachedReflectHelper());
-        var mockMemberInfo = new Mock<MemberInfo>();
-        var attributes = new Attribute[] { new UTF.TestMethodAttribute() };
-
-        _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
-            Returns((object[])null);
-
-        _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(UTF.TestMethodAttribute), true)).
-            Returns(attributes);
-
-        Verify(rh.IsNonDerivedAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
-    }
-
     public void HasAttributeDerivedFromShouldReturnTrueIfSpecifiedAttributeIsDefinedOnAMember()
     {
-        var rh = new ReflectHelper(new NotCachedReflectHelper());
+        var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
@@ -222,7 +205,7 @@ public class ReflectHelperTests : TestContainer
 
     public void HasAttributeDerivedFromShouldReturnFalseIfSpecifiedAttributeIsNotDefinedOnAMember()
     {
-        var rh = new ReflectHelper(new NotCachedReflectHelper());
+        var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
@@ -235,7 +218,7 @@ public class ReflectHelperTests : TestContainer
 
     public void HasAttributeDerivedFromShouldReturnFromCache()
     {
-        var rh = new ReflectHelper(new NotCachedReflectHelper());
+        var rh = new ReflectHelper();
 
         // Not using mocks here because for some reason a dictionary match of the mock is not returning true in the product code.
         MethodInfo memberInfo = typeof(ReflectHelperTests).GetMethod("HasAttributeDerivedFromShouldReturnFromCache");
@@ -259,7 +242,7 @@ public class ReflectHelperTests : TestContainer
 
     public void HasAttributeDerivedFromShouldReturnFalseQueryingProvidedAttributesExistenceIfGettingAllAttributesFail()
     {
-        var rh = new ReflectHelper(new NotCachedReflectHelper());
+        var rh = new ReflectHelper();
         var mockMemberInfo = new Mock<MemberInfo>();
         var attributes = new Attribute[] { new TestableExtendedTestMethod() };
 
@@ -272,23 +255,6 @@ public class ReflectHelperTests : TestContainer
             Returns(attributes);
 
         Verify(!rh.IsNonDerivedAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
-    }
-
-    public void HasAttributeDerivedFromShouldReturnTrueQueryingProvidedAttributesExistenceIfGettingAllAttributesFail()
-    {
-        var rh = new ReflectHelper(new NotCachedReflectHelper());
-        var mockMemberInfo = new Mock<MemberInfo>();
-        var attributes = new Attribute[] { new TestableExtendedTestMethod() };
-
-        _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, true)).
-            Returns((object[])null);
-
-        _testablePlatformServiceProvider.MockReflectionOperations.
-            Setup(ro => ro.GetCustomAttributes(mockMemberInfo.Object, typeof(TestableExtendedTestMethod), true)).
-            Returns(attributes);
-
-        Verify(rh.IsNonDerivedAttributeDefined<TestableExtendedTestMethod>(mockMemberInfo.Object, true));
     }
 }
 

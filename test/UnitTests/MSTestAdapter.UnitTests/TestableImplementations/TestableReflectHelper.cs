@@ -12,44 +12,56 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
 /// </summary>
 internal sealed class TestableReflectHelper : ReflectHelper
 {
-    /// <summary>
-    /// A dictionary to hold mock custom attributes. The int represents a hash code of
-    /// the Type of custom attribute and the level its applied at :
-    /// MemberTypes.All for assembly level
-    /// MemberTypes.TypeInfo for class level
-    /// MemberTypes.Method for method level.
-    /// </summary>
-    private readonly Dictionary<int, Attribute[]> _customAttributes;
-
     public TestableReflectHelper()
         : base(new TestableReflectionAccessor())
     {
-        _customAttributes = [];
     }
 
     public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
     {
-        // tODO:  Add the info to ours;
-        var ours = (TestableReflectionAccessor)this.NotCachedReflectHelper;
-
-
-        int hashCode = type.FullName.GetHashCode() + memberTypes.GetHashCode();
-        _customAttributes[hashCode] = _customAttributes.TryGetValue(hashCode, out Attribute[] value)
-            ? value.Concat(values).ToArray()
-            : values;
+        var attributeProvider = (TestableReflectionAccessor)NotCachedAttributes;
+        attributeProvider.AddData(type, values, memberTypes);
     }
 }
 
-internal class TestableReflectionAccessor : INotCachedReflectHelper
+internal class TestableReflectionAccessor : INotCachedAttributeHelper
 {
-    public TestableReflectionAccessor()
+
+    /// <summary>
+    /// A collection to hold mock custom attributes.
+    /// MemberTypes.All for assembly level
+    /// MemberTypes.TypeInfo for class level
+    /// MemberTypes.Method for method level.
+    /// </summary>
+    private readonly List<(Type Type, Attribute Attribute, MemberTypes MemberType)> _data = new();
+
+    public object[] GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit)
     {
+        var foundAttributes = new List<Attribute>();
+        foreach ((Type Type, Attribute Attribute, MemberTypes MemberType) attributeData in _data)
+        {
+            if (attributeProvider is MethodInfo && (attributeData.MemberType == MemberTypes.Method))
+            {
+                foundAttributes.Add(attributeData.Attribute);
+            }
+            else if (attributeProvider is TypeInfo && (attributeData.MemberType == MemberTypes.TypeInfo))
+            {
+                foundAttributes.Add(attributeData.Attribute);
+            }
+            else if (attributeProvider is Assembly && attributeData.MemberType == MemberTypes.All)
+            {
+                foundAttributes.Add(attributeData.Attribute);
+            }
+        }
+
+        return foundAttributes.ToArray();
     }
 
-    // TODO: fix to fix tests.
-    public object[] GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit) => throw new NotImplementedException();
-
-    public TAttribute[] GetCustomAttributesNotCached<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit) => throw new NotImplementedException();
-
-    public bool IsDerivedAttributeDefinedNotCached<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit) => throw new NotImplementedException();
+    internal void AddData(Type type, Attribute[] values, MemberTypes memberTypes)
+    {
+        foreach (Attribute attribute in values)
+        {
+            _data.Add((type, attribute, memberTypes));
+        }
+    }
 }

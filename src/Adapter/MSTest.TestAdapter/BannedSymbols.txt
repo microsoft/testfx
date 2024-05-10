@@ -1,2 +1,1 @@
-﻿T:Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.NotCachedReflectHelper; This is allowed only for tests.
-M:Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.ReflectHelper.#ctor; This is allowed only for tests.
+﻿M:Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.ReflectHelper.#ctor; This is allowed only for tests.

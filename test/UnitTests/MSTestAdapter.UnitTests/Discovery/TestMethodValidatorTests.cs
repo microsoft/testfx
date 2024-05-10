@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -39,7 +39,7 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReturnFalseForMethodsWithoutATestMethodAttributeOrItsDerivedAttributes()
     {
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<UTF.TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(false);
+            rh => rh.IsDerivedAttributeDefined<UTF.TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(false);
         Verify(!_testMethodValidator.IsValidTestMethod(_mockMethodInfo.Object, _type, _warnings));
     }
 
@@ -56,6 +56,8 @@ public class TestMethodValidatorTests : TestContainer
     public void IsValidTestMethodShouldReportWarningsForGenericTestMethodDefinitions()
     {
         SetupTestMethod();
+
+        // _mockMethodInfo.Setup(mi => mi.Module.Assembly.ReflectionOnly).Returns(false);
         _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
         _mockMethodInfo.Setup(mi => mi.DeclaringType.FullName).Returns("DummyTestClass");
         _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
@@ -183,7 +185,7 @@ public class TestMethodValidatorTests : TestContainer
     #endregion
 
     private void SetupTestMethod() => _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<UTF.TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(true);
+            rh => rh.IsDerivedAttributeDefined<UTF.TestMethodAttribute>(It.IsAny<MemberInfo>(), false)).Returns(true);
 }
 
 #region Dummy types

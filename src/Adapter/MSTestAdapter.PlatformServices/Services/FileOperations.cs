@@ -19,7 +19,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 public class FileOperations : IFileOperations
 {
-    Dictionary<string, Assembly> _assemblyCache = new();
+    private readonly Dictionary<string, Assembly> _assemblyCache = new();
 
 #if WIN_UI
     private readonly bool _isPackaged;
@@ -57,9 +57,22 @@ public class FileOperations : IFileOperations
 
         return asm;
 #elif NETFRAMEWORK
-#pragma warning disable IDE0022 // Use expression body for method
-        return isReflectionOnly ? Assembly.ReflectionOnlyLoadFrom(assemblyName) : Assembly.LoadFrom(assemblyName);
-#pragma warning restore IDE0022 // Use expression body for method
+        if (isReflectionOnly)
+        {
+            return Assembly.ReflectionOnlyLoadFrom(assemblyName);
+        }
+        else
+        {
+            if (_assemblyCache.TryGetValue(assemblyName, out Assembly? assembly))
+            {
+                return assembly;
+            }
+
+            var asm = Assembly.LoadFrom(assemblyName);
+            _assemblyCache.Add(assemblyName, asm);
+
+            return asm;
+        }
 #endif
     }
 

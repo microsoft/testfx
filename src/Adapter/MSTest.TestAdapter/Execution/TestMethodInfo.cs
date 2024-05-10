@@ -82,17 +82,11 @@ public class TestMethodInfo : ITestMethod
     /// </summary>
     internal TestMethodOptions TestMethodOptions { get; }
 
-    // This is allowed because we don't know the usage.
-#pragma warning disable RS0030 // Do not use banned APIs
-    [Obsolete("don't use, but cannot remove")]
-    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.NotCachedReflectHelper.GetCustomAttributesNotCached(TestMethod, inherit) as Attribute[];
-#pragma warning restore RS0030 // Do not use banned APIs
+    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
 
-    [Obsolete("don't use, but cannot remove")]
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
-        => ReflectHelper.Instance.NotCachedReflectHelper.GetCustomAttributesNotCached<TAttributeType>(TestMethod, inherit)
-        ?? Array.Empty<TAttributeType>();
+        => ReflectHelper.Instance.GetDerivedAttributes<TAttributeType>(TestMethod, inherit).ToArray();
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.

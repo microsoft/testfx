@@ -290,7 +290,7 @@ internal class TypeCache : MarshalByRefObject
 
         TestAssemblyInfo assemblyInfo = GetAssemblyInfo(classType);
 
-        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetDerivedAttribute<TestClassAttribute>(classType, false);
+        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstDerivedAttributeOrDefault<TestClassAttribute>(classType, inherit: false);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
         var classInfo = new TestClassInfo(classType, constructor, testContextProperty, testClassAttribute, assemblyInfo);
 
@@ -485,7 +485,7 @@ internal class TypeCache : MarshalByRefObject
     private bool IsAssemblyOrClassInitializeMethod<TInitializeAttribute>(MethodInfo methodInfo)
         where TInitializeAttribute : Attribute
     {
-        // TODO: can we? it will then never throw for invalid, this is inconsitent in the codebase.
+        // TODO: can we? it will then never throw for invalid, this is inconsistent in the codebase.
         //if (!methodInfo.IsStatic)
         //{
         //    return false;
@@ -592,7 +592,7 @@ internal class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstDerivedAttributeOrDefault<ClassInitializeAttribute>(methodInfo, inherit: true)!
+                if (_reflectionHelper.GetFirstDerivedAttributeOrDefault<ClassInitializeAttribute>(methodInfo, inherit: true)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[0] = methodInfo;
@@ -625,7 +625,7 @@ internal class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(methodInfo, inherit: true)!
+                if (_reflectionHelper.GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(methodInfo, inherit: true)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[1] = methodInfo;
@@ -788,7 +788,7 @@ internal class TypeCache : MarshalByRefObject
     private TestMethodAttribute? GetTestMethodAttribute(MethodInfo methodInfo, TestClassInfo testClassInfo)
     {
         // Get the derived TestMethod attribute from reflection
-        TestMethodAttribute? testMethodAttribute = _reflectionHelper.GetDerivedAttribute<TestMethodAttribute>(methodInfo, false);
+        TestMethodAttribute? testMethodAttribute = _reflectionHelper.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(methodInfo, inherit: false);
 
         // Get the derived TestMethod attribute from Extended TestClass Attribute
         // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute

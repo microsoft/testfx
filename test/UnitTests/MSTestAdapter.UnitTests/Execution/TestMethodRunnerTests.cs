@@ -363,7 +363,7 @@ public class TestMethodRunnerTests : TestContainer
         Verify(results[2].DatarowIndex == 2);
     }
 
-    public void RunTestMethodShoudlRunOnlyDataSourceTestsWhenBothDataSourceAndDataRowAreProvided()
+    public void RunTestMethodShouldRunOnlyDataSourceTestsWhenBothDataSourceAndDataRowAreProvided()
     {
         var testMethodInfo = new TestableTestmethodInfo(_methodInfo, _testClassInfo, _testMethodOptions, () => new UTF.TestResult());
         var testMethodRunner = new TestMethodRunner(testMethodInfo, _testMethod, _testContextImplementation, false);
@@ -405,7 +405,7 @@ public class TestMethodRunnerTests : TestContainer
         var attributes = new Attribute[] { dataRowAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(ro => ro.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
 
         UnitTestResult[] results = testMethodRunner.RunTestMethod();
 
@@ -428,7 +428,7 @@ public class TestMethodRunnerTests : TestContainer
         var attributes = new Attribute[] { dataRowAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
 
         UnitTestResult[] results = testMethodRunner.RunTestMethod();
 
