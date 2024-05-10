@@ -73,6 +73,8 @@ internal class TypeEnumerator
         var tests = new Collection<UnitTestElement>();
 
         // Test class is already valid. Verify methods.
+        // PERF: GetRuntimeMethods is used here to get all methods, including non-public, and static methods.
+        // if we rely on analyzers to identify all invalid methods on build, we can change this to fit the current settings.
         foreach (MethodInfo method in _type.GetRuntimeMethods())
         {
             bool isMethodDeclaredInTestTypeAssembly = _reflectHelper.IsMethodDeclaredInSameAssemblyAsType(method, _type);
@@ -147,8 +149,15 @@ internal class TypeEnumerator
                     method.DeclaringType.GetTypeInfo().Assembly);
         }
 
-        // TODO: this needs a special method where we grab all attributes and compare them to a type to see if the attribute inherits from additional interface.
-        // We want to do first or default here, to see if we should go to the expensive path.
+        // PERF: AssemblyEnumerator would later try to figure if this is a data driven test method
+        // by creating a TestMethodInfo. This is really expensive for discovery, and should be done only
+        // when we are a data driven test.
+        // Instead we check if we have any data driven attribute here, and skip creating TestMethod info
+        // in AssemblyEnumerator.
+        //
+        // The foreach below could move to ReflectHelper, but this is only place where we want to check if
+        // an attribute implements something different than an Attribute derived class. So instead we just
+        // grab all attributes, and do the check ourselves.
         bool isDataDriven = false;
         foreach (Attribute attribute in _reflectHelper.GetDerivedAttributes<Attribute>(method, inherit: true))
         {
@@ -160,8 +169,6 @@ internal class TypeEnumerator
         }
 
         testMethod.DataType = isDataDriven ? DynamicDataType.ITestDataSource : DynamicDataType.None;
-
-        // TODO end
 
         var testElement = new UnitTestElement(testMethod)
         {

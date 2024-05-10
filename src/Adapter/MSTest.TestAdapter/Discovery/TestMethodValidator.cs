@@ -4,6 +4,7 @@
 using System.Globalization;
 using System.Reflection;
 
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -48,9 +49,14 @@ internal class TestMethodValidator
     /// <returns> Return true if a method is a valid test method. </returns>
     internal virtual bool IsValidTestMethod(MethodInfo testMethodInfo, Type type, ICollection<string> warnings)
     {
-        // Use non-caching reflection helper to check if a method is a valid test method. We don't want to retrieve
-        // all attributes for every single method, and we also don't want to cache them for methods that we won't look at again.
-        if (!_reflectHelper.IsDerivedAttributeDefined<TestMethodAttribute>(testMethodInfo, inherit: false))
+        // PERF: Contrary to my intuition, we are doing caching reflection here, meaning we will cache every method info in the
+        // assembly, this is because when we discover and run we will repeatedly inspect all the methods in the assembly, and this
+        // gives us a better performance.
+        // It would be possible to use non-caching reflection here if we knew that we are only doing discovery that won't be followed by run,
+        // but the difference is quite small, and we don't expect a huge amount of non-test methods in the assembly.
+        //
+        // Also skip all methods coming from object, because they cannot be tests.
+        if (testMethodInfo.DeclaringType == typeof(object) || !_reflectHelper.IsDerivedAttributeDefined<TestMethodAttribute>(testMethodInfo, inherit: false))
         {
             return false;
         }

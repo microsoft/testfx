@@ -280,13 +280,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
     private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
     {
         MethodInfo methodInfo = testMethodInfo.MethodInfo;
-        // TODO: this needs a special method where we grab all attributes and compare them to a type to see if the attribute inherits from additional interface.
-        // We want to do first or default here, to see if we should go to the expensive path.
-        IEnumerable<FrameworkITestDataSource>? testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(methodInfo, inherit: false)?.OfType<FrameworkITestDataSource>();
-        if (testDataSources == null || !testDataSources.Any())
-        {
-            return false;
-        }
+
+        // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
+        // attributes and filter them. We don't have to care if there is one, because this method is only entered when
+        // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
+        IEnumerable<FrameworkITestDataSource>? testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(methodInfo, inherit: false).OfType<FrameworkITestDataSource>();
 
         try
         {

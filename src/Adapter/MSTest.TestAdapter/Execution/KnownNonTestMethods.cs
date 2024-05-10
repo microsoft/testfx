@@ -5,5 +5,29 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
 internal static class KnownNonTestMethods
 {
-    public static HashSet<string> Methods { get; } = [nameof(object.Equals), nameof(object.GetHashCode), nameof(object.GetType), nameof(object.ReferenceEquals), nameof(object.ToString)];
+    private static readonly string[] MethodNames = [
+        nameof(Equals),
+        nameof(GetHashCode),
+        nameof(GetType),
+        nameof(ReferenceEquals),
+        nameof(ToString)
+        ];
+
+    public static bool Contains(string methodName)
+    {
+        if (methodName == "Equals")
+        {
+            Console.WriteLine($"Known non test methods called with: {methodName}");
+            Console.WriteLine(Environment.StackTrace);
+        }
+        foreach (string method in MethodNames)
+        {
+            if (string.Equals(method, methodName, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

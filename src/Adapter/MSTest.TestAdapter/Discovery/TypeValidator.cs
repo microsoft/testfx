@@ -51,6 +51,11 @@ internal class TypeValidator
     {
         TypeInfo typeInfo = type.GetTypeInfo();
 
+        // PERF: Contrary to my intuition, we are doing caching reflection here, meaning we will cache every class info in the
+        // assembly, this is because when we discover and run we will repeatedly inspect all the types in the assembly, and this
+        // gives us a better performance.
+        // It would be possible to use non-caching reflection here if we knew that we are only doing discovery that won't be followed by run,
+        // but the difference is quite small, and we don't expect a huge amount of non-test classes in the assembly.
         if (!typeInfo.IsClass || !_reflectHelper.IsDerivedAttributeDefined<TestClassAttribute>(typeInfo, inherit: false))
         {
             return false;

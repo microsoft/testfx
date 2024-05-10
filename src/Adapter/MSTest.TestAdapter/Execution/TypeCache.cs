@@ -306,11 +306,6 @@ internal class TypeCache : MarshalByRefObject
 
         foreach (MethodInfo methodInfo in classType.GetTypeInfo().DeclaredMethods)
         {
-            if (KnownNonTestMethods.Methods.Contains(methodInfo.Name))
-            {
-                continue;
-            }
-
             if (methodInfo.IsPublic && !methodInfo.IsStatic)
             {
                 // Update test initialize/cleanup method
@@ -325,15 +320,12 @@ internal class TypeCache : MarshalByRefObject
         }
 
         Type? baseType = classType.GetTypeInfo().BaseType;
-        while (baseType != null)
+
+        // PERF: Don't inspect object, no test methods or setups can be defined on it.
+        while (baseType != null && baseType != typeof(object))
         {
             foreach (MethodInfo methodInfo in baseType.GetTypeInfo().DeclaredMethods)
             {
-                if (KnownNonTestMethods.Methods.Contains(methodInfo.Name))
-                {
-                    continue;
-                }
-
                 if (methodInfo.IsPublic && !methodInfo.IsStatic)
                 {
                     // Update test initialize/cleanup method from base type.
@@ -441,7 +433,7 @@ internal class TypeCache : MarshalByRefObject
                 {
                     assemblyInfo.AssemblyInitializeMethod = methodInfo;
 
-                    TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetSingleNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false, nullOnMultiple: true);
+                    TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
                     if (timeoutAttribute != null)
                     {
                         if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
@@ -460,7 +452,7 @@ internal class TypeCache : MarshalByRefObject
                 else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
                 {
                     assemblyInfo.AssemblyCleanupMethod = methodInfo;
-                    TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetSingleNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false, nullOnMultiple: true);
+                    TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
                     if (timeoutAttribute != null)
                     {
                         if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
@@ -582,7 +574,7 @@ internal class TypeCache : MarshalByRefObject
 
         if (isInitializeMethod)
         {
-            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetSingleNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false, nullOnMultiple: true);
+            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
                 if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
@@ -615,7 +607,7 @@ internal class TypeCache : MarshalByRefObject
 
         if (isCleanupMethod)
         {
-            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetSingleNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false, nullOnMultiple: true);
+            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
                 if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
@@ -681,7 +673,7 @@ internal class TypeCache : MarshalByRefObject
 
         if (hasTestInitialize)
         {
-            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetSingleNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false, nullOnMultiple: true);
+            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
                 if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
@@ -712,7 +704,7 @@ internal class TypeCache : MarshalByRefObject
 
         if (hasTestCleanup)
         {
-            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetSingleNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false, nullOnMultiple: true);
+            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
             if (timeoutAttribute != null)
             {
                 if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
@@ -899,7 +891,7 @@ internal class TypeCache : MarshalByRefObject
     private int GetTestTimeout(MethodInfo methodInfo, TestMethod testMethod)
     {
         DebugEx.Assert(methodInfo != null, "TestMethod should be non-null");
-        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetSingleNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false, nullOnMultiple: true);
+        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
         int globalTimeout = MSTestSettings.CurrentSettings.TestTimeout;
 
         if (timeoutAttribute != null)

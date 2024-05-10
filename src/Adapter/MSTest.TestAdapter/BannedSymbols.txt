@@ -1,1 +1,2 @@
-﻿T:Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.NotCachedReflectHelper; This is allowed only for special cases that need to scan all types or methods to see if they are potentially a test class or a test method. Any use on a test class or method should use methods on ReflectHelper because it has cache.
+﻿T:Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.NotCachedReflectHelper; This is allowed only for tests.
+M:Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers.ReflectHelper.#ctor; This is allowed only for tests.

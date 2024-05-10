@@ -197,6 +197,15 @@ internal class ReflectHelper : MarshalByRefObject
 #endif
     public override object InitializeLifetimeService() => null!;
 
+    /// <summary>
+    /// Gets single attribute, DON'T use this together with attribute that does not allow multiple, to avoid eating the cost of checking for more when there cannot be more.
+    /// </summary>
+    /// <typeparam name="TAttribute">Type of the attribute to find.</typeparam>
+    /// <param name="attributeProvider">The type, assembly or method.</param>
+    /// <param name="inherit">If we should inspect parents of this type.</param>
+    /// <param name="nullOnMultiple">If null will be returned when multiple attributes are found, otherwise we throw.</param>
+    /// <returns>The attribute that is found or null.</returns>
+    /// <exception cref="InvalidOperationException">Throws when multiple attributes are found (the attribute must allow multiple).</exception>
     public TAttribute? GetSingleNonDerivedAttributeOrDefault<TAttribute>(ICustomAttributeProvider attributeProvider, bool inherit, bool nullOnMultiple)
         where TAttribute : Attribute
     {
