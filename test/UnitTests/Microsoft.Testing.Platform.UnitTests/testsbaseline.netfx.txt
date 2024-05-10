@@ -376,3 +376,5 @@ Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.Comman
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CommandLine.PlatformCommandLineProviderTests.IsValid_If_Verbosity_Has_CorrectValue(string, bool) (dumpType: "Critical", isValid: true)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CommandLine.PlatformCommandLineProviderTests.IsValid_If_Port_Is_Integer(string, bool) (timeout: "32", isValid: true)
 Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CommandLine.PlatformCommandLineProviderTests.IsValid_If_ExitOnProcessExit_Is_Integer(string, bool) (timeout: "invalid", isValid: false)
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CommandLine.TreeNodeFilterCommandLineOptionsProviderTests.TreenodeFilter_AlwaysValid()
+Microsoft.Testing.Platform.UnitTests.Microsoft.Testing.Platform.UnitTests.CommandLine.TreeNodeFilterCommandLineOptionsProviderTests.CommandLineOptions_AlwaysValid()
