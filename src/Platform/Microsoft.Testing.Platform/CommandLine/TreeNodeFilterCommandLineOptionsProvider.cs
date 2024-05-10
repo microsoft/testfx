@@ -30,19 +30,11 @@ internal sealed class TreeNodeFilterCommandLineOptionsProvider(IExtension extens
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
         => new CommandLineOption[]
         {
-            new(TreenodeFilter, PlatformResources.TreeNodeFilterDescription, ArgumentArity.ZeroOrOne, false),
+            new(TreenodeFilter, PlatformResources.TreeNodeFilterDescription, ArgumentArity.ExactlyOne, false),
         };
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-    {
-        if (commandOption.Name == TreenodeFilter && arguments.Length != 1)
-        {
-            return ValidationResult.InvalidTask(PlatformResources.TreeNodeFilterInvalidArgumentCount);
-        }
-
-        // No problem found
-        return ValidationResult.ValidTask;
-    }
+        => ValidationResult.ValidTask;
 
     public Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
         => ValidationResult.ValidTask;
