@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -8,6 +8,7 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -368,6 +369,7 @@ public class TestClassInfo
             testContext.CancellationTokenSource,
             timeout,
             methodInfo,
+            new ClassExecutionContextScope(ClassType, isCleanup: false),
             Resource.ClassInitializeWasCancelled,
             Resource.ClassInitializeTimedOut);
     }
@@ -548,6 +550,7 @@ public class TestClassInfo
             new CancellationTokenSource(),
             timeout,
             methodInfo,
+            new ClassExecutionContextScope(ClassType, isCleanup: true),
             Resource.ClassCleanupWasCancelled,
             Resource.ClassCleanupTimedOut);
     }

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics;
@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -239,7 +240,17 @@ public class TestMethodInfo : ITestMethod
                     if (RunTestInitializeMethod(classInstance, result))
                     {
                         hasTestInitializePassed = true;
-                        TestMethod.InvokeAsSynchronousTask(classInstance, arguments);
+                        if (IsTimeoutSet)
+                        {
+                            ExecutionContextService.RunActionOnContext(
+                                () => TestMethod.InvokeAsSynchronousTask(classInstance, arguments),
+                                new InstanceExecutionContextScope(classInstance, Parent.ClassType, false));
+                        }
+                        else
+                        {
+                            TestMethod.InvokeAsSynchronousTask(classInstance, arguments);
+                        }
+
                         result.Outcome = UTF.UnitTestOutcome.Passed;
                     }
                 }
@@ -640,6 +651,7 @@ public class TestMethodInfo : ITestMethod
             new CancellationTokenSource(),
             timeout,
             methodInfo,
+            new InstanceExecutionContextScope(classInstance, Parent.ClassType, isCleanup: false),
             Resource.TestInitializeWasCancelled,
             Resource.TestInitializeTimedOut);
     }
@@ -657,6 +669,7 @@ public class TestMethodInfo : ITestMethod
             new CancellationTokenSource(),
             timeout,
             methodInfo,
+            new InstanceExecutionContextScope(classInstance, Parent.ClassType, isCleanup: true),
             Resource.TestCleanupWasCancelled,
             Resource.TestCleanupTimedOut);
     }
