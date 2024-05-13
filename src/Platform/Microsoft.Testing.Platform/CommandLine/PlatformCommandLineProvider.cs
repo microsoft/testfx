@@ -87,12 +87,9 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     {
         if (commandOption.Name == DiagnosticVerbosityOptionKey)
         {
-            foreach (string verbosityOption in VerbosityOptions)
+            if (!VerbosityOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
             {
-                if (!arguments[0].Equals(verbosityOption, StringComparison.OrdinalIgnoreCase))
-                {
-                    return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage);
-                }
+                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage);
             }
         }
 
