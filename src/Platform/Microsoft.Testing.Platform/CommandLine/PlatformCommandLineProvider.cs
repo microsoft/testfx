@@ -34,12 +34,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
 
-    public const string VerbosityTrace = "Trace";
-    public const string VerbosityDebug = "Debug";
-    public const string VerbosityInformation = "Information";
-    public const string VerbosityWarning = "Warning";
-    public const string VerbosityError = "Error";
-    public const string VerbosityCritical = "Critical";
+    private static readonly string[] VerbosityOptions = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
 
     private static readonly CommandLineOption MinimumExpectedTests = new(MinimumExpectedTestsOptionKey, "Specifies the minimum number of tests that are expected to run.", ArgumentArity.ZeroOrOne, false, isBuiltIn: true);
 
@@ -92,14 +87,12 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     {
         if (commandOption.Name == DiagnosticVerbosityOptionKey)
         {
-            if (!arguments[0].Equals(VerbosityTrace, StringComparison.OrdinalIgnoreCase)
-                && !arguments[0].Equals(VerbosityDebug, StringComparison.OrdinalIgnoreCase)
-                && !arguments[0].Equals(VerbosityInformation, StringComparison.OrdinalIgnoreCase)
-                && !arguments[0].Equals(VerbosityWarning, StringComparison.OrdinalIgnoreCase)
-                && !arguments[0].Equals(VerbosityError, StringComparison.OrdinalIgnoreCase)
-                && !arguments[0].Equals(VerbosityCritical, StringComparison.OrdinalIgnoreCase))
+            foreach (string verbosityOption in VerbosityOptions)
             {
-                return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage);
+                if (!arguments[0].Equals(verbosityOption, StringComparison.OrdinalIgnoreCase))
+                {
+                    return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage);
+                }
             }
         }
 
@@ -173,7 +166,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
                 // If we don't fail here but we fail below means that the parent process is not there anymore and we can take it as exited.
                 _ = Process.GetProcessById(parentProcessPid);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitInvalidDependentProcess, parentProcessPid, ex));
             }

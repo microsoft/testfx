@@ -22,12 +22,12 @@ public class PlatformCommandLineProviderTests : TestBase
     {
     }
 
-    [Arguments(PlatformCommandLineProvider.VerbosityTrace, true)]
-    [Arguments(PlatformCommandLineProvider.VerbosityDebug, true)]
-    [Arguments(PlatformCommandLineProvider.VerbosityInformation, true)]
-    [Arguments(PlatformCommandLineProvider.VerbosityWarning, true)]
-    [Arguments(PlatformCommandLineProvider.VerbosityError, true)]
-    [Arguments(PlatformCommandLineProvider.VerbosityCritical, true)]
+    [Arguments("Trace", true)]
+    [Arguments("Debug", true)]
+    [Arguments("Information", true)]
+    [Arguments("Warning", true)]
+    [Arguments("Error", true)]
+    [Arguments("Critical", true)]
     [Arguments("invalid", false)]
     public async Task IsValid_If_Verbosity_Has_CorrectValue(string dumpType, bool isValid)
     {
@@ -46,12 +46,12 @@ public class PlatformCommandLineProviderTests : TestBase
     [Arguments("32", true)]
     [Arguments("32.32", false)]
     [Arguments("invalid", false)]
-    public async Task IsValid_If_Port_Is_Integer(string timeout, bool isValid)
+    public async Task IsValid_If_Port_Is_Integer(string port, bool isValid)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.PortOptionKey);
 
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]).ConfigureAwait(false);
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [port]).ConfigureAwait(false);
         Assert.AreEqual(isValid, validateOptionsResult.IsValid);
 
         if (!isValid)
@@ -63,12 +63,12 @@ public class PlatformCommandLineProviderTests : TestBase
     [Arguments("32", true)]
     [Arguments("32.32", false)]
     [Arguments("invalid", false)]
-    public async Task IsValid_If_ClientPort_Is_Integer(string timeout, bool isValid)
+    public async Task IsValid_If_ClientPort_Is_Integer(string clientPort, bool isValid)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ClientPortOptionKey);
 
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]).ConfigureAwait(false);
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [clientPort]).ConfigureAwait(false);
         Assert.AreEqual(isValid, validateOptionsResult.IsValid);
 
         if (!isValid)
@@ -80,12 +80,12 @@ public class PlatformCommandLineProviderTests : TestBase
     [Arguments("32", true)]
     [Arguments("32.32", false)]
     [Arguments("invalid", false)]
-    public async Task IsValid_If_ExitOnProcessExit_Is_Integer(string timeout, bool isValid)
+    public async Task IsValid_If_ExitOnProcessExit_Is_Integer(string pid, bool isValid)
     {
         var provider = new PlatformCommandLineProvider();
         CommandLineOption option = provider.GetCommandLineOptions().First(x => x.Name == PlatformCommandLineProvider.ExitOnProcessExitOptionKey);
 
-        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [timeout]).ConfigureAwait(false);
+        ValidationResult validateOptionsResult = await provider.ValidateOptionArgumentsAsync(option, [pid]).ConfigureAwait(false);
         Assert.AreEqual(isValid, validateOptionsResult.IsValid);
 
         if (!isValid)
