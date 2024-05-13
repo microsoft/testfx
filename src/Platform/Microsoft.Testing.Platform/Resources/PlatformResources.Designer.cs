@@ -530,15 +530,6 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;--client-host&apos; expects a single host name as argument.
-        /// </summary>
-        internal static string PlatformCommandLineClientHostOptionSingleArgument {
-            get {
-                return ResourceManager.GetString("PlatformCommandLineClientHostOptionSingleArgument", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Specify the port of the client..
         /// </summary>
         internal static string PlatformCommandLineClientPortOptionDescription {
@@ -553,15 +544,6 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription {
             get {
                 return ResourceManager.GetString("PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &apos;--diagnostic-output-fileprefix&apos; expects a single file name prefix argument.
-        /// </summary>
-        internal static string PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument {
-            get {
-                return ResourceManager.GetString("PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument", resourceCulture);
             }
         }
         
@@ -602,15 +584,6 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;--diagnostic-output-directory&apos; expects a single directory name argument.
-        /// </summary>
-        internal static string PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument {
-            get {
-                return ResourceManager.GetString("PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Prefix for the log file name that will replace &apos;[log]_.&apos;.
         /// </summary>
         internal static string PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription {
@@ -641,9 +614,9 @@ namespace Microsoft.Testing.Platform.Resources {
         ///   Looks up a localized string similar to Invalid PID &apos;{0}&apos;
         ///{1}.
         /// </summary>
-        internal static string PlatformCommandLineExitOnProcessExitInvalidDependantProcess {
+        internal static string PlatformCommandLineExitOnProcessExitInvalidDependentProcess {
             get {
-                return ResourceManager.GetString("PlatformCommandLineExitOnProcessExitInvalidDependantProcess", resourceCulture);
+                return ResourceManager.GetString("PlatformCommandLineExitOnProcessExitInvalidDependentProcess", resourceCulture);
             }
         }
         
@@ -716,15 +689,6 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string PlatformCommandLineNoBannerOptionDescription {
             get {
                 return ResourceManager.GetString("PlatformCommandLineNoBannerOptionDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &apos;--{0}&apos; expects no argument.
-        /// </summary>
-        internal static string PlatformCommandLineOptionExpectsNoArgumentErrorMessage {
-            get {
-                return ResourceManager.GetString("PlatformCommandLineOptionExpectsNoArgumentErrorMessage", resourceCulture);
             }
         }
         
@@ -1072,15 +1036,6 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage {
             get {
                 return ResourceManager.GetString("TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to A single argument is expected (e.g. &apos;/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]&apos;).
-        /// </summary>
-        internal static string TreeNodeFilterInvalidArgumentCount {
-            get {
-                return ResourceManager.GetString("TreeNodeFilterInvalidArgumentCount", resourceCulture);
             }
         }
         

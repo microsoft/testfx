@@ -264,11 +264,6 @@
         <target state="translated">Geben Sie den Hostnamen des Clients an.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineClientHostOptionSingleArgument">
-        <source>'--client-host' expects a single host name as argument</source>
-        <target state="translated">"--client-host" erwartet einen einzelnen Hostnamen als Argument.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineClientPortOptionDescription">
         <source>Specify the port of the client.</source>
         <target state="translated">Geben Sie den Port des Clients an.</target>
@@ -277,11 +272,6 @@
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
         <target state="translated">Erzwingen Sie, dass die integrierte Dateiprotokollierung das Protokoll synchron schreibt. Nützlich für Szenarien, in denen Sie keine Protokolle verlieren möchten (z. B. im Fall eines Absturzes). Beachten Sie, dass die Testausführung dadurch verlangsamt wird.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument">
-        <source>'--diagnostic-output-fileprefix' expects a single file name prefix argument</source>
-        <target state="translated">"--diagnostic-output-fileprefix" erwartet ein einzelnes Präfixargument für Dateinamen.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
@@ -304,11 +294,6 @@
         <target state="translated">Das Ausgabeverzeichnis der Diagnoseprotokollierung, sofern nicht angegeben, wird die Datei im Standardverzeichnis "TestResults" generiert.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument">
-        <source>'--diagnostic-output-directory' expects a single directory name argument</source>
-        <target state="translated">"--diagnostic-output-directory" erwartet ein einzelnes Verzeichnisnamenargument.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
         <target state="translated">Präfix für den Protokolldateinamen, durch den "[log]_" ersetzt wird.</target>
@@ -324,10 +309,10 @@
         <target state="translated">Listen Sie verfügbare Tests auf.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="translated">Ungültige PID "{0}"
+        <target state="new">Invalid PID '{0}'
 {1}</target>
         <note />
       </trans-unit>
@@ -369,11 +354,6 @@
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
         <target state="translated">Zeigen Sie das Startbanner, die Copyrightmeldung oder das Telemetriebanner nicht an.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineOptionExpectsNoArgumentErrorMessage">
-        <source>'--{0}' expects no argument</source>
-        <target state="translated">"--{0}" erwartet kein Argument</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
@@ -574,11 +554,6 @@ Weitere Informationen zu Microsoft Testing Platform-Telemetriedaten: https://aka
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
         <target state="translated">Ein Escapezeichen darf die Filterzeichenfolge "{0}" nicht beenden</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterInvalidArgumentCount">
-        <source>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</source>
-        <target state="translated">Es wird ein einzelnes Argument erwartet (z. B. "/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]").</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">

@@ -264,11 +264,6 @@
         <target state="translated">クライアントのホスト名を指定します。</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineClientHostOptionSingleArgument">
-        <source>'--client-host' expects a single host name as argument</source>
-        <target state="translated">'--client-host' には、引数として 1 つのホスト名が必要です</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineClientPortOptionDescription">
         <source>Specify the port of the client.</source>
         <target state="translated">クライアントのポートを指定します。</target>
@@ -277,11 +272,6 @@
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
         <target state="translated">組み込みのファイル ロガーでログを同期的に書き込むことを強制します。ログを失わないシナリオ (クラッシュした場合など) に役立ちます。これにより、テストの実行速度が低下していることに注意してください。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument">
-        <source>'--diagnostic-output-fileprefix' expects a single file name prefix argument</source>
-        <target state="translated">'--diagnostic-output-fileprefix' には、1 つのファイル名プレフィックス引数が必要です</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
@@ -304,11 +294,6 @@
         <target state="translated">診断ログの出力ディレクトリ。指定しない場合ファイルは既定の 'TestResults' ディレクトリ内に生成されます。</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument">
-        <source>'--diagnostic-output-directory' expects a single directory name argument</source>
-        <target state="translated">'--diagnostic-output-directory' には単一のディレクトリ名引数が必要です</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
         <target state="translated">'[log]_' を置き換えるログ ファイル名のプレフィックス。</target>
@@ -324,11 +309,10 @@
         <target state="translated">使用可能なテストを一覧表示します。</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="translated">PID '{0}'
- が無効です
+        <target state="new">Invalid PID '{0}'
 {1}</target>
         <note />
       </trans-unit>
@@ -370,11 +354,6 @@
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
         <target state="translated">スタートアップ バナー、著作権メッセージ、テレメトリ バナーは表示しないでください。</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineOptionExpectsNoArgumentErrorMessage">
-        <source>'--{0}' expects no argument</source>
-        <target state="translated">'--{0}' には引数が必要ありません</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
@@ -575,11 +554,6 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
         <target state="translated">エスケープ文字はフィルター文字列 '{0}' を終了できません</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterInvalidArgumentCount">
-        <source>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</source>
-        <target state="translated">1 つの引数が必要です (例: '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">

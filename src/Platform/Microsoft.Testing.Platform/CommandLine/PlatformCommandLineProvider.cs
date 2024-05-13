@@ -34,6 +34,8 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
 
+    private static readonly string[] VerbosityOptions = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
+
     private static readonly CommandLineOption MinimumExpectedTests = new(MinimumExpectedTestsOptionKey, "Specifies the minimum number of tests that are expected to run.", ArgumentArity.ZeroOrOne, false, isBuiltIn: true);
 
     private static readonly IReadOnlyCollection<CommandLineOption> PlatformCommandLineProviderCache = new[]
@@ -83,61 +85,25 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 
     public Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
     {
-        if (commandOption.Name == HelpOptionKey && arguments.Length > 0)
-        {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineOptionExpectsNoArgumentErrorMessage, HelpOptionKey));
-        }
-
-        if (commandOption.Name == InfoOptionKey && arguments.Length > 0)
-        {
-            return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineOptionExpectsNoArgumentErrorMessage, InfoOptionKey));
-        }
-
         if (commandOption.Name == DiagnosticVerbosityOptionKey)
         {
-            if (arguments.Length != 1
-                || (!arguments[0].Equals("Trace", StringComparison.OrdinalIgnoreCase)
-                    && !arguments[0].Equals("Debug", StringComparison.OrdinalIgnoreCase)
-                    && !arguments[0].Equals("Information", StringComparison.OrdinalIgnoreCase)
-                    && !arguments[0].Equals("Warning", StringComparison.OrdinalIgnoreCase)
-                    && !arguments[0].Equals("Error", StringComparison.OrdinalIgnoreCase)
-                    && !arguments[0].Equals("Critical", StringComparison.OrdinalIgnoreCase)))
+            if (!VerbosityOptions.Contains(arguments[0], StringComparer.OrdinalIgnoreCase))
             {
                 return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticOptionExpectsSingleArgumentErrorMessage);
             }
         }
 
-        if (commandOption.Name == DiagnosticOutputDirectoryOptionKey && arguments.Length != 1)
-        {
-            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument);
-        }
-
-        if (commandOption.Name == DiagnosticOutputFilePrefixOptionKey && arguments.Length != 1)
-        {
-            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument);
-        }
-
-        if (commandOption.Name == ResultDirectoryOptionKey && arguments.Length != 1)
-        {
-            return ValidationResult.InvalidTask($"Invalid arguments for --{ResultDirectoryOptionKey}, expected usage: --results-directory ./CustomTestResultsFolder");
-        }
-
-        if (commandOption.Name == PortOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
+        if (commandOption.Name == PortOptionKey && (!int.TryParse(arguments[0], out int _)))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, PortOptionKey));
         }
 
-        if (commandOption.Name == ClientPortOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
+        if (commandOption.Name == ClientPortOptionKey && (!int.TryParse(arguments[0], out int _)))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLinePortOptionSingleArgument, ClientPortOptionKey));
         }
 
-        if (commandOption.Name == ClientHostOptionKey && arguments.Length != 1)
-        {
-            return ValidationResult.InvalidTask(PlatformResources.PlatformCommandLineClientHostOptionSingleArgument);
-        }
-
-        if (commandOption.Name == ExitOnProcessExitOptionKey && (arguments.Length != 1 || !int.TryParse(arguments[0], out int _)))
+        if (commandOption.Name == ExitOnProcessExitOptionKey && (!int.TryParse(arguments[0], out int _)))
         {
             return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitSingleArgument, ExitOnProcessExitOptionKey));
         }
@@ -187,7 +153,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
 
         if (commandLineOptions.IsOptionSet(ExitOnProcessExitOptionKey))
         {
-            commandLineOptions.TryGetOptionArgumentList(ExitOnProcessExitOptionKey, out string[]? pid);
+            _ = commandLineOptions.TryGetOptionArgumentList(ExitOnProcessExitOptionKey, out string[]? pid);
             ApplicationStateGuard.Ensure(pid is not null);
             RoslynDebug.Assert(pid.Length == 1);
             int parentProcessPid = int.Parse(pid[0], CultureInfo.InvariantCulture);
@@ -195,11 +161,11 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
             {
                 // We let the api to do the validity check before to go down the subscription path.
                 // If we don't fail here but we fail below means that the parent process is not there anymore and we can take it as exited.
-                Process.GetProcessById(parentProcessPid);
+                _ = Process.GetProcessById(parentProcessPid);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
-                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitInvalidDependantProcess, parentProcessPid, ex));
+                return ValidationResult.InvalidTask(string.Format(CultureInfo.InvariantCulture, PlatformResources.PlatformCommandLineExitOnProcessExitInvalidDependentProcess, parentProcessPid, ex));
             }
         }
 
