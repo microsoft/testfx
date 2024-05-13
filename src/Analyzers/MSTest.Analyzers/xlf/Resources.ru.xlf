@@ -130,6 +130,21 @@
         <target state="translated">Методы AssemblyInitialize должны использовать допустимый макет</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessDescription">
+        <source>Assert methods should not contain conditional access.</source>
+        <target state="new">Assert methods should not contain conditional access.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
+        <source>Assert methods should not contain conditional access. First assert for null and then do the other assertion.</source>
+        <target state="new">Assert methods should not contain conditional access. First assert for null and then do the other assertion.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessTitle">
+        <source>Assertion arguments should avoid conditional access</source>
+        <target state="new">Assertion arguments should avoid conditional access</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
         <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
         <target state="translated">"Assert.AreEqual", "Assert.AreNotEqual", "Assert.AreSame" и "Assert.AreNotSame" ожидают, что сначала будет передано ожидаемое значение, а фактическое значение будет передано в качестве второго аргумента.</target>

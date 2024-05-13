@@ -255,6 +255,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Assert methods should not contain conditional access..
+        /// </summary>
+        internal static string AssertionArgsShouldAvoidConditionalAccessDescription {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldAvoidConditionalAccessDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assert methods should not contain conditional access. First assert for null and then do the other assertion..
+        /// </summary>
+        internal static string AssertionArgsShouldAvoidConditionalAccessMessageFormat {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldAvoidConditionalAccessMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Assertion arguments should avoid conditional access.
+        /// </summary>
+        internal static string AssertionArgsShouldAvoidConditionalAccessTitle {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldAvoidConditionalAccessTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;Assert.AreEqual&apos;, &apos;Assert.AreNotEqual&apos;, &apos;Assert.AreSame&apos; and &apos;Assert.AreNotSame&apos; expects the expected value to be passed first and the actual value to be passed as second argument..
         /// </summary>
         internal static string AssertionArgsShouldBePassedInCorrectOrderDescription {
