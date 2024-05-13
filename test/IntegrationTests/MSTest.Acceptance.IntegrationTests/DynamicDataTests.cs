@@ -39,7 +39,7 @@ public class DynamicDataTests : AcceptanceTestBase
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
         File.WriteAllText(runSettingsFilePath, runSettings);
 
-        var testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
 
@@ -64,7 +64,7 @@ public class DynamicDataTests : AcceptanceTestBase
         string runSettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
         File.WriteAllText(runSettingsFilePath, runSettings);
 
-        var testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
+        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
 
@@ -76,7 +76,7 @@ public class DynamicDataTests : AcceptanceTestBase
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
 
-        var testHostResult = await testHost.ExecuteAsync();
+        TestHostResult testHostResult = await testHost.ExecuteAsync();
 
         testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
 
