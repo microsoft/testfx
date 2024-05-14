@@ -132,11 +132,6 @@
         <target state="translated">Metody AssemblyInitialize musí mít platné rozložení</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessDescription">
-        <source>Assert methods should not contain conditional access.</source>
-        <target state="new">Assert methods should not contain conditional access.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
         <source>Assert methods should not contain conditional access. First assert for null and then do the other assertion.</source>
         <target state="new">Assert methods should not contain conditional access. First assert for null and then do the other assertion.</target>

@@ -40,14 +40,13 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
     });
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessDescription), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessMessageFormat), Resources.ResourceManager, typeof(Resources));
 
     internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.AssertionArgsShouldAvoidConditionalAccessRuleId,
         Title,
         MessageFormat,
-        Description,
+        description: null,
         Category.Usage,
         DiagnosticSeverity.Info,
         isEnabledByDefault: true);

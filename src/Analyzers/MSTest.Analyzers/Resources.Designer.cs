@@ -255,15 +255,6 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Assert methods should not contain conditional access..
-        /// </summary>
-        internal static string AssertionArgsShouldAvoidConditionalAccessDescription {
-            get {
-                return ResourceManager.GetString("AssertionArgsShouldAvoidConditionalAccessDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Assert methods should not contain conditional access. First assert for null and then do the other assertion..
         /// </summary>
         internal static string AssertionArgsShouldAvoidConditionalAccessMessageFormat {
