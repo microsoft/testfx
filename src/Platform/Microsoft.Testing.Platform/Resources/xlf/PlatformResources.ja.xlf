@@ -312,7 +312,8 @@
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="new">Invalid PID '{0}'
+        <target state="translated">PID '{0}'
+ が無効です
 {1}</target>
         <note />
       </trans-unit>
