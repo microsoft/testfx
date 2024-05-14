@@ -1,12 +1,4 @@
-﻿## Release 3.5.0
-
-### New Rules
-
-Rule ID | Category | Severity | Notes
---------|----------|----------|-------
-MSTEST0026 | Design | Info | AssertionArgsShouldAvoidConditionalAccessRuleId, [Documentation](https://learn.microsoft.com/dotnet/core/testing/mstest-analyzers/mstest0026)
-
-## Release 3.4.0
+﻿## Release 3.4.0
 
 ### New Rules
 

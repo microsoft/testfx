@@ -20,8 +20,12 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
     {
         "AreEqual",
         "AreNotEqual",
+        "AreSame",
+        "AreNotSame",
         "IsTrue",
         "IsFalse",
+        "AreEquivalent",
+        "AreNotEquivalent",
     });
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessTitle), Resources.ResourceManager, typeof(Resources));
@@ -50,6 +54,11 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol))
             {
                 context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol), OperationKind.Invocation);
+            }
+
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert, out INamedTypeSymbol? collectionAssertSymbol))
+            {
+                context.RegisterOperationAction(context => AnalyzeOperation(context, collectionAssertSymbol), OperationKind.Invocation);
             }
         });
     }

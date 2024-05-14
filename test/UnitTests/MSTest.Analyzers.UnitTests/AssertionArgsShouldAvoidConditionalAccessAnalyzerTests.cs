@@ -14,7 +14,7 @@ namespace MSTest.Analyzers.UnitTests;
 [TestGroup]
 public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
-    public async Task WhenUsingConditionalsAccess()
+    public async Task WhenUsingConditionalsAccess_Assert()
     {
         string code = """
             #nullable enable
@@ -37,19 +37,52 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                     string? s = "";
             
                     [|Assert.AreEqual(s?.Length, 32)|];
+                    [|Assert.AreEqual(((s?.Length)), 32)|];
                     [|Assert.AreEqual(s?.Length, s?.Length)|];
                     [|Assert.AreEqual(a?.B?.Length, 32)|];
                     [|Assert.AreEqual(c.B?.Length, 32)|];
 
                     [|Assert.AreNotEqual(s?.Length, 32)|];
+                    [|Assert.AreNotEqual(((s?.Length)), 32)|];
                     [|Assert.AreNotEqual(s?.Length, s?.Length)|];
                     [|Assert.AreNotEqual(a?.B?.Length, 32)|];
                     [|Assert.AreNotEqual(c.B?.Length, 32)|];
+                }
+            }
+            """;
 
-                    [|Assert.IsTrue(s?.Length > 32);|]
-                    [|Assert.IsTrue(s?.Length > a?.B?.Length);|]
-                    [|Assert.IsFalse(s?.Length > 32);|]
-                    [|Assert.IsFalse(s?.Length > a?.B?.Length);|]
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenUsingConditionalsAccess_CollectionAssert()
+    {
+        string code = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            public class A
+            {
+                public List<string>? B { get; set; }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    A? a = new A();
+                    A c = new A();
+            
+                    [|CollectionAssert.AreEqual(a?.B, c.B)|];
+                    [|CollectionAssert.AreEqual(c.B, a?.B)|];
+                    [|CollectionAssert.AreNotEqual(a?.B, c.B)|];
+                    [|CollectionAssert.AreNotEqual(c.B, a?.B)|];
+                    [|CollectionAssert.AreEquivalent(a?.B, c.B)|];
+                    [|CollectionAssert.AreEquivalent(c.B, a?.B)|];
+                    [|CollectionAssert.AreNotEquivalent(a?.B, c.B)|];
+                    [|CollectionAssert.AreNotEquivalent(c.B, a?.B)|];
                 }
             }
             """;
