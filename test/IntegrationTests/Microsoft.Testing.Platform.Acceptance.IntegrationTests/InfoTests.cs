@@ -125,7 +125,7 @@ Registered command line providers:
     Description: Microsoft Testing Framework\. This framework allows you to test your code anywhere in any mode \(all OSes, all platforms, all configurations\.\.\.\)\.
     Options:
       --treenode-filter
-        Arity: 0\.\.1
+        Arity: 1
         Hidden: False
         Description: Use a tree filter to filter down the tests to execute
 Registered tools:

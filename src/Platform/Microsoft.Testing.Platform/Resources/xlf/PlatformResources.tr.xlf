@@ -264,11 +264,6 @@
         <target state="translated">İstemcinin ana bilgisayar adını belirtir.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineClientHostOptionSingleArgument">
-        <source>'--client-host' expects a single host name as argument</source>
-        <target state="translated">'--client-host' bağımsız değişken olarak tek bir ana bilgisayar adı bekler</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineClientPortOptionDescription">
         <source>Specify the port of the client.</source>
         <target state="translated">İstemcinin bağlantı noktasını belirtir.</target>
@@ -277,11 +272,6 @@
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
         <target state="translated">Yerleşik dosya kaydediciyi günlüğü eşzamanlı olarak yazmaya zorlar. Herhangi bir günlüğü (kilitlenme durumunda) kaybetmek istemediğiniz senaryolar için faydalıdır. Bunun test yürütmesini yavaşlatacağını unutmayın.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument">
-        <source>'--diagnostic-output-fileprefix' expects a single file name prefix argument</source>
-        <target state="translated">'--diagnostic-output-fileprefix' tek bir dosya adı ön ek bağımsız değişkeni bekler</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
@@ -304,11 +294,6 @@
         <target state="translated">Tanılama günlüğüne kaydetme için çıkış dizini belirtilmezse dosya varsayılan 'TestResults' dizini içinde oluşturulur.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument">
-        <source>'--diagnostic-output-directory' expects a single directory name argument</source>
-        <target state="translated">'--diagnostic-output-directory' tek bir dizin adı bağımsız değişkeni bekliyor</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
         <target state="translated">'[log]_' öğesinin yerini alan günlük dosyası adına önek uygular.</target>
@@ -324,10 +309,10 @@
         <target state="translated">Kullanılabilir testleri listeler.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="translated">Geçersiz PID '{0}'
+        <target state="new">Invalid PID '{0}'
 {1}</target>
         <note />
       </trans-unit>
@@ -369,11 +354,6 @@
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
         <target state="translated">Başlangıç başlığını, telif hakkı iletisini veya telemetri başlığını görüntülemez.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineOptionExpectsNoArgumentErrorMessage">
-        <source>'--{0}' expects no argument</source>
-        <target state="translated">'--{0}' bağımsız değişken beklemiyor</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
@@ -574,11 +554,6 @@ Microsoft Test Platformu telemetrisi hakkında daha fazla bilgi edinin: https://
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
         <target state="translated">Kaçış karakteri, '{0}' filtre dizesini sonlandırmamalıdır</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterInvalidArgumentCount">
-        <source>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</source>
-        <target state="translated">Tek bir bağımsız değişken bekleniyor (ör. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">

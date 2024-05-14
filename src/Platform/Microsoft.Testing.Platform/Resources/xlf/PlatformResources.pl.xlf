@@ -264,11 +264,6 @@
         <target state="translated">Określ nazwę hosta klienta.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineClientHostOptionSingleArgument">
-        <source>'--client-host' expects a single host name as argument</source>
-        <target state="translated">Element „--client-host” oczekuje pojedynczej nazwy hosta jako argumentu</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineClientPortOptionDescription">
         <source>Specify the port of the client.</source>
         <target state="translated">Określ port klienta.</target>
@@ -277,11 +272,6 @@
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
         <target state="translated">Wymuś synchroniczne zapisywanie dziennika przez wbudowany rejestrator plików. Przydatne w przypadku scenariusza, w którym nie chcesz utracić żadnego dziennika (tj. w przypadku awarii). Pamiętaj, że to spowalnia wykonywanie testu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument">
-        <source>'--diagnostic-output-fileprefix' expects a single file name prefix argument</source>
-        <target state="translated">Element „--diagnostic-output-fileprefix” oczekuje pojedynczego argumentu prefiksu nazwy pliku</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
@@ -304,11 +294,6 @@
         <target state="translated">Katalog wyjściowy rejestrowania diagnostycznego, jeśli nie zostanie określony, plik zostanie wygenerowany w domyślnym katalogu „TestResults”.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument">
-        <source>'--diagnostic-output-directory' expects a single directory name argument</source>
-        <target state="translated">Opcja „--diagnostic-output-directory” oczekuje pojedynczego argumentu nazwy katalogu</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
         <target state="translated">Prefiks nazwy pliku dziennika, który zastąpi element „[log]_”.</target>
@@ -324,10 +309,10 @@
         <target state="translated">Wyświetl listę dostępnych testów.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="translated">Nieprawidłowy identyfikator PID „{0}”
+        <target state="new">Invalid PID '{0}'
 {1}</target>
         <note />
       </trans-unit>
@@ -369,11 +354,6 @@
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
         <target state="translated">Nie wyświetlaj baneru startowego, komunikatu o prawach autorskich ani transparentu telemetrii.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineOptionExpectsNoArgumentErrorMessage">
-        <source>'--{0}' expects no argument</source>
-        <target state="translated">Opcja „--{0}” nie oczekuje żadnego argumentu</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
@@ -574,11 +554,6 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
         <target state="translated">Znak ucieczki nie powinien kończyć ciągu filtru „{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterInvalidArgumentCount">
-        <source>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</source>
-        <target state="translated">Oczekiwano pojedynczego argumentu (np. „/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]”)</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">

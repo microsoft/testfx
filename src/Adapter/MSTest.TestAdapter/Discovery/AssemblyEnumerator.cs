@@ -305,7 +305,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
             catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
             {
-                var discoveredTest = test.Clone();
+                UnitTestElement discoveredTest = test.Clone();
                 discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
                 tests.Add(discoveredTest);
                 continue;
