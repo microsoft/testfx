@@ -14,7 +14,7 @@ namespace MSTest.Analyzers.UnitTests;
 [TestGroup]
 public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
-    public async Task WhenUsingLiterals()
+    public async Task WhenUsingConditionalsAccess()
     {
         string code = """
             #nullable enable
