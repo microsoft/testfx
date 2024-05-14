@@ -18,14 +18,25 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
 {
     private static readonly ImmutableArray<string> SupportedMethodNames = ImmutableArray.Create(new[]
     {
+        "IsTrue",
+        "IsFalse",
         "AreEqual",
         "AreNotEqual",
         "AreSame",
         "AreNotSame",
-        "IsTrue",
-        "IsFalse",
         "AreEquivalent",
         "AreNotEquivalent",
+        "Contains",
+        "DoesNotContain",
+        "AllItemsAreNotNull",
+        "AllItemsAreUnique",
+        "IsSubsetOf",
+        "IsNotSubsetOf",
+        "AllItemsAreInstancesOfType",
+        "StartsWith",
+        "EndsWith",
+        "Matches",
+        "DoesNotMatch",
     });
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessTitle), Resources.ResourceManager, typeof(Resources));
@@ -59,6 +70,11 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert, out INamedTypeSymbol? collectionAssertSymbol))
             {
                 context.RegisterOperationAction(context => AnalyzeOperation(context, collectionAssertSymbol), OperationKind.Invocation);
+            }
+
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingStringAssert, out INamedTypeSymbol? stringAssertSymbol))
+            {
+                context.RegisterOperationAction(context => AnalyzeOperation(context, stringAssertSymbol), OperationKind.Invocation);
             }
         });
     }
