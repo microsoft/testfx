@@ -23,7 +23,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
 
             public class A
             {
-                public string? B { get; set; }
+                public string? S { get; set; }
             }
 
             [TestClass]
@@ -33,20 +33,20 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                 public void NonCompliant()
                 {
                     A? a = new A();
-                    A c = new A();
+                    A b = new A();
                     string? s = "";
             
                     [|Assert.AreEqual(s?.Length, 32)|];
                     [|Assert.AreEqual(((s?.Length)), 32)|];
                     [|Assert.AreEqual(s?.Length, s?.Length)|];
-                    [|Assert.AreEqual(a?.B?.Length, 32)|];
-                    [|Assert.AreEqual(c.B?.Length, 32)|];
+                    [|Assert.AreEqual(a?.S?.Length, 32)|];
+                    [|Assert.AreEqual(b.S?.Length, 32)|];
 
                     [|Assert.AreNotEqual(s?.Length, 32)|];
                     [|Assert.AreNotEqual(((s?.Length)), 32)|];
                     [|Assert.AreNotEqual(s?.Length, s?.Length)|];
-                    [|Assert.AreNotEqual(a?.B?.Length, 32)|];
-                    [|Assert.AreNotEqual(c.B?.Length, 32)|];
+                    [|Assert.AreNotEqual(a?.S?.Length, 32)|];
+                    [|Assert.AreNotEqual(b.S?.Length, 32)|];
                 }
 
                 [TestMethod]
@@ -54,7 +54,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                 {
                     string? s = "";
                     A? a = new A();
-                    A c = new A();
+                    A b = new A();
 
                     Assert.IsNotNull(s);
                     Assert.AreEqual(s.Length, 32);
@@ -62,16 +62,16 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                     Assert.AreEqual(s.Length, s.Length);
                     
                     Assert.IsNotNull(a);
-                    Assert.IsNotNull(a.B);
-                    Assert.IsNotNull(c);
-                    Assert.IsNotNull(c.B);
-                    Assert.AreEqual(a.B.Length, 32);
-                    Assert.AreEqual(c.B.Length, 32);
+                    Assert.IsNotNull(a.S);
+                    Assert.IsNotNull(b);
+                    Assert.IsNotNull(b.S);
+                    Assert.AreEqual(a.S.Length, 32);
+                    Assert.AreEqual(b.S.Length, 32);
                     Assert.AreNotEqual(s.Length, 32);
                     Assert.AreNotEqual(((s.Length)), 32);
                     Assert.AreNotEqual(s.Length, s.Length);
-                    Assert.AreNotEqual(a.B.Length, 32);
-                    Assert.AreNotEqual(c.B.Length, 32);
+                    Assert.AreNotEqual(a.S.Length, 32);
+                    Assert.AreNotEqual(b.S.Length, 32);
                 }
             }
             """;
@@ -88,7 +88,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
 
             public class A
             {
-                public string? B { get; set; }
+                public string? S { get; set; }
             }
 
             [TestClass]
@@ -98,17 +98,17 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                 public void NonCompliant()
                 {
                     A? a = new A();
-                    A c = new A();
+                    A b = new A();
                     string? s = "";
             
                     [|Assert.IsTrue(s?.Length > 32)|];
                     [|Assert.IsTrue((s?.Length> 32))|];
-                    [|Assert.IsTrue(a?.B?.Length > 32)|];
-                    [|Assert.IsTrue(c.B?.Length > 32)|];
+                    [|Assert.IsTrue(a?.S?.Length > 32)|];
+                    [|Assert.IsTrue(b.S?.Length > 32)|];
                     [|Assert.IsFalse(s?.Length > 32)|];
                     [|Assert.IsFalse((s?.Length > 32))|];
-                    [|Assert.IsFalse(a?.B?.Length > 32)|];
-                    [|Assert.IsFalse(c.B?.Length > 32)|];
+                    [|Assert.IsFalse(a?.S?.Length > 32)|];
+                    [|Assert.IsFalse(b.S?.Length > 32)|];
                 }
 
                 [TestMethod]
@@ -116,21 +116,21 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                 {
                     string? s = "";
                     A? a = new A();
-                    A c = new A();
+                    A b = new A();
 
                     Assert.IsNotNull(s);
                     Assert.IsNotNull(a);
-                    Assert.IsNotNull(a.B);
-                    Assert.IsNotNull(c);
-                    Assert.IsNotNull(c.B);
+                    Assert.IsNotNull(a.S);
+                    Assert.IsNotNull(b);
+                    Assert.IsNotNull(b.S);
                     Assert.IsTrue(s.Length > 32);
                     Assert.IsTrue((s.Length > 32));
-                    Assert.IsTrue(a.B.Length > 32);
-                    Assert.IsTrue(c.B.Length > 32);
+                    Assert.IsTrue(a.S.Length > 32);
+                    Assert.IsTrue(b.S.Length > 32);
                     Assert.IsFalse(s.Length > 32);
                     Assert.IsFalse((s.Length > 32));
-                    Assert.IsFalse(a.B.Length > 32);
-                    Assert.IsFalse(c.B.Length > 32);
+                    Assert.IsFalse(a.S.Length > 32);
+                    Assert.IsFalse(b.S.Length > 32);
                 }
             }
             """;
@@ -147,7 +147,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
 
             public class A
             {
-                public List<string>? B { get; set; }
+                public List<string>? S { get; set; }
             }
 
             [TestClass]
@@ -157,24 +157,33 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                 public void NonCompliant()
                 {
                     A? a = new A();
-                    A c = new A();
+                    A b = new A();
             
-                    [|CollectionAssert.AreEqual(a?.B, c.B)|];
-                    [|CollectionAssert.AreEqual((a?.B), c.B)|];
-                    [|CollectionAssert.AreNotEqual(a?.B, c.B)|];
+                    [|CollectionAssert.AreEqual(a?.S, b.S)|];
+                    [|CollectionAssert.AreEqual((a?.S), b.S)|];
+                    [|CollectionAssert.AreEqual(b.S, a?.S)|];
+                    [|CollectionAssert.AreEqual(a?.S, a?.S)|];
+                    [|CollectionAssert.AreNotEqual(a?.S, b.S)|];
+                    [|CollectionAssert.AreNotEqual((a?.S), b.S)|];
+                    [|CollectionAssert.AreNotEqual(b.S, a?.S)|];
+                    [|CollectionAssert.AreNotEqual(a?.S, a?.S)|];
                 }
 
                 [TestMethod]
                 public void Compliant()
                 {
                     A? a = new A();
-                    A c = new A();
+                    A b = new A();
 
                     Assert.IsNotNull(a);
-                    CollectionAssert.AreEqual(a.B, c.B);
-                    CollectionAssert.AreEqual((a.B), c.B);
-                    CollectionAssert.AreNotEqual(a.B, c.B);
-            
+                    CollectionAssert.AreEqual(a.S, b.S);
+                    CollectionAssert.AreEqual((a.S), b.S);
+                    CollectionAssert.AreEqual(b.S, a.S);
+                    CollectionAssert.AreEqual(a.S, a.S);
+                    CollectionAssert.AreNotEqual(a.S, b.S);
+                    CollectionAssert.AreNotEqual((a.S), b.S);
+                    CollectionAssert.AreNotEqual(b.S, a.S);
+                    CollectionAssert.AreNotEqual(a.S, a.S);
                 }
             }
             """;
