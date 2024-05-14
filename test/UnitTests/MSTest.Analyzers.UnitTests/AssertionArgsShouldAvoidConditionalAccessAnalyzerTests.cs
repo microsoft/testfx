@@ -79,6 +79,65 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
+    public async Task WhenUsingConditionalsAccess_In_Assert_Boolean()
+    {
+        string code = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            public class A
+            {
+                public string? B { get; set; }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void NonCompliant()
+                {
+                    A? a = new A();
+                    A c = new A();
+                    string? s = "";
+            
+                    [|Assert.IsTrue(s?.Length > 32)|];
+                    [|Assert.IsTrue((s?.Length> 32))|];
+                    [|Assert.IsTrue(a?.B?.Length > 32)|];
+                    [|Assert.IsTrue(c.B?.Length > 32)|];
+                    [|Assert.IsFalse(s?.Length > 32)|];
+                    [|Assert.IsFalse((s?.Length > 32))|];
+                    [|Assert.IsFalse(a?.B?.Length > 32)|];
+                    [|Assert.IsFalse(c.B?.Length > 32)|];
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    string? s = "";
+                    A? a = new A();
+                    A c = new A();
+
+                    Assert.IsNotNull(s);
+                    Assert.IsNotNull(a);
+                    Assert.IsNotNull(a.B);
+                    Assert.IsNotNull(c);
+                    Assert.IsNotNull(c.B);
+                    Assert.IsTrue(s.Length > 32);
+                    Assert.IsTrue((s.Length > 32));
+                    Assert.IsTrue(a.B.Length > 32);
+                    Assert.IsTrue(c.B.Length > 32);
+                    Assert.IsFalse(s.Length > 32);
+                    Assert.IsFalse((s.Length > 32));
+                    Assert.IsFalse(a.B.Length > 32);
+                    Assert.IsFalse(c.B.Length > 32);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
     public async Task WhenUsingConditionalsAccess_In_CollectionAssert_Equal()
     {
         string code = """
