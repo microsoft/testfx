@@ -86,15 +86,27 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
             //      a?.b
             //      a?.b?.c
             //      a.b?.c
-            if (argument.Value.Kind == OperationKind.ConditionalAccess)
+            if (argument.Value is IConditionalAccessOperation conditionalAccessOperation)
             {
-                return true;
+                if (conditionalAccessOperation.Kind == OperationKind.ConditionalAccess)
+                {
+                    return true;
+                }
             }
 
             // Check for binary operations with conditional access => s?.Length > 1.
             if (argument.Value is IBinaryOperation binaryOperation)
             {
                 if (binaryOperation.LeftOperand.Kind == OperationKind.ConditionalAccess || binaryOperation.RightOperand.Kind == OperationKind.ConditionalAccess)
+                {
+                    return true;
+                }
+            }
+
+            // Check for conversion operations with conditional access => (s?.Length).
+            if (argument.Value is IConversionOperation conversionOperation)
+            {
+                if (conversionOperation.Operand.Kind == OperationKind.ConditionalAccess)
                 {
                     return true;
                 }

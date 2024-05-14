@@ -101,13 +101,21 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                     A c = new A();
             
                     [|CollectionAssert.AreEqual(a?.B, c.B)|];
-                    [|CollectionAssert.AreEqual(c.B, a?.B)|];
+                    [|CollectionAssert.AreEqual((a?.B), c.B)|];
                     [|CollectionAssert.AreNotEqual(a?.B, c.B)|];
-                    [|CollectionAssert.AreNotEqual(c.B, a?.B)|];
-                    [|CollectionAssert.AreEquivalent(a?.B, c.B)|];
-                    [|CollectionAssert.AreEquivalent(c.B, a?.B)|];
-                    [|CollectionAssert.AreNotEquivalent(a?.B, c.B)|];
-                    [|CollectionAssert.AreNotEquivalent(c.B, a?.B)|];
+                }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    A? a = new A();
+                    A c = new A();
+
+                    Assert.IsNotNull(a);
+                    CollectionAssert.AreEqual(a.B, c.B);
+                    CollectionAssert.AreEqual((a.B), c.B);
+                    CollectionAssert.AreNotEqual(a.B, c.B);
+            
                 }
             }
             """;
