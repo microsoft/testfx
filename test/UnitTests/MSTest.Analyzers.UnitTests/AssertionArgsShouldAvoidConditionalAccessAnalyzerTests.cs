@@ -14,7 +14,7 @@ namespace MSTest.Analyzers.UnitTests;
 [TestGroup]
 public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
-    public async Task WhenUsingConditionalsAccess_Assert()
+    public async Task WhenUsingConditionalsAccess_In_Assert_Equal()
     {
         string code = """
             #nullable enable
@@ -48,13 +48,38 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                     [|Assert.AreNotEqual(a?.B?.Length, 32)|];
                     [|Assert.AreNotEqual(c.B?.Length, 32)|];
                 }
+
+                [TestMethod]
+                public void Compliant()
+                {
+                    string? s = "";
+                    A? a = new A();
+                    A c = new A();
+
+                    Assert.IsNotNull(s);
+                    Assert.AreEqual(s.Length, 32);
+                    Assert.AreEqual(((s.Length)), 32);
+                    Assert.AreEqual(s.Length, s.Length);
+                    
+                    Assert.IsNotNull(a);
+                    Assert.IsNotNull(a.B);
+                    Assert.IsNotNull(c);
+                    Assert.IsNotNull(c.B);
+                    Assert.AreEqual(a.B.Length, 32);
+                    Assert.AreEqual(c.B.Length, 32);
+                    Assert.AreNotEqual(s.Length, 32);
+                    Assert.AreNotEqual(((s.Length)), 32);
+                    Assert.AreNotEqual(s.Length, s.Length);
+                    Assert.AreNotEqual(a.B.Length, 32);
+                    Assert.AreNotEqual(c.B.Length, 32);
+                }
             }
             """;
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
 
-    public async Task WhenUsingConditionalsAccess_CollectionAssert()
+    public async Task WhenUsingConditionalsAccess_In_CollectionAssert_Equal()
     {
         string code = """
             #nullable enable
