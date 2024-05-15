@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
@@ -37,7 +38,7 @@ internal static class ExecutionContextService
     /// </summary>
     internal static void RunActionOnContext(Action action, IExecutionContextScope executionContextScope)
     {
-        if (GetOrCaptureExecutionContext(executionContextScope) is not { } executionContext)
+        if (GetScopedExecutionContext(executionContextScope) is not { } executionContext)
         {
             // We don't have any execution context (that's usually the case when it is being suppressed), so we can run the action directly.
             action();
@@ -51,12 +52,14 @@ internal static class ExecutionContextService
             {
                 action();
 
-                if (executionContextScope.IsCleanup)
+                if (ShouldCleanup(executionContextScope))
                 {
                     CleanupExecutionContext(executionContextScope);
                 }
                 else
                 {
+                    // The execution context and synchronization contexts of the calling thread are returned to their previous
+                    // states when the method completes. That's why we need to capture the state and mutate the state before exiting.
                     SaveExecutionContext(executionContextScope);
                 }
             },
@@ -76,45 +79,97 @@ internal static class ExecutionContextService
                 break;
 
             case ClassExecutionContextScope classExecutionContextScope:
-                ClassesExecutionContexts.AddOrUpdate(classExecutionContextScope.Type, _ => capturedContext, (_, _) => capturedContext);
+                ClassesExecutionContexts.AddOrUpdate(
+                    classExecutionContextScope.Type,
+                    _ => capturedContext,
+                    (_, _) => capturedContext);
                 break;
 
             case InstanceExecutionContextScope instanceExecutionContextScope:
-                InstancesExecutionContexts.AddOrUpdate(instanceExecutionContextScope.Instance, _ => capturedContext, (_, _) => capturedContext);
+                InstancesExecutionContexts.AddOrUpdate(
+                    instanceExecutionContextScope.Instance,
+                    _ => capturedContext,
+                    (_, _) => capturedContext);
                 break;
         }
     }
 
+    /// <summary>
+    /// Clears up the backed up execution state based on the execution context scope.
+    /// </summary>
     private static void CleanupExecutionContext(IExecutionContextScope executionContextScope)
     {
+        Debug.Assert(executionContextScope.IsCleanup, "CleanupExecutionContext should be called only in a cleanup scope.");
+
         switch (executionContextScope)
         {
             case AssemblyExecutionContextScope:
+                // When calling the assembly cleanup, we can clear up all the contexts that would not have been cleaned up.
+                foreach (ExecutionContext? context in InstancesExecutionContexts.Values)
+                {
+                    context?.Dispose();
+                }
+
+                foreach (ExecutionContext? context in ClassesExecutionContexts.Values)
+                {
+                    context?.Dispose();
+                }
+
                 InstancesExecutionContexts.Clear();
                 ClassesExecutionContexts.Clear();
+                s_assemblyExecutionContext?.Dispose();
                 s_assemblyExecutionContext = null;
                 break;
 
             case ClassExecutionContextScope classExecutionContextScope:
-                _ = ClassesExecutionContexts.TryRemove(classExecutionContextScope.Type, out ExecutionContext? _);
+                _ = ClassesExecutionContexts.TryRemove(classExecutionContextScope.Type, out ExecutionContext? classContext);
+                classContext?.Dispose();
                 break;
 
             case InstanceExecutionContextScope instanceExecutionContextScope:
-                _ = InstancesExecutionContexts.TryRemove(instanceExecutionContextScope.Instance, out ExecutionContext? _);
+                _ = InstancesExecutionContexts.TryRemove(instanceExecutionContextScope.Instance, out ExecutionContext? instanceContext);
+                instanceContext?.Dispose();
                 break;
         }
     }
 
-    private static ExecutionContext? GetOrCaptureExecutionContext(IExecutionContextScope executionContextScope)
-        => executionContextScope switch
+    private static ExecutionContext? GetScopedExecutionContext(IExecutionContextScope executionContextScope)
+    {
+        ExecutionContext? executionContext = executionContextScope switch
         {
-            AssemblyExecutionContextScope => s_assemblyExecutionContext ??= ExecutionContext.Capture()?.CreateCopy(),
-            ClassExecutionContextScope classExecutionContextScope => ClassesExecutionContexts.GetOrAdd(classExecutionContextScope.Type, _ => s_assemblyExecutionContext?.CreateCopy()),
+            // Return the assembly level context or capture and save it if it doesn't exist.
+            AssemblyExecutionContextScope => s_assemblyExecutionContext ??= ExecutionContext.Capture(),
+
+            // Return the class level context or if it doesn't exist do the following steps:
+            // - use the assembly level context if it exists
+            // - or capture and save current context
+            ClassExecutionContextScope classExecutionContextScope => ClassesExecutionContexts.GetOrAdd(
+                classExecutionContextScope.Type,
+                _ => s_assemblyExecutionContext ?? ExecutionContext.Capture()),
+
+            // Return the instance level context or if it doesn't exist do the following steps:
+            // - use the class level context if it exists
+            // - or use the assembly level context if it exists
+            // - or capture and save current context
             InstanceExecutionContextScope instanceExecutionContextScope => InstancesExecutionContexts.GetOrAdd(
                 instanceExecutionContextScope.Instance,
                 _ => ClassesExecutionContexts.TryGetValue(instanceExecutionContextScope.Type, out ExecutionContext? classExecutionContext)
-                    ? classExecutionContext?.CreateCopy()
-                    : s_assemblyExecutionContext?.CreateCopy()),
+                    ? classExecutionContext
+                    : s_assemblyExecutionContext ?? ExecutionContext.Capture()),
+            _ => throw new NotSupportedException($"Unsupported execution context scope: {executionContextScope.GetType()}"),
+        };
+
+        // Always create a copy of the context because running twice on the same context results in an error.
+        return executionContext?.CreateCopy();
+    }
+
+    private static bool ShouldCleanup(this IExecutionContextScope executionContextScope)
+        => executionContextScope.IsCleanup
+        && executionContextScope switch
+        {
+            AssemblyExecutionContextScope => true,
+            ClassExecutionContextScope classExecutionContextScope => classExecutionContextScope.RemainingCleanupCount == 0,
+            InstanceExecutionContextScope instanceExecutionContext => instanceExecutionContext.RemainingCleanupCount == 0,
             _ => throw new NotSupportedException($"Unsupported execution context scope: {executionContextScope.GetType()}"),
         };
 }

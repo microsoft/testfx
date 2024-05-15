@@ -5,15 +5,25 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 internal readonly struct ClassExecutionContextScope : IExecutionContextScope
 {
-    public ClassExecutionContextScope(Type type, bool isCleanup)
+    public ClassExecutionContextScope(Type type)
     {
         Type = type;
-        IsCleanup = isCleanup;
+        IsCleanup = false;
+        RemainingCleanupCount = 0;
+    }
+
+    public ClassExecutionContextScope(Type type, int remainingCleanupCount)
+    {
+        Type = type;
+        IsCleanup = true;
+        RemainingCleanupCount = remainingCleanupCount;
     }
 
     public Type Type { get; }
 
     public bool IsCleanup { get; }
+
+    public int RemainingCleanupCount { get; }
 
     public override readonly int GetHashCode() => Type.GetHashCode();
 

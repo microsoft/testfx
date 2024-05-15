@@ -141,7 +141,7 @@ public class TestAssemblyInfo
                 {
                     try
                     {
-                        AssemblyInitializationException = MethodRunner.RunWithTimeoutAndCancellation(
+                        AssemblyInitializationException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                             () => AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext),
                             testContext.CancellationTokenSource,
                             AssemblyInitializeMethodTimeoutMilliseconds,
@@ -215,7 +215,7 @@ public class TestAssemblyInfo
         {
             try
             {
-                assemblyCleanupException = MethodRunner.RunWithTimeoutAndCancellation(
+                assemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                      () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
                      new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
@@ -272,7 +272,7 @@ public class TestAssemblyInfo
         {
             try
             {
-                assemblyCleanupException = MethodRunner.RunWithTimeoutAndCancellation(
+                assemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                      () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
                      new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,

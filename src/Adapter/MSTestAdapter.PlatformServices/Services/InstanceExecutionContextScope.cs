@@ -5,11 +5,20 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 internal readonly struct InstanceExecutionContextScope : IExecutionContextScope
 {
-    public InstanceExecutionContextScope(object instance, Type type, bool isCleanup)
+    public InstanceExecutionContextScope(object instance, Type type)
     {
         Instance = instance;
         Type = type;
-        IsCleanup = isCleanup;
+        IsCleanup = false;
+        RemainingCleanupCount = 0;
+    }
+
+    public InstanceExecutionContextScope(object instance, Type type, int remainingCleanupCount)
+    {
+        Instance = instance;
+        Type = type;
+        IsCleanup = true;
+        RemainingCleanupCount = remainingCleanupCount;
     }
 
     public object Instance { get; }
@@ -17,6 +26,8 @@ internal readonly struct InstanceExecutionContextScope : IExecutionContextScope
     public Type Type { get; }
 
     public bool IsCleanup { get; }
+
+    public int RemainingCleanupCount { get; }
 
     public override readonly int GetHashCode() => Instance.GetHashCode();
 
