@@ -192,10 +192,10 @@
     <value>AssemblyInitialize methods should have valid layout</value>
   </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessMessageFormat" xml:space="preserve">
-    <value>Assert methods should not contain conditional access. First assert for null and then do the other assertion.</value>
+    <value>Prefer asserting nullability as a different assertion.</value>
   </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessTitle" xml:space="preserve">
-    <value>Assertion arguments should avoid conditional access</value>
+    <value>Avoid conditional access in assertions</value>
   </data>
   <data name="AssertionArgsShouldBePassedInCorrectOrderDescription" xml:space="preserve">
     <value>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</value>

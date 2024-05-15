@@ -133,13 +133,13 @@
         <note />
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
-        <source>Assert methods should not contain conditional access. First assert for null and then do the other assertion.</source>
-        <target state="new">Assert methods should not contain conditional access. First assert for null and then do the other assertion.</target>
+        <source>Prefer asserting nullability as a different assertion.</source>
+        <target state="new">Prefer asserting nullability as a different assertion.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessTitle">
-        <source>Assertion arguments should avoid conditional access</source>
-        <target state="new">Assertion arguments should avoid conditional access</target>
+        <source>Avoid conditional access in assertions</source>
+        <target state="new">Avoid conditional access in assertions</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">

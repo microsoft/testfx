@@ -255,7 +255,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Assert methods should not contain conditional access. First assert for null and then do the other assertion..
+        ///   Looks up a localized string similar to Prefer asserting nullability as a different assertion..
         /// </summary>
         internal static string AssertionArgsShouldAvoidConditionalAccessMessageFormat {
             get {
@@ -264,7 +264,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Assertion arguments should avoid conditional access.
+        ///   Looks up a localized string similar to Avoid conditional access in assertions.
         /// </summary>
         internal static string AssertionArgsShouldAvoidConditionalAccessTitle {
             get {
