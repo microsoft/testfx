@@ -312,7 +312,7 @@
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
-        <target state="new">Invalid PID '{0}'
+        <target state="translated">Neplatný identifikátor PID „{0}“
 {1}</target>
         <note />
       </trans-unit>
