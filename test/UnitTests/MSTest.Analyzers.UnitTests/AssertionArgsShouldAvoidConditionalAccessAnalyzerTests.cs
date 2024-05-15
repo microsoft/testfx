@@ -24,7 +24,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
             public class A
             {
                 public string? S { get; set; }
-                public List<string> T { get; set; } = new();
+                public List<string>? T { get; set; }
             }
 
             [TestClass]
@@ -42,16 +42,32 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                     [|Assert.AreEqual(s?.Length, s?.Length)|];
                     [|Assert.AreEqual(a?.S?.Length, 32)|];
                     [|Assert.AreEqual(b.S?.Length, 32)|];
-                    [|Assert.AreEqual(a?.T[3]?.Length, 32)|];
-                    [|Assert.AreEqual(b.T[3]?.Length, 32)|];
+                    [|Assert.AreEqual(a?.T?[3]?.Length, 32)|];
+                    [|Assert.AreEqual(b.T?[3]?.Length, 32)|];
 
                     [|Assert.AreNotEqual(s?.Length, 32)|];
                     [|Assert.AreNotEqual(((s?.Length)), 32)|];
                     [|Assert.AreNotEqual(s?.Length, s?.Length)|];
                     [|Assert.AreNotEqual(a?.S?.Length, 32)|];
                     [|Assert.AreNotEqual(b.S?.Length, 32)|];
-                    [|Assert.AreNotEqual(a?.T[3]?.Length, 32)|];
-                    [|Assert.AreNotEqual(b.T[3]?.Length, 32)|];
+                    [|Assert.AreNotEqual(a?.T?[3]?.Length, 32)|];
+                    [|Assert.AreNotEqual(b.T?[3]?.Length, 32)|];
+
+                    [|Assert.AreSame(s?.Length, 32)|];
+                    [|Assert.AreSame(((s?.Length)), 32)|];
+                    [|Assert.AreSame(s?.Length, s?.Length)|];
+                    [|Assert.AreSame(a?.S?.Length, 32)|];
+                    [|Assert.AreSame(b.S?.Length, 32)|];
+                    [|Assert.AreSame(a?.T?[3]?.Length, 32)|];
+                    [|Assert.AreSame(b.T?[3]?.Length, 32)|];
+            
+                    [|Assert.AreNotSame(s?.Length, 32)|];
+                    [|Assert.AreNotSame(((s?.Length)), 32)|];
+                    [|Assert.AreNotSame(s?.Length, s?.Length)|];
+                    [|Assert.AreNotSame(a?.S?.Length, 32)|];
+                    [|Assert.AreNotSame(b.S?.Length, 32)|];
+                    [|Assert.AreNotSame(a?.T?[3]?.Length, 32)|];
+                    [|Assert.AreNotSame(b.T?[3]?.Length, 32)|];
                 }
 
                 [TestMethod]
@@ -64,10 +80,10 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                     Assert.IsNotNull(s);
                     Assert.IsNotNull(a);
                     Assert.IsNotNull(a.S);
-                    Assert.IsNotNull(a.T[3]);
+                    Assert.IsNotNull(a.T);
                     Assert.IsNotNull(b);
                     Assert.IsNotNull(b.S);
-                    Assert.IsNotNull(b.T[3]);
+                    Assert.IsNotNull(b.T);
                     Assert.AreEqual(s.Length, 32);
                     Assert.AreEqual(((s.Length)), 32);
                     Assert.AreEqual(s.Length, s.Length);
@@ -139,6 +155,35 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzerTests(ITest
                     Assert.IsFalse((s.Length > 32));
                     Assert.IsFalse(a.S.Length > 32);
                     Assert.IsFalse(b.S.Length > 32);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
+
+    public async Task WhenUsingConditionalsAccess_In_NullAssertions_Gives_NoWarning()
+    {
+        string code = """
+            #nullable enable
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Collections.Generic;
+
+            public class A
+            {
+                public string? S { get; set; }
+            }
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                public void Compliant()
+                {
+                    A? a = new A();
+
+                    Assert.IsNull(a?.S);
+                    Assert.IsNotNull(a?.S);
                 }
             }
             """;

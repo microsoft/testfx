@@ -85,7 +85,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         // This is not an invocation of the expected assertion methods.
         if (!SupportedMethodNames.Contains(invocationOperation.TargetMethod.Name)
             || !SymbolEqualityComparer.Default.Equals(assertSymbol, invocationOperation.TargetMethod.ContainingType)
-            || !FindConditionalArguments(invocationOperation))
+            || !HasAnyConditionalAccessOperationChild(invocationOperation))
         {
             return;
         }
@@ -93,7 +93,7 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
     }
 
-    private static bool FindConditionalArguments(IInvocationOperation invocationOperation)
+    private static bool HasAnyConditionalAccessOperationChild(IInvocationOperation invocationOperation)
     {
         foreach (IArgumentOperation argument in invocationOperation.Arguments)
         {
