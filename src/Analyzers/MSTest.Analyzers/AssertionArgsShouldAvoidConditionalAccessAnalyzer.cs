@@ -16,7 +16,7 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly ImmutableArray<string> SupportedMethodNames = ImmutableArray.Create(new[]
+    private static readonly ImmutableArray<string> AssertSupportedMethodNames = ImmutableArray.Create(new[]
     {
         "IsTrue",
         "IsFalse",
@@ -24,6 +24,14 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         "AreNotEqual",
         "AreSame",
         "AreNotSame",
+    });
+
+    private static readonly ImmutableArray<string> CollectionAssertSupportedMethodNames = ImmutableArray.Create(new[]
+    {
+        "IsTrue",
+        "IsFalse",
+        "AreEqual",
+        "AreNotEqual",
         "AreEquivalent",
         "AreNotEquivalent",
         "Contains",
@@ -33,6 +41,11 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         "IsSubsetOf",
         "IsNotSubsetOf",
         "AllItemsAreInstancesOfType",
+    });
+
+    private static readonly ImmutableArray<string> StringAssertSupportedMethodNames = ImmutableArray.Create(new[]
+    {
+        "Contains",
         "StartsWith",
         "EndsWith",
         "Matches",
@@ -63,27 +76,27 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         {
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingAssert, out INamedTypeSymbol? assertSymbol))
             {
-                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol), OperationKind.Invocation);
+                context.RegisterOperationAction(context => AnalyzeOperation(context, assertSymbol, AssertSupportedMethodNames), OperationKind.Invocation);
             }
 
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCollectionAssert, out INamedTypeSymbol? collectionAssertSymbol))
             {
-                context.RegisterOperationAction(context => AnalyzeOperation(context, collectionAssertSymbol), OperationKind.Invocation);
+                context.RegisterOperationAction(context => AnalyzeOperation(context, collectionAssertSymbol, CollectionAssertSupportedMethodNames), OperationKind.Invocation);
             }
 
             if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingStringAssert, out INamedTypeSymbol? stringAssertSymbol))
             {
-                context.RegisterOperationAction(context => AnalyzeOperation(context, stringAssertSymbol), OperationKind.Invocation);
+                context.RegisterOperationAction(context => AnalyzeOperation(context, stringAssertSymbol, StringAssertSupportedMethodNames), OperationKind.Invocation);
             }
         });
     }
 
-    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol)
+    private static void AnalyzeOperation(OperationAnalysisContext context, INamedTypeSymbol assertSymbol, ImmutableArray<string> supportedMethodNames)
     {
         var invocationOperation = (IInvocationOperation)context.Operation;
 
         // This is not an invocation of the expected assertion methods.
-        if (!SupportedMethodNames.Contains(invocationOperation.TargetMethod.Name)
+        if (!supportedMethodNames.Contains(invocationOperation.TargetMethod.Name)
             || !SymbolEqualityComparer.Default.Equals(assertSymbol, invocationOperation.TargetMethod.ContainingType)
             || !HasAnyConditionalAccessOperationChild(invocationOperation))
         {
