@@ -133,8 +133,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
-        <source>Prefer asserting nullability as a different assertion</source>
-        <target state="new">Prefer asserting nullability as a different assertion</target>
+        <source>Prefer adding an additional assertion that checks for null</source>
+        <target state="new">Prefer adding an additional assertion that checks for null</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessTitle">

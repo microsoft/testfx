@@ -192,7 +192,7 @@
     <value>AssemblyInitialize methods should have valid layout</value>
   </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessMessageFormat" xml:space="preserve">
-    <value>Prefer asserting nullability as a different assertion</value>
+    <value>Prefer adding an additional assertion that checks for null</value>
   </data>
   <data name="AssertionArgsShouldAvoidConditionalAccessTitle" xml:space="preserve">
     <value>Avoid conditional access in assertions</value>
