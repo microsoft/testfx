@@ -130,6 +130,16 @@
         <target state="translated">AssemblyInitialize メソッドには有効なレイアウトが必要です</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
+        <source>Prefer adding an additional assertion that checks for null</source>
+        <target state="new">Prefer adding an additional assertion that checks for null</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessTitle">
+        <source>Avoid conditional access in assertions</source>
+        <target state="new">Avoid conditional access in assertions</target>
+        <note />
+      </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
         <source>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</source>
         <target state="translated">'Assert.AreEqual'、'Assert.AreNotEqual'、'Assert.AreSame'、および 'Assert.AreNotSame' では、必要な値が最初に渡され、実際の値が 2 番目の引数として渡される必要があります。</target>

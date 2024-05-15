@@ -29,4 +29,5 @@ internal static class DiagnosticIds
     public const string DoNotNegateBooleanAssertionRuleId = "MSTEST0023";
     public const string DoNotStoreStaticTestContextAnalyzerRuleId = "MSTEST0024";
     public const string PreferAssertFailOverAlwaysFalseConditionsRuleId = "MSTEST0025";
+    public const string AssertionArgsShouldAvoidConditionalAccessRuleId = "MSTEST0026";
 }

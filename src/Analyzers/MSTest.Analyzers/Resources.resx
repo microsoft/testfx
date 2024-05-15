@@ -191,6 +191,12 @@
   <data name="AssemblyInitializeShouldBeValidTitle" xml:space="preserve">
     <value>AssemblyInitialize methods should have valid layout</value>
   </data>
+  <data name="AssertionArgsShouldAvoidConditionalAccessMessageFormat" xml:space="preserve">
+    <value>Prefer adding an additional assertion that checks for null</value>
+  </data>
+  <data name="AssertionArgsShouldAvoidConditionalAccessTitle" xml:space="preserve">
+    <value>Avoid conditional access in assertions</value>
+  </data>
   <data name="AssertionArgsShouldBePassedInCorrectOrderDescription" xml:space="preserve">
     <value>'Assert.AreEqual', 'Assert.AreNotEqual', 'Assert.AreSame' and 'Assert.AreNotSame' expects the expected value to be passed first and the actual value to be passed as second argument.</value>
   </data>

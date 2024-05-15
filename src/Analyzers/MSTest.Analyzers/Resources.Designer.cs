@@ -255,6 +255,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Prefer adding an additional assertion that checks for null.
+        /// </summary>
+        internal static string AssertionArgsShouldAvoidConditionalAccessMessageFormat {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldAvoidConditionalAccessMessageFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Avoid conditional access in assertions.
+        /// </summary>
+        internal static string AssertionArgsShouldAvoidConditionalAccessTitle {
+            get {
+                return ResourceManager.GetString("AssertionArgsShouldAvoidConditionalAccessTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;Assert.AreEqual&apos;, &apos;Assert.AreNotEqual&apos;, &apos;Assert.AreSame&apos; and &apos;Assert.AreNotSame&apos; expects the expected value to be passed first and the actual value to be passed as second argument..
         /// </summary>
         internal static string AssertionArgsShouldBePassedInCorrectOrderDescription {
