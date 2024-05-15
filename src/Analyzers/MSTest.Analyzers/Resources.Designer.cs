@@ -255,7 +255,7 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Prefer asserting nullability as a different assertion..
+        ///   Looks up a localized string similar to Prefer asserting nullability as a different assertion.
         /// </summary>
         internal static string AssertionArgsShouldAvoidConditionalAccessMessageFormat {
             get {
