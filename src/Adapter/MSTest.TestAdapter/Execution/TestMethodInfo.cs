@@ -109,7 +109,7 @@ public class TestMethodInfo : ITestMethod
             watch.Start();
             try
             {
-                result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
+                result = ExecuteInternalWithTimeout(arguments);
             }
             finally
             {
@@ -783,7 +783,10 @@ public class TestMethodInfo : ITestMethod
         }
 
         CancellationToken cancelToken = TestMethodOptions.TestContext!.Context.CancellationTokenSource.Token;
-        if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.Timeout, cancelToken))
+        bool executionResult = IsTimeoutSet
+            ? PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.Timeout, cancelToken)
+            : PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, cancelToken);
+        if (executionResult)
         {
             if (failure != null)
             {
