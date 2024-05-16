@@ -6,17 +6,20 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
-internal static class MethodRunner
+internal static class FixtureMethodRunner
 {
     internal static TestFailedException? RunWithTimeoutAndCancellation(
         Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
-        string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
+        IExecutionContextScope executionContextScope, string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
     {
+        // If no timeout is specified, we can run the action directly. This avoids any overhead of creating a task/thread and
+        // ensures that the execution context is preserved (as we run the action on the current thread).
         if (timeout is null)
         {
             action();
@@ -25,13 +28,13 @@ internal static class MethodRunner
 
         // We need to start a thread to handle "cancellation" and "timeout" scenarios.
         return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
-                ? RunWithTimeoutAndCancellationWithSTAThread(action, cancellationTokenSource, timeout, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat)
-                : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeout, methodInfo, methodCancelledMessageFormat, methodTimedOutMessageFormat);
+            ? RunWithTimeoutAndCancellationWithSTAThread(action, cancellationTokenSource, timeout, methodInfo, executionContextScope, methodCancelledMessageFormat, methodTimedOutMessageFormat)
+            : RunWithTimeoutAndCancellationWithThreadPool(action, cancellationTokenSource, timeout, methodInfo, executionContextScope, methodCancelledMessageFormat, methodTimedOutMessageFormat);
     }
 
     private static TestFailedException? RunWithTimeoutAndCancellationWithThreadPool(
         Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
-        string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
+        IExecutionContextScope executionContextScope, string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
     {
         Exception? realException = null;
         Task? executionTask = null;
@@ -42,7 +45,7 @@ internal static class MethodRunner
                 {
                     try
                     {
-                        action();
+                        ExecutionContextService.RunActionOnContext(action, executionContextScope);
                     }
                     catch (Exception ex)
                     {
@@ -109,14 +112,14 @@ internal static class MethodRunner
 #endif
     private static TestFailedException? RunWithTimeoutAndCancellationWithSTAThread(
         Action action, CancellationTokenSource cancellationTokenSource, int? timeout, MethodInfo methodInfo,
-        string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
+        IExecutionContextScope executionContextScope, string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
     {
         Exception? realException = null;
         Thread executionThread = new(new ThreadStart(() =>
         {
             try
             {
-                action();
+                ExecutionContextService.RunActionOnContext(action, executionContextScope);
             }
             catch (Exception ex)
             {
