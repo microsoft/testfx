@@ -109,7 +109,7 @@ public class TestMethodInfo : ITestMethod
             watch.Start();
             try
             {
-                result = ExecuteInternalWithTimeout(arguments);
+                result = ExecuteInternalWithTimeoutOrCancellationToken(arguments);
             }
             finally
             {
@@ -765,7 +765,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="arguments">The arguments to be passed.</param>
     /// <returns>The result of execution.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private TestResult ExecuteInternalWithTimeout(object?[]? arguments)
+    private TestResult ExecuteInternalWithTimeoutOrCancellationToken(object?[]? arguments)
     {
         TestResult? result = null;
         Exception? failure = null;
