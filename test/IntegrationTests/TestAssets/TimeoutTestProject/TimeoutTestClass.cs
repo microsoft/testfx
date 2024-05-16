@@ -29,10 +29,10 @@ public class TimeoutTestClass
 #endif
 
     [TestMethod]
-    public void RegularTest_WhenUserCancelsTestContextToken_TestContinues()
+    public void RegularTest_WhenUserCancelsTestContextToken_TestAbort()
     {
         TestContext.CancellationTokenSource.Cancel();
-        Assert.Fail("Expected failure: test should not be cancelled");
+        Assert.Fail("Test should have been cancelled");
     }
 
     [TestMethod]
