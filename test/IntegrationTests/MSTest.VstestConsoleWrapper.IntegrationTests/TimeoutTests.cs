@@ -24,7 +24,7 @@ public class TimeoutTests : CLITestBase
         var failedTests = new List<string>
         {
             "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenUserCancelsTestContextToken_AbortTest",
-            "TimeoutTestProject.TimeoutTestClass.RegularTest_WhenUserCancelsTestContextToken_TestContinues",
+            "TimeoutTestProject.TimeoutTestClass.RegularTest_WhenUserCancelsTestContextToken_AbortTest",
             "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenTimeoutReached_CancelsTestContextToken",
             "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenTimeoutReached_ForcesTestAbort",
         };
