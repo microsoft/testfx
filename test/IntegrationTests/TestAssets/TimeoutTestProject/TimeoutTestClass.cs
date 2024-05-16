@@ -35,6 +35,15 @@ public class TimeoutTestClass
         Assert.Fail("Test should have been cancelled");
     }
 
+#if NETFRAMEWORK
+    [TestMethod]
+    public void RegularTest_WhenUserCallsThreadAbort_AbortTest()
+    {
+        Thread.CurrentThread.Abort();
+        Assert.Fail("Test should have been cancelled");
+    }
+#endif
+
     [TestMethod]
     [Timeout(1000)]
     public void TimeoutTest_WhenTimeoutReached_CancelsTestContextToken()

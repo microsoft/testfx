@@ -4,6 +4,7 @@
 using FluentAssertions;
 
 using Microsoft.MSTestV2.CLIAutomation;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace MSTest.VstestConsoleWrapper.IntegrationTests;
 
@@ -19,20 +20,30 @@ public class TimeoutTests : CLITestBase
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TimeoutTest|RegularTest", targetFramework: targetFramework);
 
-        ValidateFailedTestsCount(targetFramework == "net462" ? 5 : 4);
+        ValidateFailedTestsCount(targetFramework == "net462" ? 6 : 4);
 
-        var failedTests = new List<string>
-        {
+        string[] abortedTests =
+        [
             "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenUserCancelsTestContextToken_AbortTest",
             "TimeoutTestProject.TimeoutTestClass.RegularTest_WhenUserCancelsTestContextToken_AbortTest",
-            "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenTimeoutReached_CancelsTestContextToken",
-            "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenTimeoutReached_ForcesTestAbort",
-        };
+        ];
+        ValidatedCancellationTokenCancelledTests(abortedTests);
 
         if (targetFramework == "net462")
         {
-            failedTests.Add("TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenUserCallsThreadAbort_AbortTest");
+            string[] threadAbortedTests =
+            [
+                "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenUserCallsThreadAbort_AbortTest",
+                "TimeoutTestProject.TimeoutTestClass.RegularTest_WhenUserCallsThreadAbort_AbortTest"
+            ];
+            ValidateThreadAbortedTests(threadAbortedTests);
         }
+
+        string[] failedTests =
+        [
+            "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenTimeoutReached_CancelsTestContextToken",
+            "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenTimeoutReached_ForcesTestAbort",
+        ];
 
         ValidateFailedTestsContain(false, failedTests.ToArray());
 
@@ -43,5 +54,31 @@ public class TimeoutTests : CLITestBase
             "..",
             "TimeoutTestOutput.txt");
         File.Exists(timeoutFile).Should().BeTrue();
+    }
+
+    private void ValidatedCancellationTokenCancelledTests(params string[] failedTests)
+    {
+        foreach (string test in failedTests)
+        {
+            TestResult testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName, StringComparison.Ordinal) ||
+                test.Equals(f.DisplayName, StringComparison.Ordinal));
+            testFound.Should().NotBeNull("Test '{0}' does not appear in failed tests list.", test);
+            testFound.ErrorMessage.Should().EndWith("execution has been aborted.");
+        }
+
+        ValidateFailedTestsContain(false, failedTests);
+    }
+
+    private void ValidateThreadAbortedTests(params string[] failedTests)
+    {
+        foreach (string test in failedTests)
+        {
+            TestResult testFound = RunEventsHandler.FailedTests.FirstOrDefault(f => test.Equals(f.TestCase?.FullyQualifiedName, StringComparison.Ordinal) ||
+                test.Equals(f.DisplayName, StringComparison.Ordinal));
+            testFound.Should().NotBeNull("Test '{0}' does not appear in failed tests list.", test);
+            testFound.ErrorMessage.Should().StartWith("Exception thrown while executing test. If using extension of TestMethodAttribute then please contact vendor. Error message: Thread was being aborted.");
+        }
+
+        ValidateFailedTestsContain(false, failedTests);
     }
 }
