@@ -151,7 +151,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
         // on the one argument case. Check if we match either of the array argument constructors
         // and expand the array argument if we do.
         ImmutableArray<TypedConstant> constructorArguments = attribute.ConstructorArguments;
-        if (constructorArguments[0].Kind is TypedConstantKind.Array && !constructorArguments[0].IsNull)
+        if (attribute.AttributeConstructor?.Parameters.FirstOrDefault()?.IsParams == true)
         {
             constructorArguments = constructorArguments[0].Values;
         }
