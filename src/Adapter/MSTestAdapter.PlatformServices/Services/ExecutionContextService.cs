@@ -9,14 +9,28 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 internal static class ExecutionContextService
 {
     /// <summary>
-    /// The execution context to use by class. This context will be derived from the assembly level context and shared down
-    /// to the tests of this class. The type used as key is the type of the test class and not the type of the method info.
+    /// The execution context to use by class fixtures (ClassInitialize and ClassCleanup).
+    ///
+    /// The type used as key is the type of the test class and not the type of the method info, this is ensuring that mutations
+    /// done in parent classes are correctly impacting only the current context class.
+    ///
+    /// The logic for the context associated to the key is as follows:
+    /// - Copy and reuse the assembly level context,
+    /// - If not available, capture the current context and use it.
+    /// After each ClassInitialize or ClassCleanup, mutate (recapture) the context for the class.
     /// </summary>
     private static readonly ConcurrentDictionary<Type, ExecutionContext?> ClassesExecutionContexts = new();
 
     /// <summary>
-    /// The execution context to use for the tests (test init, method, test cleanup) of an instance. This context will be derived
-    /// from the test class (if it exists) or the assembly level context. The key is the instance of the test class.
+    /// The execution context to use for instance methods fixtures and tests (TestInitialize, TestMethod, TestCleanup).
+    ///
+    /// The key is the instance of the test class.
+    ///
+    /// The logic for the context associated to the key is as follows:
+    /// - Copy and reuse the class level context,
+    /// - If not available, reuse the assembly level context,
+    /// - If not available, capture the current context and use it.
+    /// After each TestInitialize or TestCleanup, mutate (recapture) the context for the instance.
     /// </summary>
     private static readonly ConcurrentDictionary<object, ExecutionContext?> InstancesExecutionContexts = new();
 
@@ -38,6 +52,9 @@ internal static class ExecutionContextService
     /// </summary>
     internal static void RunActionOnContext(Action action, IExecutionContextScope executionContextScope)
     {
+        // TODO: Log (trace/debug) the execution context scope and the current execution context.
+        // This would be particularly useful if we have a strange context issue to understand what is being set or not,
+        // What we manage to capture and what we don't, etc.
         if (GetScopedExecutionContext(executionContextScope) is not { } executionContext)
         {
             // We don't have any execution context (that's usually the case when it is being suppressed), so we can run the action directly.

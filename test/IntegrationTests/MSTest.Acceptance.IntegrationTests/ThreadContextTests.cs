@@ -300,28 +300,32 @@ public class UnitTest1
     [ClassInitialize]
     public static void ClassInitialize(TestContext context)
     {
-        Assert.AreEqual(AssemblyInitCultureCodeName, CultureInfo.CurrentCulture.Name, "ClassInitialize culture check failed");
+        Assert.AreEqual(AssemblyInitCultureCodeName, CultureInfo.CurrentCulture.Name,
+            "ClassInitialize culture should have been the one set by AssemblyInitialize");
         CultureInfo.CurrentCulture = new CultureInfo(ClassInitCultureCodeName);
     }
 
     [TestInitialize]
     public void TestInitialize()
     {
-        Assert.AreEqual(ClassInitCultureCodeName, CultureInfo.CurrentCulture.Name, "TestInitialize culture check failed");
+        Assert.AreEqual(ClassInitCultureCodeName, CultureInfo.CurrentCulture.Name,
+            "TestInitialize culture should have been the one set by ClassInitialize");
         CultureInfo.CurrentCulture = new CultureInfo(TestInitCultureCodeName);
     }
 
     [TestMethod]
     public void TestMethod1()
     {
-        Assert.AreEqual(TestInitCultureCodeName, CultureInfo.CurrentCulture.Name, "TestMethod culture check failed");
+        Assert.AreEqual(TestInitCultureCodeName, CultureInfo.CurrentCulture.Name,
+            "TestMethod culture should have been the one set by TestInitialize");
         CultureInfo.CurrentCulture = new CultureInfo(TestMethodCultureCodeName);
     }
 
     [TestCleanup]
     public void TestCleanup()
     {
-        Assert.AreEqual(TestMethodCultureCodeName, CultureInfo.CurrentCulture.Name, "TestCleanup culture check failed");
+        Assert.AreEqual(TestMethodCultureCodeName, CultureInfo.CurrentCulture.Name,
+            "TestCleanup culture should have been the one set by TestMethod");
         CultureInfo.CurrentCulture = new CultureInfo(TestCleanupCultureCodeName);
     }
 
@@ -330,11 +334,13 @@ public class UnitTest1
     {
         if (Environment.GetEnvironmentVariable("MSTEST_TEST_FLOW_CONTEXT") == "true")
         {
-            Assert.AreEqual(ClassInitCultureCodeName, CultureInfo.CurrentCulture.Name, "ClassCleanup culture check failed");
+            Assert.AreEqual(ClassInitCultureCodeName, CultureInfo.CurrentCulture.Name,
+                "ClassCleanup culture should have been the one set by ClassInitialize");
         }
         else
         {
-            Assert.AreEqual(TestCleanupCultureCodeName, CultureInfo.CurrentCulture.Name, "ClassCleanup culture check failed");
+            Assert.AreEqual(TestCleanupCultureCodeName, CultureInfo.CurrentCulture.Name,
+                "ClassCleanup culture should have been the one set by TestCleanup");
             CultureInfo.CurrentCulture = new CultureInfo(ClassCleanupCultureCodeName);
         }
     }
@@ -344,11 +350,13 @@ public class UnitTest1
     {
         if (Environment.GetEnvironmentVariable("MSTEST_TEST_FLOW_CONTEXT") == "true")
         {
-            Assert.AreEqual(AssemblyInitCultureCodeName, CultureInfo.CurrentCulture.Name, "AssemblyCleanup culture check failed");
+            Assert.AreEqual(AssemblyInitCultureCodeName, CultureInfo.CurrentCulture.Name,
+                "AssemblyCleanup culture should have been the one set by AssemblyInitialize");
         }
         else
         {
-            Assert.AreEqual(ClassCleanupCultureCodeName, CultureInfo.CurrentCulture.Name, "AssemblyCleanup culture check failed");
+            Assert.AreEqual(ClassCleanupCultureCodeName, CultureInfo.CurrentCulture.Name,
+                "AssemblyCleanup culture should have been the one set by ClassCleanup");
         }
     }
 }
