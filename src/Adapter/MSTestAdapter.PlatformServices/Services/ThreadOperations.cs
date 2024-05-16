@@ -15,6 +15,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 public class ThreadOperations : IThreadOperations
 {
     /// <summary>
+    /// Execute the given action synchronously on a background thread.
+    /// </summary>
+    /// <param name="action">The action to execute.</param>
+    /// <param name="cancelToken">Token to cancel the execution.</param>
+    /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
+    public bool Execute(Action action, CancellationToken cancelToken) =>
+#if NETFRAMEWORK
+        ExecuteWithCustomThread(action, null, cancelToken);
+#else
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
+            ? ExecuteWithCustomThread(action, null, cancelToken)
+            : ExecuteWithThreadPool(action, null, cancelToken);
+#endif
+
+    /// <summary>
     /// Execute the given action synchronously on a background thread in the given timeout.
     /// </summary>
     /// <param name="action">The action to execute.</param>
@@ -31,14 +46,22 @@ public class ThreadOperations : IThreadOperations
 #endif
 
 #if !NETFRAMEWORK
-    private static bool ExecuteWithThreadPool(Action action, int timeout, CancellationToken cancellationToken)
+    private static bool ExecuteWithThreadPool(Action action, int? timeout, CancellationToken cancellationToken)
     {
         try
         {
             var executionTask = Task.Run(action, cancellationToken);
 
-            // False means execution timed out.
-            return executionTask.Wait(timeout, cancellationToken);
+            if (timeout.HasValue)
+            {
+                // False means execution timed out.
+                return executionTask.Wait(timeout.Value, cancellationToken);
+            }
+            else
+            {
+                executionTask.Wait(cancellationToken);
+                return true;
+            }
         }
         catch (Exception ex) when
             ((ex is OperationCanceledException oce && oce.CancellationToken == cancellationToken)
@@ -55,7 +78,7 @@ public class ThreadOperations : IThreadOperations
 #if NET6_0_OR_GREATER
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 #endif
-    private static bool ExecuteWithCustomThread(Action action, int timeout, CancellationToken cancellationToken)
+    private static bool ExecuteWithCustomThread(Action action, int? timeout, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
         {
@@ -74,7 +97,14 @@ public class ThreadOperations : IThreadOperations
         try
         {
             // Creates a Task<bool> that represents the results of the execution thread.
-            var executionTask = Task.Run(() => executionThread.Join(timeout), cancellationToken);
+            Task<bool> executionTask = timeout.HasValue
+                ? Task.Run(() => executionThread.Join(timeout.Value), cancellationToken)
+                : Task.Run(
+                    () =>
+                    {
+                        executionThread.Join();
+                        return true;
+                    }, cancellationToken);
             executionTask.Wait(cancellationToken);
 
             // If the execution thread completes before the timeout, the task will return true, otherwise false.

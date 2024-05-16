@@ -9,6 +9,14 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Int
 public interface IThreadOperations
 {
     /// <summary>
+    /// Execute the given action synchronously on a background thread.
+    /// </summary>
+    /// <param name="action">The action to execute.</param>
+    /// <param name="cancelToken">Token to cancel the execution.</param>
+    /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
+    bool Execute(Action action, CancellationToken cancelToken);
+
+    /// <summary>
     /// Execute the given action synchronously on a background thread in the given timeout.
     /// </summary>
     /// <param name="action">The action to execute.</param>
