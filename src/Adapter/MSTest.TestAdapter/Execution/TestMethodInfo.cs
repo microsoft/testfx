@@ -109,7 +109,9 @@ public class TestMethodInfo : ITestMethod
             watch.Start();
             try
             {
-                result = ExecuteInternalWithTimeoutOrCancellationToken(arguments);
+                result = IsTimeoutSet
+                    ? ExecuteInternalWithTimeout(arguments)
+                    : ExecuteInternal(arguments);
             }
             finally
             {
@@ -637,7 +639,7 @@ public class TestMethodInfo : ITestMethod
 
         return MethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
-            new CancellationTokenSource(),
+            TestMethodOptions.TestContext!.Context.CancellationTokenSource,
             timeout,
             methodInfo,
             Resource.TestInitializeWasCancelled,
@@ -765,7 +767,7 @@ public class TestMethodInfo : ITestMethod
     /// <param name="arguments">The arguments to be passed.</param>
     /// <returns>The result of execution.</returns>
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
-    private TestResult ExecuteInternalWithTimeoutOrCancellationToken(object?[]? arguments)
+    private TestResult ExecuteInternalWithTimeout(object?[]? arguments)
     {
         TestResult? result = null;
         Exception? failure = null;
@@ -783,6 +785,9 @@ public class TestMethodInfo : ITestMethod
         }
 
         CancellationToken cancelToken = TestMethodOptions.TestContext!.Context.CancellationTokenSource.Token;
+
+        var token = CancellationTokenSource.CreateLinkedTokenSource(cancelToken);
+
         bool executionResult = IsTimeoutSet
             ? PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.Timeout, cancelToken)
             : PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, cancelToken);
