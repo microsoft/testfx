@@ -1,6 +1,6 @@
 {
   "tools": {
-    "dotnet": "8.0.300",
+    "dotnet": "8.0.101",
     "runtimes": {
       "dotnet": [
         "3.1.32",
@@ -10,11 +10,11 @@
       ]
     },
     "vs": {
-      "version": "17.8.3"
+      "version": "17.8.0"
     }
   },
   "sdk": {
-    "version": "8.0.300",
+    "version": "8.0.101",
     "allowPrerelease": true,
     "rollForward": "latestFeature"
   },
