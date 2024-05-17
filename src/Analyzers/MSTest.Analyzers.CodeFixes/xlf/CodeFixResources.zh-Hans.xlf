@@ -2,10 +2,10 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="zh-Hans" original="../CodeFixResources.resx">
     <body>
-      <trans-unit id="CodeFixTitle">
-        <source>Make uppercase</source>
-        <target state="translated">转换为大写</target>
-        <note>The title of the code fix.</note>
+      <trans-unit id="AssemblyCleanupShouldBeValidCodeFix">
+        <source>Fix signature</source>
+        <target state="new">Fix signature</target>
+        <note />
       </trans-unit>
     </body>
   </file>

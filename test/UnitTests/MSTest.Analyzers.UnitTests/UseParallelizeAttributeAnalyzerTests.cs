@@ -6,7 +6,7 @@ using Microsoft.Testing.TestInfrastructure;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseParallelizeAttributeAnalyzer,
-    MSTest.Analyzers.UseParallelizeAttributeFixer>;
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
