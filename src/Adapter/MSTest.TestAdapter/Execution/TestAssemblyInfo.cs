@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -8,6 +8,7 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using UnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -140,11 +141,12 @@ public class TestAssemblyInfo
                 {
                     try
                     {
-                        AssemblyInitializationException = MethodRunner.RunWithTimeoutAndCancellation(
+                        AssemblyInitializationException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                             () => AssemblyInitializeMethod.InvokeAsSynchronousTask(null, testContext),
                             testContext.CancellationTokenSource,
                             AssemblyInitializeMethodTimeoutMilliseconds,
                             AssemblyInitializeMethod,
+                            new AssemblyExecutionContextScope(isCleanup: false),
                             Resource.AssemblyInitializeWasCancelled,
                             Resource.AssemblyInitializeTimedOut);
                     }
@@ -213,11 +215,12 @@ public class TestAssemblyInfo
         {
             try
             {
-                assemblyCleanupException = MethodRunner.RunWithTimeoutAndCancellation(
+                assemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                      () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
                      new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
+                     new AssemblyExecutionContextScope(isCleanup: true),
                      Resource.AssemblyCleanupWasCancelled,
                      Resource.AssemblyCleanupTimedOut);
             }
@@ -269,11 +272,12 @@ public class TestAssemblyInfo
         {
             try
             {
-                assemblyCleanupException = MethodRunner.RunWithTimeoutAndCancellation(
+                assemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                      () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
                      new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
                      AssemblyCleanupMethod,
+                     new AssemblyExecutionContextScope(isCleanup: true),
                      Resource.AssemblyCleanupWasCancelled,
                      Resource.AssemblyCleanupTimedOut);
             }

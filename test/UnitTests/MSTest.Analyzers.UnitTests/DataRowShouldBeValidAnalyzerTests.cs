@@ -542,4 +542,25 @@ public sealed class DataRowShouldBeValidAnalyzerTests(ITestExecutionContext test
 
         await VerifyCS.VerifyAnalyzerAsync(code);
     }
+
+    public async Task Issue2856_ArraysInDataRow_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestMethod]
+                [DataRow(new int[] { })]
+                [DataRow(new int[] { 11 })]
+                [DataRow(new int[] { 11, 1337, 12 })]
+                public void ItemsTest(int[] input)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyAnalyzerAsync(code);
+    }
 }

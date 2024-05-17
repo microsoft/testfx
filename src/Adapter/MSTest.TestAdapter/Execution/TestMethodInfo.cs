@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -241,7 +242,17 @@ public class TestMethodInfo : ITestMethod
                     if (RunTestInitializeMethod(classInstance, result))
                     {
                         hasTestInitializePassed = true;
-                        TestMethod.InvokeAsSynchronousTask(classInstance, arguments);
+                        if (IsTimeoutSet)
+                        {
+                            ExecutionContextService.RunActionOnContext(
+                                () => TestMethod.InvokeAsSynchronousTask(classInstance, arguments),
+                                new InstanceExecutionContextScope(classInstance, Parent.ClassType));
+                        }
+                        else
+                        {
+                            TestMethod.InvokeAsSynchronousTask(classInstance, arguments);
+                        }
+
                         result.Outcome = UTF.UnitTestOutcome.Passed;
                     }
                 }
@@ -450,12 +461,16 @@ public class TestMethodInfo : ITestMethod
             {
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
-                testCleanupException = testCleanupMethod is not null ? InvokeCleanupMethod(testCleanupMethod, classInstance) : null;
+                testCleanupException = testCleanupMethod is not null
+                    ? InvokeCleanupMethod(testCleanupMethod, classInstance, Parent.BaseTestCleanupMethodsQueue.Count)
+                    : null;
                 var baseTestCleanupQueue = new Queue<MethodInfo>(Parent.BaseTestCleanupMethodsQueue);
                 while (baseTestCleanupQueue.Count > 0 && testCleanupException is null)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupException = testCleanupMethod is not null ? InvokeCleanupMethod(testCleanupMethod, classInstance) : null;
+                    testCleanupException = testCleanupMethod is not null
+                        ? InvokeCleanupMethod(testCleanupMethod, classInstance, baseTestCleanupQueue.Count)
+                        : null;
                 }
             }
             finally
@@ -637,16 +652,17 @@ public class TestMethodInfo : ITestMethod
             timeout = localTimeout;
         }
 
-        return MethodRunner.RunWithTimeoutAndCancellation(
+        return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
             new CancellationTokenSource(),
             timeout,
             methodInfo,
+            new InstanceExecutionContextScope(classInstance, Parent.ClassType),
             Resource.TestInitializeWasCancelled,
             Resource.TestInitializeTimedOut);
     }
 
-    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, object classInstance)
+    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, object classInstance, int remainingCleanupCount)
     {
         int? timeout = null;
         if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
@@ -654,11 +670,12 @@ public class TestMethodInfo : ITestMethod
             timeout = localTimeout;
         }
 
-        return MethodRunner.RunWithTimeoutAndCancellation(
+        return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
             new CancellationTokenSource(),
             timeout,
             methodInfo,
+            new InstanceExecutionContextScope(classInstance, Parent.ClassType, remainingCleanupCount),
             Resource.TestCleanupWasCancelled,
             Resource.TestCleanupTimedOut);
     }
