@@ -110,8 +110,8 @@ public class TestMethodInfo : ITestMethod
             try
             {
                 result = IsTimeoutSet
-                    ? ExecuteInternalWithTimeout(arguments)
-                    : ExecuteInternal(arguments);
+                   ? ExecuteInternalWithTimeout(arguments)
+                   : ExecuteInternalWithCancellationToken(arguments);
             }
             finally
             {
@@ -639,7 +639,7 @@ public class TestMethodInfo : ITestMethod
 
         return MethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
-            TestMethodOptions.TestContext!.Context.CancellationTokenSource,
+            new CancellationTokenSource(),
             timeout,
             methodInfo,
             Resource.TestInitializeWasCancelled,
@@ -759,6 +759,58 @@ public class TestMethodInfo : ITestMethod
         }
 
         return classInstance;
+    }
+
+    private TestResult ExecuteInternalWithCancellationToken(object?[]? arguments)
+    {
+        TestResult? result = null;
+        Exception? failure = null;
+
+        bool ExecuteAsyncAction()
+        {
+            try
+            {
+                result = ExecuteInternal(arguments);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                failure = ex;
+                return false;
+            }
+        }
+
+        CancellationToken cancelToken = TestMethodOptions.TestContext!.Context.CancellationTokenSource.Token;
+        var task = Task.Run(ExecuteAsyncAction, cancelToken);
+        task.Wait(cancelToken);
+
+        if (task.Result)
+        {
+            if (failure != null)
+            {
+                throw failure;
+            }
+
+            DebugEx.Assert(result is not null, "result is not null");
+            return result;
+        }
+        else
+        {
+            // Timed out or canceled
+            string errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Timeout, TestMethodName);
+            if (TestMethodOptions.TestContext.Context.CancellationTokenSource.IsCancellationRequested)
+            {
+                errorMessage = string.Format(CultureInfo.CurrentCulture, Resource.Execution_Test_Cancelled, TestMethodName);
+            }
+            else
+            {
+                // Cancel the token source as test has timed out
+                TestMethodOptions.TestContext.Context.CancellationTokenSource.Cancel();
+            }
+
+            TestResult timeoutResult = new() { Outcome = UTF.UnitTestOutcome.Timeout, TestFailureException = new TestFailedException(ObjectModelUnitTestOutcome.Timeout, errorMessage) };
+            return timeoutResult;
+        }
     }
 
     /// <summary>

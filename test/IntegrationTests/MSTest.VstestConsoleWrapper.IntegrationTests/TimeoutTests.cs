@@ -20,7 +20,7 @@ public class TimeoutTests : CLITestBase
     {
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TimeoutTest|RegularTest", targetFramework: targetFramework);
 
-        ValidateFailedTestsCount(targetFramework == "net462" ? 6 : 4);
+        ValidateFailedTestsCount(targetFramework == "net462" ? 5 : 4);
 
         string[] abortedTests =
         [
@@ -34,7 +34,6 @@ public class TimeoutTests : CLITestBase
             string[] threadAbortedTests =
             [
                 "TimeoutTestProject.TimeoutTestClass.TimeoutTest_WhenUserCallsThreadAbort_AbortTest",
-                "TimeoutTestProject.TimeoutTestClass.RegularTest_WhenUserCallsThreadAbort_AbortTest"
             ];
             ValidateThreadAbortedTests(threadAbortedTests);
         }
