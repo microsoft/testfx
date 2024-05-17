@@ -37,4 +37,32 @@ public class DynamicDataExMoreTests
         Assert.AreEqual(0, b % 2);
         Assert.IsTrue(c);
     }
+
+    [TestMethod]
+    [DynamicData("EmptyTestDataProperty", typeof(DynamicDataExTests))]
+    public void DynamicEmptyDataTestMethod4(string a, int b, bool c)
+    {
+        Assert.AreEqual("string", a);
+        Assert.AreEqual(0, b % 2);
+        Assert.IsTrue(c);
+    }
+
+    [TestMethod]
+    [DynamicData("EmptyTestDataMethod", typeof(DynamicDataExTests), DynamicDataSourceType.Method)]
+    public void DynamicEmptyDataTestMethod5(string a, int b, bool c)
+    {
+        Assert.AreEqual("string", a);
+        Assert.AreEqual(0, b % 2);
+        Assert.IsTrue(c);
+    }
+
+    [TestMethod]
+    [DynamicData("EmptyTestDataProperty", typeof(DynamicDataExTests))]
+    [DynamicData("EmptyTestDataMethod", typeof(DynamicDataExTests), DynamicDataSourceType.Method)]
+    public void DynamicEmptyDataTestMethod6(string a, int b, bool c)
+    {
+        Assert.AreEqual("string", a);
+        Assert.AreEqual(0, b % 2);
+        Assert.IsTrue(c);
+    }
 }

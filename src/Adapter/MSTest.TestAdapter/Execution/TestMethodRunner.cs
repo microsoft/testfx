@@ -3,6 +3,7 @@
 
 using System.Diagnostics;
 using System.Globalization;
+using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 
@@ -288,7 +289,6 @@ internal class TestMethodRunner
         else
         {
             IEnumerable<UTF.ITestDataSource>? testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>();
-
             if (testDataSources != null)
             {
                 foreach (UTF.ITestDataSource testDataSource in testDataSources)
@@ -298,6 +298,11 @@ internal class TestMethodRunner
                     try
                     {
                         dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
+
+                        if (!dataSource.Any())
+                        {
+                            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", _testMethodInfo.ToString()));
+                        }
                     }
                     catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
                     {

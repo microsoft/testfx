@@ -11,9 +11,13 @@ public class DynamicDataExTests
 #pragma warning disable IDE0051 // Remove unused private members
     private static IEnumerable<object[]> ReusableTestDataProperty => new[] { new object[] { "string", 2, true } };
 
+    private static IEnumerable<object[]> EmptyTestDataProperty => [];
+
 #pragma warning disable CA1859 // Use concrete types when possible for improved performance
 #pragma warning disable IDE0051 // Remove unused private members
     private static IEnumerable<object[]> ReusableTestDataMethod() => new[] { new object[] { "string", 4, true } };
+
+    private static IEnumerable<object[]> EmptyTestDataMethod() => [];
 
     // Property ReusableTestDataProperty can be used as data source for test data with data driven test case.
     [TestMethod]
@@ -39,6 +43,34 @@ public class DynamicDataExTests
     [DynamicData("ReusableTestDataProperty")]
     [DynamicData("ReusableTestDataMethod", DynamicDataSourceType.Method)]
     public void DynamicDataTestMethod3(string a, int b, bool c)
+    {
+        Assert.AreEqual("string", a);
+        Assert.AreEqual(0, b % 2);
+        Assert.IsTrue(c);
+    }
+
+    [TestMethod]
+    [DynamicData("EmptyTestDataProperty")]
+    public void DynamicEmptyDataTestMethod1(string a, int b, bool c)
+    {
+        Assert.AreEqual("string", a);
+        Assert.AreEqual(0, b % 2);
+        Assert.IsTrue(c);
+    }
+
+    [TestMethod]
+    [DynamicData("EmptyTestDataMethod", DynamicDataSourceType.Method)]
+    public void DynamicEmptyDataTestMethod2(string a, int b, bool c)
+    {
+        Assert.AreEqual("string", a);
+        Assert.AreEqual(0, b % 2);
+        Assert.IsTrue(c);
+    }
+
+    [TestMethod]
+    [DynamicData("EmptyTestDataProperty")]
+    [DynamicData("EmptyTestDataMethod", DynamicDataSourceType.Method)]
+    public void DynamicEmptyDataTestMethod3(string a, int b, bool c)
     {
         Assert.AreEqual("string", a);
         Assert.AreEqual(0, b % 2);
