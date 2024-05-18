@@ -1,4 +1,4 @@
-# Implement the Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework
+# The `Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework`
 
 The `Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework` is implemented by extensions that provide a test framework:
 
