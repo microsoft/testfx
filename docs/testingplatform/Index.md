@@ -20,6 +20,7 @@
         1. [IDataConsumer](idataconsumer.md)
     1. Out-of-process
         1. [ITestHostEnvironmentVariableProvider](itesthostenvironmentvariableprovider.md)
+        1. [ITestHostProcessLifetimeHandler](itesthostprocesslifetimehandler.md)
 1. Extensions miscellaneous
     1. [IAsyncInitializableExtension & IAsyncCleanableExtension](asyncinitcleanup.md)
     1. [CompositeExtensionFactory\<T\>](compositeextensionfactory.md)
