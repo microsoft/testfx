@@ -35,14 +35,14 @@ internal sealed class TestingFramework : ITestFramework, IDataProducer, IDisposa
         IConfiguration configuration,
         ILogger<TestingFramework> logger,
         IOutputDevice outputDevice,
-        Assembly[] assemblies)
+        Func<Assembly[]> assemblies)
     {
         _capabilities = (TestingFrameworkCapabilities)capabilities;
         _commandLineOptions = commandLineOptions;
         _configuration = configuration;
         _logger = logger;
         _outputDevice = outputDevice;
-        _assemblies = assemblies;
+        _assemblies = assemblies();
 
         if (_commandLineOptions.TryGetOptionArgumentList(TestingFrameworkCommandLineOptions.DopOption, out string[]? argumentList))
         {

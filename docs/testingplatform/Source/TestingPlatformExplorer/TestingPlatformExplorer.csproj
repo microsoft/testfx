@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <!-- Update to the last version if needed -->
-    <PackageReference Include="Microsoft.Testing.Platform" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>
