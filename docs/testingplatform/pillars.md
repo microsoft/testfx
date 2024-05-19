@@ -13,3 +13,14 @@ The main driving factors for the evolution of the new testing platform are:
 * **Performant**: Finding the right balance between features and extension points to avoid bloating the runtime with non-fundamental code. The new test platform is designed to "orchestrate" a test run, rather than providing implementation details on how to do it.
 * **Extensible enough**: The new platform is built on extensibility points to allow for maximum customization of runtime execution. It allows you to configure the test process host, observe the test process, and consume information from the test framework within the test host process.
 * **Single module deploy**: The hostability feature enables a single module deploy model, where a single compilation result can be used to support all extensibility points, both out-of-process and in-process, without the need to ship different executable modules.
+
+The following factors should enhance the overall quality of the testing platform:
+
+* Shifting all to compile time aids in identifying issues prior to runtime.
+* Determinism is beneficial in all aspects, as it reduces bugs and, in the event of a bug, provides a clear, straightforward stack trace that directly indicates the problem.
+* Determinism facilitates straightforward reproduction of issues, independent of the execution context (such as machine setup, local environment, CI, etc.). If the issue is related to the execution context, determinism makes it evident.
+* Dynamic code, often associated with "indirect execution", can result in performance degradation. By avoiding it, performance can be enhanced.
+* Eliminating dynamic code simplifies the logic behind feature development. The code you see is exactly what will be executed at runtime.
+* Eliminating dependencies and dynamic code guarantees compatibility with upcoming runtime features.
+* Eliminating dependencies means we can run everywhere.
+* Operating a self-contained testing platform without dependencies ensures that there's always a mechanism to execute user tests. This is because `Microsoft.Testing.Platform.dll` is viewed as a fundamental part of the runtime itself.
