@@ -24,6 +24,7 @@
 1. Extensions miscellaneous
     1. [IAsyncInitializableExtension & IAsyncCleanableExtension](asyncinitcleanup.md)
     1. [CompositeExtensionFactory\<T\>](compositeextensionfactory.md)
+1. [Testing framework & extensions execution order](executionorder.md)
 1. Services
     1. [IServiceProvider](iserviceprovider.md)
     1. [IConfiguration](configuration.md)
