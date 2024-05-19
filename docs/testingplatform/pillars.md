@@ -23,4 +23,4 @@ The following factors should enhance the overall quality of the testing platform
 * Eliminating dynamic code simplifies the logic behind feature development. The code you see is exactly what will be executed at runtime.
 * Eliminating dependencies and dynamic code guarantees compatibility with upcoming runtime features.
 * Eliminating dependencies means we can run everywhere.
-* Operating a self-contained testing platform without dependencies ensures that there's always a mechanism to execute user tests. This is because `Microsoft.Testing.Platform.dll` is viewed as a fundamental part of the runtime itself.
+* Operating a self-contained testing platform without dependencies ensures that there's always a mechanism to execute user tests. This is because `Microsoft.Testing.Platform.dll` is viewed as a fundamental part of the runtime itself, ideally `System.Testing.Platform`.
