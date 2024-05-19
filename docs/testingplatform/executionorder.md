@@ -19,4 +19,3 @@ While a *sequence* could be used to depict this, we opt for a straightforward or
 1. In-process cleanup, involves calling dispose and [IAsyncCleanableExtension](asyncinitcleanup.md) on all extension points.
 1. [ITestHostProcessLifetimeHandler.OnTestHostProcessExitedAsync](itesthostprocesslifetimehandler.md) : Out-of-process
 1. Out-of-process cleanup, involves calling dispose and [IAsyncCleanableExtension](asyncinitcleanup.md) on all extension points.
-
