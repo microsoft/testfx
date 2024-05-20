@@ -11,7 +11,6 @@ namespace MSTest.Acceptance.IntegrationTests;
 public class DynamicDataTests : AcceptanceTestBase
 {
     private readonly TestAssetFixture _testAssetFixture;
-    private const string AssetName = "DynamicData";
 
     // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
     public DynamicDataTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
@@ -48,7 +47,7 @@ public class DynamicDataTests : AcceptanceTestBase
     private async Task RunTests(string currentTfm, bool isEmptyDataInconclusive, bool isDynamicData, bool useRunSettings)
     {
         _testAssetFixture.IsDynamicData = isDynamicData;
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, _testAssetFixture.AssetName, currentTfm);
 
         TestHostResult testHostResult = await testHost.ExecuteAsync(SetupRunSettingsAndGetArgs(useRunSettings, isEmptyDataInconclusive));
 
@@ -83,7 +82,12 @@ public class DynamicDataTests : AcceptanceTestBase
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
+        private const string DynamicAssetName = "DynamicData";
+        private const string SourceAssetName = "SourceData";
+
         public bool IsDynamicData { get; set; }
+
+        public string AssetName => IsDynamicData ? DynamicAssetName : SourceAssetName;
 
         public string SourceCode => IsDynamicData ? SourceCodeDynamicData : SourceCodeTestDataSource;
 
