@@ -10,6 +10,8 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestGroup]
 public class DynamicDataTests : AcceptanceTestBase
 {
+    private const string DynamicDataAssetName = "DynamicData";
+    private const string DataSourceAssetName = "DataSource";
     private readonly TestAssetFixture _testAssetFixture;
 
     // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
@@ -22,42 +24,43 @@ public class DynamicDataTests : AcceptanceTestBase
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
-        => await RunTests(currentTfm, true, true, true);
+        => await RunTests(currentTfm, DynamicDataAssetName, true);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToTestDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
-        => await RunTests(currentTfm, true, false, true);
+    public async Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
+        => await RunTests(currentTfm, DataSourceAssetName, true);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
-        => await RunTests(currentTfm, false, true, true);
+        => await RunTests(currentTfm, DynamicDataAssetName, false);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToTestDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
-    => await RunTests(currentTfm, false, false, true);
+    public async Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
+    => await RunTests(currentTfm, DataSourceAssetName, false);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDynamicDataTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
-        => await RunTests(currentTfm, false, true, false);
+        => await RunTests(currentTfm, DynamicDataAssetName, null);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToTestDataSourceTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
-        => await RunTests(currentTfm, false, false, false);
+    public async Task SendingEmptyDataToDataSourceTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
+        => await RunTests(currentTfm, DataSourceAssetName, null);
 
-    private async Task RunTests(string currentTfm, bool isEmptyDataInconclusive, bool isDynamicData, bool useRunSettings)
+    private async Task RunTests(string currentTfm, string assetName, bool? isEmptyDataInconclusive)
     {
-        _testAssetFixture.IsDynamicData = isDynamicData;
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, _testAssetFixture.AssetName, currentTfm);
+        var testHost = TestHost.LocateFrom(_testAssetFixture.GetAssetPath(assetName), assetName, currentTfm);
 
-        TestHostResult testHostResult = await testHost.ExecuteAsync(SetupRunSettingsAndGetArgs(useRunSettings, isEmptyDataInconclusive));
+        TestHostResult testHostResult = await testHost.ExecuteAsync(SetupRunSettingsAndGetArgs(isEmptyDataInconclusive));
 
-        testHostResult.AssertExitCodeIs(isEmptyDataInconclusive ? ExitCodes.Success : ExitCodes.AtLeastOneTestFailed);
+        bool isSuccess = isEmptyDataInconclusive.HasValue && isEmptyDataInconclusive.Value;
 
-        testHostResult.AssertOutputContains(isEmptyDataInconclusive ? "skipped Test" : "failed Test");
+        testHostResult.AssertExitCodeIs(isSuccess ? ExitCodes.Success : ExitCodes.AtLeastOneTestFailed);
 
-        string? SetupRunSettingsAndGetArgs(bool useRunSettings, bool isEmptyDataInconclusive)
+        testHostResult.AssertOutputContains(isSuccess ? "skipped Test" : "failed Test");
+
+        string? SetupRunSettingsAndGetArgs(bool? isEmptyDataInconclusive)
         {
-            if (useRunSettings)
+            if (!isEmptyDataInconclusive.HasValue)
             {
                 return null;
             }
@@ -82,25 +85,20 @@ public class DynamicDataTests : AcceptanceTestBase
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
-        private const string DynamicAssetName = "DynamicData";
-        private const string SourceAssetName = "SourceData";
+        public string DynamicDataTargetAssetPath => GetAssetPath(DynamicDataAssetName);
 
-        public bool IsDynamicData { get; set; }
-
-        public string AssetName => IsDynamicData ? DynamicAssetName : SourceAssetName;
-
-        public string TargetAssetPath => GetAssetPath(AssetName);
+        public string TestSourceDataTargetAssetPath => GetAssetPath(DataSourceAssetName);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            yield return (DynamicAssetName, DynamicAssetName,
+            yield return (DynamicDataAssetName, DynamicDataAssetName,
                 SourceCodeDynamicData
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
                 .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
-            yield return (SourceAssetName, SourceAssetName,
-                SourceCodeTestDataSource
+            yield return (DataSourceAssetName, DataSourceAssetName,
+                SourceCodeDataSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
@@ -153,8 +151,8 @@ public class TestClass
 }
 """;
 
-        private const string SourceCodeTestDataSource = """
-#file DynamicData.csproj
+        private const string SourceCodeDataSource = """
+#file DataSource.csproj
 <Project Sdk="Microsoft.NET.Sdk">
     
   <PropertyGroup>
