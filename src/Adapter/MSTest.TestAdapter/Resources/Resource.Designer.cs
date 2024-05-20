@@ -62,7 +62,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Assembly cleanup method &apos;{0}.{1}&apos; timed out after &apos;{2}&apos;ms.
+        ///   Looks up a localized string similar to Assembly cleanup method &apos;{0}.{1}&apos; timed out after {2}ms.
         /// </summary>
         internal static string AssemblyCleanupTimedOut {
             get {
@@ -80,7 +80,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Assembly initialize method &apos;{0}.{1}&apos; timed out after &apos;{2}&apos;ms.
+        ///   Looks up a localized string similar to Assembly initialize method &apos;{0}.{1}&apos; timed out after {2}ms.
         /// </summary>
         internal static string AssemblyInitializeTimedOut {
             get {
@@ -163,7 +163,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class cleanup method &apos;{0}.{1}&apos; timed out after &apos;{2}&apos;ms.
+        ///   Looks up a localized string similar to Class cleanup method &apos;{0}.{1}&apos; timed out after {2}ms.
         /// </summary>
         internal static string ClassCleanupTimedOut {
             get {
@@ -181,7 +181,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Class initialize method &apos;{0}.{1}&apos; timed out after &apos;{2}&apos;ms.
+        ///   Looks up a localized string similar to Class initialize method &apos;{0}.{1}&apos; timed out after {2}ms.
         /// </summary>
         internal static string ClassInitializeTimedOut {
             get {
@@ -406,7 +406,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test cleanup method &apos;{0}.{1}&apos; timed out after &apos;{2}&apos;ms.
+        ///   Looks up a localized string similar to Test cleanup method &apos;{0}.{1}&apos; timed out after {2}ms.
         /// </summary>
         internal static string TestCleanupTimedOut {
             get {
@@ -442,7 +442,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test initialize method &apos;{0}.{1}&apos; timed out after &apos;{2}&apos;ms.
+        ///   Looks up a localized string similar to Test initialize method &apos;{0}.{1}&apos; timed out after {2}ms.
         /// </summary>
         internal static string TestInitializeTimedOut {
             get {
