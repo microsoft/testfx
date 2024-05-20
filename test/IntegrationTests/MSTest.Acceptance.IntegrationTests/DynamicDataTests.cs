@@ -168,6 +168,7 @@ public class TestClass
 using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Reflection;
 
 [TestClass]
 public class TestClass
