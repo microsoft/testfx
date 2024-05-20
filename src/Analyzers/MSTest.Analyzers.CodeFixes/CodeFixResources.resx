@@ -120,4 +120,7 @@
   <data name="AssemblyCleanupShouldBeValidCodeFix" xml:space="preserve">
     <value>Fix signature</value>
   </data>
+  <data name="AssemblyInitializeShouldBeValidCodeFix" xml:space="preserve">
+    <value>Fix signature</value>
+  </data>
 </root>
