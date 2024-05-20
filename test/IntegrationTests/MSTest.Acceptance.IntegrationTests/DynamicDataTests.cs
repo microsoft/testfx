@@ -89,14 +89,18 @@ public class DynamicDataTests : AcceptanceTestBase
 
         public string AssetName => IsDynamicData ? DynamicAssetName : SourceAssetName;
 
-        public string SourceCode => IsDynamicData ? SourceCodeDynamicData : SourceCodeTestDataSource;
-
         public string TargetAssetPath => GetAssetPath(AssetName);
 
         public override IEnumerable<(string ID, string Name, string Code)> GetAssetsToGenerate()
         {
-            yield return (AssetName, AssetName,
-                SourceCode
+            yield return (DynamicAssetName, DynamicAssetName,
+                SourceCodeDynamicData
+                .PatchTargetFrameworks(TargetFrameworks.All)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
+                .PatchCodeWithReplace("$MSTestVersion$", MSTestVersion));
+            yield return (SourceAssetName, SourceAssetName,
+                SourceCodeTestDataSource
                 .PatchTargetFrameworks(TargetFrameworks.All)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion)
                 .PatchCodeWithReplace("$MicrosoftTestingPlatformExtensionsVersion$", MicrosoftTestingPlatformExtensionsVersion)
