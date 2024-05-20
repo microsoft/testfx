@@ -361,13 +361,13 @@ Error: {1}</value>
 {1}: Test name</comment>
   </data>
   <data name="AssemblyInitializeTimedOut" xml:space="preserve">
-    <value>Assembly initialize method '{0}.{1}' timed out</value>
+    <value>Assembly initialize method '{0}.{1}' timed out after '{2}'ms</value>
   </data>
   <data name="AssemblyInitializeWasCancelled" xml:space="preserve">
     <value>Assembly initialize method '{0}.{1}' was cancelled</value>
   </data>
   <data name="ClassInitializeTimedOut" xml:space="preserve">
-    <value>Class initialize method '{0}.{1}' timed out</value>
+    <value>Class initialize method '{0}.{1}' timed out after '{2}'ms</value>
   </data>
   <data name="ClassInitializeWasCancelled" xml:space="preserve">
     <value>Class initialize method '{0}.{1}' was cancelled</value>
@@ -376,25 +376,25 @@ Error: {1}</value>
     <value>TestClass attribute defined on generic non-abstract class {0}</value>
   </data>
   <data name="AssemblyCleanupTimedOut" xml:space="preserve">
-    <value>Assembly cleanup method '{0}.{1}' timed out</value>
+    <value>Assembly cleanup method '{0}.{1}' timed out after '{2}'ms</value>
   </data>
   <data name="AssemblyCleanupWasCancelled" xml:space="preserve">
     <value>Assembly cleanup method '{0}.{1}' was cancelled</value>
   </data>
   <data name="ClassCleanupTimedOut" xml:space="preserve">
-    <value>Class cleanup method '{0}.{1}' timed out</value>
+    <value>Class cleanup method '{0}.{1}' timed out after '{2}'ms</value>
   </data>
   <data name="ClassCleanupWasCancelled" xml:space="preserve">
     <value>Class cleanup method '{0}.{1}' was cancelled</value>
   </data>
   <data name="TestCleanupTimedOut" xml:space="preserve">
-    <value>Test cleanup method '{0}.{1}' timed out</value>
+    <value>Test cleanup method '{0}.{1}' timed out after '{2}'ms</value>
   </data>
   <data name="TestCleanupWasCancelled" xml:space="preserve">
     <value>Test cleanup method '{0}.{1}' was cancelled</value>
   </data>
   <data name="TestInitializeTimedOut" xml:space="preserve">
-    <value>Test initialize method '{0}.{1}' timed out</value>
+    <value>Test initialize method '{0}.{1}' timed out after '{2}'ms</value>
   </data>
   <data name="TestInitializeWasCancelled" xml:space="preserve">
     <value>Test initialize method '{0}.{1}' was cancelled</value>
