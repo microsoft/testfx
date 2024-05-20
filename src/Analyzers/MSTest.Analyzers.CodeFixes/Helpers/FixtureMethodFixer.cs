@@ -45,6 +45,9 @@ internal static class FixtureMethodFixer
         // Copy the attributes from the old method to the new method.
         fixedMethodDeclarationNode = syntaxGenerator.AddAttributes(fixedMethodDeclarationNode, syntaxGenerator.GetAttributes(node));
 
+        // Copy the attributes from the old method to the new method.
+        fixedMethodDeclarationNode = syntaxGenerator.AddAttributes(fixedMethodDeclarationNode, syntaxGenerator.GetAttributes(node));
+
         return document.WithSyntaxRoot(root.ReplaceNode(node, fixedMethodDeclarationNode)).Project.Solution;
     }
 
