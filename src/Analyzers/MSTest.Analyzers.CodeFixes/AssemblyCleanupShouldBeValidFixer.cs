@@ -34,18 +34,7 @@ public sealed class AssemblyCleanupShouldBeValidFixer : CodeFixProvider
             return;
         }
 
-        context.RegisterCodeFix(
-            CodeAction.Create(
-                CodeFixResources.AssemblyCleanupShouldBeValidCodeFix,
-                ct => FixSignatureAsync(context.Document, context.Diagnostics, root, node, ct),
-                nameof(CodeFixResources.AssemblyCleanupShouldBeValidCodeFix)),
-            context.Diagnostics);
-    }
-
-    private static Task<Solution> FixSignatureAsync(Document document, ImmutableArray<Diagnostic> diagnostics, SyntaxNode root,
-        SyntaxNode node, CancellationToken cancellationToken)
-    {
-        FixtureMethodSignatureChanges fixesToApply = diagnostics.Aggregate(FixtureMethodSignatureChanges.None, (acc, diagnostic) =>
+        FixtureMethodSignatureChanges fixesToApply = context.Diagnostics.Aggregate(FixtureMethodSignatureChanges.None, (acc, diagnostic) =>
         {
             if (diagnostic.Descriptor == AssemblyCleanupShouldBeValidAnalyzer.StaticRule)
             {
@@ -72,10 +61,23 @@ public sealed class AssemblyCleanupShouldBeValidFixer : CodeFixProvider
                 return acc | FixtureMethodSignatureChanges.RemoveParameters;
             }
 
+            if (diagnostic.Descriptor == AssemblyCleanupShouldBeValidAnalyzer.NotGenericRule)
+            {
+                return acc | FixtureMethodSignatureChanges.RemoveGeneric;
+            }
+
             // return accumulator unchanged, either the action cannot be fixed or it will be fixed by default.
             return acc;
         });
 
-        return FixtureMethodFixer.FixSignatureAsync(document, root, node, fixesToApply, cancellationToken);
+        if (fixesToApply != FixtureMethodSignatureChanges.None)
+        {
+            context.RegisterCodeFix(
+                CodeAction.Create(
+                    CodeFixResources.AssemblyCleanupShouldBeValidCodeFix,
+                    ct => FixtureMethodFixer.FixSignatureAsync(context.Document, root, node, fixesToApply, ct),
+                    nameof(CodeFixResources.AssemblyCleanupShouldBeValidCodeFix)),
+                context.Diagnostics);
+        }
     }
 }

@@ -16,4 +16,5 @@ internal enum FixtureMethodSignatureChanges
     RemoveParameters = 16,
     FixAsyncVoid = 32,
     FixReturnType = 64,
+    RemoveGeneric = 128,
 }

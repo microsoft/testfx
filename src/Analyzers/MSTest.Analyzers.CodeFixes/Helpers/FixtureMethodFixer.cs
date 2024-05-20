@@ -36,10 +36,13 @@ internal static class FixtureMethodFixer
             methodSymbol.Name,
             GetParameters(fixesToApply, syntaxGenerator, wellKnownTypeProvider),
             typeParameters: null,
-            GetReturnType(fixesToApply, syntaxGenerator, methodSymbol),
+            GetReturnType(fixesToApply, syntaxGenerator, methodSymbol, wellKnownTypeProvider),
             GetAccessibility(fixesToApply, methodSymbol),
             GetModifiers(fixesToApply, methodSymbol),
             syntaxGenerator.GetStatements(node));
+
+        // Copy the attributes from the old method to the new method.
+        fixedMethodDeclarationNode = syntaxGenerator.AddAttributes(fixedMethodDeclarationNode, syntaxGenerator.GetAttributes(node));
 
         return document.WithSyntaxRoot(root.ReplaceNode(node, fixedMethodDeclarationNode)).Project.Solution;
     }
@@ -61,22 +64,23 @@ internal static class FixtureMethodFixer
             : methodSymbol.DeclaredAccessibility;
 
     private static SyntaxNode? GetReturnType(FixtureMethodSignatureChanges fixesToApply, SyntaxGenerator syntaxGenerator,
-        IMethodSymbol methodSymbol)
+        IMethodSymbol methodSymbol, WellKnownTypeProvider wellKnownTypeProvider)
     {
         if (fixesToApply.HasFlag(FixtureMethodSignatureChanges.FixAsyncVoid))
         {
-            syntaxGenerator.IdentifierName("Task");
+            return syntaxGenerator.IdentifierName("Task");
         }
 
         if (fixesToApply.HasFlag(FixtureMethodSignatureChanges.FixReturnType))
         {
-            if (methodSymbol.IsAsync)
+            if (SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType.OriginalDefinition, wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask1)))
             {
-                syntaxGenerator.IdentifierName("Task");
+                return syntaxGenerator.IdentifierName("Task");
             }
-            else
+
+            if (SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType.OriginalDefinition, wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask1)))
             {
-                return VoidReturnTypeNode;
+                return syntaxGenerator.IdentifierName("ValueTask");
             }
         }
 

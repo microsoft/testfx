@@ -38,4 +38,5 @@ internal static class WellKnownTypeNames
     public const string SystemThreadingTasksTask = "System.Threading.Tasks.Task";
     public const string SystemThreadingTasksTask1 = "System.Threading.Tasks.Task`1";
     public const string SystemThreadingTasksValueTask = "System.Threading.Tasks.ValueTask";
+    public const string SystemThreadingTasksValueTask1 = "System.Threading.Tasks.ValueTask`1";
 }
