@@ -297,23 +297,39 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
                 [AssemblyCleanup]
                 public static int {|#0:AssemblyCleanup0|}()
                 {
+                    int x = 1 + 2;
                     return 0;
                 }
 
                 [AssemblyCleanup]
                 public static string {|#1:AssemblyCleanup1|}()
                 {
+                    int x = 1 + 2;
                     return "0";
                 }
 
                 [AssemblyCleanup]
-                public static Task<int> {|#2:AssemblyCleanup2|}()
+                public static async Task<int> {|#2:AssemblyCleanup2|}()
                 {
-                    return Task.FromResult(0);
+                    await Task.Delay(0);
+                    return 0;
                 }
 
                 [AssemblyCleanup]
-                public static ValueTask<int> {|#3:AssemblyCleanup3|}()
+                public static Task<int> {|#3:AssemblyCleanup3|}()
+                {
+                    return Task.FromResult(0);
+                }
+            
+                [AssemblyCleanup]
+                public static async ValueTask<int> {|#4:AssemblyCleanup4|}()
+                {
+                    await Task.Delay(0);
+                    return 0;
+                }
+
+                [AssemblyCleanup]
+                public static ValueTask<int> {|#5:AssemblyCleanup5|}()
                 {
                     return ValueTask.FromResult(0);
                 }
@@ -330,25 +346,35 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
                 [AssemblyCleanup]
                 public static void AssemblyCleanup0()
                 {
-                    return 0;
+                    int x = 1 + 2;
                 }
 
                 [AssemblyCleanup]
                 public static void AssemblyCleanup1()
                 {
-                    return "0";
+                    int x = 1 + 2;
                 }
 
                 [AssemblyCleanup]
-                public static Task AssemblyCleanup2()
+                public static async Task AssemblyCleanup2()
                 {
-                    return Task.FromResult(0);
+                    await Task.Delay(0);
                 }
 
                 [AssemblyCleanup]
-                public static ValueTask AssemblyCleanup3()
+                public static Task {|CS0161:AssemblyCleanup3|}()
                 {
-                    return ValueTask.FromResult(0);
+                }
+            
+                [AssemblyCleanup]
+                public static async ValueTask AssemblyCleanup4()
+                {
+                    await Task.Delay(0);
+                }
+
+                [AssemblyCleanup]
+                public static ValueTask {|CS0161:AssemblyCleanup5|}()
+                {
                 }
             }
             """;
@@ -369,6 +395,12 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
                 VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.ReturnTypeRule)
                     .WithLocation(3)
                     .WithArguments("AssemblyCleanup3"),
+                VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.ReturnTypeRule)
+                    .WithLocation(4)
+                    .WithArguments("AssemblyCleanup4"),
+                VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.ReturnTypeRule)
+                    .WithLocation(5)
+                    .WithArguments("AssemblyCleanup5"),
             },
             fixedCode);
     }

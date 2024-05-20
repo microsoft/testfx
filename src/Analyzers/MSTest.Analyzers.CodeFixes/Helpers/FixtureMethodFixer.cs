@@ -4,6 +4,7 @@
 using Analyzer.Utilities;
 
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Editing;
 
 namespace MSTest.Analyzers.Helpers;
@@ -39,13 +40,17 @@ internal static class FixtureMethodFixer
             GetReturnType(fixesToApply, syntaxGenerator, methodSymbol, wellKnownTypeProvider),
             GetAccessibility(fixesToApply, methodSymbol),
             GetModifiers(fixesToApply, methodSymbol),
-            syntaxGenerator.GetStatements(node));
+            GetStatements(node, syntaxGenerator));
 
         // Copy the attributes from the old method to the new method.
         fixedMethodDeclarationNode = syntaxGenerator.AddAttributes(fixedMethodDeclarationNode, syntaxGenerator.GetAttributes(node));
 
         return document.WithSyntaxRoot(root.ReplaceNode(node, fixedMethodDeclarationNode)).Project.Solution;
     }
+
+    private static IEnumerable<SyntaxNode> GetStatements(SyntaxNode node, SyntaxGenerator syntaxGenerator)
+        => syntaxGenerator.GetStatements(node)
+            .Where(x => !x.IsKind(SyntaxKind.ReturnStatement) && !x.IsKind(SyntaxKind.YieldReturnStatement));
 
     private static DeclarationModifiers GetModifiers(FixtureMethodSignatureChanges fixesToApply, IMethodSymbol methodSymbol)
     {
