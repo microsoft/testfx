@@ -113,8 +113,8 @@ For a comprehensive list of information that can be published to the testing pla
 `CancellationToken`: This token is utilized to interrupt the processing of a particular request.
 
 `Complete()`: As depicted in the previous sequence, the `Complete` method notifies the platform that the request has been successfully processed and all relevant information has been transmitted to the [IMessageBus](imessagebus.md).
->> [!WARNING]
->> Neglecting to invoke `Complete()` on the request will result in the test application becoming unresponsive.
+> [!WARNING]
+> Neglecting to invoke `Complete()` on the request will result in the test application becoming unresponsive.
 
 To customize your test framework according to your requirements or those of your users, you can use a personalized section inside the [configuration](configuration.md) file or with custom [command line options](icommandlineoptionsprovider.md).
 
