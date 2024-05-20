@@ -23,15 +23,47 @@ public class DynamicDataTests : AcceptanceTestBase
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
-        => await RunTests(currentTfm, true, true);
+        => await RunTests(currentTfm, true, true, true);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToTestDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
-        => await RunTests(currentTfm, true, false);
+        => await RunTests(currentTfm, true, false, true);
 
-    private async Task RunTests(string currentTfm, bool isEmptyDataInconclusive, bool isDynamicData)
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
+        => await RunTests(currentTfm, false, true, true);
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task SendingEmptyDataToTestDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
+    => await RunTests(currentTfm, false, false, true);
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task SendingEmptyDataToDynamicDataTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
+        => await RunTests(currentTfm, false, true, false);
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task SendingEmptyDataToTestDataSourceTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
+        => await RunTests(currentTfm, false, false, false);
+
+    private async Task RunTests(string currentTfm, bool isEmptyDataInconclusive, bool isDynamicData, bool useRunSettings)
     {
-        string runSettings = $"""
+        _testAssetFixture.IsDynamicData = isDynamicData;
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync(SetupRunSettingsAndGetArgs(useRunSettings, isEmptyDataInconclusive));
+
+        testHostResult.AssertExitCodeIs(isEmptyDataInconclusive ? ExitCodes.Success : ExitCodes.AtLeastOneTestFailed);
+
+        testHostResult.AssertOutputContains(isEmptyDataInconclusive ? "skipped Test" : "failed Test");
+
+        string? SetupRunSettingsAndGetArgs(bool useRunSettings, bool isEmptyDataInconclusive)
+        {
+            if (useRunSettings)
+            {
+                return null;
+            }
+
+            string runSettings = $"""
 <?xml version="1.0" encoding="utf-8" ?>
 <RunSettings>
     <RunConfiguration>
@@ -42,37 +74,10 @@ public class DynamicDataTests : AcceptanceTestBase
 </RunSettings>
 """;
 
-        _testAssetFixture.IsDynamicData = isDynamicData;
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
-
-        string runSettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
-        File.WriteAllText(runSettingsFilePath, runSettings);
-
-        TestHostResult testHostResult = await testHost.ExecuteAsync($"--settings {runSettingsFilePath}");
-
-        testHostResult.AssertExitCodeIs(isEmptyDataInconclusive ? ExitCodes.Success : ExitCodes.AtLeastOneTestFailed);
-
-        testHostResult.AssertOutputContains(isEmptyDataInconclusive ? "skipped Test" : "failed Test");
-    }
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
-        => await RunTests(currentTfm, false, true);
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToTestDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
-    => await RunTests(currentTfm, false, false);
-
-    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDynamicDataTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
-    {
-        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
-
-        TestHostResult testHostResult = await testHost.ExecuteAsync();
-
-        testHostResult.AssertExitCodeIs(ExitCodes.AtLeastOneTestFailed);
-
-        testHostResult.AssertOutputContains("failed Test");
+            string runSettingsFilePath = Path.Combine(testHost.DirectoryName, $"{Guid.NewGuid():N}.runsettings");
+            File.WriteAllText(runSettingsFilePath, runSettings);
+            return $"--settings {runSettingsFilePath}";
+        }
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
