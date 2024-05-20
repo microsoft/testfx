@@ -178,7 +178,7 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
     {
         var testHost = TestHost.LocateFrom(rootFolder, assetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync(environmentVariables: new() { { envVarPrefix + InfoByKind[entryKind].EnvVarSuffix, "1" } });
-        testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out");
+        testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out after 1000ms");
     }
 
     private async Task RunAndAssertWithRunSettingsAsync(string tfm, int timeoutValue, bool assertAttributePrecedence, string entryKind)
@@ -195,6 +195,9 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
 </RunSettings>
 """;
 
+        // if assertAttributePrecedence is set we will use CodeWithOneSecTimeoutAssetPath
+        timeoutValue = assertAttributePrecedence ? 1000 : timeoutValue;
+
         TestHost testHost = assertAttributePrecedence
             ? TestHost.LocateFrom(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm)
             : TestHost.LocateFrom(_testAssetFixture.CodeWithNoTimeoutAssetPath, TestAssetFixture.CodeWithNoTimeout, tfm);
@@ -210,7 +213,7 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
             Assert.IsTrue(stopwatch.Elapsed.TotalSeconds < 25);
         }
 
-        testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out");
+        testHostResult.AssertOutputContains($"{InfoByKind[entryKind].Prefix} method '{InfoByKind[entryKind].MethodFullName}' timed out after {timeoutValue}ms");
     }
 
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
