@@ -182,7 +182,7 @@ public class TestClass
     [TestMethod]
     [CustomTestDataSource]
     [CustomEmptyTestDataSource]
-    public void Test()
+    public void Test(int a, int b, int c)
     {
     }
 }
