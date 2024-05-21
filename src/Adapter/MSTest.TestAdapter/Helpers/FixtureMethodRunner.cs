@@ -85,7 +85,8 @@ internal static class FixtureMethodRunner
                     CultureInfo.InvariantCulture,
                     methodTimedOutMessageFormat,
                     methodInfo.DeclaringType!.FullName,
-                    methodInfo.Name));
+                    methodInfo.Name,
+                    timeout));
         }
         catch (Exception ex) when
             (ex is OperationCanceledException
@@ -167,7 +168,8 @@ internal static class FixtureMethodRunner
                     CultureInfo.InvariantCulture,
                     methodTimedOutMessageFormat,
                     methodInfo.DeclaringType!.FullName,
-                    methodInfo.Name));
+                    methodInfo.Name,
+                    timeout));
         }
         catch (Exception ex) when
 

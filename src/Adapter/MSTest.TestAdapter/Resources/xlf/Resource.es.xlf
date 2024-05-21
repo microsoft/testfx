@@ -3,8 +3,8 @@
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="es">
     <body>
       <trans-unit id="AssemblyCleanupTimedOut">
-        <source>Assembly cleanup method '{0}.{1}' timed out</source>
-        <target state="translated">Se agotó el tiempo de espera del método de limpieza de ensamblados "{0}.{1}"</target>
+        <source>Assembly cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="new">Assembly cleanup method '{0}.{1}' timed out after {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
@@ -13,8 +13,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
-        <source>Assembly initialize method '{0}.{1}' timed out</source>
-        <target state="translated">Se agotó el tiempo de espera del método de inicialización de ensamblado "{0}.{1}"</target>
+        <source>Assembly initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="new">Assembly initialize method '{0}.{1}' timed out after {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
@@ -37,8 +37,8 @@ pero recibió {4} argumento(s), con los tipos "{5}".</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">
-        <source>Class cleanup method '{0}.{1}' timed out</source>
-        <target state="translated">Se agotó el tiempo de espera del método de limpieza de clases "{0}.{1}"</target>
+        <source>Class cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="new">Class cleanup method '{0}.{1}' timed out after {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
@@ -47,8 +47,8 @@ pero recibió {4} argumento(s), con los tipos "{5}".</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
-        <source>Class initialize method '{0}.{1}' timed out</source>
-        <target state="translated">Se agotó el tiempo de espera del método de inicialización de clase "{0}.{1}"</target>
+        <source>Class initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="new">Class initialize method '{0}.{1}' timed out after {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
@@ -72,8 +72,8 @@ pero recibió {4} argumento(s), con los tipos "{5}".</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestCleanupTimedOut">
-        <source>Test cleanup method '{0}.{1}' timed out</source>
-        <target state="translated">Se agotó el tiempo de espera del método de limpieza de pruebas "{0}.{1}"</target>
+        <source>Test cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="new">Test cleanup method '{0}.{1}' timed out after {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
@@ -82,8 +82,8 @@ pero recibió {4} argumento(s), con los tipos "{5}".</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
-        <source>Test initialize method '{0}.{1}' timed out</source>
-        <target state="translated">Se agotó el tiempo de espera del método de inicialización de pruebas "{0}.{1}"</target>
+        <source>Test initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="new">Test initialize method '{0}.{1}' timed out after {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
