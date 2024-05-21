@@ -63,9 +63,9 @@ namespace MSTest.Analyzers {
         /// <summary>
         ///   Looks up a localized string similar to Fix signature.
         /// </summary>
-        internal static string AssemblyCleanupShouldBeValidCodeFix {
+        internal static string FixSignatureCodeFix {
             get {
-                return ResourceManager.GetString("AssemblyCleanupShouldBeValidCodeFix", resourceCulture);
+                return ResourceManager.GetString("FixSignatureCodeFix", resourceCulture);
             }
         }
         
