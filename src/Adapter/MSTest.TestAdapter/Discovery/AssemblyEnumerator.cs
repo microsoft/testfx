@@ -299,9 +299,17 @@ internal class AssemblyEnumerator : MarshalByRefObject
         foreach (FrameworkITestDataSource dataSource in testDataSources)
         {
             IEnumerable<object?[]>? data = null;
+
+            // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
+            // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.
             try
             {
                 data = dataSource.GetData(methodInfo);
+
+                if (!data.Any())
+                {
+                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", dataSource.GetType().Name));
+                }
             }
             catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
             {
