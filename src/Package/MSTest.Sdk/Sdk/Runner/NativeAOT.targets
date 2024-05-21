@@ -13,18 +13,18 @@
 
   <!-- Core -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.Engine" Version="$(MSTestEngineVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestEngineVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" VersionOverride="$(MicrosoftTestingPlatformVersion)" Sdk="MSTest" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Sdk="MSTest" />
+    <PackageReference Include="MSTest.Engine" Version="$(MSTestEngineVersion)" VersionOverride="$(MSTestEngineVersion)" Sdk="MSTest" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestEngineVersion)" VersionOverride="$(MSTestEngineVersion)" Sdk="MSTest" />
   </ItemGroup>
 
   <!-- Extensions -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " Sdk="MSTest" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)" VersionOverride="$(MicrosoftTestingExtensionsTrxReportVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" VersionOverride="$(MicrosoftTestingExtensionsCodeCoverageVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " Sdk="MSTest" />
     <!-- Support for -p:AotMsCodeCoverageInstrumentation="true" during dotnet publish for native aot -->
-    <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and $(PublishAot) == 'true' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" VersionOverride="$(MicrosoftTestingExtensionsCodeCoverageVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' and $(PublishAot) == 'true' " Sdk="MSTest" />
   </ItemGroup>
 
 </Project>
