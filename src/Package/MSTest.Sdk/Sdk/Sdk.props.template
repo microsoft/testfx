@@ -5,7 +5,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
   <PropertyGroup>
-    <EnableAspire Condition=" '$(EnableAspire)' == '' ">false</EnableAspire>
+    <EnableAspireTesting Condition=" '$(EnableAspireTesting)' == '' ">false</EnableAspireTesting>
     <EnablePlaywright Condition=" '$(EnablePlaywright)' == '' ">false</EnablePlaywright>
     <UseVSTest Condition=" '$(UseVSTest)' == '' " >false</UseVSTest>
 
