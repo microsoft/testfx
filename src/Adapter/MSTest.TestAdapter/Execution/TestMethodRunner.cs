@@ -288,6 +288,7 @@ internal class TestMethodRunner
         else
         {
             IEnumerable<UTF.ITestDataSource>? testDataSources = _testMethodInfo.GetAttributes<Attribute>(false)?.OfType<UTF.ITestDataSource>();
+
             if (testDataSources != null)
             {
                 foreach (UTF.ITestDataSource testDataSource in testDataSources)
