@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <ItemGroup>
-    <PackageReference Include="Aspire.Hosting.Testing" Version="$(AspireHostingTestingVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
+    <PackageReference Include="Aspire.Hosting.Testing" Version="$(AspireHostingTestingVersion)" VersionOverride="$(AspireHostingTestingVersion)" Sdk="MSTest" />
   </ItemGroup>
 
   <!--
