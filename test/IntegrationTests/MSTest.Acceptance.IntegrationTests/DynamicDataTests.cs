@@ -10,9 +10,9 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestGroup]
 public class DynamicDataTests : AcceptanceTestBase
 {
+    private readonly TestAssetFixture _testAssetFixture;
     private const string DynamicDataAssetName = "DynamicData";
     private const string DataSourceAssetName = "DataSource";
-    private readonly TestAssetFixture _testAssetFixture;
 
     // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
     public DynamicDataTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
@@ -24,29 +24,29 @@ public class DynamicDataTests : AcceptanceTestBase
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
-        => await RunTests(currentTfm, DynamicDataAssetName, true);
+        => await RunTestsAsync(currentTfm, DynamicDataAssetName, true);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
-        => await RunTests(currentTfm, DataSourceAssetName, true);
+        => await RunTestsAsync(currentTfm, DataSourceAssetName, true);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
-        => await RunTests(currentTfm, DynamicDataAssetName, false);
+        => await RunTestsAsync(currentTfm, DynamicDataAssetName, false);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
-    => await RunTests(currentTfm, DataSourceAssetName, false);
+    => await RunTestsAsync(currentTfm, DataSourceAssetName, false);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDynamicDataTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
-        => await RunTests(currentTfm, DynamicDataAssetName, null);
+        => await RunTestsAsync(currentTfm, DynamicDataAssetName, null);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task SendingEmptyDataToDataSourceTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
-        => await RunTests(currentTfm, DataSourceAssetName, null);
+        => await RunTestsAsync(currentTfm, DataSourceAssetName, null);
 
-    private async Task RunTests(string currentTfm, string assetName, bool? isEmptyDataInconclusive)
+    private async Task RunTestsAsync(string currentTfm, string assetName, bool? isEmptyDataInconclusive)
     {
         var testHost = TestHost.LocateFrom(_testAssetFixture.GetAssetPath(assetName), assetName, currentTfm);
 
