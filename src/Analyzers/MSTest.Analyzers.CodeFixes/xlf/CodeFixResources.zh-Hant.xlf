@@ -7,6 +7,11 @@
         <target state="new">Fix signature</target>
         <note />
       </trans-unit>
+      <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
+        <source>Fix signature</source>
+        <target state="new">Fix signature</target>
+        <note />
+      </trans-unit>
     </body>
   </file>
 </xliff>
