@@ -305,7 +305,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
                 if (!data.Any())
                 {
-                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", methodInfo.DeclaringType!.Name));
+                    throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", dataSource.GetType().Name));
                 }
             }
             catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
