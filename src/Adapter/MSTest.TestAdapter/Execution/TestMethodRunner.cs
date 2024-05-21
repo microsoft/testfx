@@ -297,6 +297,8 @@ internal class TestMethodRunner
                     IEnumerable<object?[]>? dataSource = null;
                     try
                     {
+                        // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
+                        // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
                         dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
 
                         if (!dataSource.Any())

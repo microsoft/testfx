@@ -8,14 +8,14 @@ using Microsoft.Testing.Platform.Helpers;
 namespace MSTest.Acceptance.IntegrationTests;
 
 [TestGroup]
-public class DynamicDataTests : AcceptanceTestBase
+public class ParameterizedTestTests : AcceptanceTestBase
 {
     private readonly TestAssetFixture _testAssetFixture;
     private const string DynamicDataAssetName = "DynamicData";
     private const string DataSourceAssetName = "DataSource";
 
     // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
-    public DynamicDataTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
+    public ParameterizedTestTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,
         AcceptanceFixture globalFixture)
         : base(testExecutionContext)
     {
