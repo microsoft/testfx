@@ -132,12 +132,12 @@
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
         <source>Prefer adding an additional assertion that checks for null</source>
-        <target state="new">Prefer adding an additional assertion that checks for null</target>
+        <target state="translated">Preferir agregar una aserción adicional que compruebe si hay valores NULL</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionArgsShouldAvoidConditionalAccessTitle">
         <source>Avoid conditional access in assertions</source>
-        <target state="new">Avoid conditional access in assertions</target>
+        <target state="translated">Evitar el acceso condicional en las aserciones</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">

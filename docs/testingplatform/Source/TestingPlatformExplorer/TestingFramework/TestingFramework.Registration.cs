@@ -10,7 +10,7 @@ namespace TestingPlatformExplorer.TestingFramework;
 
 public static class TestingFrameworkExtensions
 {
-    public static void AddTestingFramework(this ITestApplicationBuilder builder, Assembly[] assemblies)
+    public static void AddTestingFramework(this ITestApplicationBuilder builder, Func<Assembly[]> assemblies)
         => builder.RegisterTestFramework(_ => new TestingFrameworkCapabilities(),
             (capabilities, serviceProvider) => new TestingFramework(capabilities,
                 serviceProvider.GetCommandLineOptions(),

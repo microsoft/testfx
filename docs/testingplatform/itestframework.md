@@ -1,4 +1,4 @@
-# Implement the Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework
+# The `Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework`
 
 The `Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework` is implemented by extensions that provide a test framework:
 
@@ -78,7 +78,7 @@ public sealed class ExecuteRequestContext
 ```mermaid
 sequenceDiagram
     Testing platform->>ITestFramework: adapterFactory() from 'RegisterTestFramework'
-    ITestFramework-->>Testing platform:
+    ITestFramework-->>Testing platform: 
     Testing platform->>ITestFramework: CreateTestSessionAsync(CreateTestSessionContext)
     ITestFramework-->>Testing platform: CreateTestSessionResult
     Testing platform->>ITestFramework: ExecuteRequestAsync(ExecuteRequestContext_1)
@@ -113,8 +113,8 @@ For a comprehensive list of information that can be published to the testing pla
 `CancellationToken`: This token is utilized to interrupt the processing of a particular request.
 
 `Complete()`: As depicted in the previous sequence, the `Complete` method notifies the platform that the request has been successfully processed and all relevant information has been transmitted to the [IMessageBus](imessagebus.md).
->> [!WARNING]
->> Neglecting to invoke `Complete()` on the request will result in the test application becoming unresponsive.
+> [!WARNING]
+> Neglecting to invoke `Complete()` on the request will result in the test application becoming unresponsive.
 
 To customize your test framework according to your requirements or those of your users, you can use a personalized section inside the [configuration](configuration.md) file or with custom [command line options](icommandlineoptionsprovider.md).
 
