@@ -79,7 +79,7 @@ public sealed class TestCleanupShouldBeValidFixer : CodeFixProvider
         {
             context.RegisterCodeFix(
                 CodeAction.Create(
-                    CodeFixResources.AssemblyCleanupShouldBeValidCodeFix,
+                    CodeFixResources.FixSignatureCodeFix,
                     ct => FixtureMethodFixer.FixSignatureAsync(context.Document, root, node, fixesToApply, ct),
                     nameof(TestCleanupShouldBeValidFixer)),
                 context.Diagnostics);

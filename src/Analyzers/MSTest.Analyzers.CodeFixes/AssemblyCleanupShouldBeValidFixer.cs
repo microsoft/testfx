@@ -72,14 +72,14 @@ public sealed class AssemblyCleanupShouldBeValidFixer : CodeFixProvider
 
         if (fixesToApply != FixtureMethodSignatureChanges.None)
         {
-            // Ensure that the method will be static.
+            // The fixer is common to all fixture methods, so we need to hint it that we need 'static'.
             fixesToApply |= FixtureMethodSignatureChanges.MakeStatic;
 
             context.RegisterCodeFix(
                 CodeAction.Create(
-                    CodeFixResources.AssemblyCleanupShouldBeValidCodeFix,
+                    CodeFixResources.FixSignatureCodeFix,
                     ct => FixtureMethodFixer.FixSignatureAsync(context.Document, root, node, fixesToApply, ct),
-                    nameof(CodeFixResources.AssemblyCleanupShouldBeValidCodeFix)),
+                    nameof(AssemblyCleanupShouldBeValidFixer)),
                 context.Diagnostics);
         }
     }
