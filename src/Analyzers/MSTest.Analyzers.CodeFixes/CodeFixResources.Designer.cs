@@ -59,15 +59,7 @@ namespace MSTest.Analyzers {
                 resourceCulture = value;
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Fix signature.
-        /// </summary>
-        internal static string AssemblyInitializeShouldBeValidCodeFix {
-            get {
-                return ResourceManager.GetString("AssemblyInitializeShouldBeValidCodeFix", resourceCulture);
-            }
-        }
+
         
         /// <summary>
         ///   Looks up a localized string similar to Fix signature.
