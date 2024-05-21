@@ -54,13 +54,15 @@ internal static class FixtureMethodFixer
 
     private static DeclarationModifiers GetModifiers(FixtureMethodSignatureChanges fixesToApply, IMethodSymbol methodSymbol)
     {
-        var currentModifiers = DeclarationModifiers.From(methodSymbol);
+        DeclarationModifiers newModifiers = methodSymbol.IsAsync
+            ? DeclarationModifiers.Async
+            : DeclarationModifiers.None;
 
         return fixesToApply.HasFlag(FixtureMethodSignatureChanges.MakeStatic)
-            ? currentModifiers.WithIsStatic(true)
+            ? newModifiers.WithIsStatic(true)
             : fixesToApply.HasFlag(FixtureMethodSignatureChanges.RemoveStatic)
-                ? currentModifiers.WithIsStatic(false)
-                : currentModifiers;
+                ? newModifiers.WithIsStatic(false)
+                : newModifiers;
     }
 
     private static Accessibility GetAccessibility(FixtureMethodSignatureChanges fixesToApply, IMethodSymbol methodSymbol)
