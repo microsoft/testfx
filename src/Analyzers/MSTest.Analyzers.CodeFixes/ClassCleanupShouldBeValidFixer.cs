@@ -72,6 +72,9 @@ public sealed class ClassCleanupShouldBeValidFixer : CodeFixProvider
 
         if (fixesToApply != FixtureMethodSignatureChanges.None)
         {
+            // The fixer is common to all fixture methods, so we need to hint it that we need 'static'.
+            fixesToApply |= FixtureMethodSignatureChanges.MakeStatic;
+
             context.RegisterCodeFix(
                 CodeAction.Create(
                     CodeFixResources.FixSignatureCodeFix,

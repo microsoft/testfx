@@ -72,11 +72,13 @@ public sealed class ClassInitializeShouldBeValidFixer : CodeFixProvider
 
         if (fixesToApply != FixtureMethodSignatureChanges.None)
         {
+            // The fixer is common to all fixture methods, so we need to hint it that we need 'static' and 'TestContext' parameter.
             fixesToApply |= FixtureMethodSignatureChanges.AddTestContextParameter;
+            fixesToApply |= FixtureMethodSignatureChanges.MakeStatic;
 
             context.RegisterCodeFix(
                 CodeAction.Create(
-                    CodeFixResources.AssemblyCleanupShouldBeValidCodeFix,
+                    CodeFixResources.FixSignatureCodeFix,
                     ct => FixtureMethodFixer.FixSignatureAsync(context.Document, root, node, fixesToApply, ct),
                     nameof(ClassInitializeShouldBeValidFixer)),
                 context.Diagnostics);
