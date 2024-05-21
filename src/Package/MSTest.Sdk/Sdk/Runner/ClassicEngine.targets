@@ -28,20 +28,20 @@
 
   <!-- Core -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" VersionOverride="$(MicrosoftNETTestSdkVersion)" Sdk="MSTest" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Sdk="MSTest" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Sdk="MSTest" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " Sdk="MSTest" />
   </ItemGroup>
 
   <!-- Extensions -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " Sdk="MSTest" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingExtensionsCrashDumpVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'true' " Sdk="MSTest" />
-    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$(MicrosoftTestingExtensionsHangDumpVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' " Sdk="MSTest" />
-    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " Sdk="MSTest" />
-    <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$(MicrosoftTestingExtensionsHotReloadVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' " Sdk="MSTest" />
-    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingExtensionsRetryVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingExtensionsTrxReportVersion)" VersionOverride="$(MicrosoftTestingExtensionsTrxReportVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsTrxReport)' == 'true' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CrashDump" Version="$(MicrosoftTestingExtensionsCrashDumpVersion)" VersionOverride="$(MicrosoftTestingExtensionsCrashDumpVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsCrashDump)' == 'true' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="$(MicrosoftTestingExtensionsHangDumpVersion)" VersionOverride="$(MicrosoftTestingExtensionsHangDumpVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsHangDump)' == 'true' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(MicrosoftTestingExtensionsCodeCoverageVersion)" VersionOverride="$(MicrosoftTestingExtensionsCodeCoverageVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsCodeCoverage)' == 'true' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HotReload" Version="$(MicrosoftTestingExtensionsHotReloadVersion)" VersionOverride="$(MicrosoftTestingExtensionsHotReloadVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsHotReload)' == 'true' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.Testing.Extensions.Retry" Version="$(MicrosoftTestingExtensionsRetryVersion)" VersionOverride="$(MicrosoftTestingExtensionsRetryVersion)" Condition=" '$(EnableMicrosoftTestingExtensionsRetry)' == 'true' " Sdk="MSTest" />
   </ItemGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)../Features/Aspire.targets" Condition=" '$(EnableAspireTesting)' == 'true' " />

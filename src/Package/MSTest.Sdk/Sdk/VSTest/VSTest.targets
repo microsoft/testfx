@@ -2,10 +2,10 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" VersionOverride="$(MicrosoftNETTestSdkVersion)" Sdk="MSTest" />
+    <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Sdk="MSTest" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Sdk="MSTest" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" VersionOverride="$(MSTestVersion)" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " Sdk="MSTest" />
   </ItemGroup>
 
   <!--
