@@ -59,7 +59,6 @@ namespace MSTest.Analyzers {
                 resourceCulture = value;
             }
         }
-
         
         /// <summary>
         ///   Looks up a localized string similar to Fix signature.
