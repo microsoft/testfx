@@ -72,6 +72,9 @@ public sealed class AssemblyInitializeShouldBeValidFixer : CodeFixProvider
 
         if (fixesToApply != FixtureMethodSignatureChanges.None)
         {
+            // If we have some fixes to apply, we want to ensure the new method signature will have the TestContext parameter.
+            fixesToApply |= FixtureMethodSignatureChanges.AddTestContextParameter;
+
             context.RegisterCodeFix(
                 CodeAction.Create(
                     CodeFixResources.AssemblyInitializeShouldBeValidCodeFix,
