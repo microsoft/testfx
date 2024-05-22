@@ -512,7 +512,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to In process file artifacts produced.
+        ///   Looks up a localized string similar to In process file artifacts produced:.
         /// </summary>
         internal static string InProcessArtifactsProduced {
             get {
@@ -629,7 +629,7 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Out of process file artifacts produced.
+        ///   Looks up a localized string similar to Out of process file artifacts produced:.
         /// </summary>
         internal static string OutOfProcessArtifactsProduced {
             get {

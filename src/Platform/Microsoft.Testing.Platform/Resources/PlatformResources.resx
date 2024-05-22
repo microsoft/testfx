@@ -520,14 +520,14 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <comment>is followed by test name</comment>
   </data>
   <data name="InProcessArtifactsProduced" xml:space="preserve">
-    <value>In process file artifacts produced</value>
+    <value>In process file artifacts produced:</value>
   </data>
   <data name="MinimumExpectedTestsPolicyViolation" xml:space="preserve">
     <value>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</value>
     <comment>{0}, {1} number of tests</comment>
   </data>
   <data name="OutOfProcessArtifactsProduced" xml:space="preserve">
-    <value>Out of process file artifacts produced</value>
+    <value>Out of process file artifacts produced:</value>
   </data>
   <data name="Passed" xml:space="preserve">
     <value>Passed</value>
