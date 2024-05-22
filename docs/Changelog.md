@@ -57,6 +57,10 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
 * Fix localappdata folder for Linux and Mac by @Evangelink in [#2765](https://github.com/microsoft/testfx/pull/2765)
 * Fix deserializers for DiscoveryRequestArgs and RunRequestArgs by @mariam-abdulla in [#2768](https://github.com/microsoft/testfx/pull/2768)
 * Don't start thread/task when not using timeout for fixture methods by @Evangelink in [#2825](https://github.com/microsoft/testfx/pull/2825)
+* Fix parameters/arguments check for data driven tests by @nohwnd in [#2829](https://github.com/microsoft/testfx/pull/2829)
+* Cleaning command line validations and adding unit tests by @fhnaseer in [#2847](https://github.com/microsoft/testfx/pull/2847)
+* Fix MSTEST0014 FP with arrays by @Evangelink in [#2857](https://github.com/microsoft/testfx/pull/2857)
+* Flow execution context across fixture methods when using timeout by @Evangelink [#2843](https://github.com/microsoft/testfx/pull/2843)
 
 ### Housekeeping
 
@@ -70,6 +74,17 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
 * perf: reduce allocations and calls to ToArray by @Evangelink in [#2747](https://github.com/microsoft/testfx/pull/2747)
 * Add test for resource recursion problem by @nohwnd in [#2778](https://github.com/microsoft/testfx/pull/2778)
 * Opt-out from CPM in samples by @Evangelink in [#2805](https://github.com/microsoft/testfx/pull/2805)
+
+### New Contributors
+
+* @mariam-abdulla made their first contribution in [#2564](https://github.com/microsoft/testfx/pull/2564)
+* @Varorbc made their first contribution in [#2696](https://github.com/microsoft/testfx/pull/2696)
+* @skanda890 made their first contribution in [#2706](https://github.com/microsoft/testfx/pull/2706)
+* @SimonCropp made their first contribution in [#2714](https://github.com/microsoft/testfx/pull/2714)
+* @Mrxx99 made their first contribution in [#2717](https://github.com/microsoft/testfx/pull/2717)
+* @dansiegel made their first contribution in [#2727](https://github.com/microsoft/testfx/pull/2727)
+* @thomhurst made their first contribution in [#2749](https://github.com/microsoft/testfx/pull/2749)
+* @Youssef1313 made their first contribution in [#2799](https://github.com/microsoft/testfx/pull/2799)
 
 ### Artifacts
 
