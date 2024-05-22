@@ -14,12 +14,12 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
-[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AssemblyCleanupShouldBeValidFixer))]
+[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AssemblyInitializeShouldBeValidFixer))]
 [Shared]
-public sealed class AssemblyCleanupShouldBeValidFixer : CodeFixProvider
+public sealed class AssemblyInitializeShouldBeValidFixer : CodeFixProvider
 {
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.AssemblyCleanupShouldBeValidRuleId);
+        = ImmutableArray.Create(DiagnosticIds.AssemblyInitializeShouldBeValidRuleId);
 
     public override FixAllProvider GetFixAllProvider()
         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
@@ -36,32 +36,32 @@ public sealed class AssemblyCleanupShouldBeValidFixer : CodeFixProvider
 
         FixtureMethodSignatureChanges fixesToApply = context.Diagnostics.Aggregate(FixtureMethodSignatureChanges.None, (acc, diagnostic) =>
         {
-            if (diagnostic.Descriptor == AssemblyCleanupShouldBeValidAnalyzer.StaticRule)
+            if (diagnostic.Descriptor == AssemblyInitializeShouldBeValidAnalyzer.StaticRule)
             {
                 return acc | FixtureMethodSignatureChanges.MakeStatic;
             }
 
-            if (diagnostic.Descriptor == AssemblyCleanupShouldBeValidAnalyzer.PublicRule)
+            if (diagnostic.Descriptor == AssemblyInitializeShouldBeValidAnalyzer.PublicRule)
             {
                 return acc | FixtureMethodSignatureChanges.MakePublic;
             }
 
-            if (diagnostic.Descriptor == AssemblyCleanupShouldBeValidAnalyzer.ReturnTypeRule)
+            if (diagnostic.Descriptor == AssemblyInitializeShouldBeValidAnalyzer.ReturnTypeRule)
             {
                 return acc | FixtureMethodSignatureChanges.FixReturnType;
             }
 
-            if (diagnostic.Descriptor == AssemblyCleanupShouldBeValidAnalyzer.NotAsyncVoidRule)
+            if (diagnostic.Descriptor == AssemblyInitializeShouldBeValidAnalyzer.NotAsyncVoidRule)
             {
                 return acc | FixtureMethodSignatureChanges.FixAsyncVoid;
             }
 
-            if (diagnostic.Descriptor == AssemblyCleanupShouldBeValidAnalyzer.NoParametersRule)
+            if (diagnostic.Descriptor == AssemblyInitializeShouldBeValidAnalyzer.SingleContextParameterRule)
             {
-                return acc | FixtureMethodSignatureChanges.RemoveParameters;
+                return acc | FixtureMethodSignatureChanges.AddTestContextParameter;
             }
 
-            if (diagnostic.Descriptor == AssemblyCleanupShouldBeValidAnalyzer.NotGenericRule)
+            if (diagnostic.Descriptor == AssemblyInitializeShouldBeValidAnalyzer.NotGenericRule)
             {
                 return acc | FixtureMethodSignatureChanges.RemoveGeneric;
             }
@@ -72,14 +72,15 @@ public sealed class AssemblyCleanupShouldBeValidFixer : CodeFixProvider
 
         if (fixesToApply != FixtureMethodSignatureChanges.None)
         {
-            // The fixer is common to all fixture methods, so we need to hint it that we need 'static'.
+            // The fixer is common to all fixture methods, so we need to hint it that we need 'static' and 'TestContext' parameter.
+            fixesToApply |= FixtureMethodSignatureChanges.AddTestContextParameter;
             fixesToApply |= FixtureMethodSignatureChanges.MakeStatic;
 
             context.RegisterCodeFix(
                 CodeAction.Create(
                     CodeFixResources.FixSignatureCodeFix,
                     ct => FixtureMethodFixer.FixSignatureAsync(context.Document, root, node, fixesToApply, ct),
-                    nameof(AssemblyCleanupShouldBeValidFixer)),
+                    nameof(AssemblyInitializeShouldBeValidFixer)),
                 context.Diagnostics);
         }
     }

@@ -8,7 +8,7 @@
   </Target>
 
   <Target Name="_MSTestSDKValidateAspire" BeforeTargets="Build">
-    <Error Condition=" '$(EnableAspire)' == 'true' " Text="Aspire MSTest currently doesn't support NativeAOT mode." />
+    <Error Condition=" '$(EnableAspireTesting)' == 'true' " Text="Aspire MSTest currently doesn't support NativeAOT mode." />
   </Target>
 
   <!-- Core -->

@@ -37,7 +37,7 @@ Let's discuss the parameters:
 * `IData`: This interface serves as a placeholder where you only need to provide descriptive details such as the name and a description. The interface doesn't reveal much about the data's nature, which is intentional. It implies that the test framework and extensions can push any type of data to the bus, and this data can be consumed by any registered extension or the test framework itself.
 This approach facilitates the evolution of the information exchange process, preventing breaking changes when an extension is unfamiliar with new data. **It allows different versions of extensions and the test framework to operate in harmony, based on their mutual understanding**.
 
-The opposite end of the bus is what we refer to as a [consumer](idataConsumer.md), which is subscribed to a specific type of data and can thus consume it.
+The opposite end of the bus is what we refer to as a [consumer](idataconsumer.md), which is subscribed to a specific type of data and can thus consume it.
 
 > [!IMPORTANT]
 > Always use *await* the call to `PublishAsync`. If you don't, the `IData` might not be processed correctly by the testing platform and extensions, which could lead to subtle bugs. It's only after you've returned from the *await* that you can be assured that the `IData` has been queued for processing on the message bus. Regardless of the extension point you're working on, ensure that you've awaited all `PublishAsync` calls before exiting the extension. For example, if you're implementing the [`testing framework`](itestframework.md), you should not call `Complete` on the [requests](irequest.md) until you've awaited all `PublishAsync` calls for that specific request.

@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AssemblyCleanupTimedOut">
         <source>Assembly cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Assembly cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">Po {2} ms vypršel časový limit metody čištění sestavení {0}.{1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
         <source>Assembly initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Assembly initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">Po {2} ms vypršel časový limit metody inicializace sestavení {0}.{1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
@@ -38,7 +38,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">
         <source>Class cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Class cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">Po {2} ms vypršel časový limit metody čištění třídy {0}.{1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
@@ -48,7 +48,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
         <source>Class initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Class initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">Po {2} ms vypršel časový limit metody inicializace třídy {0}.{1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
@@ -73,7 +73,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="TestCleanupTimedOut">
         <source>Test cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Test cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">Po {2} ms vypršel časový limit metody čištění testu {0}.{1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
@@ -83,7 +83,7 @@ byl však přijat tento počet argumentů: {4} s typy {5}.</target>
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
         <source>Test initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Test initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">Po {2} ms vypršel časový limit metody inicializace testu {0}.{1}.</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">

@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="AssemblyCleanupTimedOut">
         <source>Assembly cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Assembly cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">アセンブリ クリーンアップ メソッド '{0}.{1}' が {2}ms 後にタイムアウトしました</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
@@ -14,7 +14,7 @@
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
         <source>Assembly initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Assembly initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">アセンブリ初期化メソッド '{0}.{1}' が {2}ms 後にタイムアウトになりました</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
@@ -39,7 +39,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">
         <source>Class cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Class cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">クラス クリーンアップ メソッド '{0}.{1}' が {2}ms 後にタイムアウトしました</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
@@ -49,7 +49,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
         <source>Class initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Class initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">クラス初期化メソッド '{0}.{1}' が {2}ms 後にタイムアウトになりました</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
@@ -74,7 +74,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="TestCleanupTimedOut">
         <source>Test cleanup method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Test cleanup method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">テスト クリーンアップ メソッド '{0}.{1}' が {2}ms 後にタイムアウトしました</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
@@ -84,7 +84,7 @@ but received {4} argument(s), with types '{5}'.</source>
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
         <source>Test initialize method '{0}.{1}' timed out after {2}ms</source>
-        <target state="new">Test initialize method '{0}.{1}' timed out after {2}ms</target>
+        <target state="translated">テスト初期化メソッド '{0}.{1}' が {2}ms 後にタイムアウトになりました</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">
