@@ -78,9 +78,9 @@ public sealed class AssemblyInitializeShouldBeValidFixer : CodeFixProvider
 
             context.RegisterCodeFix(
                 CodeAction.Create(
-                    CodeFixResources.AssemblyInitializeShouldBeValidCodeFix,
+                    CodeFixResources.FixSignatureCodeFix,
                     ct => FixtureMethodFixer.FixSignatureAsync(context.Document, root, node, fixesToApply, ct),
-                    nameof(CodeFixResources.AssemblyInitializeShouldBeValidCodeFix)),
+                    nameof(AssemblyInitializeShouldBeValidFixer)),
                 context.Diagnostics);
         }
     }
