@@ -257,8 +257,8 @@
         <note />
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
-        <source>In process file artifacts produced</source>
-        <target state="new">In process file artifacts produced</target>
+        <source>In process file artifacts produced:</source>
+        <target state="new">In process file artifacts produced:</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -322,8 +322,8 @@
         <note />
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
-        <source>Out of process file artifacts produced</source>
-        <target state="new">Out of process file artifacts produced</target>
+        <source>Out of process file artifacts produced:</source>
+        <target state="new">Out of process file artifacts produced:</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
