@@ -7,7 +7,7 @@
   <PropertyGroup Label="Product dependencies">
     <AspireHostingTestingVersion>8.0.0-preview.6.24214.1</AspireHostingTestingVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
-    <MicrosoftNETTestSdkVersion>17.9.0</MicrosoftNETTestSdkVersion>
+    <MicrosoftNETTestSdkVersion>17.10.0</MicrosoftNETTestSdkVersion>
     <!-- UWP and WinUI dependencies -->
     <MicrosoftNETCoreUniversalWindowsPlatformVersion>6.2.14</MicrosoftNETCoreUniversalWindowsPlatformVersion>
     <!-- / UWP and WinUI dependencies -->
