@@ -484,4 +484,70 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
     <value>Invalid PID '{0}'
 {1}</value>
   </data>
+  <data name="Aborted" xml:space="preserve">
+    <value>Aborted</value>
+  </data>
+  <data name="Actual" xml:space="preserve">
+    <value>Actual</value>
+  </data>
+  <data name="CancelledLowercase" xml:space="preserve">
+    <value>cancelled</value>
+  </data>
+  <data name="CancellingTestSession" xml:space="preserve">
+    <value>Cancelling the test session...</value>
+  </data>
+  <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
+    <value>Diagnostic file (level '{0}' with async flush): {1}"</value>
+    <comment>0 level such as verbose, 
+1 path to file</comment>
+  </data>
+  <data name="DiagnosticFileLevelWithFlush" xml:space="preserve">
+    <value>Diagnostic file (level '{0}' with sync flush): {1}"</value>
+    <comment>0 level such as verbose, 
+1 path to file</comment>
+  </data>
+  <data name="Expected" xml:space="preserve">
+    <value>Expected</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="FailedLowercase" xml:space="preserve">
+    <value>failed</value>
+  </data>
+  <data name="ForTest" xml:space="preserve">
+    <value>For test</value>
+    <comment>is followed by test name</comment>
+  </data>
+  <data name="InProcessArtifactsProduced" xml:space="preserve">
+    <value>In process file artifacts produced</value>
+  </data>
+  <data name="MinimumExpectedTestsPolicyViolation" xml:space="preserve">
+    <value>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</value>
+    <comment>{0}, {1} number of tests</comment>
+  </data>
+  <data name="OutOfProcessArtifactsProduced" xml:space="preserve">
+    <value>Out of process file artifacts produced</value>
+  </data>
+  <data name="Passed" xml:space="preserve">
+    <value>Passed</value>
+  </data>
+  <data name="PassedLowercase" xml:space="preserve">
+    <value>passed</value>
+  </data>
+  <data name="Skipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="SkippedLowercase" xml:space="preserve">
+    <value>skipped</value>
+  </data>
+  <data name="StackTrace" xml:space="preserve">
+    <value>Stack Trace</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="ZeroTestsRan" xml:space="preserve">
+    <value>Zero tests ran</value>
+  </data>
 </root>

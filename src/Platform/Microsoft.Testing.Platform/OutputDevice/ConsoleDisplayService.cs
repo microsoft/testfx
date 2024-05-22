@@ -11,6 +11,7 @@ using Microsoft.Testing.Platform.Extensions.OutputDevice;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
+using Microsoft.Testing.Platform.Resources;
 using Microsoft.Testing.Platform.Services;
 using Microsoft.Testing.Platform.TestHost;
 using Microsoft.Testing.Platform.TestHostControllers;
@@ -90,7 +91,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
             _bannerDisplayed = true;
         }
 
-        _testApplicationCancellationTokenSource.CancellationToken.Register(() => _console.WriteLine("Cancelling the test session..."));
+        _testApplicationCancellationTokenSource.CancellationToken.Register(() => _console.WriteLine(PlatformResources.CancellingTestSession));
     }
 
     public Type[] DataTypesConsumed { get; } =
@@ -187,7 +188,14 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                 try
                 {
                     _console.SetForegroundColor(ConsoleColor.Yellow);
-                    _console.WriteLine($"Diagnostic file (level '{_fileLoggerProvider.LogLevel}' with {(_fileLoggerProvider.SyncFlush ? "sync flush" : "async flush")}): {_fileLoggerProvider.FileLogger.FileName}");
+                    if (_fileLoggerProvider.SyncFlush)
+                    {
+                        _console.WriteLine(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
+                    }
+                    else
+                    {
+                        _console.WriteLine(string.Format(CultureInfo.CurrentCulture, PlatformResources.DiagnosticFileLevelWithAsyncFlush, _fileLoggerProvider.LogLevel, _fileLoggerProvider.FileLogger.FileName));
+                    }
                 }
                 finally
                 {
@@ -240,16 +248,17 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
             if (!_firstCallTo_OnSessionStartingAsync)
             {
-                string passedOrFailedOrAborted = _totalFailedTests > 0 ? "Failed!" : "Passed!";
-                passedOrFailedOrAborted = _totalTests == 0 ? "Zero tests ran" : passedOrFailedOrAborted;
-                passedOrFailedOrAborted = _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested ? "Aborted" : passedOrFailedOrAborted;
-                passedOrFailedOrAborted = _totalTests < _minimumExpectedTest ? $"Minimum expected tests policy violation, tests ran {_totalTests}, minimum expected {_minimumExpectedTest}" : passedOrFailedOrAborted;
+                bool runFailed = _totalFailedTests > 0;
+                string passedOrFailedOrAborted = string.Format(CultureInfo.CurrentCulture, "{0}!", runFailed ? PlatformResources.Failed : PlatformResources.Passed);
+                passedOrFailedOrAborted = _totalTests == 0 ? PlatformResources.ZeroTestsRan : passedOrFailedOrAborted;
+                passedOrFailedOrAborted = _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested ? PlatformResources.Aborted : passedOrFailedOrAborted;
+                passedOrFailedOrAborted = _totalTests < _minimumExpectedTest ? string.Format(CultureInfo.CurrentCulture, PlatformResources.MinimumExpectedTestsPolicyViolation, _totalTests, _minimumExpectedTest) : passedOrFailedOrAborted;
                 ConsoleColor currentForeground = _console.GetForegroundColor();
-                ConsoleColor consoleColor = passedOrFailedOrAborted == "Passed!" ? ConsoleColor.Green : ConsoleColor.Red;
+                ConsoleColor consoleColor = runFailed ? ConsoleColor.Red : ConsoleColor.Green;
                 try
                 {
                     _console.SetForegroundColor(consoleColor);
-                    _console.WriteLine($"{passedOrFailedOrAborted} - Failed: {_totalFailedTests}, Passed: {_totalPassedTests}, Skipped: {_totalSkippedTests}, Total: {_totalTests}{(_testRequestExecutionTimeInfo is not null ? $", Duration: {ToHumanReadableDuration(_testRequestExecutionTimeInfo.Value.TimingInfo.Duration.TotalMilliseconds)}" : string.Empty)} - {Path.GetFileName(moduleOutput)} {(runtimeInformation is null ? string.Empty : $"({runtimeInformation})")}");
+                    _console.WriteLine($"{passedOrFailedOrAborted} - {PlatformResources.Failed}: {_totalFailedTests}, {PlatformResources.Passed}: {_totalPassedTests}, {PlatformResources.Skipped}: {_totalSkippedTests}, {PlatformResources.Total}: {_totalTests}{(_testRequestExecutionTimeInfo is not null ? $", Duration: {ToHumanReadableDuration(_testRequestExecutionTimeInfo.Value.TimingInfo.Duration.TotalMilliseconds)}" : string.Empty)} - {Path.GetFileName(moduleOutput)} {(runtimeInformation is null ? string.Empty : $"({runtimeInformation})")}");
                 }
                 finally
                 {
@@ -269,10 +278,10 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
             StringBuilder artifacts = new();
             bool hasArtifacts = false;
-            artifacts.AppendLine(CultureInfo.InvariantCulture, $"{(_firstCallTo_OnSessionStartingAsync ? "Out of process" : "In process")} file artifacts produced:");
+            artifacts.AppendLine(_firstCallTo_OnSessionStartingAsync ? PlatformResources.OutOfProcessArtifactsProduced : PlatformResources.InProcessArtifactsProduced);
             foreach (TestNodeFileArtifact testNodeFileArtifact in _sessionFilesArtifact.OfType<TestNodeFileArtifact>())
             {
-                artifacts.AppendLine(CultureInfo.InvariantCulture, $"- For test {testNodeFileArtifact.TestNode.DisplayName}: {testNodeFileArtifact.FileInfo.FullName}");
+                artifacts.AppendLine(CultureInfo.InvariantCulture, $"- {PlatformResources.ForTest} {testNodeFileArtifact.TestNode.DisplayName}: {testNodeFileArtifact.FileInfo.FullName}");
             }
 
             foreach (SessionFileArtifact sessionFileArtifact in _sessionFilesArtifact.Except(_sessionFilesArtifact.OfType<TestNodeFileArtifact>()))
@@ -449,7 +458,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                         // For other run, skip displaying passed tests.
                         if (_runtimeFeature.IsHotReloadEnabled)
                         {
-                            await ConsoleWriteAsync("passed", ConsoleColor.DarkGreen);
+                            await ConsoleWriteAsync(PlatformResources.PassedLowercase, ConsoleColor.DarkGreen);
                             await ConsoleWriteAsync($" {testNodeStateChanged.TestNode.DisplayName}");
                             await ConsoleWriteLineAsync($" {duration}", ConsoleColor.Gray);
                         }
@@ -459,7 +468,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
                         break;
 
                     case SkippedTestNodeStateProperty:
-                        await ConsoleWriteAsync("skipped", ConsoleColor.Yellow);
+                        await ConsoleWriteAsync(PlatformResources.SkippedLowercase, ConsoleColor.Yellow);
                         await ConsoleWriteAsync($" {testNodeStateChanged.TestNode.DisplayName}");
                         await ConsoleWriteLineAsync($" {duration}", ConsoleColor.Gray);
                         _totalTests++;
@@ -484,10 +493,10 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     protected virtual async Task HandleFailuresAsync(string testDisplayName, bool isCancelled, string? duration, string? errorMessage,
         string? errorStackTrace, string? expected, string? actual)
     {
-        await ConsoleWriteAsync("failed", ConsoleColor.DarkRed);
+        await ConsoleWriteAsync(PlatformResources.FailedLowercase, ConsoleColor.DarkRed);
         if (isCancelled)
         {
-            await ConsoleWriteAsync("(cancelled)", ConsoleColor.DarkRed);
+            await ConsoleWriteAsync($"({PlatformResources.CancelledLowercase})", ConsoleColor.DarkRed);
         }
 
         await ConsoleWriteAsync($" {testDisplayName}");
@@ -501,19 +510,19 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
         if (expected is not null)
         {
-            await ConsoleWriteLineAsync("Expected:", ConsoleColor.Red);
+            await ConsoleWriteLineAsync($"{PlatformResources.Expected}:", ConsoleColor.Red);
             await ConsoleWriteLineAsync(expected, ConsoleColor.Red);
         }
 
         if (actual is not null)
         {
-            await ConsoleWriteLineAsync("Actual:", ConsoleColor.Red);
+            await ConsoleWriteLineAsync($"{PlatformResources.Actual}:", ConsoleColor.Red);
             await ConsoleWriteLineAsync(actual, ConsoleColor.Red);
         }
 
         if (errorStackTrace != null)
         {
-            await ConsoleWriteLineAsync("Stack Trace:", ConsoleColor.DarkRed);
+            await ConsoleWriteLineAsync($"{PlatformResources.StackTrace}:", ConsoleColor.DarkRed);
             await ConsoleWriteLineAsync(errorStackTrace, ConsoleColor.DarkRed);
         }
 
