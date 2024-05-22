@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## [3.4.0] - WIP
+## [3.4.0] - 2024-05-22
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
 
@@ -57,6 +57,10 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
 * Fix localappdata folder for Linux and Mac by @Evangelink in [#2765](https://github.com/microsoft/testfx/pull/2765)
 * Fix deserializers for DiscoveryRequestArgs and RunRequestArgs by @mariam-abdulla in [#2768](https://github.com/microsoft/testfx/pull/2768)
 * Don't start thread/task when not using timeout for fixture methods by @Evangelink in [#2825](https://github.com/microsoft/testfx/pull/2825)
+* Fix parameters/arguments check for data driven tests by @nohwnd in [#2829](https://github.com/microsoft/testfx/pull/2829)
+* Cleaning command line validations and adding unit tests by @fhnaseer in [#2847](https://github.com/microsoft/testfx/pull/2847)
+* Fix MSTEST0014 FP with arrays by @Evangelink in [#2857](https://github.com/microsoft/testfx/pull/2857)
+* Flow execution context across fixture methods when using timeout by @Evangelink [#2843](https://github.com/microsoft/testfx/pull/2843)
 
 ### Housekeeping
 
