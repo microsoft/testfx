@@ -2,7 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
+using System.Data;
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -386,6 +386,11 @@ public class TestExecutionManager
                 break;
             }
 
+            if (currentTest.Traits.Any(t => t.Name == "NonRunnable"))
+            {
+                continue;
+            }
+
             var unitTestElement = currentTest.ToUnitTestElement(source);
 
             testExecutionRecorder.RecordStart(currentTest);
@@ -404,6 +409,23 @@ public class TestExecutionManager
             DateTimeOffset endTime = DateTimeOffset.Now;
 
             SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
+        }
+
+        foreach (TestCase currentTest in tests)
+        {
+            Trait? trait = currentTest.Traits.FirstOrDefault(t => t.Name == "NonRunnable");
+
+            if (trait is not null)
+            {
+                var unitTestElement = currentTest.ToUnitTestElement(source);
+                string? exception = trait.Value == "Initialize"
+                    ? testRunner.GetClassInitializeException(unitTestElement.TestMethod)
+                    : testRunner.GetClassCleanupException(unitTestElement.TestMethod);
+                UnitTestResult result = exception is null
+                    ? new UnitTestResult()
+                    : new UnitTestResult(ObjectModel.UnitTestOutcome.Failed, exception);
+                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
+            }
         }
     }
 
@@ -434,7 +456,6 @@ public class TestExecutionManager
         return testContextProperties;
     }
 
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]
     private void CacheSessionParameters(IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder)
     {
         if (StringEx.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
@@ -23,6 +23,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 internal class UnitTestRunner : MarshalByRefObject
 {
+    private readonly Dictionary<string, TestMethodInfo?> _nonRunnableMethods = new();
+
     /// <summary>
     /// Type cache.
     /// </summary>
@@ -97,6 +99,16 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
+    internal string? GetClassInitializeException(TestMethod testMethod)
+        => _nonRunnableMethods.TryGetValue(testMethod.FullClassName, out TestMethodInfo? testMethodInfo)
+            ? testMethodInfo?.Parent.ClassInitializationException?.Message
+            : null;
+
+    internal string? GetClassCleanupException(TestMethod testMethod)
+    => _nonRunnableMethods.TryGetValue(testMethod.FullClassName, out TestMethodInfo? testMethodInfo)
+            ? testMethodInfo?.Parent.ClassCleanupException?.Message
+            : null;
+
     /// <summary>
     /// Runs a single test.
     /// </summary>
@@ -138,6 +150,11 @@ internal class UnitTestRunner : MarshalByRefObject
                 RunRequiredCleanups(testContext, testMethodInfo, testMethod, notRunnableResult);
 
                 return notRunnableResult;
+            }
+
+            if (!_nonRunnableMethods.ContainsKey(testMethod.FullClassName))
+            {
+                _nonRunnableMethods.Add(testMethod.FullClassName, testMethodInfo);
             }
 
             DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
@@ -315,10 +332,10 @@ internal class UnitTestRunner : MarshalByRefObject
 
             lock (testsByClass)
             {
-                testsByClass.Remove(testMethod.UniqueName);
+                _ = testsByClass.Remove(testMethod.UniqueName);
                 if (testsByClass.Count == 0)
                 {
-                    _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
+                    _ = _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
                     if (testMethodInfo.Parent.HasExecutableCleanupMethod)
                     {
                         ClassCleanupBehavior cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)

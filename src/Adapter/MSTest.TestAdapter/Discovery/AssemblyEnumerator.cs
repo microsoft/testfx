@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using FrameworkITestDataSource = Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource;
@@ -43,12 +44,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// </summary>
     /// <param name="settings">The settings for the session.</param>
     /// <remarks>Use this constructor when creating this object in a new app domain so the settings for this app domain are set.</remarks>
-    public AssemblyEnumerator(MSTestSettings settings)
-    {
+    public AssemblyEnumerator(MSTestSettings settings) =>
         // Populate the settings into the domain(Desktop workflow) performing discovery.
         // This would just be resetting the settings to itself in non desktop workflows.
         MSTestSettings.PopulateSettings(settings);
-    }
 
     /// <summary>
     /// Gets or sets the run settings to use for current discovery session.
@@ -75,10 +74,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>A collection of Test Elements.</returns>
     internal ICollection<UnitTestElement> EnumerateAssembly(string assemblyFileName, out ICollection<string> warnings)
     {
+        System.Diagnostics.Debug.Assert(false);
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
 
         var warningMessages = new List<string>();
         var tests = new List<UnitTestElement>();
+        var initializeCleanupMethods = new HashSet<string>();
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
@@ -104,7 +105,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, RunSettingsXml, type, warningMessages, discoverInternals,
-                testDataSourceDiscovery, testIdGenerationStrategy);
+                testDataSourceDiscovery, testIdGenerationStrategy, initializeCleanupMethods);
             tests.AddRange(testsInType);
         }
 
@@ -172,13 +173,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 if (!map.ContainsKey(line))
                 {
                     map.Add(line, null);
-                    errorDetails.AppendLine(line);
+                    _ = errorDetails.AppendLine(line);
                 }
             }
         }
         else
         {
-            errorDetails.AppendLine(ex.Message);
+            _ = errorDetails.AppendLine(ex.Message);
         }
 
         return errorDetails.ToString();
@@ -203,7 +204,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
     private List<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string? runSettingsXml, Type type,
         List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
-        TestIdGenerationStrategy testIdGenerationStrategy)
+        TestIdGenerationStrategy testIdGenerationStrategy, HashSet<string> initializeCleanupMethods)
     {
         IDictionary<string, object> tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
         tempSourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(tempSourceLevelParameters)
@@ -232,7 +233,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
                     {
-                        if (DynamicDataAttached(sourceLevelParameters, test, tests))
+                        if (DynamicDataAttached(sourceLevelParameters, test, tests, initializeCleanupMethods))
                         {
                             continue;
                         }
@@ -254,7 +255,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return tests;
     }
 
-    private bool DynamicDataAttached(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test, List<UnitTestElement> tests)
+    private bool DynamicDataAttached(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test, List<UnitTestElement> tests,
+        HashSet<string> initializeCleanupMethods)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -269,7 +271,55 @@ internal class AssemblyEnumerator : MarshalByRefObject
         TestMethod testMethod = test.TestMethod;
         MSTestAdapter.PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
         TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
-        return testMethodInfo != null && TryProcessTestDataSourceTests(test, testMethodInfo, tests);
+
+        if (testMethodInfo == null)
+        {
+            return false;
+        }
+
+        AddInitializeMethods(testMethodInfo, tests, initializeCleanupMethods);
+        return TryProcessTestDataSourceTests(test, testMethodInfo, tests);
+    }
+
+    private static void AddInitializeMethods(TestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> initializeCleanupMethods)
+    {
+        string assemblyName = testMethodInfo.Parent.Parent.Assembly.GetName().Name!;
+        string className = testMethodInfo.Parent.ClassType.Name;
+        string classFullName = testMethodInfo.Parent.ClassType.FullName!;
+
+        if (!initializeCleanupMethods.Contains(classFullName))
+        {
+            _ = initializeCleanupMethods.Add(classFullName);
+
+            if (testMethodInfo.Parent.ClassInitializeMethod is not null)
+            {
+                AddMethod(testMethodInfo.Parent.ClassInitializeMethod, tests, assemblyName, className, classFullName, testMethodInfo.Parent.Parent.Assembly.Location, "Initialize");
+            }
+
+            if (testMethodInfo.Parent.ClassCleanupMethod is not null)
+            {
+                AddMethod(testMethodInfo.Parent.ClassCleanupMethod, tests, assemblyName, className, classFullName, testMethodInfo.Parent.Parent.Assembly.Location, "Cleanup");
+            }
+        }
+
+        static void AddMethod(MethodInfo methodInfo, List<UnitTestElement> tests, string assemblyName, string className, string classFullName, string assemblyLocation, string methodType)
+        {
+            ParameterInfo[] args = methodInfo.GetParameters();
+            string methodName = args.Length > 0
+                ? $"{methodInfo.Name}({string.Join(",", args.Select(a => a.ParameterType.FullName))})"
+                : methodInfo.Name;
+            string[] hierarchy = [null!, assemblyName, className, methodName];
+            var classInitMethod = new TestMethod(classFullName, methodName,
+                hierarchy, methodName, classFullName, assemblyLocation, false,
+                TestIdGenerationStrategy.FullyQualified);
+            var classInitializeTest = new UnitTestElement(classInitMethod)
+            {
+                DisplayName = methodName,
+                Ignored = true,
+                Traits = [new Trait("NonRunnable", methodType)],
+            };
+            tests.Add(classInitializeTest);
+        }
     }
 
     private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
