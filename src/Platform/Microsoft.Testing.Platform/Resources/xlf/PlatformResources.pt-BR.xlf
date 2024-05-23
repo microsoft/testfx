@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="Aborted">
         <source>Aborted</source>
-        <target state="new">Aborted</target>
+        <target state="translated">Anulado</target>
         <note />
       </trans-unit>
       <trans-unit id="Actual">
@@ -201,7 +201,7 @@
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">Falhou</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedLowercase">
@@ -328,7 +328,7 @@
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">Aprovado</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
@@ -525,7 +525,7 @@
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
-        <target state="new">Skipped</target>
+        <target state="translated">Ignorado</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedLowercase">
@@ -635,7 +635,7 @@ Leia mais sobre a telemetria da Plataforma de Testes da Microsoft: https://aka.m
       </trans-unit>
       <trans-unit id="Total">
         <source>Total</source>
-        <target state="new">Total</target>
+        <target state="translated">Total</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
