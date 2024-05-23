@@ -430,4 +430,42 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestCleanup"),
             fixedCode);
     }
+
+    public async Task WhenMultipleViolations_TheyAllGetFixed()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestCleanup]
+                public static async void {|#0:TestCleanup|}<T>(int i)
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestCleanup]
+                public async Task TestCleanup()
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestCleanup"),
+            fixedCode);
+    }
 }

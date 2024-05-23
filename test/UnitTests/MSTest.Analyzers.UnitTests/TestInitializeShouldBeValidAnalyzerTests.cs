@@ -428,4 +428,42 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
             VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize"),
             fixedCode);
     }
+
+    public async Task WhenMultipleViolations_TheyAllGetFixed()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public static async void {|#0:TestInitialize|}<T>(int i)
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public async Task TestInitialize()
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize"),
+            fixedCode);
+    }
 }
