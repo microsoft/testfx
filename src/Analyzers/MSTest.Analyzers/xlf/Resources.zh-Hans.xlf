@@ -11,14 +11,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">标记有 [AssemblyCleanup] 的方法应遵循以下布局才有效：
-- 它应为“public”
-- 它应为“static”
-- 它不应是泛型的
-- 它不应采用任何参数
-- 返回类型应为“void”、“Task”或“ValueTask”
-- 它不应为“async void”
-- 它不应是特殊方法（终结器、运算符...）。</target>
+        <target state="new">Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -40,14 +40,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">标记有 [AssemblyInitialize] 的方法应遵循以下布局才有效：
-- 它应为“public”
-- 它应为“static”
-- 它不应是泛型的
-- 它应采用“TestContext”类型的一个参数
-- 返回类型应为“void”、“Task”或“ValueTask”
-- 它不应为“async void”
-- 它不应是特殊方法（终结器、运算符...）。</target>
+        <target state="new">Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -109,14 +109,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">标记有 [ClassCleanup] 的方法应遵循以下布局才有效：
-- 它应为“public”
-- 它不应为“static”
-- 它不应是泛型的
-- 它不应采用任何参数
-- 返回类型应为“void”、“Task”或“ValueTask”
-- 它不应为“async void”
-- 它不应是特殊方法（终结器、运算符...）。</target>
+        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -138,14 +138,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">标记有 [ClassInitialize] 的方法应遵循以下布局才有效：
-- 它应为“public”
-- 它应为“static”
-- 它不应是泛型的
-- 它应采用“TestContext”类型的一个参数
-- 返回类型应为“void”、“Task”或“ValueTask”
-- 它不应为“async void”
-- 它不应是特殊方法（终结器、运算符...）。</target>
+        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -330,15 +330,15 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">标记有 [TestCleanup] 的方法应遵循以下布局才有效:
-- 它应为 "public"
-- 它不应为 "static"
-- 它不应是泛型的
-- 它不应为 "abstract"
-- 它不应采用任何参数
-- 返回类型应为 "void"、"Task" 或 "ValueTask"
-- 它不应为 "async void"
-- 它不应是特殊方法(终结器、运算符...)。</target>
+        <target state="new">Methods marked with [TestCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic or be defined on a generic class
+- not be 'abstract'
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -404,15 +404,15 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">标记有 [TestInitialize] 的方法应遵循以下布局才有效:
-- 它应为 "public"
-- 它不应为 "static"
-- 它不应是泛型的
-- 它不应为 "abstract"
-- 它不应采用任何参数
-- 返回类型应为 "void"、"Task" 或 "ValueTask"
-- 它不应为 "async void"
-- 它不应是特殊方法(终结器、运算符...)。</target>
+        <target state="new">Methods marked with [TestInitialize] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not be 'abstract'
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
