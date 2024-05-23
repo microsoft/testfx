@@ -4,22 +4,22 @@
     <body>
       <trans-unit id="Aborted">
         <source>Aborted</source>
-        <target state="new">Aborted</target>
+        <target state="translated">已中止</target>
         <note />
       </trans-unit>
       <trans-unit id="Actual">
         <source>Actual</source>
-        <target state="new">Actual</target>
+        <target state="translated">實際</target>
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>cancelled</source>
-        <target state="new">cancelled</target>
+        <target state="translated">已取消</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Cancelling the test session...</source>
-        <target state="new">Cancelling the test session...</target>
+        <target state="translated">正在取消測試工作階段...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -169,13 +169,13 @@
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
-        <target state="new">Diagnostic file (level '{0}' with async flush): {1}"</target>
+        <target state="translated">診斷檔案 (具有非同步排清的層級 '{0}')：{1}”</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
-        <target state="new">Diagnostic file (level '{0}' with sync flush): {1}"</target>
+        <target state="translated">診斷檔案 (具有同步排清的層級 '{0}')：{1}”</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
@@ -186,7 +186,7 @@
       </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
-        <target state="new">Expected</target>
+        <target state="translated">預期</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
@@ -201,12 +201,12 @@
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">失敗</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
-        <target state="new">failed</target>
+        <target state="translated">已失敗</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
@@ -218,7 +218,7 @@
       </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
-        <target state="new">For test</target>
+        <target state="translated">用於測試</target>
         <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
@@ -258,7 +258,7 @@
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
         <source>In process file artifacts produced:</source>
-        <target state="new">In process file artifacts produced:</target>
+        <target state="translated">產生的流程内檔案成品：</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -298,7 +298,7 @@
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="new">Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</target>
+        <target state="translated">預期測試原則違反的最小值，{0} 個執行的測試，預期的最小值為 {1}</target>
         <note>{0}, {1} number of tests</note>
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -323,17 +323,17 @@
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
-        <target state="new">Out of process file artifacts produced:</target>
+        <target state="translated">產生的流程外檔案成品：</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">成功</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
         <source>passed</source>
-        <target state="new">passed</target>
+        <target state="translated">已通過</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
@@ -525,17 +525,17 @@
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
-        <target state="new">Skipped</target>
+        <target state="translated">略過</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
-        <target state="new">skipped</target>
+        <target state="translated">已跳過</target>
         <note />
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
-        <target state="new">Stack Trace</target>
+        <target state="translated">堆疊追蹤</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">
@@ -635,7 +635,7 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
       </trans-unit>
       <trans-unit id="Total">
         <source>Total</source>
-        <target state="new">Total</target>
+        <target state="translated">總計</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
@@ -712,7 +712,7 @@ Microsoft 測試平台會收集使用量資料，以協助我們改善您的體�
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
-        <target state="new">Zero tests ran</target>
+        <target state="translated">已執行零項測試</target>
         <note />
       </trans-unit>
     </body>
