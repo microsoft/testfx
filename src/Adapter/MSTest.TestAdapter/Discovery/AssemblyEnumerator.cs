@@ -286,18 +286,37 @@ internal class AssemblyEnumerator : MarshalByRefObject
         string className = testMethodInfo.Parent.ClassType.Name;
         string classFullName = testMethodInfo.Parent.ClassType.FullName!;
 
-        if (!initializeCleanupMethods.Contains(classFullName))
+        if (!initializeCleanupMethods.Contains(testMethodInfo.Parent.Parent.Assembly.Location))
         {
-            _ = initializeCleanupMethods.Add(classFullName);
+            _ = initializeCleanupMethods.Add(testMethodInfo.Parent.Parent.Assembly.Location);
+
+            if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
+            {
+                AddMethod(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, tests, assemblyName, "_", "_",
+                    testMethodInfo.Parent.Parent.Assembly.Location, Constants.AssemblyInitialize);
+            }
+
+            if (testMethodInfo.Parent.Parent.AssemblyCleanupMethod is not null)
+            {
+                AddMethod(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, tests, assemblyName, "_", "_",
+                    testMethodInfo.Parent.Parent.Assembly.Location, Constants.AssemblyCleanup);
+            }
+        }
+
+        if (!initializeCleanupMethods.Contains(testMethodInfo.Parent.Parent.Assembly.Location + classFullName))
+        {
+            _ = initializeCleanupMethods.Add(testMethodInfo.Parent.Parent.Assembly.Location + classFullName);
 
             if (testMethodInfo.Parent.ClassInitializeMethod is not null)
             {
-                AddMethod(testMethodInfo.Parent.ClassInitializeMethod, tests, assemblyName, className, classFullName, testMethodInfo.Parent.Parent.Assembly.Location, "Initialize");
+                AddMethod(testMethodInfo.Parent.ClassInitializeMethod, tests, assemblyName, className, classFullName,
+                    testMethodInfo.Parent.Parent.Assembly.Location, Constants.ClassInitialize);
             }
 
             if (testMethodInfo.Parent.ClassCleanupMethod is not null)
             {
-                AddMethod(testMethodInfo.Parent.ClassCleanupMethod, tests, assemblyName, className, classFullName, testMethodInfo.Parent.Parent.Assembly.Location, "Cleanup");
+                AddMethod(testMethodInfo.Parent.ClassCleanupMethod, tests, assemblyName, className, classFullName,
+                    testMethodInfo.Parent.Parent.Assembly.Location, Constants.ClassCleanup);
             }
         }
 
@@ -308,10 +327,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 ? $"{methodInfo.Name}({string.Join(",", args.Select(a => a.ParameterType.FullName))})"
                 : methodInfo.Name;
             string[] hierarchy = [null!, assemblyName, className, methodName];
-            var classInitMethod = new TestMethod(classFullName, methodName,
+            var method = new TestMethod(classFullName, methodName,
                 hierarchy, methodName, classFullName, assemblyLocation, false,
                 TestIdGenerationStrategy.FullyQualified);
-            var classInitializeTest = new UnitTestElement(classInitMethod)
+            var classInitializeTest = new UnitTestElement(method)
             {
                 DisplayName = methodName,
                 Ignored = true,

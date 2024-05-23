@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -96,6 +95,11 @@ public class TestAssemblyInfo
     public Exception? AssemblyInitializationException { get; internal set; }
 
     /// <summary>
+    /// Gets the assembly cleanup exception.
+    /// </summary>
+    public Exception? AssemblyCleanupException { get; internal set; }
+
+    /// <summary>
     /// Gets a value indicating whether this assembly has an executable <c>AssemblyCleanup</c> method.
     /// </summary>
     public bool HasExecutableCleanupMethod =>
@@ -112,7 +116,6 @@ public class TestAssemblyInfo
     /// </summary>
     /// <param name="testContext"> The test context. </param>
     /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public void RunAssemblyInitialize(TestContext testContext)
     {
         // No assembly initialize => nothing to do.
@@ -202,7 +205,6 @@ public class TestAssemblyInfo
     /// <returns>
     /// Any exception that can be thrown as part of a assembly cleanup as warning messages.
     /// </returns>
-    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public string? RunAssemblyCleanup()
     {
         if (AssemblyCleanupMethod == null)
@@ -210,12 +212,11 @@ public class TestAssemblyInfo
             return null;
         }
 
-        Exception? assemblyCleanupException = null;
         lock (_assemblyInfoExecuteSyncObject)
         {
             try
             {
-                assemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
+                AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                      () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
                      new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
@@ -226,17 +227,17 @@ public class TestAssemblyInfo
             }
             catch (Exception ex)
             {
-                assemblyCleanupException = ex;
+                AssemblyCleanupException = ex;
             }
         }
 
         // If assemblyCleanup was successful, then don't do anything
-        if (assemblyCleanupException is null)
+        if (AssemblyCleanupException is null)
         {
             return null;
         }
 
-        Exception realException = assemblyCleanupException.GetRealException();
+        Exception realException = AssemblyCleanupException.GetRealException();
 
         // special case AssertFailedException to trim off part of the stack trace
         string errorMessage = realException is AssertFailedException or AssertInconclusiveException

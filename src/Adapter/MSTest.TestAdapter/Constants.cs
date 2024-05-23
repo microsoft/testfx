@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -10,6 +10,26 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 /// </summary>
 internal static class Constants
 {
+    /// <summary>
+    /// Assembly initialize.
+    /// </summary>
+    internal const string AssemblyInitialize = "AssemblyInitialize";
+
+    /// <summary>
+    /// Assembly cleanup.
+    /// </summary>
+    internal const string AssemblyCleanup = "AssemblyCleanup";
+
+    /// <summary>
+    /// Class initialize.
+    /// </summary>
+    internal const string ClassInitialize = "ClassInitialize";
+
+    /// <summary>
+    /// Class cleanup.
+    /// </summary>
+    internal const string ClassCleanup = "ClassCleanup";
+
     /// <summary>
     /// Uri of the MSTest executor.
     /// </summary>

@@ -18,19 +18,6 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
-internal enum ExceptionType
-{
-    /// <summary>
-    /// Class initialize exception.
-    /// </summary>
-    ClassInitialize,
-
-    /// <summary>
-    /// Class cleanup exception.
-    /// </summary>
-    ClassCleanup,
-}
-
 /// <summary>
 /// The runner that runs a single unit test. Also manages the assembly and class cleanup methods at the end of the run.
 /// </summary>
@@ -112,17 +99,29 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
-    internal (bool HasMatchingTest, string? ExceptionMessage) GetClassException(TestMethod testMethod, ExceptionType exceptionType)
+    internal (bool HasMatchingTest, string? ExceptionMessage) GetException(TestMethod testMethod, string nonRunnableMethodType)
     {
         if (_nonRunnableMethods.TryGetValue(testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
         {
-            if (exceptionType == ExceptionType.ClassInitialize)
+            if (nonRunnableMethodType == Constants.ClassInitialize)
             {
                 return (true, testMethodInfo?.Parent.ClassInitializationException?.Message);
             }
-            else if (exceptionType == ExceptionType.ClassCleanup)
+            else if (nonRunnableMethodType == Constants.ClassCleanup)
             {
                 return (true, testMethodInfo?.Parent.ClassCleanupException?.Message);
+            }
+        }
+
+        if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName, out testMethodInfo))
+        {
+            if (nonRunnableMethodType == Constants.AssemblyInitialize)
+            {
+                return (true, testMethodInfo?.Parent.Parent.AssemblyInitializationException?.Message);
+            }
+            else if (nonRunnableMethodType == Constants.AssemblyCleanup)
+            {
+                return (true, testMethodInfo?.Parent.Parent.AssemblyCleanupException?.Message);
             }
         }
 
@@ -172,6 +171,7 @@ internal class UnitTestRunner : MarshalByRefObject
                 return notRunnableResult;
             }
 
+            _nonRunnableMethods[testMethod.AssemblyName] = testMethodInfo;
             _nonRunnableMethods[testMethod.FullClassName] = testMethodInfo;
 
             DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");

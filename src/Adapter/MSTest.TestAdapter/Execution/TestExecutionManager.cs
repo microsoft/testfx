@@ -418,7 +418,7 @@ public class TestExecutionManager
             {
                 testExecutionRecorder.RecordStart(currentTest);
                 var unitTestElement = currentTest.ToUnitTestElement(source);
-                (bool hasTestMethod, string? exception) = testRunner.GetClassException(unitTestElement.TestMethod, trait.Value == "Initialize" ? ExceptionType.ClassInitialize : ExceptionType.ClassCleanup);
+                (bool hasTestMethod, string? exception) = testRunner.GetException(unitTestElement.TestMethod, trait.Value);
 
                 UnitTestResult result = exception is null
                     ? new UnitTestResult(hasTestMethod ? ObjectModel.UnitTestOutcome.Passed : ObjectModel.UnitTestOutcome.Ignored, null)
