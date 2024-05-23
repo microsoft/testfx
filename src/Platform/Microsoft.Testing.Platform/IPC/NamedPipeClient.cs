@@ -135,7 +135,6 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
             int missingBytesToReadOfWholeMessage = 0;
             while (true)
             {
-                int missingBytesToReadOfCurrentChunk = 0;
                 int currentReadIndex = 0;
 #if NETCOREAPP
                 int currentReadBytes = await _namedPipeClientStream.ReadAsync(_readBuffer.AsMemory(currentReadIndex, _readBuffer.Length), cancellationToken);
@@ -144,7 +143,7 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 #endif
 
                 // Reset the current chunk size
-                missingBytesToReadOfCurrentChunk = currentReadBytes;
+                int missingBytesToReadOfCurrentChunk = currentReadBytes;
 
                 // If currentRequestSize is 0, we need to read the message size
                 if (currentMessageSize == 0)
