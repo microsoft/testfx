@@ -564,8 +564,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         await RegisterAsServiceOrConsumerOrBothAsync(testExecutionFilterFactory, serviceProvider, dataConsumersBuilder);
 
         // Create the test framework adapter
-        ITestFramework testFrameworkAdapter = testFrameworkManager.TestFrameworkAdapterFactory(testFrameworkCapabilities, serviceProvider);
-        if (testFrameworkAdapter is IAsyncInitializableExtension testFrameworkAsyncInitializable)
+        ITestFramework testFramework = testFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
+        if (testFramework is IAsyncInitializableExtension testFrameworkAsyncInitializable)
         {
             await testFrameworkAsyncInitializable.InitializeAsync();
         }
@@ -573,7 +573,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AllowTestAdapterFrameworkRegistration = true;
         try
         {
-            await RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkProxy(testFrameworkAdapter), serviceProvider, dataConsumersBuilder);
+            await RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkProxy(testFramework), serviceProvider, dataConsumersBuilder);
         }
         finally
         {
@@ -665,7 +665,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             guardMessageBusService.SetBuiltMessageBus(concreteMessageBusService);
         }
 
-        return testFrameworkAdapter;
+        return testFramework;
     }
 
     protected virtual ConsoleTestHost CreateConsoleTestHost(
