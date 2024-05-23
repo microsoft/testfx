@@ -23,7 +23,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
     {
         CancellationToken testApplicationCancellationToken = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
 
-        int exitCode = ExitCodes.GenericFailure;
+        int exitCode;
         try
         {
             if (RunTestApplicationLifecycleCallbacks)

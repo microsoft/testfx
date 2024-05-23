@@ -34,5 +34,5 @@ internal static class TimeoutHelper
 
     public static int DefaultHangTimeoutSeconds { get; private set; }
 
-    public static TimeSpan DefaultHangTimeSpanTimeout { get; private set; }
+    public static TimeSpan DefaultHangTimeSpanTimeout { get; }
 }

@@ -614,7 +614,7 @@ internal class ReflectHelper : MarshalByRefObject
             // Populate the cache
             attributes = [];
 
-            object[]? customAttributesArray = null;
+            object[]? customAttributesArray;
             try
             {
                 customAttributesArray = GetCustomAttributes(memberInfo, inherit);

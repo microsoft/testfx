@@ -277,10 +277,9 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         IEnumerable<string> allSystemOptions = _systemCommandLineOptionsProviders.SelectMany(x => x.GetCommandLineOptions()).Select(x => x.Name).Distinct();
 
         IEnumerable<string> invalidReservedOptions = allSystemOptions.Intersect(allExtensionOptions);
-        StringBuilder? stringBuilder = null;
         if (invalidReservedOptions.Any())
         {
-            stringBuilder = new();
+            var stringBuilder = new StringBuilder();
             foreach (string reservedOption in invalidReservedOptions)
             {
                 IEnumerable<ICommandLineOptionsProvider> commandLineOptionProviders = GetExtensionCommandLineOptionsProviderByOptionName(reservedOption);
