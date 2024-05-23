@@ -90,6 +90,11 @@ public class TestAssemblyInfo
     public bool IsAssemblyInitializeExecuted { get; internal set; }
 
     /// <summary>
+    /// Gets a value indicating whether <c>AssemblyCleanup</c> has been executed.
+    /// </summary>
+    public bool IsAssemblyCleanupExecuted { get; internal set; }
+
+    /// <summary>
     /// Gets the assembly initialization exception.
     /// </summary>
     public Exception? AssemblyInitializationException { get; internal set; }
@@ -229,6 +234,10 @@ public class TestAssemblyInfo
             {
                 AssemblyCleanupException = ex;
             }
+            finally
+            {
+                IsAssemblyCleanupExecuted = true;
+            }
         }
 
         // If assemblyCleanup was successful, then don't do anything
@@ -285,6 +294,10 @@ public class TestAssemblyInfo
             catch (Exception ex)
             {
                 assemblyCleanupException = ex;
+            }
+            finally
+            {
+                IsAssemblyCleanupExecuted = true;
             }
         }
 

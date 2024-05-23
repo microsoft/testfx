@@ -105,11 +105,11 @@ internal class UnitTestRunner : MarshalByRefObject
         {
             if (nonRunnableMethodType == Constants.ClassInitialize)
             {
-                return (true, testMethodInfo?.Parent.ClassInitializationException?.Message);
+                return (testMethodInfo?.Parent.IsClassInitializeExecuted == true, testMethodInfo?.Parent.ClassInitializationException?.Message);
             }
             else if (nonRunnableMethodType == Constants.ClassCleanup)
             {
-                return (true, testMethodInfo?.Parent.ClassCleanupException?.Message);
+                return (testMethodInfo?.Parent.IsClassCleanupExecuted == true, testMethodInfo?.Parent.ClassCleanupException?.Message);
             }
         }
 
@@ -117,11 +117,11 @@ internal class UnitTestRunner : MarshalByRefObject
         {
             if (nonRunnableMethodType == Constants.AssemblyInitialize)
             {
-                return (true, testMethodInfo?.Parent.Parent.AssemblyInitializationException?.Message);
+                return (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true, testMethodInfo?.Parent.Parent.AssemblyInitializationException?.Message);
             }
             else if (nonRunnableMethodType == Constants.AssemblyCleanup)
             {
-                return (true, testMethodInfo?.Parent.Parent.AssemblyCleanupException?.Message);
+                return (testMethodInfo?.Parent.Parent.IsAssemblyCleanupExecuted == true, testMethodInfo?.Parent.Parent.AssemblyCleanupException?.Message);
             }
         }
 
