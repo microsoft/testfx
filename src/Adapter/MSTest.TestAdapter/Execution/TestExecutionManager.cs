@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
-using System.Data;
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -417,12 +416,13 @@ public class TestExecutionManager
 
             if (trait is not null)
             {
+                testExecutionRecorder.RecordStart(currentTest);
                 var unitTestElement = currentTest.ToUnitTestElement(source);
                 string? exception = trait.Value == "Initialize"
                     ? testRunner.GetClassInitializeException(unitTestElement.TestMethod)
                     : testRunner.GetClassCleanupException(unitTestElement.TestMethod);
                 UnitTestResult result = exception is null
-                    ? new UnitTestResult()
+                    ? new UnitTestResult(ObjectModel.UnitTestOutcome.Passed, null)
                     : new UnitTestResult(ObjectModel.UnitTestOutcome.Failed, exception);
                 SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
             }

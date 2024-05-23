@@ -74,7 +74,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>A collection of Test Elements.</returns>
     internal ICollection<UnitTestElement> EnumerateAssembly(string assemblyFileName, out ICollection<string> warnings)
     {
-        System.Diagnostics.Debug.Assert(false);
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
 
         var warningMessages = new List<string>();

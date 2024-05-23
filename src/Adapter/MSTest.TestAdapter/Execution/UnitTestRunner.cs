@@ -152,10 +152,7 @@ internal class UnitTestRunner : MarshalByRefObject
                 return notRunnableResult;
             }
 
-            if (!_nonRunnableMethods.ContainsKey(testMethod.FullClassName))
-            {
-                _nonRunnableMethods.Add(testMethod.FullClassName, testMethodInfo);
-            }
+            _nonRunnableMethods[testMethod.FullClassName] = testMethodInfo;
 
             DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);

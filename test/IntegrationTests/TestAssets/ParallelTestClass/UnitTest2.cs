@@ -58,14 +58,6 @@ public class UnitTest2
         Assert.AreEqual(0, 0);
     }
 
-    [Ignore]
-    [TestMethod]
-    public void Ignored()
-    {
-        Thread.Sleep(Constants.WaitTimeInMS);
-        Assert.AreEqual(0, 0);
-    }
-
     [TestMethod]
     public void SimpleTest22()
     {
@@ -74,8 +66,8 @@ public class UnitTest2
     }
 
     [TestMethod]
-    [DataRow(1, false)]
-    public void IsolatedTest(int x, bool temp)
+    [DoNotParallelize]
+    public void IsolatedTest()
     {
         Thread.Sleep(Constants.WaitTimeInMS);
         Assert.IsTrue(true);
