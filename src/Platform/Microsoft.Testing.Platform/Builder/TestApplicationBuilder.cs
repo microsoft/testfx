@@ -33,7 +33,7 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
     private readonly IUnhandledExceptionsHandler _unhandledExceptionsHandler;
     private readonly TestHostBuilder _testHostBuilder;
     private ITestHost? _testHost;
-    private Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>? _testFrameworkAdapterFactory;
+    private Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework>? _testFrameworkFactory;
     private Func<IServiceProvider, ITestFrameworkCapabilities>? _testFrameworkCapabilitiesFactory;
 
     internal TestApplicationBuilder(
@@ -78,12 +78,12 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         ArgumentGuard.IsNotNull(adapterFactory);
         ArgumentGuard.IsNotNull(capabilitiesFactory);
 
-        if (_testFrameworkAdapterFactory is not null)
+        if (_testFrameworkFactory is not null)
         {
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderFrameworkAdapterFactoryAlreadyRegisteredErrorMessage);
         }
 
-        _testFrameworkAdapterFactory = adapterFactory;
+        _testFrameworkFactory = adapterFactory;
 
         if (_testFrameworkCapabilitiesFactory is not null)
         {
@@ -93,14 +93,14 @@ internal sealed class TestApplicationBuilder : ITestApplicationBuilder
         _testFrameworkCapabilitiesFactory = capabilitiesFactory;
 
         _testHostBuilder.TestFramework
-            = new TestFrameworkManager(_testFrameworkAdapterFactory, _testFrameworkCapabilitiesFactory);
+            = new TestFrameworkManager(_testFrameworkFactory, _testFrameworkCapabilitiesFactory);
 
         return this;
     }
 
     public async Task<ITestApplication> BuildAsync()
     {
-        if (_testFrameworkAdapterFactory is null)
+        if (_testFrameworkFactory is null)
         {
             throw new InvalidOperationException(PlatformResources.TestApplicationBuilderTestFrameworkNotRegistered);
         }
