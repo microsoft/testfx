@@ -283,40 +283,41 @@ internal class AssemblyEnumerator : MarshalByRefObject
     private static void AddInitializeMethods(TestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> initializeCleanupMethods)
     {
         string assemblyName = testMethodInfo.Parent.Parent.Assembly.GetName().Name!;
+        string assemblyLocation = testMethodInfo.Parent.Parent.Assembly.Location;
         string className = testMethodInfo.Parent.ClassType.Name;
         string classFullName = testMethodInfo.Parent.ClassType.FullName!;
 
-        if (!initializeCleanupMethods.Contains(testMethodInfo.Parent.Parent.Assembly.Location))
+        if (!initializeCleanupMethods.Contains(assemblyLocation))
         {
-            _ = initializeCleanupMethods.Add(testMethodInfo.Parent.Parent.Assembly.Location);
+            _ = initializeCleanupMethods.Add(assemblyLocation);
 
             if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
             {
                 AddMethod(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, tests, assemblyName, "_", "_",
-                    testMethodInfo.Parent.Parent.Assembly.Location, Constants.AssemblyInitialize);
+                    assemblyLocation, Constants.AssemblyInitialize);
             }
 
             if (testMethodInfo.Parent.Parent.AssemblyCleanupMethod is not null)
             {
                 AddMethod(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, tests, assemblyName, "_", "_",
-                    testMethodInfo.Parent.Parent.Assembly.Location, Constants.AssemblyCleanup);
+                    assemblyLocation, Constants.AssemblyCleanup);
             }
         }
 
-        if (!initializeCleanupMethods.Contains(testMethodInfo.Parent.Parent.Assembly.Location + classFullName))
+        if (!initializeCleanupMethods.Contains(assemblyLocation + classFullName))
         {
-            _ = initializeCleanupMethods.Add(testMethodInfo.Parent.Parent.Assembly.Location + classFullName);
+            _ = initializeCleanupMethods.Add(assemblyLocation + classFullName);
 
             if (testMethodInfo.Parent.ClassInitializeMethod is not null)
             {
                 AddMethod(testMethodInfo.Parent.ClassInitializeMethod, tests, assemblyName, className, classFullName,
-                    testMethodInfo.Parent.Parent.Assembly.Location, Constants.ClassInitialize);
+                    assemblyLocation, Constants.ClassInitialize);
             }
 
             if (testMethodInfo.Parent.ClassCleanupMethod is not null)
             {
                 AddMethod(testMethodInfo.Parent.ClassCleanupMethod, tests, assemblyName, className, classFullName,
-                    testMethodInfo.Parent.Parent.Assembly.Location, Constants.ClassCleanup);
+                    assemblyLocation, Constants.ClassCleanup);
             }
         }
 
