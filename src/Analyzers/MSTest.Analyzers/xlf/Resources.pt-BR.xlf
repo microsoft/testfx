@@ -209,6 +209,11 @@
         <target state="translated">Não armazene TestContext em um membro estático</target>
         <note />
       </trans-unit>
+      <trans-unit id="MarkMemberStaticSuppressorJustification">
+        <source>Test, TestInitialize and TestCleanup methods should not be 'static'</source>
+        <target state="new">Test, TestInitialize and TestCleanup methods should not be 'static'</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
         <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
         <target state="translated">Use "Assert.Fail" em vez de uma asserção "Assert.{0}" sempre com falha</target>

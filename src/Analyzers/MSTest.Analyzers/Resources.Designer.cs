@@ -353,6 +353,15 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Test, TestInitialize and TestCleanup methods should not be &apos;static&apos;.
+        /// </summary>
+        internal static string MarkMemberStaticSuppressorJustification {
+            get {
+                return ResourceManager.GetString("MarkMemberStaticSuppressorJustification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use &apos;Assert.Fail&apos; instead of an always-failing &apos;Assert.{0}&apos; assert.
         /// </summary>
         internal static string PreferAssertFailOverAlwaysFalseConditionsMessageFormat {

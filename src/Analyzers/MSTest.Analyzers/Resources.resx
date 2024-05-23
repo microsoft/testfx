@@ -235,6 +235,9 @@
   <data name="DoNotStoreStaticTestContextAnalyzerTitle" xml:space="preserve">
     <value>Do not store TestContext in a static member</value>
   </data>
+  <data name="MarkMemberStaticSuppressorJustification" xml:space="preserve">
+    <value>Test, TestInitialize and TestCleanup methods should not be 'static'</value>
+  </data>
   <data name="PreferAssertFailOverAlwaysFalseConditionsMessageFormat" xml:space="preserve">
     <value>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</value>
   </data>
