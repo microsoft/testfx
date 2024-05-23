@@ -11,14 +11,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Los métodos marcados con [AssemblyCleanup] deben seguir el siguiente diseño para ser válidos:
-- debería ser 'público' 
-- debería estar 'estático'
-- no debería ser genérico
-- no debería tomar ningún parámetro
-- el tipo de valor devuelto debería ser 'void', 'Task' o 'ValueTask'
-- no debería ser 'async void'
-- no debería ser un método especial (finalizador, operador...).</target>
+        <target state="new">Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -40,14 +40,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Los métodos marcados con [AssemblyInitialize] deberían seguir el siguiente diseño para ser válidos:
-- debería ser 'público' 
-- debería estar 'estático'
-- no debería ser genérico
-- debería tomar un parámetro de tipo 'TestContext'
-- el tipo de valor devuelto debería ser 'void', 'Task' o 'ValueTask'
-- no debería ser 'async void'
-- no debería ser un método especial (finalizador, operador...).</target>
+        <target state="new">Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -109,14 +109,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Los métodos marcados con [ClassCleanup] deben seguir el siguiente diseño para ser válidos:
-- debería ser 'público' 
-- no debería ser 'estático'
-- no debería ser genérico
-- no debería tomar ningún parámetro
-- el tipo de valor devuelto debería ser 'void', 'Task' o 'ValueTask'
-- no debería ser 'async void'
-- no debería ser un método especial (finalizador, operador...).</target>
+        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -138,14 +138,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Los métodos marcados con [ClassInitialize] deberían seguir el siguiente diseño para ser válidos:
-- debería ser 'público' 
-- debería estar 'estático'
-- no debería ser genérico
-- debería tomar un parámetro de tipo 'TestContext'
-- el tipo de valor devuelto debería ser 'void', 'Task' o 'ValueTask'
-- no debería ser 'async void'
-- no debería ser un método especial (finalizador, operador...).</target>
+        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -330,15 +330,15 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Los métodos marcados con [TestCleanup] deberían seguir el siguiente diseño para ser válidos:
-- debería ser 'public' 
-- no debería ser 'static'
-- no debería ser genérico
-- no debería ser 'abstract'
-- no debería tomar ningún parámetro
-- el tipo de valor devuelto debería ser 'void', 'Task' o 'ValueTask'
-- no debería ser 'async void'
-- no debería ser un método especial (finalizador, operador...).</target>
+        <target state="new">Methods marked with [TestCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic or be defined on a generic class
+- not be 'abstract'
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -404,15 +404,15 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Los métodos marcados con [TestInitialize] deberían seguir el siguiente diseño para ser válidos:
-- debería ser 'public' 
-- no debería ser 'static'
-- no debería ser genérico
-- no debería ser 'abstract'
-- no debería tomar ningún parámetro
-- el tipo de valor devuelto debería ser 'void', 'Task' o 'ValueTask'
-- no debería ser 'async void'
-- no debería ser un método especial (finalizador, operador...).</target>
+        <target state="new">Methods marked with [TestInitialize] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not be 'abstract'
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">

@@ -11,14 +11,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">[AssemblyCleanup]으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 합니다. 
-- 'static'이어야 합니다.
-- 제네릭이 아니어야 합니다.
-- 매개 변수를 사용하지 않아야 합니다.
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.</target>
+        <target state="new">Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -40,14 +40,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">[AssemblyInitialize]로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 합니다. 
-- 'static'이어야 합니다.
-- 제네릭이 아니어야 합니다.
-- 'TestContext' 형식의 매개 변수를 하나 사용해야 합니다.
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.</target>
+        <target state="new">Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -109,14 +109,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">[ClassCleanup]으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 합니다. 
-- 'static'이 아니어야 합니다.
-- 제네릭이 아니어야 합니다.
-- 매개 변수를 사용하지 않아야 합니다.
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.</target>
+        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -138,14 +138,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">[ClassInitialize]로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
-- 'public'이어야 합니다. 
-- 'static'이어야 합니다.
-- 제네릭이 아니어야 합니다.
-- 'TestContext' 형식의 매개 변수를 하나 사용해야 합니다.
-- 반환 형식은 'void', 'Task' 또는 'ValueTask'여야 합니다.
-- 'async void'가 아니어야 합니다.
-- 특수 메서드(종료자, 연산자...)가 아니어야 합니다.</target>
+        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">

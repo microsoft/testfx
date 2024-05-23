@@ -11,15 +11,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Aby byly metody s označením [AssemblyCleanup] platné, musí se řídit následujícím rozložením: 
-.
-– musí být public, 
-– musí být static,
-– nesmí být obecné,
-– nesmí přijímat žádný parametr,
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být async void,
-– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
+        <target state="new">Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
@@ -41,15 +40,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Aby byly metody s označením [AssemblyInitialize] platné, musí se řídit následujícím rozložením: 
-.
-– musí být public, 
-– musí být static,
-– nesmí být obecné,
-– musí mít jeden parametr typu TestContext,
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být async void,
-– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
+        <target state="new">Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
@@ -111,15 +109,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Aby byly metody s označením [ClassCleanup] platné, musí se řídit následujícím rozložením: 
-.
-– musí být public, 
-– nesmí být static,
-– nesmí být obecné,
-– nesmí přijímat žádný parametr,
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být async void,
-– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
+        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
@@ -141,15 +138,14 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Aby byly metody s označením [ClassInitialize] platné, musí se řídit následujícím rozložením: 
-.
-– musí být public, 
-– musí být static,
-– nesmí být obecné,
-– musí mít jeden parametr typu TestContext,
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být async void,
-– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
+        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
@@ -334,16 +330,15 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Aby byly metody s označením [TestCleanup] platné, musí se řídit následujícím rozložením: 
-.
-– musí být public, 
-– nesmí být static,
-– nesmí být obecné,
-– nesmí být abstract,
-– nesmí přijímat žádný parametr,
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být async void,
-– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
+        <target state="new">Methods marked with [TestCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic or be defined on a generic class
+- not be 'abstract'
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
@@ -409,16 +404,15 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="needs-review-translation">Aby byly metody s označením [TestInitialize] platné, musí se řídit následujícím rozložením: 
-.
-– musí být public, 
-– nesmí být static,
-– nesmí být obecné,
-– nesmí být abstract,
-– nesmí přijímat žádný parametr,
-– návratový typ musí být void, Task nebo ValueTask,
-– nesmí být async void,
-– nesmí být speciální metodou (finalizační metoda, operátor...).</target>
+        <target state="new">Methods marked with [TestInitialize] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not be 'abstract'
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
