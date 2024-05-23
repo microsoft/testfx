@@ -1,12 +1,18 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Immutable;
+
 using Microsoft.CodeAnalysis;
 
 namespace MSTest.Analyzers.Helpers;
 
 internal static class DiagnosticDescriptorHelper
 {
+    public const string CannotFixPropertyKey = "CannotFix";
+    public static readonly ImmutableDictionary<string, string?> CannotFixProperties
+        = ImmutableDictionary<string, string?>.Empty.Add(CannotFixPropertyKey, null);
+
     public static DiagnosticDescriptor Create(
         string id,
         LocalizableString title,

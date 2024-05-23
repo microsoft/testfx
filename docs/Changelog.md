@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## <a name="3.4.0"></a>[3.4.0] - WIP
+## <a name="3.4.0"></a>[3.4.0] - 2023-05-23
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
 
@@ -88,6 +88,17 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...HEAD)
 
 ### Artifacts
 
+* MSTest: [3.4.0](https://www.nuget.org/packages/MSTest/3.4.0)
+* MSTest.TestFramework: [3.4.0](https://www.nuget.org/packages/MSTest.TestFramework/3.4.0)
+* MSTest.TestAdapter: [3.4.0](https://www.nuget.org/packages/MSTest.TestAdapter/3.4.0)
+* MSTest.Analyzers: [3.4.0](https://www.nuget.org/packages/MSTest.Analyzers/3.4.0)
+* MSTest.Sdk: [3.4.0](https://www.nuget.org/packages/MSTest.Sdk/3.4.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.1.0)
+* Microsoft.Testing.Extensions.HangDump: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.1.0)
+* Microsoft.Testing.Extensions.HotReload: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.1.0)
+* Microsoft.Testing.Extensions.Retry: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.1.0)
+* Microsoft.Testing.Extensions.TrxReport: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.1.0)
+
 ## <a name="3.3.1"></a>[3.3.1] - 2024-04-04
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.3.0...v3.3.1)
@@ -103,11 +114,11 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.3.0...v3.3.1)
 * MSTest.TestAdapter: [3.3.1](https://www.nuget.org/packages/MSTest.TestAdapter/3.3.1)
 * MSTest.Analyzers: [3.3.1](https://www.nuget.org/packages/MSTest.Analyzers/3.3.1)
 * MSTest.Sdk: [3.3.1](https://www.nuget.org/packages/MSTest.Sdk/3.3.1)
-* Microsoft.Testing.Extensions.CrashDump: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.1.0)
-* Microsoft.Testing.Extensions.HangDump: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.1.0)
-* Microsoft.Testing.Extensions.HotReload: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.1.0)
-* Microsoft.Testing.Extensions.Retry: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.1.0)
-* Microsoft.Testing.Extensions.TrxReport: [1.1.0](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.1.0)
+* Microsoft.Testing.Extensions.CrashDump: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.CrashDump/1.2.1)
+* Microsoft.Testing.Extensions.HangDump: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HangDump/1.2.1)
+* Microsoft.Testing.Extensions.HotReload: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.HotReload/1.2.1)
+* Microsoft.Testing.Extensions.Retry: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.2.1)
+* Microsoft.Testing.Extensions.TrxReport: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.2.1)
 
 ## <a name="3.3.0"></a>[3.3.0] - 2024-04-03
 

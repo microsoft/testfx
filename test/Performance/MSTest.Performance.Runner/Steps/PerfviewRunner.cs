@@ -35,7 +35,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
             return new Files(Array.Empty<string>());
         }
 
-        string perfViewExecutable = await PerfviewExecutable();
+        await PerfviewExecutable();
         StringBuilder commandLine = new();
         commandLine.Append(CultureInfo.InvariantCulture, $" \"/DataFile:{Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "DataFile.etl")}\" /AcceptEULA /NoGui {_argument} ");
         commandLine.Append(CultureInfo.InvariantCulture, $"run \"{payload.TestHost.FullName}\" ");

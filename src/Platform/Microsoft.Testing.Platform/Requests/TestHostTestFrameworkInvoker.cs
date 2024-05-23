@@ -34,11 +34,11 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
-    public async Task ExecuteAsync(ITestFramework testFrameworkAdapter, ClientInfo client, CancellationToken cancellationToken)
+    public async Task ExecuteAsync(ITestFramework testFramework, ClientInfo client, CancellationToken cancellationToken)
     {
         ILogger<TestHostTestFrameworkInvoker> logger = ServiceProvider.GetLoggerFactory().CreateLogger<TestHostTestFrameworkInvoker>();
 
-        await logger.LogInformationAsync($"TestFrameworkAdapter UID: '{testFrameworkAdapter.Uid}' Version: '{testFrameworkAdapter.Version}' DisplayName: '{testFrameworkAdapter.DisplayName}' Description: '{testFrameworkAdapter.Description}'");
+        await logger.LogInformationAsync($"Test framework UID: '{testFramework.Uid}' Version: '{testFramework.Version}' DisplayName: '{testFramework.DisplayName}' Description: '{testFramework.Description}'");
 
         foreach (ICapability capability in ServiceProvider.GetTestFrameworkCapabilities().Capabilities)
         {
@@ -51,7 +51,7 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         DateTimeOffset startTime = DateTimeOffset.UtcNow;
         var stopwatch = Stopwatch.StartNew();
         SessionUid sessionId = ServiceProvider.GetTestSessionContext().SessionId;
-        CreateTestSessionResult createTestSessionResult = await testFrameworkAdapter.CreateTestSessionAsync(new(sessionId, client, cancellationToken));
+        CreateTestSessionResult createTestSessionResult = await testFramework.CreateTestSessionAsync(new(sessionId, client, cancellationToken));
         await HandleTestSessionResultAsync(createTestSessionResult.IsSuccess, createTestSessionResult.WarningMessage, createTestSessionResult.ErrorMessage);
 
         ITestExecutionRequestFactory testExecutionRequestFactory = ServiceProvider.GetTestExecutionRequestFactory();
@@ -59,18 +59,18 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
         IMessageBus messageBus = ServiceProvider.GetMessageBus();
 
         // Execute the test request
-        await ExecuteRequestAsync(testFrameworkAdapter, request, messageBus, cancellationToken);
+        await ExecuteRequestAsync(testFramework, request, messageBus, cancellationToken);
 
-        CloseTestSessionResult closeTestSessionResult = await testFrameworkAdapter.CloseTestSessionAsync(new(sessionId, client, cancellationToken));
+        CloseTestSessionResult closeTestSessionResult = await testFramework.CloseTestSessionAsync(new(sessionId, client, cancellationToken));
         await HandleTestSessionResultAsync(closeTestSessionResult.IsSuccess, closeTestSessionResult.WarningMessage, closeTestSessionResult.ErrorMessage);
         DateTimeOffset endTime = DateTimeOffset.UtcNow;
         await messageBus.PublishAsync(this, new TestRequestExecutionTimeInfo(new TimingInfo(startTime, endTime, stopwatch.Elapsed)));
     }
 
-    public virtual async Task ExecuteRequestAsync(ITestFramework testFrameworkAdapter, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
+    public virtual async Task ExecuteRequestAsync(ITestFramework testFramework, TestExecutionRequest request, IMessageBus messageBus, CancellationToken cancellationToken)
     {
         using SemaphoreSlim requestSemaphore = new(0, 1);
-        await testFrameworkAdapter.ExecuteRequestAsync(new(request, messageBus, requestSemaphore, cancellationToken));
+        await testFramework.ExecuteRequestAsync(new(request, messageBus, requestSemaphore, cancellationToken));
         await requestSemaphore.WaitAsync(cancellationToken);
     }
 

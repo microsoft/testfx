@@ -34,51 +34,12 @@ public sealed class ClassCleanupShouldBeValidFixer : CodeFixProvider
             return;
         }
 
-        FixtureMethodSignatureChanges fixesToApply = context.Diagnostics.Aggregate(FixtureMethodSignatureChanges.None, (acc, diagnostic) =>
+        if (context.Diagnostics.Any(d => !d.Properties.ContainsKey(DiagnosticDescriptorHelper.CannotFixPropertyKey)))
         {
-            if (diagnostic.Descriptor == ClassCleanupShouldBeValidAnalyzer.StaticRule)
-            {
-                return acc | FixtureMethodSignatureChanges.MakeStatic;
-            }
-
-            if (diagnostic.Descriptor == ClassCleanupShouldBeValidAnalyzer.PublicRule)
-            {
-                return acc | FixtureMethodSignatureChanges.MakePublic;
-            }
-
-            if (diagnostic.Descriptor == ClassCleanupShouldBeValidAnalyzer.ReturnTypeRule)
-            {
-                return acc | FixtureMethodSignatureChanges.FixReturnType;
-            }
-
-            if (diagnostic.Descriptor == ClassCleanupShouldBeValidAnalyzer.NotAsyncVoidRule)
-            {
-                return acc | FixtureMethodSignatureChanges.FixAsyncVoid;
-            }
-
-            if (diagnostic.Descriptor == ClassCleanupShouldBeValidAnalyzer.NoParametersRule)
-            {
-                return acc | FixtureMethodSignatureChanges.RemoveParameters;
-            }
-
-            if (diagnostic.Descriptor == ClassCleanupShouldBeValidAnalyzer.NotGenericRule)
-            {
-                return acc | FixtureMethodSignatureChanges.RemoveGeneric;
-            }
-
-            // return accumulator unchanged, either the action cannot be fixed or it will be fixed by default.
-            return acc;
-        });
-
-        if (fixesToApply != FixtureMethodSignatureChanges.None)
-        {
-            // The fixer is common to all fixture methods, so we need to hint it that we need 'static'.
-            fixesToApply |= FixtureMethodSignatureChanges.MakeStatic;
-
             context.RegisterCodeFix(
                 CodeAction.Create(
                     CodeFixResources.FixSignatureCodeFix,
-                    ct => FixtureMethodFixer.FixSignatureAsync(context.Document, root, node, fixesToApply, ct),
+                    ct => FixtureMethodFixer.FixSignatureAsync(context.Document, root, node, isParameterLess: true, shouldBeStatic: true, ct),
                     nameof(ClassCleanupShouldBeValidFixer)),
                 context.Diagnostics);
         }

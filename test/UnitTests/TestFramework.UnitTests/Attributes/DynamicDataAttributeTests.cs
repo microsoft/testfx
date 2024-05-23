@@ -145,7 +145,7 @@ public class DynamicDataAttributeTests : TestContainer
             object[] data = new object[] { 1, 2, 3 };
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithMissingParameters";
-            string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
+            _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         Exception ex = VerifyThrows(Action);
@@ -159,7 +159,7 @@ public class DynamicDataAttributeTests : TestContainer
             object[] data = new object[] { 1, 2, 3 };
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidReturnType";
-            string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
+            _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         Exception ex = VerifyThrows(Action);
@@ -173,7 +173,7 @@ public class DynamicDataAttributeTests : TestContainer
             object[] data = new object[] { 1, 2, 3 };
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidFirstParameterType";
-            string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
+            _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         Exception ex = VerifyThrows(Action);
@@ -187,7 +187,7 @@ public class DynamicDataAttributeTests : TestContainer
             object[] data = new object[] { 1, 2, 3 };
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidSecondParameterType";
-            string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
+            _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         Exception ex = VerifyThrows(Action);
@@ -201,7 +201,7 @@ public class DynamicDataAttributeTests : TestContainer
             object[] data = new object[] { 1, 2, 3 };
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameNonStatic";
-            string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
+            _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         Exception ex = VerifyThrows(Action);
@@ -215,7 +215,7 @@ public class DynamicDataAttributeTests : TestContainer
             object[] data = new object[] { 1, 2, 3 };
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNamePrivate";
-            string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
+            _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         Exception ex = VerifyThrows(Action);
@@ -229,7 +229,7 @@ public class DynamicDataAttributeTests : TestContainer
             object[] data = new object[] { 1, 2, 3 };
 
             _dynamicDataAttribute.DynamicDataDisplayName = "MissingCustomDynamicDataDisplayName";
-            string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
+            _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         }
 
         Exception ex = VerifyThrows(Action);

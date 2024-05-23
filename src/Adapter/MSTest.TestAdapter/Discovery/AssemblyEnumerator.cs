@@ -121,10 +121,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>Gets the types defined in the provided assembly.</returns>
     internal static IReadOnlyList<Type> GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
     {
-        var types = new List<Type>();
         try
         {
-            types.AddRange(assembly.DefinedTypes.Select(typeInfo => typeInfo.AsType()));
+            return assembly.DefinedTypes.Select(typeInfo => typeInfo.AsType()).ToList();
         }
         catch (ReflectionTypeLoadException ex)
         {
@@ -146,8 +145,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             return ex.Types!;
         }
-
-        return types;
     }
 
     /// <summary>
@@ -219,7 +216,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
             ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string>? warningsFromTypeEnumerator);
-            bool typeIgnored = ReflectHelper.IsAttributeDefined<IgnoreAttribute>(type, false);
 
             if (warningsFromTypeEnumerator != null)
             {
@@ -298,7 +294,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     {
         foreach (FrameworkITestDataSource dataSource in testDataSources)
         {
-            IEnumerable<object?[]>? data = null;
+            IEnumerable<object?[]>? data;
 
             // This code is to discover tests. To run the tests code is in TestMethodRunner.ExecuteDataSourceBasedTests.
             // Any change made here should be reflected in TestMethodRunner.ExecuteDataSourceBasedTests as well.

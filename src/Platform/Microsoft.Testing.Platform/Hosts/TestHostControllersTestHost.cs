@@ -63,7 +63,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
     protected override async Task<int> InternalRunAsync()
     {
-        int exitCode = ExitCodes.Success;
+        int exitCode;
         CancellationToken abortRun = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
         DateTimeOffset consoleRunStart = _clock.UtcNow;
         var consoleRunStarted = Stopwatch.StartNew();

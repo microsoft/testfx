@@ -148,7 +148,6 @@ public sealed class TestApplicationBuilderTests : TestBase
             : new(() => new TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider());
         testHostControllerManager.AddEnvironmentVariableProvider(compositeExtensionFactory);
         testHostControllerManager.AddProcessLifetimeHandler(compositeExtensionFactory);
-        List<ICompositeExtensionFactory> compositeExtensions = new();
         TestHostControllerConfiguration configuration = await testHostControllerManager.BuildAsync(_serviceProvider);
         Assert.IsTrue(configuration.RequireProcessRestart);
         Assert.AreEqual(1, configuration.LifetimeHandlers.Length);

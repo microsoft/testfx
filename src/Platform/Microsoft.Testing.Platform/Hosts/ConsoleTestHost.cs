@@ -73,7 +73,7 @@ internal sealed class ConsoleTestHost(
             ?? new TestHostTestFrameworkInvoker(ServiceProvider);
 
         ServiceProvider.TryAddService(new Services.TestSessionContext(abortRun));
-        ITestFramework testFrameworkAdapter = await _buildTestFrameworkAsync(
+        ITestFramework testFramework = await _buildTestFrameworkAsync(
             ServiceProvider,
             new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), testExecutionFilterFactory),
             testAdapterInvoker,
@@ -90,7 +90,7 @@ internal sealed class ConsoleTestHost(
         Statistics? statistics = null;
         string? extensionInformation = null;
         await _logger.LogInformationAsync($"Starting test session '{ServiceProvider.GetTestSessionContext().SessionId}'");
-        int exitCode = ExitCodes.GenericFailure;
+        int exitCode;
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
         DateTimeOffset requestExecuteStart = _clock.UtcNow;
         DateTimeOffset? requestExecuteStop = null;
@@ -103,7 +103,7 @@ internal sealed class ConsoleTestHost(
                 testSessionInfo,
                 ServiceProvider,
                 ServiceProvider.GetBaseMessageBus(),
-                testFrameworkAdapter,
+                testFramework,
                 Client);
             requestExecuteStop = _clock.UtcNow;
 
