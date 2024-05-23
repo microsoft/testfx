@@ -17,7 +17,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 {
     public ServiceProvider ServiceProvider { get; } = serviceProvider;
 
-    protected abstract bool RunTestApplicationLifecycleCallbacks { get; }
+    protected abstract bool RunTestApplicationLifeCycleCallbacks { get; }
 
     public async Task<int> RunAsync()
     {
@@ -26,7 +26,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
         int exitCode;
         try
         {
-            if (RunTestApplicationLifecycleCallbacks)
+            if (RunTestApplicationLifeCycleCallbacks)
             {
                 // Get the test application lifecycle callbacks to be able to call the before run
                 foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
@@ -37,7 +37,7 @@ internal abstract class CommonTestHost(ServiceProvider serviceProvider) : ITestH
 
             exitCode = await InternalRunAsync();
 
-            if (RunTestApplicationLifecycleCallbacks)
+            if (RunTestApplicationLifeCycleCallbacks)
             {
                 foreach (ITestApplicationLifecycleCallbacks testApplicationLifecycleCallbacks in ServiceProvider.GetServicesInternal<ITestApplicationLifecycleCallbacks>())
                 {

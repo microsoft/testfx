@@ -54,12 +54,10 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private bool _bannerDisplayed;
     private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
 
-    public ConsoleOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console, ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process,
-        bool isVSTestMode,
-        bool isListTests,
-        bool isServerMode,
-        int minimumExpectedTest,
-        FileLoggerProvider? fileLoggerProvider)
+    public ConsoleOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
+        ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
+        IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, bool isVSTestMode, bool isListTests,
+        bool isServerMode, int minimumExpectedTest, FileLoggerProvider? fileLoggerProvider)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
@@ -126,7 +124,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
         }
     }
 
-    public virtual async Task DisplayBannerAsync()
+    public virtual async Task DisplayBannerAsync(string? bannerMessage)
     {
         if (_isVSTestMode)
         {
@@ -142,44 +140,51 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
                 _bannerDisplayed = true;
 
-                StringBuilder stringBuilder = new();
-                stringBuilder.Append(".NET Testing Platform");
-                if (_runtimeFeature.IsDynamicCodeSupported)
+                if (bannerMessage is not null)
                 {
-                    AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-                    if (version is not null)
+                    _console.WriteLine(bannerMessage);
+                }
+                else
+                {
+                    StringBuilder stringBuilder = new();
+                    stringBuilder.Append(".NET Testing Platform");
+                    if (_runtimeFeature.IsDynamicCodeSupported)
                     {
-                        string informationalVersion = version.InformationalVersion;
-                        int index = informationalVersion.LastIndexOfAny(PlusSign);
-                        if (index != -1)
+                        AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+                        if (version is not null)
                         {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $" v{informationalVersion[..(index + 10)]}");
-                        }
-                        else
-                        {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $" v{informationalVersion}");
+                            string informationalVersion = version.InformationalVersion;
+                            int index = informationalVersion.LastIndexOfAny(PlusSign);
+                            if (index != -1)
+                            {
+                                stringBuilder.Append(CultureInfo.InvariantCulture, $" v{informationalVersion[..(index + 10)]}");
+                            }
+                            else
+                            {
+                                stringBuilder.Append(CultureInfo.InvariantCulture, $" v{informationalVersion}");
+                            }
+
+                            AssemblyMetadataAttribute? buildTime = Assembly.GetExecutingAssembly()
+                                .GetCustomAttributes<AssemblyMetadataAttribute>()
+                                .FirstOrDefault(x => x.Key == BUILDTIME_ATTRIBUTE_NAME);
+
+                            if (buildTime is not null && !RoslynString.IsNullOrEmpty(buildTime.Value))
+                            {
+                                stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildTime.Value})");
+                            }
                         }
 
-                        AssemblyMetadataAttribute? buildTime = Assembly.GetExecutingAssembly()
-                            .GetCustomAttributes<AssemblyMetadataAttribute>()
-                            .FirstOrDefault(x => x.Key == BUILDTIME_ATTRIBUTE_NAME);
-
-                        if (buildTime is not null && !RoslynString.IsNullOrEmpty(buildTime.Value))
-                        {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildTime.Value})");
-                        }
-                    }
-
-                    stringBuilder.Append(" [");
+                        stringBuilder.Append(" [");
 #if !NETCOREAPP
                     stringBuilder.Append(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
 #else
-                    stringBuilder.Append(RuntimeInformation.RuntimeIdentifier);
+                        stringBuilder.Append(RuntimeInformation.RuntimeIdentifier);
 #endif
-                    stringBuilder.Append(CultureInfo.InvariantCulture, $" - {RuntimeInformation.FrameworkDescription}]");
-                }
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $" - {RuntimeInformation.FrameworkDescription}]");
+                    }
 
-                _console.WriteLine(stringBuilder.ToString());
+                    _console.WriteLine(stringBuilder.ToString());
+                }
             }
 
             if (_fileLoggerProvider is not null)
