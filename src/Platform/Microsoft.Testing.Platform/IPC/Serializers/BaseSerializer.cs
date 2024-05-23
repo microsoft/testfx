@@ -223,31 +223,6 @@ internal abstract class BaseSerializer
     }
 #endif
 
-    private static int GetSize<T>()
-        where T : struct
-    {
-        int sizeInBytes = 0;
-
-        if (typeof(T) == typeof(int))
-        {
-            sizeInBytes = sizeof(int);
-        }
-        else if (typeof(T) == typeof(long))
-        {
-            sizeInBytes = sizeof(long);
-        }
-        else if (typeof(T) == typeof(short))
-        {
-            sizeInBytes = sizeof(short);
-        }
-        else if (typeof(T) == typeof(bool))
-        {
-            sizeInBytes = sizeof(bool);
-        }
-
-        return sizeInBytes;
-    }
-
     protected static void WriteField(Stream stream, short id, string? value)
     {
         if (value is null)
@@ -278,5 +253,30 @@ internal abstract class BaseSerializer
         SetPosition(stream, position);
         WriteInt(stream, value);
         SetPosition(stream, currentPosition);
+    }
+
+    private static int GetSize<T>()
+        where T : struct
+    {
+        int sizeInBytes = 0;
+
+        if (typeof(T) == typeof(int))
+        {
+            sizeInBytes = sizeof(int);
+        }
+        else if (typeof(T) == typeof(long))
+        {
+            sizeInBytes = sizeof(long);
+        }
+        else if (typeof(T) == typeof(short))
+        {
+            sizeInBytes = sizeof(short);
+        }
+        else if (typeof(T) == typeof(bool))
+        {
+            sizeInBytes = sizeof(bool);
+        }
+
+        return sizeInBytes;
     }
 }
