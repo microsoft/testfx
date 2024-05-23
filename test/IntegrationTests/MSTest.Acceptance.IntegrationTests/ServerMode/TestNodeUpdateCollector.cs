@@ -12,7 +12,7 @@ public class TestNodeUpdateCollector
     private readonly TaskCompletionSource _taskCompletionSource = new();
     private readonly Func<TestNodeUpdate, bool>? _completeCollector;
 
-    public ConcurrentBag<TestNodeUpdate> TestNodeUpdates { get; private set; } = new();
+    public ConcurrentBag<TestNodeUpdate> TestNodeUpdates { get; } = new();
 
     public TestNodeUpdateCollector(Func<TestNodeUpdate, bool>? completeCollectorWhen = null)
     {

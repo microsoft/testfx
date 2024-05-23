@@ -60,7 +60,7 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     /// <summary>
     /// Gets the message to include in the test result if the test fails due to not throwing an exception.
     /// </summary>
-    protected string SpecifiedNoExceptionMessage { get; private set; }
+    protected string SpecifiedNoExceptionMessage { get; }
 
     /// <summary>
     /// Gets the default no-exception message.

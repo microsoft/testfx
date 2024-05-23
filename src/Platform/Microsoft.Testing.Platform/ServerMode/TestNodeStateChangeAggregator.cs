@@ -20,7 +20,7 @@ internal sealed partial class ServerTestHost
         // Note: Currently there's no cascading node changes we need to deal with.
         private readonly List<TestNodeUpdateMessage> _stateChanges = [];
 
-        public Guid RunId { get; private set; } = runId;
+        public Guid RunId { get; } = runId;
 
         public bool HasChanges
             => _stateChanges.Count > 0;

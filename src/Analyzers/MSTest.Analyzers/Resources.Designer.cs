@@ -62,13 +62,13 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-        ///- it should be &apos;public&apos; 
-        ///- it should be &apos;static&apos;
-        ///- it should not be generic
-        ///- it should not take any parameter
+        ///- be &apos;public&apos; 
+        ///- be &apos;static&apos;
+        ///- not be generic nor defined on a generic class
+        ///- not take any parameter
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- it should not be &apos;async void&apos;
-        ///- it should not be a special method (finalizer, operator...)..
+        ///- not be &apos;async void&apos;
+        ///- not be a special method (finalizer, operator...)..
         /// </summary>
         internal static string AssemblyCleanupShouldBeValidDescription {
             get {
@@ -77,74 +77,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; should not take any parameter.
+        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; signature is invalid.
         /// </summary>
-        internal static string AssemblyCleanupShouldBeValidMessageFormat_NoParameters {
+        internal static string AssemblyCleanupShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_NoParameters", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; can&apos;t be declared on a generic class.
-        /// </summary>
-        internal static string AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass {
-            get {
-                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid {
-            get {
-                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; should not be generic.
-        /// </summary>
-        internal static string AssemblyCleanupShouldBeValidMessageFormat_NotGeneric {
-            get {
-                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_NotGeneric", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
-        /// </summary>
-        internal static string AssemblyCleanupShouldBeValidMessageFormat_Ordinary {
-            get {
-                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_Ordinary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string AssemblyCleanupShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string AssemblyCleanupShouldBeValidMessageFormat_ReturnType {
-            get {
-                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_ReturnType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyCleanup method &apos;{0}&apos; should be &apos;static&apos;.
-        /// </summary>
-        internal static string AssemblyCleanupShouldBeValidMessageFormat_Static {
-            get {
-                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat_Static", resourceCulture);
+                return ResourceManager.GetString("AssemblyCleanupShouldBeValidMessageFormat", resourceCulture);
             }
         }
         
@@ -159,13 +96,13 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-        ///- it should be &apos;public&apos; 
-        ///- it should be &apos;static&apos;
-        ///- it should not be generic
-        ///- it should take one parameter of type &apos;TestContext&apos;
+        ///- be &apos;public&apos; 
+        ///- be &apos;static&apos;
+        ///- not be generic nor be defined on a generic class
+        ///- take a single parameter of type &apos;TestContext&apos;
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- it should not be &apos;async void&apos;
-        ///- it should not be a special method (finalizer, operator...)..
+        ///- not be &apos;async void&apos;
+        ///- not be a special method (finalizer, operator...)..
         /// </summary>
         internal static string AssemblyInitializeShouldBeValidDescription {
             get {
@@ -174,74 +111,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; can&apos;t be declared on a generic class.
+        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; signature is invalid.
         /// </summary>
-        internal static string AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass {
+        internal static string AssemblyInitializeShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid {
-            get {
-                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should not be generic.
-        /// </summary>
-        internal static string AssemblyInitializeShouldBeValidMessageFormat_NotGeneric {
-            get {
-                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_NotGeneric", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
-        /// </summary>
-        internal static string AssemblyInitializeShouldBeValidMessageFormat_Ordinary {
-            get {
-                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_Ordinary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string AssemblyInitializeShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string AssemblyInitializeShouldBeValidMessageFormat_ReturnType {
-            get {
-                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_ReturnType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should take a single parameter of type &apos;TestContext&apos;.
-        /// </summary>
-        internal static string AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter {
-            get {
-                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AssemblyInitialize method &apos;{0}&apos; should be &apos;static&apos;.
-        /// </summary>
-        internal static string AssemblyInitializeShouldBeValidMessageFormat_Static {
-            get {
-                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat_Static", resourceCulture);
+                return ResourceManager.GetString("AssemblyInitializeShouldBeValidMessageFormat", resourceCulture);
             }
         }
         
@@ -328,13 +202,13 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [ClassCleanup] should follow the following layout to be valid:
-        ///- it should be &apos;public&apos; 
-        ///- it should not &apos;static&apos;
-        ///- it should not be generic
-        ///- it should not take any parameter
+        ///- be &apos;public&apos; 
+        ///- not be &apos;static&apos;
+        ///- not be generic nor defined on a generic class
+        ///- not take any parameter
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- it should not be &apos;async void&apos;
-        ///- it should not be a special method (finalizer, operator...)..
+        ///- not be &apos;async void&apos;
+        ///- not be a special method (finalizer, operator...)..
         /// </summary>
         internal static string ClassCleanupShouldBeValidDescription {
             get {
@@ -343,74 +217,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should not take any parameter.
+        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; signature is invalid.
         /// </summary>
-        internal static string ClassCleanupShouldBeValidMessageFormat_NoParameters {
+        internal static string ClassCleanupShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_NoParameters", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; can&apos;t be declared on a generic class without the `InheritanceBehavior` mode is set.
-        /// </summary>
-        internal static string ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet {
-            get {
-                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid {
-            get {
-                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should not be generic.
-        /// </summary>
-        internal static string ClassCleanupShouldBeValidMessageFormat_NotGeneric {
-            get {
-                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_NotGeneric", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
-        /// </summary>
-        internal static string ClassCleanupShouldBeValidMessageFormat_Ordinary {
-            get {
-                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_Ordinary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string ClassCleanupShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string ClassCleanupShouldBeValidMessageFormat_ReturnType {
-            get {
-                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_ReturnType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassCleanup method &apos;{0}&apos; should be &apos;static&apos;.
-        /// </summary>
-        internal static string ClassCleanupShouldBeValidMessageFormat_Static {
-            get {
-                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat_Static", resourceCulture);
+                return ResourceManager.GetString("ClassCleanupShouldBeValidMessageFormat", resourceCulture);
             }
         }
         
@@ -425,13 +236,13 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [ClassInitialize] should follow the following layout to be valid:
-        ///- it should be &apos;public&apos; 
-        ///- it should be &apos;static&apos;
-        ///- it should not be generic
-        ///- it should take one parameter of type &apos;TestContext&apos;
+        ///- be &apos;public&apos; 
+        ///- be &apos;static&apos;
+        ///- not be generic nor be defined on a generic class
+        ///- take a single parameter of type &apos;TestContext&apos;
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- it should not be &apos;async void&apos;
-        ///- it should not be a special method (finalizer, operator...)..
+        ///- not be &apos;async void&apos;
+        ///- not be a special method (finalizer, operator...)..
         /// </summary>
         internal static string ClassInitializeShouldBeValidDescription {
             get {
@@ -440,75 +251,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; can&apos;t be declared on a generic class without the `InheritanceBehavior` mode is set.
+        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; signature is invalid.
         /// </summary>
-        internal static string ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet {
+        internal static string ClassInitializeShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSe" +
-                        "t", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid {
-            get {
-                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should not be generic.
-        /// </summary>
-        internal static string ClassInitializeShouldBeValidMessageFormat_NotGeneric {
-            get {
-                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_NotGeneric", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
-        /// </summary>
-        internal static string ClassInitializeShouldBeValidMessageFormat_Ordinary {
-            get {
-                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_Ordinary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string ClassInitializeShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string ClassInitializeShouldBeValidMessageFormat_ReturnType {
-            get {
-                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_ReturnType", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should take a single parameter of type &apos;TestContext&apos;.
-        /// </summary>
-        internal static string ClassInitializeShouldBeValidMessageFormat_SingleContextParameter {
-            get {
-                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_SingleContextParameter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ClassInitialize method &apos;{0}&apos; should be &apos;static&apos;.
-        /// </summary>
-        internal static string ClassInitializeShouldBeValidMessageFormat_Static {
-            get {
-                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat_Static", resourceCulture);
+                return ResourceManager.GetString("ClassInitializeShouldBeValidMessageFormat", resourceCulture);
             }
         }
         
@@ -799,14 +546,14 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [TestCleanup] should follow the following layout to be valid:
-        ///- it should be &apos;public&apos; 
-        ///- it should not be &apos;static&apos;
-        ///- it should not be generic
-        ///- it should not be &apos;abstract&apos;
-        ///- it should not take any parameter
+        ///- be &apos;public&apos; 
+        ///- not be &apos;static&apos;
+        ///- not be generic or be defined on a generic class
+        ///- not be &apos;abstract&apos;
+        ///- not take any parameter
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- it should not be &apos;async void&apos;
-        ///- it should not be a special method (finalizer, operator...)..
+        ///- not be &apos;async void&apos;
+        ///- not be a special method (finalizer, operator...)..
         /// </summary>
         internal static string TestCleanupShouldBeValidDescription {
             get {
@@ -815,74 +562,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should not take any parameter.
+        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; signature is invalid.
         /// </summary>
-        internal static string TestCleanupShouldBeValidMessageFormat_NoParameters {
+        internal static string TestCleanupShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("TestCleanupShouldBeValidMessageFormat_NoParameters", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should not be &apos;abstract&apos;.
-        /// </summary>
-        internal static string TestCleanupShouldBeValidMessageFormat_NotAbstract {
-            get {
-                return ResourceManager.GetString("TestCleanupShouldBeValidMessageFormat_NotAbstract", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should not be &apos;async void&apos;.
-        /// </summary>
-        internal static string TestCleanupShouldBeValidMessageFormat_NotAsyncVoid {
-            get {
-                return ResourceManager.GetString("TestCleanupShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should not be generic.
-        /// </summary>
-        internal static string TestCleanupShouldBeValidMessageFormat_NotGeneric {
-            get {
-                return ResourceManager.GetString("TestCleanupShouldBeValidMessageFormat_NotGeneric", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should not be &apos;static&apos;.
-        /// </summary>
-        internal static string TestCleanupShouldBeValidMessageFormat_NotStatic {
-            get {
-                return ResourceManager.GetString("TestCleanupShouldBeValidMessageFormat_NotStatic", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
-        /// </summary>
-        internal static string TestCleanupShouldBeValidMessageFormat_Ordinary {
-            get {
-                return ResourceManager.GetString("TestCleanupShouldBeValidMessageFormat_Ordinary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string TestCleanupShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("TestCleanupShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestCleanup method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string TestCleanupShouldBeValidMessageFormat_ReturnType {
-            get {
-                return ResourceManager.GetString("TestCleanupShouldBeValidMessageFormat_ReturnType", resourceCulture);
+                return ResourceManager.GetString("TestCleanupShouldBeValidMessageFormat", resourceCulture);
             }
         }
         
@@ -964,14 +648,14 @@ namespace MSTest.Analyzers {
         
         /// <summary>
         ///   Looks up a localized string similar to Methods marked with [TestInitialize] should follow the following layout to be valid:
-        ///- it should be &apos;public&apos; 
-        ///- it should not be &apos;static&apos;
-        ///- it should not be generic
-        ///- it should not be &apos;abstract&apos;
-        ///- it should not take any parameter
+        ///- be &apos;public&apos; 
+        ///- not be &apos;static&apos;
+        ///- not be generic nor defined on a generic class
+        ///- not be &apos;abstract&apos;
+        ///- not take any parameter
         ///- return type should be &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;
-        ///- it should not be &apos;async void&apos;
-        ///- it should not be a special method (finalizer, operator...)..
+        ///- not be &apos;async void&apos;
+        ///- not be a special method (finalizer, operator...)..
         /// </summary>
         internal static string TestInitializeShouldBeValidDescription {
             get {
@@ -980,74 +664,11 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should not take any parameter.
+        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; signature is invalid.
         /// </summary>
-        internal static string TestInitializeShouldBeValidMessageFormat_NoParameters {
+        internal static string TestInitializeShouldBeValidMessageFormat {
             get {
-                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_NoParameters", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should not be &apos;abstract&apos;.
-        /// </summary>
-        internal static string TestInitializeShouldBeValidMessageFormat_NotAbstract {
-            get {
-                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_NotAbstract", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestInitialize method  &apos;{0}&apos; should not be &apos;async void&apos;.
-        /// </summary>
-        internal static string TestInitializeShouldBeValidMessageFormat_NotAsyncVoid {
-            get {
-                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_NotAsyncVoid", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should not be generic.
-        /// </summary>
-        internal static string TestInitializeShouldBeValidMessageFormat_NotGeneric {
-            get {
-                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_NotGeneric", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should not be &apos;static&apos;.
-        /// </summary>
-        internal static string TestInitializeShouldBeValidMessageFormat_NotStatic {
-            get {
-                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_NotStatic", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should be an &apos;ordinary&apos; method.
-        /// </summary>
-        internal static string TestInitializeShouldBeValidMessageFormat_Ordinary {
-            get {
-                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_Ordinary", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should be &apos;public&apos;.
-        /// </summary>
-        internal static string TestInitializeShouldBeValidMessageFormat_Public {
-            get {
-                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to TestInitialize method &apos;{0}&apos; should return &apos;void&apos;, &apos;Task&apos; or &apos;ValueTask&apos;.
-        /// </summary>
-        internal static string TestInitializeShouldBeValidMessageFormat_ReturnType {
-            get {
-                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat_ReturnType", resourceCulture);
+                return ResourceManager.GetString("TestInitializeShouldBeValidMessageFormat", resourceCulture);
             }
         }
         

@@ -14,12 +14,12 @@ using MSTest.Analyzers.Helpers;
 
 namespace MSTest.Analyzers;
 
-[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(AssemblyCleanupShouldBeValidFixer))]
+[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ClassCleanupShouldBeValidFixer))]
 [Shared]
-public sealed class AssemblyCleanupShouldBeValidFixer : CodeFixProvider
+public sealed class ClassCleanupShouldBeValidFixer : CodeFixProvider
 {
     public sealed override ImmutableArray<string> FixableDiagnosticIds { get; }
-        = ImmutableArray.Create(DiagnosticIds.AssemblyCleanupShouldBeValidRuleId);
+        = ImmutableArray.Create(DiagnosticIds.ClassCleanupShouldBeValidRuleId);
 
     public override FixAllProvider GetFixAllProvider()
         // See https://github.com/dotnet/roslyn/blob/main/docs/analyzers/FixAllProvider.md for more information on Fix All Providers
@@ -40,7 +40,7 @@ public sealed class AssemblyCleanupShouldBeValidFixer : CodeFixProvider
                 CodeAction.Create(
                     CodeFixResources.FixSignatureCodeFix,
                     ct => FixtureMethodFixer.FixSignatureAsync(context.Document, root, node, isParameterLess: true, shouldBeStatic: true, ct),
-                    nameof(AssemblyCleanupShouldBeValidFixer)),
+                    nameof(ClassCleanupShouldBeValidFixer)),
                 context.Diagnostics);
         }
     }

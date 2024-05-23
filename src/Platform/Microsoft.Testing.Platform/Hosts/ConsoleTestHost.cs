@@ -90,7 +90,7 @@ internal sealed class ConsoleTestHost(
         Statistics? statistics = null;
         string? extensionInformation = null;
         await _logger.LogInformationAsync($"Starting test session '{ServiceProvider.GetTestSessionContext().SessionId}'");
-        int exitCode = ExitCodes.GenericFailure;
+        int exitCode;
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
         DateTimeOffset requestExecuteStart = _clock.UtcNow;
         DateTimeOffset? requestExecuteStop = null;

@@ -56,21 +56,13 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
     /// <summary>
     /// Gets a value indicating the Type of the expected exception.
     /// </summary>
-    public Type ExceptionType
-    {
-        get;
-        private set;
-    }
+    public Type ExceptionType { get; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to allow types derived from the type of the expected exception to
     /// qualify as expected.
     /// </summary>
-    public bool AllowDerivedTypes
-    {
-        get;
-        set;
-    }
+    public bool AllowDerivedTypes { get; set; }
 
     /// <summary>
     /// Gets the message to include in the test result if the test fails due to not throwing an exception.

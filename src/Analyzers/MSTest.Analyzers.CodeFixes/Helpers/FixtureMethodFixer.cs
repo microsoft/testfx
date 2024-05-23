@@ -14,7 +14,7 @@ internal static class FixtureMethodFixer
     private const SyntaxNode? VoidReturnTypeNode = null;
 
     public static async Task<Solution> FixSignatureAsync(Document document, SyntaxNode root, SyntaxNode node,
-        FixtureMethodSignatureChanges fixesToApply, CancellationToken cancellationToken)
+        bool isParameterLess, bool shouldBeStatic, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -35,11 +35,11 @@ internal static class FixtureMethodFixer
 
         SyntaxNode fixedMethodDeclarationNode = syntaxGenerator.MethodDeclaration(
             methodSymbol.Name,
-            GetParameters(fixesToApply, syntaxGenerator, wellKnownTypeProvider),
+            GetParameters(syntaxGenerator, isParameterLess, wellKnownTypeProvider),
             typeParameters: null,
-            GetReturnType(fixesToApply, syntaxGenerator, methodSymbol, wellKnownTypeProvider),
-            GetAccessibility(fixesToApply, methodSymbol),
-            GetModifiers(fixesToApply, methodSymbol),
+            GetReturnType(syntaxGenerator, methodSymbol, wellKnownTypeProvider),
+            Accessibility.Public,
+            GetModifiers(methodSymbol, shouldBeStatic),
             GetStatements(node, syntaxGenerator));
 
         // Copy the attributes from the old method to the new method.
@@ -52,51 +52,36 @@ internal static class FixtureMethodFixer
         => syntaxGenerator.GetStatements(node)
             .Where(x => !x.IsKind(SyntaxKind.ReturnStatement) && !x.IsKind(SyntaxKind.YieldReturnStatement));
 
-    private static DeclarationModifiers GetModifiers(FixtureMethodSignatureChanges fixesToApply, IMethodSymbol methodSymbol)
+    private static DeclarationModifiers GetModifiers(IMethodSymbol methodSymbol, bool shouldBeStatic)
     {
-        var currentModifiers = DeclarationModifiers.From(methodSymbol);
+        DeclarationModifiers newModifiers = methodSymbol.IsAsync
+            ? DeclarationModifiers.Async
+            : DeclarationModifiers.None;
 
-        return fixesToApply.HasFlag(FixtureMethodSignatureChanges.MakeStatic)
-            ? currentModifiers.WithIsStatic(true)
-            : fixesToApply.HasFlag(FixtureMethodSignatureChanges.RemoveStatic)
-                ? currentModifiers.WithIsStatic(false)
-                : currentModifiers;
+        return newModifiers.WithIsStatic(shouldBeStatic);
     }
 
-    private static Accessibility GetAccessibility(FixtureMethodSignatureChanges fixesToApply, IMethodSymbol methodSymbol)
-        => fixesToApply.HasFlag(FixtureMethodSignatureChanges.MakePublic)
-            ? Accessibility.Public
-            : methodSymbol.DeclaredAccessibility;
-
-    private static SyntaxNode? GetReturnType(FixtureMethodSignatureChanges fixesToApply, SyntaxGenerator syntaxGenerator,
-        IMethodSymbol methodSymbol, WellKnownTypeProvider wellKnownTypeProvider)
+    private static SyntaxNode? GetReturnType(SyntaxGenerator syntaxGenerator, IMethodSymbol methodSymbol, WellKnownTypeProvider wellKnownTypeProvider)
     {
-        if (fixesToApply.HasFlag(FixtureMethodSignatureChanges.FixAsyncVoid))
+        if (SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType.OriginalDefinition, wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask1)))
+        {
+            return syntaxGenerator.IdentifierName("ValueTask");
+        }
+
+        if (methodSymbol.IsAsync
+            || SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType.OriginalDefinition, wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask1)))
         {
             return syntaxGenerator.IdentifierName("Task");
         }
 
-        if (fixesToApply.HasFlag(FixtureMethodSignatureChanges.FixReturnType))
-        {
-            if (SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType.OriginalDefinition, wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksTask1)))
-            {
-                return syntaxGenerator.IdentifierName("Task");
-            }
-
-            if (SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType.OriginalDefinition, wellKnownTypeProvider.GetOrCreateTypeByMetadataName(WellKnownTypeNames.SystemThreadingTasksValueTask1)))
-            {
-                return syntaxGenerator.IdentifierName("ValueTask");
-            }
-        }
-
+        // For all other cases return void.
         return VoidReturnTypeNode;
     }
 
-    private static IEnumerable<SyntaxNode> GetParameters(FixtureMethodSignatureChanges fixesToApply, SyntaxGenerator syntaxGenerator,
+    private static IEnumerable<SyntaxNode> GetParameters(SyntaxGenerator syntaxGenerator, bool isParameterLess,
         WellKnownTypeProvider wellKnownTypeProvider)
     {
-        if (!fixesToApply.HasFlag(FixtureMethodSignatureChanges.AddTestContextParameter)
-            || wellKnownTypeProvider is null
+        if (isParameterLess
             || !wellKnownTypeProvider.TryGetOrCreateTypeByMetadataName(
                 WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext,
                 out INamedTypeSymbol? testContextTypeSymbol))

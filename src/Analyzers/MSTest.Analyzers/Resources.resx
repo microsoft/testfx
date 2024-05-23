@@ -119,74 +119,32 @@
   </resheader>
   <data name="AssemblyCleanupShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should not take any parameter
+- be 'public' 
+- be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</value>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</value>
   </data>
-  <data name="AssemblyCleanupShouldBeValidMessageFormat_NoParameters" xml:space="preserve">
-    <value>AssemblyCleanup method '{0}' should not take any parameter</value>
-  </data>
-  <data name="AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass" xml:space="preserve">
-    <value>AssemblyCleanup method '{0}' can't be declared on a generic class</value>
-  </data>
-  <data name="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
-    <value>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
-  </data>
-  <data name="AssemblyCleanupShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
-    <value>AssemblyCleanup method '{0}' should not be generic</value>
-  </data>
-  <data name="AssemblyCleanupShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
-    <value>AssemblyCleanup method '{0}' should be an 'ordinary' method</value>
-  </data>
-  <data name="AssemblyCleanupShouldBeValidMessageFormat_Public" xml:space="preserve">
-    <value>AssemblyCleanup method '{0}' should be 'public'</value>
-  </data>
-  <data name="AssemblyCleanupShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
-    <value>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
-  </data>
-  <data name="AssemblyCleanupShouldBeValidMessageFormat_Static" xml:space="preserve">
-    <value>AssemblyCleanup method '{0}' should be 'static'</value>
+  <data name="AssemblyCleanupShouldBeValidMessageFormat" xml:space="preserve">
+    <value>AssemblyCleanup method '{0}' signature is invalid</value>
   </data>
   <data name="AssemblyCleanupShouldBeValidTitle" xml:space="preserve">
     <value>AssemblyCleanup methods should have valid layout</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should take one parameter of type 'TestContext'
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</value>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</value>
   </data>
-  <data name="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass" xml:space="preserve">
-    <value>AssemblyInitialize method '{0}' can't be declared on a generic class</value>
-  </data>
-  <data name="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
-    <value>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
-  </data>
-  <data name="AssemblyInitializeShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
-    <value>AssemblyInitialize method '{0}' should not be generic</value>
-  </data>
-  <data name="AssemblyInitializeShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
-    <value>AssemblyInitialize method '{0}' should be an 'ordinary' method</value>
-  </data>
-  <data name="AssemblyInitializeShouldBeValidMessageFormat_Public" xml:space="preserve">
-    <value>AssemblyInitialize method '{0}' should be 'public'</value>
-  </data>
-  <data name="AssemblyInitializeShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
-    <value>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
-  </data>
-  <data name="AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter" xml:space="preserve">
-    <value>AssemblyInitialize method '{0}' should take a single parameter of type 'TestContext'</value>
-  </data>
-  <data name="AssemblyInitializeShouldBeValidMessageFormat_Static" xml:space="preserve">
-    <value>AssemblyInitialize method '{0}' should be 'static'</value>
+  <data name="AssemblyInitializeShouldBeValidMessageFormat" xml:space="preserve">
+    <value>AssemblyInitialize method '{0}' signature is invalid</value>
   </data>
   <data name="AssemblyInitializeShouldBeValidTitle" xml:space="preserve">
     <value>AssemblyInitialize methods should have valid layout</value>
@@ -217,74 +175,32 @@
   </data>
   <data name="ClassCleanupShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not 'static'
-- it should not be generic
-- it should not take any parameter
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</value>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</value>
   </data>
-  <data name="ClassCleanupShouldBeValidMessageFormat_NoParameters" xml:space="preserve">
-    <value>ClassCleanup method '{0}' should not take any parameter</value>
-  </data>
-  <data name="ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet" xml:space="preserve">
-    <value>ClassCleanup method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</value>
-  </data>
-  <data name="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
-    <value>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
-  </data>
-  <data name="ClassCleanupShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
-    <value>ClassCleanup method '{0}' should not be generic</value>
-  </data>
-  <data name="ClassCleanupShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
-    <value>ClassCleanup method '{0}' should be an 'ordinary' method</value>
-  </data>
-  <data name="ClassCleanupShouldBeValidMessageFormat_Public" xml:space="preserve">
-    <value>ClassCleanup method '{0}' should be 'public'</value>
-  </data>
-  <data name="ClassCleanupShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
-    <value>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
-  </data>
-  <data name="ClassCleanupShouldBeValidMessageFormat_Static" xml:space="preserve">
-    <value>ClassCleanup method '{0}' should be 'static'</value>
+  <data name="ClassCleanupShouldBeValidMessageFormat" xml:space="preserve">
+    <value>ClassCleanup method '{0}' signature is invalid</value>
   </data>
   <data name="ClassCleanupShouldBeValidTitle" xml:space="preserve">
     <value>ClassCleanup methods should have valid layout</value>
   </data>
   <data name="ClassInitializeShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should take one parameter of type 'TestContext'
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</value>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</value>
   </data>
-  <data name="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet" xml:space="preserve">
-    <value>ClassInitialize method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</value>
-  </data>
-  <data name="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
-    <value>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
-  </data>
-  <data name="ClassInitializeShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
-    <value>ClassInitialize method '{0}' should not be generic</value>
-  </data>
-  <data name="ClassInitializeShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
-    <value>ClassInitialize method '{0}' should be an 'ordinary' method</value>
-  </data>
-  <data name="ClassInitializeShouldBeValidMessageFormat_Public" xml:space="preserve">
-    <value>ClassInitialize method '{0}' should be 'public'</value>
-  </data>
-  <data name="ClassInitializeShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
-    <value>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
-  </data>
-  <data name="ClassInitializeShouldBeValidMessageFormat_SingleContextParameter" xml:space="preserve">
-    <value>ClassInitialize method '{0}' should take a single parameter of type 'TestContext'</value>
-  </data>
-  <data name="ClassInitializeShouldBeValidMessageFormat_Static" xml:space="preserve">
-    <value>ClassInitialize method '{0}' should be 'static'</value>
+  <data name="ClassInitializeShouldBeValidMessageFormat" xml:space="preserve">
+    <value>ClassInitialize method '{0}' signature is invalid</value>
   </data>
   <data name="ClassInitializeShouldBeValidTitle" xml:space="preserve">
     <value>ClassInitialize methods should have valid layout</value>
@@ -387,38 +303,17 @@
   </data>
   <data name="TestCleanupShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with [TestCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
+- be 'public' 
+- not be 'static'
+- not be generic or be defined on a generic class
+- not be 'abstract'
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</value>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</value>
   </data>
-  <data name="TestCleanupShouldBeValidMessageFormat_NoParameters" xml:space="preserve">
-    <value>TestCleanup method '{0}' should not take any parameter</value>
-  </data>
-  <data name="TestCleanupShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
-    <value>TestCleanup method '{0}' should not be 'abstract'</value>
-  </data>
-  <data name="TestCleanupShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
-    <value>TestCleanup method '{0}' should not be 'async void'</value>
-  </data>
-  <data name="TestCleanupShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
-    <value>TestCleanup method '{0}' should not be generic</value>
-  </data>
-  <data name="TestCleanupShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
-    <value>TestCleanup method '{0}' should not be 'static'</value>
-  </data>
-  <data name="TestCleanupShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
-    <value>TestCleanup method '{0}' should be an 'ordinary' method</value>
-  </data>
-  <data name="TestCleanupShouldBeValidMessageFormat_Public" xml:space="preserve">
-    <value>TestCleanup method '{0}' should be 'public'</value>
-  </data>
-  <data name="TestCleanupShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
-    <value>TestCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+  <data name="TestCleanupShouldBeValidMessageFormat" xml:space="preserve">
+    <value>TestCleanup method '{0}' signature is invalid</value>
   </data>
   <data name="TestCleanupShouldBeValidTitle" xml:space="preserve">
     <value>TestCleanup method should have valid layout</value>
@@ -450,38 +345,17 @@
   </data>
   <data name="TestInitializeShouldBeValidDescription" xml:space="preserve">
     <value>Methods marked with [TestInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not be 'abstract'
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</value>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</value>
   </data>
-  <data name="TestInitializeShouldBeValidMessageFormat_NoParameters" xml:space="preserve">
-    <value>TestInitialize method '{0}' should not take any parameter</value>
-  </data>
-  <data name="TestInitializeShouldBeValidMessageFormat_NotAbstract" xml:space="preserve">
-    <value>TestInitialize method '{0}' should not be 'abstract'</value>
-  </data>
-  <data name="TestInitializeShouldBeValidMessageFormat_NotAsyncVoid" xml:space="preserve">
-    <value>TestInitialize method  '{0}' should not be 'async void'</value>
-  </data>
-  <data name="TestInitializeShouldBeValidMessageFormat_NotGeneric" xml:space="preserve">
-    <value>TestInitialize method '{0}' should not be generic</value>
-  </data>
-  <data name="TestInitializeShouldBeValidMessageFormat_NotStatic" xml:space="preserve">
-    <value>TestInitialize method '{0}' should not be 'static'</value>
-  </data>
-  <data name="TestInitializeShouldBeValidMessageFormat_Ordinary" xml:space="preserve">
-    <value>TestInitialize method '{0}' should be an 'ordinary' method</value>
-  </data>
-  <data name="TestInitializeShouldBeValidMessageFormat_Public" xml:space="preserve">
-    <value>TestInitialize method '{0}' should be 'public'</value>
-  </data>
-  <data name="TestInitializeShouldBeValidMessageFormat_ReturnType" xml:space="preserve">
-    <value>TestInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</value>
+  <data name="TestInitializeShouldBeValidMessageFormat" xml:space="preserve">
+    <value>TestInitialize method '{0}' signature is invalid</value>
   </data>
   <data name="TestInitializeShouldBeValidTitle" xml:space="preserve">
     <value>TestInitialize method should have valid layout</value>

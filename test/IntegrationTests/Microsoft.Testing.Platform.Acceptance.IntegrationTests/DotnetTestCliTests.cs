@@ -31,7 +31,6 @@ public class DotnetTestCliTests : AcceptanceTestBase
             .PatchCodeWithReplace("$Extra$", string.Empty),
             addPublicFeeds: true);
 
-        string binlogFile = Path.Combine(generator.TargetAssetPath, "msbuild.binlog");
         DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"test -m:1 -nodeReuse:false {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
 
         // There is whitespace difference in output in parent and public repo that depends on the version of the dotnet SDK used.

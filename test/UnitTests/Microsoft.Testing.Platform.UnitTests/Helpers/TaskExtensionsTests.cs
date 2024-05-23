@@ -66,7 +66,7 @@ public sealed class TaskExtensionsTests : TestBase
                 async () =>
                 {
                     ManualResetEvent waitException = new(false);
-                    OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(async ()
+                    await Assert.ThrowsAsync<OperationCanceledException>(async ()
                         => await Task.Run(async () =>
                         {
                             await Task.Delay(TimeSpan.FromSeconds(10));
@@ -82,7 +82,7 @@ public sealed class TaskExtensionsTests : TestBase
                 async () =>
                 {
                     ManualResetEvent waitException = new(false);
-                    OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(async ()
+                    await Assert.ThrowsAsync<OperationCanceledException>(async ()
                         => await Task.Run(async () =>
                         {
                             await Task.Delay(TimeSpan.FromSeconds(10));
