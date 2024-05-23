@@ -9,13 +9,11 @@ namespace Microsoft.Testing.Platform.TestHostControllers;
 
 internal sealed class TestHostControllerInfo(CommandLineParseResult parseResult) : ITestHostControllerInfo
 {
-    private readonly CommandLineParseResult _parseResult = parseResult;
-
-    public bool HasTestHostController => _parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey);
+    public bool HasTestHostController => parseResult.IsOptionSet(PlatformCommandLineProvider.TestHostControllerPIDOptionKey);
 
     public bool? CurrentProcessIsTestHostController { get; set; }
 
-    public int? GetTestHostControllerPID(bool throwIfMissing = true) => _parseResult.TryGetOptionArgumentList(PlatformCommandLineProvider.TestHostControllerPIDOptionKey, out string[]? pid)
+    public int? GetTestHostControllerPID(bool throwIfMissing = true) => parseResult.TryGetOptionArgumentList(PlatformCommandLineProvider.TestHostControllerPIDOptionKey, out string[]? pid)
                 ? int.Parse(pid[0], CultureInfo.InvariantCulture)
                 : throwIfMissing ? throw new InvalidOperationException($"'{PlatformCommandLineProvider.TestHostControllerPIDOptionKey}' not found in the command line") : null;
 }

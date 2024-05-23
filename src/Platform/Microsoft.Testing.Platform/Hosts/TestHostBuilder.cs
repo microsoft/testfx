@@ -34,9 +34,6 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
-    private readonly IFileSystem _fileSystem = fileSystem;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
-
     public ITestFrameworkManager? TestFramework { get; set; }
 
     public ITestHostManager TestHost { get; } = new TestHostManager();
@@ -99,8 +96,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.TryAddService(systemTask);
         serviceProvider.TryAddService(runtimeFeature);
         serviceProvider.TryAddService(processHandler);
-        serviceProvider.TryAddService(_fileSystem);
-        serviceProvider.TryAddService(_testApplicationModuleInfo);
+        serviceProvider.TryAddService(fileSystem);
+        serviceProvider.TryAddService(testApplicationModuleInfo);
         TestHostControllerInfo testHostControllerInfo = new(loggingState.CommandLineParseResult);
         serviceProvider.TryAddService(testHostControllerInfo);
 
@@ -128,7 +125,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         }
 
         // Add the default json configuration source, this will read the standard test platform json configuration file.
-        Configuration.AddConfigurationSource(() => new JsonConfigurationSource(_testApplicationModuleInfo, _fileSystem, loggingState.FileLoggerProvider));
+        Configuration.AddConfigurationSource(() => new JsonConfigurationSource(testApplicationModuleInfo, fileSystem, loggingState.FileLoggerProvider));
 
         // Build the IConfiguration - we need special treatment because the configuration is needed by extensions.
         var configuration = (AggregatedConfiguration)await ((ConfigurationManager)Configuration).BuildAsync(loggingState.FileLoggerProvider);
@@ -487,7 +484,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         builderMetadata[TelemetryProperties.HostProperties.TestingPlatformVersionPropertyName] = version?.InformationalVersion ?? "unknown";
 
-        string moduleName = Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        string moduleName = Path.GetFileName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
         builderMetadata[TelemetryProperties.HostProperties.TestHostPropertyName] = Sha256Hasher.HashWithNormalizedCasing(moduleName);
         builderMetadata[TelemetryProperties.HostProperties.FrameworkDescriptionPropertyName] = RuntimeInformation.FrameworkDescription;
         builderMetadata[TelemetryProperties.HostProperties.ProcessArchitecturePropertyName] = RuntimeInformation.ProcessArchitecture;

@@ -11,19 +11,17 @@ namespace Microsoft.Testing.Platform.Hosts;
 // This is needed to avoid that methods will be called by extensions, they can only query the information.
 internal sealed class TestFrameworkProxy(ITestFramework testFramework) : ITestFramework
 {
-    private readonly ITestFramework _testFramework = testFramework;
+    /// <inheritdoc />
+    public string Uid => testFramework.Uid;
 
     /// <inheritdoc />
-    public string Uid => _testFramework.Uid;
+    public string Version => testFramework.Version;
 
     /// <inheritdoc />
-    public string Version => _testFramework.Version;
+    public string DisplayName => testFramework.DisplayName;
 
     /// <inheritdoc />
-    public string DisplayName => _testFramework.DisplayName;
-
-    /// <inheritdoc />
-    public string Description => _testFramework.Description;
+    public string Description => testFramework.Description;
 
     /// <inheritdoc />
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);

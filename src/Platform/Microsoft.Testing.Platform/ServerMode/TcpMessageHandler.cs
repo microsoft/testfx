@@ -11,8 +11,6 @@ internal sealed class TcpMessageHandler(
     Stream serverToClientStream,
     IMessageFormatter formatter) : StreamMessageHandler(clientToServerStream, serverToClientStream, formatter)
 {
-    private readonly TcpClient _client = client;
-
     public override async Task<RpcMessage?> ReadAsync(CancellationToken cancellationToken)
     {
         try
@@ -46,6 +44,6 @@ internal sealed class TcpMessageHandler(
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
-        _client.Close();
+        client.Close();
     }
 }

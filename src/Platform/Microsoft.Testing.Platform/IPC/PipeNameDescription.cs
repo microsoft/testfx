@@ -5,7 +5,6 @@ namespace Microsoft.Testing.Platform.IPC;
 
 internal sealed class PipeNameDescription(string name, bool isDirectory) : IDisposable
 {
-    private readonly bool _isDirectory = isDirectory;
     private bool _disposed;
 
     public string Name { get; } = name;
@@ -24,7 +23,7 @@ internal sealed class PipeNameDescription(string name, bool isDirectory) : IDisp
             // TODO: dispose managed state (managed objects).
         }
 
-        if (_isDirectory)
+        if (isDirectory)
         {
             try
             {

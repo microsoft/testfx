@@ -13,18 +13,15 @@ internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel 
 #endif
 {
     private readonly object _sync = new();
-    private readonly ILoggerProvider[] _loggerProviders = loggerProviders;
-    private readonly LogLevel _logLevel = logLevel;
-    private readonly IMonitor _monitor = monitor;
     private readonly Dictionary<string, Logger> _loggers = new(StringComparer.Ordinal);
 
     public ILogger CreateLogger(string categoryName)
     {
-        using (_monitor.Lock(_sync))
+        using (monitor.Lock(_sync))
         {
             if (!_loggers.TryGetValue(categoryName, out Logger? logger))
             {
-                logger = new Logger(CreateLoggers(categoryName), _logLevel);
+                logger = new Logger(CreateLoggers(categoryName), logLevel);
 
                 _loggers[categoryName] = logger;
             }
@@ -36,7 +33,7 @@ internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel 
     private ILogger[] CreateLoggers(string categoryName)
     {
         List<ILogger> loggers = [];
-        foreach (ILoggerProvider loggerProvider in _loggerProviders)
+        foreach (ILoggerProvider loggerProvider in loggerProviders)
         {
             loggers.Add(loggerProvider.CreateLogger(categoryName));
         }
@@ -46,7 +43,7 @@ internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel 
 
     public void Dispose()
     {
-        foreach (IDisposable disposable in _loggerProviders.OfType<IDisposable>())
+        foreach (IDisposable disposable in loggerProviders.OfType<IDisposable>())
         {
             // FileLoggerProvider is special and needs to be disposed manually.
             if (disposable is FileLoggerProvider)
@@ -61,7 +58,7 @@ internal sealed class LoggerFactory(ILoggerProvider[] loggerProviders, LogLevel 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        foreach (IAsyncDisposable asyncDisposable in _loggerProviders.OfType<IAsyncDisposable>())
+        foreach (IAsyncDisposable asyncDisposable in loggerProviders.OfType<IAsyncDisposable>())
         {
             // FileLoggerProvider is special and needs to be disposed manually.
             if (asyncDisposable is FileLoggerProvider)

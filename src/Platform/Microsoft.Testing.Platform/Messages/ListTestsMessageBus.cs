@@ -21,11 +21,6 @@ internal sealed class ListTestsMessageBus(
     IEnvironment environment,
     ITestApplicationProcessExitCode testApplicationProcessExitCode) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
 {
-    private readonly ITestFramework _testFrameworkAdapter = testFrameworkAdapter;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-    private readonly IOutputDevice _outputDisplay = outputDisplay;
-    private readonly IEnvironment _environment = environment;
-    private readonly ITestApplicationProcessExitCode _testApplicationProcessExitCode = testApplicationProcessExitCode;
     private readonly ILogger<ListTestsMessageBus> _logger = loggerFactory.CreateLogger<ListTestsMessageBus>();
     private readonly IAsyncMonitor _asyncMonitor = asyncMonitorFactory.Create();
     private bool _printTitle = true;
@@ -54,40 +49,40 @@ internal sealed class ListTestsMessageBus(
 
     public override async Task PublishAsync(IDataProducer dataProducer, IData data)
     {
-        if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
+        if (testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
         {
             return;
         }
 
-        if (_testFrameworkAdapter.Uid != dataProducer.Uid
+        if (testFrameworkAdapter.Uid != dataProducer.Uid
             || data is not TestNodeUpdateMessage testNodeUpdatedMessage
             || testNodeUpdatedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not DiscoveredTestNodeStateProperty)
         {
             if (_logger.IsEnabled(LogLevel.Trace))
             {
-                await _logger.LogTraceAsync($"Unexpected data received from producer {dataProducer.DisplayName}{_environment.NewLine}{data}");
+                await _logger.LogTraceAsync($"Unexpected data received from producer {dataProducer.DisplayName}{environment.NewLine}{data}");
             }
 
             return;
         }
 
         // Send the information to the ITestApplicationProcessExitCode to correctly handle the ZeroTest case.
-        await _testApplicationProcessExitCode.ConsumeAsync(dataProducer, data, _testApplicationCancellationTokenSource.CancellationToken);
+        await testApplicationProcessExitCode.ConsumeAsync(dataProducer, data, testApplicationCancellationTokenSource.CancellationToken);
 
-        using (await _asyncMonitor.LockAsync(_testApplicationCancellationTokenSource.CancellationToken))
+        using (await _asyncMonitor.LockAsync(testApplicationCancellationTokenSource.CancellationToken))
         {
-            if (_testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
+            if (testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested)
             {
                 return;
             }
 
             if (_printTitle)
             {
-                await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData("The following Tests are available:"));
+                await outputDisplay.DisplayAsync(this, new TextOutputDeviceData("The following Tests are available:"));
                 _printTitle = false;
             }
 
-            await _outputDisplay.DisplayAsync(this, new TextOutputDeviceData(testNodeUpdatedMessage.TestNode.DisplayName));
+            await outputDisplay.DisplayAsync(this, new TextOutputDeviceData(testNodeUpdatedMessage.TestNode.DisplayName));
         }
     }
 }

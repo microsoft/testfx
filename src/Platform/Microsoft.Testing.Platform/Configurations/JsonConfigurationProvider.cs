@@ -11,9 +11,6 @@ internal sealed partial class JsonConfigurationSource
 {
     internal sealed class JsonConfigurationProvider(ITestApplicationModuleInfo testApplicationModuleInfo, IFileSystem fileSystem, ILogger? logger) : IConfigurationProvider
     {
-        private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
-        private readonly IFileSystem _fileSystem = fileSystem;
-        private readonly ILogger? _logger = logger;
         private Dictionary<string, string?>? _propertyToAllChildren;
         private Dictionary<string, string?>? _singleValueData;
 
@@ -21,18 +18,18 @@ internal sealed partial class JsonConfigurationSource
 
         private async Task LogInformationAsync(string message)
         {
-            if (_logger is not null)
+            if (logger is not null)
             {
-                await _logger.LogInformationAsync(message);
+                await logger.LogInformationAsync(message);
             }
         }
 
         public async Task LoadAsync()
         {
             string configFileName = $"{Path.Combine(
-                Path.GetDirectoryName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!,
-                Path.GetFileNameWithoutExtension(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()))}{PlatformConfigurationConstants.PlatformConfigSuffixFileName}";
-            if (!_fileSystem.Exists(configFileName))
+                Path.GetDirectoryName(testApplicationModuleInfo.GetCurrentTestApplicationFullPath())!,
+                Path.GetFileNameWithoutExtension(testApplicationModuleInfo.GetCurrentTestApplicationFullPath()))}{PlatformConfigurationConstants.PlatformConfigSuffixFileName}";
+            if (!fileSystem.Exists(configFileName))
             {
                 await LogInformationAsync($"Config file '{configFileName}' not found.");
                 return;
@@ -42,7 +39,7 @@ internal sealed partial class JsonConfigurationSource
 
             ConfigurationFile = configFileName;
 
-            using Stream fileStream = _fileSystem.NewFileStream(configFileName, FileMode.Open, FileAccess.Read);
+            using Stream fileStream = fileSystem.NewFileStream(configFileName, FileMode.Open, FileAccess.Read);
             (_singleValueData, _propertyToAllChildren) = JsonConfigurationFileParser.Parse(fileStream);
         }
 

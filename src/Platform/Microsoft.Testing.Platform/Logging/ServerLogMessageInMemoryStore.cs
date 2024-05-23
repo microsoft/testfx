@@ -8,9 +8,8 @@ using Microsoft.Testing.Platform.Hosts;
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class ServerLogMessageInMemoryStore(LogLevel logLevel) : ILogger, IEnumerable<ServerLogMessage>
+internal sealed class ServerLogMessageInMemoryStore(LogLevel level) : ILogger, IEnumerable<ServerLogMessage>
 {
-    private readonly LogLevel _logLevel = logLevel;
     private
 #if NETCOREAPP
     readonly
@@ -25,7 +24,7 @@ internal sealed class ServerLogMessageInMemoryStore(LogLevel logLevel) : ILogger
 
     IEnumerator IEnumerable.GetEnumerator() => _values.GetEnumerator();
 
-    public bool IsEnabled(LogLevel logLevel) => logLevel >= _logLevel;
+    public bool IsEnabled(LogLevel logLevel) => logLevel >= level;
 
     public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {

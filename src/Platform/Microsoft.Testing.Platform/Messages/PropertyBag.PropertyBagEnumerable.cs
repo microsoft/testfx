@@ -9,18 +9,13 @@ public sealed partial class PropertyBag
 {
     private readonly struct PropertyBagEnumerable(Property? properties, TestNodeStateProperty? testNodeStateProperty) : IEnumerable<IProperty>
     {
-        private readonly Property? _properties = properties;
-        private readonly TestNodeStateProperty? _testNodeStateProperty = testNodeStateProperty;
+        public IEnumerator<IProperty> GetEnumerator() => new PropertyBagEnumerator(properties, testNodeStateProperty);
 
-        public IEnumerator<IProperty> GetEnumerator() => new PropertyBagEnumerator(_properties, _testNodeStateProperty);
-
-        IEnumerator IEnumerable.GetEnumerator() => new PropertyBagEnumerator(_properties, _testNodeStateProperty);
+        IEnumerator IEnumerable.GetEnumerator() => new PropertyBagEnumerator(properties, testNodeStateProperty);
     }
 
     private struct PropertyBagEnumerator(Property? properties, TestNodeStateProperty? testNodeStateProperty) : IEnumerator<IProperty>
     {
-        private readonly Property? _properties = properties;
-        private readonly TestNodeStateProperty? _testNodeStateProperty = testNodeStateProperty;
         private Property? _currentPropertyObj;
         private IProperty? _current;
 
@@ -32,11 +27,11 @@ public sealed partial class PropertyBag
 
         public bool MoveNext()
         {
-            if (_properties is not null)
+            if (properties is not null)
             {
                 if (_currentPropertyObj is null)
                 {
-                    _currentPropertyObj = _properties;
+                    _currentPropertyObj = properties;
                     _current = _currentPropertyObj.Current;
                     return true;
                 }
@@ -49,9 +44,9 @@ public sealed partial class PropertyBag
                 }
             }
 
-            if (!object.ReferenceEquals(_testNodeStateProperty, _current) && _testNodeStateProperty is not null)
+            if (!object.ReferenceEquals(testNodeStateProperty, _current) && testNodeStateProperty is not null)
             {
-                _current = _testNodeStateProperty;
+                _current = testNodeStateProperty;
                 return true;
             }
 

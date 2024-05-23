@@ -7,7 +7,5 @@ namespace Microsoft.Testing.Platform.ServerMode.Json;
 
 internal sealed class JsonElementDeserializer<T>(Func<Json, JsonElement, T> createObject) : JsonDeserializer
 {
-    private readonly Func<Json, JsonElement, T> _activator = createObject;
-
-    internal T CreateObject(Json json, JsonElement element) => _activator(json, element);
+    internal T CreateObject(Json json, JsonElement element) => createObject(json, element);
 }

@@ -9,10 +9,6 @@ namespace Microsoft.Testing.Platform.Configurations;
 
 internal sealed partial class JsonConfigurationSource(ITestApplicationModuleInfo testApplicationModuleInfo, IFileSystem fileSystem, FileLoggerProvider? fileLoggerProvider) : IConfigurationSource
 {
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
-    private readonly IFileSystem _fileSystem = fileSystem;
-    private readonly FileLoggerProvider? _fileLoggerProvider = fileLoggerProvider;
-
     /// <inheritdoc />
     public string Uid { get; } = nameof(JsonConfigurationSource);
 
@@ -31,5 +27,5 @@ internal sealed partial class JsonConfigurationSource(ITestApplicationModuleInfo
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public IConfigurationProvider Build()
-        => new JsonConfigurationProvider(_testApplicationModuleInfo, _fileSystem, _fileLoggerProvider?.CreateLogger(typeof(JsonConfigurationProvider).ToString()));
+        => new JsonConfigurationProvider(testApplicationModuleInfo, fileSystem, fileLoggerProvider?.CreateLogger(typeof(JsonConfigurationProvider).ToString()));
 }

@@ -5,14 +5,11 @@ namespace Microsoft.Testing.Platform.Logging;
 
 internal sealed class FileLoggerCategory(FileLogger fileLogger, string category) : ILogger
 {
-    private readonly FileLogger _fileLogger = fileLogger;
-    private readonly string _category = category;
-
-    public bool IsEnabled(LogLevel logLevel) => _fileLogger.IsEnabled(logLevel);
+    public bool IsEnabled(LogLevel logLevel) => fileLogger.IsEnabled(logLevel);
 
     public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        => _fileLogger.Log(logLevel, state, exception, formatter, _category);
+        => fileLogger.Log(logLevel, state, exception, formatter, category);
 
     public async Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
-        => await _fileLogger.LogAsync(logLevel, state, exception, formatter, _category);
+        => await fileLogger.LogAsync(logLevel, state, exception, formatter, category);
 }

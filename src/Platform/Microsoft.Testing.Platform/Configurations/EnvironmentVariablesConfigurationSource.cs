@@ -7,8 +7,6 @@ namespace Microsoft.Testing.Platform.Configurations;
 
 internal class EnvironmentVariablesConfigurationSource(IEnvironment environmentVariables) : IConfigurationSource
 {
-    private readonly IEnvironment _environmentVariables = environmentVariables;
-
     public string Uid => nameof(EnvironmentVariablesConfigurationSource);
 
     public string Version => AppVersion.DefaultSemVer;
@@ -22,5 +20,5 @@ internal class EnvironmentVariablesConfigurationSource(IEnvironment environmentV
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public IConfigurationProvider Build()
-        => new EnvironmentVariablesConfigurationProvider(_environmentVariables);
+        => new EnvironmentVariablesConfigurationProvider(environmentVariables);
 }

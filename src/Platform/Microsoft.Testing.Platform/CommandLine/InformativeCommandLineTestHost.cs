@@ -7,7 +7,5 @@ namespace Microsoft.Testing.Platform.CommandLine;
 
 internal sealed class InformativeCommandLineTestHost(int returnValue) : ITestHost
 {
-    private readonly int _returnValue = returnValue;
-
-    public Task<int> RunAsync() => Task.FromResult(_returnValue);
+    public Task<int> RunAsync() => Task.FromResult(returnValue);
 }

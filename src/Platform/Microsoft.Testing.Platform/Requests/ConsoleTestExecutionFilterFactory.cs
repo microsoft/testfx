@@ -9,8 +9,6 @@ namespace Microsoft.Testing.Platform.Requests;
 
 internal sealed class ConsoleTestExecutionFilterFactory(ICommandLineOptions commandLineService) : ITestExecutionFilterFactory
 {
-    private readonly ICommandLineOptions _commandLineService = commandLineService;
-
     public string Uid => nameof(ConsoleTestExecutionFilterFactory);
 
     public string Version => AppVersion.DefaultSemVer;
@@ -22,7 +20,7 @@ internal sealed class ConsoleTestExecutionFilterFactory(ICommandLineOptions comm
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
     public Task<(bool Success, ITestExecutionFilter? TestExecutionFilter)> TryCreateAsync() =>
-        _commandLineService.TryGetOptionArgumentList(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter, out string[]? filter)
+        commandLineService.TryGetOptionArgumentList(TreeNodeFilterCommandLineOptionsProvider.TreenodeFilter, out string[]? filter)
             ? Task.FromResult((true, (ITestExecutionFilter?)new TreeNodeFilter(filter[0])))
             : Task.FromResult((true, (ITestExecutionFilter?)new NopFilter()));
 }

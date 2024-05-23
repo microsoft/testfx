@@ -12,7 +12,6 @@ namespace Microsoft.Testing.Platform.TestHostControllers;
 internal sealed class SystemEnvironmentVariableProvider(IEnvironment environment) : ITestHostEnvironmentVariableProvider
 {
     private readonly SystemExtension _systemExtension = new();
-    private readonly IEnvironment _environment = environment;
 
     public string Uid => _systemExtension.Uid;
 
@@ -26,7 +25,7 @@ internal sealed class SystemEnvironmentVariableProvider(IEnvironment environment
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
-        foreach (DictionaryEntry entry in _environment.GetEnvironmentVariables())
+        foreach (DictionaryEntry entry in environment.GetEnvironmentVariables())
         {
             environmentVariables.SetVariable(new(entry.Key!.ToString()!, entry.Value!.ToString(), false, false));
         }

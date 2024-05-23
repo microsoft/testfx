@@ -10,12 +10,9 @@ namespace Microsoft.Testing.Platform.Requests;
 
 internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions commandLineService, ITestExecutionFilterFactory testExecutionFilterFactory) : ITestExecutionRequestFactory
 {
-    private readonly ICommandLineOptions _commandLineService = commandLineService;
-    private readonly ITestExecutionFilterFactory _testExecutionFilterFactory = testExecutionFilterFactory;
-
     public async Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session)
     {
-        (bool created, ITestExecutionFilter? testExecutionFilter) = await _testExecutionFilterFactory.TryCreateAsync();
+        (bool created, ITestExecutionFilter? testExecutionFilter) = await testExecutionFilterFactory.TryCreateAsync();
         if (!created)
         {
             throw new InvalidOperationException(PlatformResources.CannotCreateTestExecutionFilterErrorMessage);
@@ -23,7 +20,7 @@ internal sealed class ConsoleTestExecutionRequestFactory(ICommandLineOptions com
 
         ApplicationStateGuard.Ensure(testExecutionFilter is not null);
 
-        TestExecutionRequest testExecutionRequest = _commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+        TestExecutionRequest testExecutionRequest = commandLineService.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
             ? new DiscoverTestExecutionRequest(session, testExecutionFilter)
             : new RunTestExecutionRequest(session, testExecutionFilter);
 

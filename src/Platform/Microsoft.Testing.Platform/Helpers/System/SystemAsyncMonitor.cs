@@ -26,19 +26,17 @@ internal sealed class SystemAsyncMonitor : IAsyncMonitor, IDisposable
 
     private readonly struct AsyncDisposableMonitor(SemaphoreSlim semaphoreSlim) : IDisposable
     {
-        private readonly SemaphoreSlim _semaphoreSlim = semaphoreSlim;
-
         public async Task WaitAsync(TimeSpan timeout)
         {
-            if (!await _semaphoreSlim.WaitAsync(timeout))
+            if (!await semaphoreSlim.WaitAsync(timeout))
             {
                 throw new InvalidOperationException($"Timeout of '{timeout}' while waiting for the semaphore");
             }
         }
 
-        public async Task WaitAsync(CancellationToken cancellationToken) => await _semaphoreSlim.WaitAsync(cancellationToken);
+        public async Task WaitAsync(CancellationToken cancellationToken) => await semaphoreSlim.WaitAsync(cancellationToken);
 
         public void Dispose()
-            => _semaphoreSlim.Release();
+            => semaphoreSlim.Release();
     }
 }

@@ -10,19 +10,16 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal class TestHostOrchestratorHost(TestHostOrchestratorConfiguration testHostOrchestratorConfiguration, ServiceProvider serviceProvider) : ITestHost
 {
-    private readonly TestHostOrchestratorConfiguration _testHostOrchestratorConfiguration = testHostOrchestratorConfiguration;
-    private readonly ServiceProvider _serviceProvider = serviceProvider;
-
     public async Task<int> RunAsync()
     {
-        ILogger logger = _serviceProvider.GetLoggerFactory().CreateLogger<TestHostOrchestratorHost>();
-        if (_testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 1)
+        ILogger logger = serviceProvider.GetLoggerFactory().CreateLogger<TestHostOrchestratorHost>();
+        if (testHostOrchestratorConfiguration.TestHostOrchestrators.Length > 1)
         {
             throw new NotSupportedException("Multiple test orchestrator not supported");
         }
 
-        ITestHostOrchestrator testHostOrchestrator = _testHostOrchestratorConfiguration.TestHostOrchestrators[0];
-        ITestApplicationCancellationTokenSource applicationCancellationToken = _serviceProvider.GetTestApplicationCancellationTokenSource();
+        ITestHostOrchestrator testHostOrchestrator = testHostOrchestratorConfiguration.TestHostOrchestrators[0];
+        ITestApplicationCancellationTokenSource applicationCancellationToken = serviceProvider.GetTestApplicationCancellationTokenSource();
         int exitCode;
         await logger.LogInformationAsync($"Running test orchestrator '{testHostOrchestrator.Uid}'");
         try

@@ -8,9 +8,7 @@ namespace Microsoft.Testing.Platform.Helpers;
 #if NETCOREAPP
 internal sealed class SystemMainModule(ProcessModule? processModule) : IMainModule
 {
-    private readonly ProcessModule? _processModule = processModule;
-
-    public string? FileName => _processModule?.FileName;
+    public string? FileName => processModule?.FileName;
 }
 #else
 internal sealed class SystemMainModule : IMainModule

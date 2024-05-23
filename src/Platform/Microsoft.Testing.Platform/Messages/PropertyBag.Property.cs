@@ -104,8 +104,6 @@ public sealed partial class PropertyBag
 
         internal struct PropertyEnumerator(Property properties) : IEnumerator<IProperty>
         {
-            private readonly Property _properties = properties;
-
             private Property? _current;
 
             // https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerator-1.current?view=netframework-4.8#remarks
@@ -118,7 +116,7 @@ public sealed partial class PropertyBag
             {
                 if (_current is null)
                 {
-                    _current = _properties;
+                    _current = properties;
                     return true;
                 }
 

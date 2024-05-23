@@ -29,8 +29,6 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
     private readonly ITestSessionContext _testSessionContext = serviceProvider.GetTestSessionContext();
     private readonly TaskCompletionSource<bool> _testSessionEnd = new();
     private readonly IServiceProvider _serviceProvider = serviceProvider;
-    private readonly IServerTestHost _serverTestHost = serverTestHost;
-    private readonly ITask _task = task;
     private Task? _idleUpdateTask;
     private TestNodeStateChangeAggregator _nodeUpdatesAggregator = new(runId);
     private bool _isDisposed;
@@ -146,8 +144,8 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
             using CancellationTokenRegistration registration = cancellationToken.Register(() => _testSessionEnd.SetCanceled());
 
             // When batch timer expire or we're at the end of the session we can unblock the message drain
-            ArgumentGuard.IsNotNull(_task);
-            await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task);
+            ArgumentGuard.IsNotNull(task);
+            await Task.WhenAny(task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task);
 
             if (cancellationToken.IsCancellationRequested)
             {
@@ -188,7 +186,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             if (change is not null)
             {
-                await _serverTestHost.SendTestUpdateAsync(change);
+                await serverTestHost.SendTestUpdateAsync(change);
             }
         }
         finally

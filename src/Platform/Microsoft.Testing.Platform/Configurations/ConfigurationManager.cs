@@ -14,8 +14,6 @@ namespace Microsoft.Testing.Platform.Configurations;
 internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicationModuleInfo testApplicationModuleInfo) : IConfigurationManager
 {
     private readonly List<Func<IConfigurationSource>> _configurationSources = [];
-    private readonly IFileSystem _fileSystem = fileSystem;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
 
     public void AddConfigurationSource(Func<IConfigurationSource> source) => _configurationSources.Add(source);
 
@@ -53,7 +51,7 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
             {
                 if (defaultJsonConfiguration is not null && defaultJsonConfiguration.ConfigurationFile is not null)
                 {
-                    using Stream configFileStream = _fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open);
+                    using Stream configFileStream = fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open);
                     StreamReader streamReader = new(configFileStream);
                     await logger.LogTraceAsync($"Configuration file ('{defaultJsonConfiguration.ConfigurationFile}') content:\n{await streamReader.ReadToEndAsync()}");
                 }
@@ -62,6 +60,6 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
 
         return defaultJsonConfiguration is null
             ? throw new InvalidOperationException(PlatformResources.ConfigurationManagerCannotFindDefaultJsonConfigurationErrorMessage)
-            : new AggregatedConfiguration(configurationProviders.ToArray(), _testApplicationModuleInfo, _fileSystem);
+            : new AggregatedConfiguration(configurationProviders.ToArray(), testApplicationModuleInfo, fileSystem);
     }
 }

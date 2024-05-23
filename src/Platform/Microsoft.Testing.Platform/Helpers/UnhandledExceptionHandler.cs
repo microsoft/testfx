@@ -7,8 +7,6 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal sealed class UnhandledExceptionHandler(IEnvironment environment, IConsole console, bool isTestHost = false) : IUnhandledExceptionsHandler
 {
-    private readonly IEnvironment _environment = environment;
-    private readonly IConsole _console = console;
     private readonly bool _isTestController = !isTestHost;
     private ILogger? _logger;
 
@@ -23,7 +21,7 @@ internal sealed class UnhandledExceptionHandler(IEnvironment environment, IConso
 
     private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
-        string error = $"[UnhandledExceptionHandler.OnCurrentDomainUnhandledException{(_isTestController ? "(testhost controller workflow)" : "(testhost workflow)")}] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}";
+        string error = $"[UnhandledExceptionHandler.OnCurrentDomainUnhandledException{(_isTestController ? "(testhost controller workflow)" : "(testhost workflow)")}] {e.ExceptionObject}{environment.NewLine}IsTerminating: {e.IsTerminating}";
         LogErrorAndExit(error, !e.IsTerminating);
     }
 
@@ -35,11 +33,11 @@ internal sealed class UnhandledExceptionHandler(IEnvironment environment, IConso
 
     private void LogErrorAndExit(string error, bool forceClose)
     {
-        _console.WriteLine(error);
+        console.WriteLine(error);
         _logger?.LogCritical(error);
         if (forceClose)
         {
-            _environment.FailFast(error);
+            environment.FailFast(error);
         }
     }
 }

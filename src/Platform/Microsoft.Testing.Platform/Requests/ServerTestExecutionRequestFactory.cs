@@ -7,8 +7,6 @@ namespace Microsoft.Testing.Platform.Requests;
 
 internal sealed class ServerTestExecutionRequestFactory(Func<TestSessionContext, TestExecutionRequest> factory) : ITestExecutionRequestFactory
 {
-    private readonly Func<TestSessionContext, TestExecutionRequest> _factory = factory;
-
     public Task<TestExecutionRequest> CreateRequestAsync(TestSessionContext session)
-        => Task.FromResult(_factory(session));
+        => Task.FromResult(factory(session));
 }

@@ -9,7 +9,6 @@ namespace Microsoft.Testing.Platform.Logging;
 internal sealed class ServerLoggerForwarderProvider(LogLevel logLevel, IServiceProvider serviceProvider)
     : ILoggerProvider
 {
-    private readonly LogLevel _logLevel = logLevel;
     private readonly ServerLogMessageInMemoryStore _serverLogMessageInMemoryStore = new(logLevel);
 
     private ServerTestHost? _serverTestHost;
@@ -18,7 +17,7 @@ internal sealed class ServerLoggerForwarderProvider(LogLevel logLevel, IServiceP
     public ILogger CreateLogger(string categoryName)
         => _serverTestHost is null
         ? _serverLogMessageInMemoryStore
-        : new ServerLoggerForwarder(_logLevel, serviceProvider.GetTask(), _serverTestHost);
+        : new ServerLoggerForwarder(logLevel, serviceProvider.GetTask(), _serverTestHost);
 
     public async Task InitializeAsync(ServerTestHost serverTestHost)
     {

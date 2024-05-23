@@ -8,30 +8,29 @@ namespace Microsoft.Testing.Platform.CommandLine;
 
 internal struct CommandLineOptionsProviderCache(ICommandLineOptionsProvider commandLineOptionsProvider) : ICommandLineOptionsProvider
 {
-    private readonly ICommandLineOptionsProvider _commandLineOptionsProvider = commandLineOptionsProvider;
     private CommandLineOption[]? _commandLineOptions;
 
-    public readonly string Uid => _commandLineOptionsProvider.Uid;
+    public readonly string Uid => commandLineOptionsProvider.Uid;
 
-    public readonly string Version => _commandLineOptionsProvider.Version;
+    public readonly string Version => commandLineOptionsProvider.Version;
 
-    public readonly string DisplayName => _commandLineOptionsProvider.DisplayName;
+    public readonly string DisplayName => commandLineOptionsProvider.DisplayName;
 
-    public readonly string Description => _commandLineOptionsProvider.Description;
+    public readonly string Description => commandLineOptionsProvider.Description;
 
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
     {
-        _commandLineOptions ??= _commandLineOptionsProvider.GetCommandLineOptions().ToArray();
+        _commandLineOptions ??= commandLineOptionsProvider.GetCommandLineOptions().ToArray();
 
         return _commandLineOptions;
     }
 
     public readonly Task<bool> IsEnabledAsync()
-        => _commandLineOptionsProvider.IsEnabledAsync();
+        => commandLineOptionsProvider.IsEnabledAsync();
 
     public readonly Task<ValidationResult> ValidateCommandLineOptionsAsync(ICommandLineOptions commandLineOptions)
-        => _commandLineOptionsProvider.ValidateCommandLineOptionsAsync(commandLineOptions);
+        => commandLineOptionsProvider.ValidateCommandLineOptionsAsync(commandLineOptions);
 
     public readonly Task<ValidationResult> ValidateOptionArgumentsAsync(CommandLineOption commandOption, string[] arguments)
-        => _commandLineOptionsProvider.ValidateOptionArgumentsAsync(commandOption, arguments);
+        => commandLineOptionsProvider.ValidateOptionArgumentsAsync(commandOption, arguments);
 }

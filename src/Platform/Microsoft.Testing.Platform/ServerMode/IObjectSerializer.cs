@@ -10,8 +10,6 @@ internal interface IObjectSerializer
 
 internal sealed class ObjectSerializer<T>(Func<T, IDictionary<string, object?>> fn) : IObjectSerializer
 {
-    private readonly Func<T, IDictionary<string, object?>> _fn = fn;
-
     public IDictionary<string, object?> SerializeObject(object obj)
-        => _fn((T)obj);
+        => fn((T)obj);
 }

@@ -21,14 +21,6 @@ internal sealed class FileLoggerProvider(
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
-    private readonly FileLoggerOptions _options = options;
-    private readonly IClock _clock = clock;
-    private readonly ITask _task = task;
-    private readonly IConsole _console = console;
-    private readonly IFileSystem _fileSystem = fileSystem;
-    private readonly bool _customDirectory = customDirectory;
-    private readonly IFileStreamFactory _fileStreamFactory = fileStreamFactory;
-
     public LogLevel LogLevel { get; } = logLevel;
 
     public FileLogger FileLogger { get; private set; } = new(
@@ -40,13 +32,13 @@ internal sealed class FileLoggerProvider(
         fileSystem,
         fileStreamFactory);
 
-    public bool SyncFlush => _options.SyncFlush;
+    public bool SyncFlush => options.SyncFlush;
 
     public async Task CheckLogFolderAndMoveToTheNewIfNeededAsync(string testResultDirectory)
     {
         // If custom directory is provided for the log file, we don't WANT to move the log file
         // We won't betray the users expectations.
-        if (_customDirectory
+        if (customDirectory
             || testResultDirectory == Path.GetDirectoryName(FileLogger.FileName)
             || FileLogger is null)
         {
@@ -57,16 +49,16 @@ internal sealed class FileLoggerProvider(
         await DisposeHelper.DisposeAsync(FileLogger);
 
         // Move the log file to the new directory
-        _fileSystem.Move(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
+        fileSystem.Move(FileLogger.FileName, Path.Combine(testResultDirectory, fileName));
 
         FileLogger = new FileLogger(
-            new FileLoggerOptions(testResultDirectory, _options.LogPrefixName, fileName, _options.SyncFlush),
+            new FileLoggerOptions(testResultDirectory, options.LogPrefixName, fileName, options.SyncFlush),
             LogLevel,
-            _clock,
-            _task,
-            _console,
-            _fileSystem,
-            _fileStreamFactory);
+            clock,
+            task,
+            console,
+            fileSystem,
+            fileStreamFactory);
     }
 
     public ILogger CreateLogger(string categoryName)

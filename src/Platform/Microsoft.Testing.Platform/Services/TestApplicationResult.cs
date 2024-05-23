@@ -21,10 +21,6 @@ internal sealed class TestApplicationResult(
     ICommandLineOptions commandLineOptions,
     IEnvironment environment) : ITestApplicationProcessExitCode, ILoggerProvider, IOutputDeviceDataProducer
 {
-    private readonly IOutputDevice _outputService = outputService;
-    private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-    private readonly ICommandLineOptions _commandLineOptions = commandLineOptions;
-    private readonly IEnvironment _environment = environment;
     private readonly List<TestApplicationResultLogger> _testApplicationResultLoggers = [];
     private readonly List<TestNode> _failedTests = [];
     private int _totalRanTests;
@@ -68,7 +64,7 @@ internal sealed class TestApplicationResult(
             _failedTests.Add(message.TestNode);
         }
 
-        if (_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
+        if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey)
             && Array.IndexOf(TestNodePropertiesCategories.WellKnownTestNodeDiscoveredProperties, executionState.GetType()) != -1)
         {
             _totalRanTests++;
@@ -95,31 +91,31 @@ internal sealed class TestApplicationResult(
         foreach ((string categoryName, string error) in _testApplicationResultLoggers.SelectMany(logger => logger.Errors.Select(error => (logger.CategoryName, error))))
         {
             anyError = true;
-            await _outputService.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText($"[{categoryName}] {error}"));
+            await outputService.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText($"[{categoryName}] {error}"));
         }
 
         int exitCode = ExitCodes.Success;
         exitCode = anyError ? ExitCodes.GenericFailure : exitCode;
         exitCode = exitCode == ExitCodes.Success && _testAdapterTestSessionFailure ? ExitCodes.TestAdapterTestSessionFailure : exitCode;
         exitCode = exitCode == ExitCodes.Success && _failedTests.Count > 0 ? ExitCodes.AtLeastOneTestFailed : exitCode;
-        exitCode = exitCode == ExitCodes.Success && _testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested ? ExitCodes.TestSessionAborted : exitCode;
+        exitCode = exitCode == ExitCodes.Success && testApplicationCancellationTokenSource.CancellationToken.IsCancellationRequested ? ExitCodes.TestSessionAborted : exitCode;
 
         // If the user has specified the VSTestAdapterMode option, then we don't want to return a non-zero exit code if no tests ran.
-        if (!_commandLineOptions.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey))
+        if (!commandLineOptions.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey))
         {
             exitCode = exitCode == ExitCodes.Success && _totalRanTests == 0 ? ExitCodes.ZeroTests : exitCode;
         }
 
-        if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string[]? argumentList))
+        if (commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.MinimumExpectedTestsOptionKey, out string[]? argumentList))
         {
             exitCode = exitCode == ExitCodes.Success && _totalRanTests < int.Parse(argumentList[0], CultureInfo.InvariantCulture) ? ExitCodes.MinimumExpectedTestsPolicyViolation : exitCode;
         }
 
         // If the user has specified the IgnoreExitCode, then we don't want to return a non-zero exit code if the exit code matches the one specified.
-        string? exitCodeToIgnore = _environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE);
+        string? exitCodeToIgnore = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE);
         if (RoslynString.IsNullOrEmpty(exitCodeToIgnore))
         {
-            if (_commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string[]? commandLineExitCodes) && commandLineExitCodes.Length > 0)
+            if (commandLineOptions.TryGetOptionArgumentList(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, out string[]? commandLineExitCodes) && commandLineExitCodes.Length > 0)
             {
                 exitCodeToIgnore = commandLineExitCodes[0];
             }
@@ -140,7 +136,7 @@ internal sealed class TestApplicationResult(
     {
         TestAdapterTestSessionFailureErrorMessage = errorMessage;
         _testAdapterTestSessionFailure = true;
-        await _outputService.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(errorMessage));
+        await outputService.DisplayAsync(this, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(errorMessage));
     }
 
     public Statistics GetStatistics()

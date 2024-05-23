@@ -14,15 +14,13 @@ namespace Microsoft.Testing.Platform.Services;
 
 internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment, IProcessHandler process) : ITestApplicationModuleInfo
 {
-    private readonly IEnvironment _environment = environment;
-    private readonly IProcessHandler _process = process;
     private static readonly string[] MuxerExec = ["exec"];
 
     public bool IsCurrentTestApplicationHostDotnetMuxer
     {
         get
         {
-            string? processPath = GetProcessPath(_environment, _process, false);
+            string? processPath = GetProcessPath(environment, process, false);
             return processPath is not null
                 && Path.GetFileNameWithoutExtension(processPath) == "dotnet";
         }
@@ -32,7 +30,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     {
         get
         {
-            string? processPath = GetProcessPath(_environment, _process, true);
+            string? processPath = GetProcessPath(environment, process, true);
             return processPath != ".dll";
         }
     }
@@ -51,7 +49,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
 #pragma warning restore IL3000
 
         moduleName = RoslynString.IsNullOrEmpty(moduleName)
-            ? GetProcessPath(_environment, _process)
+            ? GetProcessPath(environment, process)
             : moduleName;
 
         ApplicationStateGuard.Ensure(moduleName is not null);
@@ -59,10 +57,10 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
     }
 
     public string GetProcessPath()
-        => GetProcessPath(_environment, _process, throwOnNull: true)!;
+        => GetProcessPath(environment, process, throwOnNull: true)!;
 
     public string[] GetCommandLineArgs()
-        => _environment.GetCommandLineArgs();
+        => environment.GetCommandLineArgs();
 
     public string GetCommandLineArguments()
     {
@@ -75,7 +73,7 @@ internal sealed class CurrentTestApplicationModuleInfo(IEnvironment environment,
             }
         }
 
-        return _environment.CommandLine[_environment.CommandLine.IndexOf(executableFileName, StringComparison.InvariantCultureIgnoreCase)..];
+        return environment.CommandLine[environment.CommandLine.IndexOf(executableFileName, StringComparison.InvariantCultureIgnoreCase)..];
     }
 
     private static string? GetProcessPath(IEnvironment environment, IProcessHandler process, bool throwOnNull = false)

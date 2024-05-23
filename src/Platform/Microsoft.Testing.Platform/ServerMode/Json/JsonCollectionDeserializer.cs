@@ -13,14 +13,11 @@ internal abstract class JsonCollectionDeserializer<TCollection> : JsonDeserializ
 internal class JsonCollectionDeserializer<TCollection, TItem>(Func<JsonElement, TCollection> createCollection, Action<TCollection, TItem> addItem) : JsonCollectionDeserializer<TCollection>
     where TCollection : ICollection<TItem>
 {
-    private readonly Func<JsonElement, TCollection> _createCollection = createCollection;
-    private readonly Action<TCollection, TItem> _addItem = addItem;
-
     public TCollection CreateCollection(JsonElement jsonElement)
-        => _createCollection(jsonElement);
+        => createCollection(jsonElement);
 
     public void AddItem(TCollection collection, TItem item)
-        => _addItem(collection, item);
+        => addItem(collection, item);
 
     internal override TCollection CreateObject(Json json, JsonElement element)
     {

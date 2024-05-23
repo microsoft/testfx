@@ -14,24 +14,20 @@ internal class TestHostControlledHost(NamedPipeClient namedPipeClient, ITestHost
 #pragma warning restore SA1001 // Commas should be spaced correctly
 #endif
 {
-    private readonly NamedPipeClient _namedPipeClient = namedPipeClient;
-    private readonly ITestHost _innerTestHost = innerTestHost;
-    private readonly CancellationToken _cancellationToken = cancellationToken;
-
     public async Task<int> RunAsync()
     {
-        int exitCode = await _innerTestHost.RunAsync();
+        int exitCode = await innerTestHost.RunAsync();
         try
         {
-            await _namedPipeClient.RequestReplyAsync<TestHostProcessExitRequest, VoidResponse>(new TestHostProcessExitRequest(exitCode), _cancellationToken);
+            await namedPipeClient.RequestReplyAsync<TestHostProcessExitRequest, VoidResponse>(new TestHostProcessExitRequest(exitCode), cancellationToken);
         }
-        catch (OperationCanceledException oc) when (oc.CancellationToken == _cancellationToken)
+        catch (OperationCanceledException oc) when (oc.CancellationToken == cancellationToken)
         {
             // We do nothing we're cancelling
         }
         finally
         {
-            await DisposeHelper.DisposeAsync(_namedPipeClient);
+            await DisposeHelper.DisposeAsync(namedPipeClient);
         }
 
         return exitCode;
@@ -39,15 +35,15 @@ internal class TestHostControlledHost(NamedPipeClient namedPipeClient, ITestHost
 
     public void Dispose()
     {
-        (_innerTestHost as IDisposable)?.Dispose();
-        _namedPipeClient.Dispose();
+        (innerTestHost as IDisposable)?.Dispose();
+        namedPipeClient.Dispose();
     }
 
 #if NETCOREAPP
     public async ValueTask DisposeAsync()
     {
-        await DisposeHelper.DisposeAsync(_innerTestHost);
-        await _namedPipeClient.DisposeAsync();
+        await DisposeHelper.DisposeAsync(innerTestHost);
+        await namedPipeClient.DisposeAsync();
     }
 #endif
 }

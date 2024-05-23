@@ -3,17 +3,14 @@
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class Logger(ILogger[] loggers, LogLevel logLevel) : ILogger
+internal sealed class Logger(ILogger[] loggers, LogLevel level) : ILogger
 {
-    private readonly ILogger[] _loggers = loggers;
-    private readonly LogLevel _logLevel = logLevel;
-
     public bool IsEnabled(LogLevel logLevel)
-        => logLevel >= _logLevel;
+        => logLevel >= level;
 
     public void Log<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        foreach (ILogger logger in _loggers)
+        foreach (ILogger logger in loggers)
         {
             if (logger.IsEnabled(logLevel))
             {
@@ -24,7 +21,7 @@ internal sealed class Logger(ILogger[] loggers, LogLevel logLevel) : ILogger
 
     public async Task LogAsync<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        foreach (ILogger logger in _loggers)
+        foreach (ILogger logger in loggers)
         {
             if (logger.IsEnabled(logLevel))
             {

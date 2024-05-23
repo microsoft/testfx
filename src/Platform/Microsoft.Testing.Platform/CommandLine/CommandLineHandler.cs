@@ -24,21 +24,14 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 {
     private static readonly TextOutputDeviceData EmptyText = new(string.Empty);
 
-    private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders = systemCommandLineOptionsProviders;
-    private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
-    private readonly IRuntimeFeature _runtimeFeature = runtimeFeature;
-    private readonly IPlatformOutputDevice _platformOutputDevice = platformOutputDevice;
 #if !NETCOREAPP
     [SuppressMessage("CodeQuality", "IDE0052:RemoveVariable unread private members", Justification = "Used in netcoreapp")]
 #endif
-    private readonly IEnvironment _environment = environment;
 
 #if NETCOREAPP
     [SuppressMessage("CodeQuality", "IDE0052:RemoveVariable unread private members", Justification = "Used in netstandard")]
 #endif
     private readonly IProcessHandler _process = process;
-
-    private readonly CommandLineParseResult _parseResult = parseResult;
 
     public string[] Arguments { get; } = args;
 
@@ -54,11 +47,11 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
     public async Task<(bool IsValid, string? ValidationError)> TryParseAndValidateAsync()
     {
-        if (_parseResult.HasError)
+        if (parseResult.HasError)
         {
             StringBuilder stringBuilder = new();
             stringBuilder.AppendLine(PlatformResources.InvalidCommandLineArguments);
-            foreach (string error in _parseResult.Errors)
+            foreach (string error in parseResult.Errors)
             {
                 stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t- {error}");
             }
@@ -137,7 +130,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
     private async Task<ValidationResult> ValidateConfigurationAsync()
     {
         StringBuilder? stringBuilder = null;
-        foreach (ICommandLineOptionsProvider commandLineOptionsProvider in _systemCommandLineOptionsProviders.Union(ExtensionsCommandLineOptionsProviders))
+        foreach (ICommandLineOptionsProvider commandLineOptionsProvider in systemCommandLineOptionsProviders.Union(ExtensionsCommandLineOptionsProviders))
         {
             ValidationResult result = await commandLineOptionsProvider.ValidateCommandLineOptionsAsync(this);
             if (!result.IsValid)
@@ -155,10 +148,10 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
     private async Task<ValidationResult> ValidateOptionsArgumentsAsync()
     {
-        ApplicationStateGuard.Ensure(_parseResult is not null);
+        ApplicationStateGuard.Ensure(parseResult is not null);
 
         StringBuilder? stringBuilder = null;
-        foreach (OptionRecord optionRecord in _parseResult.Options)
+        foreach (OptionRecord optionRecord in parseResult.Options)
         {
             ICommandLineOptionsProvider extension = GetAllCommandLineOptionsProviderByOptionName(optionRecord.Option).Single();
             ValidationResult result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments);
@@ -178,10 +171,10 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
     {
         error = null;
 
-        ApplicationStateGuard.Ensure(_parseResult is not null);
+        ApplicationStateGuard.Ensure(parseResult is not null);
 
         StringBuilder? stringBuilder = null;
-        foreach (OptionRecord optionRecord in _parseResult.Options)
+        foreach (OptionRecord optionRecord in parseResult.Options)
         {
             if (!GetAllCommandLineOptionsProviderByOptionName(optionRecord.Option).Any())
             {
@@ -203,10 +196,10 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
     {
         error = null;
 
-        ApplicationStateGuard.Ensure(_parseResult is not null);
+        ApplicationStateGuard.Ensure(parseResult is not null);
 
         StringBuilder stringBuilder = new();
-        foreach (IGrouping<string, OptionRecord> groupedOptions in _parseResult.Options.GroupBy(x => x.Option))
+        foreach (IGrouping<string, OptionRecord> groupedOptions in parseResult.Options.GroupBy(x => x.Option))
         {
             // getting the arguments count for an option.
             int arity = 0;
@@ -274,7 +267,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         error = null;
 
         IEnumerable<string> allExtensionOptions = ExtensionsCommandLineOptionsProviders.SelectMany(x => x.GetCommandLineOptions()).Select(x => x.Name).Distinct();
-        IEnumerable<string> allSystemOptions = _systemCommandLineOptionsProviders.SelectMany(x => x.GetCommandLineOptions()).Select(x => x.Name).Distinct();
+        IEnumerable<string> allSystemOptions = systemCommandLineOptionsProviders.SelectMany(x => x.GetCommandLineOptions()).Select(x => x.Name).Distinct();
 
         IEnumerable<string> invalidReservedOptions = allSystemOptions.Intersect(allExtensionOptions);
         StringBuilder? stringBuilder = null;
@@ -307,7 +300,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
     private IEnumerable<ICommandLineOptionsProvider> GetAllCommandLineOptionsProviderByOptionName(string optionName)
     {
-        foreach (ICommandLineOptionsProvider commandLineOptionsProvider in _systemCommandLineOptionsProviders.Union(ExtensionsCommandLineOptionsProviders))
+        foreach (ICommandLineOptionsProvider commandLineOptionsProvider in systemCommandLineOptionsProviders.Union(ExtensionsCommandLineOptionsProviders))
         {
             if (commandLineOptionsProvider.GetCommandLineOptions().Any(option => option.Name == optionName))
             {
@@ -324,12 +317,12 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
     public async Task PrintHelpAsync(ITool[]? availableTools = null)
 #pragma warning restore IDE0060 // Remove unused parameter
     {
-        string applicationName = GetApplicationName(_testApplicationModuleInfo);
+        string applicationName = GetApplicationName(testApplicationModuleInfo);
         await PrintApplicationUsageAsync(applicationName);
 
         // Temporary disabled, we don't remove the code because could be useful in future.
         // PrintApplicationToolUsage(availableTools, applicationName);
-        await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Empty));
+        await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Empty));
 
         // Local functions
         static string GetApplicationName(ITestApplicationModuleInfo testApplicationModuleInfo)
@@ -358,7 +351,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
             foreach (CommandLineOption? option in options)
             {
-                await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{new string(' ', leftPaddingDepth * 2)}--{option.Name}{new string(' ', maxOptionNameLength - option.Name.Length)} {option.Description}"));
+                await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{new string(' ', leftPaddingDepth * 2)}--{option.Name}{new string(' ', maxOptionNameLength - option.Name.Length)} {option.Description}"));
             }
 
             return options.Any();
@@ -366,25 +359,25 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
         async Task PrintApplicationUsageAsync(string applicationName)
         {
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.HelpApplicationUsage, applicationName)));
-            await _platformOutputDevice.DisplayAsync(this, EmptyText);
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpExecuteTestApplication));
-            await _platformOutputDevice.DisplayAsync(this, EmptyText);
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(string.Format(CultureInfo.InvariantCulture, PlatformResources.HelpApplicationUsage, applicationName)));
+            await platformOutputDevice.DisplayAsync(this, EmptyText);
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpExecuteTestApplication));
+            await platformOutputDevice.DisplayAsync(this, EmptyText);
 
             RoslynDebug.Assert(
-                !_systemCommandLineOptionsProviders.OfType<IToolCommandLineOptionsProvider>().Any(),
+                !systemCommandLineOptionsProviders.OfType<IToolCommandLineOptionsProvider>().Any(),
                 "System command line options should not have any tool option registered.");
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpOptions));
-            await PrintOptionsAsync(_systemCommandLineOptionsProviders.Union(ExtensionsCommandLineOptionsProviders), 1, builtInOnly: true);
-            await _platformOutputDevice.DisplayAsync(this, EmptyText);
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpOptions));
+            await PrintOptionsAsync(systemCommandLineOptionsProviders.Union(ExtensionsCommandLineOptionsProviders), 1, builtInOnly: true);
+            await platformOutputDevice.DisplayAsync(this, EmptyText);
 
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpExtensionOptions));
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpExtensionOptions));
             if (!await PrintOptionsAsync(ExtensionsCommandLineOptionsProviders.Where(provider => provider is not IToolCommandLineOptionsProvider), 1))
             {
-                await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpNoExtensionRegistered));
+                await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData(PlatformResources.HelpNoExtensionRegistered));
             }
 
-            await _platformOutputDevice.DisplayAsync(this, EmptyText);
+            await platformOutputDevice.DisplayAsync(this, EmptyText);
         }
 
         // Temporary disabled, we don't remove the code because could be useful in future.
@@ -417,9 +410,9 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
     {
         // /!\ Info should not be localized as it serves debugging purposes.
         await DisplayPlatformInfoAsync();
-        await _platformOutputDevice.DisplayAsync(this, EmptyText);
+        await platformOutputDevice.DisplayAsync(this, EmptyText);
         await DisplayBuiltInExtensionsInfoAsync();
-        await _platformOutputDevice.DisplayAsync(this, EmptyText);
+        await platformOutputDevice.DisplayAsync(this, EmptyText);
 
         List<IToolCommandLineOptionsProvider> toolExtensions = [];
         List<ICommandLineOptionsProvider> nonToolExtensions = [];
@@ -436,23 +429,23 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         }
 
         await DisplayRegisteredExtensionsInfoAsync(nonToolExtensions);
-        await _platformOutputDevice.DisplayAsync(this, EmptyText);
+        await platformOutputDevice.DisplayAsync(this, EmptyText);
         await DisplayRegisteredToolsInfoAsync(availableTools, toolExtensions);
-        await _platformOutputDevice.DisplayAsync(this, EmptyText);
+        await platformOutputDevice.DisplayAsync(this, EmptyText);
 
         return;
 
         async Task DisplayPlatformInfoAsync()
         {
             // Product title, do not translate.
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Microsoft Testing Platform:"));
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Microsoft Testing Platform:"));
 
             // TODO: Replace Assembly with IAssembly
             AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
             string versionInfo = version?.InformationalVersion ?? "Not Available";
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Version: {versionInfo}"));
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Version: {versionInfo}"));
 
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Dynamic Code Supported: {_runtimeFeature.IsDynamicCodeSupported}"));
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Dynamic Code Supported: {runtimeFeature.IsDynamicCodeSupported}"));
 
             // TODO: Replace RuntimeInformation with IRuntimeInformation
 #if NETCOREAPP
@@ -460,7 +453,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 #else
             string runtimeInformation = $"{RuntimeInformation.FrameworkDescription}";
 #endif
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime information: {runtimeInformation}"));
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime information: {runtimeInformation}"));
 
 #if !NETCOREAPP
 #pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file, this branch run only in .NET Framework
@@ -469,15 +462,15 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime location: {runtimeLocation}"));
 #endif
 
-            string? moduleName = _testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
+            string? moduleName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
             moduleName = RoslynString.IsNullOrEmpty(moduleName)
 #if NETCOREAPP
-                ? _environment.ProcessPath
+                ? environment.ProcessPath
 #else
                 ? _process.GetCurrentProcess().MainModule.FileName
 #endif
                 : moduleName;
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Test module: {moduleName}"));
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Test module: {moduleName}"));
         }
 
         async Task DisplayOptionsAsync(IEnumerable<CommandLineOption> options, int indentLevel)
@@ -486,18 +479,18 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
             string optionInfoIndent = new(' ', (indentLevel + 1) * 2);
             foreach (CommandLineOption option in options.OrderBy(x => x.Name))
             {
-                await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionNameIndent}--{option.Name}"));
+                await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionNameIndent}--{option.Name}"));
                 if (option.Arity.Min == option.Arity.Max)
                 {
-                    await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Arity: {option.Arity.Min}"));
+                    await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Arity: {option.Arity.Min}"));
                 }
                 else
                 {
-                    await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Arity: {option.Arity.Min}..{option.Arity.Max}"));
+                    await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Arity: {option.Arity.Min}..{option.Arity.Max}"));
                 }
 
-                await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Hidden: {option.IsHidden}"));
-                await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Description: {option.Description}"));
+                await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Hidden: {option.IsHidden}"));
+                await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{optionInfoIndent}Description: {option.Description}"));
             }
         }
 
@@ -513,11 +506,11 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
                     if (isFirst)
                     {
                         isFirst = false;
-                        await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerIdIndent}{provider.Uid}"));
-                        await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Name: {provider.DisplayName}"));
-                        await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Version: {provider.Version}"));
-                        await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Description: {provider.Description}"));
-                        await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Options:"));
+                        await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerIdIndent}{provider.Uid}"));
+                        await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Name: {provider.DisplayName}"));
+                        await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Version: {provider.Version}"));
+                        await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Description: {provider.Description}"));
+                        await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"{providerInfoIndent}Options:"));
                     }
 
                     await DisplayOptionsAsync(provider.GetCommandLineOptions(), indentLevel + 2);
@@ -527,23 +520,23 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
         async Task DisplayBuiltInExtensionsInfoAsync()
         {
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Built-in command line providers:"));
-            if (_systemCommandLineOptionsProviders.Length == 0)
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Built-in command line providers:"));
+            if (systemCommandLineOptionsProviders.Length == 0)
             {
-                await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("  There are no built-in command line providers."));
+                await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("  There are no built-in command line providers."));
             }
             else
             {
-                await DisplayProvidersAsync(_systemCommandLineOptionsProviders, 1);
+                await DisplayProvidersAsync(systemCommandLineOptionsProviders, 1);
             }
         }
 
         async Task DisplayRegisteredExtensionsInfoAsync(List<ICommandLineOptionsProvider> nonToolExtensions)
         {
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Registered command line providers:"));
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Registered command line providers:"));
             if (nonToolExtensions.Count == 0)
             {
-                await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("  There are no registered command line providers."));
+                await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("  There are no registered command line providers."));
             }
             else
             {
@@ -553,22 +546,22 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
         async Task DisplayRegisteredToolsInfoAsync(ITool[]? availableTools, List<IToolCommandLineOptionsProvider> toolExtensions)
         {
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Registered tools:"));
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Registered tools:"));
             if (availableTools is null || availableTools.Length == 0)
             {
-                await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("  There are no registered tools."));
+                await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("  There are no registered tools."));
             }
             else
             {
                 var groupedToolExtensions = toolExtensions.GroupBy(x => x.ToolName).ToDictionary(x => x.Key, x => x.ToList());
                 foreach (ITool tool in availableTools.OrderBy(x => x.Uid))
                 {
-                    await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  {tool.Uid}"));
-                    await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Command: {tool.Name}"));
-                    await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Name: {tool.DisplayName}"));
-                    await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Version: {tool.Version}"));
-                    await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Description: {tool.Description}"));
-                    await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("    Tool command line providers:"));
+                    await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  {tool.Uid}"));
+                    await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Command: {tool.Name}"));
+                    await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Name: {tool.DisplayName}"));
+                    await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Version: {tool.Version}"));
+                    await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"    Description: {tool.Description}"));
+                    await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("    Tool command line providers:"));
                     await DisplayProvidersAsync(groupedToolExtensions[tool.Name], 3);
                 }
             }
@@ -576,12 +569,12 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
     }
 
     public bool IsOptionSet(string optionName)
-        => _parseResult?.IsOptionSet(optionName) == true;
+        => parseResult?.IsOptionSet(optionName) == true;
 
     public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
     {
         arguments = null;
-        return _parseResult is not null && _parseResult.TryGetOptionArgumentList(optionName, out arguments);
+        return parseResult is not null && parseResult.TryGetOptionArgumentList(optionName, out arguments);
     }
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);

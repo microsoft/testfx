@@ -8,8 +8,6 @@ namespace Microsoft.Testing.Platform.Telemetry;
 
 internal sealed class ServerTelemetry(IServerTestHost serverTestHost) : ITelemetryCollector
 {
-    private readonly IServerTestHost _serverTestHost = serverTestHost;
-
     public async Task LogEventAsync(string eventName, IDictionary<string, object> paramsMap)
     {
         TelemetryEventArgs logMessage = new(eventName, paramsMap);
@@ -17,5 +15,5 @@ internal sealed class ServerTelemetry(IServerTestHost serverTestHost) : ITelemet
     }
 
     private async Task PushTelemetryToServerTestHostAsync(TelemetryEventArgs telemetryEvent)
-        => await _serverTestHost.SendTelemetryEventUpdateAsync(telemetryEvent);
+        => await serverTestHost.SendTelemetryEventUpdateAsync(telemetryEvent);
 }
