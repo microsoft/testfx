@@ -37,7 +37,7 @@ internal static class FixtureMethodRunner
         IExecutionContextScope executionContextScope, string methodCancelledMessageFormat, string methodTimedOutMessageFormat)
     {
         Exception? realException = null;
-        Task? executionTask = null;
+        Task? executionTask;
         try
         {
             executionTask = Task.Run(

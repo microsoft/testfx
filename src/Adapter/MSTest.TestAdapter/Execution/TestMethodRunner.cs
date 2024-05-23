@@ -294,7 +294,7 @@ internal class TestMethodRunner
                 foreach (UTF.ITestDataSource testDataSource in testDataSources)
                 {
                     isDataDriven = true;
-                    IEnumerable<object?[]>? dataSource = null;
+                    IEnumerable<object?[]>? dataSource;
                     try
                     {
                         // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
@@ -373,7 +373,7 @@ internal class TestMethodRunner
         string displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, _test.DisplayName, rowIndex);
         Stopwatch? stopwatch = null;
 
-        TestResult[]? testResults = null;
+        TestResult[]? testResults;
         try
         {
             stopwatch = Stopwatch.StartNew();
