@@ -418,11 +418,10 @@ public class TestExecutionManager
             {
                 testExecutionRecorder.RecordStart(currentTest);
                 var unitTestElement = currentTest.ToUnitTestElement(source);
-                string? exception = trait.Value == "Initialize"
-                    ? testRunner.GetClassInitializeException(unitTestElement.TestMethod)
-                    : testRunner.GetClassCleanupException(unitTestElement.TestMethod);
+                (bool hasTestMethod, string? exception) = testRunner.GetClassException(unitTestElement.TestMethod, trait.Value == "Initialize" ? ExceptionType.ClassInitialize : ExceptionType.ClassCleanup);
+
                 UnitTestResult result = exception is null
-                    ? new UnitTestResult(ObjectModel.UnitTestOutcome.Passed, null)
+                    ? new UnitTestResult(hasTestMethod ? ObjectModel.UnitTestOutcome.Passed : ObjectModel.UnitTestOutcome.Ignored, null)
                     : new UnitTestResult(ObjectModel.UnitTestOutcome.Failed, exception);
                 SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
             }

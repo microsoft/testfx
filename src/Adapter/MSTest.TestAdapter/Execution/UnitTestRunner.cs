@@ -18,6 +18,19 @@ using UTF = Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 
+internal enum ExceptionType
+{
+    /// <summary>
+    /// Class initialize exception.
+    /// </summary>
+    ClassInitialize,
+
+    /// <summary>
+    /// Class cleanup exception.
+    /// </summary>
+    ClassCleanup,
+}
+
 /// <summary>
 /// The runner that runs a single unit test. Also manages the assembly and class cleanup methods at the end of the run.
 /// </summary>
@@ -99,15 +112,22 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
-    internal string? GetClassInitializeException(TestMethod testMethod)
-        => _nonRunnableMethods.TryGetValue(testMethod.FullClassName, out TestMethodInfo? testMethodInfo)
-            ? testMethodInfo?.Parent.ClassInitializationException?.Message
-            : null;
+    internal (bool HasMatchingTest, string? ExceptionMessage) GetClassException(TestMethod testMethod, ExceptionType exceptionType)
+    {
+        if (_nonRunnableMethods.TryGetValue(testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
+        {
+            if (exceptionType == ExceptionType.ClassInitialize)
+            {
+                return (true, testMethodInfo?.Parent.ClassInitializationException?.Message);
+            }
+            else if (exceptionType == ExceptionType.ClassCleanup)
+            {
+                return (true, testMethodInfo?.Parent.ClassCleanupException?.Message);
+            }
+        }
 
-    internal string? GetClassCleanupException(TestMethod testMethod)
-    => _nonRunnableMethods.TryGetValue(testMethod.FullClassName, out TestMethodInfo? testMethodInfo)
-            ? testMethodInfo?.Parent.ClassCleanupException?.Message
-            : null;
+        return (false, null);
+    }
 
     /// <summary>
     /// Runs a single test.
@@ -307,8 +327,9 @@ internal class UnitTestRunner : MarshalByRefObject
             ClassCleanupBehavior lifecycleFromAssembly,
             ReflectHelper? reflectHelper = null)
         {
+            IEnumerable<UnitTestElement> runnableTests = testsToRun.Where(t => t.Traits is null || !t.Traits.Any(t => t.Name == "NonRunnable"));
             _remainingTestsByClass =
-                new(testsToRun.GroupBy(t => t.TestMethod.FullClassName)
+                new(runnableTests.GroupBy(t => t.TestMethod.FullClassName)
                     .ToDictionary(
                         g => g.Key,
                         g => new HashSet<string>(g.Select(t => t.TestMethod.UniqueName))));
@@ -330,6 +351,7 @@ internal class UnitTestRunner : MarshalByRefObject
             lock (testsByClass)
             {
                 _ = testsByClass.Remove(testMethod.UniqueName);
+
                 if (testsByClass.Count == 0)
                 {
                     _ = _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
