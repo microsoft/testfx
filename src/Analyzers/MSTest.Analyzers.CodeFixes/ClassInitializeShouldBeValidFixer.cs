@@ -34,52 +34,12 @@ public sealed class ClassInitializeShouldBeValidFixer : CodeFixProvider
             return;
         }
 
-        FixtureMethodSignatureChanges fixesToApply = context.Diagnostics.Aggregate(FixtureMethodSignatureChanges.None, (acc, diagnostic) =>
+        if (context.Diagnostics.Any(d => !d.Properties.ContainsKey(DiagnosticDescriptorHelper.CannotFixPropertyKey)))
         {
-            if (diagnostic.Descriptor == ClassInitializeShouldBeValidAnalyzer.StaticRule)
-            {
-                return acc | FixtureMethodSignatureChanges.MakeStatic;
-            }
-
-            if (diagnostic.Descriptor == ClassInitializeShouldBeValidAnalyzer.PublicRule)
-            {
-                return acc | FixtureMethodSignatureChanges.MakePublic;
-            }
-
-            if (diagnostic.Descriptor == ClassInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-            {
-                return acc | FixtureMethodSignatureChanges.FixReturnType;
-            }
-
-            if (diagnostic.Descriptor == ClassInitializeShouldBeValidAnalyzer.NotAsyncVoidRule)
-            {
-                return acc | FixtureMethodSignatureChanges.FixAsyncVoid;
-            }
-
-            if (diagnostic.Descriptor == ClassInitializeShouldBeValidAnalyzer.SingleContextParameterRule)
-            {
-                return acc | FixtureMethodSignatureChanges.AddTestContextParameter;
-            }
-
-            if (diagnostic.Descriptor == ClassInitializeShouldBeValidAnalyzer.NotGenericRule)
-            {
-                return acc | FixtureMethodSignatureChanges.RemoveGeneric;
-            }
-
-            // return accumulator unchanged, either the action cannot be fixed or it will be fixed by default.
-            return acc;
-        });
-
-        if (fixesToApply != FixtureMethodSignatureChanges.None)
-        {
-            // The fixer is common to all fixture methods, so we need to hint it that we need 'static' and 'TestContext' parameter.
-            fixesToApply |= FixtureMethodSignatureChanges.AddTestContextParameter;
-            fixesToApply |= FixtureMethodSignatureChanges.MakeStatic;
-
             context.RegisterCodeFix(
                 CodeAction.Create(
                     CodeFixResources.FixSignatureCodeFix,
-                    ct => FixtureMethodFixer.FixSignatureAsync(context.Document, root, node, fixesToApply, ct),
+                    ct => FixtureMethodFixer.FixSignatureAsync(context.Document, root, node, isParameterLess: false, shouldBeStatic: true, ct),
                     nameof(ClassInitializeShouldBeValidFixer)),
                 context.Diagnostics);
         }

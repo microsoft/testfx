@@ -48,9 +48,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.NotAGenericClassRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyCleanup"),
             code);
     }
 
@@ -71,9 +69,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.OrdinaryRule)
-                .WithLocation(0)
-                .WithArguments("Finalize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("Finalize"),
             code);
     }
 
@@ -131,9 +127,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.PublicRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyCleanup"),
             fixedCode);
     }
 
@@ -171,9 +165,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.PublicRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyCleanup"),
             fixedCode);
     }
 
@@ -207,9 +199,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyCleanup"),
             fixedCode);
     }
 
@@ -243,9 +233,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.StaticRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyCleanup"),
             fixedCode);
     }
 
@@ -279,9 +267,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.NoParametersRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyCleanup"),
             fixedCode);
     }
 
@@ -320,7 +306,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
                 {
                     return Task.FromResult(0);
                 }
-            
+
                 [AssemblyCleanup]
                 public static async ValueTask<int> {|#4:AssemblyCleanup4|}()
                 {
@@ -365,7 +351,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
                 public static Task {|CS0161:AssemblyCleanup3|}()
                 {
                 }
-            
+
                 [AssemblyCleanup]
                 public static async ValueTask AssemblyCleanup4()
                 {
@@ -383,24 +369,12 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
             code,
             new[]
             {
-                VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(0)
-                    .WithArguments("AssemblyCleanup0"),
-                VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(1)
-                    .WithArguments("AssemblyCleanup1"),
-                VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(2)
-                    .WithArguments("AssemblyCleanup2"),
-                VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(3)
-                    .WithArguments("AssemblyCleanup3"),
-                VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(4)
-                    .WithArguments("AssemblyCleanup4"),
-                VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(5)
-                    .WithArguments("AssemblyCleanup5"),
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyCleanup0"),
+                VerifyCS.Diagnostic().WithLocation(1).WithArguments("AssemblyCleanup1"),
+                VerifyCS.Diagnostic().WithLocation(2).WithArguments("AssemblyCleanup2"),
+                VerifyCS.Diagnostic().WithLocation(3).WithArguments("AssemblyCleanup3"),
+                VerifyCS.Diagnostic().WithLocation(4).WithArguments("AssemblyCleanup4"),
+                VerifyCS.Diagnostic().WithLocation(5).WithArguments("AssemblyCleanup5"),
             },
             fixedCode);
     }
@@ -470,9 +444,7 @@ public sealed class AssemblyCleanupShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyCleanupShouldBeValidAnalyzer.NotAsyncVoidRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyCleanup"),
             fixedCode);
     }
 }

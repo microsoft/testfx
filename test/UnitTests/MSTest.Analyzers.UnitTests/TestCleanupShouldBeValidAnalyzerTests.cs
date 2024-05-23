@@ -85,7 +85,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.PublicRule)
+            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.Rule)
                 .WithLocation(0)
                 .WithArguments("TestCleanup"),
             fixedCode);
@@ -125,7 +125,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.PublicRule)
+            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.Rule)
                 .WithLocation(0)
                 .WithArguments("TestCleanup"),
             fixedCode);
@@ -148,9 +148,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.OrdinaryRule)
-                .WithLocation(0)
-                .WithArguments("Finalize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("Finalize"),
             code);
     }
 
@@ -182,9 +180,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.NotAbstractRule)
-                .WithLocation(0)
-                .WithArguments("TestCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestCleanup"),
             fixedCode);
     }
 
@@ -218,9 +214,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(0)
-                .WithArguments("TestCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestCleanup"),
             fixedCode);
     }
 
@@ -254,9 +248,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.NotStaticRule)
-                .WithLocation(0)
-                .WithArguments("TestCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestCleanup"),
             fixedCode);
     }
 
@@ -290,9 +282,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.NoParametersRule)
-                .WithLocation(0)
-                .WithArguments("TestCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestCleanup"),
             fixedCode);
     }
 
@@ -364,18 +354,10 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
             code,
             new[]
             {
-                VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(0)
-                    .WithArguments("TestCleanup0"),
-                VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(1)
-                    .WithArguments("TestCleanup1"),
-                VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(2)
-                    .WithArguments("TestCleanup2"),
-                VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(3)
-                    .WithArguments("TestCleanup3"),
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestCleanup0"),
+                VerifyCS.Diagnostic().WithLocation(1).WithArguments("TestCleanup1"),
+                VerifyCS.Diagnostic().WithLocation(2).WithArguments("TestCleanup2"),
+                VerifyCS.Diagnostic().WithLocation(3).WithArguments("TestCleanup3"),
             },
             fixedCode);
     }
@@ -445,9 +427,7 @@ public sealed class TestCleanupShouldBeValidAnalyzerTests(ITestExecutionContext 
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestCleanupShouldBeValidAnalyzer.NotAsyncVoidRule)
-                .WithLocation(0)
-                .WithArguments("TestCleanup"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestCleanup"),
             fixedCode);
     }
 }
