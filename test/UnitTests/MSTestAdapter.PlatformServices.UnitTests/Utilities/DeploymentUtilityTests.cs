@@ -205,7 +205,6 @@ public class DeploymentUtilityTests : TestContainer
 
     public void DeployShouldNotDeployIfOutputDirectoryIsInvalid()
     {
-        string assemblyFullPath = Assembly.GetExecutingAssembly().Location;
         string deploymentItemPath = "C:\\temp\\sample.dll";
         string deploymentItemOutputDirectory = "..\\..\\out";
 
@@ -258,8 +257,6 @@ public class DeploymentUtilityTests : TestContainer
 
     public void DeployShouldDeployContentsOfADirectoryIfSpecified()
     {
-        string assemblyFullPath = Assembly.GetExecutingAssembly().Location;
-
         TestCase testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
         string content1 = Path.Combine(DefaultDeploymentItemPath, "directoryContents.dll");
         var directoryContentFiles = new List<string> { content1 };
