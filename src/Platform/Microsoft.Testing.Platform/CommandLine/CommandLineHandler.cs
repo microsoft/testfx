@@ -459,7 +459,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 #pragma warning disable IL3000 // Avoid accessing Assembly file path when publishing as a single file, this branch run only in .NET Framework
             string runtimeLocation = typeof(object).Assembly?.Location ?? "Not Found";
 #pragma warning restore IL3000 // Avoid accessing Assembly file path when publishing as a single file
-            await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime location: {runtimeLocation}"));
+            await platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Runtime location: {runtimeLocation}"));
 #endif
 
             string? moduleName = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
