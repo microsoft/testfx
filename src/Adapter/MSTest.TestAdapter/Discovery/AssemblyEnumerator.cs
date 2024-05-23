@@ -124,7 +124,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         var types = new List<Type>();
         try
         {
-            types.AddRange(assembly.DefinedTypes.Select(typeInfo => typeInfo.AsType()));
+            types.AddRange(assembly.GetTypes());
         }
         catch (ReflectionTypeLoadException ex)
         {

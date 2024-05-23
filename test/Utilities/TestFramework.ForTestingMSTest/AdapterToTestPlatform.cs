@@ -164,8 +164,8 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
             LogMessage(logger, TestMessageLevel.Informational, $"Discovering tests in assembly '{assemblyName}'");
 
             var assembly = Assembly.LoadFrom(assemblyName);
-            IEnumerable<TypeInfo> assemblyTestContainerTypes = assembly.DefinedTypes.Where(typeInfo =>
-                IsTestContainer(typeInfo));
+            IEnumerable<Type> assemblyTestContainerTypes = assembly.GetTypes().Where(type =>
+                IsTestContainer(type));
 
             // TODO: Fail if no container?
             foreach (TypeInfo? testContainerType in assemblyTestContainerTypes)
@@ -189,7 +189,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
     }
 
     private static bool TryFindMethodsToRun(TestCase testCase, IMessageLogger? logger,
-        [NotNullWhen(true)] out TypeInfo? testContainerType,
+        [NotNullWhen(true)] out Type? testContainerType,
         [NotNullWhen(true)] out ConstructorInfo? setupMethod,
         [NotNullWhen(true)] out MethodInfo? teardownMethod,
         [NotNullWhen(true)] out MethodInfo? testMethod)
@@ -199,7 +199,7 @@ internal sealed class AdapterToTestPlatform : ITestDiscoverer, ITestExecutor, ID
             LogMessage(logger, TestMessageLevel.Informational, $"Trying to find test '{testCase.DisplayName}'");
             var assembly = Assembly.LoadFrom(testCase.Source);
 
-            testContainerType = assembly.DefinedTypes.Single(typeInfo =>
+            testContainerType = assembly.GetTypes().Single(type =>
                 testCase.FullyQualifiedName.StartsWith(typeInfo.FullName, StringComparison.Ordinal));
 
             // Is it better to use Activator.CreateInstance?
