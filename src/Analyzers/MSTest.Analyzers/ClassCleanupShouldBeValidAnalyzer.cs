@@ -3,7 +3,6 @@
 
 using System.Collections.Immutable;
 
-using Analyzer.Utilities;
 using Analyzer.Utilities.Extensions;
 
 using Microsoft.CodeAnalysis;
@@ -16,29 +15,16 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly LocalizableResourceString Title = new(nameof(Resources.ClassCleanupShouldBeValidTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.ClassCleanupShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_Public), Resources.ResourceManager, typeof(Resources));
-
-    internal static readonly DiagnosticDescriptor PublicRule = DiagnosticDescriptorHelper.Create(
+    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.ClassCleanupShouldBeValidRuleId,
-        Title,
-        MessageFormat,
-        Description,
+        new LocalizableResourceString(nameof(Resources.ClassCleanupShouldBeValidTitle), Resources.ResourceManager, typeof(Resources)),
+        new LocalizableResourceString(nameof(Resources.ClassCleanupShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources)),
+        new LocalizableResourceString(nameof(Resources.ClassCleanupShouldBeValidDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    internal static readonly DiagnosticDescriptor StaticRule = PublicRule.WithMessage(new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_Static), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NoParametersRule = PublicRule.WithMessage(new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_NoParameters), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor ReturnTypeRule = PublicRule.WithMessage(new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_ReturnType), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NotAsyncVoidRule = PublicRule.WithMessage(new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NotGenericRule = PublicRule.WithMessage(new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_NotGeneric), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor OrdinaryRule = PublicRule.WithMessage(new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_Ordinary), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NotAGenericClassUnlessInheritanceModeSetRule = PublicRule.WithMessage(new(nameof(Resources.ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet), Resources.ResourceManager, typeof(Resources)));
-
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(PublicRule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
     public override void Initialize(AnalysisContext context)
     {
@@ -65,85 +51,14 @@ public sealed class ClassCleanupShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
-        if (!methodSymbol.IsClassCleanupMethod(classCleanupAttributeSymbol))
+        if (methodSymbol.IsClassInitializeMethod(classCleanupAttributeSymbol)
+            && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: true,
+                allowGenericType: methodSymbol.IsInheritanceModeSet(inheritanceBehaviorSymbol, classCleanupAttributeSymbol), testContextSymbol: null,
+                out bool isFixable))
         {
-            return;
-        }
-
-        if (methodSymbol.MethodKind != MethodKind.Ordinary)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(OrdinaryRule, methodSymbol.Name));
-
-            // Do not check the other criteria, users should fix the method kind first.
-            return;
-        }
-
-        if (context.Symbol.ContainingType.IsGenericType)
-        {
-            bool isInheritanceModeSet = false;
-            foreach (AttributeData attr in methodSymbol.GetAttributes())
-            {
-                if (!SymbolEqualityComparer.Default.Equals(attr.AttributeClass, classCleanupAttributeSymbol))
-                {
-                    continue;
-                }
-
-                ImmutableArray<TypedConstant> constructorArguments = attr.ConstructorArguments;
-                foreach (TypedConstant constructorArgument in constructorArguments)
-                {
-                    if (!SymbolEqualityComparer.Default.Equals(constructorArgument.Type, inheritanceBehaviorSymbol))
-                    {
-                        continue;
-                    }
-
-                    // It's an enum so it can't be null
-                    RoslynDebug.Assert(constructorArgument.Value is not null);
-
-                    // We need to check that the inheritanceBehavior is not set to none and it's value inside the enum is zero
-                    if ((int)constructorArgument.Value != 0)
-                    {
-                        isInheritanceModeSet = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!isInheritanceModeSet)
-            {
-                context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAGenericClassUnlessInheritanceModeSetRule, methodSymbol.Name));
-            }
-        }
-
-        if (methodSymbol.Parameters.Length > 0)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NoParametersRule, methodSymbol.Name));
-        }
-
-        if (methodSymbol.IsGenericMethod)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotGenericRule, methodSymbol.Name));
-        }
-
-        if (!methodSymbol.IsStatic)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(StaticRule, methodSymbol.Name));
-        }
-
-        if (methodSymbol.ReturnsVoid && methodSymbol.IsAsync)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAsyncVoidRule, methodSymbol.Name));
-        }
-
-        if (!methodSymbol.IsPublicAndHasCorrectResultantVisibility(canDiscoverInternals))
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicRule, methodSymbol.Name));
-        }
-
-        if (!methodSymbol.ReturnsVoid
-            && (taskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol))
-            && (valueTaskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol)))
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ReturnTypeRule, methodSymbol.Name));
+            context.ReportDiagnostic(isFixable
+                ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)
+                : methodSymbol.CreateDiagnostic(Rule, DiagnosticDescriptorHelper.CannotFixProperties, methodSymbol.Name));
         }
     }
 }

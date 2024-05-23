@@ -48,9 +48,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.OrdinaryRule)
-                .WithLocation(0)
-                .WithArguments("Finalize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("Finalize"),
             code);
     }
 
@@ -108,9 +106,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.PublicRule)
-                .WithLocation(0)
-                .WithArguments("TestInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize"),
             fixedCode);
     }
 
@@ -148,7 +144,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.PublicRule)
+            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.Rule)
                 .WithLocation(0)
                 .WithArguments("TestInitialize"),
             fixedCode);
@@ -182,9 +178,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.NotAbstractRule)
-                .WithLocation(0)
-                .WithArguments("TestInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize"),
             fixedCode);
     }
 
@@ -218,9 +212,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(0)
-                .WithArguments("TestInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize"),
             fixedCode);
     }
 
@@ -254,9 +246,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.NotStaticRule)
-                .WithLocation(0)
-                .WithArguments("TestInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize"),
             fixedCode);
     }
 
@@ -290,9 +280,7 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.NoParametersRule)
-                .WithLocation(0)
-                .WithArguments("TestInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize"),
             fixedCode);
     }
 
@@ -364,18 +352,10 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
             code,
             new[]
             {
-                VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(0)
-                    .WithArguments("TestInitialize0"),
-                VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(1)
-                    .WithArguments("TestInitialize1"),
-                VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(2)
-                    .WithArguments("TestInitialize2"),
-                VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(3)
-                    .WithArguments("TestInitialize3"),
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize0"),
+                VerifyCS.Diagnostic().WithLocation(1).WithArguments("TestInitialize1"),
+                VerifyCS.Diagnostic().WithLocation(2).WithArguments("TestInitialize2"),
+                VerifyCS.Diagnostic().WithLocation(3).WithArguments("TestInitialize3"),
             },
             fixedCode);
     }
@@ -445,9 +425,45 @@ public sealed class TestInitializeShouldBeValidAnalyzerTests(ITestExecutionConte
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(TestInitializeShouldBeValidAnalyzer.NotAsyncVoidRule)
-                .WithLocation(0)
-                .WithArguments("TestInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize"),
+            fixedCode);
+    }
+
+    public async Task WhenMultipleViolations_TheyAllGetFixed()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public static async void {|#0:TestInitialize|}<T>(int i)
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [TestInitialize]
+                public async Task TestInitialize()
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("TestInitialize"),
             fixedCode);
     }
 }

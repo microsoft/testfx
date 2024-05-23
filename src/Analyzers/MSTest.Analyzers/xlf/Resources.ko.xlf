@@ -4,14 +4,14 @@
     <body>
       <trans-unit id="AssemblyCleanupShouldBeValidDescription">
         <source>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should not take any parameter
+- be 'public' 
+- be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">[AssemblyCleanup]으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
+        <target state="needs-review-translation">[AssemblyCleanup]으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
 - 'public'이어야 합니다. 
 - 'static'이어야 합니다.
 - 제네릭이 아니어야 합니다.
@@ -21,44 +21,9 @@
 - 특수 메서드(종료자, 연산자...)가 아니어야 합니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NoParameters">
-        <source>AssemblyCleanup method '{0}' should not take any parameter</source>
-        <target state="translated">AssemblyCleanup 메서드 '{0}'은(는) 매개 변수를 사용하지 않아야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass">
-        <source>AssemblyCleanup method '{0}' can't be declared on a generic class</source>
-        <target state="translated">'{0}' AssemblyCleanup 메서드는 제네릭 클래스에서 선언할 수 없습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">AssemblyCleanup 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotGeneric">
-        <source>AssemblyCleanup method '{0}' should not be generic</source>
-        <target state="translated">AssemblyCleanup 메서드 '{0}'은(는) 제네릭이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Ordinary">
-        <source>AssemblyCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">AssemblyCleanup 메서드 '{0}'은(는) 'ordinary' 메서드여야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Public">
-        <source>AssemblyCleanup method '{0}' should be 'public'</source>
-        <target state="translated">AssemblyCleanup 메서드 '{0}'은(는) 'public'이어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_ReturnType">
-        <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">AssemblyCleanup 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Static">
-        <source>AssemblyCleanup method '{0}' should be 'static'</source>
-        <target state="translated">AssemblyCleanup 메서드 '{0}'은(는) 'static'이어야 합니다.</target>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
+        <source>AssemblyCleanup method '{0}' signature is invalid</source>
+        <target state="new">AssemblyCleanup method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidTitle">
@@ -68,14 +33,14 @@
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
         <source>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should take one parameter of type 'TestContext'
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">[AssemblyInitialize]로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
+        <target state="needs-review-translation">[AssemblyInitialize]로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
 - 'public'이어야 합니다. 
 - 'static'이어야 합니다.
 - 제네릭이 아니어야 합니다.
@@ -85,44 +50,9 @@
 - 특수 메서드(종료자, 연산자...)가 아니어야 합니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass">
-        <source>AssemblyInitialize method '{0}' can't be declared on a generic class</source>
-        <target state="translated">'{0}' AssemblyInitialize 메서드는 제네릭 클래스에서 선언할 수 없습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">AssemblyInitialize 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotGeneric">
-        <source>AssemblyInitialize method '{0}' should not be generic</source>
-        <target state="translated">AssemblyInitialize 메서드 '{0}'은(는) 제네릭이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Ordinary">
-        <source>AssemblyInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">AssemblyInitialize 메서드 '{0}'은(는) 'ordinary' 메서드여야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Public">
-        <source>AssemblyInitialize method '{0}' should be 'public'</source>
-        <target state="translated">AssemblyInitialize 메서드 '{0}'은(는) 'public'이어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_ReturnType">
-        <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">AssemblyInitialize 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter">
-        <source>AssemblyInitialize method '{0}' should take a single parameter of type 'TestContext'</source>
-        <target state="translated">AssemblyInitialize 메서드 '{0}'은(는) 'TestContext' 형식의 단일 매개 변수를 사용해야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Static">
-        <source>AssemblyInitialize method '{0}' should be 'static'</source>
-        <target state="translated">AssemblyInitialize 메서드 '{0}'은(는) 'static'이어야 합니다.</target>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
+        <source>AssemblyInitialize method '{0}' signature is invalid</source>
+        <target state="new">AssemblyInitialize method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
@@ -172,14 +102,14 @@
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
         <source>Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not 'static'
-- it should not be generic
-- it should not take any parameter
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">[ClassCleanup]으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
+        <target state="needs-review-translation">[ClassCleanup]으로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
 - 'public'이어야 합니다. 
 - 'static'이 아니어야 합니다.
 - 제네릭이 아니어야 합니다.
@@ -189,44 +119,9 @@
 - 특수 메서드(종료자, 연산자...)가 아니어야 합니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NoParameters">
-        <source>ClassCleanup method '{0}' should not take any parameter</source>
-        <target state="translated">ClassCleanup 메서드 '{0}'은(는) 매개 변수를 사용하지 않아야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
-        <source>ClassCleanup method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="translated">'{0}' ClassCleanup 메서드는 'InheritanceBehavior' 모드가 설정되지 않은 제네릭 클래스에서 선언할 수 없습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">ClassCleanup 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotGeneric">
-        <source>ClassCleanup method '{0}' should not be generic</source>
-        <target state="translated">ClassCleanup 메서드 '{0}'은(는) 제네릭이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Ordinary">
-        <source>ClassCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">ClassCleanup 메서드 '{0}'은(는) 'ordinary' 메서드여야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Public">
-        <source>ClassCleanup method '{0}' should be 'public'</source>
-        <target state="translated">ClassCleanup 메서드 '{0}'은(는) 'public'이어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_ReturnType">
-        <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">ClassCleanup 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Static">
-        <source>ClassCleanup method '{0}' should be 'static'</source>
-        <target state="translated">ClassCleanup 메서드 '{0}'은(는) 'static'이어야 합니다.</target>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
+        <source>ClassCleanup method '{0}' signature is invalid</source>
+        <target state="new">ClassCleanup method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidTitle">
@@ -236,14 +131,14 @@
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidDescription">
         <source>Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should take one parameter of type 'TestContext'
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">[ClassInitialize]로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
+        <target state="needs-review-translation">[ClassInitialize]로 표시된 메서드가 유효하려면 다음 레이아웃을 따라야 합니다.
 - 'public'이어야 합니다. 
 - 'static'이어야 합니다.
 - 제네릭이 아니어야 합니다.
@@ -253,44 +148,9 @@
 - 특수 메서드(종료자, 연산자...)가 아니어야 합니다.</target>
         <note />
       </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
-        <source>ClassInitialize method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="translated">'{0}' ClassInitialize 메서드는 'InheritanceBehavior' 모드가 설정되지 않은 제네릭 클래스에서 선언할 수 없습니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">ClassInitialize 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotGeneric">
-        <source>ClassInitialize method '{0}' should not be generic</source>
-        <target state="translated">ClassInitialize 메서드 '{0}'은(는) 제네릭이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Ordinary">
-        <source>ClassInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">ClassInitialize 메서드 '{0}'은(는) 'ordinary' 메서드여야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Public">
-        <source>ClassInitialize method '{0}' should be 'public'</source>
-        <target state="translated">ClassInitialize 메서드 '{0}'은(는) 'public'이어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_ReturnType">
-        <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">ClassInitialize 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_SingleContextParameter">
-        <source>ClassInitialize method '{0}' should take a single parameter of type 'TestContext'</source>
-        <target state="translated">ClassInitialize 메서드 '{0}'은(는) 'TestContext' 형식의 단일 매개 변수를 사용해야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Static">
-        <source>ClassInitialize method '{0}' should be 'static'</source>
-        <target state="translated">ClassInitialize 메서드 '{0}'은(는) 'static'이어야 합니다.</target>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
+        <source>ClassInitialize method '{0}' signature is invalid</source>
+        <target state="new">ClassInitialize method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidTitle">
@@ -462,63 +322,28 @@
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
         <source>Methods marked with [TestCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
+- be 'public' 
+- not be 'static'
+- not be generic or be defined on a generic class
+- not be 'abstract'
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
         <target state="new">Methods marked with [TestCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
+- be 'public' 
+- not be 'static'
+- not be generic or be defined on a generic class
+- not be 'abstract'
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NoParameters">
-        <source>TestCleanup method '{0}' should not take any parameter</source>
-        <target state="translated">TestCleanup 메서드 '{0}'은(는) 매개 변수를 사용하지 않아야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotAbstract">
-        <source>TestCleanup method '{0}' should not be 'abstract'</source>
-        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'abstract'가 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>TestCleanup method '{0}' should not be 'async void'</source>
-        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'async void'가 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotGeneric">
-        <source>TestCleanup method '{0}' should not be generic</source>
-        <target state="translated">TestCleanup 메서드 '{0}'은(는) 제네릭이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotStatic">
-        <source>TestCleanup method '{0}' should not be 'static'</source>
-        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'static'이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_Ordinary">
-        <source>TestCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'ordinary' 메서드여야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_Public">
-        <source>TestCleanup method '{0}' should be 'public'</source>
-        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'public'이어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_ReturnType">
-        <source>TestCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">TestCleanup 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
+      <trans-unit id="TestCleanupShouldBeValidMessageFormat">
+        <source>TestCleanup method '{0}' signature is invalid</source>
+        <target state="new">TestCleanup method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidTitle">
@@ -572,63 +397,28 @@
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidDescription">
         <source>Methods marked with [TestInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not be 'abstract'
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
         <target state="new">Methods marked with [TestInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not be 'abstract'
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</target>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NoParameters">
-        <source>TestInitialize method '{0}' should not take any parameter</source>
-        <target state="translated">TestInitialize 메서드 '{0}'은(는) 매개 변수를 사용하지 않아야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAbstract">
-        <source>TestInitialize method '{0}' should not be 'abstract'</source>
-        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'abstract'가 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>TestInitialize method  '{0}' should not be 'async void'</source>
-        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'async void'가 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotGeneric">
-        <source>TestInitialize method '{0}' should not be generic</source>
-        <target state="translated">TestInitialize 메서드 '{0}'은(는) 제네릭이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotStatic">
-        <source>TestInitialize method '{0}' should not be 'static'</source>
-        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'static'이 아니어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_Ordinary">
-        <source>TestInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'ordinary' 메서드여야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_Public">
-        <source>TestInitialize method '{0}' should be 'public'</source>
-        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'public'이어야 합니다.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_ReturnType">
-        <source>TestInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">TestInitialize 메서드 '{0}'은(는) 'void', 'Task' 또는 'ValueTask'를 반환해야 합니다.</target>
+      <trans-unit id="TestInitializeShouldBeValidMessageFormat">
+        <source>TestInitialize method '{0}' signature is invalid</source>
+        <target state="new">TestInitialize method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
