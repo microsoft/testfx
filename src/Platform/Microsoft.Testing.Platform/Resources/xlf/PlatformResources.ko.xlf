@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="Aborted">
         <source>Aborted</source>
-        <target state="new">Aborted</target>
+        <target state="translated">중단됨</target>
         <note />
       </trans-unit>
       <trans-unit id="Actual">
@@ -201,7 +201,7 @@
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">실패</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedLowercase">
@@ -328,7 +328,7 @@
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">통과</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
@@ -525,7 +525,7 @@
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
-        <target state="new">Skipped</target>
+        <target state="translated">건너뜀</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedLowercase">
@@ -635,7 +635,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="Total">
         <source>Total</source>
-        <target state="new">Total</target>
+        <target state="translated">합계</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">

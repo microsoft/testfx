@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="Aborted">
         <source>Aborted</source>
-        <target state="new">Aborted</target>
+        <target state="translated">中止されました</target>
         <note />
       </trans-unit>
       <trans-unit id="Actual">
@@ -201,7 +201,7 @@
       </trans-unit>
       <trans-unit id="Failed">
         <source>Failed</source>
-        <target state="new">Failed</target>
+        <target state="translated">失敗</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedLowercase">
@@ -328,7 +328,7 @@
       </trans-unit>
       <trans-unit id="Passed">
         <source>Passed</source>
-        <target state="new">Passed</target>
+        <target state="translated">成功</target>
         <note />
       </trans-unit>
       <trans-unit id="PassedLowercase">
@@ -526,7 +526,7 @@
       </trans-unit>
       <trans-unit id="Skipped">
         <source>Skipped</source>
-        <target state="new">Skipped</target>
+        <target state="translated">スキップ</target>
         <note />
       </trans-unit>
       <trans-unit id="SkippedLowercase">
@@ -636,7 +636,7 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       </trans-unit>
       <trans-unit id="Total">
         <source>Total</source>
-        <target state="new">Total</target>
+        <target state="translated">合計</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
