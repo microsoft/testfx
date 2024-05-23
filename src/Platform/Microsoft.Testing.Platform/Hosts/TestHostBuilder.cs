@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
@@ -34,6 +35,8 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
+    private const string ServerOptionValue = "dotnettestcli";
+
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
 
@@ -67,6 +70,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         DateTimeOffset createBuilderStart)
     {
         // ============= SETUP COMMON SERVICE USED IN ALL MODES ===============//
+
         ApplicationStateGuard.Ensure(TestFramework is not null);
 
         var systemClock = new SystemClock();
@@ -283,10 +287,74 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
+        NamedPipeClient? namedPipeClient = null;
+
+        if (commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
+            serverArgs?.Length > 0 &&
+            serverArgs[0].Equals(ServerOptionValue, StringComparison.Ordinal) &&
+            commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
+        {
+            namedPipeClient = new(arguments[0]);
+
+            namedPipeClient.RegisterSerializer<CommandLineOptionMessages>(new CommandLineOptionMessagesSerializer());
+            namedPipeClient.RegisterSerializer<VoidResponse>(new VoidResponseSerializer());
+
+            await namedPipeClient.ConnectAsync(testApplicationCancellationTokenSource.CancellationToken);
+        }
+
         // If --help is invoked we return
         if (commandLineHandler.IsHelpInvoked())
         {
-            await commandLineHandler.PrintHelpAsync(toolsInformation.Tools);
+            if (namedPipeClient is not null)
+            {
+                List<CommandLineOptionMessage> commandLineHelpOptions = new();
+                foreach (ICommandLineOptionsProvider commandLineOptionProvider in commandLineHandler.CommandLineOptionsProviders)
+                {
+                    foreach (CommandLineOption commandLineOption in commandLineOptionProvider.GetCommandLineOptions())
+                    {
+                        string arity = string.Empty;
+
+                        if (commandLineOption.Arity == ArgumentArity.Zero)
+                        {
+                            arity = "Zero";
+                        }
+
+                        if (commandLineOption.Arity == ArgumentArity.ZeroOrOne)
+                        {
+                            arity = "ZeroOrOne";
+                        }
+
+                        if (commandLineOption.Arity == ArgumentArity.ZeroOrMore)
+                        {
+                            arity = "ZeroOrMore";
+                        }
+
+                        if (commandLineOption.Arity == ArgumentArity.OneOrMore)
+                        {
+                            arity = "OneOrMore";
+                        }
+
+                        if (commandLineOption.Arity == ArgumentArity.ExactlyOne)
+                        {
+                            arity = "ExactlyOne";
+                        }
+
+                        commandLineHelpOptions.Add(new CommandLineOptionMessage(
+                            commandLineOption.Name,
+                            commandLineOption.Description,
+                            arity,
+                            commandLineOption.IsHidden,
+                            commandLineOption.IsBuiltIn));
+                    }
+                }
+
+                await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), testApplicationCancellationTokenSource.CancellationToken);
+            }
+            else
+            {
+                await commandLineHandler.PrintHelpAsync(toolsInformation.Tools);
+            }
+
             return new InformativeCommandLineTestHost(0);
         }
 

@@ -638,6 +638,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to dotnet test pipe..
+        /// </summary>
+        internal static string PlatformCommandLineDotnetTestPipe {
+            get {
+                return ResourceManager.GetString("PlatformCommandLineDotnetTestPipe", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Invalid PID &apos;{0}&apos;
         ///{1}.
         /// </summary>

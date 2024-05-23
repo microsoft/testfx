@@ -324,6 +324,11 @@
         <target state="translated">Listen Sie verfügbare Tests auf.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestPipe">
+        <source>dotnet test pipe.</source>
+        <target state="new">dotnet test pipe.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
         <source>Invalid PID '{0}'
 {1}</source>

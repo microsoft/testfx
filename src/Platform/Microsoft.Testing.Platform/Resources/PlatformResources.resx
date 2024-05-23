@@ -433,6 +433,9 @@
   <data name="PlatformCommandLineTestHostControllerPIDOptionDescription" xml:space="preserve">
     <value>Eventual parent test host controller PID.</value>
   </data>
+  <data name="PlatformCommandLineDotnetTestPipe" xml:space="preserve">
+    <value>dotnet test pipe.</value>
+  </data>
   <data name="PlatformCommandLineVSTestAdapterModeOptionDescription" xml:space="preserve">
     <value>Bridge to VSTest APIs</value>
   </data>

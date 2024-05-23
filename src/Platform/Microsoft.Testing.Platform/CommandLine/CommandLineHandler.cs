@@ -44,6 +44,8 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
 
     public ICommandLineOptionsProvider[] ExtensionsCommandLineOptionsProviders { get; } = extensionsCommandLineOptionsProviders;
 
+    public IEnumerable<ICommandLineOptionsProvider> CommandLineOptionsProviders { get; } = systemCommandLineOptionsProviders.Union(extensionsCommandLineOptionsProviders);
+
     public string Uid => nameof(CommandLineHandler);
 
     public string Version => AppVersion.DefaultSemVer;
@@ -319,6 +321,8 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
     public bool IsHelpInvoked() => IsOptionSet(PlatformCommandLineProvider.HelpOptionKey);
 
     public bool IsInfoInvoked() => IsOptionSet(PlatformCommandLineProvider.InfoOptionKey);
+
+    public bool IsDotNetTestPipeInvoked() => IsOptionSet(PlatformCommandLineProvider.DotNetTestPipeOptionKey);
 
 #pragma warning disable IDE0060 // Remove unused parameter, temporary we don't use it.
     public async Task PrintHelpAsync(ITool[]? availableTools = null)
