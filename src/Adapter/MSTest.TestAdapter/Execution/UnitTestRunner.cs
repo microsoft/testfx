@@ -101,7 +101,7 @@ internal class UnitTestRunner : MarshalByRefObject
 
     internal (bool HasMatchingTest, string? ExceptionMessage) GetException(TestMethod testMethod, string nonRunnableMethodType)
     {
-        if (_nonRunnableMethods.TryGetValue(testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
+        if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
         {
             if (nonRunnableMethodType == Constants.ClassInitialize)
             {
@@ -172,7 +172,7 @@ internal class UnitTestRunner : MarshalByRefObject
             }
 
             _nonRunnableMethods[testMethod.AssemblyName] = testMethodInfo;
-            _nonRunnableMethods[testMethod.FullClassName] = testMethodInfo;
+            _nonRunnableMethods[testMethod.AssemblyName + testMethod.FullClassName] = testMethodInfo;
 
             DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
