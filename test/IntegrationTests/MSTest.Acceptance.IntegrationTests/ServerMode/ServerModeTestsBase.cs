@@ -65,7 +65,7 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
 
         IProcessHandle processHandler = ProcessFactory.Start(processConfig, cleanDefaultEnvironmentVariableIfCustomAreProvided: false);
 
-        TcpClient? tcpClient = null;
+        TcpClient? tcpClient;
         using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromSeconds(60));
         try
         {

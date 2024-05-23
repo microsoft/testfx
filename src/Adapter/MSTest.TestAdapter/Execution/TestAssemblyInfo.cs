@@ -210,7 +210,7 @@ public class TestAssemblyInfo
             return null;
         }
 
-        Exception? assemblyCleanupException = null;
+        Exception? assemblyCleanupException;
         lock (_assemblyInfoExecuteSyncObject)
         {
             try

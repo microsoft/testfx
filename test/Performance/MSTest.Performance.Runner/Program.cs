@@ -14,14 +14,13 @@ namespace MSTest.Performance.Runner;
 
 internal class EntryPoint
 {
-    public static int Main(string[] args)
+    public static Task<int> Main(string[] args)
     {
         // Opt out telemetry for clean stacks, AppInsight is allocating strings and polluting the results.
         Environment.SetEnvironmentVariable("DOTNET_CLI_TELEMETRY_OPTOUT", "1");
 
         Console.WriteLine("Microsoft (R) MSTest Performance Profiler Command Line Tool");
 
-        int exitCode = 0;
         var rootCommand = new RootCommand("MSTest Performance Profiler Command Line Tool");
         var pipelineNameFilter = new Option<string>(name: "--pipelineNameFilter", description: "Globbing filter for the pipeline name to execute.", getDefaultValue: () => string.Empty);
         var executeTests = new Command("execute", "Execute the performance scenarios.")
@@ -33,8 +32,7 @@ internal class EntryPoint
 
         rootCommand.AddCommand(executeTests);
 
-        exitCode = rootCommand.InvokeAsync(args).Result;
-        return exitCode;
+        return rootCommand.InvokeAsync(args);
     }
 
     private static int Pipelines(string pipelineNameFilter)
