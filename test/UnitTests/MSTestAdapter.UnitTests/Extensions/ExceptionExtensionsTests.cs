@@ -45,7 +45,6 @@ public class ExceptionExtensionsTests : TestContainer
 
     public void ExceptionTryGetMessageShouldThrowIfExceptionMessageThrows()
     {
-        string errorMessage = string.Format(CultureInfo.InvariantCulture, Resource.UTF_FailedToGetExceptionMessage, "System.NotImplementedException");
         var exception = new DummyException(() => throw new NotImplementedException());
 
         Exception ex = VerifyThrows(() => exception.TryGetMessage());

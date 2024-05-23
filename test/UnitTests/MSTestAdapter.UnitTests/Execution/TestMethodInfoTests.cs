@@ -848,7 +848,6 @@ public class TestMethodInfoTests : TestContainer
         _testClassInfo.TestCleanupMethod = typeof(DummyTestClass).GetMethod("DummyTestCleanupMethod");
 
         UTF.TestResult result = _testMethodInfo.Invoke(null);
-        var exception = result.TestFailureException as TestFailedException;
 
         Verify(result.Outcome == UTF.UnitTestOutcome.Failed);
     }

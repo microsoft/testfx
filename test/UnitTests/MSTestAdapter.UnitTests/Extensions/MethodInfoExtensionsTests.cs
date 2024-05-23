@@ -348,8 +348,6 @@ public class MethodInfoExtensionsTests : TestContainer
             return true;
         };
 
-        MethodInfo methodInfo = typeof(DummyTestClass).GetMethod("PublicMethod");
-
         var dummyTestClass = new DummyTestClass2();
         MethodInfo dummyMethod = typeof(DummyTestClass2).GetMethod("DummyMethod");
 

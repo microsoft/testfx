@@ -267,7 +267,7 @@ public class TestClassInfoTests : TestContainer
         DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        Exception exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext));
+        VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext));
 
         Verify(_testClassInfo.ClassInitializationException is not null);
     }

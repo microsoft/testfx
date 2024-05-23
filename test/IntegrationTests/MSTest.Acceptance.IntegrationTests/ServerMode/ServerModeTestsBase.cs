@@ -11,8 +11,6 @@ using System.Text.RegularExpressions;
 using Microsoft.Testing.Platform.Acceptance.IntegrationTests;
 using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
-using StreamJsonRpc;
-
 namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
 
 public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTestBase
@@ -98,7 +96,6 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
 
         // To attach to the server on startup
         // environmentVariables.Add(EnvironmentVariableConstants.TESTINGPLATFORM_LAUNCH_ATTACH_DEBUGGER, "1");
-        TaskCompletionSource<JsonRpc> clientCreated = new();
         TaskCompletionSource<int> portFound = new();
         ProcessConfiguration processConfig = new(testHost.FullName)
         {

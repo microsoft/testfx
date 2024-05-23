@@ -219,7 +219,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
             ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string>? warningsFromTypeEnumerator);
-            bool typeIgnored = ReflectHelper.IsAttributeDefined<IgnoreAttribute>(type, false);
 
             if (warningsFromTypeEnumerator != null)
             {
