@@ -70,7 +70,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         DateTimeOffset createBuilderStart)
     {
         // ============= SETUP COMMON SERVICE USED IN ALL MODES ===============//
-
         ApplicationStateGuard.Ensure(TestFramework is not null);
 
         var systemClock = new SystemClock();
