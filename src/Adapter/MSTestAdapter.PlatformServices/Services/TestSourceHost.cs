@@ -127,6 +127,9 @@ public class TestSourceHost : ITestSourceHost
             EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths));
         }
 
+        // NOTE: These 2 lines are super important, see https://github.com/microsoft/testfx/issues/2922
+        // It's not entirely clear why but not assigning directly the resolver to the field (or/and) disposing the resolver in
+        // case of an error in TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver causes the issue.
         _parentDomainAssemblyResolver = new AssemblyResolver(resolutionPaths);
         _ = TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_parentDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName)!);
 
