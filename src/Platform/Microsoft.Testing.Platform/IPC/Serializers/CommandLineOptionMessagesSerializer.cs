@@ -101,17 +101,17 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         WriteShort(stream, (short)GetFieldCount(commandLineOptionMessages));
 
         WriteField(stream, CommandLineOptionMessagesFields.ModuleName, commandLineOptionMessages.ModuleName);
-        WriteCommandLineOptionMessagesPayload(stream, CommandLineOptionMessagesFields.CommandLineOptionMessageList, commandLineOptionMessages.CommandLineOptionMessageList);
+        WriteCommandLineOptionMessagesPayload(stream, commandLineOptionMessages.CommandLineOptionMessageList);
     }
 
-    private static void WriteCommandLineOptionMessagesPayload(Stream stream, short id, CommandLineOptionMessage[] commandLineOptionMessageList)
+    private static void WriteCommandLineOptionMessagesPayload(Stream stream, CommandLineOptionMessage[] commandLineOptionMessageList)
     {
-        if (commandLineOptionMessageList is null)
+        if (commandLineOptionMessageList is null || commandLineOptionMessageList.Length == 0)
         {
             return;
         }
 
-        WriteShort(stream, id);
+        WriteShort(stream, CommandLineOptionMessagesFields.CommandLineOptionMessageList);
 
         // We will reserve an int (4 bytes)
         // so that we fill the size later, once we write the payload
@@ -143,15 +143,15 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
     private static int GetFieldCount(CommandLineOptionMessage commandLineOptionMessage)
     {
-        return (IsNull(commandLineOptionMessage.Name) ? 1 : 0) +
-            (IsNull(commandLineOptionMessage.Description) ? 1 : 0) +
-            (IsNull(commandLineOptionMessage.Arity) ? 1 : 0) +
-            (IsNull(commandLineOptionMessage.IsHidden) ? 1 : 0) +
-            (IsNull(commandLineOptionMessage.IsBuiltIn) ? 1 : 0);
+        return (IsNull(commandLineOptionMessage.Name) ? 0 : 1) +
+            (IsNull(commandLineOptionMessage.Description) ? 0 : 1) +
+            (IsNull(commandLineOptionMessage.Arity) ? 0 : 1) +
+            (IsNull(commandLineOptionMessage.IsHidden) ? 0 : 1) +
+            (IsNull(commandLineOptionMessage.IsBuiltIn) ? 0 : 1);
     }
 
     private static bool IsNull<T>(T field)
     {
-        return typeof(T) == typeof(string) ? field is not null : true;
+        return typeof(T) == typeof(string) && (field is null || field?.ToString()?.Length == 0);
     }
 }
