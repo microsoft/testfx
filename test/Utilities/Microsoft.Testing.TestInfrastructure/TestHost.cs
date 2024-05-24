@@ -63,12 +63,13 @@ public sealed class TestHost
             foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
                 // Skip all unwanted environment variables.
-                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
+                string? key = entry.Key.ToString();
+                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
                 {
                     continue;
                 }
 
-                environmentVariables.Add(entry.Key!.ToString()!, entry.Value!.ToString()!);
+                environmentVariables.Add(key!, entry.Value!.ToString()!);
             }
 
             // Define DOTNET_ROOT to point to the dotnet we install for this repository, to avoid

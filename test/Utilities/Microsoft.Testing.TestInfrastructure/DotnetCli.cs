@@ -63,7 +63,8 @@ public static class DotnetCli
             foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
                 // Skip all unwanted environment variables.
-                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
+                string? key = entry.Key.ToString();
+                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -71,13 +72,13 @@ public static class DotnetCli
                 if (disableCodeCoverage)
                 {
                     // Disable the code coverage during the build.
-                    if (CodeCoverageEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
+                    if (CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
                     {
                         continue;
                     }
                 }
 
-                environmentVariables.Add(entry.Key!.ToString()!, entry.Value!.ToString()!);
+                environmentVariables.Add(key!, entry.Value!.ToString()!);
             }
 
             if (disableTelemetry)
