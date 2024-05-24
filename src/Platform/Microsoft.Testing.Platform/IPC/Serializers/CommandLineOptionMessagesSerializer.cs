@@ -98,7 +98,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
         CommandLineOptionMessages commandLineOptionMessages = (CommandLineOptionMessages)objectToSerialize;
 
-        WriteShort(stream, (short)GetFieldCount(commandLineOptionMessages));
+        WriteShort(stream, GetFieldCount(commandLineOptionMessages));
 
         WriteField(stream, CommandLineOptionMessagesFieldsId.ModuleName, commandLineOptionMessages.ModuleName);
         WriteCommandLineOptionMessagesPayload(stream, commandLineOptionMessages.CommandLineOptionMessageList);
@@ -135,24 +135,19 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
     }
 
-    private static int GetFieldCount(CommandLineOptionMessages commandLineOptionMessages)
+    private static short GetFieldCount(CommandLineOptionMessages commandLineOptionMessages)
     {
-        return (IsNull(commandLineOptionMessages.ModuleName) ? 0 : 1) +
-           (IsNull(commandLineOptionMessages) ? 0 : 1);
+        return (short)((RoslynString.IsNullOrEmpty(commandLineOptionMessages.ModuleName) ? 0 : 1) +
+           (commandLineOptionMessages is null ? 0 : 1));
     }
 
     private static short GetFieldCount(CommandLineOptionMessage commandLineOptionMessage)
     {
-        return (short)((IsNull(commandLineOptionMessage.Name) ? 0 : 1) +
-            (short)(IsNull(commandLineOptionMessage.Description) ? 0 : 1) +
-            (short)(IsNull(commandLineOptionMessage.Arity) ? 0 : 1) +
-            (short)(IsNull(commandLineOptionMessage.IsHidden) ? 0 : 1) +
-            (short)(IsNull(commandLineOptionMessage.IsBuiltIn) ? 0 : 1));
-    }
-
-    private static bool IsNull<T>(T field)
-    {
-        return typeof(T) == typeof(string) && (field is null || field?.ToString()?.Length == 0);
+        return (short)((short)(RoslynString.IsNullOrEmpty(commandLineOptionMessage.Name) ? 0 : 1) +
+            (short)(RoslynString.IsNullOrEmpty(commandLineOptionMessage.Description) ? 0 : 1) +
+            (short)(RoslynString.IsNullOrEmpty(commandLineOptionMessage.Arity) ? 0 : 1) +
+            1 +
+            1);
     }
 
     private static bool IsNull<T>(T[] items)
