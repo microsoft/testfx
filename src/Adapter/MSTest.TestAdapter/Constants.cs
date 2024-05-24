@@ -13,7 +13,7 @@ internal static class Constants
     /// <summary>
     /// Non runnable test.
     /// </summary>
-    internal const string NonRunnableTest = "NonRunnableTest";
+    internal const string NonRunnableTest = "NonRunnableTests";
 
     /// <summary>
     /// Assembly initialize.
