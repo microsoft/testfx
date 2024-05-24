@@ -5,6 +5,40 @@ using Microsoft.Testing.Platform.IPC.Models;
 
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
+/*
+|---FieldCount----| 2 bytes
+
+|---ModuleName Id----| id (2 bytes)
+|---ModuleName Size----| (4 bytes)
+|---ModuleName Value----| (n bytes)
+
+|---CommandLineOptionMessageList Id----| id (2 bytes)
+|---CommandLineOptionMessageList Size----| (4 bytes)
+|---CommandLineOptionMessageList Value----| (n bytes)
+    |---CommandLineOptionMessageList Length----| (4 bytes)
+
+    |---CommandLineOptionMessageList[0] FieldCount----| 2 bytes
+    |---CommandLineOptionMessageList[0] Name Id----| id (2 bytes)
+    |---CommandLineOptionMessageList[0] Name Size----| (4 bytes)
+    |---CommandLineOptionMessageList[0] Name Value----| (n bytes)
+
+    |---CommandLineOptionMessageList[1] Description Id----| id (2 bytes)
+    |---CommandLineOptionMessageList[1] Description Size----| (4 bytes)
+    |---CommandLineOptionMessageList[1] Description Value----| (n bytes)
+
+    |---CommandLineOptionMessageList[2] Arity Id----| id (2 bytes)
+    |---CommandLineOptionMessageList[2] Arity Size----| (4 bytes)
+    |---CommandLineOptionMessageList[2] Arity Value----| (n bytes)
+
+    |---CommandLineOptionMessageList[3] IsHidden Id----| id (2 bytes)
+    |---CommandLineOptionMessageList[3] IsHidden Size----| (4 bytes)
+    |---CommandLineOptionMessageList[3] IsHidden Value----| (1 byte)
+
+    |---CommandLineOptionMessageList[4] IsBuiltIn Id----| id (2 bytes)
+    |---CommandLineOptionMessageList[4] IsBuiltIn Size----| (4 bytes)
+    |---CommandLineOptionMessageList[4] IsBuiltIn Value----| (1 byte)
+*/
+
 internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INamedPipeSerializer
 {
     public int Id => 3;
