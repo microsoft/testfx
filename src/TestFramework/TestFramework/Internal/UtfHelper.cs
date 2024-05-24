@@ -32,6 +32,7 @@ internal static class UtfHelper
             // Get the exception message. Need to check for errors because the Message property
             // may have been overridden by the exception type in user code.
             string msg;
+            Type type = curException.GetType();
             try
             {
                 msg = curException.Message;
@@ -41,15 +42,26 @@ internal static class UtfHelper
                 msg = string.Format(
                     CultureInfo.CurrentCulture,
                     FrameworkMessages.UTF_FailedToGetExceptionMessage,
-                    curException.GetType());
+                    type);
             }
 
-            result.AppendFormat(
+            if (first)
+            {
+                result.AppendFormat(
                     CultureInfo.CurrentCulture,
-                    "{0}{1}: {2}",
-                    first ? string.Empty : " ---> ",
-                    curException.GetType(),
+                    "{0}: {1}",
+                    type,
                     msg);
+            }
+            else
+            {
+                result.AppendFormat(
+                    CultureInfo.CurrentCulture,
+                    " ---> {0}: {1}",
+                    type,
+                    msg);
+            }
+
             first = false;
         }
 
