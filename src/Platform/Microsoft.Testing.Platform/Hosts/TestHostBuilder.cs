@@ -288,7 +288,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         NamedPipeClient? namedPipeClient = null;
 
-        // If we are in server mode and we the pipe name is provided
+        // If we are in server mode and the pipe name is provided
         // then, we need to connect to the pipe server.
         if (commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
             serverArgs?.Length > 0 &&
