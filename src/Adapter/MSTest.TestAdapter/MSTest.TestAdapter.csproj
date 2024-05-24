@@ -5,7 +5,7 @@
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" Condition=" '$(OS)' != 'Windows_NT' " />
 
   <PropertyGroup>
-    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(UwpMinimum);$(WinUiMinimum);netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks)</TargetFrameworks>
+    <TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">netstandard2.0;$(NetFrameworkMinimum);$(SupportedNetFrameworks);$(UwpMinimum);$(WinUiMinimum)</TargetFrameworks>
     <TargetFrameworks Condition=" '$(OS)' != 'Windows_NT' ">$(SupportedNetFrameworks);netstandard2.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseAssemblyVersion14>true</UseAssemblyVersion14>
