@@ -286,70 +286,14 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
-        NamedPipeClient? namedPipeClient = null;
-
-        // If we are in server mode and the pipe name is provided
-        // then, we need to connect to the pipe server.
-        if (commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
-            serverArgs?.Length > 0 &&
-            serverArgs[0].Equals(ServerOptionValue, StringComparison.Ordinal) &&
-            commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
-        {
-            namedPipeClient = new(arguments[0]);
-
-            namedPipeClient.RegisterSerializer<CommandLineOptionMessages>(new CommandLineOptionMessagesSerializer());
-            namedPipeClient.RegisterSerializer<VoidResponse>(new VoidResponseSerializer());
-
-            await namedPipeClient.ConnectAsync(testApplicationCancellationTokenSource.CancellationToken);
-        }
+        NamedPipeClient? namedPipeClient = await ConnectToDotnetTestPipeIfAvailableAsync(commandLineHandler, testApplicationCancellationTokenSource);
 
         // If --help is invoked we return
         if (commandLineHandler.IsHelpInvoked())
         {
             if (namedPipeClient is not null)
             {
-                List<CommandLineOptionMessage> commandLineHelpOptions = new();
-                foreach (ICommandLineOptionsProvider commandLineOptionProvider in commandLineHandler.CommandLineOptionsProviders)
-                {
-                    foreach (CommandLineOption commandLineOption in commandLineOptionProvider.GetCommandLineOptions())
-                    {
-                        string arity = string.Empty;
-
-                        if (commandLineOption.Arity == ArgumentArity.Zero)
-                        {
-                            arity = "Zero";
-                        }
-
-                        if (commandLineOption.Arity == ArgumentArity.ZeroOrOne)
-                        {
-                            arity = "ZeroOrOne";
-                        }
-
-                        if (commandLineOption.Arity == ArgumentArity.ZeroOrMore)
-                        {
-                            arity = "ZeroOrMore";
-                        }
-
-                        if (commandLineOption.Arity == ArgumentArity.OneOrMore)
-                        {
-                            arity = "OneOrMore";
-                        }
-
-                        if (commandLineOption.Arity == ArgumentArity.ExactlyOne)
-                        {
-                            arity = "ExactlyOne";
-                        }
-
-                        commandLineHelpOptions.Add(new CommandLineOptionMessage(
-                            commandLineOption.Name,
-                            commandLineOption.Description,
-                            arity,
-                            commandLineOption.IsHidden,
-                            commandLineOption.IsBuiltIn));
-                    }
-                }
-
-                await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), testApplicationCancellationTokenSource.CancellationToken);
+                await SendCommandLineOptionsToDotnetTestPipeAsync(namedPipeClient, commandLineHandler, testApplicationCancellationTokenSource);
             }
             else
             {
@@ -499,6 +443,74 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
             return actualTestHost;
         }
+    }
+
+    private async Task SendCommandLineOptionsToDotnetTestPipeAsync(NamedPipeClient namedPipeClient, CommandLineHandler commandLineHandler, CTRLPlusCCancellationTokenSource cancellationTokenSource)
+    {
+        List<CommandLineOptionMessage> commandLineHelpOptions = new();
+        foreach (ICommandLineOptionsProvider commandLineOptionProvider in commandLineHandler.CommandLineOptionsProviders)
+        {
+            foreach (CommandLineOption commandLineOption in commandLineOptionProvider.GetCommandLineOptions())
+            {
+                string arity = string.Empty;
+
+                if (commandLineOption.Arity == ArgumentArity.Zero)
+                {
+                    arity = "Zero";
+                }
+
+                if (commandLineOption.Arity == ArgumentArity.ZeroOrOne)
+                {
+                    arity = "ZeroOrOne";
+                }
+
+                if (commandLineOption.Arity == ArgumentArity.ZeroOrMore)
+                {
+                    arity = "ZeroOrMore";
+                }
+
+                if (commandLineOption.Arity == ArgumentArity.OneOrMore)
+                {
+                    arity = "OneOrMore";
+                }
+
+                if (commandLineOption.Arity == ArgumentArity.ExactlyOne)
+                {
+                    arity = "ExactlyOne";
+                }
+
+                commandLineHelpOptions.Add(new CommandLineOptionMessage(
+                    commandLineOption.Name,
+                    commandLineOption.Description,
+                    arity,
+                    commandLineOption.IsHidden,
+                    commandLineOption.IsBuiltIn));
+            }
+        }
+
+        await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationTokenSource.CancellationToken);
+    }
+
+    private static async Task<NamedPipeClient?> ConnectToDotnetTestPipeIfAvailableAsync(CommandLineHandler commandLineHandler, CTRLPlusCCancellationTokenSource cancellationTokenSource)
+    {
+        NamedPipeClient? namedPipeClient = null;
+
+        // If we are in server mode and the pipe name is provided
+        // then, we need to connect to the pipe server.
+        if (commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
+            serverArgs?.Length > 0 &&
+            serverArgs[0].Equals(ServerOptionValue, StringComparison.Ordinal) &&
+            commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
+        {
+            namedPipeClient = new(arguments[0]);
+
+            namedPipeClient.RegisterSerializer<CommandLineOptionMessages>(new CommandLineOptionMessagesSerializer());
+            namedPipeClient.RegisterSerializer<VoidResponse>(new VoidResponseSerializer());
+
+            await namedPipeClient.ConnectAsync(cancellationTokenSource.CancellationToken);
+        }
+
+        return namedPipeClient;
     }
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(
