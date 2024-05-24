@@ -49,9 +49,7 @@ public sealed class DoNotStoreStaticTestContextAnalyzer : DiagnosticAnalyzer
     {
         var assignmentOperation = (ISimpleAssignmentOperation)context.Operation;
 
-        if (assignmentOperation.Target is IMemberReferenceOperation memberReferenceOperation
-            && memberReferenceOperation.Instance is null
-            && assignmentOperation.Value is IParameterReferenceOperation parameterReferenceOperation
+        if (assignmentOperation is { Target: IMemberReferenceOperation { Instance: null }, Value: IParameterReferenceOperation parameterReferenceOperation }
             && SymbolEqualityComparer.Default.Equals(parameterReferenceOperation.Type, testContextSymbol))
         {
             context.ReportDiagnostic(assignmentOperation.CreateDiagnostic(Rule));

@@ -268,8 +268,8 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
         switch (expr)
         {
             case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprsNot } when subexprsNot.Count != 1:
-            case OperatorExpression { Op: FilterOperator.And, SubExpressions: var subexprsAnd } when subexprsAnd.Count < 2:
-            case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subexprsOr } when subexprsOr.Count < 2:
+            case OperatorExpression { Op: FilterOperator.And, SubExpressions.Count: < 2 }:
+            case OperatorExpression { Op: FilterOperator.Or, SubExpressions.Count: < 2 }:
                 throw ApplicationStateGuard.Unreachable();
 
             case OperatorExpression opExpr:

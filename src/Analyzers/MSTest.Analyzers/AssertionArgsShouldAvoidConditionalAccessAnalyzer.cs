@@ -114,12 +114,9 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
             //      a?.b
             //      a?.b?.c
             //      a.b?.c
-            if (argument.Value is IConditionalAccessOperation conditionalAccessOperation)
+            if (argument.Value is IConditionalAccessOperation { Kind: OperationKind.ConditionalAccess })
             {
-                if (conditionalAccessOperation.Kind == OperationKind.ConditionalAccess)
-                {
-                    return true;
-                }
+                return true;
             }
 
             // Check for binary operations with conditional access => s?.Length > 1.
@@ -132,12 +129,9 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
             }
 
             // Check for conversion operations with conditional access => (s?.Length).
-            if (argument.Value is IConversionOperation conversionOperation)
+            if (argument.Value is IConversionOperation { Operand.Kind: OperationKind.ConditionalAccess })
             {
-                if (conversionOperation.Operand.Kind == OperationKind.ConditionalAccess)
-                {
-                    return true;
-                }
+                return true;
             }
         }
 

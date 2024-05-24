@@ -144,7 +144,7 @@ internal class UnitTestElement
         }
 
         IReadOnlyCollection<string?> hierarchy = TestMethod.Hierarchy;
-        if (hierarchy != null && hierarchy.Count > 0)
+        if (hierarchy is { Count: > 0 })
         {
             testCase.SetHierarchy(hierarchy.ToArray());
         }
@@ -162,7 +162,7 @@ internal class UnitTestElement
         }
 
         // Set only if some test category is present
-        if (TestCategory != null && TestCategory.Length > 0)
+        if (TestCategory is { Length: > 0 })
         {
             testCase.SetPropertyValue(Constants.TestCategoryProperty, TestCategory);
         }
@@ -199,7 +199,7 @@ internal class UnitTestElement
         }
 
         // The list of items to deploy before running this test.
-        if (DeploymentItems != null && DeploymentItems.Length > 0)
+        if (DeploymentItems is { Length: > 0 })
         {
             testCase.SetPropertyValue(Constants.DeploymentItemsProperty, DeploymentItems);
         }
