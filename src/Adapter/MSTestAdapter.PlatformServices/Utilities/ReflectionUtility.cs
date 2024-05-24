@@ -290,7 +290,7 @@ internal class ReflectionUtility
                 return true;
             }
 
-            type1 = type1.GetTypeInfo().BaseType;
+            type1 = type1.BaseType;
         }
 
         return false;

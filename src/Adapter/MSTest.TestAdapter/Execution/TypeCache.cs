@@ -305,7 +305,7 @@ internal class TypeCache : MarshalByRefObject
             UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods);
         }
 
-        Type? baseType = classType.GetTypeInfo().BaseType;
+        Type? baseType = classType.BaseType;
         while (baseType != null)
         {
             foreach (MethodInfo methodInfo in baseType.GetTypeInfo().DeclaredMethods)
@@ -323,7 +323,7 @@ internal class TypeCache : MarshalByRefObject
             }
 
             UpdateInfoWithInitializeAndCleanupMethods(classInfo, ref initAndCleanupMethods);
-            baseType = baseType.GetTypeInfo().BaseType;
+            baseType = baseType.BaseType;
         }
 
         return classInfo;
@@ -372,7 +372,7 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
     private TestAssemblyInfo GetAssemblyInfo(Type type)
     {
-        Assembly assembly = type.GetTypeInfo().Assembly;
+        Assembly assembly = type.Assembly;
 
         if (_testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo? assemblyInfo))
         {

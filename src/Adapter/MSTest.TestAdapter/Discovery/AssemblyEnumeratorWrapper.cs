@@ -18,7 +18,7 @@ internal class AssemblyEnumeratorWrapper
     /// <summary>
     /// Assembly name for UTF.
     /// </summary>
-    private static readonly AssemblyName UnitTestFrameworkAssemblyName = typeof(TestMethodAttribute).GetTypeInfo().Assembly.GetName();
+    private static readonly AssemblyName UnitTestFrameworkAssemblyName = typeof(TestMethodAttribute).Assembly.GetName();
 
     /// <summary>
     /// Gets test elements from an assembly.

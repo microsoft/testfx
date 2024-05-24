@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NETCOREAPP
-using System.Reflection;
-#endif
-
 using System.Globalization;
 
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -88,7 +84,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
         foreach (object serviceInstance in _services)
         {
 #if !NETCOREAPP
-            if (serviceType.GetTypeInfo().IsAssignableFrom(serviceInstance.GetType()))
+            if (serviceType.IsAssignableFrom(serviceInstance.GetType()))
             {
                 yield return serviceInstance;
                 if (stopAtFirst)

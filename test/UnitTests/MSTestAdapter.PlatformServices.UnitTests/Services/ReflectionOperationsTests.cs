@@ -177,7 +177,7 @@ public class ReflectionOperationsTests : TestContainer
 
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
     {
-        Assembly asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
+        Assembly asm = typeof(DummyTestClass).Assembly;
 
         object[] attributes = _reflectionOperations.GetCustomAttributes(asm, typeof(DummyAAttribute));
 

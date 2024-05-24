@@ -17,7 +17,7 @@ public class ReflectionUtilityTests : TestContainer
 {
     public void GetSpecificCustomAttributesOnAssemblyShouldReturnAllAttributes()
     {
-        Assembly asm = typeof(DummyTestClass).GetTypeInfo().Assembly;
+        Assembly asm = typeof(DummyTestClass).Assembly;
 
         List<Attribute> attributes = ReflectionUtility.GetCustomAttributes(asm, typeof(DummyAAttribute));
 
