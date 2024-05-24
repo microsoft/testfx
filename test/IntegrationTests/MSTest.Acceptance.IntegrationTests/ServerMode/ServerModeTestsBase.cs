@@ -41,7 +41,7 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
                 continue;
             }
 
-            environmentVariables[entry.Key.ToString()!] = entry.Value!.ToString()!;
+            environmentVariables[key] = entry.Value!.ToString()!;
         }
 
         // We expect to not fail for unhandled exception in server mode for IDE needs.
