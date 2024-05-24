@@ -256,25 +256,26 @@ internal abstract class BaseSerializer
     private static int GetSize<T>()
         where T : struct
     {
-        int sizeInBytes = 0;
-
         if (typeof(T) == typeof(int))
         {
-            sizeInBytes = sizeof(int);
-        }
-        else if (typeof(T) == typeof(long))
-        {
-            sizeInBytes = sizeof(long);
-        }
-        else if (typeof(T) == typeof(short))
-        {
-            sizeInBytes = sizeof(short);
-        }
-        else if (typeof(T) == typeof(bool))
-        {
-            sizeInBytes = sizeof(bool);
+            return sizeof(int);
         }
 
-        return sizeInBytes;
+        if (typeof(T) == typeof(long))
+        {
+            return sizeof(long);
+        }
+
+        if (typeof(T) == typeof(short))
+        {
+            return sizeof(short);
+        }
+
+        if (typeof(T) == typeof(bool))
+        {
+            return sizeof(bool);
+        }
+
+        return 0;
     }
 }
