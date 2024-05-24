@@ -51,12 +51,13 @@ public class Logger
             ? format
             : string.Format(CultureInfo.InvariantCulture, format, args);
 
+        object?[] parameters = [message];
         // Making sure all event handlers are called in sync on same thread.
-        foreach (Delegate? invoker in OnLogMessage.GetInvocationList())
+        foreach (Delegate invoker in OnLogMessage.GetInvocationList())
         {
             try
             {
-                invoker!.GetMethodInfo()!.Invoke(invoker.Target, new[] { message });
+                invoker.GetMethodInfo().Invoke(invoker.Target, parameters);
             }
             catch (Exception)
             {
