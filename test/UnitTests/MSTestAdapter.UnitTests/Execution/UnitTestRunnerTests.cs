@@ -378,10 +378,6 @@ public class UnitTestRunnerTests : TestContainer
     [DummyTestClass]
     private class DummyTestClassWithCleanupMethods
     {
-        public DummyTestClassWithCleanupMethods()
-        {
-        }
-
         public static Action AssemblyCleanupMethodBody { get; set; }
 
         public static Action ClassCleanupMethodBody { get; set; }
