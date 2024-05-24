@@ -35,6 +35,7 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
             // Skip all unwanted environment variables.
+            string? key = entry.Key.ToString();
             if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key.ToString(), StringComparer.OrdinalIgnoreCase))
             {
                 continue;
