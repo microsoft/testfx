@@ -102,14 +102,8 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     public void SetupHost()
     {
-#if NETFRAMEWORK || NET
-        List<string> resolutionPaths = GetResolutionPaths(
-            _sourceFileName,
-#if NETFRAMEWORK
-            VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
-#else
-            false);
-#endif
+#if NET
+        List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, false);
 
         if (EqtTrace.IsInfoEnabled)
         {
@@ -125,10 +119,17 @@ public class TestSourceHost : ITestSourceHost
         {
             assemblyResolver.Dispose();
         }
+#elif NETFRAMEWORK
+        List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
 
-#endif
+        if (EqtTrace.IsInfoEnabled)
+        {
+            EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths));
+        }
 
-#if NETFRAMEWORK
+        _parentDomainAssemblyResolver = new AssemblyResolver(resolutionPaths);
+        _ = TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_parentDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName)!);
+
         // Case when DisableAppDomain setting is present in runsettings and no child-appdomain needs to be created
         if (!_isAppDomainCreationDisabled)
         {
