@@ -9,17 +9,17 @@
       </trans-unit>
       <trans-unit id="Actual">
         <source>Actual</source>
-        <target state="new">Actual</target>
+        <target state="translated">Réel</target>
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>cancelled</source>
-        <target state="new">cancelled</target>
+        <target state="translated">annulé</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Cancelling the test session...</source>
-        <target state="new">Cancelling the test session...</target>
+        <target state="translated">Annulation de la session de test...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -169,13 +169,13 @@
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
-        <target state="new">Diagnostic file (level '{0}' with async flush): {1}"</target>
+        <target state="translated">Fichier de diagnostic (niveau « {0} » avec vidage asynchrone) : {1} »</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
-        <target state="new">Diagnostic file (level '{0}' with sync flush): {1}"</target>
+        <target state="translated">Fichier de diagnostic (niveau « {0} » avec vidage synchrone) : {1} »</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
@@ -186,7 +186,7 @@
       </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
-        <target state="new">Expected</target>
+        <target state="translated">Attendu</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
@@ -206,7 +206,7 @@
       </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
-        <target state="new">failed</target>
+        <target state="translated">échec</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
@@ -218,7 +218,7 @@
       </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
-        <target state="new">For test</target>
+        <target state="translated">Pour le test</target>
         <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
@@ -258,7 +258,7 @@
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
         <source>In process file artifacts produced:</source>
-        <target state="new">In process file artifacts produced:</target>
+        <target state="translated">Artéfacts produits dans les dossiers en cours de traitement :</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -298,7 +298,7 @@
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="new">Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</target>
+        <target state="translated">Violation de stratégie de tests minimale attendue, tests exécutés {0}, minimum attendu {1}</target>
         <note>{0}, {1} number of tests</note>
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -323,7 +323,7 @@
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
-        <target state="new">Out of process file artifacts produced:</target>
+        <target state="translated">Artefacts de fichier hors processus produits :</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
@@ -333,7 +333,7 @@
       </trans-unit>
       <trans-unit id="PassedLowercase">
         <source>passed</source>
-        <target state="new">passed</target>
+        <target state="translated">réussite</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
@@ -530,12 +530,12 @@
       </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
-        <target state="new">skipped</target>
+        <target state="translated">ignoré</target>
         <note />
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
-        <target state="new">Stack Trace</target>
+        <target state="translated">Rapport des appels de procédure</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">
@@ -712,7 +712,7 @@ En savoir plus sur la télémétrie de la plateforme de tests Microsoft : https:
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
-        <target state="new">Zero tests ran</target>
+        <target state="translated">Zéro tests exécutés</target>
         <note />
       </trans-unit>
     </body>

@@ -244,9 +244,9 @@ public sealed class IPCTests : TestBase
             .Select(s => s[random.Next(s.Length)]).ToArray());
     }
 
-    private abstract record class BaseMessage : IRequest;
+    private abstract record BaseMessage : IRequest;
 
-    private sealed record class TextMessage(string Text) : BaseMessage;
+    private sealed record TextMessage(string Text) : BaseMessage;
 
     private sealed class TextMessageSerializer : BaseSerializer, INamedPipeSerializer
     {
@@ -257,7 +257,7 @@ public sealed class IPCTests : TestBase
         public void Serialize(object objectToSerialize, Stream stream) => WriteString(stream, ((TextMessage)objectToSerialize).Text);
     }
 
-    private sealed record class IntMessage(int Integer) : BaseMessage;
+    private sealed record IntMessage(int Integer) : BaseMessage;
 
     private sealed class IntMessageSerializer : BaseSerializer, INamedPipeSerializer
     {
@@ -268,7 +268,7 @@ public sealed class IPCTests : TestBase
         public void Serialize(object objectToSerialize, Stream stream) => WriteInt(stream, ((IntMessage)objectToSerialize).Integer);
     }
 
-    private sealed record class LongMessage(long Long) : BaseMessage;
+    private sealed record LongMessage(long Long) : BaseMessage;
 
     private sealed class LongMessageSerializer : BaseSerializer, INamedPipeSerializer
     {
