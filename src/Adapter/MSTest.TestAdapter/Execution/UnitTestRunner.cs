@@ -115,7 +115,7 @@ internal class UnitTestRunner : MarshalByRefObject
 
             if (nonRunnableMethodType == Constants.ClassCleanup)
             {
-                bool isExecuted = testMethodInfo.Parent.Parent.IsAssemblyCleanupExecuted || testMethodInfo.Parent.Parent.AssemblyCleanupException is not null;
+                bool isExecuted = testMethodInfo.Parent.Parent.IsAssemblyCleanupExecuted || testMethodInfo.Parent.ClassCleanupException is not null;
                 return GetOutcome(isExecuted, testMethodInfo.Parent.ClassCleanupException);
             }
         }
