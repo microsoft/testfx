@@ -257,7 +257,7 @@ internal sealed class Json
                         case FailedTestNodeStateProperty failedTestNodeStateProperty:
                             {
                                 properties.Add(("execution-state", "failed"));
-                                Exception exception = failedTestNodeStateProperty.Exception;
+                                Exception? exception = failedTestNodeStateProperty.Exception;
                                 properties.Add(("error.message", failedTestNodeStateProperty.Explanation ?? exception?.Message));
                                 if (exception is not null)
                                 {
