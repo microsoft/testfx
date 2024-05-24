@@ -294,8 +294,6 @@ public class ReflectHelperTests : TestContainer
 
 #region Dummy Implementations
 
-public class TestableExtendedTestMethod : UTF.TestMethodAttribute
-{
-}
+public class TestableExtendedTestMethod : UTF.TestMethodAttribute;
 
 #endregion

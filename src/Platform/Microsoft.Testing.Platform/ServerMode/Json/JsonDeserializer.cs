@@ -3,6 +3,4 @@
 
 namespace Microsoft.Testing.Platform.ServerMode.Json;
 
-internal abstract class JsonDeserializer
-{
-}
+internal abstract class JsonDeserializer;

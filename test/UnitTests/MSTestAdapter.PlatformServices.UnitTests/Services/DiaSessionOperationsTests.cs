@@ -226,9 +226,7 @@ public class MockDiaSession : IDisposable
     public void Dispose() => IsDisposeInvoked = true;
 }
 
-public interface IDiaNavigationData
-{
-}
+public interface IDiaNavigationData;
 
 public class MockDiaNavigationData : IDiaNavigationData
 {

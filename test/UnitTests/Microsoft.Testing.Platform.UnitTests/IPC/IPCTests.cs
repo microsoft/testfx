@@ -244,9 +244,7 @@ public sealed class IPCTests : TestBase
             .Select(s => s[random.Next(s.Length)]).ToArray());
     }
 
-    private abstract record class BaseMessage : IRequest
-    {
-    }
+    private abstract record class BaseMessage : IRequest;
 
     private sealed record class TextMessage(string Text) : BaseMessage;
 

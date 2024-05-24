@@ -416,13 +416,9 @@ public interface IDummyInterface
 {
 }
 
-public abstract class AbstractGenericClass<T>
-{
-}
+public abstract class AbstractGenericClass<T>;
 
-public class GenericClass<T>
-{
-}
+public class GenericClass<T>;
 
 public class ClassWithTestContextGetterOnly
 {
@@ -473,140 +469,88 @@ public class GenericClassWithTestContext<T>
     public UTFExtension.TestContext TestContext { get; set; }
 }
 
-public class PublicTestClass
-{
-}
+public class PublicTestClass;
 
-public abstract class AbstractTestClass
-{
-}
+public abstract class AbstractTestClass;
 
 public class OuterClass
 {
-    public class NestedPublicClass
-    {
-    }
+    public class NestedPublicClass;
 
-    internal class NestedInternalClass
-    {
-    }
+    internal class NestedInternalClass;
 
     private class NestedPrivateClass
     {
-        public class InaccessiblePublicClass
-        {
-        }
+        public class InaccessiblePublicClass;
     }
 }
 
 public class PublicClass2
 {
-    public class PublicNestedClassInPublicClass
-    {
-    }
+    public class PublicNestedClassInPublicClass;
 
-    internal class InternalNestedClassInPublicClass
-    {
-    }
+    internal class InternalNestedClassInPublicClass;
 
-    protected internal class ProtectedInteralNestedClassInPublicClass
-    {
-    }
+    protected internal class ProtectedInteralNestedClassInPublicClass;
 
-    protected class ProtectedNestedClassInPublicClass
-    {
-    }
+    protected class ProtectedNestedClassInPublicClass;
 
-    private protected class PrivateProtectedNestedClassInPublicClass
-    {
-    }
+    private protected class PrivateProtectedNestedClassInPublicClass;
 
-    private sealed class PrivateClassNestedInPublicClass
-    {
-    }
+    private sealed class PrivateClassNestedInPublicClass;
 }
 
 public class PublicClass3
 {
     public class PublicClassNestedInPublicClass
     {
-        public class PublicClassNestedInPublicClassNestedInPublicClass
-        {
-        }
+        public class PublicClassNestedInPublicClassNestedInPublicClass;
 
-        internal class InternalClassNestedInPublicClassNestedInPublicClass
-        {
-        }
+        internal class InternalClassNestedInPublicClassNestedInPublicClass;
     }
 
     internal class InternalClassNestedInPublicClass
     {
-        public class PublicClassNestedInInternalClassNestedInPublicClass
-        {
-        }
+        public class PublicClassNestedInInternalClassNestedInPublicClass;
 
-        internal class InternalClassNestedInInternalClassNestedInPublicClass
-        {
-        }
+        internal class InternalClassNestedInInternalClassNestedInPublicClass;
     }
 
     private sealed class PrivateClassNestedInPublicClass
     {
-        public sealed class PublicClassNestedInPrivateClassNestedInPublicClass
-        {
-        }
+        public sealed class PublicClassNestedInPrivateClassNestedInPublicClass;
     }
 }
 
-internal class InternalTestClass
-{
-}
+internal class InternalTestClass;
 
 internal class InternalClass
 {
-    public class PublicClassNestedInInternalClass
-    {
-    }
+    public class PublicClassNestedInInternalClass;
 
-    internal class InternalClassNestedInInternalClass
-    {
-    }
+    internal class InternalClassNestedInInternalClass;
 
-    protected internal class ProtectedInteralClassNestedInInternalClass
-    {
-    }
+    protected internal class ProtectedInteralClassNestedInInternalClass;
 
-    protected class ProtectedClassNestedInInternalClass
-    {
-    }
+    protected class ProtectedClassNestedInInternalClass;
 
-    private protected class PrivateProtectedClassNestedInInternalClass
-    {
-    }
+    private protected class PrivateProtectedClassNestedInInternalClass;
 
-    private sealed class PrivateClassNestedInInternalClass
-    {
-    }
+    private sealed class PrivateClassNestedInInternalClass;
 }
 
 internal class InternalClass2
 {
     internal class InternalClassNestedInInternalClass
     {
-        public class PublicClassNestedInInternalClassNestedInInternalClass
-        {
-        }
+        public class PublicClassNestedInInternalClassNestedInInternalClass;
 
-        internal class InternalClassNestedInInternalClassNestedInInternalClass
-        {
-        }
+        internal class InternalClassNestedInInternalClassNestedInInternalClass;
     }
 
     private sealed class PrivateClassNestedInInternalClass
     {
-        public sealed class PublicClassNestedInPrivateClassNestedInInternalClass
-        {
-        }
+        public sealed class PublicClassNestedInPrivateClassNestedInInternalClass;
     }
 }
 
