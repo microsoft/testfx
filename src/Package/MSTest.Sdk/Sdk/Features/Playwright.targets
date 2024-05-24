@@ -2,8 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Playwright.MSTest" Version="$(MicrosoftPlaywrightVersion)" IsImplicitlyDefined="True" Sdk="MSTest" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" IsImplicitlyDefined="True" Condition=" '$(EnableMSTestAnalyzers)' != 'false' " Sdk="MSTest" />
+    <PackageReference Include="Microsoft.Playwright.MSTest" Version="$(MicrosoftPlaywrightVersion)" VersionOverride="$(MicrosoftPlaywrightVersion)" Sdk="MSTest" />
   </ItemGroup>
 
   <!--

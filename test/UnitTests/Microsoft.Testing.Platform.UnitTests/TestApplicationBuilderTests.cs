@@ -26,7 +26,7 @@ public sealed class TestApplicationBuilderTests : TestBase
         : base(testExecutionContext)
     {
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
-        var configuration = new AggregatedConfiguration(Array.Empty<IConfigurationProvider>(), testApplicationModuleInfo, new SystemFileSystem());
+        AggregatedConfiguration configuration = new(Array.Empty<IConfigurationProvider>(), testApplicationModuleInfo, new SystemFileSystem());
         configuration.SetCurrentWorkingDirectory(string.Empty);
         configuration.SetCurrentWorkingDirectory(string.Empty);
         _serviceProvider.AddService(configuration);
@@ -90,7 +90,7 @@ public sealed class TestApplicationBuilderTests : TestBase
             : new(() => new TestSessionLifetimeHandlerPlusConsumer());
         testHostManager.AddTestSessionLifetimeHandle(compositeExtensionFactory);
         testHostManager.AddDataConsumer(compositeExtensionFactory);
-        var compositeExtensions = new List<ICompositeExtensionFactory>();
+        List<ICompositeExtensionFactory> compositeExtensions = new();
         IDataConsumer[] consumers = (await testHostManager.BuildDataConsumersAsync(_serviceProvider, compositeExtensions)).Select(x => (IDataConsumer)x.Consumer).ToArray();
         ITestSessionLifetimeHandler[] sessionLifetimeHandle = (await testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, compositeExtensions)).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler).ToArray();
         Assert.AreEqual(1, consumers.Length);
@@ -148,7 +148,6 @@ public sealed class TestApplicationBuilderTests : TestBase
             : new(() => new TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider());
         testHostControllerManager.AddEnvironmentVariableProvider(compositeExtensionFactory);
         testHostControllerManager.AddProcessLifetimeHandler(compositeExtensionFactory);
-        var compositeExtensions = new List<ICompositeExtensionFactory>();
         TestHostControllerConfiguration configuration = await testHostControllerManager.BuildAsync(_serviceProvider);
         Assert.IsTrue(configuration.RequireProcessRestart);
         Assert.AreEqual(1, configuration.LifetimeHandlers.Length);
@@ -171,7 +170,7 @@ public sealed class TestApplicationBuilderTests : TestBase
     }
 
     [SuppressMessage("Design", "TA0001:Extension should not implement cross-functional areas", Justification = "Done on purpose for testing error")]
-    private sealed class InvalidComposition : ITestHostProcessLifetimeHandler, IDataConsumer
+    private sealed class InvalidComposition : ITestHostProcessLifetimeHandler, ITestSessionLifetimeHandler
     {
         private readonly IServiceProvider? _serviceProvider;
 
@@ -192,17 +191,17 @@ public sealed class TestApplicationBuilderTests : TestBase
 
         public string Description => nameof(InvalidComposition);
 
-        public Type[] DataTypesConsumed => Array.Empty<Type>();
-
         public Task BeforeTestHostProcessStartAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
-
-        public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken) => throw new NotImplementedException();
 
         public Task<bool> IsEnabledAsync() => throw new NotImplementedException();
 
         public Task OnTestHostProcessExitedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
 
         public Task OnTestHostProcessStartedAsync(ITestHostProcessInformation testHostProcessInformation, CancellationToken cancellation) => throw new NotImplementedException();
+
+        public Task OnTestSessionStartingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
+
+        public Task OnTestSessionFinishingAsync(SessionUid sessionUid, CancellationToken cancellationToken) => throw new NotImplementedException();
     }
 
     private sealed class TestHostProcessLifetimeHandlerPlusTestHostEnvironmentVariableProvider : ITestHostProcessLifetimeHandler, ITestHostEnvironmentVariableProvider

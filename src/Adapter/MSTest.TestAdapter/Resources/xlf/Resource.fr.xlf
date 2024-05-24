@@ -3,8 +3,8 @@
   <file datatype="xml" source-language="en" original="../Resource.resx" target-language="fr">
     <body>
       <trans-unit id="AssemblyCleanupTimedOut">
-        <source>Assembly cleanup method '{0}.{1}' timed out</source>
-        <target state="translated">Méthode de nettoyage de l'assemblage '{0}.{1}' Fin du temps</target>
+        <source>Assembly cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">La méthode de nettoyage d’assembly « {0}.{1} » a expiré après {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupWasCancelled">
@@ -13,8 +13,8 @@
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeTimedOut">
-        <source>Assembly initialize method '{0}.{1}' timed out</source>
-        <target state="translated">Le délai de la méthode d’initialisation de l’assembly « {0}.{1} » est dépassé</target>
+        <source>Assembly initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">La méthode d'initialisation de l’assembly « {0}.{1} » a expiré après {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeWasCancelled">
@@ -37,8 +37,8 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupTimedOut">
-        <source>Class cleanup method '{0}.{1}' timed out</source>
-        <target state="translated">Méthode de nettoyage de classe '{0}.{1}' a expiré</target>
+        <source>Class cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">La méthode de nettoyage de classe « {0}.{1} » a expiré après {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupWasCancelled">
@@ -47,8 +47,8 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeTimedOut">
-        <source>Class initialize method '{0}.{1}' timed out</source>
-        <target state="translated">Le délai de la méthode d’initialisation de la classe « {0}.{1} » est dépassé</target>
+        <source>Class initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">La méthode d'initialisation de la classe « {0}.{1} » a expiré après {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeWasCancelled">
@@ -72,8 +72,8 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note></note>
       </trans-unit>
       <trans-unit id="TestCleanupTimedOut">
-        <source>Test cleanup method '{0}.{1}' timed out</source>
-        <target state="translated">Tester la méthode de nettoyage '{0}.{1}' a expiré</target>
+        <source>Test cleanup method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">La méthode de nettoyage de test « {0}.{1} » a expiré après {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupWasCancelled">
@@ -82,8 +82,8 @@ mais a reçu {4} argument(s), avec les types « {5} ».</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeTimedOut">
-        <source>Test initialize method '{0}.{1}' timed out</source>
-        <target state="translated">Test initialiser la méthode '{0}.{1}' a expiré</target>
+        <source>Test initialize method '{0}.{1}' timed out after {2}ms</source>
+        <target state="translated">La méthode d’initialisation de test « {0}.{1} » a expiré après {2}ms</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeWasCancelled">

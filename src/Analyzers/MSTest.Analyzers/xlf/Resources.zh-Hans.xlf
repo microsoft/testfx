@@ -4,61 +4,26 @@
     <body>
       <trans-unit id="AssemblyCleanupShouldBeValidDescription">
         <source>Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should not take any parameter
+- be 'public' 
+- be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">标记有 [AssemblyCleanup] 的方法应遵循以下布局才有效：
-- 它应为“public”
-- 它应为“static”
-- 它不应是泛型的
-- 它不应采用任何参数
-- 返回类型应为“void”、“Task”或“ValueTask”
-- 它不应为“async void”
-- 它不应是特殊方法（终结器、运算符...）。</target>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
+        <target state="new">Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NoParameters">
-        <source>AssemblyCleanup method '{0}' should not take any parameter</source>
-        <target state="translated">AssemblyCleanup 方法“{0}”不应采用任何参数</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAGenericClass">
-        <source>AssemblyCleanup method '{0}' can't be declared on a generic class</source>
-        <target state="translated">不能在泛型类上声明 AssemblyCleanup 方法“{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">AssemblyCleanup 方法“{0}”应返回“void”、“Task”或“ValueTask”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_NotGeneric">
-        <source>AssemblyCleanup method '{0}' should not be generic</source>
-        <target state="translated">AssemblyCleanup 方法“{0}”不应是泛型的</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Ordinary">
-        <source>AssemblyCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">AssemblyCleanup 方法“{0}”应为“普通”方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Public">
-        <source>AssemblyCleanup method '{0}' should be 'public'</source>
-        <target state="translated">AssemblyCleanup 方法“{0}”应是“public”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_ReturnType">
-        <source>AssemblyCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">AssemblyCleanup 方法“{0}”应返回“void”、“Task”或“ValueTask”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat_Static">
-        <source>AssemblyCleanup method '{0}' should be 'static'</source>
-        <target state="translated">AssemblyCleanup 方法“{0}”不应是“static”</target>
+      <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
+        <source>AssemblyCleanup method '{0}' signature is invalid</source>
+        <target state="new">AssemblyCleanup method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidTitle">
@@ -68,66 +33,41 @@
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidDescription">
         <source>Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should take one parameter of type 'TestContext'
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">标记有 [AssemblyInitialize] 的方法应遵循以下布局才有效：
-- 它应为“public”
-- 它应为“static”
-- 它不应是泛型的
-- 它应采用“TestContext”类型的一个参数
-- 返回类型应为“void”、“Task”或“ValueTask”
-- 它不应为“async void”
-- 它不应是特殊方法（终结器、运算符...）。</target>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
+        <target state="new">Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAGenericClass">
-        <source>AssemblyInitialize method '{0}' can't be declared on a generic class</source>
-        <target state="translated">不能在泛型类上声明 AssemblyInitialize 方法“{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">AssemblyInitialize 方法“{0}”应返回“void”、“Task”或“ValueTask”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_NotGeneric">
-        <source>AssemblyInitialize method '{0}' should not be generic</source>
-        <target state="translated">AssemblyInitialize 方法“{0}”不应是泛型的</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Ordinary">
-        <source>AssemblyInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">AssemblyInitialize 方法“{0}”应为“普通”方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Public">
-        <source>AssemblyInitialize method '{0}' should be 'public'</source>
-        <target state="translated">AssemblyInitialize 方法“{0}”不应是“public”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_ReturnType">
-        <source>AssemblyInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">AssemblyInitialize 方法“{0}”应返回“void”、“Task”或“ValueTask”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_SingleContextParameter">
-        <source>AssemblyInitialize method '{0}' should take a single parameter of type 'TestContext'</source>
-        <target state="translated">AssemblyInitialize 方法“{0}”应采用类型为“TestContext”的单个参数</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat_Static">
-        <source>AssemblyInitialize method '{0}' should be 'static'</source>
-        <target state="translated">AssemblyInitialize 方法“{0}”不应是“static”</target>
+      <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
+        <source>AssemblyInitialize method '{0}' signature is invalid</source>
+        <target state="new">AssemblyInitialize method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
         <source>AssemblyInitialize methods should have valid layout</source>
         <target state="translated">AssemblyInitialize 方法应具有有效的布局</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessMessageFormat">
+        <source>Prefer adding an additional assertion that checks for null</source>
+        <target state="translated">首选添加检查 null 的其他断言</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="AssertionArgsShouldAvoidConditionalAccessTitle">
+        <source>Avoid conditional access in assertions</source>
+        <target state="translated">避免断言中的条件访问</target>
         <note />
       </trans-unit>
       <trans-unit id="AssertionArgsShouldBePassedInCorrectOrderDescription">
@@ -162,61 +102,26 @@
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidDescription">
         <source>Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not 'static'
-- it should not be generic
-- it should not take any parameter
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">标记有 [ClassCleanup] 的方法应遵循以下布局才有效：
-- 它应为“public”
-- 它不应为“static”
-- 它不应是泛型的
-- 它不应采用任何参数
-- 返回类型应为“void”、“Task”或“ValueTask”
-- 它不应为“async void”
-- 它不应是特殊方法（终结器、运算符...）。</target>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
+        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NoParameters">
-        <source>ClassCleanup method '{0}' should not take any parameter</source>
-        <target state="translated">ClassCleanup 方法“{0}”不应采用任何参数</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
-        <source>ClassCleanup method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="translated">如果未设置 `InheritanceBehavior` 模式，则无法在泛型类上声明 ClassCleanup 方法“{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">ClassCleanup 方法“{0}”应返回“void”、“Task” 或“ValueTask”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_NotGeneric">
-        <source>ClassCleanup method '{0}' should not be generic</source>
-        <target state="translated">ClassCleanup 方法“{0}”不应是泛型的</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Ordinary">
-        <source>ClassCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">ClassCleanup 方法“{0}”应为一种“普通”方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Public">
-        <source>ClassCleanup method '{0}' should be 'public'</source>
-        <target state="translated">ClassCleanup 方法“{0}”应为“public”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_ReturnType">
-        <source>ClassCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">ClassCleanup 方法“{0}”应返回“void”、“Task” 或“ValueTask”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassCleanupShouldBeValidMessageFormat_Static">
-        <source>ClassCleanup method '{0}' should be 'static'</source>
-        <target state="translated">ClassCleanup 方法“{0}”应为“static”</target>
+      <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
+        <source>ClassCleanup method '{0}' signature is invalid</source>
+        <target state="new">ClassCleanup method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidTitle">
@@ -226,61 +131,26 @@
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidDescription">
         <source>Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should be 'static'
-- it should not be generic
-- it should take one parameter of type 'TestContext'
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">标记有 [ClassInitialize] 的方法应遵循以下布局才有效：
-- 它应为“public”
-- 它应为“static”
-- 它不应是泛型的
-- 它应采用“TestContext”类型的一个参数
-- 返回类型应为“void”、“Task”或“ValueTask”
-- 它不应为“async void”
-- 它不应是特殊方法（终结器、运算符...）。</target>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
+        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
+- be 'public' 
+- be 'static'
+- not be generic nor be defined on a generic class
+- take a single parameter of type 'TestContext'
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAGenericClassUnlessInheritanceModeSet">
-        <source>ClassInitialize method '{0}' can't be declared on a generic class without the `InheritanceBehavior` mode is set</source>
-        <target state="translated">如果未设置 `InheritanceBehavior` 模式，则无法在泛型类上声明 ClassInitialize 方法“{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">ClassInitialize 方法“{0}”应返回“void”、“Task”或“ValueTask”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_NotGeneric">
-        <source>ClassInitialize method '{0}' should not be generic</source>
-        <target state="translated">ClassInitialize 方法“{0}”不应是泛型的</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Ordinary">
-        <source>ClassInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">ClassInitialize 方法“{0}”应为“普通”方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Public">
-        <source>ClassInitialize method '{0}' should be 'public'</source>
-        <target state="translated">ClassInitialize 方法“{0}”不应是“public”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_ReturnType">
-        <source>ClassInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">ClassInitialize 方法“{0}”应返回“void”、“Task”或“ValueTask”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_SingleContextParameter">
-        <source>ClassInitialize method '{0}' should take a single parameter of type 'TestContext'</source>
-        <target state="translated">ClassInitialize 方法“{0}”应采用类型为“TestContext”的单个参数</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="ClassInitializeShouldBeValidMessageFormat_Static">
-        <source>ClassInitialize method '{0}' should be 'static'</source>
-        <target state="translated">ClassInitialize 方法“{0}”不应是“static”</target>
+      <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
+        <source>ClassInitialize method '{0}' signature is invalid</source>
+        <target state="new">ClassInitialize method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidTitle">
@@ -337,6 +207,16 @@
       <trans-unit id="DoNotStoreStaticTestContextAnalyzerTitle">
         <source>Do not store TestContext in a static member</source>
         <target state="translated">不要将 TestContext 存储在静态成员中</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsMessageFormat">
+        <source>Use 'Assert.Fail' instead of an always-failing 'Assert.{0}' assert</source>
+        <target state="translated">使用 “Assert.Fail” 而不是始终失败的 “Assert.{0}” 断言</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PreferAssertFailOverAlwaysFalseConditionsTitle">
+        <source>Use 'Assert.Fail' instead of an always-failing assert</source>
+        <target state="translated">使用 “Assert.Fail” 而不是始终失败的断言</target>
         <note />
       </trans-unit>
       <trans-unit id="PreferConstructorOverTestInitializeMessageFormat">
@@ -442,63 +322,28 @@
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidDescription">
         <source>Methods marked with [TestCleanup] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
+- be 'public' 
+- not be 'static'
+- not be generic or be defined on a generic class
+- not be 'abstract'
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">标记有 [TestCleanup] 的方法应遵循以下布局才有效:
-- 它应为 "public"
-- 它不应为 "static"
-- 它不应是泛型的
-- 它不应为 "abstract"
-- 它不应采用任何参数
-- 返回类型应为 "void"、"Task" 或 "ValueTask"
-- 它不应为 "async void"
-- 它不应是特殊方法(终结器、运算符...)。</target>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
+        <target state="new">Methods marked with [TestCleanup] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic or be defined on a generic class
+- not be 'abstract'
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NoParameters">
-        <source>TestCleanup method '{0}' should not take any parameter</source>
-        <target state="translated">TestCleanup 方法“{0}”不应采用任何参数</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotAbstract">
-        <source>TestCleanup method '{0}' should not be 'abstract'</source>
-        <target state="translated">TestCleanup 方法“{0}”不应为 "abstract"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>TestCleanup method '{0}' should not be 'async void'</source>
-        <target state="translated">TestCleanup 方法“{0}”不应为 "async void"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotGeneric">
-        <source>TestCleanup method '{0}' should not be generic</source>
-        <target state="translated">TestCleanup 方法“{0}”不应是泛型的</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_NotStatic">
-        <source>TestCleanup method '{0}' should not be 'static'</source>
-        <target state="translated">TestCleanup 方法“{0}”不应为 "static"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_Ordinary">
-        <source>TestCleanup method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">TestCleanup 方法“{0}”应为一种“普通”方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_Public">
-        <source>TestCleanup method '{0}' should be 'public'</source>
-        <target state="translated">TestCleanup 方法“{0}”应为 "public"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestCleanupShouldBeValidMessageFormat_ReturnType">
-        <source>TestCleanup method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">TestCleanup 方法“{0}”应返回 "void"、"Task" 或 "ValueTask"</target>
+      <trans-unit id="TestCleanupShouldBeValidMessageFormat">
+        <source>TestCleanup method '{0}' signature is invalid</source>
+        <target state="new">TestCleanup method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidTitle">
@@ -551,63 +396,28 @@
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidDescription">
         <source>Methods marked with [TestInitialize] should follow the following layout to be valid:
-- it should be 'public' 
-- it should not be 'static'
-- it should not be generic
-- it should not be 'abstract'
-- it should not take any parameter
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not be 'abstract'
+- not take any parameter
 - return type should be 'void', 'Task' or 'ValueTask'
-- it should not be 'async void'
-- it should not be a special method (finalizer, operator...).</source>
-        <target state="translated">标记有 [TestInitialize] 的方法应遵循以下布局才有效:
-- 它应为 "public"
-- 它不应为 "static"
-- 它不应是泛型的
-- 它不应为 "abstract"
-- 它不应采用任何参数
-- 返回类型应为 "void"、"Task" 或 "ValueTask"
-- 它不应为 "async void"
-- 它不应是特殊方法(终结器、运算符...)。</target>
+- not be 'async void'
+- not be a special method (finalizer, operator...).</source>
+        <target state="new">Methods marked with [TestInitialize] should follow the following layout to be valid:
+- be 'public' 
+- not be 'static'
+- not be generic nor defined on a generic class
+- not be 'abstract'
+- not take any parameter
+- return type should be 'void', 'Task' or 'ValueTask'
+- not be 'async void'
+- not be a special method (finalizer, operator...).</target>
         <note />
       </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NoParameters">
-        <source>TestInitialize method '{0}' should not take any parameter</source>
-        <target state="translated">TestInitialize 方法“{0}”不应采用任何参数</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAbstract">
-        <source>TestInitialize method '{0}' should not be 'abstract'</source>
-        <target state="translated">TestInitialize 方法“{0}”不应为 "abstract"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotAsyncVoid">
-        <source>TestInitialize method  '{0}' should not be 'async void'</source>
-        <target state="translated">TestInitialize 方法“{0}”不应为 "async void"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotGeneric">
-        <source>TestInitialize method '{0}' should not be generic</source>
-        <target state="translated">TestInitialize 方法“{0}”不应是泛型的</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_NotStatic">
-        <source>TestInitialize method '{0}' should not be 'static'</source>
-        <target state="translated">TestInitialize 方法“{0}”不应为 "static"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_Ordinary">
-        <source>TestInitialize method '{0}' should be an 'ordinary' method</source>
-        <target state="translated">TestInitialize 方法“{0}”应为一种“普通”方法</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_Public">
-        <source>TestInitialize method '{0}' should be 'public'</source>
-        <target state="translated">TestInitialize 方法“{0}”应为 "public"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TestInitializeShouldBeValidMessageFormat_ReturnType">
-        <source>TestInitialize method '{0}' should return 'void', 'Task' or 'ValueTask'</source>
-        <target state="translated">TestInitialize 方法“{0}”应返回 "void"、"Task" 或 "ValueTask"</target>
+      <trans-unit id="TestInitializeShouldBeValidMessageFormat">
+        <source>TestInitialize method '{0}' signature is invalid</source>
+        <target state="new">TestInitialize method '{0}' signature is invalid</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
@@ -692,6 +502,16 @@
       <trans-unit id="TestMethodShouldNotBeIgnoredAnalyzerTitle">
         <source>Test method should not be ignored</source>
         <target state="translated">不应忽略测试方法</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
+        <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
+        <target state="new">Asynchronous test fixture methods do not require the 'Async' suffix</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
+        <source>Asynchronous test methods do not require the 'Async' suffix</source>
+        <target state="new">Asynchronous test methods do not require the 'Async' suffix</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">

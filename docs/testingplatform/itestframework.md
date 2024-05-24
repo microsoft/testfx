@@ -1,4 +1,4 @@
-# Implement the Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework
+# The `Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework`
 
 The `Microsoft.Testing.Platform.Extensions.TestFramework.ITestFramework` is implemented by extensions that provide a test framework:
 
@@ -99,9 +99,8 @@ sequenceDiagram
 The diagram above illustrates that the testing platform issues 3 requests after creating the test framework instance. The test framework processes these requests and utilizes the `IMessageBus` service, which is included in the request itself, to deliver the result for each specific request. Once a particular request has been handled, the test framework invokes the `Complete()` method on it, indicating to the testing platform that the request has been fulfilled.
 The testing platform monitors all dispatched requests. Once all requests have been fulfilled, it invokes `CloseTestSessionAsync` and disposes of the instance (if `IDisposable/IAsyncDisposable` is implemented).
 It's evident that the requests and their completions can overlap, enabling concurrent and asynchronous execution of requests.
->> [!NOTE]
->> Currently, the testing platform does not send overlapping requests and waits for the completion of a request >> before sending the next one. However, this behavior may change in the future.
->> The support for concurrent requests will be determined through the [capabilities](capabilities.md) system.
+> [!NOTE]
+> Currently, the testing platform does not send overlapping requests and waits for the completion of a request >> before sending the next one. However, this behavior may change in the future. The support for concurrent requests will be determined through the [capabilities](capabilities.md) system.
 
 The `IRequest` implementation specifies the precise request that needs to be fulfilled. The test framework identifies the type of request and handles it accordingly. If the request type is unrecognized, an exception should be raised.
 
@@ -114,9 +113,9 @@ For a comprehensive list of information that can be published to the testing pla
 `CancellationToken`: This token is utilized to interrupt the processing of a particular request.
 
 `Complete()`: As depicted in the previous sequence, the `Complete` method notifies the platform that the request has been successfully processed and all relevant information has been transmitted to the [IMessageBus](imessagebus.md).
->> [!WARNING]
->> Neglecting to invoke `Complete()` on the request will result in the test application becoming unresponsive.
+> [!WARNING]
+> Neglecting to invoke `Complete()` on the request will result in the test application becoming unresponsive.
 
-To customize your test framework according to your requirements or those of your users, you can use a personalized section inside the [configuration](configuration.md) file or with custom [command line options](icommandlineoptions.md).
+To customize your test framework according to your requirements or those of your users, you can use a personalized section inside the [configuration](configuration.md) file or with custom [command line options](icommandlineoptionsprovider.md).
 
 A practical example of a test framework can be found in the [code sample](codesample.md) section.

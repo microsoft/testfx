@@ -2,6 +2,26 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="cs" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="Aborted">
+        <source>Aborted</source>
+        <target state="translated">Přerušeno</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Actual">
+        <source>Actual</source>
+        <target state="new">Actual</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancelledLowercase">
+        <source>cancelled</source>
+        <target state="new">cancelled</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancellingTestSession">
+        <source>Cancelling the test session...</source>
+        <target state="new">Cancelling the test session...</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">Nepovedlo se vytvořit filtr provádění testů.</target>
@@ -147,9 +167,26 @@
         <target state="translated">Nepodařilo se najít adresář {0}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
+        <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
+        <target state="new">Diagnostic file (level '{0}' with async flush): {1}"</target>
+        <note>0 level such as verbose, 
+1 path to file</note>
+      </trans-unit>
+      <trans-unit id="DiagnosticFileLevelWithFlush">
+        <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
+        <target state="new">Diagnostic file (level '{0}' with sync flush): {1}"</target>
+        <note>0 level such as verbose, 
+1 path to file</note>
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Zprostředkovatel {0} (UID: {1}) selhal s chybou: {2}.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Expected">
+        <source>Expected</source>
+        <target state="new">Expected</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
@@ -162,12 +199,27 @@
         <target state="translated">Už je zaregistrované jiné rozšíření se stejným UID {0}. Zaregistrované rozšíření je typu {1}.</target>
         <note />
       </trans-unit>
+      <trans-unit id="Failed">
+        <source>Failed</source>
+        <target state="translated">Neúspěšné</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedLowercase">
+        <source>failed</source>
+        <target state="new">failed</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
         <target state="translated">Zápis protokolu do kanálu se nezdařil. Nezachycený obsah protokolu:
 {0}</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ForTest">
+        <source>For test</source>
+        <target state="new">For test</target>
+        <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
@@ -202,6 +254,11 @@
       <trans-unit id="HelpTestApplicationRunner">
         <source>&lt;test application runner&gt;</source>
         <target state="translated">&lt;spouštěč testovací aplikace&gt;</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InProcessArtifactsProduced">
+        <source>In process file artifacts produced:</source>
+        <target state="new">In process file artifacts produced:</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -239,6 +296,11 @@
         <target state="translated">Handshake mezi klientem a serverem JsonRpc, implementace na základě specifikace protokolu testovací platformy</target>
         <note />
       </trans-unit>
+      <trans-unit id="MinimumExpectedTestsPolicyViolation">
+        <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
+        <target state="new">Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</target>
+        <note>{0}, {1} number of tests</note>
+      </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
         <target state="translated">Není zaregistrovaný žádný serializátor s ID {0}.</target>
@@ -259,14 +321,24 @@
         <target state="translated">Nenalezeno</target>
         <note />
       </trans-unit>
+      <trans-unit id="OutOfProcessArtifactsProduced">
+        <source>Out of process file artifacts produced:</source>
+        <target state="new">Out of process file artifacts produced:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Passed">
+        <source>Passed</source>
+        <target state="translated">Úspěšné</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PassedLowercase">
+        <source>passed</source>
+        <target state="new">passed</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
         <source>Specify the hostname of the client.</source>
         <target state="translated">Zadejte název hostitele klienta.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineClientHostOptionSingleArgument">
-        <source>'--client-host' expects a single host name as argument</source>
-        <target state="translated">--client-host očekává jako argument jeden název hostitele.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientPortOptionDescription">
@@ -277,11 +349,6 @@
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
         <target state="translated">Umožňuje vynutit synchronní zápis do protokolu integrovaným protokolovacím nástrojem souborů. Užitečné pro scénář, kdy nechcete přijít o žádný protokol (například v případě chybového ukončení). Poznámka: Toto zpomaluje provádění testu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument">
-        <source>'--diagnostic-output-fileprefix' expects a single file name prefix argument</source>
-        <target state="translated">--diagnostic-output-fileprefix očekává jeden argument předpony názvu souboru.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
@@ -304,11 +371,6 @@
         <target state="translated">Výstupní adresář diagnostického protokolování. Pokud není zadaný, soubor se vygeneruje ve výchozím adresáři TestResults.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument">
-        <source>'--diagnostic-output-directory' expects a single directory name argument</source>
-        <target state="translated">--diagnostic-output-directory očekává jeden argument názvu adresáře.</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
         <target state="translated">Předpona pro název souboru protokolu, který nahradí [log]_</target>
@@ -329,7 +391,7 @@
         <target state="new">dotnet test pipe.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
         <target state="translated">Neplatný identifikátor PID „{0}“
@@ -374,11 +436,6 @@
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
         <target state="translated">Nezobrazovat úvodní banner, zprávu o autorských právech ani banner telemetrie</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineOptionExpectsNoArgumentErrorMessage">
-        <source>'--{0}' expects no argument</source>
-        <target state="translated">--{0} neočekává žádný argument.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
@@ -469,6 +526,21 @@
       <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">Instance typu ITestFramework by neměly být registrovány prostřednictvím poskytovatele služeb, ale prostřednictvím metody ITestApplicationBuilder.RegisterTestFramework.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Skipped">
+        <source>Skipped</source>
+        <target state="translated">Přeskočeno</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SkippedLowercase">
+        <source>skipped</source>
+        <target state="new">skipped</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StackTrace">
+        <source>Stack Trace</source>
+        <target state="new">Stack Trace</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">
@@ -566,6 +638,11 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
         <target state="translated">Nepovedlo se vyprázdnit protokoly před vypršením časového limitu {0} s.</target>
         <note />
       </trans-unit>
+      <trans-unit id="Total">
+        <source>Total</source>
+        <target state="translated">Celkem</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
         <target state="translated">Filtr {0} nesmí obsahovat znak /.</target>
@@ -579,11 +656,6 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
         <target state="translated">Řetězec filtru by neměl být ukončen řídicím znakem {0}.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterInvalidArgumentCount">
-        <source>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</source>
-        <target state="translated">Očekává se jeden argument (například /MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]).</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
@@ -641,6 +713,11 @@ Přečtěte si další informace o telemetrii Microsoft Testing Platform: https:
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
         <target state="translated">Toto umístění programu se považuje za nedostupné. File={0}, Line={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ZeroTestsRan">
+        <source>Zero tests ran</source>
+        <target state="new">Zero tests ran</target>
         <note />
       </trans-unit>
     </body>

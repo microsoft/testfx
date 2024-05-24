@@ -62,30 +62,15 @@ public class TestClassInfoTests : TestContainer
         DummyTestClass.ClassCleanupMethodBody = null;
     }
 
-    public void TestClassInfoClassAttributeGetsAReferenceToTheTestClassAttribute()
-    {
-        Verify(_testClassAttribute == _testClassInfo.ClassAttribute);
-    }
+    public void TestClassInfoClassAttributeGetsAReferenceToTheTestClassAttribute() => Verify(_testClassAttribute == _testClassInfo.ClassAttribute);
 
-    public void TestClassInfoClassTypeGetsAReferenceToTheActualTypeForTheTestClass()
-    {
-        Verify(typeof(DummyTestClass) == _testClassInfo.ClassType);
-    }
+    public void TestClassInfoClassTypeGetsAReferenceToTheActualTypeForTheTestClass() => Verify(typeof(DummyTestClass) == _testClassInfo.ClassType);
 
-    public void TestClassInfoConstructorGetsTheConstructorInfoForTestClass()
-    {
-        Verify(_testClassConstructor == _testClassInfo.Constructor);
-    }
+    public void TestClassInfoConstructorGetsTheConstructorInfoForTestClass() => Verify(_testClassConstructor == _testClassInfo.Constructor);
 
-    public void TestClassInfoTestContextPropertyGetsAReferenceToTheTestContextDefinedInTestClass()
-    {
-        Verify(_testContextProperty == _testClassInfo.TestContextProperty);
-    }
+    public void TestClassInfoTestContextPropertyGetsAReferenceToTheTestContextDefinedInTestClass() => Verify(_testContextProperty == _testClassInfo.TestContextProperty);
 
-    public void TestClassInfoParentGetsAReferenceToTheParentAssemblyForTheTestClass()
-    {
-        Verify(_testAssemblyInfo == _testClassInfo.Parent);
-    }
+    public void TestClassInfoParentGetsAReferenceToTheParentAssemblyForTheTestClass() => Verify(_testAssemblyInfo == _testClassInfo.Parent);
 
     public void TestClassInfoClassInitializeMethodSetShouldThrowForMultipleClassInitializeMethods()
     {
@@ -95,7 +80,7 @@ public class TestClassInfoTests : TestContainer
             _testClassInfo.ClassInitializeMethod = _testClassType.GetMethods().First();
         }
 
-        var ex = VerifyThrows(Action);
+        Exception ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(TypeInspectionException));
     }
 
@@ -107,19 +92,19 @@ public class TestClassInfoTests : TestContainer
             _testClassInfo.ClassCleanupMethod = _testClassType.GetMethods().First();
         }
 
-        var ex = VerifyThrows(Action);
+        Exception ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(TypeInspectionException));
     }
 
     public void TestClassInfoClassCleanupMethodShouldNotInvokeWhenNoTestClassInitializedIsCalled()
     {
-        var classcleanupCallCount = 0;
+        int classcleanupCallCount = 0;
         DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
 
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        var ret = _testClassInfo.RunClassCleanup(); // call cleanup without calling init
+        string ret = _testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
         Verify(ret is null);
         Verify(classcleanupCallCount == 0);
@@ -127,7 +112,7 @@ public class TestClassInfoTests : TestContainer
 
     public void TestClassInfoClassCleanupMethodShouldNotInvokeBaseClassCleanupMethodsWhenNoTestClassInitializedIsCalled()
     {
-        var classcleanupCallCount = 0;
+        int classcleanupCallCount = 0;
         DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
 
         _testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
@@ -136,7 +121,7 @@ public class TestClassInfoTests : TestContainer
                 typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod")));
         _testClassInfo.ClassInitializeMethod = typeof(DummyDerivedTestClass).GetMethod("InitBaseClassMethod");
 
-        var ret = _testClassInfo.RunClassCleanup(); // call cleanup without calling init
+        string ret = _testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
         Verify(ret is null);
         Verify(classcleanupCallCount == 0);
@@ -144,14 +129,14 @@ public class TestClassInfoTests : TestContainer
 
     public void TestClassInfoClassCleanupMethodShouldInvokeWhenTestClassInitializedIsCalled()
     {
-        var classcleanupCallCount = 0;
+        int classcleanupCallCount = 0;
         DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
 
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
         _testClassInfo.RunClassInitialize(_testContext);
-        var ret = _testClassInfo.RunClassCleanup(); // call cleanup without calling init
+        string ret = _testClassInfo.RunClassCleanup(); // call cleanup without calling init
 
         Verify(ret is null);
         Verify(classcleanupCallCount == 1);
@@ -159,7 +144,7 @@ public class TestClassInfoTests : TestContainer
 
     public void TestClassInfoClassCleanupMethodShouldInvokeBaseClassCleanupMethodWhenTestClassInitializedIsCalled()
     {
-        var classcleanupCallCount = 0;
+        int classcleanupCallCount = 0;
         DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
 
         _testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
@@ -168,16 +153,13 @@ public class TestClassInfoTests : TestContainer
                 typeof(DummyBaseTestClass).GetMethod("CleanupClassMethod")));
 
         _testClassInfo.RunClassInitialize(_testContext);
-        var ret = _testClassInfo.RunClassCleanup();
+        string ret = _testClassInfo.RunClassCleanup();
 
         Verify(ret is null);
         Verify(classcleanupCallCount == 1);
     }
 
-    public void TestClassInfoHasExecutableCleanupMethodShouldReturnFalseIfClassDoesNotHaveCleanupMethod()
-    {
-        Verify(!_testClassInfo.HasExecutableCleanupMethod);
-    }
+    public void TestClassInfoHasExecutableCleanupMethodShouldReturnFalseIfClassDoesNotHaveCleanupMethod() => Verify(!_testClassInfo.HasExecutableCleanupMethod);
 
     public void TestClassInfoHasExecutableCleanupMethodShouldReturnTrueEvenIfClassInitializeThrowsAnException()
     {
@@ -198,7 +180,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldNotInvokeIfClassInitializeIsNull()
     {
-        var classInitCallCount = 0;
+        int classInitCallCount = 0;
         DummyTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
 
         _testClassInfo.ClassInitializeMethod = null;
@@ -216,13 +198,13 @@ public class TestClassInfoTests : TestContainer
 
         void Action() => _testClassInfo.RunClassInitialize(null);
 
-        var ex = VerifyThrows(Action);
+        Exception ex = VerifyThrows(Action);
         Verify(ex.GetType() == typeof(NullReferenceException));
     }
 
     public void RunClassInitializeShouldNotExecuteClassInitializeIfItHasAlreadyExecuted()
     {
-        var classInitCallCount = 0;
+        int classInitCallCount = 0;
         DummyTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
 
         _testClassInfo.IsClassInitializeExecuted = true;
@@ -235,7 +217,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldExecuteClassInitialize()
     {
-        var classInitCallCount = 0;
+        int classInitCallCount = 0;
         DummyTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
@@ -256,7 +238,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldOnlyRunOnce()
     {
-        var classInitCallCount = 0;
+        int classInitCallCount = 0;
         DummyTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
@@ -268,7 +250,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldRunOnlyOnceIfThereIsNoDerivedClassInitializeAndSetClassInitializeExecutedFlag()
     {
-        var classInitCallCount = 0;
+        int classInitCallCount = 0;
         DummyBaseTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
         _testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
             Tuple.Create(typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"), (MethodInfo)null));
@@ -285,14 +267,14 @@ public class TestClassInfoTests : TestContainer
         DummyTestClass.ClassInitializeMethodBody = tc => UTF.Assert.Inconclusive("Test Inconclusive");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
-        var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext));
+        VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext));
 
         Verify(_testClassInfo.ClassInitializationException is not null);
     }
 
     public void RunClassInitializeShouldExecuteBaseClassInitializeMethod()
     {
-        var classInitCallCount = 0;
+        int classInitCallCount = 0;
         DummyBaseTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
         DummyDerivedTestClass.DerivedClassInitializeMethodBody = tc => classInitCallCount++;
 
@@ -309,7 +291,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldNotExecuteBaseClassInitializeMethodIfClassInitializeHasExecuted()
     {
-        var classInitCallCount = 0;
+        int classInitCallCount = 0;
 
         DummyBaseTestClass.ClassInitializeMethodBody = tc => classInitCallCount += 2;
         DummyDerivedTestClass.DerivedClassInitializeMethodBody = tc => classInitCallCount++;
@@ -329,7 +311,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldExecuteBaseClassInitializeIfDerivedClassInitializeIsNull()
     {
-        var classInitCallCount = 0;
+        int classInitCallCount = 0;
         DummyBaseTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
 
         _testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(
@@ -344,7 +326,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldNotExecuteBaseClassIfBaseClassInitializeIsNull()
     {
-        var classInitCallCount = 0;
+        int classInitCallCount = 0;
         DummyTestClass.ClassInitializeMethodBody = tc => classInitCallCount++;
 
         _testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(new Tuple<MethodInfo, MethodInfo>(null, null));
@@ -357,7 +339,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldThrowTestFailedExceptionOnBaseInitializeMethodWithNonAssertExceptions()
     {
-        DummyBaseTestClass.ClassInitializeMethodBody = tc => { throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message")); };
+        DummyBaseTestClass.ClassInitializeMethodBody = tc => throw new ArgumentException("Some exception message", new InvalidOperationException("Inner exception message"));
 
         _testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(new Tuple<MethodInfo, MethodInfo>(
             typeof(DummyBaseTestClass).GetMethod("InitBaseClassMethod"),
@@ -415,7 +397,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunClassInitializeShouldThrowTestFailedExceptionWithNonAssertExceptions()
     {
-        DummyTestClass.ClassInitializeMethodBody = tc => { throw new ArgumentException("Argument exception"); };
+        DummyTestClass.ClassInitializeMethodBody = tc => throw new ArgumentException("Argument exception");
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
         var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
@@ -445,7 +427,7 @@ public class TestClassInfoTests : TestContainer
 
     public void RunAssemblyInitializeShouldPassOnTheTestContextToAssemblyInitMethod()
     {
-        DummyTestClass.ClassInitializeMethodBody = tc => { Verify(tc == _testContext); };
+        DummyTestClass.ClassInitializeMethodBody = tc => Verify(tc == _testContext);
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
         _testClassInfo.RunClassInitialize(_testContext);
@@ -454,12 +436,10 @@ public class TestClassInfoTests : TestContainer
     public void RunClassInitializeShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
     {
         DummyTestClass.ClassInitializeMethodBody = tc =>
-        {
             // This helper calls inner helper, and the inner helper ctor throws.
             // We want to see the real exception on screen, and not TypeInitializationException
             // which has no info about what failed.
             FailingStaticHelper.DoWork();
-        };
         _testClassInfo.ClassInitializeMethod = typeof(DummyTestClass).GetMethod("ClassInitializeMethod");
 
         var exception = VerifyThrows(() => _testClassInfo.RunClassInitialize(_testContext)) as TestFailedException;
@@ -482,12 +462,12 @@ public class TestClassInfoTests : TestContainer
     public void RunClassCleanupShouldInvokeIfClassCleanupMethod()
     {
         // Arrange
-        var classcleanupCallCount = 0;
+        int classcleanupCallCount = 0;
         DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
-        var classCleanup = _testClassInfo.RunClassCleanup();
+        string classCleanup = _testClassInfo.RunClassCleanup();
 
         // Assert
         Verify(classCleanup is null);
@@ -497,12 +477,12 @@ public class TestClassInfoTests : TestContainer
     public void RunClassCleanupShouldNotInvokeIfClassCleanupIsNull()
     {
         // Arrange
-        var classcleanupCallCount = 0;
+        int classcleanupCallCount = 0;
         DummyTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
         _testClassInfo.ClassCleanupMethod = null;
 
         // Act
-        var classCleanup = _testClassInfo.RunClassCleanup();
+        string classCleanup = _testClassInfo.RunClassCleanup();
 
         // Assert
         Verify(classCleanup is null);
@@ -516,7 +496,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
-        var classCleanup = _testClassInfo.RunClassCleanup();
+        string classCleanup = _testClassInfo.RunClassCleanup();
 
         // Assert
         Verify(classCleanup.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
@@ -531,7 +511,7 @@ public class TestClassInfoTests : TestContainer
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
-        var classCleanup = _testClassInfo.RunClassCleanup();
+        string classCleanup = _testClassInfo.RunClassCleanup();
 
         // Assert
         Verify(classCleanup.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
@@ -542,11 +522,11 @@ public class TestClassInfoTests : TestContainer
     public void RunClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
     {
         // Arrange
-        DummyTestClass.ClassCleanupMethodBody = () => { throw new ArgumentException("Argument Exception"); };
+        DummyTestClass.ClassCleanupMethodBody = () => throw new ArgumentException("Argument Exception");
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod(nameof(DummyTestClass.ClassCleanupMethod));
 
         // Act
-        var classCleanup = _testClassInfo.RunClassCleanup();
+        string classCleanup = _testClassInfo.RunClassCleanup();
 
         // Assert
         Verify(classCleanup.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed.", StringComparison.Ordinal));
@@ -557,14 +537,14 @@ public class TestClassInfoTests : TestContainer
     public void RunBaseClassCleanupWithNoDerivedClassCleanupShouldReturnExceptionDetailsOfNonAssertExceptions()
     {
         // Arrange
-        DummyBaseTestClass.ClassCleanupMethodBody = () => { throw new ArgumentException("Argument Exception"); };
-        var baseClassCleanupMethod = typeof(DummyBaseTestClass).GetMethod(nameof(DummyBaseTestClass.CleanupClassMethod));
+        DummyBaseTestClass.ClassCleanupMethodBody = () => throw new ArgumentException("Argument Exception");
+        MethodInfo baseClassCleanupMethod = typeof(DummyBaseTestClass).GetMethod(nameof(DummyBaseTestClass.CleanupClassMethod));
         _testClassInfo.ClassCleanupMethod = null;
         _testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(Tuple.Create((MethodInfo)null, baseClassCleanupMethod));
         _testClassInfo.BaseClassCleanupMethodsStack.Push(baseClassCleanupMethod);
 
         // Act
-        var classCleanup = _testClassInfo.RunClassCleanup();
+        string classCleanup = _testClassInfo.RunClassCleanup();
 
         // Assert
         Verify(classCleanup.StartsWith("Class Cleanup method DummyBaseTestClass.CleanupClassMethod failed.", StringComparison.Ordinal));
@@ -575,15 +555,15 @@ public class TestClassInfoTests : TestContainer
     public void RunBaseClassCleanupEvenIfThereIsNoDerivedClassCleanup()
     {
         // Arrange
-        var classcleanupCallCount = 0;
+        int classcleanupCallCount = 0;
         DummyBaseTestClass.ClassCleanupMethodBody = () => classcleanupCallCount++;
-        var baseClassCleanupMethod = typeof(DummyBaseTestClass).GetMethod(nameof(DummyBaseTestClass.CleanupClassMethod));
+        MethodInfo baseClassCleanupMethod = typeof(DummyBaseTestClass).GetMethod(nameof(DummyBaseTestClass.CleanupClassMethod));
         _testClassInfo.ClassCleanupMethod = null;
         _testClassInfo.BaseClassInitAndCleanupMethods.Enqueue(Tuple.Create((MethodInfo)null, baseClassCleanupMethod));
         _testClassInfo.BaseClassCleanupMethodsStack.Push(baseClassCleanupMethod);
 
         // Act
-        var classCleanup = _testClassInfo.RunClassCleanup();
+        string classCleanup = _testClassInfo.RunClassCleanup();
 
         // Assert
         Verify(_testClassInfo.HasExecutableCleanupMethod);
@@ -594,15 +574,13 @@ public class TestClassInfoTests : TestContainer
     public void RunClassCleanupShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
     {
         DummyTestClass.ClassCleanupMethodBody = () =>
-        {
             // This helper calls inner helper, and the inner helper ctor throws.
             // We want to see the real exception on screen, and not TypeInitializationException
             // which has no info about what failed.
             FailingStaticHelper.DoWork();
-        };
         _testClassInfo.ClassCleanupMethod = typeof(DummyTestClass).GetMethod("ClassCleanupMethod");
 
-        var errorMessage = _testClassInfo.RunClassCleanup();
+        string errorMessage = _testClassInfo.RunClassCleanup();
 
         Verify(errorMessage.StartsWith("Class Cleanup method DummyTestClass.ClassCleanupMethod failed. Error Message: System.InvalidOperationException: I fail..", StringComparison.Ordinal));
         Verify(errorMessage.Contains("at Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Execution.TestClassInfoTests.FailingStaticHelper..cctor()"));
@@ -620,15 +598,9 @@ public class TestClassInfoTests : TestContainer
         public UTFExtension.TestContext BaseTestContext { get; set; }
 
         [UTF.ClassInitialize(UTF.InheritanceBehavior.BeforeEachDerivedClass)]
-        public static void InitClassMethod(UTFExtension.TestContext testContext)
-        {
-            ClassInitMethodBody?.Invoke(testContext);
-        }
+        public static void InitClassMethod(UTFExtension.TestContext testContext) => ClassInitMethodBody?.Invoke(testContext);
 
-        public static void ClassCleanupMethod()
-        {
-            CleanupClassMethodBody?.Invoke();
-        }
+        public static void ClassCleanupMethod() => CleanupClassMethodBody?.Invoke();
     }
 
     [DummyTestClass]
@@ -641,15 +613,9 @@ public class TestClassInfoTests : TestContainer
         public UTFExtension.TestContext TestContext { get; set; }
 
         [UTF.ClassInitialize(UTF.InheritanceBehavior.BeforeEachDerivedClass)]
-        public static void InitBaseClassMethod(UTFExtension.TestContext testContext)
-        {
-            ClassInitializeMethodBody?.Invoke(testContext);
-        }
+        public static void InitBaseClassMethod(UTFExtension.TestContext testContext) => ClassInitializeMethodBody?.Invoke(testContext);
 
-        public static void CleanupClassMethod()
-        {
-            ClassCleanupMethodBody?.Invoke();
-        }
+        public static void CleanupClassMethod() => ClassCleanupMethodBody?.Invoke();
     }
 
     [DummyTestClass]
@@ -661,15 +627,9 @@ public class TestClassInfoTests : TestContainer
 
         public UTFExtension.TestContext Context { get; set; }
 
-        public static void InitDerivedClassMethod(UTFExtension.TestContext testContext)
-        {
-            DerivedClassInitializeMethodBody?.Invoke(testContext);
-        }
+        public static void InitDerivedClassMethod(UTFExtension.TestContext testContext) => DerivedClassInitializeMethodBody?.Invoke(testContext);
 
-        public static void CleanupDerivedClassMethod()
-        {
-            DerivedClassCleanupMethodBody?.Invoke();
-        }
+        public static void CleanupDerivedClassMethod() => DerivedClassCleanupMethodBody?.Invoke();
     }
 
     [DummyTestClass]
@@ -681,15 +641,9 @@ public class TestClassInfoTests : TestContainer
 
         public UTFExtension.TestContext TestContext { get; set; }
 
-        public static void ClassInitializeMethod(UTFExtension.TestContext testContext)
-        {
-            ClassInitializeMethodBody?.Invoke(testContext);
-        }
+        public static void ClassInitializeMethod(UTFExtension.TestContext testContext) => ClassInitializeMethodBody?.Invoke(testContext);
 
-        public static void ClassCleanupMethod()
-        {
-            ClassCleanupMethodBody?.Invoke();
-        }
+        public static void ClassCleanupMethod() => ClassCleanupMethodBody?.Invoke();
     }
 
     private class DummyTestClassAttribute : UTF.TestClassAttribute

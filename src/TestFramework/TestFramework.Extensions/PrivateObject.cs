@@ -39,7 +39,7 @@ public class PrivateObject
         _ = obj ?? throw new ArgumentNullException(nameof(obj));
         ValidateAccessString(memberToAccess);
 
-        PrivateObject? temp = obj as PrivateObject;
+        var temp = obj as PrivateObject;
         temp ??= new PrivateObject(obj);
 
         // Split The access string
@@ -171,10 +171,7 @@ public class PrivateObject
     /// </summary>
     public object Target
     {
-        get
-        {
-            return _target;
-        }
+        get => _target;
 
         set
         {
@@ -250,10 +247,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call.</returns>
-    public object? Invoke(string name, Type[] parameterTypes, object?[]? args)
-    {
-        return Invoke(name, parameterTypes, args, CultureInfo.InvariantCulture);
-    }
+    public object? Invoke(string name, Type[] parameterTypes, object?[]? args) => Invoke(name, parameterTypes, args, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Invokes the specified method.
@@ -263,10 +257,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="typeArguments">An array of types corresponding to the types of the generic arguments.</param>
     /// <returns>Result of method call.</returns>
-    public object? Invoke(string name, Type[] parameterTypes, object?[]? args, Type[] typeArguments)
-    {
-        return Invoke(name, BindToEveryThing, parameterTypes, args, CultureInfo.InvariantCulture, typeArguments);
-    }
+    public object? Invoke(string name, Type[] parameterTypes, object?[]? args, Type[] typeArguments) => Invoke(name, BindToEveryThing, parameterTypes, args, CultureInfo.InvariantCulture, typeArguments);
 
     /// <summary>
     /// Invokes the specified method.
@@ -275,10 +266,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of method call.</returns>
-    public object? Invoke(string name, object?[]? args, CultureInfo culture)
-    {
-        return Invoke(name, null, args, culture);
-    }
+    public object? Invoke(string name, object?[]? args, CultureInfo culture) => Invoke(name, null, args, culture);
 
     /// <summary>
     /// Invokes the specified method.
@@ -288,10 +276,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of method call.</returns>
-    public object? Invoke(string name, Type[]? parameterTypes, object?[]? args, CultureInfo culture)
-    {
-        return Invoke(name, BindToEveryThing, parameterTypes, args, culture);
-    }
+    public object? Invoke(string name, Type[]? parameterTypes, object?[]? args, CultureInfo culture) => Invoke(name, BindToEveryThing, parameterTypes, args, culture);
 
     /// <summary>
     /// Invokes the specified method.
@@ -300,10 +285,7 @@ public class PrivateObject
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call.</returns>
-    public object? Invoke(string name, BindingFlags bindingFlags, params object?[]? args)
-    {
-        return Invoke(name, bindingFlags, null, args, CultureInfo.InvariantCulture);
-    }
+    public object? Invoke(string name, BindingFlags bindingFlags, params object?[]? args) => Invoke(name, bindingFlags, null, args, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Invokes the specified method.
@@ -313,10 +295,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the method to get.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>Result of method call.</returns>
-    public object? Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object?[]? args)
-    {
-        return Invoke(name, bindingFlags, parameterTypes, args, CultureInfo.InvariantCulture);
-    }
+    public object? Invoke(string name, BindingFlags bindingFlags, Type[] parameterTypes, object?[]? args) => Invoke(name, bindingFlags, parameterTypes, args, CultureInfo.InvariantCulture);
 
     /// <summary>
     /// Invokes the specified method.
@@ -326,10 +305,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of method call.</returns>
-    public object? Invoke(string name, BindingFlags bindingFlags, object?[]? args, CultureInfo culture)
-    {
-        return Invoke(name, bindingFlags, null, args, culture);
-    }
+    public object? Invoke(string name, BindingFlags bindingFlags, object?[]? args, CultureInfo culture) => Invoke(name, bindingFlags, null, args, culture);
 
     /// <summary>
     /// Invokes the specified method.
@@ -340,10 +316,7 @@ public class PrivateObject
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <param name="culture">Culture info.</param>
     /// <returns>Result of method call.</returns>
-    public object? Invoke(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args, CultureInfo culture)
-    {
-        return Invoke(name, bindingFlags, parameterTypes, args, culture, null);
-    }
+    public object? Invoke(string name, BindingFlags bindingFlags, Type[]? parameterTypes, object?[]? args, CultureInfo culture) => Invoke(name, bindingFlags, parameterTypes, args, culture, null);
 
     /// <summary>
     /// Invokes the specified method.
@@ -444,7 +417,7 @@ public class PrivateObject
     public object GetArrayElement(string name, BindingFlags bindingFlags, params int[] indices)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        Array? arr = (Array?)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
+        var arr = (Array?)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
         DebugEx.Assert(arr is not null, "arr should not be null");
         return arr.GetValue(indices);
     }
@@ -459,7 +432,7 @@ public class PrivateObject
     public void SetArrayElement(string name, BindingFlags bindingFlags, object value, params int[] indices)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        Array? arr = (Array?)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
+        var arr = (Array?)InvokeHelper(name, BindingFlags.GetField | bindingFlags, null, CultureInfo.InvariantCulture);
         DebugEx.Assert(arr is not null, "arr should not be null");
         arr.SetValue(value, indices);
     }
@@ -562,10 +535,7 @@ public class PrivateObject
     /// <param name="name">Name of the property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
-    public object? GetProperty(string name, params object?[]? args)
-    {
-        return GetProperty(name, null, args);
-    }
+    public object? GetProperty(string name, params object?[]? args) => GetProperty(name, null, args);
 
     /// <summary>
     /// Gets the property.
@@ -574,10 +544,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
-    public object? GetProperty(string name, Type[]? parameterTypes, object?[]? args)
-    {
-        return GetProperty(name, BindToEveryThing, parameterTypes, args);
-    }
+    public object? GetProperty(string name, Type[]? parameterTypes, object?[]? args) => GetProperty(name, BindToEveryThing, parameterTypes, args);
 
     /// <summary>
     /// Set the property.
@@ -585,10 +552,7 @@ public class PrivateObject
     /// <param name="name">Name of the property.</param>
     /// <param name="value">value to set.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetProperty(string name, object? value, params object?[]? args)
-    {
-        SetProperty(name, null, value, args);
-    }
+    public void SetProperty(string name, object? value, params object?[]? args) => SetProperty(name, null, value, args);
 
     /// <summary>
     /// Set the property.
@@ -597,10 +561,7 @@ public class PrivateObject
     /// <param name="parameterTypes">An array of <see cref="System.Type"/> objects representing the number, order, and type of the parameters for the indexed property.</param>
     /// <param name="value">value to set.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetProperty(string name, Type[]? parameterTypes, object? value, object?[]? args)
-    {
-        SetProperty(name, BindToEveryThing, value, parameterTypes, args);
-    }
+    public void SetProperty(string name, Type[]? parameterTypes, object? value, object?[]? args) => SetProperty(name, BindToEveryThing, value, parameterTypes, args);
 
     /// <summary>
     /// Gets the property.
@@ -609,10 +570,7 @@ public class PrivateObject
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
     /// <returns>The property.</returns>
-    public object? GetProperty(string name, BindingFlags bindingFlags, params object?[]? args)
-    {
-        return GetProperty(name, bindingFlags, null, args);
-    }
+    public object? GetProperty(string name, BindingFlags bindingFlags, params object?[]? args) => GetProperty(name, bindingFlags, null, args);
 
     /// <summary>
     /// Gets the property.
@@ -642,10 +600,7 @@ public class PrivateObject
     /// <param name="bindingFlags">A bitmask comprised of one or more <see cref="System.Reflection.BindingFlags"/> that specify how the search is conducted.</param>
     /// <param name="value">value to set.</param>
     /// <param name="args">Arguments to pass to the member to invoke.</param>
-    public void SetProperty(string name, BindingFlags bindingFlags, object value, params object?[]? args)
-    {
-        SetProperty(name, bindingFlags, value, null, args);
-    }
+    public void SetProperty(string name, BindingFlags bindingFlags, object value, params object?[]? args) => SetProperty(name, bindingFlags, value, null, args);
 
     /// <summary>
     /// Sets the property.
@@ -769,10 +724,10 @@ public class PrivateObject
         DebugEx.Assert(typeArguments != null, "Invalid type arguments array.");
 
         // Build a preliminary list of method candidates that contain roughly the same signature.
-        var methodCandidates = GetMethodCandidates(methodName, parameterTypes, typeArguments, bindingFlags);
+        LinkedList<MethodInfo> methodCandidates = GetMethodCandidates(methodName, parameterTypes, typeArguments, bindingFlags);
 
         // Search of ambiguous methods (methods with the same signature).
-        MethodInfo[] finalCandidates = new MethodInfo[methodCandidates.Count];
+        var finalCandidates = new MethodInfo[methodCandidates.Count];
         methodCandidates.CopyTo(finalCandidates, 0);
 
         // TODO: Check if it's possible to have parameterTypes null here as we assert it's not null above.
@@ -804,7 +759,7 @@ public class PrivateObject
 
         LinkedList<MethodInfo> methodCandidates = new();
 
-        if (!GenericMethodCache.TryGetValue(methodName, out var methods))
+        if (!GenericMethodCache.TryGetValue(methodName, out LinkedList<MethodInfo>? methods))
         {
             return methodCandidates;
         }
@@ -822,7 +777,7 @@ public class PrivateObject
 
             // Since we can't just get the correct MethodInfo from Reflection,
             // we will just match the number of parameters, their order, and their type
-            var methodCandidate = candidate;
+            MethodInfo methodCandidate = candidate;
             ParameterInfo[] candidateParams = methodCandidate.GetParameters();
 
             if (candidateParams.Length != parameterTypes.Length)

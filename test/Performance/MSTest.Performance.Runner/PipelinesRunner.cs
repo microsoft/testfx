@@ -11,10 +11,7 @@ internal class PipelinesRunner
 {
     private readonly List<PipelineInfo> _pipelines = new();
 
-    public void AddPipeline(string groupName, string pipelineName, OSPlatform[] oSPlatform, Action<IDictionary<string, object>> func, Action<IDictionary<string, object>>? updatePropertyBag = null, string[]? traits = null)
-    {
-        _pipelines.Add(new PipelineInfo(groupName, pipelineName, oSPlatform, func, updatePropertyBag, traits));
-    }
+    public void AddPipeline(string groupName, string pipelineName, OSPlatform[] oSPlatform, Action<IDictionary<string, object>> func, Action<IDictionary<string, object>>? updatePropertyBag = null, string[]? traits = null) => _pipelines.Add(new PipelineInfo(groupName, pipelineName, oSPlatform, func, updatePropertyBag, traits));
 
     public int Run(string pipelineNameFilter, IDictionary<string, object>? parametersBag = null)
     {
@@ -46,7 +43,7 @@ internal class PipelinesRunner
                 { "PipelineName", pipeline.PipelineName },
             };
 
-            foreach (var item in parametersBag)
+            foreach (KeyValuePair<string, object> item in parametersBag)
             {
                 pipelinePropertyBag.Add(item.Key, item.Value);
             }
@@ -64,7 +61,7 @@ internal class PipelinesRunner
 
     private static void WriteConsole(string message, ConsoleColor consoleColor)
     {
-        var color = Console.ForegroundColor;
+        ConsoleColor color = Console.ForegroundColor;
         try
         {
             Console.ForegroundColor = consoleColor;

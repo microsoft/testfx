@@ -1,4 +1,8 @@
-﻿<Project Sdk="MSTest.Sdk/3.3.1">
+﻿<Project Sdk="MSTest.Sdk">
+<!--
+Alternatively, if you don't want to use the `global.json` file for versions, you can specify the version of the MSTest.Sdk package here.
+<Project Sdk="MSTest.Sdk/3.3.1">
+-->
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>

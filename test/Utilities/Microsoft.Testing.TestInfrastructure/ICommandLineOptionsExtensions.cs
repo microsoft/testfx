@@ -7,6 +7,5 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class ICommandLineOptionsExtensions
 {
-    public static bool IsServerMode(this ICommandLineOptions commandLineOptions)
-        => commandLineOptions.IsOptionSet("--server");
+    public static bool IsServerMode(this ICommandLineOptions commandLineOptions) => commandLineOptions.IsOptionSet("--server");
 }

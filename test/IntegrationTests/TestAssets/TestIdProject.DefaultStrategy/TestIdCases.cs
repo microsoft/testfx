@@ -26,10 +26,7 @@ public class TestIdCases
     [DataRow(0, new int[] { })]
     [DataRow(0, new int[] { 0 })]
     [DataRow(0, new int[] { 0, 0, 0 })]
-    public void DataRowArraysTests(int expectedSum, int[] array)
-    {
-        Assert.AreEqual(expectedSum, array.Sum());
-    }
+    public void DataRowArraysTests(int expectedSum, int[] array) => Assert.AreEqual(expectedSum, array.Sum());
 
     [TestMethod] // See https://github.com/microsoft/testfx/issues/1028
     [DataRow(null)]
@@ -42,10 +39,7 @@ public class TestIdCases
 
     [DataTestMethod]
     [DynamicData(nameof(ArraysData))]
-    public void DynamicDataArraysTests(int expectedSum, int[] array)
-    {
-        Assert.AreEqual(expectedSum, array.Sum());
-    }
+    public void DynamicDataArraysTests(int expectedSum, int[] array) => Assert.AreEqual(expectedSum, array.Sum());
 
     public static IEnumerable<object[]> ArraysData
     {
@@ -91,10 +85,7 @@ public class TestIdCases
 
     [DataTestMethod]
     [ArraysDataSource]
-    public void TestDataSourceArraysTests(int expectedSum, int[] array)
-    {
-        Assert.AreEqual(expectedSum, array.Sum());
-    }
+    public void TestDataSourceArraysTests(int expectedSum, int[] array) => Assert.AreEqual(expectedSum, array.Sum());
 
     public class ArraysDataSourceAttribute : Attribute, ITestDataSource
     {

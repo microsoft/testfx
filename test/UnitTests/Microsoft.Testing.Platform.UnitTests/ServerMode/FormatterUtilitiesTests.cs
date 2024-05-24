@@ -7,6 +7,7 @@ using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.TestInfrastructure;
 
 using TestNode = Microsoft.Testing.Platform.Extensions.Messages.TestNode;
+using TestNodeUid = Microsoft.Testing.Platform.Extensions.Messages.TestNodeUid;
 
 namespace Microsoft.Testing.Platform.UnitTests;
 
@@ -70,21 +71,65 @@ public class FormatterUtilitiesTests : TestBase
         }
 
         static bool HasCustomDeserializeAssert(Type type) => type == typeof(TestNode);
-        static void CustomAssert(Type type, object instanceDeserialized, object originalObject)
+    }
+
+    [Arguments(typeof(DiscoverRequestArgs))]
+    [Arguments(typeof(RunRequestArgs))]
+    public void DeserializeSpecificTypes(Type type)
+    {
+        string json = CreateSerializedInstance(type);
+        Type? deserializer = SerializerUtilities.DeserializerTypes.SingleOrDefault(x => x == type);
+
+        if (deserializer is not null)
         {
-            if (type == typeof(TestNode))
+            object actual = Deserialize(deserializer, json);
+            object expected = CreateInstance(type);
+
+            if (type == typeof(DiscoverRequestArgs))
             {
-                var deserialized = (TestNode)instanceDeserialized;
-                var original = (TestNode)originalObject;
-                Assert.AreEqual(original.Uid, deserialized.Uid);
-                Assert.AreEqual(original.DisplayName, deserialized.DisplayName);
-                Assert.AreEqual(original.Properties.Single<TestFileLocationProperty>(), deserialized.Properties.Single<TestFileLocationProperty>());
+                AssertRequestArgs(type, (DiscoverRequestArgs)actual, (DiscoverRequestArgs)expected);
+            }
+            else if (type == typeof(RunRequestArgs))
+            {
+                AssertRequestArgs(type, (RunRequestArgs)actual, (RunRequestArgs)expected);
+            }
+            else
+            {
+                Assert.AreEqual(actual, expected);
             }
         }
     }
 
-    internal static TestArgumentsEntry<Type> FormatSerializerTypes(TestArgumentsContext testArgumentsContext)
-        => new((Type)testArgumentsContext.Arguments, ((Type)testArgumentsContext.Arguments).Name);
+    private void AssertRequestArgs<TRequestArgs>(Type type, TRequestArgs actualRequest, TRequestArgs expectedRequest)
+        where TRequestArgs : RequestArgsBase
+    {
+        Assert.AreEqual(expectedRequest.RunId, actualRequest.RunId);
+        Assert.AreEqual(expectedRequest.TestNodes?.Count, actualRequest.TestNodes?.Count);
+
+        TestNode[]? actualTestNodes = actualRequest.TestNodes?.ToArray();
+        TestNode[]? expectedTestNodes = expectedRequest.TestNodes?.ToArray();
+
+        for (int i = 0; i < actualRequest.TestNodes?.Count; i++)
+        {
+            CustomAssert(typeof(TestNode), actualTestNodes?[i]!, expectedTestNodes?[i]!);
+        }
+
+        Assert.AreEqual(expectedRequest.GraphFilter, actualRequest.GraphFilter);
+    }
+
+    private static void CustomAssert(Type type, object instanceDeserialized, object originalObject)
+    {
+        if (type == typeof(TestNode))
+        {
+            var deserialized = (TestNode)instanceDeserialized;
+            var original = (TestNode)originalObject;
+            Assert.AreEqual(original.Uid, deserialized.Uid);
+            Assert.AreEqual(original.DisplayName, deserialized.DisplayName);
+            Assert.AreEqual(original.Properties.Single<TestFileLocationProperty>(), deserialized.Properties.Single<TestFileLocationProperty>());
+        }
+    }
+
+    internal static TestArgumentsEntry<Type> FormatSerializerTypes(TestArgumentsContext testArgumentsContext) => new((Type)testArgumentsContext.Arguments, ((Type)testArgumentsContext.Arguments).Name);
 
     private static void AssertSerialize(Type type, string instanceSerialized)
     {
@@ -218,6 +263,23 @@ public class FormatterUtilitiesTests : TestBase
         throw new NotImplementedException($"Assertion not implemented '{type}', value to assert:\n{instanceSerialized}");
     }
 
+    private static string CreateSerializedInstance(Type type) => type == typeof(DiscoverRequestArgs) || type == typeof(RunRequestArgs)
+            ? """
+            {
+                "runId":"00000000-0000-0000-0000-000000000000",
+                "tests":[
+                    {
+                        "uid":"UnitTest1.TestMethod1",
+                        "display-name":"test1",
+                        "location.file":"filePath",
+                        "location.line-start":1,
+                        "location.line-end":2
+                    }
+                    ]
+                }
+            """
+            : throw new NotImplementedException($"Serialized instance doesn't exist for '{type}'");
+
     private static object CreateInstance(Type type)
     {
         if (type == typeof(AttachDebuggerInfoArgs))
@@ -323,6 +385,38 @@ public class FormatterUtilitiesTests : TestBase
             return new RequestMessage(1, "testing/discoverTests", null);
         }
 
+        if (type == typeof(DiscoverRequestArgs))
+        {
+            return new DiscoverRequestArgs(
+                Guid.Empty,
+                new TestNode[]
+                {
+                    new()
+                    {
+                        Uid = new TestNodeUid("UnitTest1.TestMethod1"),
+                        DisplayName = "test1",
+                        Properties = new PropertyBag(new TestFileLocationProperty("filePath", new LinePositionSpan(new(1, 0), new(2, 0)))),
+                    },
+                },
+                null);
+        }
+
+        if (type == typeof(RunRequestArgs))
+        {
+            return new RunRequestArgs(
+                Guid.Empty,
+                new TestNode[]
+                {
+                    new()
+                    {
+                        Uid = new TestNodeUid("UnitTest1.TestMethod1"),
+                        DisplayName = "test1",
+                        Properties = new PropertyBag(new TestFileLocationProperty("filePath", new LinePositionSpan(new(1, 0), new(2, 0)))),
+                    },
+                },
+                null);
+        }
+
         // Last resort, try to create an instance of the type
         return type == typeof(object)
             ? new object()
@@ -393,6 +487,24 @@ public class FormatterUtilitiesTests : TestBase
             return _formatter.Deserialize<TestNode>(instanceSerialized.AsMemory());
 #else
             return _formatter.Deserialize<TestNode>(instanceSerialized);
+#endif
+        }
+
+        if (type == typeof(DiscoverRequestArgs))
+        {
+#if NETCOREAPP
+            return _formatter.Deserialize<DiscoverRequestArgs>(instanceSerialized.AsMemory());
+#else
+            return _formatter.Deserialize<DiscoverRequestArgs>(instanceSerialized);
+#endif
+        }
+
+        if (type == typeof(RunRequestArgs))
+        {
+#if NETCOREAPP
+            return _formatter.Deserialize<RunRequestArgs>(instanceSerialized.AsMemory());
+#else
+            return _formatter.Deserialize<RunRequestArgs>(instanceSerialized);
 #endif
         }
 

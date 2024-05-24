@@ -294,7 +294,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
         {
             case OperatorKind.And:
             case OperatorKind.Or:
-                var subexprs = new List<FilterExpression>
+                List<FilterExpression> subexprs = new()
                 {
                     expr.Pop(),
                     expr.Pop(),
@@ -345,7 +345,7 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
     private static IEnumerable<string> TokenizeFilter(string filter)
     {
         int i = 0;
-        var lastStringTokenBuilder = new StringBuilder();
+        StringBuilder lastStringTokenBuilder = new();
         int openedSquareBrackets = 0;
 
         while (i < filter.Length)

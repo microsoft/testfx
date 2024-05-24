@@ -34,8 +34,8 @@ internal sealed class FormatterUtilities
 
         public MessageFormatter()
         {
-            var serializers = new Dictionary<Type, JsonSerializer>();
-            var deserializers = new Dictionary<Type, JsonDeserializer>();
+            Dictionary<Type, JsonSerializer> serializers = new();
+            Dictionary<Type, JsonDeserializer> deserializers = new();
 
             foreach (Type serializableType in SerializerUtilities.SerializerTypes)
             {

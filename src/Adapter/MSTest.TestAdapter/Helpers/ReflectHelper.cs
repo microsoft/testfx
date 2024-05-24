@@ -45,11 +45,11 @@ internal class ReflectHelper : MarshalByRefObject
 
         // Get attributes defined on the member from the cache.
         Dictionary<string, object>? attributes = GetAttributes(memberInfo, inherit);
-        var requiredAttributeQualifiedName = typeof(TAttribute).AssemblyQualifiedName!;
+        string requiredAttributeQualifiedName = typeof(TAttribute).AssemblyQualifiedName!;
         if (attributes == null)
         {
             // If we could not obtain all attributes from cache, just get the one we need.
-            var specificAttributes = GetCustomAttributes<TAttribute>(memberInfo, inherit);
+            TAttribute[] specificAttributes = GetCustomAttributes<TAttribute>(memberInfo, inherit);
             return specificAttributes.Any(a => string.Equals(a.GetType().AssemblyQualifiedName, requiredAttributeQualifiedName, StringComparison.Ordinal));
         }
 
@@ -221,12 +221,9 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="method">The method to inspect.</param>
     /// <param name="returnType">The return type to match.</param>
     /// <returns>True if there is a match.</returns>
-    internal static bool MatchReturnType(MethodInfo method, Type returnType)
-    {
-        return method == null
+    internal static bool MatchReturnType(MethodInfo method, Type returnType) => method == null
             ? throw new ArgumentNullException(nameof(method))
             : returnType == null ? throw new ArgumentNullException(nameof(returnType)) : method.ReturnType.Equals(returnType);
-    }
 
     /// <summary>
     /// Get custom attributes on a member for both normal and reflection only load.
@@ -244,7 +241,7 @@ internal class ReflectHelper : MarshalByRefObject
             return null;
         }
 
-        var attributesArray = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
+        object[] attributesArray = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
             memberInfo,
             typeof(TAttribute),
             inherit);
@@ -266,7 +263,7 @@ internal class ReflectHelper : MarshalByRefObject
             return null;
         }
 
-        var attributesArray = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
+        object[] attributesArray = PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(
             memberInfo,
             inherit);
 
@@ -310,7 +307,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Categories defined.</returns>
     internal virtual string[] GetCategories(MemberInfo categoryAttributeProvider, Type owningType)
     {
-        var categories = GetCustomAttributesRecursively(categoryAttributeProvider, owningType);
+        IEnumerable<object> categories = GetCustomAttributesRecursively(categoryAttributeProvider, owningType);
         List<string> testCategories = [];
 
         if (categories != null)
@@ -371,7 +368,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>The categories of the specified type on the method. </returns>
     internal IEnumerable<object> GetCustomAttributesRecursively(MemberInfo attributeProvider, Type owningType)
     {
-        var categories = GetCustomAttributes<TestCategoryBaseAttribute>(attributeProvider);
+        TestCategoryBaseAttribute[]? categories = GetCustomAttributes<TestCategoryBaseAttribute>(attributeProvider);
         if (categories != null)
         {
             categories = categories.Concat(GetCustomAttributes<TestCategoryBaseAttribute>(owningType.GetTypeInfo())).ToArray();
@@ -418,7 +415,7 @@ internal class ReflectHelper : MarshalByRefObject
     internal virtual TAttribute? GetCustomAttribute<TAttribute>(MemberInfo attributeProvider)
         where TAttribute : Attribute
     {
-        var attribute = GetCustomAttributes<TAttribute>(attributeProvider, true);
+        TAttribute[] attribute = GetCustomAttributes<TAttribute>(attributeProvider, true);
 
         return attribute == null || attribute.Length != 1
             ? null
@@ -456,7 +453,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Priority value if defined. Null otherwise.</returns>
     internal virtual int? GetPriority(MemberInfo priorityAttributeProvider)
     {
-        var priorityAttribute = GetCustomAttributes<PriorityAttribute>(priorityAttributeProvider, true);
+        PriorityAttribute[] priorityAttribute = GetCustomAttributes<PriorityAttribute>(priorityAttributeProvider, true);
 
         return priorityAttribute == null || priorityAttribute.Length != 1
             ? null
@@ -471,7 +468,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>Priority value if defined. Null otherwise.</returns>
     internal virtual string? GetIgnoreMessage(MemberInfo ignoreAttributeProvider)
     {
-        var ignoreAttribute = GetCustomAttributes<IgnoreAttribute>(ignoreAttributeProvider, true);
+        IgnoreAttribute[]? ignoreAttribute = GetCustomAttributes<IgnoreAttribute>(ignoreAttributeProvider, true);
 
         return ignoreAttribute is null || ignoreAttribute.Length == 0
             ? null
@@ -510,7 +507,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>List of traits.</returns>
     internal virtual IEnumerable<Trait> GetTestPropertiesAsTraits(MemberInfo testPropertyProvider)
     {
-        var testPropertyAttributes = GetCustomAttributes<TestPropertyAttribute>(testPropertyProvider, true);
+        TestPropertyAttribute[] testPropertyAttributes = GetCustomAttributes<TestPropertyAttribute>(testPropertyProvider, true);
 
         foreach (TestPropertyAttribute testProperty in testPropertyAttributes)
         {
@@ -562,7 +559,7 @@ internal class ReflectHelper : MarshalByRefObject
     internal static TAttributeType? GetDerivedAttribute<TAttributeType>(Type type, bool inherit)
         where TAttributeType : Attribute
     {
-        var attributes = GetCustomAttributes(type.GetTypeInfo(), inherit);
+        object[] attributes = GetCustomAttributes(type.GetTypeInfo(), inherit);
         if (attributes == null)
         {
             return null;
@@ -590,7 +587,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>owner if attribute is applied to TestMethod, else null.</returns>
     private static string? GetOwner(MemberInfo ownerAttributeProvider)
     {
-        var ownerAttribute = GetCustomAttributes<OwnerAttribute>(ownerAttributeProvider, true);
+        OwnerAttribute[] ownerAttribute = GetCustomAttributes<OwnerAttribute>(ownerAttributeProvider, true);
 
         return ownerAttribute == null || ownerAttribute.Length != 1
             ? null
@@ -617,7 +614,7 @@ internal class ReflectHelper : MarshalByRefObject
             // Populate the cache
             attributes = [];
 
-            object[]? customAttributesArray = null;
+            object[]? customAttributesArray;
             try
             {
                 customAttributesArray = GetCustomAttributes(memberInfo, inherit);

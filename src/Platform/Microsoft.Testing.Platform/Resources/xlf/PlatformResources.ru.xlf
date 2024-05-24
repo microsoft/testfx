@@ -2,6 +2,26 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="ru" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="Aborted">
+        <source>Aborted</source>
+        <target state="translated">Прервано</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Actual">
+        <source>Actual</source>
+        <target state="translated">Фактические</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancelledLowercase">
+        <source>cancelled</source>
+        <target state="translated">отменено</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancellingTestSession">
+        <source>Cancelling the test session...</source>
+        <target state="translated">Отмена тестового сеанса...</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">Не удалось создать фильтр выполнения теста</target>
@@ -147,9 +167,26 @@
         <target state="translated">Не удалось найти каталог "{0}".</target>
         <note />
       </trans-unit>
+      <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
+        <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
+        <target state="translated">Диагностический файл (уровень "{0}" с асинхронной очисткой): "{1}"</target>
+        <note>0 level such as verbose, 
+1 path to file</note>
+      </trans-unit>
+      <trans-unit id="DiagnosticFileLevelWithFlush">
+        <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
+        <target state="translated">Диагностический файл (уровень "{0}" с очисткой синхронизации): "{1}"</target>
+        <note>0 level such as verbose, 
+1 path to file</note>
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Сбой поставщика "{0}" (ИД пользователя: {1}) с ошибкой: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Expected">
+        <source>Expected</source>
+        <target state="translated">Ожидалось</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
@@ -162,12 +199,27 @@
         <target state="translated">Уже зарегистрировано другое расширение с таким же ИД пользователя "{0}". Зарегистрированное расширение относится к типу "{1}"</target>
         <note />
       </trans-unit>
+      <trans-unit id="Failed">
+        <source>Failed</source>
+        <target state="translated">Сбой</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedLowercase">
+        <source>failed</source>
+        <target state="translated">сбой</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
         <target state="translated">Не удалось записать журнал в канал. Отсутствует содержимое журнала:
 {0}</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ForTest">
+        <source>For test</source>
+        <target state="translated">Для тестирования</target>
+        <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
@@ -202,6 +254,11 @@
       <trans-unit id="HelpTestApplicationRunner">
         <source>&lt;test application runner&gt;</source>
         <target state="translated">&lt;проверка средства выполнения тестов приложения&gt;</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InProcessArtifactsProduced">
+        <source>In process file artifacts produced:</source>
+        <target state="translated">Созданные в процессе артефакты файлов:</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -239,6 +296,11 @@
         <target state="translated">Рукопожатие сервера JsonRpc с клиентом, реализация на основе спецификации протокола платформы тестирования.</target>
         <note />
       </trans-unit>
+      <trans-unit id="MinimumExpectedTestsPolicyViolation">
+        <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
+        <target state="translated">Нарушение политики минимального ожидаемого числа тестов, тесты выполнено: {0}, ожидаемый минимум: {1}</target>
+        <note>{0}, {1} number of tests</note>
+      </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
         <target state="translated">Не зарегистрирован сериализатор с ИД "{0}"</target>
@@ -259,14 +321,24 @@
         <target state="translated">Не найдено</target>
         <note />
       </trans-unit>
+      <trans-unit id="OutOfProcessArtifactsProduced">
+        <source>Out of process file artifacts produced:</source>
+        <target state="translated">Созданные вне процесса артефакты файлов:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Passed">
+        <source>Passed</source>
+        <target state="translated">Пройден</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PassedLowercase">
+        <source>passed</source>
+        <target state="translated">пройдено</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
         <source>Specify the hostname of the client.</source>
         <target state="translated">Укажите имя узла клиента.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineClientHostOptionSingleArgument">
-        <source>'--client-host' expects a single host name as argument</source>
-        <target state="translated">"--client-host" ожидает в качестве аргумента одно имя узла</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientPortOptionDescription">
@@ -277,11 +349,6 @@
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
         <target state="translated">Принудительная синхронная запись журнала с помощью встроенного средства ведения журнала файла. Удобно для сценария, в котором вы не хотите потерять журнал (например, в случае сбоя). Обратите внимание, что это замедляет выполнение теста.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument">
-        <source>'--diagnostic-output-fileprefix' expects a single file name prefix argument</source>
-        <target state="translated">"--diagnostic-output-fileprefix" ожидает один аргумент в виде префикса имени файла</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
@@ -304,11 +371,6 @@
         <target state="translated">Выходной каталог журнала диагностики, если не указан, файл будет создан в каталоге "TestResults" по умолчанию.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument">
-        <source>'--diagnostic-output-directory' expects a single directory name argument</source>
-        <target state="translated">"--diagnostic-output-directory" ожидает один аргумент в виде имени каталога</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
         <target state="translated">Префикс для имени файла журнала, который заменит "[log]_."</target>
@@ -329,7 +391,7 @@
         <target state="new">dotnet test pipe.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
         <target state="translated">Недопустимый PID "{0}"
@@ -374,11 +436,6 @@
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
         <target state="translated">Не отображать баннер запуска, сообщение об авторских правах и баннер телеметрии.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineOptionExpectsNoArgumentErrorMessage">
-        <source>'--{0}' expects no argument</source>
-        <target state="translated">"--{0}" не ожидает никаких аргументов</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
@@ -469,6 +526,21 @@
       <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">Экземпляры типа "ITestFramework" следует регистрировать не через поставщика услуг, а через "ITestApplicationBuilder.RegisterTestFramework"</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Skipped">
+        <source>Skipped</source>
+        <target state="translated">Пропущен</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SkippedLowercase">
+        <source>skipped</source>
+        <target state="translated">пропущено</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StackTrace">
+        <source>Stack Trace</source>
+        <target state="translated">Трассировка стека</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">
@@ -566,6 +638,11 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
         <target state="translated">Не удалось записать журналы на диск до истечения времени ожидания ("{0}" с)</target>
         <note />
       </trans-unit>
+      <trans-unit id="Total">
+        <source>Total</source>
+        <target state="translated">Всего</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
         <target state="translated">Фильтр "{0}" не должен содержать символ "/"</target>
@@ -579,11 +656,6 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
         <target state="translated">Escape-символ не должен завершать строку фильтра "{0}"</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterInvalidArgumentCount">
-        <source>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</source>
-        <target state="translated">Ожидается один аргумент (например, "/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]")</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
@@ -641,6 +713,11 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
         <target state="translated">Похоже, что это расположение программы является недоступным. Файл="{0}", строка={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ZeroTestsRan">
+        <source>Zero tests ran</source>
+        <target state="translated">Запущено ноль тестов</target>
         <note />
       </trans-unit>
     </body>

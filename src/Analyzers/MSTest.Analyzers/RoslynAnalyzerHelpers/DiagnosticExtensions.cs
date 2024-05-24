@@ -8,7 +8,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Analyzer.Utilities.Extensions
 {
-    internal static class DiagnosticExtensions
+    internal static class FixtureUtils
     {
         public static Diagnostic CreateDiagnostic(
             this SyntaxNode node,
@@ -47,45 +47,30 @@ namespace Analyzer.Utilities.Extensions
             this IOperation operation,
             DiagnosticDescriptor rule,
             ImmutableDictionary<string, string?>? properties,
-            params object[] args)
-        {
-            return operation.Syntax.CreateDiagnostic(rule, properties, args);
-        }
+            params object[] args) => operation.Syntax.CreateDiagnostic(rule, properties, args);
 
         public static Diagnostic CreateDiagnostic(
             this IOperation operation,
             DiagnosticDescriptor rule,
             ImmutableArray<Location> additionalLocations,
             ImmutableDictionary<string, string?>? properties,
-            params object[] args)
-        {
-            return operation.Syntax.CreateDiagnostic(rule, additionalLocations, properties, args);
-        }
+            params object[] args) => operation.Syntax.CreateDiagnostic(rule, additionalLocations, properties, args);
 
         public static Diagnostic CreateDiagnostic(
             this SyntaxToken token,
             DiagnosticDescriptor rule,
-            params object[] args)
-        {
-            return token.GetLocation().CreateDiagnostic(rule, args);
-        }
+            params object[] args) => token.GetLocation().CreateDiagnostic(rule, args);
 
         public static Diagnostic CreateDiagnostic(
             this ISymbol symbol,
             DiagnosticDescriptor rule,
-            params object[] args)
-        {
-            return symbol.Locations.CreateDiagnostic(rule, args);
-        }
+            params object[] args) => symbol.Locations.CreateDiagnostic(rule, args);
 
         public static Diagnostic CreateDiagnostic(
             this ISymbol symbol,
             DiagnosticDescriptor rule,
             ImmutableDictionary<string, string?>? properties,
-            params object[] args)
-        {
-            return symbol.Locations.CreateDiagnostic(rule, properties, args);
-        }
+            params object[] args) => symbol.Locations.CreateDiagnostic(rule, properties, args);
 
         public static Diagnostic CreateDiagnostic(
             this Location location,
@@ -127,10 +112,7 @@ namespace Analyzer.Utilities.Extensions
         public static Diagnostic CreateDiagnostic(
             this IEnumerable<Location> locations,
             DiagnosticDescriptor rule,
-            params object[] args)
-        {
-            return locations.CreateDiagnostic(rule, null, args);
-        }
+            params object[] args) => locations.CreateDiagnostic(rule, null, args);
 
         public static Diagnostic CreateDiagnostic(
             this IEnumerable<Location> locations,
@@ -179,7 +161,7 @@ namespace Analyzer.Utilities.Extensions
             ImmutableDictionary<string, string?>? properties,
             params object[] args)
         {
-            var effectiveSeverity = GetEffectiveSeverity();
+            DiagnosticSeverity? effectiveSeverity = GetEffectiveSeverity();
             if (!effectiveSeverity.HasValue)
             {
                 // Disabled rule
@@ -203,15 +185,15 @@ namespace Analyzer.Utilities.Extensions
                 // Microsoft.CodeAnalysis version >= 3.7 exposes options through 'CompilationOptions.SyntaxTreeOptionsProvider.TryGetDiagnosticValue'
                 // Microsoft.CodeAnalysis version 3.3 - 3.7 exposes options through 'SyntaxTree.DiagnosticOptions'. This API is deprecated in 3.7.
 
-                var syntaxTreeOptionsProvider = s_compilationOptionsSyntaxTreeOptionsProviderProperty?.GetValue(compilation.Options);
-                var syntaxTreeOptionsProviderTryGetDiagnosticValueMethod = syntaxTreeOptionsProvider?.GetType().GetRuntimeMethods().FirstOrDefault(m => m.Name == "TryGetDiagnosticValue");
+                object? syntaxTreeOptionsProvider = s_compilationOptionsSyntaxTreeOptionsProviderProperty?.GetValue(compilation.Options);
+                MethodInfo? syntaxTreeOptionsProviderTryGetDiagnosticValueMethod = syntaxTreeOptionsProvider?.GetType().GetRuntimeMethods().FirstOrDefault(m => m.Name == "TryGetDiagnosticValue");
                 if (syntaxTreeOptionsProviderTryGetDiagnosticValueMethod == null && s_syntaxTreeDiagnosticOptionsProperty == null)
                 {
                     return rule.DefaultSeverity;
                 }
 
                 ReportDiagnostic? overriddenSeverity = null;
-                foreach (var tree in compilation.SyntaxTrees)
+                foreach (SyntaxTree tree in compilation.SyntaxTrees)
                 {
                     ReportDiagnostic? configuredValue = null;
 
@@ -243,7 +225,7 @@ namespace Analyzer.Utilities.Extensions
                     {
                         RoslynDebug.Assert(s_syntaxTreeDiagnosticOptionsProperty != null);
                         var options = (ImmutableDictionary<string, ReportDiagnostic>)s_syntaxTreeDiagnosticOptionsProperty.GetValue(tree)!;
-                        if (options.TryGetValue(rule.Id, out var value))
+                        if (options.TryGetValue(rule.Id, out ReportDiagnostic value))
                         {
                             configuredValue = value;
                         }

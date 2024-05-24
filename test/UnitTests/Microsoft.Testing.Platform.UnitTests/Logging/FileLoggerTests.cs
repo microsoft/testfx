@@ -81,7 +81,7 @@ public class FileLoggerTests : TestBase, IDisposable
             .Throws<IOException>()
             .Returns(_mockStream.Object);
 
-        string fileLoggerName = string.Empty;
+        string fileLoggerName;
         using (FileLogger fileLogger = new(
             new(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
@@ -135,7 +135,7 @@ public class FileLoggerTests : TestBase, IDisposable
             .Setup(x => x.Create(It.IsAny<string>(), fileExists ? FileMode.Append : FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
 
-        string fileLoggerName = string.Empty;
+        string fileLoggerName;
         using (FileLogger fileLogger = new(
             new(LogFolder, LogPrefix, fileName: FileName, syncFlush: syncFlush),
             LogLevel.Trace,
@@ -162,7 +162,6 @@ public class FileLoggerTests : TestBase, IDisposable
             .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
 
-        string fileLoggerName = string.Empty;
         using FileLogger fileLogger = new(
             new(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
             defaultLogLevel,
@@ -197,7 +196,6 @@ public class FileLoggerTests : TestBase, IDisposable
             .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
 
-        string fileLoggerName = string.Empty;
         using FileLogger fileLogger = new(
             new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
             defaultLogLevel,
@@ -223,8 +221,5 @@ public class FileLoggerTests : TestBase, IDisposable
         }
     }
 
-    public void Dispose()
-    {
-        _memoryStream.Dispose();
-    }
+    public void Dispose() => _memoryStream.Dispose();
 }

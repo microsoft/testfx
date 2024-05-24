@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -8,6 +8,7 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -97,7 +98,7 @@ public class TestClassInfo
         {
             if (_classInitializeMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassInit, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -165,7 +166,7 @@ public class TestClassInfo
         {
             if (_classCleanupMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassClean, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClassClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -207,7 +208,7 @@ public class TestClassInfo
         {
             if (_testInitializeMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiInit, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiInit, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -226,7 +227,7 @@ public class TestClassInfo
         {
             if (_testCleanupMethod != null)
             {
-                var message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClean, ClassType.FullName);
+                string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorMultiClean, ClassType.FullName);
                 throw new TypeInspectionException(message);
             }
 
@@ -287,7 +288,7 @@ public class TestClassInfo
 
                         while (baseClassInitializeStack.Count > 0)
                         {
-                            var baseInitCleanupMethods = baseClassInitializeStack.Pop();
+                            Tuple<MethodInfo?, MethodInfo?> baseInitCleanupMethods = baseClassInitializeStack.Pop();
                             initializeMethod = baseInitCleanupMethods.Item1;
 
                             ClassInitializationException = initializeMethod is not null ? InvokeInitializeMethod(initializeMethod, testContext) : null;
@@ -334,20 +335,20 @@ public class TestClassInfo
         }
 
         // Fail the current test if it was a failure.
-        var realException = ClassInitializationException.GetRealException();
+        Exception realException = ClassInitializationException.GetRealException();
 
-        var outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
+        ObjectModelUnitTestOutcome outcome = realException is AssertInconclusiveException ? ObjectModelUnitTestOutcome.Inconclusive : ObjectModelUnitTestOutcome.Failed;
 
         // Do not use StackTraceHelper.GetFormattedExceptionMessage(realException) as it prefixes the message with the exception type name.
-        var exceptionMessage = realException.TryGetMessage();
-        var errorMessage = string.Format(
+        string exceptionMessage = realException.TryGetMessage();
+        string errorMessage = string.Format(
             CultureInfo.CurrentCulture,
             Resource.UTA_ClassInitMethodThrows,
             ClassType.FullName,
             failedClassInitializeMethodName,
             realException.GetType().ToString(),
             exceptionMessage);
-        var exceptionStackTraceInfo = realException.GetStackTraceInformation();
+        StackTraceInformation? exceptionStackTraceInfo = realException.GetStackTraceInformation();
 
         var testFailedException = new TestFailedException(outcome, errorMessage, exceptionStackTraceInfo, realException);
         ClassInitializationException = testFailedException;
@@ -358,16 +359,17 @@ public class TestClassInfo
     private TestFailedException? InvokeInitializeMethod(MethodInfo methodInfo, TestContext testContext)
     {
         int? timeout = null;
-        if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
+        if (ClassInitializeMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
         {
             timeout = localTimeout;
         }
 
-        return MethodRunner.RunWithTimeoutAndCancellation(
+        return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(null, testContext),
             testContext.CancellationTokenSource,
             timeout,
             methodInfo,
+            new ClassExecutionContextScope(ClassType),
             Resource.ClassInitializeWasCancelled,
             Resource.ClassInitializeTimedOut);
     }
@@ -404,12 +406,12 @@ public class TestClassInfo
                 try
                 {
                     classCleanupMethod = ClassCleanupMethod;
-                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
+                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod, BaseClassCleanupMethodsStack.Count) : null;
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
                     while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
+                        ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count) : null;
                     }
 
                     IsClassCleanupExecuted = ClassCleanupException is null;
@@ -427,14 +429,14 @@ public class TestClassInfo
             return null;
         }
 
-        var realException = ClassCleanupException.GetRealException();
+        Exception realException = ClassCleanupException.GetRealException();
 
         // special case AssertFailedException to trim off part of the stack trace
         string errorMessage = realException is AssertFailedException or AssertInconclusiveException
             ? realException.Message
             : realException.GetFormattedExceptionMessage();
 
-        var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
+        StackTraceInformation? exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
 
         errorMessage = string.Format(
             CultureInfo.CurrentCulture,
@@ -482,12 +484,16 @@ public class TestClassInfo
             try
             {
                 classCleanupMethod = ClassCleanupMethod;
-                ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
+                ClassCleanupException = classCleanupMethod is not null
+                    ? InvokeCleanupMethod(classCleanupMethod, BaseClassCleanupMethodsStack.Count)
+                    : null;
                 var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
                 while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                 {
                     classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
+                    ClassCleanupException = classCleanupMethod is not null
+                        ? InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count)
+                        : null;
                 }
 
                 IsClassCleanupExecuted = ClassCleanupException is null;
@@ -510,14 +516,14 @@ public class TestClassInfo
             throw ClassCleanupException;
         }
 
-        var realException = ClassCleanupException.GetRealException();
+        Exception realException = ClassCleanupException.GetRealException();
 
         // special case AssertFailedException to trim off part of the stack trace
         string errorMessage = realException is AssertFailedException or AssertInconclusiveException
             ? realException.Message
             : realException.GetFormattedExceptionMessage();
 
-        var exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
+        StackTraceInformation? exceptionStackTraceInfo = realException.TryGetStackTraceInformation();
 
         var testFailedException = new TestFailedException(
             ObjectModelUnitTestOutcome.Failed,
@@ -535,19 +541,20 @@ public class TestClassInfo
         throw testFailedException;
     }
 
-    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo)
+    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, int remainingCleanupCount)
     {
         int? timeout = null;
-        if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out var localTimeout))
+        if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
         {
             timeout = localTimeout;
         }
 
-        return MethodRunner.RunWithTimeoutAndCancellation(
+        return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(null),
             new CancellationTokenSource(),
             timeout,
             methodInfo,
+            new ClassExecutionContextScope(ClassType, remainingCleanupCount),
             Resource.ClassCleanupWasCancelled,
             Resource.ClassCleanupTimedOut);
     }

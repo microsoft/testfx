@@ -21,16 +21,14 @@ public class ThreadOperations : IThreadOperations
     /// <param name="timeout">Timeout for the specified action in milliseconds.</param>
     /// <param name="cancelToken">Token to cancel the execution.</param>
     /// <returns>Returns true if the action executed before the timeout. returns false otherwise.</returns>
-    public bool Execute(Action action, int timeout, CancellationToken cancelToken)
-    {
+    public bool Execute(Action action, int timeout, CancellationToken cancelToken) =>
 #if NETFRAMEWORK
-        return ExecuteWithCustomThread(action, timeout, cancelToken);
+        ExecuteWithCustomThread(action, timeout, cancelToken);
 #else
-        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
+        RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA
             ? ExecuteWithCustomThread(action, timeout, cancelToken)
             : ExecuteWithThreadPool(action, timeout, cancelToken);
 #endif
-    }
 
 #if !NETFRAMEWORK
     private static bool ExecuteWithThreadPool(Action action, int timeout, CancellationToken cancellationToken)

@@ -72,17 +72,17 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // ============= SETUP COMMON SERVICE USED IN ALL MODES ===============//
         ApplicationStateGuard.Ensure(TestFramework is not null);
 
-        var systemClock = new SystemClock();
+        SystemClock systemClock = new();
         DateTimeOffset buildBuilderStart = systemClock.UtcNow;
 
         // Note: These metrics should be populated with the builder configuration,
         //       and the overall state of the system.
-        var builderMetrics = new Dictionary<string, object>
+        Dictionary<string, object> builderMetrics = new()
         {
             [TelemetryProperties.HostProperties.CreateBuilderStart] = createBuilderStart,
             [TelemetryProperties.HostProperties.BuildBuilderStart] = buildBuilderStart,
         };
-        var systemEnvironment = new SystemEnvironment();
+        SystemEnvironment systemEnvironment = new();
 
         // Default service provider bag
         ServiceProvider serviceProvider = new();
@@ -96,9 +96,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Add required non-skippable system "services"
         serviceProvider.TryAddService(loggingState);
         serviceProvider.TryAddService(systemEnvironment);
-        var systemConsole = new SystemConsole();
+        SystemConsole systemConsole = new();
         serviceProvider.TryAddService(systemConsole);
-        var systemTask = new SystemTask();
+        SystemTask systemTask = new();
         serviceProvider.TryAddService(systemTask);
         serviceProvider.TryAddService(runtimeFeature);
         serviceProvider.TryAddService(processHandler);
@@ -108,9 +108,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.TryAddService(testHostControllerInfo);
 
         serviceProvider.TryAddService(systemClock);
-        var systemMonitor = new SystemMonitor();
+        SystemMonitor systemMonitor = new();
         serviceProvider.TryAddService(systemMonitor);
-        var systemMonitorAsyncFactory = new SystemMonitorAsyncFactory();
+        SystemMonitorAsyncFactory systemMonitorAsyncFactory = new();
         serviceProvider.TryAddService(systemMonitorAsyncFactory);
 
         ILogger? logger = null;
@@ -177,11 +177,11 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             unhandledExceptionsHandler.Subscribe();
         }
 
-        var unhandledExceptionsPolicy = new UnhandledExceptionsPolicy(fastFailOnFailure: exitProcessOnUnhandledException);
+        UnhandledExceptionsPolicy unhandledExceptionsPolicy = new(fastFailOnFailure: exitProcessOnUnhandledException);
         serviceProvider.AddService(unhandledExceptionsPolicy);
 
         // Add the lifetime application implementation
-        var testApplicationCancellationTokenSource = new CTRLPlusCCancellationTokenSource(
+        CTRLPlusCCancellationTokenSource testApplicationCancellationTokenSource = new(
             systemConsole,
             loggingState.FileLoggerProvider?.CreateLogger(nameof(CTRLPlusCCancellationTokenSource)));
         serviceProvider.AddService(testApplicationCancellationTokenSource, throwIfSameInstanceExit: true);
@@ -221,7 +221,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && loggingState.FileLoggerProvider is not null)
         {
-            var serverLoggerProxy = new ServerLoggerForwarderProvider(loggingState.LogLevel, serviceProvider);
+            ServerLoggerForwarderProvider serverLoggerProxy = new(loggingState.LogLevel, serviceProvider);
             serviceProvider.AddService(serverLoggerProxy);
             Logging.AddProvider((logLevel, services) => serverLoggerProxy);
         }
@@ -269,7 +269,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             // Add the platform output device to the service provider.
             serviceProvider.TryAddService(platformOutputDevice);
 
-            var toolsTestHost = new ToolsTestHost(
+            ToolsTestHost toolsTestHost = new(
                 toolsInformation,
                 serviceProvider,
                 loggingState.CommandLineParseResult,
@@ -390,7 +390,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             TestHostControllerConfiguration testHostControllers = await ((TestHostControllersManager)TestHostControllers).BuildAsync(testHostControllersServiceProvider);
             if (testHostControllers.RequireProcessRestart)
             {
-                var testHostControllersTestHost = new TestHostControllersTestHost(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock);
+                TestHostControllersTestHost testHostControllersTestHost = new(testHostControllers, testHostControllersServiceProvider, systemEnvironment, loggerFactory, systemClock);
 
                 await LogTestHostCreatedAsync(
                     serviceProvider,
@@ -434,8 +434,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             // Build the test host
             // note that we pass the BuildTestFrameworkAsync as callback because server mode will call it per-request
             // this is not needed in console mode where we have only 1 request.
-            var serverTestHost =
-                new ServerTestHost(serviceProvider, BuildTestFrameworkAsync, messageHandlerFactory, (TestFrameworkManager)TestFramework, (TestHostManager)TestHost);
+            ServerTestHost serverTestHost =
+                new(serviceProvider, BuildTestFrameworkAsync, messageHandlerFactory, (TestFrameworkManager)TestFramework, (TestHostManager)TestHost);
 
             // If needed we wrap the host inside the TestHostControlledHost to automatically handle the shutdown of the connected pipe.
             ITestHost? actualTestHost = testControllerConnection is not null
@@ -521,7 +521,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         environment.SetEnvironmentVariable(pipeEnvironmentVariable, string.Empty);
 
         // Create client to connect to the monitor
-        var client = new NamedPipeClient(pipeName);
+        NamedPipeClient client = new(pipeName);
         client.RegisterAllSerializers();
 
         // Connect to the monitor
@@ -531,7 +531,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Default timeout is 30 seconds
         int timeoutSeconds = seconds is null ? TimeoutHelper.DefaultHangTimeoutSeconds : int.Parse(seconds, CultureInfo.InvariantCulture);
         await logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerNamedPipeClientConnectTimeoutSeconds '{timeoutSeconds}'");
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds));
+        using CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds));
         await client.ConnectAsync(timeout.Token);
         await logger.LogDebugAsync($"Connected to named pipe '{pipeName}'");
 
@@ -544,35 +544,36 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
     protected virtual void AddApplicationMetadata(IServiceProvider serviceProvider, Dictionary<string, object> builderMetadata)
     {
-        ITelemetryCollector telemetryService = serviceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = serviceProvider.GetTelemetryInformation();
-        if (telemetryInformation.IsEnabled)
+        if (!telemetryInformation.IsEnabled)
         {
-            builderMetadata[TelemetryProperties.HostProperties.IsNativeAotPropertyName] = (!serviceProvider.GetRuntimeFeature().IsDynamicCodeSupported).AsTelemetryBool();
-            builderMetadata[TelemetryProperties.HostProperties.IsHotReloadPropertyName] = serviceProvider.GetRuntimeFeature().IsHotReloadEnabled.AsTelemetryBool();
+            return;
+        }
 
-            var version = (AssemblyInformationalVersionAttribute?)Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
-            builderMetadata[TelemetryProperties.HostProperties.TestingPlatformVersionPropertyName] = version?.InformationalVersion ?? "unknown";
+        builderMetadata[TelemetryProperties.HostProperties.IsNativeAotPropertyName] = (!serviceProvider.GetRuntimeFeature().IsDynamicCodeSupported).AsTelemetryBool();
+        builderMetadata[TelemetryProperties.HostProperties.IsHotReloadPropertyName] = serviceProvider.GetRuntimeFeature().IsHotReloadEnabled.AsTelemetryBool();
 
-            string moduleName = Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
-            builderMetadata[TelemetryProperties.HostProperties.TestHostPropertyName] = Sha256Hasher.HashWithNormalizedCasing(moduleName);
-            builderMetadata[TelemetryProperties.HostProperties.FrameworkDescriptionPropertyName] = RuntimeInformation.FrameworkDescription;
-            builderMetadata[TelemetryProperties.HostProperties.ProcessArchitecturePropertyName] = RuntimeInformation.ProcessArchitecture;
-            builderMetadata[TelemetryProperties.HostProperties.OSArchitecturePropertyName] = RuntimeInformation.OSArchitecture;
-            builderMetadata[TelemetryProperties.HostProperties.OSDescriptionPropertyName] = RuntimeInformation.OSDescription;
+        AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        builderMetadata[TelemetryProperties.HostProperties.TestingPlatformVersionPropertyName] = version?.InformationalVersion ?? "unknown";
+
+        string moduleName = Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath());
+        builderMetadata[TelemetryProperties.HostProperties.TestHostPropertyName] = Sha256Hasher.HashWithNormalizedCasing(moduleName);
+        builderMetadata[TelemetryProperties.HostProperties.FrameworkDescriptionPropertyName] = RuntimeInformation.FrameworkDescription;
+        builderMetadata[TelemetryProperties.HostProperties.ProcessArchitecturePropertyName] = RuntimeInformation.ProcessArchitecture;
+        builderMetadata[TelemetryProperties.HostProperties.OSArchitecturePropertyName] = RuntimeInformation.OSArchitecture;
+        builderMetadata[TelemetryProperties.HostProperties.OSDescriptionPropertyName] = RuntimeInformation.OSDescription;
 #if NETCOREAPP
-            builderMetadata[TelemetryProperties.HostProperties.RuntimeIdentifierPropertyName] = RuntimeInformation.RuntimeIdentifier;
+        builderMetadata[TelemetryProperties.HostProperties.RuntimeIdentifierPropertyName] = RuntimeInformation.RuntimeIdentifier;
 #endif
 
-            builderMetadata[TelemetryProperties.HostProperties.IsDebugBuild] =
+        builderMetadata[TelemetryProperties.HostProperties.IsDebugBuild] =
 #if DEBUG
-                TelemetryProperties.True;
+            TelemetryProperties.True;
 #else
                 TelemetryProperties.False;
 #endif
 
-            builderMetadata[TelemetryProperties.HostProperties.IsDebuggerAttached] = Debugger.IsAttached.AsTelemetryBool();
-        }
+        builderMetadata[TelemetryProperties.HostProperties.IsDebuggerAttached] = Debugger.IsAttached.AsTelemetryBool();
     }
 
     private static async Task LogTestHostCreatedAsync(
@@ -585,7 +586,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         ITelemetryInformation telemetryInformation = serviceProvider.GetTelemetryInformation();
         if (telemetryInformation.IsEnabled)
         {
-            var metricsObj = new Dictionary<string, object>(metrics)
+            Dictionary<string, object> metricsObj = new(metrics)
             {
                 [TelemetryProperties.HostProperties.ApplicationModePropertyName] = mode,
 
@@ -632,8 +633,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         await RegisterAsServiceOrConsumerOrBothAsync(testExecutionFilterFactory, serviceProvider, dataConsumersBuilder);
 
         // Create the test framework adapter
-        ITestFramework testFrameworkAdapter = testFrameworkManager.TestFrameworkAdapterFactory(testFrameworkCapabilities, serviceProvider);
-        if (testFrameworkAdapter is IAsyncInitializableExtension testFrameworkAsyncInitializable)
+        ITestFramework testFramework = testFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
+        if (testFramework is IAsyncInitializableExtension testFrameworkAsyncInitializable)
         {
             await testFrameworkAsyncInitializable.InitializeAsync();
         }
@@ -641,7 +642,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AllowTestAdapterFrameworkRegistration = true;
         try
         {
-            await RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkProxy(testFrameworkAdapter), serviceProvider, dataConsumersBuilder);
+            await RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkProxy(testFramework), serviceProvider, dataConsumersBuilder);
         }
         finally
         {
@@ -696,7 +697,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.AddService(testSessionLifetimeHandlersContainer);
 
         // Register the ITestApplicationResult
-        var testApplicationResult = new TestApplicationResult(
+        TestApplicationResult testApplicationResult = new(
             platformOutputDisplayService,
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetCommandLineOptions(),
@@ -710,7 +711,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // adding a custom message bus that will simply forward to the output display for better performance
         if (serviceProvider.GetCommandLineOptions().IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey))
         {
-            var concreteMessageBusService = new ListTestsMessageBus(
+            ListTestsMessageBus concreteMessageBusService = new(
                 serviceProvider.GetTestFramework(),
                 serviceProvider.GetTestApplicationCancellationTokenSource(),
                 serviceProvider.GetLoggerFactory(),
@@ -723,7 +724,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         }
         else
         {
-            var concreteMessageBusService = new AsynchronousMessageBus(
+            AsynchronousMessageBus concreteMessageBusService = new(
                 dataConsumerServices,
                 serviceProvider.GetTestApplicationCancellationTokenSource(),
                 serviceProvider.GetTask(),
@@ -733,7 +734,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             guardMessageBusService.SetBuiltMessageBus(concreteMessageBusService);
         }
 
-        return testFrameworkAdapter;
+        return testFramework;
     }
 
     protected virtual ConsoleTestHost CreateConsoleTestHost(

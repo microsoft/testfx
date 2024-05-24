@@ -60,20 +60,17 @@ public abstract class ExpectedExceptionBaseAttribute : Attribute
     /// <summary>
     /// Gets the message to include in the test result if the test fails due to not throwing an exception.
     /// </summary>
-    protected string SpecifiedNoExceptionMessage { get; private set; }
+    protected string SpecifiedNoExceptionMessage { get; }
 
     /// <summary>
     /// Gets the default no-exception message.
     /// </summary>
     /// <param name="expectedExceptionAttributeTypeName">The ExpectedException attribute type name.</param>
     /// <returns>The default no-exception message.</returns>
-    internal static string GetDefaultNoExceptionMessage(string? expectedExceptionAttributeTypeName)
-    {
-        return string.Format(
+    internal static string GetDefaultNoExceptionMessage(string? expectedExceptionAttributeTypeName) => string.Format(
             CultureInfo.CurrentCulture,
             FrameworkMessages.UTF_TestMethodNoExceptionDefault,
             expectedExceptionAttributeTypeName);
-    }
 
     /// <summary>
     /// Determines whether the exception is expected. If the method returns, then it is

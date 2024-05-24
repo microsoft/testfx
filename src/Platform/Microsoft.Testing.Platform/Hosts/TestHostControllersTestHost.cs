@@ -63,7 +63,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
     protected override async Task<int> InternalRunAsync()
     {
-        int exitCode = ExitCodes.Success;
+        int exitCode;
         CancellationToken abortRun = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
         DateTimeOffset consoleRunStart = _clock.UtcNow;
         var consoleRunStarted = Stopwatch.StartNew();
@@ -71,7 +71,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         IProcessHandler process = ServiceProvider.GetProcessHandler();
         int currentPID = process.GetCurrentProcess().Id;
         ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
-        var executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
+        ExecutableInfo executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
         string testApplicationFullPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
@@ -120,8 +120,26 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             testHostControllerIpc.RegisterAllSerializers();
             processStartInfo.EnvironmentVariables[$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}"] = testHostControllerIpc.PipeName.Name;
 
-            // Setup data consumers
-            await BuildAndRegisterTestControllersExtensionsAsync();
+            List<IDataConsumer> dataConsumersBuilder = [];
+            if (_testHostsInformation.DataConsumer.Length > 0)
+            {
+                dataConsumersBuilder.AddRange(_testHostsInformation.DataConsumer);
+            }
+
+            IPlatformOutputDevice? display = ServiceProvider.GetServiceInternal<IPlatformOutputDevice>();
+            if (display is not null and IDataConsumer dataConsumerDisplay)
+            {
+                dataConsumersBuilder.Add(dataConsumerDisplay);
+            }
+
+            AsynchronousMessageBus concreteMessageBusService = new(
+                dataConsumersBuilder.ToArray(),
+                ServiceProvider.GetTestApplicationCancellationTokenSource(),
+                ServiceProvider.GetTask(),
+                ServiceProvider.GetLoggerFactory(),
+                ServiceProvider.GetEnvironment());
+            await concreteMessageBusService.InitAsync();
+            ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
 
             // Apply the ITestHostEnvironmentVariableProvider
             if (_testHostsInformation.EnvironmentVariableProviders.Length > 0)
@@ -144,7 +162,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 List<(IExtension, string)> failedValidations = [];
                 foreach (ITestHostEnvironmentVariableProvider hostEnvironmentVariableProvider in _testHostsInformation.EnvironmentVariableProviders)
                 {
-                    var variableResult = await hostEnvironmentVariableProvider.ValidateTestHostEnvironmentVariablesAsync(environmentVariables);
+                    ValidationResult variableResult = await hostEnvironmentVariableProvider.ValidateTestHostEnvironmentVariablesAsync(environmentVariables);
                     if (!variableResult.IsValid)
                     {
                         failedValidations.Add((hostEnvironmentVariableProvider, variableResult.ErrorMessage));
@@ -204,7 +222,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             await _logger.LogDebugAsync($"Setting PlatformTestHostControllersManagerSingleConnectionNamedPipeServerWaitConnectionTimeoutSeconds '{timeoutSeconds}'");
 
             // Wait for the test host controller to connect
-            using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(timeoutSeconds)))
+            using (CancellationTokenSource timeout = new(TimeSpan.FromSeconds(timeoutSeconds)))
             using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, abortRun))
             {
                 await _logger.LogDebugAsync($"Wait connection from the test host process");
@@ -212,7 +230,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             }
 
             // Wait for the test host controller to send the PID of the test host process
-            using (var timeout = new CancellationTokenSource(TimeoutHelper.DefaultHangTimeSpanTimeout))
+            using (CancellationTokenSource timeout = new(TimeoutHelper.DefaultHangTimeSpanTimeout))
             {
                 _waitForPid.Wait(timeout.Token);
             }
@@ -229,7 +247,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 // We don't block the host during the 'OnTestHostProcessStartedAsync' by-design, if 'ITestHostProcessLifetimeHandler' extensions needs
                 // to block the execution of the test host should add an in-process extension like an 'ITestApplicationLifecycleCallbacks' and
                 // wait for a connection/signal to return.
-                var testHostProcessInformation = new TestHostProcessInformation(_testHostPID.Value);
+                TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value);
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
                     await lifetimeHandler.OnTestHostProcessStartedAsync(testHostProcessInformation, abortRun);
@@ -249,7 +267,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 var messageBusProxy = (MessageBusProxy)ServiceProvider.GetMessageBus();
 
                 ApplicationStateGuard.Ensure(_testHostPID is not null);
-                var testHostProcessInformation = new TestHostProcessInformation(_testHostPID.Value, testHostProcess.ExitCode, _testHostGracefullyClosed);
+                TestHostProcessInformation testHostProcessInformation = new(_testHostPID.Value, testHostProcess.ExitCode, _testHostGracefullyClosed);
                 foreach (ITestHostProcessLifetimeHandler lifetimeHandler in _testHostsInformation.LifetimeHandlers)
                 {
                     await lifetimeHandler.OnTestHostProcessExitedAsync(testHostProcessInformation, abortRun);
@@ -305,40 +323,6 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         }
 
         return exitCode;
-    }
-
-    private async Task BuildAndRegisterTestControllersExtensionsAsync()
-    {
-        await _logger.LogDebugAsync($"Setup data consumers");
-        List<IDataConsumer> dataConsumersBuilder = [];
-
-        foreach (ITestHostProcessLifetimeHandler item in _testHostsInformation.LifetimeHandlers)
-        {
-            if (item is IDataConsumer consumer)
-            {
-                dataConsumersBuilder.Add(consumer);
-            }
-        }
-
-        foreach (ITestHostEnvironmentVariableProvider item in _testHostsInformation.EnvironmentVariableProviders)
-        {
-            if (item is IDataConsumer consumer)
-            {
-                dataConsumersBuilder.Add(consumer);
-            }
-        }
-
-        ConsoleOutputDevice display = ServiceProvider.GetRequiredServiceInternal<ConsoleOutputDevice>();
-        dataConsumersBuilder.Add(display);
-
-        var concreteMessageBusService = new AsynchronousMessageBus(
-            dataConsumersBuilder.ToArray(),
-            ServiceProvider.GetTestApplicationCancellationTokenSource(),
-            ServiceProvider.GetTask(),
-            ServiceProvider.GetLoggerFactory(),
-            ServiceProvider.GetEnvironment());
-        await concreteMessageBusService.InitAsync();
-        ((MessageBusProxy)ServiceProvider.GetMessageBus()).SetBuiltMessageBus(concreteMessageBusService);
     }
 
     private async Task DisposeServicesAsync()

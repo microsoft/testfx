@@ -20,7 +20,7 @@ public class InfoTests : AcceptanceTestBase
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Info_WhenNoExtensionRegistered_OutputDefaultInfoContent(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.NoExtensionTargetAssetPath, TestAssetFixture.NoExtensionAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);
@@ -125,7 +125,7 @@ Registered command line providers:
     Description: Microsoft Testing Framework\. This framework allows you to test your code anywhere in any mode \(all OSes, all platforms, all configurations\.\.\.\)\.
     Options:
       --treenode-filter
-        Arity: 0\.\.1
+        Arity: 1
         Hidden: False
         Description: Use a tree filter to filter down the tests to execute
 Registered tools:
@@ -138,7 +138,7 @@ Registered tools:
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
     public async Task Info_WhenMSTestExtensionRegistered_OutputInfoContentOfRegisteredExtension(string tfm)
     {
-        TestInfrastructure.TestHost testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
+        var testHost = TestInfrastructure.TestHost.LocateFrom(_testAssetFixture.MSTestTargetAssetPath, TestAssetFixture.MSTestAssetName, tfm);
         TestHostResult testHostResult = await testHost.ExecuteAsync("--info");
 
         testHostResult.AssertExitCodeIs(ExitCodes.Success);

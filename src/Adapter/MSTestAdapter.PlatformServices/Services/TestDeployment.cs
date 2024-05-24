@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -77,14 +77,12 @@ public class TestDeployment : ITestDeployment
     /// <param name="type"> The type. </param>
     /// <param name="warnings"> The warnings. </param>
     /// <returns> A string of deployment items. </returns>
-    public KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings)
-    {
+    public KeyValuePair<string, string>[]? GetDeploymentItems(MethodInfo method, Type type, ICollection<string> warnings) =>
 #if WINDOWS_UWP
-        return null;
+        null;
 #else
-        return _deploymentItemUtility.GetDeploymentItems(method, _deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
+        _deploymentItemUtility.GetDeploymentItems(method, _deploymentItemUtility.GetClassLevelDeploymentItems(type, warnings), warnings);
 #endif
-    }
 
     /// <summary>
     /// Cleanup deployment item directories.
@@ -108,14 +106,12 @@ public class TestDeployment : ITestDeployment
     /// Gets the deployment output directory where the source file along with all its dependencies is dropped.
     /// </summary>
     /// <returns> The deployment output directory. </returns>
-    public string? GetDeploymentDirectory()
-    {
+    public string? GetDeploymentDirectory() =>
 #if WINDOWS_UWP
-        return null;
+        null;
 #else
-        return RunDirectories?.OutDirectory;
+        RunDirectories?.OutDirectory;
 #endif
-    }
 
     /// <summary>
     /// Deploy files related to the list of tests specified.
@@ -138,7 +134,7 @@ public class TestDeployment : ITestDeployment
 
         _adapterSettings = MSTestSettingsProvider.Settings;
         bool canDeploy = CanDeploy();
-        var hasDeploymentItems = tests.Any(test => DeploymentItemUtility.HasDeploymentItems(test));
+        bool hasDeploymentItems = tests.Any(test => DeploymentItemUtility.HasDeploymentItems(test));
 
         // deployment directories should not be created in this case,simply return
         if (!canDeploy && hasDeploymentItems)
@@ -165,7 +161,7 @@ public class TestDeployment : ITestDeployment
                                 group test by test.Source into testGroup
                                 select new { Source = testGroup.Key, Tests = testGroup };
 
-            var runDirectories = RunDirectories;
+            TestRunDirectories runDirectories = RunDirectories;
             foreach (var group in testsBySource)
             {
                 // do the deployment
@@ -211,10 +207,7 @@ public class TestDeployment : ITestDeployment
     /// <summary>
     /// Reset the static variable to default values. Used only for testing purposes.
     /// </summary>
-    internal static void Reset()
-    {
-        RunDirectories = null;
-    }
+    internal static void Reset() => RunDirectories = null;
 
     /// <summary>
     /// Returns whether deployment can happen or not.

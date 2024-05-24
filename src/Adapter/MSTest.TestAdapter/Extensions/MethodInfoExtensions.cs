@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -95,7 +95,7 @@ internal static class MethodInfoExtensions
         DebugEx.Assert(method != null, "method should not be null.");
 
         // There should be one and only one TimeoutAttribute.
-        var attributes = ReflectHelper.GetCustomAttributes<TimeoutAttribute>(method, false);
+        TimeoutAttribute[] attributes = ReflectHelper.GetCustomAttributes<TimeoutAttribute>(method, false);
         if (attributes?.Length != 1)
         {
             return false;
@@ -111,13 +111,11 @@ internal static class MethodInfoExtensions
     /// <param name="method">The method to verify.</param>
     /// <returns>True if the method has a void/task return type..</returns>
     internal static bool IsValidReturnType(this MethodInfo method)
-    {
-        return ReflectHelper.MatchReturnType(method, typeof(Task))
+        => ReflectHelper.MatchReturnType(method, typeof(Task))
 #if NETCOREAPP
-            || ReflectHelper.MatchReturnType(method, typeof(ValueTask))
+        || ReflectHelper.MatchReturnType(method, typeof(ValueTask))
 #endif
-            || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName() == null);
-    }
+        || (ReflectHelper.MatchReturnType(method, typeof(void)) && method.GetAsyncTypeName() == null);
 
     /// <summary>
     /// For async methods compiler generates different type and method.
@@ -127,7 +125,7 @@ internal static class MethodInfoExtensions
     /// <returns>Compiler generated type name for given async test method..</returns>
     internal static string? GetAsyncTypeName(this MethodInfo method)
     {
-        var asyncStateMachineAttribute = ReflectHelper.GetCustomAttributes<AsyncStateMachineAttribute>(method, false).FirstOrDefault();
+        AsyncStateMachineAttribute? asyncStateMachineAttribute = ReflectHelper.GetCustomAttributes<AsyncStateMachineAttribute>(method, false).FirstOrDefault();
 
         return asyncStateMachineAttribute?.StateMachineType?.FullName;
     }
@@ -146,7 +144,7 @@ internal static class MethodInfoExtensions
     /// </param>
     internal static void InvokeAsSynchronousTask(this MethodInfo methodInfo, object? classInstance, params object?[]? arguments)
     {
-        var methodParameters = methodInfo.GetParameters();
+        ParameterInfo[]? methodParameters = methodInfo.GetParameters();
 
         // check if test method expected parameter values but no test data was provided,
         // throw error with appropriate message.
@@ -171,57 +169,37 @@ internal static class MethodInfoExtensions
         }
         else
         {
-            var methodParametersLengthOrZero = methodParameters?.Length ?? 0;
-            var argumentsLengthOrZero = arguments?.Length ?? 0;
-            if (methodParametersLengthOrZero != argumentsLengthOrZero
-                || !AreArgumentAndParameterTypesAssignable(arguments, methodParameters))
+            int methodParametersLengthOrZero = methodParameters?.Length ?? 0;
+            int argumentsLengthOrZero = arguments?.Length ?? 0;
+            if (methodParametersLengthOrZero != argumentsLengthOrZero)
             {
-                throw new TestFailedException(
-                    ObjectModel.UnitTestOutcome.Error,
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        Resource.CannotRunTestArgumentsMismatchError,
-                        methodInfo.DeclaringType!.FullName,
-                        methodInfo.Name,
-                        methodParametersLengthOrZero,
-                        string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>()),
-                        argumentsLengthOrZero,
-                        string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())));
+                throw GetParameterCountMismatchException(methodInfo, arguments, methodParameters, methodParametersLengthOrZero, argumentsLengthOrZero, innerException: null);
             }
 
-            task = methodInfo.Invoke(classInstance, arguments) as Task;
+            try
+            {
+                task = methodInfo.Invoke(classInstance, arguments) as Task;
+            }
+            catch (Exception ex) when (ex is TargetParameterCountException or ArgumentException)
+            {
+                throw GetParameterCountMismatchException(methodInfo, arguments, methodParameters, methodParametersLengthOrZero, argumentsLengthOrZero, ex);
+            }
         }
 
         // If methodInfo is an async method, wait for returned task
         task?.GetAwaiter().GetResult();
     }
 
-    private static bool AreArgumentAndParameterTypesAssignable(object?[]? arguments, ParameterInfo[]? parameters)
-    {
-        if (arguments is null or { Length: 0 } && parameters is null or { Length: 0 })
-        {
-            return true;
-        }
-
-        if (arguments is null)
-        {
-            return false;
-        }
-
-        if (parameters is null)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < parameters.Length; i++)
-        {
-            if (arguments[i] is { } argument
-                && !parameters[i].ParameterType.IsAssignableFrom(argument.GetType()))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
+    private static TestFailedException GetParameterCountMismatchException(MethodInfo methodInfo, object?[]? arguments, ParameterInfo[]? methodParameters, int methodParametersLengthOrZero, int argumentsLengthOrZero, Exception? innerException) =>
+        new(
+            ObjectModel.UnitTestOutcome.Error,
+            string.Format(
+                CultureInfo.InvariantCulture,
+                Resource.CannotRunTestArgumentsMismatchError,
+                methodInfo.DeclaringType!.FullName,
+                methodInfo.Name,
+                methodParametersLengthOrZero,
+                string.Join(", ", methodParameters?.Select(p => p.ParameterType.Name) ?? Array.Empty<string>()),
+                argumentsLengthOrZero,
+                string.Join(", ", arguments?.Select(a => a?.GetType().Name ?? "null") ?? Array.Empty<string>())), innerException);
 }

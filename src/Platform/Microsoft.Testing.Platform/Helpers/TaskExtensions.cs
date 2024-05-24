@@ -125,7 +125,7 @@ internal static class TaskExtensions
             throw new TimeoutException(CreateMessage(timeout, filePath, lineNumber));
         }
 #else
-        var cts = new CancellationTokenSource();
+        CancellationTokenSource cts = new();
         if (task == await Task.WhenAny(task, Task.Delay(timeout, cts.Token)).ConfigureAwait(false))
         {
             cts.Cancel();
@@ -174,7 +174,7 @@ internal static class TaskExtensions
             throw new TimeoutException(CreateMessage(timeout, filePath, lineNumber));
         }
 #else
-        var cts = new CancellationTokenSource();
+        CancellationTokenSource cts = new();
         var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token, cts.Token);
         if (task == await Task.WhenAny(task, Task.Delay(timeout, linkedTokenSource.Token)).ConfigureAwait(false))
         {

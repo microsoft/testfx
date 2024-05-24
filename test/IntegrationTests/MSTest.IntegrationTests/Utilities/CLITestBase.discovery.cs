@@ -47,10 +47,7 @@ public partial class CLITestBase : TestContainer
     #region Helper classes
     private class InternalLogger : IMessageLogger
     {
-        public void SendMessage(TestMessageLevel testMessageLevel, string message)
-        {
-            Debug.WriteLine($"{testMessageLevel}: {message}");
-        }
+        public void SendMessage(TestMessageLevel testMessageLevel, string message) => Debug.WriteLine($"{testMessageLevel}: {message}");
     }
 
     private sealed class InternalSink : ITestCaseDiscoverySink
@@ -78,10 +75,7 @@ public partial class CLITestBase : TestContainer
 
         public IRunSettings RunSettings { get; }
 
-        public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider)
-        {
-            return _filter;
-        }
+        public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider) => _filter;
 
         private class InternalRunSettings : IRunSettings
         {
@@ -105,15 +99,9 @@ public partial class CLITestBase : TestContainer
 
         public bool EnableShutdownAfterTestRun { get; set; }
 
-        public void RecordStart(TestCase testCase)
-        {
-            _activeResults = _testResults.GetOrAdd(testCase, _ => new());
-        }
+        public void RecordStart(TestCase testCase) => _activeResults = _testResults.GetOrAdd(testCase, _ => new());
 
-        public void RecordEnd(TestCase testCase, TestOutcome outcome)
-        {
-            _activeResults = _testResults[testCase];
-        }
+        public void RecordEnd(TestCase testCase, TestOutcome outcome) => _activeResults = _testResults[testCase];
 
         public void RecordResult(TestResult testResult)
         {
@@ -132,10 +120,7 @@ public partial class CLITestBase : TestContainer
         public void RecordAttachments(IList<AttachmentSet> attachmentSets)
             => throw new NotImplementedException();
 
-        public void SendMessage(TestMessageLevel testMessageLevel, string message)
-        {
-            _messageList.Add($"{testMessageLevel}:{message}");
-        }
+        public void SendMessage(TestMessageLevel testMessageLevel, string message) => _messageList.Add($"{testMessageLevel}:{message}");
 
         public int LaunchProcessWithDebuggerAttached(string filePath, string workingDirectory, string arguments, IDictionary<string, string> environmentVariables)
             => throw new NotImplementedException();

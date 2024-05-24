@@ -93,13 +93,13 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
             return (false, arityErrors);
         }
 
-        var optionsResult = await ValidateOptionsArgumentsAsync();
+        ValidationResult optionsResult = await ValidateOptionsArgumentsAsync();
         if (!optionsResult.IsValid)
         {
             return (false, optionsResult.ErrorMessage);
         }
 
-        var configurationResult = await ValidateConfigurationAsync();
+        ValidationResult configurationResult = await ValidateConfigurationAsync();
 #pragma warning disable IDE0046 // Convert to conditional expression - make the code less readable
         if (!configurationResult.IsValid)
         {
@@ -141,7 +141,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         StringBuilder? stringBuilder = null;
         foreach (ICommandLineOptionsProvider commandLineOptionsProvider in _systemCommandLineOptionsProviders.Union(ExtensionsCommandLineOptionsProviders))
         {
-            var result = await commandLineOptionsProvider.ValidateCommandLineOptionsAsync(this);
+            ValidationResult result = await commandLineOptionsProvider.ValidateCommandLineOptionsAsync(this);
             if (!result.IsValid)
             {
                 stringBuilder ??= new();
@@ -163,7 +163,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         foreach (OptionRecord optionRecord in _parseResult.Options)
         {
             ICommandLineOptionsProvider extension = GetAllCommandLineOptionsProviderByOptionName(optionRecord.Option).Single();
-            var result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments);
+            ValidationResult result = await extension.ValidateOptionArgumentsAsync(extension.GetCommandLineOptions().Single(x => x.Name == optionRecord.Option), optionRecord.Arguments);
             if (!result.IsValid)
             {
                 stringBuilder ??= new();
@@ -279,10 +279,9 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
         IEnumerable<string> allSystemOptions = _systemCommandLineOptionsProviders.SelectMany(x => x.GetCommandLineOptions()).Select(x => x.Name).Distinct();
 
         IEnumerable<string> invalidReservedOptions = allSystemOptions.Intersect(allExtensionOptions);
-        StringBuilder? stringBuilder = null;
         if (invalidReservedOptions.Any())
         {
-            stringBuilder = new();
+            var stringBuilder = new StringBuilder();
             foreach (string reservedOption in invalidReservedOptions)
             {
                 IEnumerable<ICommandLineOptionsProvider> commandLineOptionProviders = GetExtensionCommandLineOptionsProviderByOptionName(reservedOption);
@@ -452,7 +451,7 @@ internal sealed class CommandLineHandler(string[] args, CommandLineParseResult p
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData("Microsoft Testing Platform:"));
 
             // TODO: Replace Assembly with IAssembly
-            var version = (AssemblyInformationalVersionAttribute?)Assembly.GetExecutingAssembly().GetCustomAttribute(typeof(AssemblyInformationalVersionAttribute));
+            AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
             string versionInfo = version?.InformationalVersion ?? "Not Available";
             await _platformOutputDevice.DisplayAsync(this, new TextOutputDeviceData($"  Version: {versionInfo}"));
 

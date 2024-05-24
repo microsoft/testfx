@@ -61,6 +61,42 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Aborted.
+        /// </summary>
+        internal static string Aborted {
+            get {
+                return ResourceManager.GetString("Aborted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actual.
+        /// </summary>
+        internal static string Actual {
+            get {
+                return ResourceManager.GetString("Actual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to cancelled.
+        /// </summary>
+        internal static string CancelledLowercase {
+            get {
+                return ResourceManager.GetString("CancelledLowercase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancelling the test session....
+        /// </summary>
+        internal static string CancellingTestSession {
+            get {
+                return ResourceManager.GetString("CancellingTestSession", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to create a test execution filter.
         /// </summary>
         internal static string CannotCreateTestExecutionFilterErrorMessage {
@@ -322,11 +358,38 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Diagnostic file (level &apos;{0}&apos; with async flush): {1}&quot;.
+        /// </summary>
+        internal static string DiagnosticFileLevelWithAsyncFlush {
+            get {
+                return ResourceManager.GetString("DiagnosticFileLevelWithAsyncFlush", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Diagnostic file (level &apos;{0}&apos; with sync flush): {1}&quot;.
+        /// </summary>
+        internal static string DiagnosticFileLevelWithFlush {
+            get {
+                return ResourceManager.GetString("DiagnosticFileLevelWithFlush", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Provider &apos;{0}&apos; (UID: {1}) failed with error: {2}.
         /// </summary>
         internal static string EnvironmentVariableProviderFailedWithError {
             get {
                 return ResourceManager.GetString("EnvironmentVariableProviderFailedWithError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected.
+        /// </summary>
+        internal static string Expected {
+            get {
+                return ResourceManager.GetString("Expected", resourceCulture);
             }
         }
         
@@ -349,12 +412,39 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed.
+        /// </summary>
+        internal static string Failed {
+            get {
+                return ResourceManager.GetString("Failed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to failed.
+        /// </summary>
+        internal static string FailedLowercase {
+            get {
+                return ResourceManager.GetString("FailedLowercase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to write the log to the channel. Missed log content:
         ///{0}.
         /// </summary>
         internal static string FailedToWriteLogToChannelErrorMessage {
             get {
                 return ResourceManager.GetString("FailedToWriteLogToChannelErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For test.
+        /// </summary>
+        internal static string ForTest {
+            get {
+                return ResourceManager.GetString("ForTest", resourceCulture);
             }
         }
         
@@ -422,6 +512,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to In process file artifacts produced:.
+        /// </summary>
+        internal static string InProcessArtifactsProduced {
+            get {
+                return ResourceManager.GetString("InProcessArtifactsProduced", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Method &apos;{0}&apos; did not exit successfully.
         /// </summary>
         internal static string InternalLoopAsyncDidNotExitSuccessfullyErrorMessage {
@@ -485,6 +584,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Minimum expected tests policy violation, tests ran {0}, minimum expected {1}.
+        /// </summary>
+        internal static string MinimumExpectedTestsPolicyViolation {
+            get {
+                return ResourceManager.GetString("MinimumExpectedTestsPolicyViolation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to No serializer registered with ID &apos;{0}&apos;.
         /// </summary>
         internal static string NoSerializerRegisteredWithIdErrorMessage {
@@ -521,20 +629,38 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Out of process file artifacts produced:.
+        /// </summary>
+        internal static string OutOfProcessArtifactsProduced {
+            get {
+                return ResourceManager.GetString("OutOfProcessArtifactsProduced", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Passed.
+        /// </summary>
+        internal static string Passed {
+            get {
+                return ResourceManager.GetString("Passed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to passed.
+        /// </summary>
+        internal static string PassedLowercase {
+            get {
+                return ResourceManager.GetString("PassedLowercase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Specify the hostname of the client..
         /// </summary>
         internal static string PlatformCommandLineClientHostOptionDescription {
             get {
                 return ResourceManager.GetString("PlatformCommandLineClientHostOptionDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &apos;--client-host&apos; expects a single host name as argument.
-        /// </summary>
-        internal static string PlatformCommandLineClientHostOptionSingleArgument {
-            get {
-                return ResourceManager.GetString("PlatformCommandLineClientHostOptionSingleArgument", resourceCulture);
             }
         }
         
@@ -553,15 +679,6 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription {
             get {
                 return ResourceManager.GetString("PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &apos;--diagnostic-output-fileprefix&apos; expects a single file name prefix argument.
-        /// </summary>
-        internal static string PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument {
-            get {
-                return ResourceManager.GetString("PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument", resourceCulture);
             }
         }
         
@@ -598,15 +715,6 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string PlatformCommandLineDiagnosticOutputDirectoryOptionDescription {
             get {
                 return ResourceManager.GetString("PlatformCommandLineDiagnosticOutputDirectoryOptionDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &apos;--diagnostic-output-directory&apos; expects a single directory name argument.
-        /// </summary>
-        internal static string PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument {
-            get {
-                return ResourceManager.GetString("PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument", resourceCulture);
             }
         }
         
@@ -650,9 +758,9 @@ namespace Microsoft.Testing.Platform.Resources {
         ///   Looks up a localized string similar to Invalid PID &apos;{0}&apos;
         ///{1}.
         /// </summary>
-        internal static string PlatformCommandLineExitOnProcessExitInvalidDependantProcess {
+        internal static string PlatformCommandLineExitOnProcessExitInvalidDependentProcess {
             get {
-                return ResourceManager.GetString("PlatformCommandLineExitOnProcessExitInvalidDependantProcess", resourceCulture);
+                return ResourceManager.GetString("PlatformCommandLineExitOnProcessExitInvalidDependentProcess", resourceCulture);
             }
         }
         
@@ -725,15 +833,6 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string PlatformCommandLineNoBannerOptionDescription {
             get {
                 return ResourceManager.GetString("PlatformCommandLineNoBannerOptionDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &apos;--{0}&apos; expects no argument.
-        /// </summary>
-        internal static string PlatformCommandLineOptionExpectsNoArgumentErrorMessage {
-            get {
-                return ResourceManager.GetString("PlatformCommandLineOptionExpectsNoArgumentErrorMessage", resourceCulture);
             }
         }
         
@@ -900,6 +999,33 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skipped.
+        /// </summary>
+        internal static string Skipped {
+            get {
+                return ResourceManager.GetString("Skipped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to skipped.
+        /// </summary>
+        internal static string SkippedLowercase {
+            get {
+                return ResourceManager.GetString("SkippedLowercase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Stack Trace.
+        /// </summary>
+        internal static string StackTrace {
+            get {
+                return ResourceManager.GetString("StackTrace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Starting server. Listening on port &apos;{0}&apos;.
         /// </summary>
         internal static string StartingServer {
@@ -1058,6 +1184,15 @@ namespace Microsoft.Testing.Platform.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Total.
+        /// </summary>
+        internal static string Total {
+            get {
+                return ResourceManager.GetString("Total", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A filter &apos;{0}&apos; should not contain a &apos;/&apos; character.
         /// </summary>
         internal static string TreeNodeFilterCannotContainSlashCharacterErrorMessage {
@@ -1081,15 +1216,6 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage {
             get {
                 return ResourceManager.GetString("TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to A single argument is expected (e.g. &apos;/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]&apos;).
-        /// </summary>
-        internal static string TreeNodeFilterInvalidArgumentCount {
-            get {
-                return ResourceManager.GetString("TreeNodeFilterInvalidArgumentCount", resourceCulture);
             }
         }
         
@@ -1190,6 +1316,15 @@ namespace Microsoft.Testing.Platform.Resources {
         internal static string UnreachableLocationErrorMessage {
             get {
                 return ResourceManager.GetString("UnreachableLocationErrorMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Zero tests ran.
+        /// </summary>
+        internal static string ZeroTestsRan {
+            get {
+                return ResourceManager.GetString("ZeroTestsRan", resourceCulture);
             }
         }
     }

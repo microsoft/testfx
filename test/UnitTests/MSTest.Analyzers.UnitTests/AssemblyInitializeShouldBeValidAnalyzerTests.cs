@@ -6,7 +6,7 @@ using Microsoft.Testing.TestInfrastructure;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.AssemblyInitializeShouldBeValidAnalyzer,
-    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
+    MSTest.Analyzers.AssemblyInitializeShouldBeValidFixer>;
 
 namespace MSTest.Analyzers.Test;
 
@@ -15,14 +15,14 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
 {
     public async Task WhenAssemblyInitializeIsPublic_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
             public class MyTestClass
             {
                 [AssemblyInitialize]
-                public static void AssemblyInitialize(TestContext context)
+                public static void AssemblyInitialize(TestContext testContext)
                 {
                 }
             }
@@ -33,16 +33,16 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
 
     public async Task WhenAssemblyInitializeIsPublic_InsideInternalClassWithDiscoverInternals_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
+
             [assembly: DiscoverInternals]
 
             [TestClass]
             internal class MyTestClass
             {
                 [AssemblyInitialize]
-                public static void AssemblyInitialize(TestContext context)
+                public static void AssemblyInitialize(TestContext testContext)
                 {
                 }
             }
@@ -53,29 +53,28 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
 
     public async Task WhenAssemblyInitializeIsInsideAGenericClass_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
             public class MyTestClass<T>
             {
                 [AssemblyInitialize]
-                public static void {|#0:AssemblyInitialize|}(TestContext context)
+                public static void {|#0:AssemblyInitialize|}(TestContext testContext)
                 {
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.NotAGenericClassRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyInitialize"));
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyInitialize"),
+            code);
     }
 
     public async Task WhenAssemblyInitializeIsInternal_InsidePublicClassWithDiscoverInternals_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: DiscoverInternals]
@@ -84,17 +83,31 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
             public class MyTestClass
             {
                 [AssemblyInitialize]
-                internal static void {|#0:AssemblyInitialize|}(TestContext context)
+                internal static void {|#0:AssemblyInitialize|}(TestContext testContext)
                 {
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [assembly: DiscoverInternals]
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInitialize(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.PublicRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyInitialize"));
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyInitialize"),
+            fixedCode);
     }
 
     [Arguments("protected")]
@@ -103,29 +116,41 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
     [Arguments("private")]
     public async Task WhenAssemblyInitializeIsNotPublic_Diagnostic(string accessibility)
     {
-        var code = $$"""
+        string code = $$"""
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
             public class MyTestClass
             {
                 [AssemblyInitialize]
-                {{accessibility}} static void {|#0:AssemblyInitialize|}(TestContext context)
+                {{accessibility}} static void {|#0:AssemblyInitialize|}(TestContext testContext)
                 {
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInitialize(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.PublicRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyInitialize"));
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyInitialize"),
+            fixedCode);
     }
 
     public async Task WhenAssemblyInitializeIsNotOrdinary_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -138,60 +163,83 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.OrdinaryRule)
-                .WithLocation(0)
-                .WithArguments("Finalize"));
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("Finalize"),
+            code);
     }
 
     public async Task WhenAssemblyInitializeIsGeneric_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
             public class MyTestClass
             {
                 [AssemblyInitialize]
-                public static void {|#0:AssemblyInitialize|}<T>(TestContext context)
+                public static void {|#0:AssemblyInitialize|}<T>(TestContext testContext)
                 {
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInitialize(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyInitialize"));
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyInitialize"),
+            fixedCode);
     }
 
     public async Task WhenAssemblyInitializeIsNotStatic_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
             public class MyTestClass
             {
                 [AssemblyInitialize]
-                public void {|#0:AssemblyInitialize|}(TestContext context)
+                public void {|#0:AssemblyInitialize|}(TestContext testContext)
                 {
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInitialize(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.StaticRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyInitialize"));
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyInitialize"),
+            fixedCode);
     }
 
     public async Task WhenAssemblyInitializeDoesNotHaveParameters_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -204,16 +252,28 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInitialize(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.SingleContextParameterRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyInitialize"));
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyInitialize"),
+            fixedCode);
     }
 
     public async Task WhenAssemblyInitializeReturnTypeIsNotValid_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 
@@ -221,50 +281,46 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
             public class MyTestClass
             {
                 [AssemblyInitialize]
-                public static int {|#0:AssemblyInitialize0|}(TestContext context)
+                public static int {|#0:AssemblyInitialize0|}(TestContext testContext)
                 {
                     return 0;
                 }
 
                 [AssemblyInitialize]
-                public static string {|#1:AssemblyInitialize1|}(TestContext context)
+                public static string {|#1:AssemblyInitialize1|}(TestContext testContext)
                 {
                     return "0";
                 }
 
                 [AssemblyInitialize]
-                public static Task<int> {|#2:AssemblyInitialize2|}(TestContext context)
+                public static async Task<int> {|#2:AssemblyInitialize2|}(TestContext testContext)
+                {
+                    await Task.Delay(0);
+                    return 0;
+                }
+
+                [AssemblyInitialize]
+                public static Task<int> {|#3:AssemblyInitialize3|}(TestContext testContext)
                 {
                     return Task.FromResult(0);
                 }
 
                 [AssemblyInitialize]
-                public static ValueTask<int> {|#3:AssemblyInitialize3|}(TestContext context)
+                public static async ValueTask<int> {|#4:AssemblyInitialize4|}(TestContext testContext)
+                {
+                    await Task.Delay(0);
+                    return 0;
+                }
+
+                [AssemblyInitialize]
+                public static ValueTask<int> {|#5:AssemblyInitialize5|}(TestContext testContext)
                 {
                     return ValueTask.FromResult(0);
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
-            code,
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyInitialize0"),
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                .WithLocation(1)
-                .WithArguments("AssemblyInitialize1"),
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                .WithLocation(2)
-                .WithArguments("AssemblyInitialize2"),
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                .WithLocation(3)
-                .WithArguments("AssemblyInitialize3"));
-    }
-
-    public async Task WhenAssemblyInitializeReturnTypeIsValid_NoDiagnostic()
-    {
-        var code = """
+        string fixedCode = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 
@@ -272,18 +328,75 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
             public class MyTestClass
             {
                 [AssemblyInitialize]
-                public static void AssemblyInitialize0(TestContext context)
+                public static void AssemblyInitialize0(TestContext testContext)
                 {
                 }
 
                 [AssemblyInitialize]
-                public static Task AssemblyInitialize1(TestContext context)
+                public static void AssemblyInitialize1(TestContext testContext)
+                {
+                }
+
+                [AssemblyInitialize]
+                public static async Task AssemblyInitialize2(TestContext testContext)
+                {
+                    await Task.Delay(0);
+                }
+
+                [AssemblyInitialize]
+                public static Task {|CS0161:AssemblyInitialize3|}(TestContext testContext)
+                {
+                }
+
+                [AssemblyInitialize]
+                public static async ValueTask AssemblyInitialize4(TestContext testContext)
+                {
+                    await Task.Delay(0);
+                }
+
+                [AssemblyInitialize]
+                public static ValueTask {|CS0161:AssemblyInitialize5|}(TestContext testContext)
+                {
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            new[]
+            {
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyInitialize0"),
+                VerifyCS.Diagnostic().WithLocation(1).WithArguments("AssemblyInitialize1"),
+                VerifyCS.Diagnostic().WithLocation(2).WithArguments("AssemblyInitialize2"),
+                VerifyCS.Diagnostic().WithLocation(3).WithArguments("AssemblyInitialize3"),
+                VerifyCS.Diagnostic().WithLocation(4).WithArguments("AssemblyInitialize4"),
+                VerifyCS.Diagnostic().WithLocation(5).WithArguments("AssemblyInitialize5"),
+            },
+            fixedCode);
+    }
+
+    public async Task WhenAssemblyInitializeReturnTypeIsValid_NoDiagnostic()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static void AssemblyInitialize0(TestContext testContext)
+                {
+                }
+
+                [AssemblyInitialize]
+                public static Task AssemblyInitialize1(TestContext testContext)
                 {
                     return Task.CompletedTask;
                 }
 
                 [AssemblyInitialize]
-                public static ValueTask AssemblyInitialize2(TestContext context)
+                public static ValueTask AssemblyInitialize2(TestContext testContext)
                 {
                     return ValueTask.CompletedTask;
                 }
@@ -295,7 +408,7 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
 
     public async Task WhenAssemblyInitializeIsAsyncVoid_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
             using System.Threading.Tasks;
 
@@ -303,17 +416,69 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
             public class MyTestClass
             {
                 [AssemblyInitialize]
-                public static async void {|#0:AssemblyInitialize|}(TestContext context)
+                public static async void {|#0:AssemblyInitialize|}(TestContext testContext)
                 {
                     await Task.Delay(0);
                 }
             }
             """;
 
-        await VerifyCS.VerifyAnalyzerAsync(
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static async Task AssemblyInitialize(TestContext testContext)
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(AssemblyInitializeShouldBeValidAnalyzer.NotAsyncVoidRule)
-                .WithLocation(0)
-                .WithArguments("AssemblyInitialize"));
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyInitialize"),
+            fixedCode);
+    }
+
+    public async Task WhenMultipleViolations_TheyAllGetFixed()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public async void {|#0:AssemblyInitialize|}<T>(int i)
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [AssemblyInitialize]
+                public static async Task AssemblyInitialize(TestContext testContext)
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyInitialize"),
+            fixedCode);
     }
 }

@@ -7,11 +7,11 @@ using Microsoft.Testing.Platform.Extensions.TestFramework;
 namespace Microsoft.Testing.Internal.Framework;
 
 internal class TestFrameworkManager(
-    Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> testFrameworkAdapterFactory,
+    Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> testFrameworkFactory,
     Func<IServiceProvider, ITestFrameworkCapabilities> testFrameworkCapabilitiesFactory)
     : ITestFrameworkManager
 {
-    public Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> TestFrameworkAdapterFactory { get; } = testFrameworkAdapterFactory;
+    public Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> TestFrameworkFactory { get; } = testFrameworkFactory;
 
     public Func<IServiceProvider, ITestFrameworkCapabilities> TestFrameworkCapabilitiesFactory { get; } = testFrameworkCapabilitiesFactory;
 }

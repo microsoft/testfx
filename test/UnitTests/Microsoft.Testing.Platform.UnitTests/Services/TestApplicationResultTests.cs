@@ -69,7 +69,7 @@ public sealed class TestApplicationResultTests : TestBase
 
     public async Task GetProcessExitCodeAsync_If_Cancelled_Returns_TestSessionAborted()
     {
-        var testApplicationCancellationTokenSource = new Mock<ITestApplicationCancellationTokenSource>();
+        Mock<ITestApplicationCancellationTokenSource> testApplicationCancellationTokenSource = new();
         testApplicationCancellationTokenSource.SetupGet(x => x.CancellationToken).Returns(() =>
         {
             CancellationTokenSource cancellationTokenSource = new();
@@ -185,7 +185,7 @@ public sealed class TestApplicationResultTests : TestBase
     [Arguments("", ExitCodes.ZeroTests)]
     public async Task GetProcessExitCodeAsync_IgnoreExitCodes(string argument, int expectedExitCode)
     {
-        var environment = new Mock<IEnvironment>();
+        Mock<IEnvironment> environment = new();
         environment.Setup(x => x.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE)).Returns(argument);
 
         foreach (TestApplicationResult testApplicationResult in new TestApplicationResult[]

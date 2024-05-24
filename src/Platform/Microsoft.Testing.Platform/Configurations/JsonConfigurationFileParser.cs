@@ -30,13 +30,13 @@ internal sealed class JsonConfigurationFileParser
 
     private (Dictionary<string, string?> SingleValueData, Dictionary<string, string?> PropertyToAllChildren) ParseStream(Stream input)
     {
-        var jsonDocumentOptions = new JsonDocumentOptions
+        JsonDocumentOptions jsonDocumentOptions = new()
         {
             CommentHandling = JsonCommentHandling.Skip,
             AllowTrailingCommas = true,
         };
 
-        using (var reader = new StreamReader(input))
+        using (StreamReader reader = new(input))
         using (var doc = JsonDocument.Parse(reader.ReadToEnd(), jsonDocumentOptions))
         {
             if (doc.RootElement.ValueKind != JsonValueKind.Object)

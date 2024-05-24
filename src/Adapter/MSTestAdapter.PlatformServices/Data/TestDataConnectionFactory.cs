@@ -49,7 +49,7 @@ internal class TestDataConnectionFactory
 
         // Most, but not all, connections are actually database based,
         // here we look for special cases
-        if (SpecializedProviders.TryGetValue(invariantProviderName, out var factory))
+        if (SpecializedProviders.TryGetValue(invariantProviderName, out TestDataConnectionFactory? factory))
         {
             DebugEx.Assert(factory != null, "factory");
             return factory.Create(invariantProviderName, connectionString, dataFolders);
@@ -66,18 +66,12 @@ internal class TestDataConnectionFactory
 
     private class XmlTestDataConnectionFactory : TestDataConnectionFactory
     {
-        public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders)
-        {
-            return new XmlDataConnection(connectionString, dataFolders);
-        }
+        public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders) => new XmlDataConnection(connectionString, dataFolders);
     }
 
     private class CsvTestDataConnectionFactory : TestDataConnectionFactory
     {
-        public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders)
-        {
-            return new CsvDataConnection(connectionString, dataFolders);
-        }
+        public override TestDataConnection Create(string invariantProviderName, string connectionString, List<string> dataFolders) => new CsvDataConnection(connectionString, dataFolders);
     }
 
     #endregion TestDataConnectionFactories

@@ -69,7 +69,7 @@ public class DesktopCSharpCLITests : CLITestBase
     private void DoDiscoveryAndValidateDiscoveredTests(string[] sources, string runSettings = "")
     {
         InvokeVsTestForDiscovery(sources, runSettings);
-        var listOfTests = new string[] { "SampleUnitTestProject.UnitTest1.PassingTest", "SampleUnitTestProject.UnitTest1.FailingTest", "SampleUnitTestProject.UnitTest1.SkippingTest" };
+        string[] listOfTests = new string[] { "SampleUnitTestProject.UnitTest1.PassingTest", "SampleUnitTestProject.UnitTest1.FailingTest", "SampleUnitTestProject.UnitTest1.SkippingTest" };
         ValidateDiscoveredTests(listOfTests);
     }
 

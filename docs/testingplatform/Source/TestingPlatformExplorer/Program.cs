@@ -4,13 +4,41 @@
 using System.Reflection;
 
 using Microsoft.Testing.Platform.Builder;
+using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Services;
 
+using TestingPlatformExplorer.InProcess;
+using TestingPlatformExplorer.OutOfProcess;
 using TestingPlatformExplorer.TestingFramework;
 
-var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+// Create the test application builder
+ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 
 // Register the testing framework
-testApplicationBuilder.AddTestingFramework(new[] { Assembly.GetExecutingAssembly() });
+testApplicationBuilder.AddTestingFramework(() => new[] { Assembly.GetExecutingAssembly() });
 
-using var testApplication = await testApplicationBuilder.BuildAsync();
+// In-process & out-of-process extensions
+// Register the testing framework command line options
+testApplicationBuilder.CommandLine.AddProvider(() => new TestingFrameworkCommandLineOptions());
+
+// In-process extensions
+testApplicationBuilder.TestHost.AddTestApplicationLifecycleCallbacks(serviceProvider
+    => new DisplayTestApplicationLifecycleCallbacks(serviceProvider.GetOutputDevice()));
+testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(serviceProvider
+    => new DisplayTestSessionLifeTimeHandler(serviceProvider.GetOutputDevice()));
+testApplicationBuilder.TestHost.AddDataConsumer(serviceProvider
+    => new DisplayDataConsumer(serviceProvider.GetOutputDevice()));
+
+// Out-of-process extensions
+testApplicationBuilder.TestHostControllers.AddEnvironmentVariableProvider(_
+    => new SetEnvironmentVariableForTestHost());
+testApplicationBuilder.TestHostControllers.AddProcessLifetimeHandler(serviceProvider =>
+    new MonitorTestHost(serviceProvider.GetOutputDevice()));
+
+// In-process composite extension SessionLifeTimeHandler+DataConsumer
+CompositeExtensionFactory<DisplayCompositeExtensionFactorySample> compositeExtensionFactory = new(serviceProvider => new DisplayCompositeExtensionFactorySample(serviceProvider.GetOutputDevice()));
+testApplicationBuilder.TestHost.AddTestSessionLifetimeHandle(compositeExtensionFactory);
+testApplicationBuilder.TestHost.AddDataConsumer(compositeExtensionFactory);
+
+using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();

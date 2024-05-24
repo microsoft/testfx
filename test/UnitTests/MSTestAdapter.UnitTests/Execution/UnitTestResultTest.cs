@@ -50,8 +50,8 @@ public class UnitTestResultTest : TestContainer
         };
 
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
-        var startTime = DateTimeOffset.Now;
-        var endTime = DateTimeOffset.Now;
+        DateTimeOffset startTime = DateTimeOffset.Now;
+        DateTimeOffset endTime = DateTimeOffset.Now;
 
         string runSettingsXml =
             @"<RunSettings>
@@ -59,7 +59,7 @@ public class UnitTestResultTest : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
         // Act
         var testResult = result.ToTestResult(testCase, startTime, endTime, "MachineName", adapterSettings);
@@ -90,7 +90,7 @@ public class UnitTestResultTest : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
         var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
         Verify(testResult.Messages.All(m => m.Text.Contains("DummyOutput") && m.Category.Equals("StdOutMsgs", StringComparison.Ordinal)));
@@ -109,7 +109,7 @@ public class UnitTestResultTest : TestContainer
                     </MSTestV2>
                   </RunSettings>";
 
-        MSTestSettings adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
+        var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
         var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);
         Verify(testResult.Messages.All(m => m.Text.Contains("\r\n\r\nDebug Trace:\r\nDummyDebugTrace") && m.Category.Equals("StdOutMsgs", StringComparison.Ordinal)));
     }

@@ -7,9 +7,9 @@ In a console project `Contoso.UnitTests.exe` the following `Main` method defines
 ```c#
 public static async Task<int> Main(string[] args)
 {
-    var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+    ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
     testApplicationBuilder.RegisterTestFramework(/* test framework registration factories */);
-    using var testApplication = await testApplicationBuilder.BuildAsync();
+    using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
     return await testApplication.RunAsync();
 }
 ```
@@ -46,10 +46,10 @@ The testing platform accommodates this by having **out-of-process** extensions. 
 The following example demonstrates how to register a code coverage feature using a **TestHostController** extension.
 
 ```c#
-var testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
 testApplicationBuilder.RegisterTestFramework(/* test framework registration factories */);
 testApplicationBuilder.AddCodeCoverage();
-using var testApplication = await testApplicationBuilder.BuildAsync();
+using ITestApplication testApplication = await testApplicationBuilder.BuildAsync();
 return await testApplication.RunAsync();
 ```
 
@@ -87,14 +87,17 @@ The above section provides a brief introduction to the architecture of the testi
 
 1. **In process** extensions can be accessed through the `TestHost` property of the test application builder. In process means that they will run in the same process as the test framework.
 
-```cs
-ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
-testApplicationBuilder.TestHost.AddXXX(...);
-```
+    ```cs
+    ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+    testApplicationBuilder.RegisterTestFramework(/* test framework registration factories */);
+    testApplicationBuilder.TestHost.AddXXX(...);
+    ```
+
+    As observed, the most crucial extension point is the in-process *testing framework* (`RegisterTestFramework`), which is the only **mandatory** one.
 
 1. **Out of process** extensions can be accessed through the `TestHostControllers` property of the test application builder. These extensions run in a separate process from the test framework to "observe" it.
 
-```cs
-ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
-testApplicationBuilder.TestHostControllers.AddXXX(...);
-```
+    ```cs
+    ITestApplicationBuilder testApplicationBuilder = await TestApplication.CreateBuilderAsync(args);
+    testApplicationBuilder.TestHostControllers.AddXXX(...);
+    ```

@@ -30,11 +30,11 @@ internal static class DataSerializationHelper
             return null;
         }
 
-        var serializedData = new string?[data.Length * 2];
+        string?[] serializedData = new string?[data.Length * 2];
         for (int i = 0; i < data.Length; i++)
         {
-            var typeIndex = i * 2;
-            var dataIndex = typeIndex + 1;
+            int typeIndex = i * 2;
+            int dataIndex = typeIndex + 1;
             if (data[i] == null)
             {
                 serializedData[typeIndex] = null;
@@ -43,16 +43,16 @@ internal static class DataSerializationHelper
                 continue;
             }
 
-            var type = data[i]!.GetType();
-            var typeName = type.AssemblyQualifiedName;
+            Type type = data[i]!.GetType();
+            string? typeName = type.AssemblyQualifiedName;
 
             serializedData[typeIndex] = typeName;
 
-            var serializer = GetSerializer(type);
+            DataContractJsonSerializer serializer = GetSerializer(type);
 
             using var memoryStream = new MemoryStream();
             serializer.WriteObject(memoryStream, data[i]);
-            var serializerData = memoryStream.ToArray();
+            byte[] serializerData = memoryStream.ToArray();
 
             serializedData[dataIndex] = Encoding.UTF8.GetString(serializerData, 0, serializerData.Length);
         }
@@ -72,14 +72,14 @@ internal static class DataSerializationHelper
             return null;
         }
 
-        var length = serializedData.Length / 2;
-        var data = new object?[length];
+        int length = serializedData.Length / 2;
+        object?[] data = new object?[length];
 
         for (int i = 0; i < length; i++)
         {
-            var typeIndex = i * 2;
-            var assemblyQualifiedName = serializedData[typeIndex];
-            var serializedValue = serializedData[typeIndex + 1];
+            int typeIndex = i * 2;
+            string? assemblyQualifiedName = serializedData[typeIndex];
+            string? serializedValue = serializedData[typeIndex + 1];
 
             if (serializedValue == null || assemblyQualifiedName == null)
             {
@@ -87,9 +87,9 @@ internal static class DataSerializationHelper
                 continue;
             }
 
-            var serializer = GetSerializer(assemblyQualifiedName);
+            DataContractJsonSerializer serializer = GetSerializer(assemblyQualifiedName);
 
-            var serializedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
+            byte[] serializedDataBytes = Encoding.UTF8.GetBytes(serializedValue);
             using var memoryStream = new MemoryStream(serializedDataBytes);
             data[i] = serializer.ReadObject(memoryStream);
         }
@@ -98,16 +98,12 @@ internal static class DataSerializationHelper
     }
 
     private static DataContractJsonSerializer GetSerializer(string assemblyQualifiedName)
-    {
-        return SerializerCache.GetOrAdd(
+        => SerializerCache.GetOrAdd(
             assemblyQualifiedName,
             _ => new DataContractJsonSerializer(Type.GetType(assemblyQualifiedName) ?? typeof(object), SerializerSettings));
-    }
 
     private static DataContractJsonSerializer GetSerializer(Type type)
-    {
-        return SerializerCache.GetOrAdd(
+        => SerializerCache.GetOrAdd(
             type.AssemblyQualifiedName!,
             _ => new DataContractJsonSerializer(type, SerializerSettings));
-    }
 }

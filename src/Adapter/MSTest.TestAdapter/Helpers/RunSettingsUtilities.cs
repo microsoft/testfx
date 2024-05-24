@@ -36,7 +36,7 @@ internal class RunSettingsUtilities
     /// <remarks>If there is no test run parameters section defined in the settingsxml a blank dictionary is returned.</remarks>
     internal static Dictionary<string, object> GetTestRunParameters(string? settingsXml)
     {
-        var nodeValue = GetNodeValue(settingsXml, Constants.TestRunParametersName, TestRunParameters.FromXml);
+        Dictionary<string, object>? nodeValue = GetNodeValue(settingsXml, Constants.TestRunParametersName, TestRunParameters.FromXml);
         if (nodeValue == default(Dictionary<string, object>))
         {
             // Return default.
@@ -75,7 +75,7 @@ internal class RunSettingsUtilities
         // use XmlReader to avoid loading of the plugins in client code (mainly from VS).
         using (StringReader stringReader = new(settingsXml))
         {
-            XmlReader reader = XmlReader.Create(stringReader, ReaderSettings);
+            var reader = XmlReader.Create(stringReader, ReaderSettings);
 
             // read to the fist child
             XmlReaderUtilities.ReadToRootNode(reader);

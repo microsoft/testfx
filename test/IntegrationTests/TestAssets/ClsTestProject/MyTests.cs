@@ -11,30 +11,18 @@ namespace DataRowTestProject;
 public class ClsTests
 {
     [TestMethod]
-    public void TestMethod()
-    {
-        Assert.IsTrue(true);
-    }
+    public void TestMethod() => Assert.IsTrue(true);
 
     [TestMethod]
     [DataRow(10)]
-    public void IntDataRow(int i)
-    {
-        Assert.IsTrue(i != 0);
-    }
+    public void IntDataRow(int i) => Assert.IsTrue(i != 0);
 
     [TestMethod]
     [DataRow("some string")]
-    public void StringDataRow(string s)
-    {
-        Assert.IsNotNull(s);
-    }
+    public void StringDataRow(string s) => Assert.IsNotNull(s);
 
     [TestMethod]
     [DataRow("some string")]
     [DataRow("some other string")]
-    public void StringDataRow2(string s)
-    {
-        Assert.IsNotNull(s);
-    }
+    public void StringDataRow2(string s) => Assert.IsNotNull(s);
 }

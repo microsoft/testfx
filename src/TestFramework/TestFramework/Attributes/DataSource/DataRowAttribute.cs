@@ -59,10 +59,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     public string? DisplayName { get; set; }
 
     /// <inheritdoc />
-    public IEnumerable<object?[]> GetData(MethodInfo methodInfo)
-    {
-        return new[] { Data };
-    }
+    public IEnumerable<object?[]> GetData(MethodInfo methodInfo) => new[] { Data };
 
     /// <inheritdoc />
     public virtual string? GetDisplayName(MethodInfo methodInfo, object?[]? data)
@@ -77,7 +74,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
             return null;
         }
 
-        var parameters = methodInfo.GetParameters();
+        ParameterInfo[] parameters = methodInfo.GetParameters();
 
         // We want to force call to `data.AsEnumerable()` to ensure that objects are casted to strings (using ToString())
         // so that null do appear as "null". If you remove the call, and do string.Join(",", new object[] { null, "a" }),

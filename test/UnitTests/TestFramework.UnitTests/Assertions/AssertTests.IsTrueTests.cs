@@ -10,7 +10,7 @@ public partial class AssertTests
     public void IsFalseNullableBooleansShouldFailWithNull()
     {
         bool? nullBool = null;
-        var ex = VerifyThrows(() => Assert.IsFalse(nullBool));
+        Exception ex = VerifyThrows(() => Assert.IsFalse(nullBool));
         Verify(ex is not null);
         Verify(ex.Message.Contains("Assert.IsFalse failed"));
     }
@@ -19,7 +19,7 @@ public partial class AssertTests
     {
         bool? nullBool = null;
 
-        var ex = VerifyThrows(() => Assert.IsTrue(nullBool));
+        Exception ex = VerifyThrows(() => Assert.IsTrue(nullBool));
         Verify(ex is not null);
         Verify(ex.Message.Contains("Assert.IsTrue failed"));
     }

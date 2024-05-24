@@ -35,7 +35,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
             return new Files(Array.Empty<string>());
         }
 
-        string perfViewExecutable = await PerfviewExecutable();
+        await PerfviewExecutable();
         StringBuilder commandLine = new();
         commandLine.Append(CultureInfo.InvariantCulture, $" \"/DataFile:{Path.Combine(Path.GetDirectoryName(payload.TestHost.FullName)!, "DataFile.etl")}\" /AcceptEULA /NoGui {_argument} ");
         commandLine.Append(CultureInfo.InvariantCulture, $"run \"{payload.TestHost.FullName}\" ");
@@ -96,7 +96,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
             string reportDirectory = Path.GetDirectoryName(payload.TestHost.FullName)!;
             string dataFileDirectory = Path.Combine(reportDirectory, "DataFile");
             Directory.CreateDirectory(dataFileDirectory);
-            foreach (var item in Directory.GetFiles(reportDirectory, "DataFile.*"))
+            foreach (string item in Directory.GetFiles(reportDirectory, "DataFile.*"))
             {
                 File.Move(item, Path.Combine(dataFileDirectory, Path.GetFileName(item)!));
             }

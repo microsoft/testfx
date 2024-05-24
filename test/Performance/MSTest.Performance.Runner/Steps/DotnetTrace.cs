@@ -46,10 +46,7 @@ internal class DotnetTrace : IStep<BuildArtifact, Files>
         Process process = Process.Start(processStartInfo)!;
         process.EnableRaisingEvents = true;
         process.BeginOutputReadLine();
-        process.OutputDataReceived += (sender, args) =>
-        {
-            Console.WriteLine(args.Data);
-        };
+        process.OutputDataReceived += (sender, args) => Console.WriteLine(args.Data);
 
         process.WaitForExit();
 

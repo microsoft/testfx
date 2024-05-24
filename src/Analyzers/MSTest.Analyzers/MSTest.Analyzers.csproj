@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -11,12 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\RoslynHashCode.cs" Link="RoslynAnalyzerHelpers\RoslynHashCode.cs" />
-    <Compile Include="..\..\Platform\Microsoft.Testing.Platform\Helpers\SystemPolyfills.cs" Link="Helpers\SystemPolyfills.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynHashCode.cs" Link="RoslynAnalyzerHelpers\RoslynHashCode.cs" />
+    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\SystemPolyfills.cs" Link="Helpers\SystemPolyfills.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="MSTest.Analyzers.UnitTests" Key="$(VsPublicKey)" />
+    <InternalsVisibleTo Include="MSTest.Analyzers.CodeFixes" Key="$(VsPublicKey)" />
   </ItemGroup>
 
   <ItemGroup>

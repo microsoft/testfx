@@ -136,10 +136,7 @@ internal sealed class Json
             return list;
         });
 
-        _serializers[typeof(DiscoverResponseArgs)] = new JsonObjectSerializer<DiscoverResponseArgs>(response =>
-        {
-            return Array.Empty<(string, object?)>();
-        });
+        _serializers[typeof(DiscoverResponseArgs)] = new JsonObjectSerializer<DiscoverResponseArgs>(response => Array.Empty<(string, object?)>());
 
         _serializers[typeof(RunResponseArgs)] = new JsonObjectSerializer<RunResponseArgs>(response =>
         {
@@ -233,25 +230,25 @@ internal sealed class Json
                     hasActionNodeType = true;
                     switch (property)
                     {
-                        case DiscoveredTestNodeStateProperty _:
+                        case DiscoveredTestNodeStateProperty:
                             {
                                 properties.Add(("execution-state", "discovered"));
                                 break;
                             }
 
-                        case InProgressTestNodeStateProperty _:
+                        case InProgressTestNodeStateProperty:
                             {
                                 properties.Add(("execution-state", "in-progress"));
                                 break;
                             }
 
-                        case PassedTestNodeStateProperty _:
+                        case PassedTestNodeStateProperty:
                             {
                                 properties.Add(("execution-state", "passed"));
                                 break;
                             }
 
-                        case SkippedTestNodeStateProperty _:
+                        case SkippedTestNodeStateProperty:
                             {
                                 properties.Add(("execution-state", "skipped"));
                                 break;
@@ -412,8 +409,8 @@ internal sealed class Json
 
         _deserializers[typeof(IDictionary<string, object?>)] = new JsonElementDeserializer<IDictionary<string, object?>>((json, jsonDocument) =>
         {
-            var items = new Dictionary<string, object?>();
-            foreach (var kvp in jsonDocument.EnumerateObject())
+            Dictionary<string, object?> items = new();
+            foreach (JsonProperty kvp in jsonDocument.EnumerateObject())
             {
                 switch (kvp.Value.ValueKind)
                 {
@@ -481,7 +478,7 @@ internal sealed class Json
                 //       The best option we've got is to return a generic property bag.
                 int id = json.Bind<int>(jsonElement, JsonRpcStrings.Id);
 
-                var result = element.ValueKind == JsonValueKind.Null ? null :
+                IDictionary<string, object>? result = element.ValueKind == JsonValueKind.Null ? null :
                     json.Bind<IDictionary<string, object>>(jsonElement, JsonRpcStrings.Result);
 
                 return new ResponseMessage(id, result);
@@ -490,20 +487,14 @@ internal sealed class Json
             return json.TryBind(jsonElement, out ErrorMessage? errorMessage) ? errorMessage! : throw new MessageFormatException();
         });
 
-        _deserializers[typeof(InitializeRequestArgs)] = new JsonElementDeserializer<InitializeRequestArgs>((json, jsonElement) =>
-        {
-            return new InitializeRequestArgs(
+        _deserializers[typeof(InitializeRequestArgs)] = new JsonElementDeserializer<InitializeRequestArgs>((json, jsonElement) => new InitializeRequestArgs(
                 ProcessId: json.Bind<int>(jsonElement, JsonRpcStrings.ProcessId),
                 ClientInfo: json.Bind<ClientInfo>(jsonElement, JsonRpcStrings.ClientInfo),
-                Capabilities: json.Bind<ClientCapabilities>(jsonElement, JsonRpcStrings.Capabilities));
-        });
+                Capabilities: json.Bind<ClientCapabilities>(jsonElement, JsonRpcStrings.Capabilities)));
 
-        _deserializers[typeof(ClientInfo)] = new JsonElementDeserializer<ClientInfo>((json, jsonElement) =>
-        {
-            return new ClientInfo(
+        _deserializers[typeof(ClientInfo)] = new JsonElementDeserializer<ClientInfo>((json, jsonElement) => new ClientInfo(
                 Name: json.Bind<string>(jsonElement, JsonRpcStrings.Name),
-                Version: json.Bind<string>(jsonElement, JsonRpcStrings.Version));
-        });
+                Version: json.Bind<string>(jsonElement, JsonRpcStrings.Version)));
 
         _deserializers[typeof(ClientCapabilities)] = new JsonElementDeserializer<ClientCapabilities>((json, jsonElement) =>
         {
@@ -514,43 +505,31 @@ internal sealed class Json
         });
 
         _deserializers[typeof(InitializeResponseArgs)] = new JsonElementDeserializer<InitializeResponseArgs>(
-          (json, jsonElement) =>
-          {
-              return new InitializeResponseArgs(
+          (json, jsonElement) => new InitializeResponseArgs(
                   ServerInfo: json.Bind<ServerInfo>(jsonElement, JsonRpcStrings.ServerInfo),
-                  Capabilities: json.Bind<ServerCapabilities>(jsonElement, JsonRpcStrings.Capabilities));
-          });
+                  Capabilities: json.Bind<ServerCapabilities>(jsonElement, JsonRpcStrings.Capabilities)));
 
         _deserializers[typeof(ServerInfo)] = new JsonElementDeserializer<ServerInfo>(
-          (json, jsonElement) =>
-          {
-              return new ServerInfo(
+          (json, jsonElement) => new ServerInfo(
                   Name: json.Bind<string>(jsonElement, JsonRpcStrings.Name),
-                  Version: json.Bind<string>(jsonElement, JsonRpcStrings.Version));
-          });
+                  Version: json.Bind<string>(jsonElement, JsonRpcStrings.Version)));
 
         _deserializers[typeof(ServerCapabilities)] = new JsonElementDeserializer<ServerCapabilities>(
-          (json, jsonElement) =>
-          {
-              return new ServerCapabilities(
-                  TestingCapabilities: json.Bind<ServerTestingCapabilities>(jsonElement, JsonRpcStrings.Testing));
-          });
+          (json, jsonElement) => new ServerCapabilities(
+                  TestingCapabilities: json.Bind<ServerTestingCapabilities>(jsonElement, JsonRpcStrings.Testing)));
 
         _deserializers[typeof(ServerTestingCapabilities)] = new JsonElementDeserializer<ServerTestingCapabilities>(
-          (json, jsonElement) =>
-          {
-              return new ServerTestingCapabilities(
+          (json, jsonElement) => new ServerTestingCapabilities(
                         SupportsDiscovery: json.Bind<bool>(jsonElement, JsonRpcStrings.SupportsDiscovery),
                         MultiRequestSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.MultiRequestSupport),
-                        VSTestProviderSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.VSTestProviderSupport));
-          });
+                        VSTestProviderSupport: json.Bind<bool>(jsonElement, JsonRpcStrings.VSTestProviderSupport)));
 
         _deserializers[typeof(DiscoverRequestArgs)] = new JsonElementDeserializer<DiscoverRequestArgs>((json, jsonElement) =>
         {
             string runId = json.Bind<string>(jsonElement, JsonRpcStrings.RunId);
             _ = Guid.TryParse(runId, out Guid result);
 
-            json.TryBind(jsonElement, out ICollection<TestNode>? testNodes, JsonRpcStrings.Tests);
+            json.TryArrayBind(jsonElement, out TestNode[]? testNodes, JsonRpcStrings.Tests);
             json.TryBind(jsonElement, out string? graphFilter, JsonRpcStrings.Filter);
 
             return new DiscoverRequestArgs(
@@ -564,7 +543,7 @@ internal sealed class Json
             string runId = json.Bind<string>(jsonElement, JsonRpcStrings.RunId);
             _ = Guid.TryParse(runId, out Guid result);
 
-            json.TryBind(jsonElement, out ICollection<TestNode>? testNodes, JsonRpcStrings.Tests);
+            json.TryArrayBind(jsonElement, out TestNode[]? testNodes, JsonRpcStrings.Tests);
             json.TryBind(jsonElement, out string? graphFilter, JsonRpcStrings.Filter);
 
             return new RunRequestArgs(
@@ -576,7 +555,7 @@ internal sealed class Json
         _deserializers[typeof(TestNode)] = new JsonElementDeserializer<TestNode>(
             (json, properties) =>
             {
-                var propertyBag = new PropertyBag();
+                PropertyBag propertyBag = new();
                 string uid = json.Bind<string>(properties, JsonRpcStrings.Uid) ?? string.Empty;
                 string displayName = json.Bind<string>(properties, JsonRpcStrings.DisplayName);
 
@@ -585,7 +564,7 @@ internal sealed class Json
                     json.TryBind(properties, out int locationLineStart, "location.line-start");
                     json.TryBind(properties, out int locationLineEnd, "location.line-end");
 
-                    var testFileLocationProperty = new TestFileLocationProperty(
+                    TestFileLocationProperty testFileLocationProperty = new(
                         locationFile!,
                         new LinePositionSpan(new LinePosition(locationLineStart, 0), new LinePosition(locationLineEnd, 0)));
                     propertyBag.Add(testFileLocationProperty);
@@ -600,10 +579,7 @@ internal sealed class Json
             });
 
         _deserializers[typeof(CancelRequestArgs)] = new JsonElementDeserializer<CancelRequestArgs>(
-          (json, jsonElement) =>
-          {
-              return json.TryBind(jsonElement, out int id, JsonRpcStrings.Id) ? new CancelRequestArgs(id) : throw new MessageFormatException("id field should be an int");
-          });
+          (json, jsonElement) => json.TryBind(jsonElement, out int id, JsonRpcStrings.Id) ? new CancelRequestArgs(id) : throw new MessageFormatException("id field should be an int"));
 
         _deserializers[typeof(ExitRequestArgs)] = new JsonElementDeserializer<ExitRequestArgs>(
           (json, jsonElement) => new ExitRequestArgs());
@@ -614,10 +590,10 @@ internal sealed class Json
               ValidateJsonRpcHeader(json, jsonElement);
 
               int id = json.Bind<int>(jsonElement, JsonRpcStrings.Id);
-              var error = jsonElement.GetProperty(JsonRpcStrings.Error);
+              JsonElement error = jsonElement.GetProperty(JsonRpcStrings.Error);
 
-              var code = json.Bind<int>(error, JsonRpcStrings.Code);
-              var message = json.Bind<string>(error, JsonRpcStrings.Message);
+              int code = json.Bind<int>(error, JsonRpcStrings.Code);
+              string message = json.Bind<string>(error, JsonRpcStrings.Message);
 
               if (json.TryBind(error, out IDictionary<string, object?>? data, JsonRpcStrings.Data) && data?.Count == 0)
               {
@@ -669,7 +645,7 @@ internal sealed class Json
         try
         {
             stream.Position = 0;
-            await using var writer = new Utf8JsonWriter(stream);
+            await using Utf8JsonWriter writer = new(stream);
             await SerializeAsync(obj, writer);
             await writer.FlushAsync();
 #if NETCOREAPP
@@ -723,6 +699,18 @@ internal sealed class Json
         }
 
         value = Deserialize<T>(element);
+        return true;
+    }
+
+    internal bool TryArrayBind<T>(JsonElement element, out T[]? value, string? property = null)
+    {
+        if (property is not null && !element.TryGetProperty(property, out element))
+        {
+            value = default;
+            return false;
+        }
+
+        value = element.EnumerateArray().Select(x => Deserialize<T>(x)).ToArray();
         return true;
     }
 
@@ -826,7 +814,7 @@ internal sealed class Json
 
     private static void ValidateJsonRpcHeader(Json json, JsonElement jsonElement)
     {
-        var rpcVersion = json.Bind<string>(jsonElement, JsonRpcStrings.JsonRpc);
+        string? rpcVersion = json.Bind<string>(jsonElement, JsonRpcStrings.JsonRpc);
 
         // Note: The test anywhere supports only JSON-RPC version 2.0
         if (rpcVersion is null or not "2.0")

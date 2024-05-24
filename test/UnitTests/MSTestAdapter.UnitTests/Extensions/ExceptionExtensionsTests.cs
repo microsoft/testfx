@@ -36,7 +36,7 @@ public class ExceptionExtensionsTests : TestContainer
 
     public void ExceptionTryGetMessageReturnsErrorMessageIfExceptionIsNull()
     {
-        var errorMessage = string.Format(CultureInfo.InvariantCulture, Resource.UTF_FailedToGetExceptionMessage, "null");
+        string errorMessage = string.Format(CultureInfo.InvariantCulture, Resource.UTF_FailedToGetExceptionMessage, "null");
 
         var exception = (Exception)null;
 
@@ -45,10 +45,9 @@ public class ExceptionExtensionsTests : TestContainer
 
     public void ExceptionTryGetMessageShouldThrowIfExceptionMessageThrows()
     {
-        var errorMessage = string.Format(CultureInfo.InvariantCulture, Resource.UTF_FailedToGetExceptionMessage, "System.NotImplementedException");
-        var exception = new DummyException(() => { throw new NotImplementedException(); });
+        var exception = new DummyException(() => throw new NotImplementedException());
 
-        var ex = VerifyThrows(() => exception.TryGetMessage());
+        Exception ex = VerifyThrows(() => exception.TryGetMessage());
         Verify(ex is NotImplementedException);
     }
 
@@ -74,7 +73,7 @@ public class ExceptionExtensionsTests : TestContainer
     {
         var exception = new DummyExceptionForStackTrace(() => "    at A()\r\n    at B()");
 
-        var stackTraceInformation = exception.TryGetStackTraceInformation();
+        MSTest.TestAdapter.ObjectModel.StackTraceInformation stackTraceInformation = exception.TryGetStackTraceInformation();
 
         Verify(stackTraceInformation.ErrorStackTrace.StartsWith("    at A()", StringComparison.Ordinal));
         Verify(stackTraceInformation.ErrorFilePath is null);
@@ -83,9 +82,9 @@ public class ExceptionExtensionsTests : TestContainer
 
     public void TryGetStackTraceInformationShouldThrowIfStackTraceThrows()
     {
-        var exception = new DummyExceptionForStackTrace(() => { throw new NotImplementedException(); });
+        var exception = new DummyExceptionForStackTrace(() => throw new NotImplementedException());
 
-        var ex = VerifyThrows(() => exception.TryGetStackTraceInformation());
+        Exception ex = VerifyThrows(() => exception.TryGetStackTraceInformation());
         Verify(ex is NotImplementedException);
     }
 
@@ -134,7 +133,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void IsUnitTestAssertExceptionSetsOutcomeAsInconclusiveIfAssertInconclusiveException()
     {
         var exception = new UTF.AssertInconclusiveException("Dummy Message", new NotImplementedException("notImplementedException"));
-        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out var exceptionMessage, out _);
+        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out string exceptionMessage, out _);
 
         Verify(outcome == UTF.UnitTestOutcome.Inconclusive);
         Verify(exceptionMessage == "Dummy Message");
@@ -143,7 +142,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void IsUnitTestAssertExceptionSetsOutcomeAsFailedIfAssertFailedException()
     {
         var exception = new UTF.AssertFailedException("Dummy Message", new NotImplementedException("notImplementedException"));
-        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out var exceptionMessage, out _);
+        exception.TryGetUnitTestAssertException(out UTF.UnitTestOutcome outcome, out string exceptionMessage, out _);
 
         Verify(outcome == UTF.UnitTestOutcome.Failed);
         Verify(exceptionMessage == "Dummy Message");
@@ -154,7 +153,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void GetRealExceptionGetsTheTopExceptionWhenThereIsJustOne()
     {
         var exception = new InvalidOperationException();
-        var actual = exception.GetRealException();
+        Exception actual = exception.GetRealException();
 
         Verify(actual is InvalidOperationException);
     }
@@ -162,7 +161,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void GetRealExceptionGetsTheInnerExceptionWhenTheExceptionIsTargetInvocation()
     {
         var exception = new TargetInvocationException(new InvalidOperationException());
-        var actual = exception.GetRealException();
+        Exception actual = exception.GetRealException();
 
         Verify(actual is InvalidOperationException);
     }
@@ -170,7 +169,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void GetRealExceptionGetsTheTargetInvocationExceptionWhenTargetInvocationIsProvidedWithNullInnerException()
     {
         var exception = new TargetInvocationException(null);
-        var actual = exception.GetRealException();
+        Exception actual = exception.GetRealException();
 
         Verify(actual is TargetInvocationException);
     }
@@ -178,7 +177,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void GetRealExceptionGetsTheInnerMostRealException()
     {
         var exception = new TargetInvocationException(new TargetInvocationException(new TargetInvocationException(new InvalidOperationException())));
-        var actual = exception.GetRealException();
+        Exception actual = exception.GetRealException();
 
         Verify(actual is InvalidOperationException);
     }
@@ -186,7 +185,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void GetRealExceptionGetsTheInnerMostTargetInvocationException()
     {
         var exception = new TargetInvocationException(new TargetInvocationException(new TargetInvocationException("inner most", null)));
-        var actual = exception.GetRealException();
+        Exception actual = exception.GetRealException();
 
         Verify(actual is TargetInvocationException);
         Verify(actual.Message == "inner most");
@@ -195,7 +194,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void GetRealExceptionGetsTheInnerExceptionWhenTheExceptionIsTypeInitialization()
     {
         var exception = new TypeInitializationException("some type", new InvalidOperationException());
-        var actual = exception.GetRealException();
+        Exception actual = exception.GetRealException();
 
         Verify(actual is InvalidOperationException);
     }
@@ -203,7 +202,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void GetRealExceptionGetsTheTypeInitializationExceptionWhenTypeInitializationIsProvidedWithNullInnerException()
     {
         var exception = new TypeInitializationException("some type", null);
-        var actual = exception.GetRealException();
+        Exception actual = exception.GetRealException();
 
         Verify(actual is TypeInitializationException);
     }
@@ -211,7 +210,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void GetRealExceptionGetsTheInnerMostRealExceptionOfTypeInitialization()
     {
         var exception = new TypeInitializationException("some type", new TypeInitializationException("some type", new TypeInitializationException("some type", new InvalidOperationException())));
-        var actual = exception.GetRealException();
+        Exception actual = exception.GetRealException();
 
         Verify(actual is InvalidOperationException);
     }
@@ -219,7 +218,7 @@ public class ExceptionExtensionsTests : TestContainer
     public void GetRealExceptionGetsTheInnerMostTypeInitializationException()
     {
         var exception = new TypeInitializationException("some type", new TypeInitializationException("some type", new TypeInitializationException("inner most", null)));
-        var actual = exception.GetRealException();
+        Exception actual = exception.GetRealException();
 
         Verify(actual is TypeInitializationException);
         Verify(actual.Message == "The type initializer for 'inner most' threw an exception.");

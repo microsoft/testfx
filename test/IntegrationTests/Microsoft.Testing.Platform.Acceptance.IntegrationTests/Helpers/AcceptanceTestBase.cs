@@ -58,10 +58,10 @@ public class UnitTest1
 
     static AcceptanceTestBase()
     {
-        XDocument cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
+        var cpmPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "Directory.Packages.props"));
         MicrosoftNETTestSdkVersion = cpmPropFileDoc.Descendants("MicrosoftNETTestSdkVersion").Single().Value;
 
-        XDocument versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
+        var versionsPropFileDoc = XDocument.Load(Path.Combine(RootFinder.Find(), "eng", "Versions.props"));
 #if MSTEST_DOWNLOADED
         MSTestVersion = ExtractVersionFromVersionPropsFile(versionsPropFileDoc, "MSTestVersion");
         MicrosoftTestingPlatformVersion = ExtractVersionFromPackage(Constants.ArtifactsPackagesShipping, MicrosoftTestingPlatformNamePrefix);
@@ -146,34 +146,37 @@ public class UnitTest1
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)
     {
-        var matches = Directory.GetFiles(rootFolder, packagePrefixName + "*" + NuGetPackageExtensionName, SearchOption.TopDirectoryOnly);
+        string[] matches = Directory.GetFiles(rootFolder, packagePrefixName + "*" + NuGetPackageExtensionName, SearchOption.TopDirectoryOnly);
 
         if (matches.Length > 1)
         {
             // For some packages the find pattern will match multiple packages, for example:
             // Microsoft.Testing.Platform.1.0.0.nupkg
             // Microsoft.Testing.Platform.Extensions.1.0.0.nupkg
-            // So we need to find the first package that contains a number after the prefix.
+            // So we need to find a package that contains a number after the prefix.
             // Ideally, we would want to do a full validation to check this is a nuget version number, but that's too much work for now.
-            matches =
-            [
-                matches.Select(path => (path, fileName: Path.GetFileName(path)[packagePrefixName.Length..]))
-                    .First(tuple => int.TryParse(tuple.fileName[0].ToString(), CultureInfo.InvariantCulture, out _)).path
-            ];
+            matches = matches
+                    // (full path, file name without prefix)
+                    .Select(path => (path, fileName: Path.GetFileName(path)[packagePrefixName.Length..]))
+                    // check if first character of file name without prefix is number
+                    .Where(tuple => int.TryParse(tuple.fileName[0].ToString(), CultureInfo.InvariantCulture, out _))
+                    // take the full path
+                    .Select(tuple => tuple.path)
+                    .ToArray();
         }
 
         if (matches.Length != 1)
         {
-            throw new InvalidOperationException($"Was expecting to find a single NuGet package named '{packagePrefixName}' in '{rootFolder}' but found {matches.Length}.");
+            throw new InvalidOperationException($"Was expecting to find a single NuGet package named '{packagePrefixName}' in '{rootFolder}', but found {matches.Length}: '{string.Join("', '", matches.Select(m => Path.GetFileName(m)))}'.");
         }
 
-        var packageFullName = Path.GetFileName(matches[0]);
+        string packageFullName = Path.GetFileName(matches[0]);
         return packageFullName.Substring(packagePrefixName.Length, packageFullName.Length - packagePrefixName.Length - NuGetPackageExtensionName.Length);
     }
 
     private static string ExtractVersionFromVersionPropsFile(XDocument versionPropsXmlDocument, string entryName)
     {
-        var matches = versionPropsXmlDocument.Descendants(entryName).ToArray();
+        XElement[] matches = versionPropsXmlDocument.Descendants(entryName).ToArray();
         return matches.Length != 1
             ? throw new InvalidOperationException($"Was expecting to find a single entry for '{entryName}' but found {matches.Length}.")
             : matches[0].Value;

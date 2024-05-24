@@ -106,13 +106,13 @@ public class LogMessageListener : IDisposable
 
     public string? GetAndClearStandardOutput()
     {
-        var output = _redirectedStandardOutput.ToStringAndClear();
+        string? output = _redirectedStandardOutput.ToStringAndClear();
         return output;
     }
 
     public string? GetAndClearStandardError()
     {
-        var output = _redirectedStandardError.ToStringAndClear();
+        string? output = _redirectedStandardError.ToStringAndClear();
         return output;
     }
 
@@ -124,7 +124,7 @@ public class LogMessageListener : IDisposable
             return null;
         }
 
-        var output = s_redirectedDebugTrace.ToStringAndClear();
+        string? output = s_redirectedDebugTrace.ToStringAndClear();
         return output;
     }
 

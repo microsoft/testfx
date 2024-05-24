@@ -6,23 +6,20 @@ using Microsoft.Testing.TestInfrastructure;
 
 using VerifyCS = MSTest.Analyzers.Test.CSharpCodeFixVerifier<
     MSTest.Analyzers.UseParallelizeAttributeAnalyzer,
-    MSTest.Analyzers.UseParallelizeAttributeFixer>;
+    Microsoft.CodeAnalysis.Testing.EmptyCodeFixProvider>;
 
 namespace MSTest.Analyzers.Test;
 
 [TestGroup]
 public class UseParallelizeAttributeAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
-    public async Task WhenNoAttributeSpecified_Diagnostic()
-    {
-        await VerifyCS.VerifyAnalyzerAsync(
+    public async Task WhenNoAttributeSpecified_Diagnostic() => await VerifyCS.VerifyAnalyzerAsync(
             string.Empty,
             VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.Rule).WithNoLocation());
-    }
 
     public async Task WhenParallelizeAttributeSet_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: Parallelize(Workers = 2, Scope = ExecutionScope.MethodLevel)]
@@ -33,7 +30,7 @@ public class UseParallelizeAttributeAnalyzerTests(ITestExecutionContext testExec
 
     public async Task WhenDoNotParallelizeAttributeSet_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [assembly: DoNotParallelize]

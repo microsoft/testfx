@@ -15,21 +15,18 @@ public sealed class TaskExtensionsTests : TestBase
     {
     }
 
-    public async Task TimeoutAfterAsync_Succeeds()
-        => await Assert.ThrowsAsync<TimeoutException>(async ()
-            => await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(TimeSpan.FromSeconds(2)));
+    public async Task TimeoutAfterAsync_Succeeds() => await Assert.ThrowsAsync<TimeoutException>(async ()
+                                                                   => await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(TimeSpan.FromSeconds(2)));
 
-    public async Task TimeoutAfterAsync_CancellationToken_Succeeds()
-        => await Assert.ThrowsAsync<TaskCanceledException>(async () =>
-            await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(
-                TimeSpan.FromSeconds(30),
-                new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token));
+    public async Task TimeoutAfterAsync_CancellationToken_Succeeds() => await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+                                                                                     await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(
+                                                                                         TimeSpan.FromSeconds(30),
+                                                                                         new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token));
 
-    public async Task TimeoutAfterAsync_CancellationTokenNone_Succeeds()
-        => await Assert.ThrowsAsync<TimeoutException>(async () =>
-            await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(
-                TimeSpan.FromSeconds(2),
-                CancellationToken.None));
+    public async Task TimeoutAfterAsync_CancellationTokenNone_Succeeds() => await Assert.ThrowsAsync<TimeoutException>(async () =>
+                                                                                         await Task.Delay(TimeSpan.FromSeconds(60)).TimeoutAfterAsync(
+                                                                                             TimeSpan.FromSeconds(2),
+                                                                                             CancellationToken.None));
 
     public async Task CancellationAsync_Cancellation_Succeeds()
     {
@@ -65,48 +62,46 @@ public sealed class TaskExtensionsTests : TestBase
         Assert.AreEqual("Hello", await DoSomething().WithCancellationAsync(cancellationTokenSource.Token));
     }
 
-    public async Task CancellationAsync_ObserveException_Succeeds()
-        => await RetryHelper.RetryAsync(
-            async () =>
-            {
-                ManualResetEvent waitException = new(false);
-                OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(async ()
-                    => await Task.Run(async () =>
-                    {
-                        await Task.Delay(TimeSpan.FromSeconds(10));
-                        waitException.Set();
-                        throw new InvalidOperationException();
-                    }).WithCancellationAsync(new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token));
-
-                waitException.WaitOne();
-                await Task.Delay(TimeSpan.FromSeconds(4));
-            }, 3, TimeSpan.FromSeconds(3), _ => true);
-
-    public async Task CancellationAsyncWithReturnValue_ObserveException_Succeeds()
-        => await RetryHelper.RetryAsync(
-            async () =>
-            {
-                ManualResetEvent waitException = new(false);
-                OperationCanceledException exception = await Assert.ThrowsAsync<OperationCanceledException>(async ()
-                    => await Task.Run(async () =>
-                    {
-                        await Task.Delay(TimeSpan.FromSeconds(10));
-                        try
+    public async Task CancellationAsync_ObserveException_Succeeds() => await RetryHelper.RetryAsync(
+                async () =>
+                {
+                    ManualResetEvent waitException = new(false);
+                    await Assert.ThrowsAsync<OperationCanceledException>(async ()
+                        => await Task.Run(async () =>
                         {
-                            return 2;
-                        }
-                        finally
-                        {
+                            await Task.Delay(TimeSpan.FromSeconds(10));
                             waitException.Set();
-#pragma warning disable CA2219 // Do not raise exceptions in finally clauses
                             throw new InvalidOperationException();
-#pragma warning restore CA2219 // Do not raise exceptions in finally clauses
-                        }
-                    }).WithCancellationAsync(new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token));
+                        }).WithCancellationAsync(new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token));
 
-                waitException.WaitOne();
-                await Task.Delay(TimeSpan.FromSeconds(4));
-            }, 3, TimeSpan.FromSeconds(3), _ => true);
+                    waitException.WaitOne();
+                    await Task.Delay(TimeSpan.FromSeconds(4));
+                }, 3, TimeSpan.FromSeconds(3), _ => true);
+
+    public async Task CancellationAsyncWithReturnValue_ObserveException_Succeeds() => await RetryHelper.RetryAsync(
+                async () =>
+                {
+                    ManualResetEvent waitException = new(false);
+                    await Assert.ThrowsAsync<OperationCanceledException>(async ()
+                        => await Task.Run(async () =>
+                        {
+                            await Task.Delay(TimeSpan.FromSeconds(10));
+                            try
+                            {
+                                return 2;
+                            }
+                            finally
+                            {
+                                waitException.Set();
+#pragma warning disable CA2219 // Do not raise exceptions in finally clauses
+                                throw new InvalidOperationException();
+#pragma warning restore CA2219 // Do not raise exceptions in finally clauses
+                            }
+                        }).WithCancellationAsync(new CancellationTokenSource(TimeSpan.FromSeconds(1)).Token));
+
+                    waitException.WaitOne();
+                    await Task.Delay(TimeSpan.FromSeconds(4));
+                }, 3, TimeSpan.FromSeconds(3), _ => true);
 
     private async Task<string> DoSomething()
     {

@@ -55,20 +55,20 @@ public class ThreadSafeStringWriterTests : TestContainer
                 return stringWriter.ToString();
             });
 
-            var task2Output = task2.GetAwaiter().GetResult();
-            var task1Output = task1.GetAwaiter().GetResult();
+            string task2Output = task2.GetAwaiter().GetResult();
+            string task1Output = task1.GetAwaiter().GetResult();
 
             // there was no output in the current task, the output should be empty
-            var content = stringWriter.ToString();
+            string content = stringWriter.ToString();
             Verify(string.IsNullOrWhiteSpace(content));
 
             // task1 and task2 should output into their respective buckets
             Verify(!string.IsNullOrWhiteSpace(task1Output));
             Verify(!string.IsNullOrWhiteSpace(task2Output));
 
-            var task1Split = task1Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            string[] task1Split = task1Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             Verify(task1Split.SequenceEqual(Enumerable.Repeat("content1", 8)));
-            var task2Split = task2Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            string[] task2Split = task2Output.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             Verify(task2Split.SequenceEqual(Enumerable.Repeat("content2", 8)));
         }
     }
@@ -108,10 +108,10 @@ public class ThreadSafeStringWriterTests : TestContainer
             Verify(!string.IsNullOrWhiteSpace(result.Out));
             Verify(!string.IsNullOrWhiteSpace(result.Debug));
 
-            var output = result.Out.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            string[] output = result.Out.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             Verify(output.SequenceEqual(new[] { "out", "out" }));
 
-            var debug = result.Debug.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            string[] debug = result.Debug.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
             Verify(debug.SequenceEqual(new[] { "debug", "debug" }));
         }
     }

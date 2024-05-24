@@ -15,7 +15,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 {
     public async Task WhenTestClassHasTestMethod_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -33,7 +33,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenStaticTestClassWithAssemblyCleanup_DoesNotHaveTestMethod_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -51,7 +51,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenStaticTestClassWithAssemblyInitialization_DoesNotHaveTestMethod_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -69,7 +69,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenTestClassDoesNotHaveTestMethod_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -87,7 +87,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenStaticTestClassWithoutAssemblyAttributes_DoesNotHaveTestMethod_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -104,7 +104,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromAbstractClassHasTestMethod_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public abstract class BaseClass
@@ -123,7 +123,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromClassHasTestMethod_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public class BaseClass
@@ -142,7 +142,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromTestClassHasTestMethod_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -162,7 +162,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromAbstractTestClassHasTestMethod_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             [TestClass]
@@ -182,7 +182,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromBaseBaseClassHasTestMethod_NoDiagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public class BaseBase
@@ -205,7 +205,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromClassDoesNotHaveTestMethod_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public class BaseClass
@@ -226,7 +226,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromClassHasAssemblyInitialize_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public class BaseClass
@@ -251,7 +251,7 @@ public sealed class TestClassShouldHaveTestMethodAnalyzerTests(ITestExecutionCon
 
     public async Task WhenTestClassWithoutAssemblyAttributesAndTestMethod_InheritsFromBaseBaseClassHasAssemblyCleanup_Diagnostic()
     {
-        var code = """
+        string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
 
             public class BaseBase
