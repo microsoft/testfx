@@ -53,7 +53,7 @@ internal abstract class BaseSerializer
         }
     }
 
-    protected static void WriteSize(Stream stream, string str)
+    protected static void WriteStringSize(Stream stream, string str)
     {
         int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
         Span<byte> len = stackalloc byte[4];
@@ -155,7 +155,7 @@ internal abstract class BaseSerializer
         stream.Write(bytes, 0, bytes.Length);
     }
 
-    protected static void WriteSize(Stream stream, string str)
+    protected static void WriteStringSize(Stream stream, string str)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(str);
         byte[] len = BitConverter.GetBytes(bytes.Length);
@@ -231,7 +231,7 @@ internal abstract class BaseSerializer
         }
 
         WriteShort(stream, id);
-        WriteSize(stream, value);
+        WriteStringSize(stream, value);
         WriteString(stream, value);
     }
 
