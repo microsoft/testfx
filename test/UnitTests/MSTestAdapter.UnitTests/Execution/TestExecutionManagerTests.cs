@@ -972,9 +972,7 @@ public class TestExecutionManagerTests : TestContainer
         }
     }
 
-    private class DummyTestClassAttribute : TestClassAttribute
-    {
-    }
+    private class DummyTestClassAttribute : TestClassAttribute;
 
     #endregion
 }

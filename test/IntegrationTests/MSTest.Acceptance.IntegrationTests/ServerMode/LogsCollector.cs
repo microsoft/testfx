@@ -7,6 +7,4 @@ using static Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V10
 
 namespace Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
-public class LogsCollector : ConcurrentBag<Log>
-{
-}
+public class LogsCollector : ConcurrentBag<Log>;

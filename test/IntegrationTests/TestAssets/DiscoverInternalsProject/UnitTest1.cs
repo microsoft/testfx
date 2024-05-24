@@ -27,9 +27,7 @@ internal class TopLevelInternalClass
     }
 }
 
-internal class FancyString
-{
-}
+internal class FancyString;
 
 public abstract class CaseInsensitivityTests<T>
 {
@@ -52,9 +50,7 @@ internal class FancyStringsAreCaseInsensitive : CaseInsensitivityTests<FancyStri
 }
 
 [DataContract]
-internal sealed class SerializableInternalType
-{
-}
+internal sealed class SerializableInternalType;
 
 [TestClass]
 internal class DynamicDataTest

@@ -6,9 +6,7 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal abstract record RpcMessage
-{
-}
+internal abstract record RpcMessage();
 
 /// <summary>
 /// A request is a message for which the server should return a corresponding

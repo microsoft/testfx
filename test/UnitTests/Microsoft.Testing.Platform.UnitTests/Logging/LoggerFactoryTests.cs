@@ -41,6 +41,4 @@ public class LoggerFactoryTests : TestBase
     }
 }
 
-internal interface IDisposableLoggerProvider : ILoggerProvider, IDisposable
-{
-}
+internal interface IDisposableLoggerProvider : ILoggerProvider, IDisposable;

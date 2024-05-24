@@ -7,6 +7,4 @@ using Microsoft.Testing.Platform.ServerMode.IntegrationTests.Messages.V100;
 
 namespace MSTest.Acceptance.IntegrationTests.Messages.V100;
 
-public class TelemetryCollector : ConcurrentBag<TelemetryPayload>
-{
-}
+public class TelemetryCollector : ConcurrentBag<TelemetryPayload>;

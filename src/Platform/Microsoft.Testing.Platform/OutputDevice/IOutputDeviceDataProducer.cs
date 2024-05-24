@@ -6,6 +6,4 @@ namespace Microsoft.Testing.Platform.Extensions.OutputDevice;
 /// <summary>
 /// Represents a producer of data that will be directed to the output device.
 /// </summary>
-public interface IOutputDeviceDataProducer : IExtension
-{
-}
+public interface IOutputDeviceDataProducer : IExtension;

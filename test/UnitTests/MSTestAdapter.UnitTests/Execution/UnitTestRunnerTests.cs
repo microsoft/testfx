@@ -396,9 +396,7 @@ public class UnitTestRunnerTests : TestContainer
         public void TestMethod() => TestMethodBody?.Invoke(TestContext);
     }
 
-    private class DummyTestClassAttribute : UTF.TestClassAttribute
-    {
-    }
+    private class DummyTestClassAttribute : UTF.TestClassAttribute;
 
     #endregion
 }

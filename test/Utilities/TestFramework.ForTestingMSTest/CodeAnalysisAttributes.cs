@@ -6,9 +6,7 @@ namespace System.Diagnostics.CodeAnalysis;
 
 /// <summary>Applied to a method that will never return under any circumstance.</summary>
 [AttributeUsage(AttributeTargets.Method, Inherited = false)]
-internal sealed class DoesNotReturnAttribute : Attribute
-{
-}
+internal sealed class DoesNotReturnAttribute : Attribute;
 
 /// <summary>Specifies that when a method returns <see cref="ReturnValue"/>, the parameter will not be null even if the corresponding type allows it.</summary>
 [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
