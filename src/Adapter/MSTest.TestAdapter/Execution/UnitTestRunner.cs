@@ -327,7 +327,7 @@ internal class UnitTestRunner : MarshalByRefObject
             ClassCleanupBehavior lifecycleFromAssembly,
             ReflectHelper? reflectHelper = null)
         {
-            IEnumerable<UnitTestElement> runnableTests = testsToRun.Where(t => t.Traits is null || !t.Traits.Any(t => t.Name == "NonRunnable"));
+            IEnumerable<UnitTestElement> runnableTests = testsToRun.Where(t => t.Traits is null || !t.Traits.Any(t => t.Name == Constants.NonRunnableTest));
             _remainingTestsByClass =
                 new(runnableTests.GroupBy(t => t.TestMethod.FullClassName)
                     .ToDictionary(

@@ -385,7 +385,7 @@ public class TestExecutionManager
                 break;
             }
 
-            if (currentTest.Traits.Any(t => t.Name == "NonRunnable"))
+            if (currentTest.Traits.Any(t => t.Name == Constants.NonRunnableTest))
             {
                 continue;
             }
@@ -412,7 +412,7 @@ public class TestExecutionManager
 
         foreach (TestCase currentTest in tests)
         {
-            Trait? trait = currentTest.Traits.FirstOrDefault(t => t.Name == "NonRunnable");
+            Trait? trait = currentTest.Traits.FirstOrDefault(t => t.Name == Constants.NonRunnableTest);
 
             if (trait is not null)
             {

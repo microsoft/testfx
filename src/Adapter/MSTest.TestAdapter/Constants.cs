@@ -11,6 +11,11 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal static class Constants
 {
     /// <summary>
+    /// Non runnable test.
+    /// </summary>
+    internal const string NonRunnableTest = "NonRunnableTest";
+
+    /// <summary>
     /// Assembly initialize.
     /// </summary>
     internal const string AssemblyInitialize = "AssemblyInitialize";
