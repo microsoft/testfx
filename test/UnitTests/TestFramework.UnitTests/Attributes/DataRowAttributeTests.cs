@@ -180,11 +180,6 @@ public class DataRowAttributeTests : TestContainer
 
     private class DummyDataRowAttribute : DataRowAttribute
     {
-        public DummyDataRowAttribute()
-            : base()
-        {
-        }
-
         public override string GetDisplayName(MethodInfo methodInfo, object[] data) => "Overridden DisplayName";
     }
 }
