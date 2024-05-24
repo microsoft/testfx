@@ -57,7 +57,7 @@ public class Logger
         {
             try
             {
-                invoker.GetMethodInfo().Invoke(invoker.Target, parameters);
+                invoker.GetMethodInfo()!.Invoke(invoker.Target, parameters);
             }
             catch (Exception)
             {
