@@ -88,7 +88,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
         foreach (object serviceInstance in _services)
         {
 #if !NETCOREAPP
-            if (serviceType.GetTypeInfo().IsAssignableFrom(serviceInstance.GetType()))
+            if (serviceType.IsAssignableFrom(serviceInstance.GetType()))
             {
                 yield return serviceInstance;
                 if (stopAtFirst)

@@ -130,7 +130,7 @@ internal class ReflectHelper : MarshalByRefObject
             DebugEx.Assert(attribute != null, $"{nameof(ReflectHelper)}.{nameof(GetAttributes)}: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
-            if (attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttribute)))
+            if (attributeType.IsSubclassOf(typeof(TAttribute)))
             {
                 return true;
             }
@@ -297,7 +297,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="type">The type declared in the assembly to check.</param>
     /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
     internal virtual bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
-        => method.DeclaringType!.GetTypeInfo().Assembly.Equals(type.GetTypeInfo().Assembly); // TODO: Investigate if we rely on NRE
+        => method.DeclaringType!.Assembly.Equals(type.GetTypeInfo().Assembly); // TODO: Investigate if we rely on NRE
 
     /// <summary>
     /// Get categories applied to the test method.
@@ -540,7 +540,7 @@ internal class ReflectHelper : MarshalByRefObject
             DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
-            if (attributeType.Equals(typeof(TAttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttributeType)))
+            if (attributeType.Equals(typeof(TAttributeType)) || attributeType.IsSubclassOf(typeof(TAttributeType)))
             {
                 return attribute as TAttributeType;
             }
@@ -571,7 +571,7 @@ internal class ReflectHelper : MarshalByRefObject
             DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
-            if (attributeType.Equals(typeof(TAttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttributeType)))
+            if (attributeType.Equals(typeof(TAttributeType)) || attributeType.IsSubclassOf(typeof(TAttributeType)))
             {
                 return attribute as TAttributeType;
             }

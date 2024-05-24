@@ -45,7 +45,7 @@ public class FileOperationsTests : TestContainer
 
     public void LoadAssemblyShouldLoadAssemblyInCurrentContext()
     {
-        string filePath = typeof(FileOperationsTests).GetTypeInfo().Assembly.Location;
+        string filePath = typeof(FileOperationsTests).Assembly.Location;
 
         // This should not throw.
         _fileOperations.LoadAssembly(filePath, false);
