@@ -3,9 +3,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-using ParallelClassesTestProject;
-
-namespace ParallelClassesTestProject1;
+namespace ParallelClassesTestProject;
 
 [TestClass]
 public class UnitTest3
