@@ -73,5 +73,5 @@ internal class PipelinesRunner
         }
     }
 
-    private record class PipelineInfo(string GroupName, string PipelineName, OSPlatform[] OSPlatform, Action<IDictionary<string, object>> Func, Action<IDictionary<string, object>>? UpdatePropertyBag = null, string[]? Traits = null);
+    private record PipelineInfo(string GroupName, string PipelineName, OSPlatform[] OSPlatform, Action<IDictionary<string, object>> Func, Action<IDictionary<string, object>>? UpdatePropertyBag = null, string[]? Traits = null);
 }
