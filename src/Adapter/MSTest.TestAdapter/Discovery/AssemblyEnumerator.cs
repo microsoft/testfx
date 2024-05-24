@@ -319,7 +319,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             string assemblyLocation, string methodType)
         {
             string methodName = GetMethodName(methodInfo);
-            string[] hierarchy = [null!, assemblyName, Constants.NonRunnableTest, methodName];
+            string[] hierarchy = [null!, assemblyName, $"[{Constants.NonRunnableTest}]", methodName];
             return GetNonRunnableTest(classFullName, assemblyLocation, methodType, methodName, hierarchy);
         }
 
