@@ -101,43 +101,36 @@ internal class UnitTestRunner : MarshalByRefObject
 
     internal (bool ReportTest, ObjectModel.UnitTestOutcome Outcome, string? ExceptionMessage) GetNonRunnableTestMethodResult(TestMethod testMethod, string nonRunnableMethodType)
     {
-        if (_nonRunnableMethods.Count == 0)
-        {
-            return (true, ObjectModel.UnitTestOutcome.Inconclusive, null);
-        }
-
         if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
         {
             if (nonRunnableMethodType == Constants.ClassInitialize)
             {
-                return GetOutcome(testMethodInfo.Parent.IsClassInitializeExecuted, testMethodInfo.Parent.ClassInitializationException);
+                return GetOutcome(testMethodInfo.Parent.ClassInitializationException);
             }
 
             if (nonRunnableMethodType == Constants.ClassCleanup)
             {
-                bool isExecuted = testMethodInfo.Parent.IsClassCleanupExecuted || testMethodInfo.Parent.ClassCleanupException is not null;
-                return GetOutcome(isExecuted, testMethodInfo.Parent.ClassCleanupException);
+                return GetOutcome(testMethodInfo.Parent.ClassCleanupException);
             }
         }
-        else if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName, out testMethodInfo))
+
+        if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName, out testMethodInfo))
         {
             if (nonRunnableMethodType == Constants.AssemblyInitialize)
             {
-                return GetOutcome(testMethodInfo.Parent.Parent.IsAssemblyInitializeExecuted, testMethodInfo.Parent.Parent.AssemblyInitializationException);
+                return GetOutcome(testMethodInfo.Parent.Parent.AssemblyInitializationException);
             }
             else if (nonRunnableMethodType == Constants.AssemblyCleanup)
             {
-                return GetOutcome(testMethodInfo.Parent.Parent.IsAssemblyCleanupExecuted, testMethodInfo.Parent.Parent.AssemblyCleanupException);
+                return GetOutcome(testMethodInfo.Parent.Parent.AssemblyCleanupException);
             }
         }
 
         return (false, ObjectModel.UnitTestOutcome.Inconclusive, null);
 
-        static (bool ReportTest, ObjectModel.UnitTestOutcome Outcome, string? ExceptionMessage) GetOutcome(bool isExecuted, Exception? exception)
+        static (bool ReportTest, ObjectModel.UnitTestOutcome Outcome, string? ExceptionMessage) GetOutcome(Exception? exception)
         {
-            ObjectModel.UnitTestOutcome outcome = !isExecuted ?
-                ObjectModel.UnitTestOutcome.Inconclusive
-                : exception == null ? ObjectModel.UnitTestOutcome.Passed : ObjectModel.UnitTestOutcome.Failed;
+            ObjectModel.UnitTestOutcome outcome = exception == null ? ObjectModel.UnitTestOutcome.Passed : ObjectModel.UnitTestOutcome.Failed;
             return (true, outcome, exception?.Message);
         }
     }

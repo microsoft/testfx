@@ -383,6 +383,9 @@ public class TestExecutionManager
         IDictionary<string, object> sourceLevelParameters,
         UnitTestRunner testRunner)
     {
+        bool hasAnyRunnableTests = false;
+        var nonRunnableTests = new List<TestCase>();
+
         foreach (TestCase currentTest in tests)
         {
             if (_cancellationToken != null && _cancellationToken.Canceled)
@@ -392,9 +395,11 @@ public class TestExecutionManager
 
             if (currentTest.Traits.Any(t => t.Name == Constants.NonRunnableTest))
             {
+                nonRunnableTests.Add(currentTest);
                 continue;
             }
 
+            hasAnyRunnableTests = true;
             var unitTestElement = currentTest.ToUnitTestElement(source);
 
             testExecutionRecorder.RecordStart(currentTest);
@@ -415,21 +420,25 @@ public class TestExecutionManager
             SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
         }
 
-        foreach (TestCase currentTest in tests)
+        foreach (TestCase currentTest in nonRunnableTests)
         {
-            Trait? trait = currentTest.Traits.FirstOrDefault(t => t.Name == Constants.NonRunnableTest);
+            testExecutionRecorder.RecordStart(currentTest);
 
-            if (trait is not null)
+            if (!hasAnyRunnableTests)
             {
-                testExecutionRecorder.RecordStart(currentTest);
-                var unitTestElement = currentTest.ToUnitTestElement(source);
-                (bool reportTest, ObjectModel.UnitTestOutcome outcome, string? exception) = testRunner.GetNonRunnableTestMethodResult(unitTestElement.TestMethod, trait.Value);
+                var result = new UnitTestResult(ObjectModel.UnitTestOutcome.Inconclusive, null);
+                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
+                continue;
+            }
 
-                if (reportTest)
-                {
-                    var result = new UnitTestResult(outcome, null);
-                    SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
-                }
+            Trait trait = currentTest.Traits.First(t => t.Name == Constants.NonRunnableTest);
+            var unitTestElement = currentTest.ToUnitTestElement(source);
+            (bool reportTest, ObjectModel.UnitTestOutcome outcome, string? exception) = testRunner.GetNonRunnableTestMethodResult(unitTestElement.TestMethod, trait.Value);
+
+            if (reportTest)
+            {
+                var result = new UnitTestResult(outcome, null);
+                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
             }
         }
     }
