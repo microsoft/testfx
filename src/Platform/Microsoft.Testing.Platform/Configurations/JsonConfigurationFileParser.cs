@@ -36,16 +36,13 @@ internal sealed class JsonConfigurationFileParser
             AllowTrailingCommas = true,
         };
 
-        using (StreamReader reader = new(input))
-        using (var doc = JsonDocument.Parse(reader.ReadToEnd(), jsonDocumentOptions))
+        using var doc = JsonDocument.Parse(input, jsonDocumentOptions);
+        if (doc.RootElement.ValueKind != JsonValueKind.Object)
         {
-            if (doc.RootElement.ValueKind != JsonValueKind.Object)
-            {
-                throw new FormatException(string.Format(CultureInfo.CurrentCulture, PlatformResources.JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage, doc.RootElement.ValueKind));
-            }
-
-            VisitObjectElement(doc.RootElement);
+            throw new FormatException(string.Format(CultureInfo.CurrentCulture, PlatformResources.JsonConfigurationFileParserTopLevelElementIsNotAnObjectErrorMessage, doc.RootElement.ValueKind));
         }
+
+        VisitObjectElement(doc.RootElement);
 
         return (_singleValueData, _propertyToAllChildren);
     }
