@@ -36,7 +36,7 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
         {
             // Skip all unwanted environment variables.
             string? key = entry.Key.ToString();
-            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key.ToString(), StringComparer.OrdinalIgnoreCase))
+            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
             {
                 continue;
             }
@@ -85,12 +85,12 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
         {
             // Skip all unwanted environment variables.
             string? key = entry.Key.ToString();
-            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key.ToString(), StringComparer.OrdinalIgnoreCase))
+            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
             {
                 continue;
             }
 
-            environmentVariables[key] = entry.Value!.ToString()!;
+            environmentVariables[key!] = entry.Value!.ToString()!;
         }
 
         // We expect to not fail for unhandled exception in server mode for IDE needs.
