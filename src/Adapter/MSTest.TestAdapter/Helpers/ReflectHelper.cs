@@ -22,10 +22,6 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     private readonly Dictionary<MemberInfo, Dictionary<string, object>> _attributeCache = [];
 
-    internal ReflectHelper()
-    {
-    }
-
     public static ReflectHelper Instance => InstanceValue.Value;
 
     /// <summary>
