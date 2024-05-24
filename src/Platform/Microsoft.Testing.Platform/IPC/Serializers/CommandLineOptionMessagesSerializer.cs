@@ -23,11 +23,11 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
             switch (fieldId)
             {
-                case CommandLineOptionMessagesFields.ModuleName:
+                case CommandLineOptionMessagesFieldsId.ModuleName:
                     moduleName = ReadString(stream);
                     break;
 
-                case CommandLineOptionMessagesFields.CommandLineOptionMessageList:
+                case CommandLineOptionMessagesFieldsId.CommandLineOptionMessageList:
                     commandLineOptionMessages = ReadCommandLineOptionMessagesPayload(stream);
                     break;
 
@@ -60,23 +60,23 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
                 switch (fieldId)
                 {
-                    case CommandLineOptionMessageFields.Name:
+                    case CommandLineOptionMessageFieldsId.Name:
                         name = ReadString(stream);
                         break;
 
-                    case CommandLineOptionMessageFields.Description:
+                    case CommandLineOptionMessageFieldsId.Description:
                         description = ReadString(stream);
                         break;
 
-                    case CommandLineOptionMessageFields.Arity:
+                    case CommandLineOptionMessageFieldsId.Arity:
                         arity = ReadString(stream);
                         break;
 
-                    case CommandLineOptionMessageFields.IsHidden:
+                    case CommandLineOptionMessageFieldsId.IsHidden:
                         isHidden = ReadBool(stream);
                         break;
 
-                    case CommandLineOptionMessageFields.IsBuiltIn:
+                    case CommandLineOptionMessageFieldsId.IsBuiltIn:
                         isBuiltIn = ReadBool(stream);
                         break;
 
@@ -100,18 +100,18 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
         WriteShort(stream, (short)GetFieldCount(commandLineOptionMessages));
 
-        WriteField(stream, CommandLineOptionMessagesFields.ModuleName, commandLineOptionMessages.ModuleName);
+        WriteField(stream, CommandLineOptionMessagesFieldsId.ModuleName, commandLineOptionMessages.ModuleName);
         WriteCommandLineOptionMessagesPayload(stream, commandLineOptionMessages.CommandLineOptionMessageList);
     }
 
     private static void WriteCommandLineOptionMessagesPayload(Stream stream, CommandLineOptionMessage[] commandLineOptionMessageList)
     {
-        if (commandLineOptionMessageList is null || commandLineOptionMessageList.Length == 0)
+        if (IsNull(commandLineOptionMessageList))
         {
             return;
         }
 
-        WriteShort(stream, CommandLineOptionMessagesFields.CommandLineOptionMessageList);
+        WriteShort(stream, CommandLineOptionMessagesFieldsId.CommandLineOptionMessageList);
 
         // We will reserve an int (4 bytes)
         // so that we fill the size later, once we write the payload
@@ -121,13 +121,13 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         WriteInt(stream, commandLineOptionMessageList.Length);
         foreach (CommandLineOptionMessage commandLineOptionMessage in commandLineOptionMessageList)
         {
-            WriteShort(stream, (short)GetFieldCount(commandLineOptionMessage));
+            WriteShort(stream, GetFieldCount(commandLineOptionMessage));
 
-            WriteField(stream, CommandLineOptionMessageFields.Name, commandLineOptionMessage.Name);
-            WriteField(stream, CommandLineOptionMessageFields.Description, commandLineOptionMessage.Description);
-            WriteField(stream, CommandLineOptionMessageFields.Arity, commandLineOptionMessage.Arity);
-            WriteField(stream, CommandLineOptionMessageFields.IsHidden, commandLineOptionMessage.IsHidden);
-            WriteField(stream, CommandLineOptionMessageFields.IsBuiltIn, commandLineOptionMessage.IsBuiltIn);
+            WriteField(stream, CommandLineOptionMessageFieldsId.Name, commandLineOptionMessage.Name);
+            WriteField(stream, CommandLineOptionMessageFieldsId.Description, commandLineOptionMessage.Description);
+            WriteField(stream, CommandLineOptionMessageFieldsId.Arity, commandLineOptionMessage.Arity);
+            WriteField(stream, CommandLineOptionMessageFieldsId.IsHidden, commandLineOptionMessage.IsHidden);
+            WriteField(stream, CommandLineOptionMessageFieldsId.IsBuiltIn, commandLineOptionMessage.IsBuiltIn);
         }
 
         // NOTE: We are able to seek only if we are using a MemoryStream
@@ -137,21 +137,26 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
     private static int GetFieldCount(CommandLineOptionMessages commandLineOptionMessages)
     {
-        return (IsNull(commandLineOptionMessages.ModuleName) ? 1 : 0) +
-           (commandLineOptionMessages.CommandLineOptionMessageList is null ? 0 : 1);
+        return (IsNull(commandLineOptionMessages.ModuleName) ? 0 : 1) +
+           (IsNull(commandLineOptionMessages) ? 0 : 1);
     }
 
-    private static int GetFieldCount(CommandLineOptionMessage commandLineOptionMessage)
+    private static short GetFieldCount(CommandLineOptionMessage commandLineOptionMessage)
     {
-        return (IsNull(commandLineOptionMessage.Name) ? 0 : 1) +
-            (IsNull(commandLineOptionMessage.Description) ? 0 : 1) +
-            (IsNull(commandLineOptionMessage.Arity) ? 0 : 1) +
-            (IsNull(commandLineOptionMessage.IsHidden) ? 0 : 1) +
-            (IsNull(commandLineOptionMessage.IsBuiltIn) ? 0 : 1);
+        return (short)((IsNull(commandLineOptionMessage.Name) ? 0 : 1) +
+            (short)(IsNull(commandLineOptionMessage.Description) ? 0 : 1) +
+            (short)(IsNull(commandLineOptionMessage.Arity) ? 0 : 1) +
+            (short)(IsNull(commandLineOptionMessage.IsHidden) ? 0 : 1) +
+            (short)(IsNull(commandLineOptionMessage.IsBuiltIn) ? 0 : 1));
     }
 
     private static bool IsNull<T>(T field)
     {
         return typeof(T) == typeof(string) && (field is null || field?.ToString()?.Length == 0);
+    }
+
+    private static bool IsNull<T>(T[] items)
+    {
+        return items is null || items.Length == 0;
     }
 }

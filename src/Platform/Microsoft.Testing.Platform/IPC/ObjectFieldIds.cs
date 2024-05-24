@@ -3,13 +3,17 @@
 
 namespace Microsoft.Testing.Platform.IPC;
 
-internal class CommandLineOptionMessagesFields
+// WARNING: Please note this file needs to be kept aligned with the one in the dotnet sdk.
+// The protocol follows the concept of optional properties.
+// The id is used to identify the property in the stream and it will be skipped if it's not recognized.
+// We can add new properties with new ids, but we CANNOT change the existing ids (to support backwards compatibility).
+internal class CommandLineOptionMessagesFieldsId
 {
     internal const int ModuleName = 1;
     internal const int CommandLineOptionMessageList = 2;
 }
 
-internal class CommandLineOptionMessageFields
+internal class CommandLineOptionMessageFieldsId
 {
     internal const int Name = 1;
     internal const int Description = 2;
