@@ -17,11 +17,6 @@ public class DataRowTests_OverriddenGetDisplayName
 
     private class DummyDataRowAttribute : DataRowAttribute
     {
-        public DummyDataRowAttribute()
-            : base()
-        {
-        }
-
         public override string GetDisplayName(MethodInfo methodInfo, object[] data) => "Overridden DisplayName";
     }
 }
