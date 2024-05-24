@@ -19,7 +19,7 @@ internal abstract class BaseSerializer
 #if NETCOREAPP
     protected static string ReadString(Stream stream)
     {
-        Span<byte> len = stackalloc byte[4];
+        Span<byte> len = stackalloc byte[sizeof(int)];
         stream.Read(len);
         int stringLen = BitConverter.ToInt32(len);
         byte[] bytes = ArrayPool<byte>.Shared.Rent(stringLen);
@@ -40,7 +40,7 @@ internal abstract class BaseSerializer
         byte[] bytes = ArrayPool<byte>.Shared.Rent(stringutf8TotalBytes);
         try
         {
-            Span<byte> len = stackalloc byte[4];
+            Span<byte> len = stackalloc byte[sizeof(int)];
             ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(len, stringutf8TotalBytes), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
             stream.Write(len);
 
@@ -56,24 +56,22 @@ internal abstract class BaseSerializer
     protected static void WriteStringSize(Stream stream, string str)
     {
         int stringutf8TotalBytes = Encoding.UTF8.GetByteCount(str);
-        Span<byte> len = stackalloc byte[4];
+        Span<byte> len = stackalloc byte[sizeof(int)];
 
-        if (BitConverter.TryWriteBytes(len, stringutf8TotalBytes))
-        {
-            stream.Write(len);
-        }
+        ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(len, stringutf8TotalBytes), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+
+        stream.Write(len);
     }
 
     protected static void WriteSize<T>(Stream stream)
         where T : struct
     {
         int sizeInBytes = GetSize<T>();
-        Span<byte> len = stackalloc byte[4];
+        Span<byte> len = stackalloc byte[sizeof(int)];
 
-        if (BitConverter.TryWriteBytes(len, sizeInBytes))
-        {
-            stream.Write(len);
-        }
+        ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(len, sizeInBytes), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
+
+        stream.Write(len);
     }
 
     protected static void WriteInt(Stream stream, int value)
@@ -95,7 +93,7 @@ internal abstract class BaseSerializer
     protected static void WriteShort(Stream stream, short value)
     {
         Span<byte> bytes = stackalloc byte[sizeof(short)];
-        BitConverter.TryWriteBytes(bytes, value);
+        ApplicationStateGuard.Ensure(BitConverter.TryWriteBytes(bytes, value), PlatformResources.UnexpectedExceptionDuringByteConversionErrorMessage);
 
         stream.Write(bytes);
     }
@@ -139,7 +137,7 @@ internal abstract class BaseSerializer
 #else
     protected static string ReadString(Stream stream)
     {
-        byte[] len = new byte[4];
+        byte[] len = new byte[sizeof(int)];
         stream.Read(len, 0, len.Length);
         int length = BitConverter.ToInt32(len, 0);
         byte[] bytes = new byte[length];
@@ -178,7 +176,7 @@ internal abstract class BaseSerializer
 
     protected static int ReadInt(Stream stream)
     {
-        byte[] bytes = new byte[4];
+        byte[] bytes = new byte[sizeof(int)];
         stream.Read(bytes, 0, bytes.Length);
         return BitConverter.ToInt32(bytes, 0);
     }
@@ -204,7 +202,7 @@ internal abstract class BaseSerializer
 
     protected static short ReadShort(Stream stream)
     {
-        byte[] bytes = new byte[sizeof(long)];
+        byte[] bytes = new byte[sizeof(short)];
         stream.Read(bytes, 0, bytes.Length);
         return BitConverter.ToInt16(bytes, 0);
     }
@@ -217,7 +215,7 @@ internal abstract class BaseSerializer
 
     protected static bool ReadBool(Stream stream)
     {
-        byte[] bytes = new byte[4];
+        byte[] bytes = new byte[sizeof(bool)];
         stream.Read(bytes, 0, bytes.Length);
         return BitConverter.ToBoolean(bytes, 0);
     }
