@@ -504,6 +504,16 @@
         <target state="translated">不應略過測試方法</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
+        <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
+        <target state="new">Asynchronous test fixture methods do not require the 'Async' suffix</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
+        <source>Asynchronous test methods do not require the 'Async' suffix</source>
+        <target state="new">Asynchronous test methods do not require the 'Async' suffix</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}] 只能在標示為 [TestMethod] 的方法上設定</target>

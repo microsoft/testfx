@@ -505,6 +505,16 @@
         <target state="translated">テスト メソッドを無視することはできません</target>
         <note />
       </trans-unit>
+      <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
+        <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
+        <target state="new">Asynchronous test fixture methods do not require the 'Async' suffix</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
+        <source>Asynchronous test methods do not require the 'Async' suffix</source>
+        <target state="new">Asynchronous test methods do not require the 'Async' suffix</target>
+        <note />
+      </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">
         <source>[{0}] can only be set on methods marked with [TestMethod]</source>
         <target state="translated">[{0}] は、[TestMethod] でマークされたメソッドにのみ設定できます</target>
