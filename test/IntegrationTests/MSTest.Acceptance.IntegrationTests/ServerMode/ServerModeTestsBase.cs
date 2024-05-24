@@ -35,12 +35,12 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
             // Skip all unwanted environment variables.
-            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
+            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key.ToString(), StringComparer.OrdinalIgnoreCase))
             {
                 continue;
             }
 
-            environmentVariables[entry.Key!.ToString()!] = entry.Value!.ToString()!;
+            environmentVariables[entry.Key.ToString()!] = entry.Value!.ToString()!;
         }
 
         // We expect to not fail for unhandled exception in server mode for IDE needs.
@@ -83,12 +83,12 @@ public partial /* for codegen regx */ class ServerModeTestsBase : AcceptanceTest
         foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
         {
             // Skip all unwanted environment variables.
-            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
+            if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key.ToString(), StringComparer.OrdinalIgnoreCase))
             {
                 continue;
             }
 
-            environmentVariables[entry.Key!.ToString()!] = entry.Value!.ToString()!;
+            environmentVariables[entry.Key.ToString()!] = entry.Value!.ToString()!;
         }
 
         // We expect to not fail for unhandled exception in server mode for IDE needs.
