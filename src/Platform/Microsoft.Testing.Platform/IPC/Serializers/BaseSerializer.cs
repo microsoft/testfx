@@ -3,8 +3,8 @@
 
 #if NETCOREAPP
 using System.Buffers;
-
 #endif
+
 #if NET
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Resources;
