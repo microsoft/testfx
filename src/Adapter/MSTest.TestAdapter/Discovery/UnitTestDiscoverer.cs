@@ -117,6 +117,7 @@ internal class UnitTestDiscoverer
                 // Filter tests based on test case filters
                 if (filterExpression != null && !filterExpression.MatchTestCase(testCase, (p) => TestMethodFilter.PropertyValueProvider(testCase, p)))
                 {
+                    // If test is a non-runnable test, add it to the list of non-runnable tests.
                     if (hasNonRunnableTraits)
                     {
                         nonRunnableTests.Add(testCase);
@@ -180,6 +181,7 @@ internal class UnitTestDiscoverer
                 discoverySink.SendTestCase(testCase);
             }
 
+            // If there are runnable tests, then add non-runnable tests to the discovery sink.
             if (hasAnyRunnableTests)
             {
                 foreach (TestCase testCase in nonRunnableTests)

@@ -3,6 +3,7 @@
 
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security;
 using System.Text;
@@ -78,7 +79,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         var warningMessages = new List<string>();
         var tests = new List<UnitTestElement>();
-        var initializeCleanupMethods = new HashSet<string>();
+        var nonRunnableTests = new HashSet<string>();
+
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
         IReadOnlyList<Type> types = GetTypes(assembly, assemblyFileName, warningMessages);
@@ -103,7 +105,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, RunSettingsXml, type, warningMessages, discoverInternals,
-                testDataSourceDiscovery, testIdGenerationStrategy, initializeCleanupMethods);
+                testDataSourceDiscovery, testIdGenerationStrategy, nonRunnableTests);
             tests.AddRange(testsInType);
         }
 
@@ -168,13 +170,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 if (!map.ContainsKey(line))
                 {
                     map.Add(line, null);
-                    _ = errorDetails.AppendLine(line);
+                    errorDetails.AppendLine(line);
                 }
             }
         }
         else
         {
-            _ = errorDetails.AppendLine(ex.Message);
+            errorDetails.AppendLine(ex.Message);
         }
 
         return errorDetails.ToString();
@@ -199,7 +201,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
     private List<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string? runSettingsXml, Type type,
         List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
-        TestIdGenerationStrategy testIdGenerationStrategy, HashSet<string> initializeCleanupMethods)
+        TestIdGenerationStrategy testIdGenerationStrategy, HashSet<string> nonRunnableTests)
     {
         IDictionary<string, object> tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
         tempSourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(tempSourceLevelParameters)
@@ -227,7 +229,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
                     {
-                        if (DynamicDataAttached(sourceLevelParameters, test, tests, initializeCleanupMethods))
+                        if (DynamicDataAttached(sourceLevelParameters, test, tests, nonRunnableTests))
                         {
                             continue;
                         }
@@ -249,8 +251,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return tests;
     }
 
-    private bool DynamicDataAttached(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test, List<UnitTestElement> tests,
-        HashSet<string> initializeCleanupMethods)
+    private bool DynamicDataAttached(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test, List<UnitTestElement> tests, HashSet<string> nonRunnableTests)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -271,87 +272,84 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
-        AddInitializeMethods(testMethodInfo, tests, initializeCleanupMethods);
+        // Add non-runnable tests like AssemblyInitialize, AssemblyCleanup, ClassInitialize, ClassCleanup.
+        AddNonRunnableTests(testMethodInfo, tests, nonRunnableTests);
+
         return TryProcessTestDataSourceTests(test, testMethodInfo, tests);
     }
 
-    private static void AddInitializeMethods(TestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> initializeCleanupMethods)
+    private static void AddNonRunnableTests(TestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> nonRunnableTests)
     {
         string assemblyName = testMethodInfo.Parent.Parent.Assembly.GetName().Name!;
         string assemblyLocation = testMethodInfo.Parent.Parent.Assembly.Location;
         string className = testMethodInfo.Parent.ClassType.Name;
         string classFullName = testMethodInfo.Parent.ClassType.FullName!;
 
-        if (!initializeCleanupMethods.Contains(assemblyLocation))
+        if (!nonRunnableTests.Contains(assemblyLocation))
         {
-            _ = initializeCleanupMethods.Add(assemblyLocation);
+            _ = nonRunnableTests.Add(assemblyLocation);
 
             if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
             {
-                AddAssemblyMethod(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, tests, assemblyName, className, classFullName,
-                    assemblyLocation, Constants.AssemblyInitialize);
+                tests.Add(GetAssemblyNonRunnableTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyInitialize));
             }
 
             if (testMethodInfo.Parent.Parent.AssemblyCleanupMethod is not null)
             {
-                AddAssemblyMethod(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, tests, assemblyName, className, classFullName,
-                    assemblyLocation, Constants.AssemblyCleanup);
+                tests.Add(GetAssemblyNonRunnableTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyCleanup));
             }
         }
 
-        if (!initializeCleanupMethods.Contains(assemblyLocation + classFullName))
+        if (!nonRunnableTests.Contains(assemblyLocation + classFullName))
         {
-            _ = initializeCleanupMethods.Add(assemblyLocation + classFullName);
+            _ = nonRunnableTests.Add(assemblyLocation + classFullName);
 
             if (testMethodInfo.Parent.ClassInitializeMethod is not null)
             {
-                AddMethod(testMethodInfo.Parent.ClassInitializeMethod, tests, assemblyName, className, classFullName,
-                    assemblyLocation, Constants.ClassInitialize);
+                tests.Add(GetClassNonRunnableTest(testMethodInfo.Parent.ClassInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassInitialize));
             }
 
             if (testMethodInfo.Parent.ClassCleanupMethod is not null)
             {
-                AddMethod(testMethodInfo.Parent.ClassCleanupMethod, tests, assemblyName, className, classFullName,
-                    assemblyLocation, Constants.ClassCleanup);
+                tests.Add(GetClassNonRunnableTest(testMethodInfo.Parent.ClassCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassCleanup));
             }
         }
 
-        static void AddMethod(MethodInfo methodInfo, List<UnitTestElement> tests, string assemblyName, string className, string classFullName, string assemblyLocation, string methodType)
+        static UnitTestElement GetAssemblyNonRunnableTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
+            string assemblyLocation, string methodType)
         {
-            ParameterInfo[] args = methodInfo.GetParameters();
-            string methodName = args.Length > 0
-                ? $"{methodInfo.Name}({string.Join(",", args.Select(a => a.ParameterType.FullName))})"
-                : methodInfo.Name;
-            string[] hierarchy = [null!, classFullName, methodName];
-            var method = new TestMethod(classFullName, methodName,
-                hierarchy, methodName, classFullName, assemblyLocation, false,
-                TestIdGenerationStrategy.FullyQualified);
-            var testMethod = new UnitTestElement(method)
-            {
-                DisplayName = $"[{methodType}]",
-                Ignored = true,
-                Traits = [new Trait(Constants.NonRunnableTest, methodType)],
-            };
-            tests.Add(testMethod);
+            string methodName = GetMethodName(methodInfo);
+            string[] hierarchy = [null!, assemblyName, Constants.NonRunnableTest, methodName];
+            return GetNonRunnableTest(classFullName, assemblyLocation, methodType, methodName, hierarchy);
         }
 
-        static void AddAssemblyMethod(MethodInfo methodInfo, List<UnitTestElement> tests, string assemblyName, string className, string classFullName, string assemblyLocation, string methodType)
+        static UnitTestElement GetClassNonRunnableTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
+            string assemblyLocation, string methodType)
+        {
+            string methodName = GetMethodName(methodInfo);
+            string[] hierarchy = [null!, classFullName, methodName];
+            return GetNonRunnableTest(classFullName, assemblyLocation, methodType, methodName, hierarchy);
+        }
+
+        static string GetMethodName(MethodInfo methodInfo)
         {
             ParameterInfo[] args = methodInfo.GetParameters();
-            string methodName = args.Length > 0
+            return args.Length > 0
                 ? $"{methodInfo.Name}({string.Join(",", args.Select(a => a.ParameterType.FullName))})"
                 : methodInfo.Name;
-            string[] hierarchy = [null!, assemblyName, Constants.NonRunnableTest, methodName];
+        }
+
+        static UnitTestElement GetNonRunnableTest(string classFullName, string assemblyLocation, string methodType, string methodName, string[] hierarchy)
+        {
             var method = new TestMethod(classFullName, methodName,
                 hierarchy, methodName, classFullName, assemblyLocation, false,
                 TestIdGenerationStrategy.FullyQualified);
-            var testMethod = new UnitTestElement(method)
+            return new UnitTestElement(method)
             {
                 DisplayName = $"[{methodType}]",
                 Ignored = true,
                 Traits = [new Trait(Constants.NonRunnableTest, methodType)],
             };
-            tests.Add(testMethod);
         }
     }
 

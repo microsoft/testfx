@@ -101,16 +101,18 @@ internal class UnitTestRunner : MarshalByRefObject
 
     internal (bool ReportTest, ObjectModel.UnitTestOutcome Outcome, string? ExceptionMessage) GetNonRunnableTestMethodResult(TestMethod testMethod, string nonRunnableMethodType)
     {
+        // For the non-runnable methods, we need to return the appropriate result.
+        // Get matching testMethodInfo from the cache and return UnitTestOutcome for the non-runnable test.
         if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
         {
             if (nonRunnableMethodType == Constants.ClassInitialize)
             {
-                return GetOutcome(testMethodInfo.Parent.ClassInitializationException);
+                return (true, GetOutcome(testMethodInfo.Parent.ClassInitializationException), testMethodInfo.Parent.ClassInitializationException?.Message);
             }
 
             if (nonRunnableMethodType == Constants.ClassCleanup)
             {
-                return GetOutcome(testMethodInfo.Parent.ClassCleanupException);
+                return (true, GetOutcome(testMethodInfo.Parent.ClassCleanupException), testMethodInfo.Parent.ClassCleanupException?.Message);
             }
         }
 
@@ -118,21 +120,17 @@ internal class UnitTestRunner : MarshalByRefObject
         {
             if (nonRunnableMethodType == Constants.AssemblyInitialize)
             {
-                return GetOutcome(testMethodInfo.Parent.Parent.AssemblyInitializationException);
+                return (true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyInitializationException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
             }
             else if (nonRunnableMethodType == Constants.AssemblyCleanup)
             {
-                return GetOutcome(testMethodInfo.Parent.Parent.AssemblyCleanupException);
+                return (true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyCleanupException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
             }
         }
 
         return (false, ObjectModel.UnitTestOutcome.Inconclusive, null);
 
-        static (bool ReportTest, ObjectModel.UnitTestOutcome Outcome, string? ExceptionMessage) GetOutcome(Exception? exception)
-        {
-            ObjectModel.UnitTestOutcome outcome = exception == null ? ObjectModel.UnitTestOutcome.Passed : ObjectModel.UnitTestOutcome.Failed;
-            return (true, outcome, exception?.Message);
-        }
+        static ObjectModel.UnitTestOutcome GetOutcome(Exception? exception) => exception == null ? ObjectModel.UnitTestOutcome.Passed : ObjectModel.UnitTestOutcome.Failed;
     }
 
     /// <summary>
@@ -179,8 +177,11 @@ internal class UnitTestRunner : MarshalByRefObject
             }
 
             DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
+
+            // Keep track of all non-runnable methods so that we can return the appropriate result at the end.
             _nonRunnableMethods[testMethod.AssemblyName] = testMethodInfo;
             _nonRunnableMethods[testMethod.AssemblyName + testMethod.FullClassName] = testMethodInfo;
+
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
             UnitTestResult[] result = testMethodRunner.Execute();
             RunRequiredCleanups(testContext, testMethodInfo, testMethod, result);
@@ -356,11 +357,11 @@ internal class UnitTestRunner : MarshalByRefObject
 
             lock (testsByClass)
             {
-                _ = testsByClass.Remove(testMethod.UniqueName);
+                testsByClass.Remove(testMethod.UniqueName);
 
                 if (testsByClass.Count == 0)
                 {
-                    _ = _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
+                    _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
                     if (testMethodInfo.Parent.HasExecutableCleanupMethod)
                     {
                         ClassCleanupBehavior cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)

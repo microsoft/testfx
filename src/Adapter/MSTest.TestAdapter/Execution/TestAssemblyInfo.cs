@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -90,11 +91,6 @@ public class TestAssemblyInfo
     public bool IsAssemblyInitializeExecuted { get; internal set; }
 
     /// <summary>
-    /// Gets a value indicating whether <c>AssemblyCleanup</c> has been executed.
-    /// </summary>
-    public bool IsAssemblyCleanupExecuted { get; internal set; }
-
-    /// <summary>
     /// Gets the assembly initialization exception.
     /// </summary>
     public Exception? AssemblyInitializationException { get; internal set; }
@@ -121,6 +117,7 @@ public class TestAssemblyInfo
     /// </summary>
     /// <param name="testContext"> The test context. </param>
     /// <exception cref="TestFailedException"> Throws a test failed exception if the initialization method throws an exception. </exception>
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public void RunAssemblyInitialize(TestContext testContext)
     {
         // No assembly initialize => nothing to do.
@@ -210,6 +207,7 @@ public class TestAssemblyInfo
     /// <returns>
     /// Any exception that can be thrown as part of a assembly cleanup as warning messages.
     /// </returns>
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle all kinds of user exceptions and message appropriately.")]
     public string? RunAssemblyCleanup()
     {
         if (AssemblyCleanupMethod == null)
@@ -233,10 +231,6 @@ public class TestAssemblyInfo
             catch (Exception ex)
             {
                 AssemblyCleanupException = ex;
-            }
-            finally
-            {
-                IsAssemblyCleanupExecuted = true;
             }
         }
 
@@ -294,10 +288,6 @@ public class TestAssemblyInfo
             catch (Exception ex)
             {
                 assemblyCleanupException = ex;
-            }
-            finally
-            {
-                IsAssemblyCleanupExecuted = true;
             }
         }
 

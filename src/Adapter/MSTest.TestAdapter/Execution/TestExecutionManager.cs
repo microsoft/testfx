@@ -199,6 +199,7 @@ public class TestExecutionManager
         if (filterExpression != null
             && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
         {
+            // If this is a non runnable test, return true. Non runnable tests are not filtered out and are always available for the status.
             if (test.Traits.Any(t => t.Name == Constants.NonRunnableTest))
             {
                 return true;
@@ -393,6 +394,8 @@ public class TestExecutionManager
                 break;
             }
 
+            // If it is a non-runnable test, add it to the list of non-runnable tests and do not execute it.
+            // It is executed by test itself.
             if (currentTest.Traits.Any(t => t.Name == Constants.NonRunnableTest))
             {
                 nonRunnableTests.Add(currentTest);
@@ -420,10 +423,12 @@ public class TestExecutionManager
             SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
         }
 
+        // Once all tests have been executed, update the status of non-runnable tests.
         foreach (TestCase currentTest in nonRunnableTests)
         {
             testExecutionRecorder.RecordStart(currentTest);
 
+            // If there were only non-runnable tests, send an inconclusive result.
             if (!hasAnyRunnableTests)
             {
                 var result = new UnitTestResult(ObjectModel.UnitTestOutcome.Inconclusive, null);
