@@ -3,11 +3,30 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace ParallelClassesTestProject;
+using ParallelClassesTestProject;
+
+namespace ParallelClassesTestProject1;
 
 [TestClass]
 public class UnitTest1
 {
+    private static bool s_classInitCalled;
+    private static bool s_classCleanCalled;
+
+    [ClassInitialize]
+    public static void ClassInit(TestContext context)
+    {
+        Assert.IsFalse(s_classInitCalled);
+        s_classInitCalled = true;
+    }
+
+    [ClassCleanup]
+    public static void ClassCleanup()
+    {
+        Assert.IsFalse(s_classCleanCalled);
+        s_classCleanCalled = true;
+    }
+
     [TestMethod]
     public void SimpleTest11()
     {

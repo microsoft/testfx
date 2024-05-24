@@ -1,10 +1,11 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -90,6 +91,8 @@ internal class UnitTestDiscoverer
     internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
     {
         bool shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
+        bool hasAnyRunnableTests = false;
+        var nonRunnableTests = new List<TestCase>();
 
         var navigationSessions = new Dictionary<string, object?>();
         try
@@ -109,11 +112,22 @@ internal class UnitTestDiscoverer
             foreach (UnitTestElement testElement in testElements)
             {
                 var testCase = testElement.ToTestCase();
+                bool hasNonRunnableTraits = testCase.Traits.Any(t => t.Name == Constants.NonRunnableTest);
 
                 // Filter tests based on test case filters
                 if (filterExpression != null && !filterExpression.MatchTestCase(testCase, (p) => TestMethodFilter.PropertyValueProvider(testCase, p)))
                 {
+                    if (hasNonRunnableTraits)
+                    {
+                        nonRunnableTests.Add(testCase);
+                    }
+
                     continue;
+                }
+
+                if (!hasAnyRunnableTests)
+                {
+                    hasAnyRunnableTests = !hasNonRunnableTraits;
                 }
 
                 if (!shouldCollectSourceInformation)
@@ -164,6 +178,14 @@ internal class UnitTestDiscoverer
                 }
 
                 discoverySink.SendTestCase(testCase);
+            }
+
+            if (hasAnyRunnableTests)
+            {
+                foreach (TestCase testCase in nonRunnableTests)
+                {
+                    discoverySink.SendTestCase(testCase);
+                }
             }
         }
         finally

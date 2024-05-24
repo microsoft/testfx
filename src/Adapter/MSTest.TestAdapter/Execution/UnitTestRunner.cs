@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 internal class UnitTestRunner : MarshalByRefObject
 {
-    private readonly Dictionary<string, TestMethodInfo?> _nonRunnableMethods = new();
+    private readonly Dictionary<string, TestMethodInfo> _nonRunnableMethods = new();
 
     /// <summary>
     /// Type cache.
@@ -99,33 +99,47 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
-    internal (bool HasMatchingTest, string? ExceptionMessage) GetException(TestMethod testMethod, string nonRunnableMethodType)
+    internal (bool ReportTest, ObjectModel.UnitTestOutcome Outcome, string? ExceptionMessage) GetNonRunnableTestMethodResult(TestMethod testMethod, string nonRunnableMethodType)
     {
+        if (_nonRunnableMethods.Count == 0)
+        {
+            return (true, ObjectModel.UnitTestOutcome.Inconclusive, null);
+        }
+
         if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
         {
             if (nonRunnableMethodType == Constants.ClassInitialize)
             {
-                return (testMethodInfo?.Parent.IsClassInitializeExecuted == true, testMethodInfo?.Parent.ClassInitializationException?.Message);
+                return GetOutcome(testMethodInfo.Parent.IsClassInitializeExecuted, testMethodInfo.Parent.ClassInitializationException);
             }
-            else if (nonRunnableMethodType == Constants.ClassCleanup)
+
+            if (nonRunnableMethodType == Constants.ClassCleanup)
             {
-                return (testMethodInfo?.Parent.IsClassCleanupExecuted == true, testMethodInfo?.Parent.ClassCleanupException?.Message);
+                bool isExecuted = testMethodInfo.Parent.Parent.IsAssemblyCleanupExecuted || testMethodInfo.Parent.Parent.AssemblyCleanupException is not null;
+                return GetOutcome(isExecuted, testMethodInfo.Parent.ClassCleanupException);
             }
         }
-
-        if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName, out testMethodInfo))
+        else if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName, out testMethodInfo))
         {
             if (nonRunnableMethodType == Constants.AssemblyInitialize)
             {
-                return (testMethodInfo?.Parent.Parent.IsAssemblyInitializeExecuted == true, testMethodInfo?.Parent.Parent.AssemblyInitializationException?.Message);
+                return GetOutcome(testMethodInfo.Parent.Parent.IsAssemblyInitializeExecuted, testMethodInfo.Parent.Parent.AssemblyInitializationException);
             }
             else if (nonRunnableMethodType == Constants.AssemblyCleanup)
             {
-                return (testMethodInfo?.Parent.Parent.IsAssemblyCleanupExecuted == true, testMethodInfo?.Parent.Parent.AssemblyCleanupException?.Message);
+                return GetOutcome(testMethodInfo.Parent.Parent.IsAssemblyCleanupExecuted, testMethodInfo.Parent.Parent.AssemblyCleanupException);
             }
         }
 
-        return (false, null);
+        return (false, ObjectModel.UnitTestOutcome.Inconclusive, null);
+
+        static (bool ReportTest, ObjectModel.UnitTestOutcome Outcome, string? ExceptionMessage) GetOutcome(bool isExecuted, Exception? exception)
+        {
+            ObjectModel.UnitTestOutcome outcome = !isExecuted ?
+                ObjectModel.UnitTestOutcome.Inconclusive
+                : exception == null ? ObjectModel.UnitTestOutcome.Passed : ObjectModel.UnitTestOutcome.Failed;
+            return (true, outcome, exception?.Message);
+        }
     }
 
     /// <summary>
@@ -171,10 +185,9 @@ internal class UnitTestRunner : MarshalByRefObject
                 return notRunnableResult;
             }
 
+            DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
             _nonRunnableMethods[testMethod.AssemblyName] = testMethodInfo;
             _nonRunnableMethods[testMethod.AssemblyName + testMethod.FullClassName] = testMethodInfo;
-
-            DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
             UnitTestResult[] result = testMethodRunner.Execute();
             RunRequiredCleanups(testContext, testMethodInfo, testMethod, result);

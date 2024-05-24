@@ -199,6 +199,11 @@ public class TestExecutionManager
         if (filterExpression != null
             && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
         {
+            if (test.Traits.Any(t => t.Name == Constants.NonRunnableTest))
+            {
+                return true;
+            }
+
             // Skip test if not fitting filter criteria.
             return false;
         }
@@ -418,12 +423,13 @@ public class TestExecutionManager
             {
                 testExecutionRecorder.RecordStart(currentTest);
                 var unitTestElement = currentTest.ToUnitTestElement(source);
-                (bool hasTestMethod, string? exception) = testRunner.GetException(unitTestElement.TestMethod, trait.Value);
+                (bool reportTest, ObjectModel.UnitTestOutcome outcome, string? exception) = testRunner.GetNonRunnableTestMethodResult(unitTestElement.TestMethod, trait.Value);
 
-                UnitTestResult result = exception is null
-                    ? new UnitTestResult(hasTestMethod ? ObjectModel.UnitTestOutcome.Passed : ObjectModel.UnitTestOutcome.Ignored, null)
-                    : new UnitTestResult(ObjectModel.UnitTestOutcome.Failed, exception);
-                SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
+                if (reportTest)
+                {
+                    var result = new UnitTestResult(outcome, null);
+                    SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
+                }
             }
         }
     }
