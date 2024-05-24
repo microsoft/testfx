@@ -245,7 +245,7 @@ public class TestExecutionManager
         // and are merged with session level parameters
         IDictionary<string, object> sourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(source);
 
-        if (_sessionParameters != null && _sessionParameters.Count > 0)
+        if (_sessionParameters is { Count: > 0 })
         {
             sourceLevelParameters = _sessionParameters.ConcatWithOverwrites(sourceLevelParameters);
         }
@@ -322,7 +322,7 @@ public class TestExecutionManager
                     {
                         while (!queue!.IsEmpty)
                         {
-                            if (_cancellationToken != null && _cancellationToken.Canceled)
+                            if (_cancellationToken is { Canceled: true })
                             {
                                 // if a cancellation has been requested, do not queue any more test runs.
                                 break;
@@ -381,7 +381,7 @@ public class TestExecutionManager
     {
         foreach (TestCase currentTest in tests)
         {
-            if (_cancellationToken != null && _cancellationToken.Canceled)
+            if (_cancellationToken is { Canceled: true })
             {
                 break;
             }

@@ -193,7 +193,7 @@ internal class TestDataConnectionSql : TestDataConnection
     {
         string[]? parts = SplitName(tableName);
 
-        if (parts != null && parts.Length > 0)
+        if (parts is { Length: > 0 })
         {
             // Seems to be well formed, so make sure we end up fully quoted
             return JoinAndQuoteName(parts, true);
@@ -358,7 +358,7 @@ internal class TestDataConnectionSql : TestDataConnection
         string quoted = QuoteIdentifier(s);
         string[] parts = quoted.Split(new string[] { s }, StringSplitOptions.None);
 
-        DebugEx.Assert(parts != null && parts.Length == 2, "TestDataConnectionSql.GetQuotesLiteralHelper: Failure when trying to quote an identifier!");
+        DebugEx.Assert(parts is { Length: 2 }, "TestDataConnectionSql.GetQuotesLiteralHelper: Failure when trying to quote an identifier!");
         DebugEx.Assert(!StringEx.IsNullOrEmpty(parts[0]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuotePrefix!");
         DebugEx.Assert(!StringEx.IsNullOrEmpty(parts[1]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuoteSuffix!");
 
@@ -687,7 +687,7 @@ internal class TestDataConnectionSql : TestDataConnection
     #region Helpers
 
 #pragma warning disable SA1202 // Elements must be ordered by access
-    public bool IsOpen() => _connection != null && _connection.State == ConnectionState.Open;
+    public bool IsOpen() => _connection is { State: ConnectionState.Open };
 
     /// <summary>
     /// Returns true when given provider (OLEDB or ODBC) is for MSSql.

@@ -259,8 +259,7 @@ internal class ReflectionUtility
                 typeof(AttributeUsageAttribute),
                 true);
             if (attributeUsageAttributes.Count > 0
-                && attributeUsageAttributes[0] is AttributeUsageAttribute attributeUsageAttribute
-                && !attributeUsageAttribute.AllowMultiple)
+                && attributeUsageAttributes[0] is AttributeUsageAttribute { AllowMultiple: false })
             {
                 if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))
                 {

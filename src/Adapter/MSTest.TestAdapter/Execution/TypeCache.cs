@@ -310,13 +310,13 @@ internal class TypeCache : MarshalByRefObject
         {
             foreach (MethodInfo methodInfo in baseType.GetTypeInfo().DeclaredMethods)
             {
-                if (methodInfo.IsPublic && !methodInfo.IsStatic)
+                if (methodInfo is { IsPublic: true, IsStatic: false })
                 {
                     // Update test initialize/cleanup method from base type.
                     UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, instanceMethods);
                 }
 
-                if (methodInfo.IsPublic && methodInfo.IsStatic)
+                if (methodInfo is { IsPublic: true, IsStatic: true })
                 {
                     UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, true, ref initAndCleanupMethods);
                 }

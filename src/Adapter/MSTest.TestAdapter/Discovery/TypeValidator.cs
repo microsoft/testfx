@@ -67,7 +67,7 @@ internal class TypeValidator
         }
 
         // Generic class
-        if (typeInfo.IsGenericTypeDefinition && !typeInfo.IsAbstract)
+        if (typeInfo is { IsGenericTypeDefinition: true, IsAbstract: false })
         {
             // In IDE generic classes that are not abstract are treated as not runnable. Keep consistence.
             string warning = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorTestClassIsGenericNonAbstract, type.FullName);
