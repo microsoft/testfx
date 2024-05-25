@@ -411,7 +411,7 @@ public class TestClassInfo
                     while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count) : null;
+                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count);
                     }
 
                     IsClassCleanupExecuted = ClassCleanupException is null;
@@ -491,9 +491,7 @@ public class TestClassInfo
                 while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                 {
                     classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                    ClassCleanupException = classCleanupMethod is not null
-                        ? InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count)
-                        : null;
+                    ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count);
                 }
 
                 IsClassCleanupExecuted = ClassCleanupException is null;
