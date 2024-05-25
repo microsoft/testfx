@@ -658,7 +658,7 @@ internal static class SerializerUtilities
             return new ErrorMessage(
                 Id: id,
                 ErrorCode: code,
-                Message: errorMessage ?? string.Empty,
+                Message: errorMessage,
                 Data: data);
         });
     }
