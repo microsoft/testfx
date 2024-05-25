@@ -734,11 +734,6 @@ internal class TypeCache : MarshalByRefObject
         DebugEx.Assert(testClassInfo != null, "testClassInfo is Null");
 
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
-        if (methodInfo == null)
-        {
-            // Means the specified test method could not be found.
-            return null;
-        }
 
         ExpectedExceptionBaseAttribute? expectedExceptionAttribute = _reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
         int timeout = GetTestTimeout(methodInfo, testMethod);
