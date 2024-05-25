@@ -4,7 +4,7 @@
     <body>
       <trans-unit id="FixSignatureCodeFix">
         <source>Fix signature</source>
-        <target state="new">Fix signature</target>
+        <target state="translated">Opravit podpis</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidCodeFix">
