@@ -5,432 +5,431 @@ using System.Diagnostics;
 
 #pragma warning disable CA1000 // Do not declare static members on generic types
 
-namespace Analyzer.Utilities.PooledObjects
-{
-    [DebuggerDisplay("Count = {Count,nq}")]
-    [DebuggerTypeProxy(typeof(ArrayBuilder<>.DebuggerProxy))]
-    internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
-    {
-        #region DebuggerProxy
-#pragma warning disable CA1812 // ArrayBuilder<T>.DebuggerProxy is an internal class that is apparently never instantiated - used in DebuggerTypeProxy attribute above.
-        private sealed class DebuggerProxy
-        {
-            private readonly ArrayBuilder<T> _builder;
+namespace Analyzer.Utilities.PooledObjects;
 
-            public DebuggerProxy(ArrayBuilder<T> builder)
-            {
-                _builder = builder;
-            }
+[DebuggerDisplay("Count = {Count,nq}")]
+[DebuggerTypeProxy(typeof(ArrayBuilder<>.DebuggerProxy))]
+internal sealed partial class ArrayBuilder<T> : IReadOnlyList<T>, IDisposable
+{
+    #region DebuggerProxy
+#pragma warning disable CA1812 // ArrayBuilder<T>.DebuggerProxy is an internal class that is apparently never instantiated - used in DebuggerTypeProxy attribute above.
+    private sealed class DebuggerProxy
+    {
+        private readonly ArrayBuilder<T> _builder;
+
+        public DebuggerProxy(ArrayBuilder<T> builder)
+        {
+            _builder = builder;
+        }
 
 #pragma warning disable CA1819 // Properties should not return arrays
-            [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-            public T[] A
+        [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+        public T[] A
+        {
+            get
             {
-                get
+                var result = new T[_builder.Count];
+                for (int i = 0; i < result.Length; i++)
                 {
-                    var result = new T[_builder.Count];
-                    for (int i = 0; i < result.Length; i++)
-                    {
-                        result[i] = _builder[i];
-                    }
-
-                    return result;
+                    result[i] = _builder[i];
                 }
+
+                return result;
             }
         }
+    }
 #pragma warning restore CA1819
 #pragma warning restore CA1812
-        #endregion
+    #endregion
 
-        private readonly ImmutableArray<T>.Builder _builder;
+    private readonly ImmutableArray<T>.Builder _builder;
 
-        private readonly ObjectPool<ArrayBuilder<T>>? _pool;
+    private readonly ObjectPool<ArrayBuilder<T>>? _pool;
 
-        public ArrayBuilder(int size)
+    public ArrayBuilder(int size)
+    {
+        _builder = ImmutableArray.CreateBuilder<T>(size);
+    }
+
+    public ArrayBuilder()
+        : this(8)
+    { }
+
+    private ArrayBuilder(ObjectPool<ArrayBuilder<T>>? pool)
+        : this()
+    {
+        _pool = pool;
+    }
+
+    /// <summary>
+    /// Realizes the array.
+    /// </summary>
+    public ImmutableArray<T> ToImmutable() => _builder.ToImmutable();
+
+    public int Count
+    {
+        get => _builder.Count;
+        set => _builder.Count = value;
+    }
+
+    public T this[int index]
+    {
+        get => _builder[index];
+        set => _builder[index] = value;
+    }
+
+    /// <summary>
+    /// Write <paramref name="value"/> to slot <paramref name="index"/>.
+    /// Fills in unallocated slots preceding the <paramref name="index"/>, if any.
+    /// </summary>
+    public void SetItem(int index, T value)
+    {
+        while (index > _builder.Count)
         {
-            _builder = ImmutableArray.CreateBuilder<T>(size);
+            _builder.Add(default!);
         }
 
-        public ArrayBuilder()
-            : this(8)
-        { }
-
-        private ArrayBuilder(ObjectPool<ArrayBuilder<T>>? pool)
-            : this()
+        if (index == _builder.Count)
         {
-            _pool = pool;
+            _builder.Add(value);
         }
-
-        /// <summary>
-        /// Realizes the array.
-        /// </summary>
-        public ImmutableArray<T> ToImmutable() => _builder.ToImmutable();
-
-        public int Count
+        else
         {
-            get => _builder.Count;
-            set => _builder.Count = value;
+            _builder[index] = value;
         }
+    }
 
-        public T this[int index]
+    public void Add(T item) => _builder.Add(item);
+
+    public void Insert(int index, T item) => _builder.Insert(index, item);
+
+    public void EnsureCapacity(int capacity)
+    {
+        if (_builder.Capacity < capacity)
         {
-            get => _builder[index];
-            set => _builder[index] = value;
+            _builder.Capacity = capacity;
         }
+    }
 
-        /// <summary>
-        /// Write <paramref name="value"/> to slot <paramref name="index"/>.
-        /// Fills in unallocated slots preceding the <paramref name="index"/>, if any.
-        /// </summary>
-        public void SetItem(int index, T value)
+    public void Clear() => _builder.Clear();
+
+    public bool Contains(T item) => _builder.Contains(item);
+
+    public int IndexOf(T item) => _builder.IndexOf(item);
+
+    public int IndexOf(T item, IEqualityComparer<T> equalityComparer) => _builder.IndexOf(item, 0, _builder.Count, equalityComparer);
+
+    public int IndexOf(T item, int startIndex, int count) => _builder.IndexOf(item, startIndex, count);
+
+    public int FindIndex(Predicate<T> match)
+        => FindIndex(0, Count, match);
+
+    public int FindIndex(int startIndex, Predicate<T> match)
+        => FindIndex(startIndex, Count - startIndex, match);
+
+    public int FindIndex(int startIndex, int count, Predicate<T> match)
+    {
+        int endIndex = startIndex + count;
+        for (int i = startIndex; i < endIndex; i++)
         {
-            while (index > _builder.Count)
+            if (match(_builder[i]))
             {
-                _builder.Add(default!);
-            }
-
-            if (index == _builder.Count)
-            {
-                _builder.Add(value);
-            }
-            else
-            {
-                _builder[index] = value;
+                return i;
             }
         }
 
-        public void Add(T item) => _builder.Add(item);
+        return -1;
+    }
 
-        public void Insert(int index, T item) => _builder.Insert(index, item);
+    public void RemoveAt(int index) => _builder.RemoveAt(index);
 
-        public void EnsureCapacity(int capacity)
-        {
-            if (_builder.Capacity < capacity)
-            {
-                _builder.Capacity = capacity;
-            }
-        }
+    public void RemoveLast() => _builder.RemoveAt(_builder.Count - 1);
 
-        public void Clear() => _builder.Clear();
+    public void ReverseContents() => _builder.Reverse();
 
-        public bool Contains(T item) => _builder.Contains(item);
+    public void Sort() => _builder.Sort();
 
-        public int IndexOf(T item) => _builder.IndexOf(item);
+    public void Sort(IComparer<T> comparer) => _builder.Sort(comparer);
 
-        public int IndexOf(T item, IEqualityComparer<T> equalityComparer) => _builder.IndexOf(item, 0, _builder.Count, equalityComparer);
+    public void Sort(Comparison<T> compare)
+        => Sort(Comparer<T>.Create(compare));
 
-        public int IndexOf(T item, int startIndex, int count) => _builder.IndexOf(item, startIndex, count);
+    public void Sort(int startIndex, IComparer<T> comparer) => _builder.Sort(startIndex, _builder.Count - startIndex, comparer);
 
-        public int FindIndex(Predicate<T> match)
-            => FindIndex(0, Count, match);
+    public T[] ToArray() => _builder.ToArray();
 
-        public int FindIndex(int startIndex, Predicate<T> match)
-            => FindIndex(startIndex, Count - startIndex, match);
+    public void CopyTo(T[] array, int start) => _builder.CopyTo(array, start);
 
-        public int FindIndex(int startIndex, int count, Predicate<T> match)
-        {
-            int endIndex = startIndex + count;
-            for (int i = startIndex; i < endIndex; i++)
-            {
-                if (match(_builder[i]))
-                {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-
-        public void RemoveAt(int index) => _builder.RemoveAt(index);
-
-        public void RemoveLast() => _builder.RemoveAt(_builder.Count - 1);
-
-        public void ReverseContents() => _builder.Reverse();
-
-        public void Sort() => _builder.Sort();
-
-        public void Sort(IComparer<T> comparer) => _builder.Sort(comparer);
-
-        public void Sort(Comparison<T> compare)
-            => Sort(Comparer<T>.Create(compare));
-
-        public void Sort(int startIndex, IComparer<T> comparer) => _builder.Sort(startIndex, _builder.Count - startIndex, comparer);
-
-        public T[] ToArray() => _builder.ToArray();
-
-        public void CopyTo(T[] array, int start) => _builder.CopyTo(array, start);
-
-        public T Last() =>
+    public T Last() =>
 #pragma warning disable IDE0056
-            _builder[_builder.Count - 1];
+        _builder[_builder.Count - 1];
 #pragma warning restore IDE0056
 
-        public T First() => _builder[0];
+    public T First() => _builder[0];
 
-        public bool Any() => _builder.Count > 0;
+    public bool Any() => _builder.Count > 0;
 
-        /// <summary>
-        /// Realizes the array.
-        /// </summary>
-        public ImmutableArray<T> ToImmutableOrNull()
+    /// <summary>
+    /// Realizes the array.
+    /// </summary>
+    public ImmutableArray<T> ToImmutableOrNull()
+    {
+        if (Count == 0)
         {
-            if (Count == 0)
-            {
-                return default;
-            }
-
-            return ToImmutable();
+            return default;
         }
 
-        /// <summary>
-        /// Realizes the array, downcasting each element to a derived type.
-        /// </summary>
-        public ImmutableArray<U> ToDowncastedImmutable<U>()
-            where U : T
+        return ToImmutable();
+    }
+
+    /// <summary>
+    /// Realizes the array, downcasting each element to a derived type.
+    /// </summary>
+    public ImmutableArray<U> ToDowncastedImmutable<U>()
+        where U : T
+    {
+        if (Count == 0)
         {
-            if (Count == 0)
-            {
-                return ImmutableArray<U>.Empty;
-            }
-
-            var tmp = ArrayBuilder<U>.GetInstance(Count);
-            foreach (T i in _builder)
-            {
-                tmp.Add((U)i!);
-            }
-
-            return tmp.ToImmutableAndFree();
+            return ImmutableArray<U>.Empty;
         }
 
-        /// <summary>
-        /// Realizes the array and disposes the builder in one operation.
-        /// </summary>
-        public ImmutableArray<T> ToImmutableAndFree()
+        var tmp = ArrayBuilder<U>.GetInstance(Count);
+        foreach (T i in _builder)
         {
-            ImmutableArray<T> result;
-            if (_builder.Capacity == Count)
+            tmp.Add((U)i!);
+        }
+
+        return tmp.ToImmutableAndFree();
+    }
+
+    /// <summary>
+    /// Realizes the array and disposes the builder in one operation.
+    /// </summary>
+    public ImmutableArray<T> ToImmutableAndFree()
+    {
+        ImmutableArray<T> result;
+        if (_builder.Capacity == Count)
+        {
+            result = _builder.MoveToImmutable();
+        }
+        else
+        {
+            result = ToImmutable();
+        }
+
+        Free();
+        return result;
+    }
+
+    public T[] ToArrayAndFree()
+    {
+        T[] result = ToArray();
+        Free();
+        return result;
+    }
+
+    public void Dispose() => Free();
+
+    #region Poolable
+
+    // To implement Poolable, you need two things:
+    // 1) Expose Freeing primitive.
+    private void Free()
+    {
+        ObjectPool<ArrayBuilder<T>>? pool = _pool;
+        if (pool != null)
+        {
+            // According to the statistics of a C# compiler self-build, the most commonly used builder size is 0.  (808003 uses).
+            // The distant second is the Count == 1 (455619), then 2 (106362) ...
+            // After about 50 (just 67) we have a long tail of infrequently used builder sizes.
+            // However we have builders with size up to 50K   (just one such thing)
+            //
+            // We do not want to retain (potentially indefinitely) very large builders
+            // while the chance that we will need their size is diminishingly small.
+            // It makes sense to constrain the size to some "not too small" number.
+            // Overall perf does not seem to be very sensitive to this number, so I picked 128 as a limit.
+            if (_builder.Capacity < 128)
             {
-                result = _builder.MoveToImmutable();
+                if (Count != 0)
+                {
+                    Clear();
+                }
+
+                pool.Free(this, CancellationToken.None);
+                return;
             }
             else
             {
-                result = ToImmutable();
+                ObjectPool<ArrayBuilder<T>>.ForgetTrackedObject(this);
             }
+        }
+    }
 
-            Free();
-            return result;
+    // 2) Expose the pool or the way to create a pool or the way to get an instance.
+    //    for now we will expose both and figure which way works better
+    private static readonly ObjectPool<ArrayBuilder<T>> s_poolInstance = CreatePool();
+    public static ArrayBuilder<T> GetInstance()
+    {
+        ArrayBuilder<T> builder = s_poolInstance.Allocate();
+        Debug.Assert(builder.Count == 0);
+        return builder;
+    }
+
+    public static ArrayBuilder<T> GetInstance(int capacity)
+    {
+        ArrayBuilder<T> builder = GetInstance();
+        builder.EnsureCapacity(capacity);
+        return builder;
+    }
+
+    public static ArrayBuilder<T> GetInstance(int capacity, T fillWithValue)
+    {
+        ArrayBuilder<T> builder = GetInstance();
+        builder.EnsureCapacity(capacity);
+
+        for (int i = 0; i < capacity; i++)
+        {
+            builder.Add(fillWithValue);
         }
 
-        public T[] ToArrayAndFree()
+        return builder;
+    }
+
+    internal static ObjectPool<ArrayBuilder<T>> CreatePool() => CreatePool(128); // we rarely need more than 10
+
+    internal static ObjectPool<ArrayBuilder<T>> CreatePool(int size)
+    {
+        ObjectPool<ArrayBuilder<T>>? pool = null;
+        pool = new ObjectPool<ArrayBuilder<T>>(() => new ArrayBuilder<T>(pool), size);
+        return pool;
+    }
+
+    #endregion
+
+    internal Enumerator GetEnumerator() => new(this);
+
+    IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
+
+    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+
+    internal Dictionary<K, ImmutableArray<T>> ToDictionary<K>(Func<T, K> keySelector, IEqualityComparer<K>? comparer = null)
+        where K : notnull
+    {
+        if (Count == 1)
         {
-            T[] result = ToArray();
-            Free();
-            return result;
+            var dictionary1 = new Dictionary<K, ImmutableArray<T>>(1, comparer);
+            T value = this[0];
+            dictionary1.Add(keySelector(value), ImmutableArray.Create(value));
+            return dictionary1;
         }
 
-        public void Dispose() => Free();
-
-        #region Poolable
-
-        // To implement Poolable, you need two things:
-        // 1) Expose Freeing primitive.
-        private void Free()
+        if (Count == 0)
         {
-            ObjectPool<ArrayBuilder<T>>? pool = _pool;
-            if (pool != null)
+            return new Dictionary<K, ImmutableArray<T>>(comparer);
+        }
+
+        // bucketize
+        // prevent reallocation. it may not have 'count' entries, but it won't have more.
+        var accumulator = new Dictionary<K, ArrayBuilder<T>>(Count, comparer);
+        for (int i = 0; i < Count; i++)
+        {
+            T? item = this[i];
+            K key = keySelector(item);
+            if (!accumulator.TryGetValue(key, out ArrayBuilder<T>? bucket))
             {
-                // According to the statistics of a C# compiler self-build, the most commonly used builder size is 0.  (808003 uses).
-                // The distant second is the Count == 1 (455619), then 2 (106362) ...
-                // After about 50 (just 67) we have a long tail of infrequently used builder sizes.
-                // However we have builders with size up to 50K   (just one such thing)
-                //
-                // We do not want to retain (potentially indefinitely) very large builders
-                // while the chance that we will need their size is diminishingly small.
-                // It makes sense to constrain the size to some "not too small" number.
-                // Overall perf does not seem to be very sensitive to this number, so I picked 128 as a limit.
-                if (_builder.Capacity < 128)
-                {
-                    if (Count != 0)
-                    {
-                        Clear();
-                    }
-
-                    pool.Free(this, CancellationToken.None);
-                    return;
-                }
-                else
-                {
-                    ObjectPool<ArrayBuilder<T>>.ForgetTrackedObject(this);
-                }
+                bucket = ArrayBuilder<T>.GetInstance();
+                accumulator.Add(key, bucket);
             }
+
+            bucket.Add(item);
         }
 
-        // 2) Expose the pool or the way to create a pool or the way to get an instance.
-        //    for now we will expose both and figure which way works better
-        private static readonly ObjectPool<ArrayBuilder<T>> s_poolInstance = CreatePool();
-        public static ArrayBuilder<T> GetInstance()
+        var dictionary = new Dictionary<K, ImmutableArray<T>>(accumulator.Count, comparer);
+
+        // freeze
+        foreach (KeyValuePair<K, ArrayBuilder<T>> pair in accumulator)
         {
-            ArrayBuilder<T> builder = s_poolInstance.Allocate();
-            Debug.Assert(builder.Count == 0);
-            return builder;
+            dictionary.Add(pair.Key, pair.Value.ToImmutableAndFree());
         }
 
-        public static ArrayBuilder<T> GetInstance(int capacity)
+        return dictionary;
+    }
+
+    public void AddRange(ArrayBuilder<T> items) => _builder.AddRange(items._builder);
+
+    public void AddRange<U>(ArrayBuilder<U> items) where U : T => _builder.AddRange(items._builder);
+
+    public void AddRange(ImmutableArray<T> items) => _builder.AddRange(items);
+
+    public void AddRange(ImmutableArray<T> items, int length) => _builder.AddRange(items, length);
+
+    public void AddRange<S>(ImmutableArray<S> items) where S : class, T => AddRange(ImmutableArray<T>.CastUp(items));
+
+    public void AddRange(T[] items, int start, int length)
+    {
+        for (int i = start, end = start + length; i < end; i++)
         {
-            ArrayBuilder<T> builder = GetInstance();
-            builder.EnsureCapacity(capacity);
-            return builder;
+            Add(items[i]);
         }
+    }
 
-        public static ArrayBuilder<T> GetInstance(int capacity, T fillWithValue)
+    public void AddRange(IEnumerable<T> items) => _builder.AddRange(items);
+
+    public void AddRange(params T[] items) => _builder.AddRange(items);
+
+    public void AddRange(T[] items, int length) => _builder.AddRange(items, length);
+
+    public void Clip(int limit)
+    {
+        Debug.Assert(limit <= Count);
+        _builder.Count = limit;
+    }
+
+    public void ZeroInit(int count)
+    {
+        _builder.Clear();
+        _builder.Count = count;
+    }
+
+    public void AddMany(T item, int count)
+    {
+        for (int i = 0; i < count; i++)
         {
-            ArrayBuilder<T> builder = GetInstance();
-            builder.EnsureCapacity(capacity);
+            Add(item);
+        }
+    }
 
-            for (int i = 0; i < capacity; i++)
+    public void RemoveDuplicates()
+    {
+        using var set = PooledHashSet<T>.GetInstance();
+
+        int j = 0;
+        for (int i = 0; i < Count; i++)
+        {
+            if (set.Add(this[i]))
             {
-                builder.Add(fillWithValue);
+                this[j] = this[i];
+                j++;
             }
-
-            return builder;
         }
 
-        internal static ObjectPool<ArrayBuilder<T>> CreatePool() => CreatePool(128); // we rarely need more than 10
+        Clip(j);
+    }
 
-        internal static ObjectPool<ArrayBuilder<T>> CreatePool(int size)
+    public ImmutableArray<S> SelectDistinct<S>(Func<T, S> selector)
+    {
+        using var result = ArrayBuilder<S>.GetInstance(Count);
+        using var set = PooledHashSet<S>.GetInstance();
+
+        foreach (T? item in _builder)
         {
-            ObjectPool<ArrayBuilder<T>>? pool = null;
-            pool = new ObjectPool<ArrayBuilder<T>>(() => new ArrayBuilder<T>(pool), size);
-            return pool;
-        }
-
-        #endregion
-
-        internal Enumerator GetEnumerator() => new(this);
-
-        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumerator();
-
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
-
-        internal Dictionary<K, ImmutableArray<T>> ToDictionary<K>(Func<T, K> keySelector, IEqualityComparer<K>? comparer = null)
-            where K : notnull
-        {
-            if (Count == 1)
+            S? selected = selector(item);
+            if (set.Add(selected))
             {
-                var dictionary1 = new Dictionary<K, ImmutableArray<T>>(1, comparer);
-                T value = this[0];
-                dictionary1.Add(keySelector(value), ImmutableArray.Create(value));
-                return dictionary1;
-            }
-
-            if (Count == 0)
-            {
-                return new Dictionary<K, ImmutableArray<T>>(comparer);
-            }
-
-            // bucketize
-            // prevent reallocation. it may not have 'count' entries, but it won't have more.
-            var accumulator = new Dictionary<K, ArrayBuilder<T>>(Count, comparer);
-            for (int i = 0; i < Count; i++)
-            {
-                T? item = this[i];
-                K key = keySelector(item);
-                if (!accumulator.TryGetValue(key, out ArrayBuilder<T>? bucket))
-                {
-                    bucket = ArrayBuilder<T>.GetInstance();
-                    accumulator.Add(key, bucket);
-                }
-
-                bucket.Add(item);
-            }
-
-            var dictionary = new Dictionary<K, ImmutableArray<T>>(accumulator.Count, comparer);
-
-            // freeze
-            foreach (KeyValuePair<K, ArrayBuilder<T>> pair in accumulator)
-            {
-                dictionary.Add(pair.Key, pair.Value.ToImmutableAndFree());
-            }
-
-            return dictionary;
-        }
-
-        public void AddRange(ArrayBuilder<T> items) => _builder.AddRange(items._builder);
-
-        public void AddRange<U>(ArrayBuilder<U> items) where U : T => _builder.AddRange(items._builder);
-
-        public void AddRange(ImmutableArray<T> items) => _builder.AddRange(items);
-
-        public void AddRange(ImmutableArray<T> items, int length) => _builder.AddRange(items, length);
-
-        public void AddRange<S>(ImmutableArray<S> items) where S : class, T => AddRange(ImmutableArray<T>.CastUp(items));
-
-        public void AddRange(T[] items, int start, int length)
-        {
-            for (int i = start, end = start + length; i < end; i++)
-            {
-                Add(items[i]);
+                result.Add(selected);
             }
         }
 
-        public void AddRange(IEnumerable<T> items) => _builder.AddRange(items);
-
-        public void AddRange(params T[] items) => _builder.AddRange(items);
-
-        public void AddRange(T[] items, int length) => _builder.AddRange(items, length);
-
-        public void Clip(int limit)
-        {
-            Debug.Assert(limit <= Count);
-            _builder.Count = limit;
-        }
-
-        public void ZeroInit(int count)
-        {
-            _builder.Clear();
-            _builder.Count = count;
-        }
-
-        public void AddMany(T item, int count)
-        {
-            for (int i = 0; i < count; i++)
-            {
-                Add(item);
-            }
-        }
-
-        public void RemoveDuplicates()
-        {
-            using var set = PooledHashSet<T>.GetInstance();
-
-            int j = 0;
-            for (int i = 0; i < Count; i++)
-            {
-                if (set.Add(this[i]))
-                {
-                    this[j] = this[i];
-                    j++;
-                }
-            }
-
-            Clip(j);
-        }
-
-        public ImmutableArray<S> SelectDistinct<S>(Func<T, S> selector)
-        {
-            using var result = ArrayBuilder<S>.GetInstance(Count);
-            using var set = PooledHashSet<S>.GetInstance();
-
-            foreach (T? item in _builder)
-            {
-                S? selected = selector(item);
-                if (set.Add(selected))
-                {
-                    result.Add(selected);
-                }
-            }
-
-            return result.ToImmutable();
-        }
+        return result.ToImmutable();
     }
 }
