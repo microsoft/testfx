@@ -270,7 +270,7 @@ namespace System
 
             return (uint)end > (uint)length || (uint)start > (uint)end
                 ? throw new ArgumentOutOfRangeException(nameof(length))
-                : ((int Offset, int Length))(start, end - start);
+                : (start, end - start);
         }
     }
 #endif

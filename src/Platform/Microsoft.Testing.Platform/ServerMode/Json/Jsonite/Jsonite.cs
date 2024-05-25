@@ -643,7 +643,7 @@ namespace Jsonite
                         if (c == 'e')
                         {
                             NextCharSkipWhitespaces();
-                            return settings.ParseValuesAsStrings ? (object)"true" : true;
+                            return settings.ParseValuesAsStrings ? "true" : true;
                         }
                     }
                 }
@@ -666,7 +666,7 @@ namespace Jsonite
                             if (c == 'e')
                             {
                                 NextCharSkipWhitespaces();
-                                return settings.ParseValuesAsStrings ? (object)"false" : false;
+                                return settings.ParseValuesAsStrings ? "false" : false;
                             }
                         }
                     }
@@ -995,16 +995,16 @@ namespace Jsonite
         [MethodImpl((MethodImplOptions)256)]
         private static bool IsHighSurrogate(char c)
         {
-            if ((int)c >= 55296)
-                return (int)c <= 56319;
+            if (c >= 55296)
+                return c <= 56319;
             return false;
         }
 
         [MethodImpl((MethodImplOptions)256)]
         private static bool IsLowSurrogate(char c)
         {
-            if ((int)c >= 56320)
-                return (int)c <= 57343;
+            if (c >= 56320)
+                return c <= 57343;
             return false;
         }
 
