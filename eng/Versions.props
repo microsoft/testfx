@@ -6,7 +6,7 @@
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24270.4</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <MicrosoftTestingExtensionsCodeCoverageVersion>17.11.2-preview.24274.3</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftTestingExtensionsCodeCoverageVersion>17.11.2-preview.24274.5</MicrosoftTestingExtensionsCodeCoverageVersion>
     <MicrosoftTestingPlatformVersion>1.3.0-preview.24274.1</MicrosoftTestingPlatformVersion>
     <MSTestEngineVersion>1.0.0-alpha.24274.1</MSTestEngineVersion>
   </PropertyGroup>
