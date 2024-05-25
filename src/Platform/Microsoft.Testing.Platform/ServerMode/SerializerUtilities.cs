@@ -631,7 +631,7 @@ internal static class SerializerUtilities
 #if !NETCOREAPP
             if (errorObj.TryGetValue(JsonRpcStrings.Data, out object? errorData))
             {
-                if (errorData is JsonObject keyValuePairs && keyValuePairs.Count == 0)
+                if (errorData is JsonObject { Count: 0 })
                 {
                     errorObj[JsonRpcStrings.Data] = null!;
                 }
