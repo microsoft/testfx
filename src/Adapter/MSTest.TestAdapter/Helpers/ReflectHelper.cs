@@ -242,7 +242,7 @@ internal class ReflectHelper : MarshalByRefObject
             typeof(TAttribute),
             inherit);
 
-        return attributesArray!.OfType<TAttribute>().ToArray(); // TODO: Investigate if we rely on NRE
+        return attributesArray.OfType<TAttribute>().ToArray();
     }
 
     /// <summary>
@@ -263,7 +263,7 @@ internal class ReflectHelper : MarshalByRefObject
             memberInfo,
             inherit);
 
-        return attributesArray!.ToArray(); // TODO: Investigate if we rely on NRE
+        return attributesArray.ToArray();
     }
 
     /// <summary>
@@ -324,7 +324,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns> The parallelization level if set. -1 otherwise. </returns>
     internal static ParallelizeAttribute? GetParallelizeAttribute(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ParallelizeAttribute))
-            !.OfType<ParallelizeAttribute>() // TODO: Investigate if we rely on NRE
+            .OfType<ParallelizeAttribute>()
             .FirstOrDefault();
 
     /// <summary>
@@ -344,7 +344,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>True if test assembly should not run in parallel.</returns>
     internal static bool IsDoNotParallelizeSet(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute))
-            !.Length != 0; // TODO: Investigate if we rely on NRE
+            .Length != 0;
 
     /// <summary>
     /// Gets the class cleanup lifecycle set on an assembly.
@@ -353,7 +353,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
     internal static ClassCleanupExecutionAttribute? GetClassCleanupAttribute(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute))
-            !.OfType<ClassCleanupExecutionAttribute>() // TODO: Investigate if we rely on NRE
+            .OfType<ClassCleanupExecutionAttribute>()
             .FirstOrDefault();
 
     /// <summary>
@@ -389,7 +389,7 @@ internal class ReflectHelper : MarshalByRefObject
         where TAttribute : Attribute
         => PlatformServiceProvider.Instance.ReflectionOperations
             .GetCustomAttributes(memberInfo.Module.Assembly, typeof(TAttribute))
-            !.OfType<TAttribute>()
+            .OfType<TAttribute>()
             .ToArray();
 
     /// <summary>
