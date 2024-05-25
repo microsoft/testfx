@@ -34,138 +34,138 @@ public class InitializeAndCleanupTimeout : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInit_WhenTestContextCancelled_AssemblyInitializeTaskIsCancelled(string tfm)
-        => await RunAndAssertTestWasCancelledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout,
+    public Task AssemblyInit_WhenTestContextCancelled_AssemblyInitializeTaskIsCancelled(string tfm)
+        => RunAndAssertTestWasCancelledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout,
             tfm, "TESTCONTEXT_CANCEL_", "assemblyInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInit_WhenTimeoutExpires_AssemblyInitializeTaskIsCancelled(string tfm)
-        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout,
+    public Task AssemblyInit_WhenTimeoutExpires_AssemblyInitializeTaskIsCancelled(string tfm)
+        => RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout,
             tfm, "LONG_WAIT_", "assemblyInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInit_WhenTimeoutExpiresAndTestContextTokenIsUsed_AssemblyInitializeExits(string tfm)
-        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+    public Task AssemblyInit_WhenTimeoutExpiresAndTestContextTokenIsUsed_AssemblyInitializeExits(string tfm)
+        => RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "TIMEOUT_", "assemblyInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInit_WhenTestContextCancelled_ClassInitializeTaskIsCancelled(string tfm)
-        => await RunAndAssertTestWasCancelledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout, tfm,
+    public Task ClassInit_WhenTestContextCancelled_ClassInitializeTaskIsCancelled(string tfm)
+        => RunAndAssertTestWasCancelledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout, tfm,
             "TESTCONTEXT_CANCEL_", "classInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInit_WhenTimeoutExpires_ClassInitializeTaskIsCancelled(string tfm)
-        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+    public Task ClassInit_WhenTimeoutExpires_ClassInitializeTaskIsCancelled(string tfm)
+        => RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "classInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInit_WhenTimeoutExpiresAndTestContextTokenIsUsed_ClassInitializeExits(string tfm)
-        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+    public Task ClassInit_WhenTimeoutExpiresAndTestContextTokenIsUsed_ClassInitializeExits(string tfm)
+        => RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "TIMEOUT_", "classInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInitBase_WhenTestContextCancelled_ClassInitializeTaskIsCancelled(string tfm)
-        => await RunAndAssertTestWasCancelledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout, tfm,
+    public Task ClassInitBase_WhenTestContextCancelled_ClassInitializeTaskIsCancelled(string tfm)
+        => RunAndAssertTestWasCancelledAsync(_testAssetFixture.CodeWithSixtySecTimeoutAssetPath, TestAssetFixture.CodeWithSixtySecTimeout, tfm,
             "TESTCONTEXT_CANCEL_", "baseClassInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInitBase_WhenTimeoutExpires_ClassInitializeTaskIsCancelled(string tfm)
-        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+    public Task ClassInitBase_WhenTimeoutExpires_ClassInitializeTaskIsCancelled(string tfm)
+        => RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "baseClassInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInitBase_WhenTimeoutExpiresAndTestContextTokenIsUsed_ClassInitializeExits(string tfm)
-        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+    public Task ClassInitBase_WhenTimeoutExpiresAndTestContextTokenIsUsed_ClassInitializeExits(string tfm)
+        => RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "TIMEOUT_", "baseClassInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInitialize_WhenTimeoutExpires_FromRunSettings_AssemblyInitializeIsCancelled(string tfm)
-        => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "assemblyInit");
+    public Task AssemblyInitialize_WhenTimeoutExpires_FromRunSettings_AssemblyInitializeIsCancelled(string tfm)
+        => RunAndAssertWithRunSettingsAsync(tfm, 300, false, "assemblyInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInitialize_WhenTimeoutExpires_FromRunSettings_ClassInitializeIsCancelled(string tfm)
-        => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "classInit");
+    public Task ClassInitialize_WhenTimeoutExpires_FromRunSettings_ClassInitializeIsCancelled(string tfm)
+        => RunAndAssertWithRunSettingsAsync(tfm, 300, false, "classInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task BaseClassInitialize_WhenTimeoutExpires_FromRunSettings_ClassInitializeIsCancelled(string tfm)
-        => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "baseClassInit");
+    public Task BaseClassInitialize_WhenTimeoutExpires_FromRunSettings_ClassInitializeIsCancelled(string tfm)
+        => RunAndAssertWithRunSettingsAsync(tfm, 300, false, "baseClassInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyInitialize_WhenTimeoutExpires_AssemblyInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
-        => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "assemblyInit");
+    public Task AssemblyInitialize_WhenTimeoutExpires_AssemblyInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
+        => RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "assemblyInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
-        => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "classInit");
+    public Task ClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
+        => RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "classInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task BaseClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
-        => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "baseClassInit");
+    public Task BaseClassInitialize_WhenTimeoutExpires_ClassInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
+        => RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "baseClassInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassCleanupBase_WhenTimeoutExpires_ClassCleanupTaskIsCancelled(string tfm)
-       => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+    public Task ClassCleanupBase_WhenTimeoutExpires_ClassCleanupTaskIsCancelled(string tfm)
+       => RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
            "LONG_WAIT_", "baseClassCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassCleanup_WhenTimeoutExpires_ClassCleanupTaskIsCancelled(string tfm)
-        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+    public Task ClassCleanup_WhenTimeoutExpires_ClassCleanupTaskIsCancelled(string tfm)
+        => RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "classCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassCleanup_WhenTimeoutExpires_FromRunSettings_ClassCleanupIsCancelled(string tfm)
-       => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "classCleanup");
+    public Task ClassCleanup_WhenTimeoutExpires_FromRunSettings_ClassCleanupIsCancelled(string tfm)
+       => RunAndAssertWithRunSettingsAsync(tfm, 300, false, "classCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task BaseClassCleanup_WhenTimeoutExpires_FromRunSettings_ClassCleanupIsCancelled(string tfm)
-        => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "baseClassCleanup");
+    public Task BaseClassCleanup_WhenTimeoutExpires_FromRunSettings_ClassCleanupIsCancelled(string tfm)
+        => RunAndAssertWithRunSettingsAsync(tfm, 300, false, "baseClassCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task ClassCleanup_WhenTimeoutExpires_ClassCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
-       => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "classCleanup");
+    public Task ClassCleanup_WhenTimeoutExpires_ClassCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
+       => RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "classCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task BaseClassCleanup_WhenTimeoutExpires_ClassCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
-        => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "baseClassCleanup");
+    public Task BaseClassCleanup_WhenTimeoutExpires_ClassCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
+        => RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "baseClassCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyCleanup_WhenTimeoutExpires_AssemblyCleanupTaskIsCancelled(string tfm)
-        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+    public Task AssemblyCleanup_WhenTimeoutExpires_AssemblyCleanupTaskIsCancelled(string tfm)
+        => RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "assemblyCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyCleanup_WhenTimeoutExpires_FromRunSettings_AssemblyCleanupIsCancelled(string tfm)
-       => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "assemblyCleanup");
+    public Task AssemblyCleanup_WhenTimeoutExpires_FromRunSettings_AssemblyCleanupIsCancelled(string tfm)
+       => RunAndAssertWithRunSettingsAsync(tfm, 300, false, "assemblyCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task AssemblyCleanup_WhenTimeoutExpires_AssemblyCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
-       => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "assemblyCleanup");
+    public Task AssemblyCleanup_WhenTimeoutExpires_AssemblyCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
+       => RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "assemblyCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestInitialize_WhenTimeoutExpires_TestInitializeTaskIsCancelled(string tfm)
-        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+    public Task TestInitialize_WhenTimeoutExpires_TestInitializeTaskIsCancelled(string tfm)
+        => RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "testInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestInitialize_WhenTimeoutExpires_FromRunSettings_TestInitializeIsCancelled(string tfm)
-       => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "testInit");
+    public Task TestInitialize_WhenTimeoutExpires_FromRunSettings_TestInitializeIsCancelled(string tfm)
+       => RunAndAssertWithRunSettingsAsync(tfm, 300, false, "testInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestInitialize_WhenTimeoutExpires_TestInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
-       => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "testInit");
+    public Task TestInitialize_WhenTimeoutExpires_TestInitializeIsCancelled_AttributeTakesPrecedence(string tfm)
+       => RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "testInit");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestCleanup_WhenTimeoutExpires_TestCleanupTaskIsCancelled(string tfm)
-        => await RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
+    public Task TestCleanup_WhenTimeoutExpires_TestCleanupTaskIsCancelled(string tfm)
+        => RunAndAssertTestTimedOutAsync(_testAssetFixture.CodeWithOneSecTimeoutAssetPath, TestAssetFixture.CodeWithOneSecTimeout, tfm,
             "LONG_WAIT_", "testCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestCleanup_WhenTimeoutExpires_FromRunSettings_TestCleanupIsCancelled(string tfm)
-       => await RunAndAssertWithRunSettingsAsync(tfm, 300, false, "testCleanup");
+    public Task TestCleanup_WhenTimeoutExpires_FromRunSettings_TestCleanupIsCancelled(string tfm)
+       => RunAndAssertWithRunSettingsAsync(tfm, 300, false, "testCleanup");
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task TestCleanup_WhenTimeoutExpires_TestCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
-       => await RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "testCleanup");
+    public Task TestCleanup_WhenTimeoutExpires_TestCleanupIsCancelled_AttributeTakesPrecedence(string tfm)
+       => RunAndAssertWithRunSettingsAsync(tfm, 25000, true, "testCleanup");
 
     private async Task RunAndAssertTestWasCancelledAsync(string rootFolder, string assetName, string tfm, string envVarPrefix, string entryKind)
     {

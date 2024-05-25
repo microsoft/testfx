@@ -36,7 +36,7 @@ internal sealed class SystemAsyncMonitor : IAsyncMonitor, IDisposable
             }
         }
 
-        public async Task WaitAsync(CancellationToken cancellationToken) => await _semaphoreSlim.WaitAsync(cancellationToken);
+        public Task WaitAsync(CancellationToken cancellationToken) => _semaphoreSlim.WaitAsync(cancellationToken);
 
         public void Dispose()
             => _semaphoreSlim.Release();

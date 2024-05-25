@@ -204,9 +204,9 @@ internal abstract class DummyTestClass
     public abstract void AbstractTestMethod();
 
     [SuppressMessage("Usage", "VSTHRD100:Avoid async void methods", Justification = "Done on purpose")]
-    public async void AsyncMethodWithVoidReturnType() => await Task.FromResult(true);
+    public async void AsyncMethodWithVoidReturnType() => Task.FromResult(true);
 
-    public async Task AsyncMethodWithTaskReturnType() => await Task.Delay(TimeSpan.Zero);
+    public Task AsyncMethodWithTaskReturnType() => Task.Delay(TimeSpan.Zero);
 
     public Task MethodWithTaskReturnType() => Task.Delay(TimeSpan.Zero);
 

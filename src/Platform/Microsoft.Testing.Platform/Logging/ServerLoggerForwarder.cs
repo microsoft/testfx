@@ -118,8 +118,8 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
         await PushServerLogMessageToTheMessageBusAsync(logMessage);
     }
 
-    private async Task PushServerLogMessageToTheMessageBusAsync(ServerLogMessage logMessage)
-        => await _serverTestHost.PushDataAsync(logMessage);
+    private Task PushServerLogMessageToTheMessageBusAsync(ServerLogMessage logMessage)
+        => _serverTestHost.PushDataAsync(logMessage);
 
 #if NETCOREAPP
     [MemberNotNull(nameof(_channel), nameof(_logLoop))]

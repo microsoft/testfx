@@ -670,26 +670,26 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
     internal Task SendTestUpdateCompleteAsync(Guid runId)
         => SendTestUpdateAsync(new TestNodeStateChangedEventArgs(runId, Changes: null));
 
-    public async Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update)
-        => await SendMessageAsync(
+    public Task SendTestUpdateAsync(TestNodeStateChangedEventArgs update)
+        => SendMessageAsync(
             method: JsonRpcMethods.TestingTestUpdatesTests,
             @params: update,
             _testApplicationCancellationTokenSource.CancellationToken);
 
-    public async Task SendTelemetryEventUpdateAsync(TelemetryEventArgs args)
-        => await SendMessageAsync(
+    public Task SendTelemetryEventUpdateAsync(TelemetryEventArgs args)
+        => SendMessageAsync(
             method: JsonRpcMethods.TelemetryUpdate,
             @params: args,
             _testApplicationCancellationTokenSource.CancellationToken);
 
-    public async Task SendClientLaunchDebuggerAsync(ProcessInfoArgs args)
-       => await SendRequestAsync(
+    public Task SendClientLaunchDebuggerAsync(ProcessInfoArgs args)
+       => SendRequestAsync(
            method: JsonRpcMethods.ClientLaunchDebugger,
            @params: args,
            _testApplicationCancellationTokenSource.CancellationToken);
 
-    public async Task SendClientAttachDebuggerAsync(AttachDebuggerInfoArgs args)
-       => await SendRequestAsync(
+    public Task SendClientAttachDebuggerAsync(AttachDebuggerInfoArgs args)
+       => SendRequestAsync(
            method: JsonRpcMethods.ClientAttachDebugger,
            @params: args,
            _testApplicationCancellationTokenSource.CancellationToken);

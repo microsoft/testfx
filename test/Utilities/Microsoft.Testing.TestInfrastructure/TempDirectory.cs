@@ -61,7 +61,8 @@ public class TempDirectory : IDisposable
         await stream.WriteLineAsync(fileContents);
     }
 
-    public async Task CopyDirectoryAsync(string sourceDirectory, string targetDirectory, bool retainAttributes = false) => await CopyDirectoryAsync(new DirectoryInfo(sourceDirectory), new DirectoryInfo(targetDirectory), retainAttributes);
+    public Task CopyDirectoryAsync(string sourceDirectory, string targetDirectory, bool retainAttributes = false)
+        => CopyDirectoryAsync(new DirectoryInfo(sourceDirectory), new DirectoryInfo(targetDirectory), retainAttributes);
 
     public static async Task CopyDirectoryAsync(DirectoryInfo source, DirectoryInfo target, bool retainAttributes = false)
     {

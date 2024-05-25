@@ -98,7 +98,7 @@ public static class DotnetCli
                 return await Policy
                     .Handle<Exception>()
                     .WaitAndRetryAsync(delay)
-                    .ExecuteAsync(async () => await CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero));
+                    .ExecuteAsync(() => CallTheMuxerAsync(args, environmentVariables, workingDirectory, timeoutInSeconds, failIfReturnValueIsNotZero));
             }
         }
         finally

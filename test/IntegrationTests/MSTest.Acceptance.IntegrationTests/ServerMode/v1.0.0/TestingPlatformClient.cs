@@ -109,7 +109,7 @@ public sealed class TestingPlatformClient : IDisposable
     public async Task<InitializeResponse> Initialize()
     {
         using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromMinutes(3));
-        return await CheckedInvoke(async () => await JsonRpcClient.InvokeWithParameterObjectAsync<InitializeResponse>(
+        return await CheckedInvoke(() => JsonRpcClient.InvokeWithParameterObjectAsync<InitializeResponse>(
             "initialize",
             new InitializeRequest(Environment.ProcessId, new V100.ClientInfo("test-client"),
                 new MSTest.Acceptance.IntegrationTests.Messages.V100.ClientCapabilities(new MSTest.Acceptance.IntegrationTests.Messages.V100.ClientTestingCapabilities(DebuggerProvider: false))), cancellationToken: cancellationTokenSource.Token));
@@ -120,7 +120,7 @@ public sealed class TestingPlatformClient : IDisposable
         if (gracefully)
         {
             using CancellationTokenSource cancellationTokenSource = new(TimeSpan.FromMinutes(3));
-            await CheckedInvoke(async () => await JsonRpcClient.NotifyWithParameterObjectAsync("exit", new object()));
+            await CheckedInvoke(() => JsonRpcClient.NotifyWithParameterObjectAsync("exit", new object()));
         }
         else
         {
@@ -248,6 +248,6 @@ public sealed class TestNodeUpdatesResponseListener : ResponseListener
         _action = action;
     }
 
-    public override async Task OnMessageReceive(object message)
-        => await _action((TestNodeUpdate[])message);
+    public override Task OnMessageReceive(object message)
+        => _action((TestNodeUpdate[])message);
 }

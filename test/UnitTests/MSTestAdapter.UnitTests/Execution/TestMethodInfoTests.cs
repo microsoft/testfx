@@ -1516,13 +1516,14 @@ public class TestMethodInfoTests : TestContainer
         public void DummyTestInitializeMethod() => TestInitializeMethodBody(this);
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public async Task DummyTestInitializeMethodAsync() => await TestInitializeMethodBodyAsync(this);
+        public Task DummyTestInitializeMethodAsync()
+            => TestInitializeMethodBodyAsync(this);
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void DummyTestCleanupMethod() => TestCleanupMethodBody(this);
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public async Task DummyTestCleanupMethodAsync() => await TestCleanupMethodBodyAsync(this);
+        public Task DummyTestCleanupMethodAsync() => TestCleanupMethodBodyAsync(this);
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public void DummyTestMethod() => TestMethodBody(this);

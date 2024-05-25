@@ -46,7 +46,7 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
     public override IDataConsumer[] DataConsumerServices
         => _dataConsumers;
 
-    public override async Task InitAsync() => await BuildConsumerProducersAsync();
+    public override Task InitAsync() => BuildConsumerProducersAsync();
 
     private async Task BuildConsumerProducersAsync()
     {

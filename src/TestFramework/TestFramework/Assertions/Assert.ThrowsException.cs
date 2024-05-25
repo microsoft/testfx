@@ -227,10 +227,9 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
-    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
+    public static Task<T> ThrowsExceptionAsync<T>(Func<Task> action)
         where T : Exception
-        => await ThrowsExceptionAsync<T>(action, string.Empty, null)
-            .ConfigureAwait(false);
+        => ThrowsExceptionAsync<T>(action, string.Empty, null);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception
@@ -249,10 +248,9 @@ public sealed partial class Assert
     /// <returns>
     /// The <see cref="Task"/> executing the delegate.
     /// </returns>
-    public static async Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
+    public static Task<T> ThrowsExceptionAsync<T>(Func<Task> action, string message)
         where T : Exception
-        => await ThrowsExceptionAsync<T>(action, message, null)
-            .ConfigureAwait(false);
+        => ThrowsExceptionAsync<T>(action, message, null);
 
     /// <summary>
     /// Tests whether the code specified by delegate <paramref name="action"/> throws exact given exception

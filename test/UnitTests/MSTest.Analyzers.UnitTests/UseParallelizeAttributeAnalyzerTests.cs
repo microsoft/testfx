@@ -13,7 +13,8 @@ namespace MSTest.Analyzers.Test;
 [TestGroup]
 public class UseParallelizeAttributeAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
-    public async Task WhenNoAttributeSpecified_Diagnostic() => await VerifyCS.VerifyAnalyzerAsync(
+    public Task WhenNoAttributeSpecified_Diagnostic()
+        => VerifyCS.VerifyAnalyzerAsync(
             string.Empty,
             VerifyCS.Diagnostic(UseParallelizeAttributeAnalyzer.Rule).WithNoLocation());
 

@@ -36,8 +36,8 @@ internal sealed class NamedPipeClient : NamedPipeBase, IClient
 
     public bool IsConnected => _namedPipeClientStream.IsConnected;
 
-    public async Task ConnectAsync(CancellationToken cancellationToken)
-        => await _namedPipeClientStream.ConnectAsync(cancellationToken);
+    public Task ConnectAsync(CancellationToken cancellationToken)
+        => _namedPipeClientStream.ConnectAsync(cancellationToken);
 
     public async Task<TResponse> RequestReplyAsync<TRequest, TResponse>(TRequest request, CancellationToken cancellationToken)
        where TRequest : IRequest

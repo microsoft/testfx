@@ -250,8 +250,8 @@ public sealed class TestApplication : ITestApplication
 #endif
 
     /// <inheritdoc />
-    public async Task<int> RunAsync()
-        => await _testHost.RunAsync();
+    public Task<int> RunAsync()
+        => _testHost.RunAsync();
 
     private static void LaunchAttachDebugger(SystemEnvironment environment)
     {

@@ -16,6 +16,6 @@ internal sealed class ServerTelemetry(IServerTestHost serverTestHost) : ITelemet
         await PushTelemetryToServerTestHostAsync(logMessage);
     }
 
-    private async Task PushTelemetryToServerTestHostAsync(TelemetryEventArgs telemetryEvent)
-        => await _serverTestHost.SendTelemetryEventUpdateAsync(telemetryEvent);
+    private Task PushTelemetryToServerTestHostAsync(TelemetryEventArgs telemetryEvent)
+        => _serverTestHost.SendTelemetryEventUpdateAsync(telemetryEvent);
 }

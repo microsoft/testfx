@@ -23,28 +23,28 @@ public class ParameterizedTestTests : AcceptanceTestBase
     }
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
-        => await RunTestsAsync(currentTfm, DynamicDataAssetName, true);
+    public Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
+        => RunTestsAsync(currentTfm, DynamicDataAssetName, true);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
-        => await RunTestsAsync(currentTfm, DataSourceAssetName, true);
+    public Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusive_Passes(string currentTfm)
+        => RunTestsAsync(currentTfm, DataSourceAssetName, true);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
-        => await RunTestsAsync(currentTfm, DynamicDataAssetName, false);
+    public Task SendingEmptyDataToDynamicDataTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
+        => RunTestsAsync(currentTfm, DynamicDataAssetName, false);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
-    => await RunTestsAsync(currentTfm, DataSourceAssetName, false);
+    public Task SendingEmptyDataToDataSourceTest_WithSettingConsiderEmptyDataSourceAsInconclusiveToFalse_Fails(string currentTfm)
+        => RunTestsAsync(currentTfm, DataSourceAssetName, false);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDynamicDataTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
-        => await RunTestsAsync(currentTfm, DynamicDataAssetName, null);
+    public Task SendingEmptyDataToDynamicDataTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
+        => RunTestsAsync(currentTfm, DynamicDataAssetName, null);
 
     [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
-    public async Task SendingEmptyDataToDataSourceTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
-        => await RunTestsAsync(currentTfm, DataSourceAssetName, null);
+    public Task SendingEmptyDataToDataSourceTest_WithoutSettingConsiderEmptyDataSourceAsInconclusive_Fails(string currentTfm)
+        => RunTestsAsync(currentTfm, DataSourceAssetName, null);
 
     private async Task RunTestsAsync(string currentTfm, string assetName, bool? isEmptyDataInconclusive)
     {
@@ -108,7 +108,7 @@ public class ParameterizedTestTests : AcceptanceTestBase
         private const string SourceCodeDynamicData = """
 #file DynamicData.csproj
 <Project Sdk="Microsoft.NET.Sdk">
-    
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>
@@ -154,7 +154,7 @@ public class TestClass
         private const string SourceCodeDataSource = """
 #file DataSource.csproj
 <Project Sdk="Microsoft.NET.Sdk">
-    
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <EnableMSTestRunner>true</EnableMSTestRunner>

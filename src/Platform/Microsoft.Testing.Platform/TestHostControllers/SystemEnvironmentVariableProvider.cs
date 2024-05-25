@@ -22,7 +22,7 @@ internal sealed class SystemEnvironmentVariableProvider(IEnvironment environment
 
     public string Description => _systemExtension.Description;
 
-    public async Task<bool> IsEnabledAsync() => await _systemExtension.IsEnabledAsync();
+    public Task<bool> IsEnabledAsync() => _systemExtension.IsEnabledAsync();
 
     public Task UpdateAsync(IEnvironmentVariables environmentVariables)
     {
