@@ -136,6 +136,7 @@ internal class AssemblyUtility
         }
 
         assemblyPath = Path.GetFullPath(assemblyPath);
+        string assemblyFileName = Path.GetFileName(assemblyPath);
         string assemblyDir = Path.GetDirectoryName(assemblyPath);
         var satellites = new List<string>();
 
@@ -154,7 +155,7 @@ internal class AssemblyUtility
             foreach (string extension in _assemblyExtensions)
             {
                 // extension contains leading dot.
-                string satellite = Path.ChangeExtension(Path.GetFileName(assemblyPath), "resources" + extension);
+                string satellite = Path.ChangeExtension(assemblyFileName, "resources" + extension);
                 string satellitePath = Path.Combine(assemblyDir, Path.Combine(dir, satellite));
 
                 // We don't use Assembly.LoadFrom/Assembly.GetSatelliteAssemblies because this is rather slow
