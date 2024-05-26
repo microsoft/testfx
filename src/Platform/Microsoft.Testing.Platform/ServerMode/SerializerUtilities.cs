@@ -680,7 +680,7 @@ internal static class SerializerUtilities
         => Serialize(typeof(T), obj!);
 
     public static IDictionary<string, object?> SerializeObject(object obj)
-        => Serialize(obj.GetType(), obj!);
+        => Serialize(obj.GetType(), obj);
 
     public static IDictionary<string, object?> Serialize(Type t, object obj)
     {
