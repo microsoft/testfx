@@ -24,24 +24,24 @@ internal class AssemblyUtility
 #endif
 {
 #if NETFRAMEWORK
-    private static Dictionary<string, object?>? s_cultures;
+    private static HashSet<string>? s_cultures;
 #endif
     private readonly string[] _assemblyExtensions = [".dll", ".exe"];
 
 #if NETFRAMEWORK
     /// <summary>
-    /// Gets all supported culture names in Keys. The Values are always null.
+    /// Gets all supported culture names in Keys
     /// </summary>
-    private static Dictionary<string, object?> Cultures
+    private static HashSet<string> Cultures
     {
         get
         {
             if (s_cultures == null)
             {
-                s_cultures = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+                s_cultures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 foreach (CultureInfo? info in CultureInfo.GetCultures(CultureTypes.AllCultures))
                 {
-                    s_cultures.Add(info.Name, null);
+                    s_cultures.Add(info.Name);
                 }
             }
 
@@ -140,7 +140,7 @@ internal class AssemblyUtility
         var satellites = new List<string>();
 
         // Directory.Exists for 266 dirs takes 9ms while Path.GetDirectories can take up to 80ms on 10k dirs.
-        foreach (string dir in Cultures.Keys)
+        foreach (string dir in Cultures)
         {
             string dirPath = Path.Combine(assemblyDir, dir);
             if (!Directory.Exists(dirPath))
