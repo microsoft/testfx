@@ -35,10 +35,10 @@ public class FileUtilityTests : TestContainer
 
     public void AddFilesInADirectoryShouldReturnAllTopLevelFilesInADirectory()
     {
-        string[] topLevelFiles = new string[] { "tick.txt", "tock.tick.txt" };
+        string[] topLevelFiles = ["tick.txt", "tock.tick.txt"];
 
         _fileUtility.Setup(fu => fu.GetFilesInADirectory(It.IsAny<string>())).Returns(topLevelFiles);
-        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns(Array.Empty<string>());
+        _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns([]);
 
         List<string> files = _fileUtility.Object.AddFilesFromDirectory("C:\\randomclock", false);
 
@@ -47,13 +47,13 @@ public class FileUtilityTests : TestContainer
 
     public void AddFilesInADirectoryShouldReturnAllFilesUnderSubFolders()
     {
-        string[] allFiles = new string[]
-        {
+        string[] allFiles =
+        [
             "MainClock\\tickmain.txt", "MainClock\\tock.tick.txt",
             "MainClock\\Folder1\\tick.txt", "MainClock\\Folder1\\tock.tick.txt",
             "MainClock\\Folder2\\newtick.log", "MainClock\\Folder2\\newtock.log",
-            "MainClock\\Folder2\\backup\\newtock.tick.txt",
-        };
+            "MainClock\\Folder2\\backup\\newtock.tick.txt"
+        ];
 
         SetupMockFileAPIs(allFiles);
 
@@ -64,13 +64,13 @@ public class FileUtilityTests : TestContainer
 
     public void AddFilesInADirectoryShouldReturnAllFilesUnderSubFoldersEvenIfAFolderIsEmpty()
     {
-        string[] allFiles = new string[]
-        {
+        string[] allFiles =
+        [
             "MainClock\\tickmain.txt", "MainClock\\tock.tick.txt",
             "MainClock\\Folder1\\tick.txt", "MainClock\\Folder1\\tock.tick.txt",
             "MainClock\\Folder2\\newtick.log", "MainClock\\Folder2\\newtock.log",
-            "MainClock\\Folder2\\backup\\",
-        };
+            "MainClock\\Folder2\\backup\\"
+        ];
 
         SetupMockFileAPIs(allFiles);
 
@@ -85,13 +85,13 @@ public class FileUtilityTests : TestContainer
     public void AddFilesWithIgnoreDirectory()
     {
         // Setup
-        string[] allFiles = new string[]
-        {
+        string[] allFiles =
+        [
             "c:\\MainClock\\Results\\tickmain.trx", "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
             "c:\\MainClock\\tickmain.txt", "c:\\MainClock\\tock.tick.txt",
             "c:\\MainClock\\Folder1\\tick.txt", "c:\\MainClock\\Folder1\\tock.tick.txt",
-            "c:\\MainClock\\Folder2\\backup\\Data.csv",
-        };
+            "c:\\MainClock\\Folder2\\backup\\Data.csv"
+        ];
 
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
         {
@@ -122,13 +122,13 @@ public class FileUtilityTests : TestContainer
     public void AddFilesWithNoIgnoreDirectory()
     {
         // Setup
-        string[] allFiles = new string[]
-        {
+        string[] allFiles =
+        [
             "c:\\MainClock\\Results\\tickmain.trx", "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
             "c:\\MainClock\\tickmain.txt", "c:\\MainClock\\tock.tick.txt",
             "c:\\MainClock\\Folder1\\tick.txt", "c:\\MainClock\\Folder1\\tock.tick.txt",
-            "c:\\MainClock\\Folder2\\backup\\Data.csv",
-        };
+            "c:\\MainClock\\Folder2\\backup\\Data.csv"
+        ];
 
         _fileUtility.Setup(fu => fu.GetDirectoriesInADirectory(It.IsAny<string>())).Returns<string>((directory) =>
         {

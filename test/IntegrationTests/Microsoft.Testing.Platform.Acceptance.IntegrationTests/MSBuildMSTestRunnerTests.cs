@@ -65,7 +65,7 @@ public class MSBuildMSTestRunnerTests : AcceptanceTestBase
         string nugetFile = solution.AddOrUpdateFileContent("Nuget.config", nugetConfigContent);
         for (int i = 0; i < 3; i++)
         {
-            CSharpProject project = solution.CreateCSharpProject($"TestProject{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : new[] { singleTfmOrMultiTfm });
+            CSharpProject project = solution.CreateCSharpProject($"TestProject{i}", isMultiTfm ? singleTfmOrMultiTfm.Split(';') : [singleTfmOrMultiTfm]);
             File.WriteAllText(project.ProjectFile, projectContent);
             project.AddOrUpdateFileContent("UnitTest1.cs", testSourceContent);
         }

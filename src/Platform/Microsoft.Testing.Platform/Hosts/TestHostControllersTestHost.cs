@@ -80,11 +80,11 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         IConfiguration configuration = ServiceProvider.GetConfiguration();
         try
         {
-            List<string> partialCommandLine = new(executableInfo.Arguments)
-            {
-                $"--{PlatformCommandLineProvider.TestHostControllerPIDOptionKey}",
-                process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture),
-            };
+            List<string> partialCommandLine =
+            [
+                ..executableInfo.Arguments, $"--{PlatformCommandLineProvider.TestHostControllerPIDOptionKey}",
+                process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture)
+            ];
             CommandLineInfo finalCommandLine = new(executableInfo.FileName, partialCommandLine, testApplicationFullPath);
 
             ProcessStartInfo processStartInfo = new()

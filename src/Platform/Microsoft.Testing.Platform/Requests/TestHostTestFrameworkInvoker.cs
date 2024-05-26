@@ -30,7 +30,7 @@ internal class TestHostTestFrameworkInvoker(IServiceProvider serviceProvider) : 
 
     public string Description => string.Empty;
 
-    public Type[] DataTypesProduced => new[] { typeof(TestRequestExecutionTimeInfo) };
+    public Type[] DataTypesProduced => [typeof(TestRequestExecutionTimeInfo)];
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 

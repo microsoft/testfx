@@ -278,7 +278,7 @@ public class TestExecutionManagerTests : TestContainer
     public void RunTestsForTestShouldPassInTcmPropertiesAsPropertiesToTheTest()
     {
         TestCase testCase = GetTestCase(typeof(DummyTestClass), "PassingTest");
-        object[] propertiesValue = new object[] { 32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 1401, 54, "sample configuration name", 345 };
+        object[] propertiesValue = [32, 534, 5, "sample build directory", "sample build flavor", "132456", "sample build platform", "http://sampleBuildUti/", "http://samplecollectionuri/", "sample team project", false, 1401, 54, "sample configuration name", 345];
         SetTestCaseProperties(testCase, propertiesValue);
 
         TestCase[] tests = [testCase];

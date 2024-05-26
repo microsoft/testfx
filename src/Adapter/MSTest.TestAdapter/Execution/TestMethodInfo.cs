@@ -88,7 +88,7 @@ public class TestMethodInfo : ITestMethod
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
         => ReflectHelper.GetAttributes<TAttributeType>(TestMethod, inherit)
-        ?? Array.Empty<TAttributeType>();
+        ?? [];
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
@@ -178,7 +178,7 @@ public class TestMethodInfo : ITestMethod
                 // If this is the params parameter, instantiate a new object of that type
                 if (argumentIndex == parametersInfo.Length - 1)
                 {
-                    paramsValues = Activator.CreateInstance(parametersInfo[argumentIndex].ParameterType, new object[] { arguments.Length - argumentIndex });
+                    paramsValues = Activator.CreateInstance(parametersInfo[argumentIndex].ParameterType, [arguments.Length - argumentIndex]);
                     newParameters[argumentIndex] = paramsValues;
                 }
 
