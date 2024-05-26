@@ -30,7 +30,7 @@ internal class AssemblyUtility
 
 #if NETFRAMEWORK
     /// <summary>
-    /// Gets all supported culture names in Keys
+    /// Gets all supported culture names in Keys.
     /// </summary>
     private static HashSet<string> Cultures
     {
