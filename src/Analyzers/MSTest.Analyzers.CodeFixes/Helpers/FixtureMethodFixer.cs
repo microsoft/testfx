@@ -86,7 +86,7 @@ internal static class FixtureMethodFixer
                 WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestContext,
                 out INamedTypeSymbol? testContextTypeSymbol))
         {
-            return [];
+            return Enumerable.Empty<SyntaxNode>();
         }
 
         SyntaxNode testContextType = syntaxGenerator.TypeExpression(testContextTypeSymbol);
