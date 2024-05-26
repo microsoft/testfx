@@ -49,9 +49,12 @@ public class FileUtilityTests : TestContainer
     {
         string[] allFiles =
         [
-            "MainClock\\tickmain.txt", "MainClock\\tock.tick.txt",
-            "MainClock\\Folder1\\tick.txt", "MainClock\\Folder1\\tock.tick.txt",
-            "MainClock\\Folder2\\newtick.log", "MainClock\\Folder2\\newtock.log",
+            "MainClock\\tickmain.txt",
+            "MainClock\\tock.tick.txt",
+            "MainClock\\Folder1\\tick.txt",
+            "MainClock\\Folder1\\tock.tick.txt",
+            "MainClock\\Folder2\\newtick.log",
+            "MainClock\\Folder2\\newtock.log",
             "MainClock\\Folder2\\backup\\newtock.tick.txt"
         ];
 
@@ -66,9 +69,12 @@ public class FileUtilityTests : TestContainer
     {
         string[] allFiles =
         [
-            "MainClock\\tickmain.txt", "MainClock\\tock.tick.txt",
-            "MainClock\\Folder1\\tick.txt", "MainClock\\Folder1\\tock.tick.txt",
-            "MainClock\\Folder2\\newtick.log", "MainClock\\Folder2\\newtock.log",
+            "MainClock\\tickmain.txt",
+            "MainClock\\tock.tick.txt",
+            "MainClock\\Folder1\\tick.txt",
+            "MainClock\\Folder1\\tock.tick.txt",
+            "MainClock\\Folder2\\newtick.log",
+            "MainClock\\Folder2\\newtock.log",
             "MainClock\\Folder2\\backup\\"
         ];
 
@@ -87,9 +93,12 @@ public class FileUtilityTests : TestContainer
         // Setup
         string[] allFiles =
         [
-            "c:\\MainClock\\Results\\tickmain.trx", "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
-            "c:\\MainClock\\tickmain.txt", "c:\\MainClock\\tock.tick.txt",
-            "c:\\MainClock\\Folder1\\tick.txt", "c:\\MainClock\\Folder1\\tock.tick.txt",
+            "c:\\MainClock\\Results\\tickmain.trx",
+            "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
+            "c:\\MainClock\\tickmain.txt",
+            "c:\\MainClock\\tock.tick.txt",
+            "c:\\MainClock\\Folder1\\tick.txt",
+            "c:\\MainClock\\Folder1\\tock.tick.txt",
             "c:\\MainClock\\Folder2\\backup\\Data.csv"
         ];
 
@@ -124,9 +133,12 @@ public class FileUtilityTests : TestContainer
         // Setup
         string[] allFiles =
         [
-            "c:\\MainClock\\Results\\tickmain.trx", "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
-            "c:\\MainClock\\tickmain.txt", "c:\\MainClock\\tock.tick.txt",
-            "c:\\MainClock\\Folder1\\tick.txt", "c:\\MainClock\\Folder1\\tock.tick.txt",
+            "c:\\MainClock\\Results\\tickmain.trx",
+            "c:\\MainClock\\Results\\Run1\\tock.tick.txt",
+            "c:\\MainClock\\tickmain.txt",
+            "c:\\MainClock\\tock.tick.txt",
+            "c:\\MainClock\\Folder1\\tick.txt",
+            "c:\\MainClock\\Folder1\\tock.tick.txt",
             "c:\\MainClock\\Folder2\\backup\\Data.csv"
         ];
 
