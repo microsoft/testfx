@@ -147,7 +147,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
             // When batch timer expire or we're at the end of the session we can unblock the message drain
             ArgumentGuard.IsNotNull(_task);
-            await Task.WhenAny(_task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task);
+            await Task.WhenAny(Task.Delay(TimeSpan.FromMilliseconds(TestNodeUpdateDelayInMs), cancellationToken), _testSessionEnd.Task);
 
             if (cancellationToken.IsCancellationRequested)
             {
