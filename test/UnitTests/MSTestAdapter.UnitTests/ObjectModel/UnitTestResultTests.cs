@@ -55,10 +55,12 @@ public class UnitTestResultTests : TestContainer
         DateTimeOffset endTime = DateTimeOffset.Now;
 
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -86,10 +88,12 @@ public class UnitTestResultTests : TestContainer
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
 
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -106,10 +110,12 @@ public class UnitTestResultTests : TestContainer
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
 
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -126,10 +132,12 @@ public class UnitTestResultTests : TestContainer
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
 
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -146,10 +154,12 @@ public class UnitTestResultTests : TestContainer
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
 
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -166,10 +176,12 @@ public class UnitTestResultTests : TestContainer
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
 
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -188,10 +200,12 @@ public class UnitTestResultTests : TestContainer
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
 
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -215,10 +229,12 @@ public class UnitTestResultTests : TestContainer
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
 
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -232,10 +248,12 @@ public class UnitTestResultTests : TestContainer
     public void UniTestHelperToTestOutcomeForUnitTestOutcomePassedShouldReturnTestOutcomePassed()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -246,10 +264,12 @@ public class UnitTestResultTests : TestContainer
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeFailedShouldReturnTestOutcomeFailed()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -260,10 +280,12 @@ public class UnitTestResultTests : TestContainer
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeErrorShouldReturnTestOutcomeFailed()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -274,11 +296,13 @@ public class UnitTestResultTests : TestContainer
     public void UnitTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutComeNoneWhenSpecifiedInAdapterSettings()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                        <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <MapNotRunnableToFailed>false</MapNotRunnableToFailed>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -289,10 +313,12 @@ public class UnitTestResultTests : TestContainer
     public void UnitTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailedByDefault()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -303,10 +329,12 @@ public class UnitTestResultTests : TestContainer
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeTimeoutShouldReturnTestOutcomeFailed()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -317,10 +345,12 @@ public class UnitTestResultTests : TestContainer
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeIgnoredShouldReturnTestOutcomeSkipped()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -331,10 +361,12 @@ public class UnitTestResultTests : TestContainer
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeSkipped()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -345,11 +377,13 @@ public class UnitTestResultTests : TestContainer
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInconclusiveShouldReturnTestOutcomeFailedWhenSpecifiedSo()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                            <MapInconclusiveToFailed>true</MapInconclusiveToFailed>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <MapInconclusiveToFailed>true</MapInconclusiveToFailed>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -360,10 +394,12 @@ public class UnitTestResultTests : TestContainer
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotFoundShouldReturnTestOutcomeNotFound()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -374,10 +410,12 @@ public class UnitTestResultTests : TestContainer
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeInProgressShouldReturnTestOutcomeNone()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -388,11 +426,13 @@ public class UnitTestResultTests : TestContainer
     public void UniTestHelperToTestOutcomeForUnitTestOutcomeNotRunnableShouldReturnTestOutcomeFailedWhenSpecifiedSo()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTestV2>
-                            <MapNotRunnableToFailed>true</MapNotRunnableToFailed>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <MapNotRunnableToFailed>true</MapNotRunnableToFailed>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
         var resultOutcome = UnitTestOutcomeHelper.ToTestOutcome(UnitTestOutcome.NotRunnable, adapterSettings);

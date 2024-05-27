@@ -46,7 +46,12 @@ public class AppDomainUtilitiesTests : TestContainer
         Verify(configFile == setup.ConfigurationFile);
 
         // Assert Config Bytes.
-        string expectedRedir = "<dependentAssembly><assemblyIdentity name=\"Microsoft.VisualStudio.TestPlatform.ObjectModel\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"11.0.0.0\" newVersion=\"15.0.0.0\" />";
+        string expectedRedir =
+            """
+            <dependentAssembly>
+            <assemblyIdentity name="Microsoft.VisualStudio.TestPlatform.ObjectModel" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+            <bindingRedirect oldVersion="11.0.0.0" newVersion="15.0.0.0" />
+            """;
 
         byte[] observedConfigBytes = setup.GetConfigurationBytes();
         string observedXml = System.Text.Encoding.UTF8.GetString(observedConfigBytes);

@@ -50,12 +50,14 @@ public class AssemblyEnumeratorTests : TestContainer
     public void ConstructorShouldPopulateSettings()
     {
         string runSettingsXml =
-             @"<RunSettings>
-                     <MSTest>
-                        <ForcedLegacyMode>True</ForcedLegacyMode>
-                        <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
-                     </MSTest>
-                   </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <ForcedLegacyMode>True</ForcedLegacyMode>
+                <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
+              </MSTest>
+            </RunSettings>
+            """;
 
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>

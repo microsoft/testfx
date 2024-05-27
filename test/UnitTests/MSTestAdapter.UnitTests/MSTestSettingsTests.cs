@@ -51,6 +51,7 @@ public class MSTestSettingsTests : TestContainer
                     <MSTestV2>
                     </MSTestV2>
                   </RunSettings>";
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -60,10 +61,12 @@ public class MSTestSettingsTests : TestContainer
     public void MapNotRunnableToFailedIsByDefaultTrueWhenNotSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -73,11 +76,13 @@ public class MSTestSettingsTests : TestContainer
     public void MapInconclusiveToFailedShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -87,11 +92,13 @@ public class MSTestSettingsTests : TestContainer
     public void MapNotRunnableToFailedShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -101,10 +108,12 @@ public class MSTestSettingsTests : TestContainer
     public void ForcedLegacyModeIsByDefaultFalseWhenNotSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTest>
-                    </MSTest>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+              </MSTest>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
 
@@ -114,11 +123,13 @@ public class MSTestSettingsTests : TestContainer
     public void ForcedLegacyModeShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTest>
-                     <ForcedLegacyMode>true</ForcedLegacyMode>
-                    </MSTest>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <ForcedLegacyMode>true</ForcedLegacyMode>
+              </MSTest>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
 
@@ -128,10 +139,12 @@ public class MSTestSettingsTests : TestContainer
     public void TestSettingsFileIsByDefaultNullWhenNotSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTest>
-                    </MSTest>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+              </MSTest>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
 
@@ -141,11 +154,13 @@ public class MSTestSettingsTests : TestContainer
     public void TestSettingsFileShouldNotBeNullWhenSpecifiedInRunSettings()
     {
         string runSettingxml =
-        @"<RunSettings>
-                 <MSTest>   
-                   <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                 </MSTest>
-               </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+              </MSTest>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsName);
 
@@ -155,10 +170,12 @@ public class MSTestSettingsTests : TestContainer
     public void EnableBaseClassTestMethodsFromOtherAssembliesIsByDefaulTrueWhenNotSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -168,11 +185,13 @@ public class MSTestSettingsTests : TestContainer
     public void EnableBaseClassTestMethodsFromOtherAssembliesShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <EnableBaseClassTestMethodsFromOtherAssemblies>True</EnableBaseClassTestMethodsFromOtherAssemblies>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <EnableBaseClassTestMethodsFromOtherAssemblies>True</EnableBaseClassTestMethodsFromOtherAssemblies>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -182,10 +201,12 @@ public class MSTestSettingsTests : TestContainer
     public void CaptureDebugTracesShouldBeTrueByDefault()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -195,11 +216,13 @@ public class MSTestSettingsTests : TestContainer
     public void CaptureDebugTracesShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <CaptureTraceOutput>False</CaptureTraceOutput>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <CaptureTraceOutput>False</CaptureTraceOutput>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -209,11 +232,13 @@ public class MSTestSettingsTests : TestContainer
     public void TestTimeoutShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <TestTimeout>4000</TestTimeout>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                  <TestTimeout>4000</TestTimeout>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -223,10 +248,12 @@ public class MSTestSettingsTests : TestContainer
     public void TestTimeoutShouldBeSetToZeroIfNotSpecifiedInRunSettings()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -236,10 +263,12 @@ public class MSTestSettingsTests : TestContainer
     public void TreatClassCleanupWarningsAsErrorsShouldBeFalseByDefault()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -249,11 +278,13 @@ public class MSTestSettingsTests : TestContainer
     public void TreatClassCleanupWarningsAsErrorsShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <TreatClassAndAssemblyCleanupWarningsAsErrors>True</TreatClassAndAssemblyCleanupWarningsAsErrors>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <TreatClassAndAssemblyCleanupWarningsAsErrors>True</TreatClassAndAssemblyCleanupWarningsAsErrors>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -263,10 +294,12 @@ public class MSTestSettingsTests : TestContainer
     public void TreatDiscoveryWarningsAsErrorsShouldBeFalseByDefault()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -276,11 +309,13 @@ public class MSTestSettingsTests : TestContainer
     public void TreatDiscoveryWarningsAsErrorsShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <TreatDiscoveryWarningsAsErrors>True</TreatDiscoveryWarningsAsErrors>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <TreatDiscoveryWarningsAsErrors>True</TreatDiscoveryWarningsAsErrors>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -290,10 +325,12 @@ public class MSTestSettingsTests : TestContainer
     public void ParallelizationSettingsShouldNotBeSetByDefault()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -304,13 +341,15 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldThrowIfParallelizationWorkersIsNotInt()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize>
-                            <Workers>GoneFishing</Workers>
-                        </Parallelize>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize>
+                  <Workers>GoneFishing</Workers>
+                </Parallelize>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
@@ -322,13 +361,15 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldThrowIfParallelizationWorkersIsNegative()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize>
-                            <Workers>-1</Workers>
-                        </Parallelize>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize>
+                  <Workers>-1</Workers>
+                </Parallelize>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
@@ -340,13 +381,15 @@ public class MSTestSettingsTests : TestContainer
     public void ParallelizationWorkersShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize>
-                            <Workers>2</Workers>
-                        </Parallelize>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize>
+                  <Workers>2</Workers>
+                </Parallelize>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -356,13 +399,15 @@ public class MSTestSettingsTests : TestContainer
     public void ParallelizationWorkersShouldBeSetToProcessorCountWhenSetToZero()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize>
-                            <Workers>0</Workers>
-                        </Parallelize>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize>
+                  <Workers>0</Workers>
+                </Parallelize>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -372,12 +417,14 @@ public class MSTestSettingsTests : TestContainer
     public void ParallelizationSettingsShouldBeSetToDefaultsWhenNotSet()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize>
-                        </Parallelize>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize>
+                </Parallelize>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -388,11 +435,13 @@ public class MSTestSettingsTests : TestContainer
     public void ParallelizationSettingsShouldBeSetToDefaultsOnAnEmptyParalleizeSetting()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize/>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize/>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -403,14 +452,16 @@ public class MSTestSettingsTests : TestContainer
     public void ParallelizationSettingsShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize>
-                            <Workers>127</Workers>
-                            <Scope>MethodLevel</Scope>
-                        </Parallelize>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize>
+                  <Workers>127</Workers>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -421,13 +472,15 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldThrowIfParallelizationScopeIsNotValid()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize>
-                            <Scope>JustParallelizeWillYou</Scope>
-                        </Parallelize>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize>
+                  <Scope>JustParallelizeWillYou</Scope>
+                </Parallelize>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
@@ -439,13 +492,15 @@ public class MSTestSettingsTests : TestContainer
     public void ParallelizationScopeShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize>
-                            <Scope>MethodLevel</Scope>
-                        </Parallelize>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -455,13 +510,15 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldThrowWhenParallelizeHasInvalidElements()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize>
-                            <Hola>Hi</Hola>
-                        </Parallelize>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize>
+                  <Hola>Hi</Hola>
+                </Parallelize>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         Exception exception = VerifyThrows(() => MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias));
 
@@ -473,13 +530,15 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldBeAbleToReadAfterParallelizationSettings()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize>
-                        </Parallelize>
-                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize>
+                </Parallelize>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -489,15 +548,17 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldBeAbleToReadAfterParallelizationSettingsWithData()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize>
-                            <Workers>127</Workers>
-                            <Scope>MethodLevel</Scope>
-                        </Parallelize>
-                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize>
+                  <Workers>127</Workers>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -509,12 +570,14 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldBeAbleToReadAfterParallelizationSettingsOnEmptyParallelizationNode()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <Parallelize/>
-                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <Parallelize/>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
 
@@ -524,8 +587,10 @@ public class MSTestSettingsTests : TestContainer
     public void DisableParallelizationShouldBeFalseByDefault()
     {
         string runSettingxml =
-            @"<RunSettings>
-                  </RunSettings>";
+            """
+            <RunSettings>
+            </RunSettings>
+            """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
@@ -537,11 +602,13 @@ public class MSTestSettingsTests : TestContainer
     public void DisableParallelizationShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <RunConfiguration>
-                        <DisableParallelization>True</DisableParallelization>
-                    </RunConfiguration>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableParallelization>True</DisableParallelization>
+              </RunConfiguration>
+            </RunSettings>
+            """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
@@ -557,11 +624,13 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldProbePlatformSpecificSettingsAlso()
     {
         string runSettingxml =
-             @"<RunSettings>
-                     <MSTest>
-                        <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
-                     </MSTest>
-                   </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                 <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
+              </MSTest>
+            </RunSettings>
+            """;
 
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
@@ -580,12 +649,14 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldOnlyPassTheElementSubTreeToPlatformService()
     {
         string runSettingxml =
-              @"<RunSettings>
-                      <MSTest>
-                        <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
-                        <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
-                      </MSTest>
-                    </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+                <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
+              </MSTest>
+            </RunSettings>
+            """;
 
         string expectedrunSettingxml = "<DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>";
         string observedxml = null;
@@ -607,14 +678,16 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldBeAbleToReadSettingsAfterThePlatformServiceReadsItsSettings()
     {
         string runSettingxml =
-              @"<RunSettings>
-                      <MSTest>
-                        <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
-                        <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                        <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
-                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                      </MSTest>
-                    </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+                <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
+                <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+              </MSTest>
+            </RunSettings>
+            """;
 
         bool dummyPlatformSpecificSetting = false;
 
@@ -660,17 +733,19 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldBeAbleToReadSettingsIfThePlatformServiceDoesNotUnderstandASetting()
     {
         string runSettingxml =
-              @"<RunSettings>
-                      <MSTest>
-                        <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
-                        <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                        <UnReadableSetting>foobar</UnReadableSetting>
-                        <ForcedLegacyMode>true</ForcedLegacyMode>
-                        <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
-                        <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
-                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                      </MSTest>
-                    </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+                <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
+                <UnReadableSetting>foobar</UnReadableSetting>
+                <ForcedLegacyMode>true</ForcedLegacyMode>
+                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+                <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+              </MSTest>
+            </RunSettings>
+            """;
 
         bool dummyPlatformSpecificSetting = false;
 
@@ -718,13 +793,15 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldOnlyReadTheAdapterSection()
     {
         string runSettingxml =
-              @"<RunSettings>
-                      <MSTest>
-                        <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
-                        <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
-                      </MSTest>
-                      <BadElement>Bad</BadElement>
-                    </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+                <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
+              </MSTest>
+              <BadElement>Bad</BadElement>
+            </RunSettings>
+            """;
 
         bool outOfScopeCall = false;
 
@@ -765,20 +842,22 @@ public class MSTestSettingsTests : TestContainer
     public void GetSettingsShouldWorkIfThereAreCommentsInTheXML()
     {
         string runSettingxml =
-              @"<RunSettings>
-                      <!-- MSTest runsettings -->
-                      <MSTest>
-                        <!-- Map inconclusive -->
-                        <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
-                        <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                        <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
-                        <!-- Force Legacy mode -->
-                        <ForcedLegacyMode>true</ForcedLegacyMode>
-                        <!-- Enable base class test methods from other assemblies -->
-                        <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
-                      </MSTest>
-                      <BadElement>Bad</BadElement>
-                    </RunSettings>";
+            """
+            <RunSettings>
+              <!-- MSTest runsettings -->
+              <MSTest>
+                <!-- Map inconclusive -->
+                <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+                <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
+                <DummyPlatformSpecificSetting>True</DummyPlatformSpecificSetting>
+                <!-- Force Legacy mode -->
+                <ForcedLegacyMode>true</ForcedLegacyMode>
+                <!-- Enable base class test methods from other assemblies -->
+                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+              </MSTest>
+              <BadElement>Bad</BadElement>
+            </RunSettings>
+            """;
 
         bool dummyPlatformSpecificSetting = false;
 
@@ -840,11 +919,13 @@ public class MSTestSettingsTests : TestContainer
     public void CurrentSettingShouldReturnCachedLoadedSettings()
     {
         string runSettingxml =
-        @"<RunSettings>
-                 <MSTest>   
-                    <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                 </MSTest>
-               </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+              </MSTest>
+            </RunSettings>
+            """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
@@ -866,17 +947,19 @@ public class MSTestSettingsTests : TestContainer
     public void PopulateSettingsShouldFillInSettingsFromSettingsObject()
     {
         string runsettingsXml =
-        @"<RunSettings>
-                 <MSTest>
-                   <CaptureTraceOutput>False</CaptureTraceOutput> 
-                   <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
-                   <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                   <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                   <ForcedLegacyMode>true</ForcedLegacyMode>
-                   <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
-                   <TreatClassAndAssemblyCleanupWarningsAsErrors>true</TreatClassAndAssemblyCleanupWarningsAsErrors>
-                 </MSTest>
-               </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <CaptureTraceOutput>False</CaptureTraceOutput>
+                <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+                <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <ForcedLegacyMode>true</ForcedLegacyMode>
+                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+                <TreatClassAndAssemblyCleanupWarningsAsErrors>true</TreatClassAndAssemblyCleanupWarningsAsErrors>
+              </MSTest>
+            </RunSettings>
+            """;
 
         var settings = MSTestSettings.GetSettings(runsettingsXml, MSTestSettings.SettingsName);
 
@@ -931,11 +1014,13 @@ public class MSTestSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()
     {
         string runSettingxml =
-        @"<RunSettings>
-                 <FooUnit>   
-                  <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                 </FooUnit>
-               </RunSettings>";
+            """
+            <RunSettings>
+              <FooUnit>
+               <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+              </FooUnit>
+            </RunSettings>
+            """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
@@ -952,15 +1037,17 @@ public class MSTestSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeSettingsFromMSTestSection()
     {
         string runSettingxml =
-        @"<RunSettings>
-                 <MSTest>
-                   <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
-                   <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                   <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                   <ForcedLegacyMode>true</ForcedLegacyMode>
-                   <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
-                 </MSTest>
-               </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+                <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <ForcedLegacyMode>true</ForcedLegacyMode>
+                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+              </MSTest>
+            </RunSettings>
+            """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
@@ -980,15 +1067,17 @@ public class MSTestSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeSettingsFromMSTestV2Section()
     {
         string runSettingxml =
-        @"<RunSettings>
-                 <MSTestV2>
-                   <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
-                   <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                   <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                   <ForcedLegacyMode>true</ForcedLegacyMode>
-                   <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
-                 </MSTestV2>
-               </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+                <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <ForcedLegacyMode>true</ForcedLegacyMode>
+                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
@@ -1008,18 +1097,20 @@ public class MSTestSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeSettingsFromMSTestV2OverMSTestV1Section()
     {
         string runSettingxml =
-        @"<RunSettings>
-                 <MSTestV2>
-                   <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
-                   <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
-                   <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
-                 </MSTestV2>
-                 <MSTest>
-                   <CaptureDebugTraces>False</CaptureDebugTraces>
-                   <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                   <ForcedLegacyMode>true</ForcedLegacyMode>
-                 </MSTest>
-               </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <MapInconclusiveToFailed>True</MapInconclusiveToFailed>
+                <MapNotRunnableToFailed>True</MapNotRunnableToFailed>
+                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+              </MSTestV2>
+              <MSTest>
+                <CaptureDebugTraces>False</CaptureDebugTraces>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <ForcedLegacyMode>true</ForcedLegacyMode>
+              </MSTest>
+            </RunSettings>
+            """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
@@ -1050,11 +1141,13 @@ public class MSTestSettingsTests : TestContainer
     public void IsLegacyScenarioReturnsFalseWhenForcedLegacyModeIsSetToFalse()
     {
         string runSettingxml =
-        @"<RunSettings>   
-               <MSTest>   
-                <ForcedLegacyMode>False</ForcedLegacyMode> 
+            """
+            <RunSettings>
+               <MSTest>
+                 <ForcedLegacyMode>False</ForcedLegacyMode>
                </MSTest>
-          </RunSettings>";
+            </RunSettings>
+            """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
@@ -1065,11 +1158,13 @@ public class MSTestSettingsTests : TestContainer
     public void IsLegacyScenarioReturnsFalseWhenForcedLegacyModeIsSetToTrue()
     {
         string runSettingxml =
-        @"<RunSettings>   
-               <MSTest>   
-                <ForcedLegacyMode>true</ForcedLegacyMode> 
+            """
+            <RunSettings>
+               <MSTest>
+                 <ForcedLegacyMode>true</ForcedLegacyMode>
                </MSTest>
-          </RunSettings>";
+            </RunSettings>
+            """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
@@ -1079,11 +1174,13 @@ public class MSTestSettingsTests : TestContainer
     public void IsLegacyScenarioReturnsTrueWhenTestSettingsFileIsGiven()
     {
         string runSettingxml =
-        @"<RunSettings>   
-               <MSTest>   
-                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile> 
+            """
+            <RunSettings>
+               <MSTest>
+                 <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
                </MSTest>
-          </RunSettings>";
+            </RunSettings>
+            """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);
@@ -1093,11 +1190,13 @@ public class MSTestSettingsTests : TestContainer
     public void LegacyScenariosNotSupportedWarningIsPrintedWhenVsmdiFileIsGiven()
     {
         string runSettingxml =
-        @"<RunSettings>   
-               <MSTest>   
-                <SettingsFile>DummyPath\\vsmdiFile.vsmdi</SettingsFile> 
+            """
+            <RunSettings>
+               <MSTest>
+                <SettingsFile>DummyPath\\vsmdiFile.vsmdi</SettingsFile>
                </MSTest>
-          </RunSettings>";
+            </RunSettings>
+            """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         MSTestSettings.PopulateSettings(_mockDiscoveryContext.Object);

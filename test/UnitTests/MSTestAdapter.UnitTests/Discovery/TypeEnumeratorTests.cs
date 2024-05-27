@@ -113,13 +113,15 @@ public class TypeEnumeratorTests : TestContainer
     public void GetTestsShouldReturnBaseTestMethodsFromAnotherAssemblyByConfiguration()
     {
         string runSettingsXml =
-        @"<RunSettings>   
-                <MSTestV2>
-                  <CaptureTraceOutput>true</CaptureTraceOutput>
-                  <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
-                  <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+            """
+            <RunSettings>
+              <MSTestV2>
+                <CaptureTraceOutput>true</CaptureTraceOutput>
+                <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
+                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
               </MSTestV2>
-            </RunSettings>";
+            </RunSettings>
+            """;
 
         var mockRunContext = new Mock<IRunContext>();
         var mockRunSettings = new Mock<IRunSettings>();
@@ -142,13 +144,15 @@ public class TypeEnumeratorTests : TestContainer
     public void GetTestsShouldNotReturnBaseTestMethodsFromAnotherAssemblyByConfiguration()
     {
         string runSettingsXml =
-            @"<RunSettings>   
-                <MSTestV2>
-                  <CaptureTraceOutput>true</CaptureTraceOutput>
-                  <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
-                  <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
+            """
+            <RunSettings>
+              <MSTestV2>
+                <CaptureTraceOutput>true</CaptureTraceOutput>
+                <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
+                <EnableBaseClassTestMethodsFromOtherAssemblies>false</EnableBaseClassTestMethodsFromOtherAssemblies>
               </MSTestV2>
-            </RunSettings>";
+            </RunSettings>
+            """;
 
         var mockRunContext = new Mock<IRunContext>();
         var mockRunSettings = new Mock<IRunSettings>();
