@@ -86,7 +86,7 @@ class AssemblyResolver :
     /// </summary>
     private readonly object _syncLock = new();
 
-    private Stack<string>? _currentlyResolvingResources;
+    private static List<string>? s_currentlyLoading;
     private bool _disposed;
 
     /// <summary>
@@ -372,27 +372,25 @@ class AssemblyResolver :
                 bool isResource = requestedName.Name.EndsWith(".resources", StringComparison.InvariantCulture);
                 if (isResource)
                 {
-                    // Check for recursive resource lookup.
-                    // This can happen when we are on non-english locale, and we try to load mscorlib.resources
-                    // (or potentially some other resources). This will trigger a new Resolve and call the method
-                    // we are currently in. If then some code in this Resolve method (like File.Exists) will again
-                    // try to access mscorlib.resources it will end up recursing forever.
-                    if (_currentlyResolvingResources != null && _currentlyResolvingResources.Count > 0 && _currentlyResolvingResources.Contains(assemblyPath))
+                    // Are we recursively looking up the same resource?  Note - our backout code will set
+                    // the ResourceHelper's currentlyLoading stack to null if an exception occurs.
+                    if (s_currentlyLoading != null && s_currentlyLoading.Count > 0 && s_currentlyLoading.LastIndexOf(assemblyPath) != -1)
                     {
                         EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Assembly '{0}' is searching for itself recursively '{1}', returning as not found.", name, assemblyPath);
                         _resolvedAssemblies[name] = null;
                         return null;
                     }
 
-                    _currentlyResolvingResources ??= new Stack<string>(4);
-                    _currentlyResolvingResources.Push(assemblyPath);
+                    s_currentlyLoading ??= new List<string>();
+                    s_currentlyLoading.Add(assemblyPath); // Push
                     isPushed = true;
                 }
 
                 Assembly? assembly = SearchAndLoadAssembly(assemblyPath, name, requestedName, isReflectionOnly);
                 if (isResource && isPushed)
                 {
-                    _currentlyResolvingResources?.Pop();
+                    DebugEx.Assert(s_currentlyLoading is not null, "_currentlyLoading should not be null");
+                    s_currentlyLoading.RemoveAt(s_currentlyLoading.Count - 1); // Pop
                 }
 
                 if (assembly != null)
