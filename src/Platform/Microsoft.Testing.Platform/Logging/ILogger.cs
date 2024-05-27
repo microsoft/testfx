@@ -41,6 +41,4 @@ public interface ILogger
 /// Represents a logger that can be used for logging messages with a specific category.
 /// </summary>
 /// <typeparam name="TCategoryName">The type of the category name.</typeparam>
-public interface ILogger<out TCategoryName> : ILogger
-{
-}
+public interface ILogger<out TCategoryName> : ILogger;

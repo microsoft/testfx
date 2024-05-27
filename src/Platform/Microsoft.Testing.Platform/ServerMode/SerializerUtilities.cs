@@ -631,7 +631,7 @@ internal static class SerializerUtilities
 #if !NETCOREAPP
             if (errorObj.TryGetValue(JsonRpcStrings.Data, out object? errorData))
             {
-                if (errorData is JsonObject keyValuePairs && keyValuePairs.Count == 0)
+                if (errorData is JsonObject { Count: 0 })
                 {
                     errorObj[JsonRpcStrings.Data] = null!;
                 }
@@ -658,7 +658,7 @@ internal static class SerializerUtilities
             return new ErrorMessage(
                 Id: id,
                 ErrorCode: code,
-                Message: errorMessage ?? string.Empty,
+                Message: errorMessage,
                 Data: data);
         });
     }
@@ -680,7 +680,7 @@ internal static class SerializerUtilities
         => Serialize(typeof(T), obj!);
 
     public static IDictionary<string, object?> SerializeObject(object obj)
-        => Serialize(obj.GetType(), obj!);
+        => Serialize(obj.GetType(), obj);
 
     public static IDictionary<string, object?> Serialize(Type t, object obj)
     {

@@ -14,8 +14,8 @@ namespace MSTest.Analyzers.Test;
 [TestGroup]
 public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext testExecutionContext) : TestBase(testExecutionContext)
 {
-    private static readonly List<(DiagnosticDescriptor Rule, string AttributeUsageExample)> RuleUsageExamples = new()
-    {
+    private static readonly List<(DiagnosticDescriptor Rule, string AttributeUsageExample)> RuleUsageExamples =
+    [
         (UseAttributeOnTestMethodAnalyzer.OwnerRule, """Owner("owner")"""),
         (UseAttributeOnTestMethodAnalyzer.PriorityRule, "Priority(1)"),
         (UseAttributeOnTestMethodAnalyzer.TestPropertyRule, """TestProperty("name", "value")"""),
@@ -23,8 +23,8 @@ public sealed class UseAttributeOnTestMethodAnalyzerTests(ITestExecutionContext 
         (UseAttributeOnTestMethodAnalyzer.DescriptionRule, """Description("description")"""),
         (UseAttributeOnTestMethodAnalyzer.ExpectedExceptionRule, "ExpectedException(null)"),
         (UseAttributeOnTestMethodAnalyzer.CssIterationRule, "CssIteration(null)"),
-        (UseAttributeOnTestMethodAnalyzer.CssProjectStructureRule, "CssProjectStructure(null)"),
-    };
+        (UseAttributeOnTestMethodAnalyzer.CssProjectStructureRule, "CssProjectStructure(null)")
+    ];
 
     internal static IEnumerable<(DiagnosticDescriptor Rule, string AttributeUsageExample)> GetAttributeUsageExampleAndRuleTuples()
         => RuleUsageExamples.Select(tuple => (tuple.Rule, tuple.AttributeUsageExample));

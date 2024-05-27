@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -8,6 +8,7 @@ using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -363,11 +364,12 @@ public class TestClassInfo
             timeout = localTimeout;
         }
 
-        return MethodRunner.RunWithTimeoutAndCancellation(
+        return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(null, testContext),
             testContext.CancellationTokenSource,
             timeout,
             methodInfo,
+            new ClassExecutionContextScope(ClassType),
             Resource.ClassInitializeWasCancelled,
             Resource.ClassInitializeTimedOut);
     }
@@ -404,12 +406,12 @@ public class TestClassInfo
                 try
                 {
                     classCleanupMethod = ClassCleanupMethod;
-                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
+                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod, BaseClassCleanupMethodsStack.Count) : null;
                     var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
                     while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                     {
                         classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                        ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
+                        ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count);
                     }
 
                     IsClassCleanupExecuted = ClassCleanupException is null;
@@ -482,12 +484,14 @@ public class TestClassInfo
             try
             {
                 classCleanupMethod = ClassCleanupMethod;
-                ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
+                ClassCleanupException = classCleanupMethod is not null
+                    ? InvokeCleanupMethod(classCleanupMethod, BaseClassCleanupMethodsStack.Count)
+                    : null;
                 var baseClassCleanupQueue = new Queue<MethodInfo>(BaseClassCleanupMethodsStack);
                 while (baseClassCleanupQueue.Count > 0 && ClassCleanupException is null)
                 {
                     classCleanupMethod = baseClassCleanupQueue.Dequeue();
-                    ClassCleanupException = classCleanupMethod is not null ? InvokeCleanupMethod(classCleanupMethod) : null;
+                    ClassCleanupException = InvokeCleanupMethod(classCleanupMethod, baseClassCleanupQueue.Count);
                 }
 
                 IsClassCleanupExecuted = ClassCleanupException is null;
@@ -535,7 +539,7 @@ public class TestClassInfo
         throw testFailedException;
     }
 
-    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo)
+    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, int remainingCleanupCount)
     {
         int? timeout = null;
         if (ClassCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
@@ -543,11 +547,12 @@ public class TestClassInfo
             timeout = localTimeout;
         }
 
-        return MethodRunner.RunWithTimeoutAndCancellation(
+        return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(null),
             new CancellationTokenSource(),
             timeout,
             methodInfo,
+            new ClassExecutionContextScope(ClassType, remainingCleanupCount),
             Resource.ClassCleanupWasCancelled,
             Resource.ClassCleanupTimedOut);
     }

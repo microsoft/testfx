@@ -148,7 +148,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Check the environment variable, it wins on all the other configuration.
         string? environmentSetting = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION);
         bool? isEnvConfiguredToFailFast = null;
-        if (environmentSetting is not null and ("1" or "0"))
+        if (environmentSetting is "1" or "0")
         {
             isEnvConfiguredToFailFast = environmentSetting == "1";
         }
@@ -546,10 +546,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Create the test framework capabilities
         ITestFrameworkCapabilities testFrameworkCapabilities = testFrameworkManager.TestFrameworkCapabilitiesFactory(serviceProvider);
-        if (testFrameworkCapabilities is IAsyncInitializableExtension testFrameworkCapabilitiesAsyncInitializable)
-        {
-            await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync();
-        }
+        await testFrameworkCapabilities.TryInitializeAsync();
 
         // Register the test framework capabilities to be used by services
         serviceProvider.AddService(testFrameworkCapabilities);
@@ -564,16 +561,13 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         await RegisterAsServiceOrConsumerOrBothAsync(testExecutionFilterFactory, serviceProvider, dataConsumersBuilder);
 
         // Create the test framework adapter
-        ITestFramework testFrameworkAdapter = testFrameworkManager.TestFrameworkAdapterFactory(testFrameworkCapabilities, serviceProvider);
-        if (testFrameworkAdapter is IAsyncInitializableExtension testFrameworkAsyncInitializable)
-        {
-            await testFrameworkAsyncInitializable.InitializeAsync();
-        }
+        ITestFramework testFramework = testFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
+        await testFramework.TryInitializeAsync();
 
         serviceProvider.AllowTestAdapterFrameworkRegistration = true;
         try
         {
-            await RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkProxy(testFrameworkAdapter), serviceProvider, dataConsumersBuilder);
+            await RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkProxy(testFramework), serviceProvider, dataConsumersBuilder);
         }
         finally
         {
@@ -665,7 +659,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             guardMessageBusService.SetBuiltMessageBus(concreteMessageBusService);
         }
 
-        return testFrameworkAdapter;
+        return testFramework;
     }
 
     protected virtual ConsoleTestHost CreateConsoleTestHost(

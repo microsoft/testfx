@@ -39,7 +39,7 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
             throw new ArgumentNullException(nameof(exceptionType));
         }
 
-        if (!typeof(Exception).GetTypeInfo().IsAssignableFrom(exceptionType.GetTypeInfo()))
+        if (!typeof(Exception).IsAssignableFrom(exceptionType.GetTypeInfo()))
         {
             throw new ArgumentException(
                     FrameworkMessages.UTF_ExpectedExceptionTypeMustDeriveFromException,
@@ -56,21 +56,13 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
     /// <summary>
     /// Gets a value indicating the Type of the expected exception.
     /// </summary>
-    public Type ExceptionType
-    {
-        get;
-        private set;
-    }
+    public Type ExceptionType { get; }
 
     /// <summary>
     /// Gets or sets a value indicating whether to allow types derived from the type of the expected exception to
     /// qualify as expected.
     /// </summary>
-    public bool AllowDerivedTypes
-    {
-        get;
-        set;
-    }
+    public bool AllowDerivedTypes { get; set; }
 
     /// <summary>
     /// Gets the message to include in the test result if the test fails due to not throwing an exception.
@@ -96,7 +88,7 @@ public sealed class ExpectedExceptionAttribute : ExpectedExceptionBaseAttribute
         Type thrownExceptionType = exception.GetType();
         if (AllowDerivedTypes)
         {
-            if (!ExceptionType.GetTypeInfo().IsAssignableFrom(thrownExceptionType.GetTypeInfo()))
+            if (!ExceptionType.IsAssignableFrom(thrownExceptionType.GetTypeInfo()))
             {
                 // If the exception is an AssertFailedException or an AssertInconclusiveException, then re-throw it to
                 // preserve the test outcome and error message

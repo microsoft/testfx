@@ -142,3 +142,6 @@ project.fragment.lock.json
 
 # Playground project (use force add if a change is really worth it)
 /samples/Playground/
+
+# jetbrains temp
+.idea/

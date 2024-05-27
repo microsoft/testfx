@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using ObjectModelUnitTestOutcome = Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel.UnitTestOutcome;
@@ -103,27 +104,25 @@ public class TestMethodInfo : ITestMethod
         // check if arguments are set for data driven tests
         arguments ??= Arguments;
 
-        using (LogMessageListener listener = new(TestMethodOptions.CaptureDebugTraces))
+        using LogMessageListener listener = new(TestMethodOptions.CaptureDebugTraces);
+        watch.Start();
+        try
         {
-            watch.Start();
-            try
-            {
-                result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
-            }
-            finally
-            {
-                // Handle logs & debug traces.
-                watch.Stop();
+            result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
+        }
+        finally
+        {
+            // Handle logs & debug traces.
+            watch.Stop();
 
-                if (result != null)
-                {
-                    result.Duration = watch.Elapsed;
-                    result.DebugTrace = listener.GetAndClearDebugTrace();
-                    result.LogOutput = listener.GetAndClearStandardOutput();
-                    result.LogError = listener.GetAndClearStandardError();
-                    result.TestContextMessages = TestMethodOptions.TestContext?.GetAndClearDiagnosticMessages();
-                    result.ResultFiles = TestMethodOptions.TestContext?.GetResultFiles();
-                }
+            if (result != null)
+            {
+                result.Duration = watch.Elapsed;
+                result.DebugTrace = listener.GetAndClearDebugTrace();
+                result.LogOutput = listener.GetAndClearStandardOutput();
+                result.LogError = listener.GetAndClearStandardError();
+                result.TestContextMessages = TestMethodOptions.TestContext?.GetAndClearDiagnosticMessages();
+                result.ResultFiles = TestMethodOptions.TestContext?.GetResultFiles();
             }
         }
 
@@ -176,7 +175,7 @@ public class TestMethodInfo : ITestMethod
                 // If this is the params parameter, instantiate a new object of that type
                 if (argumentIndex == parametersInfo.Length - 1)
                 {
-                    paramsValues = Activator.CreateInstance(parametersInfo[argumentIndex].ParameterType, new object[] { arguments.Length - argumentIndex });
+                    paramsValues = Activator.CreateInstance(parametersInfo[argumentIndex].ParameterType, [arguments.Length - argumentIndex]);
                     newParameters[argumentIndex] = paramsValues;
                 }
 
@@ -238,7 +237,17 @@ public class TestMethodInfo : ITestMethod
                     if (RunTestInitializeMethod(classInstance, result))
                     {
                         hasTestInitializePassed = true;
-                        TestMethod.InvokeAsSynchronousTask(classInstance, arguments);
+                        if (IsTimeoutSet)
+                        {
+                            ExecutionContextService.RunActionOnContext(
+                                () => TestMethod.InvokeAsSynchronousTask(classInstance, arguments),
+                                new InstanceExecutionContextScope(classInstance, Parent.ClassType));
+                        }
+                        else
+                        {
+                            TestMethod.InvokeAsSynchronousTask(classInstance, arguments);
+                        }
+
                         result.Outcome = UTF.UnitTestOutcome.Passed;
                     }
                 }
@@ -447,12 +456,14 @@ public class TestMethodInfo : ITestMethod
             {
                 // Test cleanups are called in the order of discovery
                 // Current TestClass -> Parent -> Grandparent
-                testCleanupException = testCleanupMethod is not null ? InvokeCleanupMethod(testCleanupMethod, classInstance) : null;
+                testCleanupException = testCleanupMethod is not null
+                    ? InvokeCleanupMethod(testCleanupMethod, classInstance, Parent.BaseTestCleanupMethodsQueue.Count)
+                    : null;
                 var baseTestCleanupQueue = new Queue<MethodInfo>(Parent.BaseTestCleanupMethodsQueue);
                 while (baseTestCleanupQueue.Count > 0 && testCleanupException is null)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupException = testCleanupMethod is not null ? InvokeCleanupMethod(testCleanupMethod, classInstance) : null;
+                    testCleanupException = InvokeCleanupMethod(testCleanupMethod, classInstance, baseTestCleanupQueue.Count);
                 }
             }
             finally
@@ -634,16 +645,17 @@ public class TestMethodInfo : ITestMethod
             timeout = localTimeout;
         }
 
-        return MethodRunner.RunWithTimeoutAndCancellation(
+        return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
             new CancellationTokenSource(),
             timeout,
             methodInfo,
+            new InstanceExecutionContextScope(classInstance, Parent.ClassType),
             Resource.TestInitializeWasCancelled,
             Resource.TestInitializeTimedOut);
     }
 
-    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, object classInstance)
+    private TestFailedException? InvokeCleanupMethod(MethodInfo methodInfo, object classInstance, int remainingCleanupCount)
     {
         int? timeout = null;
         if (Parent.TestCleanupMethodTimeoutMilliseconds.TryGetValue(methodInfo, out int localTimeout))
@@ -651,11 +663,12 @@ public class TestMethodInfo : ITestMethod
             timeout = localTimeout;
         }
 
-        return MethodRunner.RunWithTimeoutAndCancellation(
+        return FixtureMethodRunner.RunWithTimeoutAndCancellation(
             () => methodInfo.InvokeAsSynchronousTask(classInstance, null),
             new CancellationTokenSource(),
             timeout,
             methodInfo,
+            new InstanceExecutionContextScope(classInstance, Parent.ClassType, remainingCleanupCount),
             Resource.TestCleanupWasCancelled,
             Resource.TestCleanupTimedOut);
     }
@@ -783,7 +796,7 @@ public class TestMethodInfo : ITestMethod
             }
         }
 
-        CancellationToken cancelToken = TestMethodOptions.TestContext!.Context.CancellationTokenSource!.Token;
+        CancellationToken cancelToken = TestMethodOptions.TestContext!.Context.CancellationTokenSource.Token;
         if (PlatformServiceProvider.Instance.ThreadOperations.Execute(ExecuteAsyncAction, TestMethodOptions.Timeout, cancelToken))
         {
             if (failure != null)

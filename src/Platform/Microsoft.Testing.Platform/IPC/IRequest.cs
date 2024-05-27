@@ -3,6 +3,4 @@
 
 namespace Microsoft.Testing.Platform.IPC;
 
-internal interface IRequest
-{
-}
+internal interface IRequest;

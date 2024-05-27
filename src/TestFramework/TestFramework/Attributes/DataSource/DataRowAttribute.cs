@@ -35,7 +35,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// </summary>
     /// <param name="stringArrayData"> The string array data. </param>
     public DataRowAttribute(string?[]? stringArrayData)
-        : this(new object?[] { stringArrayData })
+        : this([stringArrayData])
     {
     }
 

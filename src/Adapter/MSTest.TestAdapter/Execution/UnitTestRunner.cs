@@ -123,7 +123,7 @@ internal class UnitTestRunner : MarshalByRefObject
                 testContext,
                 MSTestSettings.CurrentSettings.CaptureDebugTraces);
 
-            if (_classCleanupManager == null && testMethodInfo != null && testMethodInfo.Parent.HasExecutableCleanupMethod)
+            if (_classCleanupManager == null && testMethodInfo is { Parent.HasExecutableCleanupMethod: true })
             {
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.OlderTFMVersionFoundClassCleanup);
             }

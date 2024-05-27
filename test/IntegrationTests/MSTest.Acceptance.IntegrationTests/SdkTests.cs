@@ -187,7 +187,7 @@ namespace MSTestSdkTest
 </Project>
 """);
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath} /warnAsError", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
         foreach (string tfm in multiTfm.Split(";"))
         {
@@ -264,7 +264,7 @@ namespace MSTestSdkTest
 </Project>
 """);
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
+        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"build -c {buildConfiguration} {generator.TargetAssetPath} /warnAsError", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
         Assert.AreEqual(0, compilationResult.ExitCode);
         foreach (string tfm in multiTfm.Split(";"))
         {

@@ -164,11 +164,7 @@ public class PropertyBagTests : TestBase
         }
     }
 
-    private sealed class DummyProperty : IProperty
-    {
-    }
+    private sealed class DummyProperty : IProperty;
 
-    private sealed class DummyProperty2 : IProperty
-    {
-    }
+    private sealed class DummyProperty2 : IProperty;
 }

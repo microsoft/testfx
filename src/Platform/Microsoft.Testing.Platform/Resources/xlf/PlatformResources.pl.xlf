@@ -2,6 +2,26 @@
 <xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd">
   <file datatype="xml" source-language="en" target-language="pl" original="../PlatformResources.resx">
     <body>
+      <trans-unit id="Aborted">
+        <source>Aborted</source>
+        <target state="translated">Przerwano</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Actual">
+        <source>Actual</source>
+        <target state="translated">Rzeczywiste</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancelledLowercase">
+        <source>cancelled</source>
+        <target state="translated">anulowano</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="CancellingTestSession">
+        <source>Cancelling the test session...</source>
+        <target state="translated">Trwa anulowanie sesji testowej...</target>
+        <note />
+      </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
         <source>Failed to create a test execution filter</source>
         <target state="translated">Nie można utworzyć filtru wykonywania testu</target>
@@ -147,9 +167,26 @@
         <target state="translated">Nie można odnaleźć katalogu „{0}”.</target>
         <note />
       </trans-unit>
+      <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
+        <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
+        <target state="translated">Plik diagnostyczny (poziom „{0}” z asynchronicznym opróżnianiem): {1}„</target>
+        <note>0 level such as verbose, 
+1 path to file</note>
+      </trans-unit>
+      <trans-unit id="DiagnosticFileLevelWithFlush">
+        <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
+        <target state="translated">Plik diagnostyczny (poziom „{0}” z synchronicznym opróżnianiem): {1}„</target>
+        <note>0 level such as verbose, 
+1 path to file</note>
+      </trans-unit>
       <trans-unit id="EnvironmentVariableProviderFailedWithError">
         <source>Provider '{0}' (UID: {1}) failed with error: {2}</source>
         <target state="translated">Dostawca „{0}” (UID:{1}) nie powiódł się z powodu błędu: {2}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Expected">
+        <source>Expected</source>
+        <target state="translated">Oczekiwane</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
@@ -162,12 +199,27 @@
         <target state="translated">Inne rozszerzenie o tym samym identyfikatorze UID „{0}” zostało już zarejestrowane. Zarejestrowane rozszerzenie jest typu „{1}”</target>
         <note />
       </trans-unit>
+      <trans-unit id="Failed">
+        <source>Failed</source>
+        <target state="translated">Niepowodzenie</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="FailedLowercase">
+        <source>failed</source>
+        <target state="translated">zakończone niepowodzeniem</target>
+        <note />
+      </trans-unit>
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
         <source>Failed to write the log to the channel. Missed log content:
 {0}</source>
         <target state="translated">Nie można zapisać dziennika w kanale. Pominięta zawartość dziennika:
 {0}</target>
         <note />
+      </trans-unit>
+      <trans-unit id="ForTest">
+        <source>For test</source>
+        <target state="translated">Na potrzeby testu</target>
+        <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
         <source>The following 'ITestHostEnvironmentVariableProvider' providers rejected the final environment variables setup:</source>
@@ -202,6 +254,11 @@
       <trans-unit id="HelpTestApplicationRunner">
         <source>&lt;test application runner&gt;</source>
         <target state="translated">&lt;test application runner&gt;</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="InProcessArtifactsProduced">
+        <source>In process file artifacts produced:</source>
+        <target state="translated">Wygenerowane artefakty pliku w trakcie procesu:</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -239,6 +296,11 @@
         <target state="translated">Serwer JsonRpc do uzgadniania klienta, implementacja oparta na specyfikacji protokołu platformy testowej.</target>
         <note />
       </trans-unit>
+      <trans-unit id="MinimumExpectedTestsPolicyViolation">
+        <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
+        <target state="translated">Minimalne oczekiwane naruszenie zasad testów, uruchomione testy: {0}, oczekiwane minimum: {1}</target>
+        <note>{0}, {1} number of tests</note>
+      </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
         <source>No serializer registered with ID '{0}'</source>
         <target state="translated">Nie zarejestrowano serializatora z identyfikatorem „{0}”</target>
@@ -259,14 +321,24 @@
         <target state="translated">Nie znaleziono</target>
         <note />
       </trans-unit>
+      <trans-unit id="OutOfProcessArtifactsProduced">
+        <source>Out of process file artifacts produced:</source>
+        <target state="translated">Wygenerowane artefakty pliku poza procesem:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Passed">
+        <source>Passed</source>
+        <target state="translated">Powodzenie</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PassedLowercase">
+        <source>passed</source>
+        <target state="translated">zakończone powodzeniem</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
         <source>Specify the hostname of the client.</source>
         <target state="translated">Określ nazwę hosta klienta.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineClientHostOptionSingleArgument">
-        <source>'--client-host' expects a single host name as argument</source>
-        <target state="translated">Element „--client-host” oczekuje pojedynczej nazwy hosta jako argumentu</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientPortOptionDescription">
@@ -277,11 +349,6 @@
       <trans-unit id="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription">
         <source>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</source>
         <target state="translated">Wymuś synchroniczne zapisywanie dziennika przez wbudowany rejestrator plików. Przydatne w przypadku scenariusza, w którym nie chcesz utracić żadnego dziennika (tj. w przypadku awarii). Pamiętaj, że to spowalnia wykonywanie testu.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument">
-        <source>'--diagnostic-output-fileprefix' expects a single file name prefix argument</source>
-        <target state="translated">Element „--diagnostic-output-fileprefix” oczekuje pojedynczego argumentu prefiksu nazwy pliku</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOptionDescription">
@@ -304,11 +371,6 @@
         <target state="translated">Katalog wyjściowy rejestrowania diagnostycznego, jeśli nie zostanie określony, plik zostanie wygenerowany w domyślnym katalogu „TestResults”.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument">
-        <source>'--diagnostic-output-directory' expects a single directory name argument</source>
-        <target state="translated">Opcja „--diagnostic-output-directory” oczekuje pojedynczego argumentu nazwy katalogu</target>
-        <note />
-      </trans-unit>
       <trans-unit id="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription">
         <source>Prefix for the log file name that will replace '[log]_.'</source>
         <target state="translated">Prefiks nazwy pliku dziennika, który zastąpi element „[log]_”.</target>
@@ -324,7 +386,7 @@
         <target state="translated">Wyświetl listę dostępnych testów.</target>
         <note />
       </trans-unit>
-      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependantProcess">
+      <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
         <target state="translated">Nieprawidłowy identyfikator PID „{0}”
@@ -369,11 +431,6 @@
       <trans-unit id="PlatformCommandLineNoBannerOptionDescription">
         <source>Do not display the startup banner, the copyright message or the telemetry banner.</source>
         <target state="translated">Nie wyświetlaj baneru startowego, komunikatu o prawach autorskich ani transparentu telemetrii.</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="PlatformCommandLineOptionExpectsNoArgumentErrorMessage">
-        <source>'--{0}' expects no argument</source>
-        <target state="translated">Opcja „--{0}” nie oczekuje żadnego argumentu</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLinePortOptionDescription">
@@ -464,6 +521,21 @@
       <trans-unit id="ServiceProviderShouldNotRegisterTestFramework">
         <source>Instances of type 'ITestFramework' should not be registered through the service provider but through 'ITestApplicationBuilder.RegisterTestFramework'</source>
         <target state="translated">Wystąpienia typu „ITestFramework” nie powinny być rejestrowane za pośrednictwem dostawcy usług, ale za pośrednictwem elementu „ITestApplicationBuilder.RegisterTestFramework”</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Skipped">
+        <source>Skipped</source>
+        <target state="translated">Pominięto</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="SkippedLowercase">
+        <source>skipped</source>
+        <target state="translated">pominięte</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="StackTrace">
+        <source>Stack Trace</source>
+        <target state="translated">Śledzenie stosu</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">
@@ -561,6 +633,11 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
         <target state="translated">Nie można opróżnić dzienników przed upływem limitu czasu wynoszącego „{0}” s</target>
         <note />
       </trans-unit>
+      <trans-unit id="Total">
+        <source>Total</source>
+        <target state="translated">Łącznie</target>
+        <note />
+      </trans-unit>
       <trans-unit id="TreeNodeFilterCannotContainSlashCharacterErrorMessage">
         <source>A filter '{0}' should not contain a '/' character</source>
         <target state="translated">Filtr „{0}” nie powinien zawierać znaku „/”</target>
@@ -574,11 +651,6 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
       <trans-unit id="TreeNodeFilterEscapeCharacterShouldNotBeLastErrorMessage">
         <source>An escape character should not terminate the filter string '{0}'</source>
         <target state="translated">Znak ucieczki nie powinien kończyć ciągu filtru „{0}”</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="TreeNodeFilterInvalidArgumentCount">
-        <source>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</source>
-        <target state="translated">Oczekiwano pojedynczego argumentu (np. „/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]”)</target>
         <note />
       </trans-unit>
       <trans-unit id="TreeNodeFilterOnlyLastLevelCanContainMutiLevelWildcardErrorMessage">
@@ -636,6 +708,11 @@ Więcej informacji o telemetrii platformy testowej firmy Microsoft: https://aka.
       <trans-unit id="UnreachableLocationErrorMessage">
         <source>This program location is thought to be unreachable. File='{0}' Line={1}</source>
         <target state="translated">Ta lokalizacja programu jest uważana za nieosiągalną. Plik=„{0}”, Wiersz={1}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="ZeroTestsRan">
+        <source>Zero tests ran</source>
+        <target state="translated">Uruchomiono zero testów</target>
         <note />
       </trans-unit>
     </body>

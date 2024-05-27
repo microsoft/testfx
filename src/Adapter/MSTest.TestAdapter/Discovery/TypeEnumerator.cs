@@ -109,7 +109,7 @@ internal class TypeEnumerator
         {
             inheritanceDepths[currentType.FullName!] = currentDepth;
             ++currentDepth;
-            currentType = currentType.GetTypeInfo().BaseType;
+            currentType = currentType.BaseType;
         }
 
         return new Collection<UnitTestElement>(
@@ -146,7 +146,7 @@ internal class TypeEnumerator
         {
             testMethod.DeclaringAssemblyName =
                 PlatformServiceProvider.Instance.FileOperations.GetAssemblyPath(
-                    method.DeclaringType.GetTypeInfo().Assembly);
+                    method.DeclaringType.Assembly);
         }
 
         // PERF: AssemblyEnumerator would later try to figure if this is a data driven test method

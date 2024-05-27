@@ -264,14 +264,14 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        string[] expectedDiscoveredTypes = new[]
-        {
+        string[] expectedDiscoveredTypes =
+        [
             nameof(PublicClass2),
             nameof(PublicClass3),
             nameof(PublicClass2.PublicNestedClassInPublicClass),
             nameof(PublicClass3.PublicClassNestedInPublicClass),
-            nameof(PublicClass3.PublicClassNestedInPublicClass.PublicClassNestedInPublicClassNestedInPublicClass),
-        };
+            nameof(PublicClass3.PublicClassNestedInPublicClass.PublicClassNestedInPublicClassNestedInPublicClass)
+        ];
 
         bool discoverInternal = false;
         string[] actualDiscoveredTypes = allTypes
@@ -287,8 +287,8 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        string[] expectedNonDiscoveredTypes = new[]
-        {
+        string[] expectedNonDiscoveredTypes =
+        [
             nameof(InternalClass),
             nameof(InternalClass.PublicClassNestedInInternalClass),
             nameof(InternalClass.InternalClassNestedInInternalClass),
@@ -313,8 +313,8 @@ public class TypeValidatorTests : TestContainer
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInPublicClass),
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInInternalClass),
             nameof(PrivateClassNames.PrivateClassNestedInPublicClass), // from PublicClass3
-            nameof(PrivateClassNames.PrivateClassNestedInInternalClass),
-        };
+            nameof(PrivateClassNames.PrivateClassNestedInInternalClass)
+        ];
 
         bool discoverInternal = false;
         string[] actualDiscoveredTypes = allTypes
@@ -330,8 +330,8 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        string[] expectedDiscoveredTypes = new[]
-        {
+        string[] expectedDiscoveredTypes =
+        [
             nameof(PublicClass2),
             nameof(PublicClass3),
             nameof(InternalClass),
@@ -348,8 +348,8 @@ public class TypeValidatorTests : TestContainer
             nameof(PublicClass3.InternalClassNestedInPublicClass.InternalClassNestedInInternalClassNestedInPublicClass),
             nameof(InternalClass2.InternalClassNestedInInternalClass),
             nameof(InternalClass2.InternalClassNestedInInternalClass.PublicClassNestedInInternalClassNestedInInternalClass),
-            nameof(InternalClass2.InternalClassNestedInInternalClass.InternalClassNestedInInternalClassNestedInInternalClass),
-        };
+            nameof(InternalClass2.InternalClassNestedInInternalClass.InternalClassNestedInInternalClassNestedInInternalClass)
+        ];
 
         bool discoverInternal = true;
         string[] actualDiscoveredTypes = allTypes
@@ -365,8 +365,8 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        string[] expectedNonDiscoveredTypes = new[]
-        {
+        string[] expectedNonDiscoveredTypes =
+        [
             nameof(PrivateClassNames.ProtectedInteralNestedClassInPublicClass),
             nameof(PrivateClassNames.ProtectedNestedClassInPublicClass),
             nameof(PrivateClassNames.PrivateProtectedNestedClassInPublicClass),
@@ -378,8 +378,8 @@ public class TypeValidatorTests : TestContainer
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInPublicClass),
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInInternalClass),
             nameof(PrivateClassNames.PrivateClassNestedInPublicClass), // from PublicClass3
-            nameof(PrivateClassNames.PrivateClassNestedInInternalClass),
-        };
+            nameof(PrivateClassNames.PrivateClassNestedInInternalClass)
+        ];
 
         bool discoverInternal = true;
         string[] actualDiscoveredTypes = allTypes
@@ -393,7 +393,7 @@ public class TypeValidatorTests : TestContainer
 
     private static Type[] GetAllTestTypes()
     {
-        Type[] types = new[] { typeof(PublicClass2), typeof(PublicClass3), typeof(InternalClass), typeof(InternalClass2) };
+        Type[] types = [typeof(PublicClass2), typeof(PublicClass3), typeof(InternalClass), typeof(InternalClass2)];
         Type[] nestedTypes = types.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)).ToArray();
         Type[] nestedNestedTypes = nestedTypes.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)).ToArray();
         Type[] allTypes = new[] { types, nestedTypes, nestedNestedTypes }.SelectMany(t => t).ToArray();
@@ -416,13 +416,9 @@ public interface IDummyInterface
 {
 }
 
-public abstract class AbstractGenericClass<T>
-{
-}
+public abstract class AbstractGenericClass<T>;
 
-public class GenericClass<T>
-{
-}
+public class GenericClass<T>;
 
 public class ClassWithTestContextGetterOnly
 {
@@ -473,140 +469,88 @@ public class GenericClassWithTestContext<T>
     public UTFExtension.TestContext TestContext { get; set; }
 }
 
-public class PublicTestClass
-{
-}
+public class PublicTestClass;
 
-public abstract class AbstractTestClass
-{
-}
+public abstract class AbstractTestClass;
 
 public class OuterClass
 {
-    public class NestedPublicClass
-    {
-    }
+    public class NestedPublicClass;
 
-    internal class NestedInternalClass
-    {
-    }
+    internal class NestedInternalClass;
 
     private class NestedPrivateClass
     {
-        public class InaccessiblePublicClass
-        {
-        }
+        public class InaccessiblePublicClass;
     }
 }
 
 public class PublicClass2
 {
-    public class PublicNestedClassInPublicClass
-    {
-    }
+    public class PublicNestedClassInPublicClass;
 
-    internal class InternalNestedClassInPublicClass
-    {
-    }
+    internal class InternalNestedClassInPublicClass;
 
-    protected internal class ProtectedInteralNestedClassInPublicClass
-    {
-    }
+    protected internal class ProtectedInteralNestedClassInPublicClass;
 
-    protected class ProtectedNestedClassInPublicClass
-    {
-    }
+    protected class ProtectedNestedClassInPublicClass;
 
-    private protected class PrivateProtectedNestedClassInPublicClass
-    {
-    }
+    private protected class PrivateProtectedNestedClassInPublicClass;
 
-    private sealed class PrivateClassNestedInPublicClass
-    {
-    }
+    private sealed class PrivateClassNestedInPublicClass;
 }
 
 public class PublicClass3
 {
     public class PublicClassNestedInPublicClass
     {
-        public class PublicClassNestedInPublicClassNestedInPublicClass
-        {
-        }
+        public class PublicClassNestedInPublicClassNestedInPublicClass;
 
-        internal class InternalClassNestedInPublicClassNestedInPublicClass
-        {
-        }
+        internal class InternalClassNestedInPublicClassNestedInPublicClass;
     }
 
     internal class InternalClassNestedInPublicClass
     {
-        public class PublicClassNestedInInternalClassNestedInPublicClass
-        {
-        }
+        public class PublicClassNestedInInternalClassNestedInPublicClass;
 
-        internal class InternalClassNestedInInternalClassNestedInPublicClass
-        {
-        }
+        internal class InternalClassNestedInInternalClassNestedInPublicClass;
     }
 
     private sealed class PrivateClassNestedInPublicClass
     {
-        public sealed class PublicClassNestedInPrivateClassNestedInPublicClass
-        {
-        }
+        public sealed class PublicClassNestedInPrivateClassNestedInPublicClass;
     }
 }
 
-internal class InternalTestClass
-{
-}
+internal class InternalTestClass;
 
 internal class InternalClass
 {
-    public class PublicClassNestedInInternalClass
-    {
-    }
+    public class PublicClassNestedInInternalClass;
 
-    internal class InternalClassNestedInInternalClass
-    {
-    }
+    internal class InternalClassNestedInInternalClass;
 
-    protected internal class ProtectedInteralClassNestedInInternalClass
-    {
-    }
+    protected internal class ProtectedInteralClassNestedInInternalClass;
 
-    protected class ProtectedClassNestedInInternalClass
-    {
-    }
+    protected class ProtectedClassNestedInInternalClass;
 
-    private protected class PrivateProtectedClassNestedInInternalClass
-    {
-    }
+    private protected class PrivateProtectedClassNestedInInternalClass;
 
-    private sealed class PrivateClassNestedInInternalClass
-    {
-    }
+    private sealed class PrivateClassNestedInInternalClass;
 }
 
 internal class InternalClass2
 {
     internal class InternalClassNestedInInternalClass
     {
-        public class PublicClassNestedInInternalClassNestedInInternalClass
-        {
-        }
+        public class PublicClassNestedInInternalClassNestedInInternalClass;
 
-        internal class InternalClassNestedInInternalClassNestedInInternalClass
-        {
-        }
+        internal class InternalClassNestedInInternalClassNestedInInternalClass;
     }
 
     private sealed class PrivateClassNestedInInternalClass
     {
-        public sealed class PublicClassNestedInPrivateClassNestedInInternalClass
-        {
-        }
+        public sealed class PublicClassNestedInPrivateClassNestedInInternalClass;
     }
 }
 

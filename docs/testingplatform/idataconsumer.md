@@ -90,4 +90,9 @@ Finally, the api takes a `CancellationToken` which the extension is expected to 
 > [!IMPORTANT]
 > It's crucial to process the payload directly within the `ConsumeAsync` method. The [IMessageBus](imessagebus.md) can manage both synchronous and asynchronous processing, coordinating the execution with the [testing framework](itestframework.md). Although the consumption process is entirely asynchronous and doesn't block the [IMessageBus.Push](imessagebus.md) at the time of writing, this is an implementation detail that may change in the future due to feature requirements. However, we aim to maintain this interface's simplicity and ensure that this method is always called once, eliminating the need for complex synchronization. Additionally, we automatically manage the scalability of the consumers.
 
+<!-- avoid "No space in block quote" block quotes follow each other -->
+
+> [!WARNING]
+> When using `IDataConsumer` in conjunction with [ITestHostProcessLifetimeHandler](itestsessionlifetimehandler.md) within a [composite extension point](compositeextensionfactory.md), **it's crucial to disregard any data received post the execution of [ITestSessionLifetimeHandler.OnTestSessionFinishingAsync](itestsessionlifetimehandler.md)**. The `OnTestSessionFinishingAsync` is the final opportunity to process accumulated data and transmit new information to the [IMessageBus](imessagebus.md), hence, any data consumed beyond this point will not be *utilizable* by the extension.
+
 If your extension requires intensive initialization and you need to use the async/await pattern, you can refer to the [`Async extension initialization and cleanup`](asyncinitcleanup.md). If you need to *share state* between extension points, you can refer to the [`CompositeExtensionFactory<T>`](compositeextensionfactory.md) section.

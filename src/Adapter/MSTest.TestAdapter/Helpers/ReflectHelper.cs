@@ -236,7 +236,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="type">The type declared in the assembly to check.</param>
     /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
     internal virtual bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
-        => method.DeclaringType!.GetTypeInfo().Assembly.Equals(type.GetTypeInfo().Assembly); // TODO: Investigate if we rely on NRE
+        => method.DeclaringType!.Assembly.Equals(type.GetTypeInfo().Assembly); // TODO: Investigate if we rely on NRE
 
     /// <summary>
     /// Get categories applied to the test method.
@@ -260,7 +260,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns> The parallelization level if set. -1 otherwise. </returns>
     internal static ParallelizeAttribute? GetParallelizeAttribute(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ParallelizeAttribute))
-            !.OfType<ParallelizeAttribute>() // TODO: Investigate if we rely on NRE
+            .OfType<ParallelizeAttribute>()
             .FirstOrDefault();
 
     /// <summary>
@@ -280,7 +280,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>True if test assembly should not run in parallel.</returns>
     internal static bool IsDoNotParallelizeSet(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute))
-            !.Length != 0; // TODO: Investigate if we rely on NRE
+            .Length != 0;
 
     /// <summary>
     /// Gets the class cleanup lifecycle set on an assembly.
@@ -289,7 +289,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
     internal static ClassCleanupExecutionAttribute? GetClassCleanupAttribute(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute))
-            !.OfType<ClassCleanupExecutionAttribute>() // TODO: Investigate if we rely on NRE
+            .OfType<ClassCleanupExecutionAttribute>()
             .FirstOrDefault();
 
     /// <summary>
@@ -370,9 +370,7 @@ internal class ReflectHelper : MarshalByRefObject
 
         foreach (TestPropertyAttribute testProperty in testPropertyAttributes)
         {
-            Trait testPropertyPair = testProperty.Name == null
-                ? new Trait(string.Empty, testProperty.Value)
-                : new Trait(testProperty.Name, testProperty.Value);
+            var testPropertyPair = new Trait(testProperty.Name, testProperty.Value);
             yield return testPropertyPair;
         }
     }

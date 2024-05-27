@@ -236,7 +236,7 @@ internal class TestMethodRunner
         bool isDataDriven = false;
 
         DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>(false);
-        if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
+        if (dataSourceAttribute is { Length: 1 })
         {
             isDataDriven = true;
             Stopwatch watch = new();
@@ -294,10 +294,17 @@ internal class TestMethodRunner
                 foreach (UTF.ITestDataSource testDataSource in testDataSources)
                 {
                     isDataDriven = true;
-                    IEnumerable<object?[]>? dataSource = null;
+                    IEnumerable<object?[]>? dataSource;
                     try
                     {
+                        // This code is to execute tests. To discover the tests code is in AssemblyEnumerator.ProcessTestDataSourceTests.
+                        // Any change made here should be reflected in AssemblyEnumerator.ProcessTestDataSourceTests as well.
                         dataSource = testDataSource.GetData(_testMethodInfo.MethodInfo);
+
+                        if (!dataSource.Any())
+                        {
+                            throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", testDataSource.GetType().Name));
+                        }
                     }
                     catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
                     {
@@ -366,7 +373,7 @@ internal class TestMethodRunner
         string displayName = string.Format(CultureInfo.CurrentCulture, Resource.DataDrivenResultDisplayName, _test.DisplayName, rowIndex);
         Stopwatch? stopwatch = null;
 
-        TestResult[]? testResults = null;
+        TestResult[]? testResults;
         try
         {
             stopwatch = Stopwatch.StartNew();

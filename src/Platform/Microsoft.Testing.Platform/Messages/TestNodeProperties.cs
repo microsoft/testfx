@@ -8,9 +8,7 @@ namespace Microsoft.Testing.Platform.Extensions.Messages;
 /// <summary>
 /// The interface that every test node property must implement.
 /// </summary>
-public interface IProperty
-{
-}
+public interface IProperty;
 
 /// <summary>
 /// Node property that represents a key-value pair.

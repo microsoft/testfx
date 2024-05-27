@@ -8,7 +8,7 @@ namespace Microsoft.Testing.Internal.Framework;
 
 internal interface ITestFrameworkManager
 {
-    Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> TestFrameworkAdapterFactory { get; }
+    Func<ITestFrameworkCapabilities, IServiceProvider, ITestFramework> TestFrameworkFactory { get; }
 
     Func<IServiceProvider, ITestFrameworkCapabilities> TestFrameworkCapabilitiesFactory { get; }
 }

@@ -205,7 +205,6 @@ public class DeploymentUtilityTests : TestContainer
 
     public void DeployShouldNotDeployIfOutputDirectoryIsInvalid()
     {
-        string assemblyFullPath = Assembly.GetExecutingAssembly().Location;
         string deploymentItemPath = "C:\\temp\\sample.dll";
         string deploymentItemOutputDirectory = "..\\..\\out";
 
@@ -258,8 +257,6 @@ public class DeploymentUtilityTests : TestContainer
 
     public void DeployShouldDeployContentsOfADirectoryIfSpecified()
     {
-        string assemblyFullPath = Assembly.GetExecutingAssembly().Location;
-
         TestCase testCase = GetTestCaseAndTestRunDirectories(DefaultDeploymentItemPath, DefaultDeploymentItemOutputDirectory, out TestRunDirectories testRunDirectories);
         string content1 = Path.Combine(DefaultDeploymentItemPath, "directoryContents.dll");
         var directoryContentFiles = new List<string> { content1 };
@@ -468,12 +465,12 @@ public class DeploymentUtilityTests : TestContainer
     private static TestCase GetTestCaseAndTestRunDirectories(string deploymentItemPath, string defaultDeploymentItemOutputDirectoryOut, out TestRunDirectories testRunDirectories)
     {
         var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
-        KeyValuePair<string, string>[] kvpArray = new[]
-        {
+        KeyValuePair<string, string>[] kvpArray =
+        [
             new KeyValuePair<string, string>(
                 deploymentItemPath,
-                defaultDeploymentItemOutputDirectoryOut),
-        };
+                defaultDeploymentItemOutputDirectoryOut)
+        ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         string currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 

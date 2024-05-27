@@ -71,7 +71,7 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         _cancellationToken = cancellationToken;
     }
 
-    public PipeNameDescription PipeName { get; private set; }
+    public PipeNameDescription PipeName { get; }
 
     public bool WasConnected { get; private set; }
 

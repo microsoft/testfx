@@ -355,17 +355,11 @@
   <data name="PlatformCommandLineClientHostOptionDescription" xml:space="preserve">
     <value>Specify the hostname of the client.</value>
   </data>
-  <data name="PlatformCommandLineClientHostOptionSingleArgument" xml:space="preserve">
-    <value>'--client-host' expects a single host name as argument</value>
-  </data>
   <data name="PlatformCommandLineClientPortOptionDescription" xml:space="preserve">
     <value>Specify the port of the client.</value>
   </data>
   <data name="PlatformCommandLineDiagnosticFileLoggerSynchronousWriteOptionDescription" xml:space="preserve">
     <value>Force the built-in file logger to write the log synchronously. Useful for scenario where you don't want to lose any log (i.e. in case of crash). Note that this is slowing down the test execution.</value>
-  </data>
-  <data name="PlatformCommandLineDiagnosticFilePrefixOptionSingleArgument" xml:space="preserve">
-    <value>'--diagnostic-output-fileprefix' expects a single file name prefix argument</value>
   </data>
   <data name="PlatformCommandLineDiagnosticOptionDescription" xml:space="preserve">
     <value>Enable the diagnostic logging. The default log level is 'Trace'. The file will be written in the output directory with the name log_[MMddHHssfff].diag</value>
@@ -378,9 +372,6 @@
   </data>
   <data name="PlatformCommandLineDiagnosticOutputDirectoryOptionDescription" xml:space="preserve">
     <value>Output directory of the diagnostic logging, if not specified the file will be generated inside the default 'TestResults' directory.</value>
-  </data>
-  <data name="PlatformCommandLineDiagnosticOutputDirectoryOptionSingleArgument" xml:space="preserve">
-    <value>'--diagnostic-output-directory' expects a single directory name argument</value>
   </data>
   <data name="PlatformCommandLineDiagnosticOutputFilePrefixOptionDescription" xml:space="preserve">
     <value>Prefix for the log file name that will replace '[log]_.'</value>
@@ -405,9 +396,6 @@
   </data>
   <data name="PlatformCommandLineNoBannerOptionDescription" xml:space="preserve">
     <value>Do not display the startup banner, the copyright message or the telemetry banner.</value>
-  </data>
-  <data name="PlatformCommandLineOptionExpectsNoArgumentErrorMessage" xml:space="preserve">
-    <value>'--{0}' expects no argument</value>
   </data>
   <data name="PlatformCommandLinePortOptionDescription" xml:space="preserve">
     <value>Specify the port of the server.</value>
@@ -438,9 +426,6 @@
   </data>
   <data name="TreeNodeFilterDescription" xml:space="preserve">
     <value>Use a tree filter to filter down the tests to execute</value>
-  </data>
-  <data name="TreeNodeFilterInvalidArgumentCount" xml:space="preserve">
-    <value>A single argument is expected (e.g. '/MyAssembly/MyNamespace/MyClass/MyTestMethod*[OS=Linux]')</value>
   </data>
   <data name="ConnectingToClientHost" xml:space="preserve">
     <value>Connecting to client host '{0}' port '{1}'</value>
@@ -495,8 +480,74 @@ Read more about Microsoft Testing Platform telemetry: https://aka.ms/testingplat
   <data name="PlatformCommandLineExitOnProcessExitSingleArgument" xml:space="preserve">
     <value>'--{0}' expects a single int PID argument</value>
   </data>
-  <data name="PlatformCommandLineExitOnProcessExitInvalidDependantProcess" xml:space="preserve">
+  <data name="PlatformCommandLineExitOnProcessExitInvalidDependentProcess" xml:space="preserve">
     <value>Invalid PID '{0}'
 {1}</value>
+  </data>
+  <data name="Aborted" xml:space="preserve">
+    <value>Aborted</value>
+  </data>
+  <data name="Actual" xml:space="preserve">
+    <value>Actual</value>
+  </data>
+  <data name="CancelledLowercase" xml:space="preserve">
+    <value>cancelled</value>
+  </data>
+  <data name="CancellingTestSession" xml:space="preserve">
+    <value>Cancelling the test session...</value>
+  </data>
+  <data name="DiagnosticFileLevelWithAsyncFlush" xml:space="preserve">
+    <value>Diagnostic file (level '{0}' with async flush): {1}"</value>
+    <comment>0 level such as verbose, 
+1 path to file</comment>
+  </data>
+  <data name="DiagnosticFileLevelWithFlush" xml:space="preserve">
+    <value>Diagnostic file (level '{0}' with sync flush): {1}"</value>
+    <comment>0 level such as verbose, 
+1 path to file</comment>
+  </data>
+  <data name="Expected" xml:space="preserve">
+    <value>Expected</value>
+  </data>
+  <data name="Failed" xml:space="preserve">
+    <value>Failed</value>
+  </data>
+  <data name="FailedLowercase" xml:space="preserve">
+    <value>failed</value>
+  </data>
+  <data name="ForTest" xml:space="preserve">
+    <value>For test</value>
+    <comment>is followed by test name</comment>
+  </data>
+  <data name="InProcessArtifactsProduced" xml:space="preserve">
+    <value>In process file artifacts produced:</value>
+  </data>
+  <data name="MinimumExpectedTestsPolicyViolation" xml:space="preserve">
+    <value>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</value>
+    <comment>{0}, {1} number of tests</comment>
+  </data>
+  <data name="OutOfProcessArtifactsProduced" xml:space="preserve">
+    <value>Out of process file artifacts produced:</value>
+  </data>
+  <data name="Passed" xml:space="preserve">
+    <value>Passed</value>
+  </data>
+  <data name="PassedLowercase" xml:space="preserve">
+    <value>passed</value>
+  </data>
+  <data name="Skipped" xml:space="preserve">
+    <value>Skipped</value>
+  </data>
+  <data name="SkippedLowercase" xml:space="preserve">
+    <value>skipped</value>
+  </data>
+  <data name="StackTrace" xml:space="preserve">
+    <value>Stack Trace</value>
+  </data>
+  <data name="Total" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="ZeroTestsRan" xml:space="preserve">
+    <value>Zero tests ran</value>
   </data>
 </root>
