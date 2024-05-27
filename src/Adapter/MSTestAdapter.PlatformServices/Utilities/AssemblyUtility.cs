@@ -265,24 +265,15 @@ internal class AssemblyUtility
     /// <returns> The <see cref="IList{T}"/> of resolution paths. </returns>
     internal static IList<string> GetResolutionPaths()
     {
-        // Use dictionary to ensure we get a list of unique paths, but keep a list as the
-        // dictionary does not guarantee order.
-        Dictionary<string, object?> resolutionPathsDictionary = new(StringComparer.OrdinalIgnoreCase);
-        List<string> resolutionPaths = [];
+        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
-        // Add the path of the currently executing assembly (use Uri(CodeBase).LocalPath as Location can be on shadow dir).
-        string currentlyExecutingAssembly = Path.GetDirectoryName(Path.GetFullPath(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath));
-        resolutionPaths.Add(currentlyExecutingAssembly);
-        resolutionPathsDictionary[currentlyExecutingAssembly] = null;
+        // Use the path of the currently executing assembly (use Uri(CodeBase).LocalPath as Location can be on shadow dir).
+        string executingAssembly = Path.GetDirectoryName(Path.GetFullPath(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath))!;
 
         // Add the application base for this domain.
-        if (!resolutionPathsDictionary.ContainsKey(AppDomain.CurrentDomain.BaseDirectory))
-        {
-            resolutionPaths.Add(AppDomain.CurrentDomain.BaseDirectory);
-            resolutionPathsDictionary[AppDomain.CurrentDomain.BaseDirectory] = null;
-        }
-
-        return resolutionPaths;
+        return string.Equals(executingAssembly, baseDirectory, StringComparison.OrdinalIgnoreCase) ?
+            [executingAssembly] :
+            [executingAssembly, baseDirectory];
     }
 #endif
 }
