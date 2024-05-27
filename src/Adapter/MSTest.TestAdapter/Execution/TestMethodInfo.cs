@@ -464,9 +464,7 @@ public class TestMethodInfo : ITestMethod
                 while (baseTestCleanupQueue.Count > 0 && testCleanupException is null)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupException = testCleanupMethod is not null
-                        ? InvokeCleanupMethod(testCleanupMethod, classInstance, baseTestCleanupQueue.Count)
-                        : null;
+                    testCleanupException = InvokeCleanupMethod(testCleanupMethod, classInstance, baseTestCleanupQueue.Count);
                 }
             }
             finally
