@@ -26,7 +26,6 @@ internal sealed class TestableReflectHelper : ReflectHelper
 
 internal class TestableReflectionAccessor : INotCachedAttributeHelper
 {
-
     /// <summary>
     /// A collection to hold mock custom attributes.
     /// MemberTypes.All for assembly level
