@@ -105,27 +105,25 @@ public class TestMethodInfo : ITestMethod
         // check if arguments are set for data driven tests
         arguments ??= Arguments;
 
-        using (LogMessageListener listener = new(TestMethodOptions.CaptureDebugTraces))
+        using LogMessageListener listener = new(TestMethodOptions.CaptureDebugTraces);
+        watch.Start();
+        try
         {
-            watch.Start();
-            try
-            {
-                result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
-            }
-            finally
-            {
-                // Handle logs & debug traces.
-                watch.Stop();
+            result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
+        }
+        finally
+        {
+            // Handle logs & debug traces.
+            watch.Stop();
 
-                if (result != null)
-                {
-                    result.Duration = watch.Elapsed;
-                    result.DebugTrace = listener.GetAndClearDebugTrace();
-                    result.LogOutput = listener.GetAndClearStandardOutput();
-                    result.LogError = listener.GetAndClearStandardError();
-                    result.TestContextMessages = TestMethodOptions.TestContext?.GetAndClearDiagnosticMessages();
-                    result.ResultFiles = TestMethodOptions.TestContext?.GetResultFiles();
-                }
+            if (result != null)
+            {
+                result.Duration = watch.Elapsed;
+                result.DebugTrace = listener.GetAndClearDebugTrace();
+                result.LogOutput = listener.GetAndClearStandardOutput();
+                result.LogError = listener.GetAndClearStandardError();
+                result.TestContextMessages = TestMethodOptions.TestContext?.GetAndClearDiagnosticMessages();
+                result.ResultFiles = TestMethodOptions.TestContext?.GetResultFiles();
             }
         }
 

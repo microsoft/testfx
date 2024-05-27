@@ -116,13 +116,11 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
             return localPath;
         }
 
-        using (HttpClient client = new())
-        {
-            using HttpResponseMessage response = await client.GetAsync(PrefViewDownload);
-            using Stream streamToReadFrom = await response.Content.ReadAsStreamAsync();
-            using Stream streamToWriteTo = File.Open(localPath, FileMode.Create);
-            await streamToReadFrom.CopyToAsync(streamToWriteTo);
-        }
+        using HttpClient client = new();
+        using HttpResponseMessage response = await client.GetAsync(PrefViewDownload);
+        using Stream streamToReadFrom = await response.Content.ReadAsStreamAsync();
+        using Stream streamToWriteTo = File.Open(localPath, FileMode.Create);
+        await streamToReadFrom.CopyToAsync(streamToWriteTo);
 
         return localPath;
     }
