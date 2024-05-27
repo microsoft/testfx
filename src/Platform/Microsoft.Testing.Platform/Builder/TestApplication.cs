@@ -212,23 +212,20 @@ public sealed class TestApplication : ITestApplication
 
         if (testHostControllerInfo.HasTestHostController)
         {
-            string? processCorrelationId;
             int? testHostControllerPID = testHostControllerInfo.GetTestHostControllerPID();
-            if ((processCorrelationId = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerPID}")) is not null)
-            {
-                await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerPID} '{processCorrelationId}'");
-            }
 
-            string? parentPid;
-            if ((parentPid = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{testHostControllerPID}")) is not null)
-            {
-                await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{testHostControllerPID} '{parentPid}'");
-            }
+            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID);
+            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID);
+            await LogVariableAsync(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME);
 
-            string? testHostProcessStartTime;
-            if ((testHostProcessStartTime = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{testHostControllerPID}")) is not null)
+            async Task LogVariableAsync(string key)
             {
-                await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{testHostControllerPID} '{testHostProcessStartTime}'");
+                string? value;
+                key = $"{key}_{testHostControllerPID}";
+                if ((value = environment.GetEnvironmentVariable(key)) is not null)
+                {
+                    await logger.LogDebugAsync($"{key} '{value}'");
+                }
             }
         }
 
