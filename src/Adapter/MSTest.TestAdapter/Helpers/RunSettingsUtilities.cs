@@ -77,26 +77,24 @@ internal class RunSettingsUtilities
         }
 
         // use XmlReader to avoid loading of the plugins in client code (mainly from VS).
-        using (StringReader stringReader = new(settingsXml))
+        using StringReader stringReader = new(settingsXml);
+        var reader = XmlReader.Create(stringReader, ReaderSettings);
+
+        // read to the fist child
+        XmlReaderUtilities.ReadToRootNode(reader);
+        reader.ReadToNextElement();
+
+        // Read till we reach nodeName element or reach EOF
+        while (!string.Equals(reader.Name, nodeName, StringComparison.OrdinalIgnoreCase)
+               && !reader.EOF)
         {
-            var reader = XmlReader.Create(stringReader, ReaderSettings);
+            reader.SkipToNextElement();
+        }
 
-            // read to the fist child
-            XmlReaderUtilities.ReadToRootNode(reader);
-            reader.ReadToNextElement();
-
-            // Read till we reach nodeName element or reach EOF
-            while (!string.Equals(reader.Name, nodeName, StringComparison.OrdinalIgnoreCase)
-                    && !reader.EOF)
-            {
-                reader.SkipToNextElement();
-            }
-
-            if (!reader.EOF)
-            {
-                // read nodeName element.
-                return nodeParser(reader);
-            }
+        if (!reader.EOF)
+        {
+            // read nodeName element.
+            return nodeParser(reader);
         }
 
         return default;

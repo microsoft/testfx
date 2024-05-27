@@ -376,13 +376,12 @@ public sealed class ClassCleanupShouldBeValidAnalyzerTests(ITestExecutionContext
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            new[]
-            {
+            [
                 VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassCleanup0"),
                 VerifyCS.Diagnostic().WithLocation(1).WithArguments("ClassCleanup1"),
                 VerifyCS.Diagnostic().WithLocation(2).WithArguments("ClassCleanup2"),
-                VerifyCS.Diagnostic().WithLocation(3).WithArguments("ClassCleanup3"),
-            },
+                VerifyCS.Diagnostic().WithLocation(3).WithArguments("ClassCleanup3")
+            ],
             fixedCode);
     }
 

@@ -113,7 +113,7 @@ public class DynamicDataAttributeTests : TestContainer
 
     public void GetDisplayNameShouldReturnDisplayName()
     {
-        object[] data = new object[] { 1, 2, 3 };
+        object[] data = [1, 2, 3];
 
         string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         Verify("TestMethod1 (1,2,3)".SequenceEqual(displayName));
@@ -121,7 +121,7 @@ public class DynamicDataAttributeTests : TestContainer
 
     public void GetDisplayNameShouldReturnDisplayNameWithDynamicDataDisplayName()
     {
-        object[] data = new object[] { 1, 2, 3 };
+        object[] data = [1, 2, 3];
 
         _dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName";
         string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
@@ -130,7 +130,7 @@ public class DynamicDataAttributeTests : TestContainer
 
     public void GetDisplayNameShouldReturnDisplayNameWithDynamicDataDisplayNameInDifferentClass()
     {
-        object[] data = new object[] { 1, 2, 3 };
+        object[] data = [1, 2, 3];
 
         _dynamicDataAttribute.DynamicDataDisplayName = "GetCustomDynamicDataDisplayName2";
         _dynamicDataAttribute.DynamicDataDisplayNameDeclaringType = typeof(DummyTestClass2);
@@ -142,7 +142,7 @@ public class DynamicDataAttributeTests : TestContainer
     {
         void Action()
         {
-            object[] data = new object[] { 1, 2, 3 };
+            object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithMissingParameters";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
@@ -156,7 +156,7 @@ public class DynamicDataAttributeTests : TestContainer
     {
         void Action()
         {
-            object[] data = new object[] { 1, 2, 3 };
+            object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidReturnType";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
@@ -170,7 +170,7 @@ public class DynamicDataAttributeTests : TestContainer
     {
         void Action()
         {
-            object[] data = new object[] { 1, 2, 3 };
+            object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidFirstParameterType";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
@@ -184,7 +184,7 @@ public class DynamicDataAttributeTests : TestContainer
     {
         void Action()
         {
-            object[] data = new object[] { 1, 2, 3 };
+            object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameWithInvalidSecondParameterType";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
@@ -198,7 +198,7 @@ public class DynamicDataAttributeTests : TestContainer
     {
         void Action()
         {
-            object[] data = new object[] { 1, 2, 3 };
+            object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNameNonStatic";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
@@ -212,7 +212,7 @@ public class DynamicDataAttributeTests : TestContainer
     {
         void Action()
         {
-            object[] data = new object[] { 1, 2, 3 };
+            object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "GetDynamicDataDisplayNamePrivate";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
@@ -226,7 +226,7 @@ public class DynamicDataAttributeTests : TestContainer
     {
         void Action()
         {
-            object[] data = new object[] { 1, 2, 3 };
+            object[] data = [1, 2, 3];
 
             _dynamicDataAttribute.DynamicDataDisplayName = "MissingCustomDynamicDataDisplayName";
             _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
@@ -244,9 +244,9 @@ public class DynamicDataAttributeTests : TestContainer
 
     public void GetDisplayNameHandlesNullValues()
     {
-        string[] data = new string[] { "value1", "value2", null };
-        string[] data1 = new string[] { null, "value1", "value2" };
-        string[] data2 = new string[] { "value1", null, "value2" };
+        string[] data = ["value1", "value2", null];
+        string[] data1 = [null, "value1", "value2"];
+        string[] data2 = ["value1", null, "value2"];
 
         string displayName = _dynamicDataAttribute.GetDisplayName(_testMethodInfo, data);
         Verify(displayName == "TestMethod1 (value1,value2,)");

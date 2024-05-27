@@ -23,10 +23,10 @@ public class CommandLineHandlerTests : TestBase
     private readonly Mock<IRuntimeFeature> _runtimeFeatureMock = new();
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<IProcessHandler> _processHandlerMock = new();
-    private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders = new[]
-    {
-        new PlatformCommandLineProvider(),
-    };
+    private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders =
+    [
+        new PlatformCommandLineProvider()
+    ];
 
     private readonly ICommandLineOptionsProvider[] _extensionCommandLineOptionsProviders = [];
 
@@ -176,11 +176,11 @@ public class CommandLineHandlerTests : TestBase
             .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
                 Assert.IsTrue(((TextOutputDeviceData)data).Text.Contains("Option '--userOption' is declared by multiple extensions: 'userOption'")));
 
-        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders = new[]
-        {
+        ICommandLineOptionsProvider[] extensionCommandLineOptionsProviders =
+        [
             new ExtensionCommandLineProviderMockInvalidConfiguration("userOption"),
-            new ExtensionCommandLineProviderMockInvalidConfiguration("userOption"),
-        };
+            new ExtensionCommandLineProviderMockInvalidConfiguration("userOption")
+        ];
         CommandLineHandler commandLineHandler = new(args, parseResult,
            extensionCommandLineOptionsProviders, [], _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
@@ -238,10 +238,10 @@ public class CommandLineHandlerTests : TestBase
             .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
                 Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option '--help' is reserved and cannot be used by providers: 'help'{Environment.NewLine}", StringComparison.Ordinal)));
 
-        ICommandLineOptionsProvider[] extensionCommandLineProvider = new[]
-        {
-            new ExtensionCommandLineProviderMockReservedOptions(),
-        };
+        ICommandLineOptionsProvider[] extensionCommandLineProvider =
+        [
+            new ExtensionCommandLineProviderMockReservedOptions()
+        ];
         CommandLineHandler commandLineHandler = new(args, parseResult, extensionCommandLineProvider,
             _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
@@ -261,10 +261,10 @@ public class CommandLineHandlerTests : TestBase
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
             Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Option `--internal-customextension` from provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider) is using the reserved prefix '--internal'{Environment.NewLine}", StringComparison.Ordinal)));
 
-        ICommandLineOptionsProvider[] extensionCommandLineProvider = new[]
-        {
-            new ExtensionCommandLineProviderMockInvalidConfiguration("--internal-customextension"),
-        };
+        ICommandLineOptionsProvider[] extensionCommandLineProvider =
+        [
+            new ExtensionCommandLineProviderMockInvalidConfiguration("--internal-customextension")
+        ];
         CommandLineHandler commandLineHandler = new(args, parseResult, extensionCommandLineProvider,
             _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
@@ -281,10 +281,10 @@ public class CommandLineHandlerTests : TestBase
         string[] args = ["--x"];
         CommandLineParseResult parseResult = CommandLineParser.Parse(args, new SystemEnvironment());
 
-        ICommandLineOptionsProvider[] extensionCommandLineProvider = new[]
-        {
-            new ExtensionCommandLineProviderMockUnknownOption(),
-        };
+        ICommandLineOptionsProvider[] extensionCommandLineProvider =
+        [
+            new ExtensionCommandLineProviderMockUnknownOption()
+        ];
         CommandLineHandler commandLineHandler = new(args, parseResult,
             extensionCommandLineProvider, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object,
             _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
@@ -306,10 +306,10 @@ public class CommandLineHandlerTests : TestBase
         .Callback((IOutputDeviceDataProducer message, IOutputDeviceData data) =>
             Assert.IsTrue(((TextOutputDeviceData)data).Text.Equals($"Invalid configuration for provider 'Microsoft Testing Platform command line provider' (UID: PlatformCommandLineProvider). Error: Invalid configuration errorMessage{Environment.NewLine}{Environment.NewLine}", StringComparison.Ordinal)));
 
-        ICommandLineOptionsProvider[] extensionCommandLineProvider = new[]
-        {
-            new ExtensionCommandLineProviderMockInvalidConfiguration(),
-        };
+        ICommandLineOptionsProvider[] extensionCommandLineProvider =
+        [
+            new ExtensionCommandLineProviderMockInvalidConfiguration()
+        ];
         CommandLineHandler commandLineHandler = new(args, parseResult,
             extensionCommandLineProvider, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object,
             _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);

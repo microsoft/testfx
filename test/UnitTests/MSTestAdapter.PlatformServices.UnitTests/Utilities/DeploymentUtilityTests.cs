@@ -465,12 +465,12 @@ public class DeploymentUtilityTests : TestContainer
     private static TestCase GetTestCaseAndTestRunDirectories(string deploymentItemPath, string defaultDeploymentItemOutputDirectoryOut, out TestRunDirectories testRunDirectories)
     {
         var testCase = new TestCase("A.C.M", new Uri("executor://testExecutor"), Assembly.GetExecutingAssembly().Location);
-        KeyValuePair<string, string>[] kvpArray = new[]
-        {
+        KeyValuePair<string, string>[] kvpArray =
+        [
             new KeyValuePair<string, string>(
                 deploymentItemPath,
-                defaultDeploymentItemOutputDirectoryOut),
-        };
+                defaultDeploymentItemOutputDirectoryOut)
+        ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         string currentExecutingFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 

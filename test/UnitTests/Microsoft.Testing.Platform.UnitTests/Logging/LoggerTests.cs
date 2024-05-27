@@ -33,7 +33,7 @@ public class LoggerTests : TestBase
     {
         _mockLogger.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns<LogLevel>(currentLogLevel => currentLogLevel >= logLevel);
 
-        Logger logger = new(new[] { _mockLogger.Object }, logLevel);
+        Logger logger = new([_mockLogger.Object], logLevel);
 
         Mock<ILoggerFactory> mockLoggerFactory = new();
         mockLoggerFactory.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(logger);
