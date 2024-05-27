@@ -256,5 +256,4 @@ internal abstract class BaseSerializer
             : typeof(T) == typeof(long)
             ? sizeof(long)
             : typeof(T) == typeof(short) ? sizeof(short) : typeof(T) == typeof(bool) ? sizeof(bool) : 0;
-
 }
