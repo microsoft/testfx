@@ -97,7 +97,7 @@ public sealed class DynamicDataAttribute : Attribute, ITestDataSource
             case DynamicDataSourceType.Property:
                 PropertyInfo property = _dynamicDataDeclaringType.GetTypeInfo().GetDeclaredProperty(_dynamicDataSourceName)
                     ?? throw new ArgumentNullException($"{DynamicDataSourceType.Property} {_dynamicDataSourceName}");
-                if (property.GetGetMethod(true) is not {IsStatic: true})
+                if (property.GetGetMethod(true) is not { IsStatic: true })
                 {
                     throw new NotSupportedException(
                         string.Format(
