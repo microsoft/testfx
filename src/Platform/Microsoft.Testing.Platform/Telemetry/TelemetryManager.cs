@@ -41,11 +41,11 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
         IEnvironment environment = serviceProvider.GetEnvironment();
         string? telemetryOptOut = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT);
         await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TELEMETRY_OPTOUT} environment variable: '{telemetryOptOut}'");
-        isTelemetryOptedOut = (telemetryOptOut is not null and ("1" or "true")) || isTelemetryOptedOut;
+        isTelemetryOptedOut = (telemetryOptOut is "1" or "true") || isTelemetryOptedOut;
 
         string? cli_telemetryOptOut = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT);
         await logger.LogInformationAsync($"{EnvironmentVariableConstants.DOTNET_CLI_TELEMETRY_OPTOUT} environment variable: '{cli_telemetryOptOut}'");
-        isTelemetryOptedOut = (cli_telemetryOptOut is not null and ("1" or "true")) || isTelemetryOptedOut;
+        isTelemetryOptedOut = (cli_telemetryOptOut is "1" or "true") || isTelemetryOptedOut;
 
         // NO_LOGO
 
@@ -55,11 +55,11 @@ internal sealed class TelemetryManager : ITelemetryManager, IOutputDeviceDataPro
 
         string? noBannerEnvVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
         await logger.LogInformationAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER} environment variable: '{noBannerEnvVar}'");
-        doNotShowLogo = (noBannerEnvVar is not null and ("1" or "true")) || doNotShowLogo;
+        doNotShowLogo = (noBannerEnvVar is "1" or "true") || doNotShowLogo;
 
         string? dotnetNoLogoEnvVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
         await logger.LogInformationAsync($"{EnvironmentVariableConstants.DOTNET_NOLOGO} environment variable: '{dotnetNoLogoEnvVar}'");
-        doNotShowLogo = (dotnetNoLogoEnvVar is not null and ("1" or "true")) || doNotShowLogo;
+        doNotShowLogo = (dotnetNoLogoEnvVar is "1" or "true") || doNotShowLogo;
 
         await logger.LogInformationAsync($"Telemetry is '{(!isTelemetryOptedOut ? "ENABLED" : "DISABLED")}'");
 
