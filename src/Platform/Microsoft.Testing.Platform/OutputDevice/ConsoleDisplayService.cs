@@ -36,7 +36,6 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private readonly IAsyncMonitor _asyncMonitor;
     private readonly IRuntimeFeature _runtimeFeature;
     private readonly IEnvironment _environment;
-    private readonly IProcessHandler _process;
     private readonly bool _isVSTestMode;
     private readonly bool _isListTests;
     private readonly bool _isServerMode;
@@ -54,7 +53,14 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private bool _bannerDisplayed;
     private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
 
-    public ConsoleOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console, ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process,
+    public ConsoleOutputDevice(
+        ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
+        IConsole console,
+        ITestApplicationModuleInfo testApplicationModuleInfo,
+        ITestHostControllerInfo testHostControllerInfo,
+        IAsyncMonitor asyncMonitor,
+        IRuntimeFeature runtimeFeature,
+        IEnvironment environment,
         bool isVSTestMode,
         bool isListTests,
         bool isServerMode,
@@ -67,7 +73,6 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
         _asyncMonitor = asyncMonitor;
         _runtimeFeature = runtimeFeature;
         _environment = environment;
-        _process = process;
         _isVSTestMode = isVSTestMode;
         _isListTests = isListTests;
         _isServerMode = isServerMode;
