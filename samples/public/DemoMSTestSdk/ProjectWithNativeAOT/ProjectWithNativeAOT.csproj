@@ -1,0 +1,45 @@
+<Project Sdk="MSTest.Sdk">
+<!--
+Alternatively, if you don't want to use the `global.json` file for versions, you can specify the version of the MSTest.Sdk package here.
+<Project Sdk="MSTest.Sdk/<version>">
+-->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- When MSTest Sdk detects PublishAot=true, it references the required packages to ensure Native AOT support -->
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+
+</Project>
+
+<!--
+Below is the equivalent project configuration when not using MSTest.Sdk
+
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+
+    <OutputType>exe</OutputType>
+    <PublishAot>true</PublishAot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeCoverage.MSBuild" Version="$(CodeCoverageVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(CodeCoverageVersion)" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(TestingPlatformVersion)" />
+    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
+    <PackageReference Include="MSTest.Engine" Version="$(MSTestAOTVersion)" />
+    <PackageReference Include="MSTest.SourceGeneration" Version="$(MSTestAOTVersion)" />
+    <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
+  </ItemGroup>
+
+</Project>
+-->
