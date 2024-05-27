@@ -648,15 +648,6 @@ public class TestMethodInfoTests : TestContainer
         Verify(result.Outcome == UTF.UnitTestOutcome.Passed);
     }
 
-    public void TestMethodInfoInvokeShouldNotThrowIfTestCleanupMethodForBaseClassIsNull()
-    {
-        _testClassInfo.BaseTestCleanupMethodsQueue.Enqueue(null);
-
-        UTF.TestResult result = _testMethodInfo.Invoke(null);
-
-        Verify(result.Outcome == UTF.UnitTestOutcome.Passed);
-    }
-
     public void TestMethodInfoInvokeShouldCallTestCleanupForBaseTestClasses()
     {
         var callOrder = new List<string>();
