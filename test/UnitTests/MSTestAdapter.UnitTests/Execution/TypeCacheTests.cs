@@ -1135,7 +1135,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedTestClasses()
     {
         Type type = typeof(DerivedTestClass);
-        MethodInfo methodInfo = type.GetRuntimeMethod("DummyTestMethod", Array.Empty<Type>());
+        MethodInfo methodInfo = type.GetRuntimeMethod("DummyTestMethod", []);
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
         TestMethodInfo testMethodInfo = _typeCache.GetTestMethodInfo(
@@ -1152,7 +1152,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedClassMethodOverloadByDefault()
     {
         Type type = typeof(DerivedTestClass);
-        MethodInfo methodInfo = type.GetRuntimeMethod("OverloadedTestMethod", Array.Empty<Type>());
+        MethodInfo methodInfo = type.GetRuntimeMethod("OverloadedTestMethod", []);
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
         TestMethodInfo testMethodInfo = _typeCache.GetTestMethodInfo(
@@ -1170,7 +1170,7 @@ public class TypeCacheTests : TestContainer
     {
         Type baseType = typeof(BaseTestClass);
         Type type = typeof(DerivedTestClass);
-        MethodInfo methodInfo = baseType.GetRuntimeMethod("OverloadedTestMethod", Array.Empty<Type>());
+        MethodInfo methodInfo = baseType.GetRuntimeMethod("OverloadedTestMethod", []);
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false)
         {
             DeclaringClassFullName = baseType.FullName,
@@ -1490,15 +1490,11 @@ public class TypeCacheTests : TestContainer
 
     [UTF.Ignore("IgnoreTestClassMessage")]
     [DummyTestClass]
-    internal class DummyTestClassWithIgnoreClassAndIgnoreTestWithMessage : DummyTestClassWithIgnoreTestWithMessage
-    {
-    }
+    internal class DummyTestClassWithIgnoreClassAndIgnoreTestWithMessage : DummyTestClassWithIgnoreTestWithMessage;
 
     [UTF.Ignore]
     [DummyTestClass]
-    internal class DummyTestClassWithIgnoreClassWithNoMessageAndIgnoreTestWithMessage : DummyTestClassWithIgnoreTestWithMessage
-    {
-    }
+    internal class DummyTestClassWithIgnoreClassWithNoMessageAndIgnoreTestWithMessage : DummyTestClassWithIgnoreTestWithMessage;
 
     [DummyTestClass]
     internal class DerivedTestClass : BaseTestClass
@@ -1542,9 +1538,7 @@ public class TypeCacheTests : TestContainer
         public new string TestContext { get; set; }
     }
 
-    private class DummyTestClassWithMultipleTestContextProperties : DummyTestClassWithTestContextProperty
-    {
-    }
+    private class DummyTestClassWithMultipleTestContextProperties : DummyTestClassWithTestContextProperty;
 
     [DummyTestClass]
     private class DummyTestClassWithInitializeMethods
@@ -1677,13 +1671,9 @@ public class TypeCacheTests : TestContainer
         }
     }
 
-    private class DerivedTestMethodAttribute : UTF.TestMethodAttribute
-    {
-    }
+    private class DerivedTestMethodAttribute : UTF.TestMethodAttribute;
 
-    private class DummyTestClassAttribute : UTF.TestClassAttribute
-    {
-    }
+    private class DummyTestClassAttribute : UTF.TestClassAttribute;
 
     #endregion
 }

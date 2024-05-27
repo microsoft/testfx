@@ -196,7 +196,7 @@ public class UnitTestResult
             testResult.Messages.Add(testContextMessage);
         }
 
-        if (ResultFiles != null && ResultFiles.Count > 0)
+        if (ResultFiles is { Count: > 0 })
         {
             AttachmentSet attachmentSet = new(Constants.ExecutorUri, Resource.AttachmentSetDisplayName);
             foreach (string resultFile in ResultFiles)

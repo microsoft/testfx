@@ -9,17 +9,17 @@
       </trans-unit>
       <trans-unit id="Actual">
         <source>Actual</source>
-        <target state="new">Actual</target>
+        <target state="translated">실제</target>
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>cancelled</source>
-        <target state="new">cancelled</target>
+        <target state="translated">취소됨</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Cancelling the test session...</source>
-        <target state="new">Cancelling the test session...</target>
+        <target state="translated">테스트 세션을 취소하는 중...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -169,13 +169,13 @@
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
-        <target state="new">Diagnostic file (level '{0}' with async flush): {1}"</target>
+        <target state="translated">진단 파일(비동기 플러시를 사용한 수준 '{0}'): {1}"</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
-        <target state="new">Diagnostic file (level '{0}' with sync flush): {1}"</target>
+        <target state="translated">진단 파일(동기 플러시를 사용한 수준 '{0}'): {1}"</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
@@ -186,7 +186,7 @@
       </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
-        <target state="new">Expected</target>
+        <target state="translated">필요</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
@@ -206,7 +206,7 @@
       </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
-        <target state="new">failed</target>
+        <target state="translated">실패</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
@@ -218,7 +218,7 @@
       </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
-        <target state="new">For test</target>
+        <target state="translated">테스트용</target>
         <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
@@ -258,7 +258,7 @@
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
         <source>In process file artifacts produced:</source>
-        <target state="new">In process file artifacts produced:</target>
+        <target state="translated">생성된 In process 파일 아티팩트:</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -298,7 +298,7 @@
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="new">Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</target>
+        <target state="translated">예상되는 최소 테스트 정책 위반, 테스트 실행 {0}, 필요한 최소 {1}</target>
         <note>{0}, {1} number of tests</note>
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -323,7 +323,7 @@
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
-        <target state="new">Out of process file artifacts produced:</target>
+        <target state="translated">생성된 Out of process 파일 아티팩트:</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
@@ -333,7 +333,7 @@
       </trans-unit>
       <trans-unit id="PassedLowercase">
         <source>passed</source>
-        <target state="new">passed</target>
+        <target state="translated">통과</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
@@ -535,12 +535,12 @@
       </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
-        <target state="new">skipped</target>
+        <target state="translated">건너뜀</target>
         <note />
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
-        <target state="new">Stack Trace</target>
+        <target state="translated">스택 추적</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">
@@ -717,7 +717,7 @@ Microsoft 테스트 플랫폼 원격 분석에 대해 자세히 알아보기: ht
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
-        <target state="new">Zero tests ran</target>
+        <target state="translated">테스트가 0개 실행됨</target>
         <note />
       </trans-unit>
     </body>

@@ -109,7 +109,7 @@ public static class TestsRunWatchDog
             {
                 List<string> tests = new(File.ReadAllLines(BaselineFile));
                 tests.RemoveAll(t => expectedTestsDidNotRun.Contains(t));
-                tests.AddRange(unexpectedRanTests ?? new List<string>());
+                tests.AddRange(unexpectedRanTests);
                 tests.Sort();
                 File.WriteAllLines(BaselineFile, tests);
                 Console.WriteLine();

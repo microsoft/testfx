@@ -285,7 +285,7 @@ public class PrivateType
     public void SetStaticField(string name, BindingFlags bindingFlags, object value)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        InvokeHelperStatic(name, BindingFlags.SetField | bindingFlags | BindingFlags.Static, new[] { value }, CultureInfo.InvariantCulture);
+        InvokeHelperStatic(name, BindingFlags.SetField | bindingFlags | BindingFlags.Static, [value], CultureInfo.InvariantCulture);
     }
 
     /// <summary>
@@ -331,7 +331,7 @@ public class PrivateType
     public void SetStaticFieldOrProperty(string name, BindingFlags bindingFlags, object value)
     {
         _ = name ?? throw new ArgumentNullException(nameof(name));
-        InvokeHelperStatic(name, BindingFlags.SetField | BindingFlags.SetProperty | bindingFlags | BindingFlags.Static, new[] { value }, CultureInfo.InvariantCulture);
+        InvokeHelperStatic(name, BindingFlags.SetField | BindingFlags.SetProperty | bindingFlags | BindingFlags.Static, [value], CultureInfo.InvariantCulture);
     }
 
     /// <summary>

@@ -11,19 +11,19 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">Aby byly metody s označením [AssemblyCleanup] platné, musí se řídit následujícím rozložením: 
+– být „public“
+– být „static“
+– nesmí být obecné ani definované pro obecnou třídu
+– nesmí přijímat žádné parametry
+– návratový typ musí být void, Task nebo ValueTask,
+– nesmí být „async void“
+– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
         <source>AssemblyCleanup method '{0}' signature is invalid</source>
-        <target state="new">AssemblyCleanup method '{0}' signature is invalid</target>
+        <target state="translated">Signatura „{0}“ metody AssemblyCleanup je neplatná</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidTitle">
@@ -40,19 +40,20 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">Aby byly metody s označením [AssemblyInitialize] platné, musí se řídit následujícím rozložením: 
+.
+– být „public“
+– být „static“
+– nesmí být obecné ani definované pro obecnou třídu
+– převzít jeden parametr typu TestContext
+– návratový typ musí být void, Task nebo ValueTask,
+– nesmí být „async void“
+– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
         <source>AssemblyInitialize method '{0}' signature is invalid</source>
-        <target state="new">AssemblyInitialize method '{0}' signature is invalid</target>
+        <target state="translated">Signatura „{0}“ metody AssemblyInitialize je neplatná</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
@@ -109,19 +110,20 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">Aby byly metody s označením [ClassCleanup] platné, musí se řídit následujícím rozložením: 
+.
+– být „public“
+– nesmí být „static“
+– nesmí být obecné ani definované pro obecnou třídu
+– nesmí přijímat žádné parametry
+– návratový typ musí být void, Task nebo ValueTask,
+– nesmí být „async void“
+– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
         <source>ClassCleanup method '{0}' signature is invalid</source>
-        <target state="new">ClassCleanup method '{0}' signature is invalid</target>
+        <target state="translated">Signatura „{0}“ metody ClassCleanup je neplatná</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidTitle">
@@ -138,19 +140,19 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">Aby byly metody s označením [ClassInitialize] platné, musí se řídit následujícím rozložením: 
+– být „public“
+– být „static“
+– nesmí být obecné ani definované pro obecnou třídu
+– převzít jeden parametr typu TestContext
+– návratový typ musí být void, Task nebo ValueTask,
+– nesmí být „async void“
+– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
         <source>ClassInitialize method '{0}' signature is invalid</source>
-        <target state="new">ClassInitialize method '{0}' signature is invalid</target>
+        <target state="translated">Signatura „{0}“ metody ClassInitialize je neplatná</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidTitle">
@@ -330,20 +332,21 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [TestCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic or be defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">Aby byly metody s označením [TestCleanup] platné, musí se řídit následujícím rozložením: 
+.
+– být „public“
+– nesmí být „static“
+– nesmí být obecné nebo definované pro obecnou třídu
+– nesmí být „abstract“
+– nesmí přijímat žádné parametry
+– návratový typ musí být „void“, „Task“ nebo „ValueTask“
+– nesmí být „async void“
+– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
         <source>TestCleanup method '{0}' signature is invalid</source>
-        <target state="new">TestCleanup method '{0}' signature is invalid</target>
+        <target state="translated">Signatura „{0}“ metody TestCleanup je neplatná</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidTitle">
@@ -404,20 +407,21 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [TestInitialize] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">Aby byly metody s označením [TestInitialize] platné, musí se řídit následujícím rozložením: 
+.
+– být „public“
+– nesmí být „static“
+– nesmí být obecné ani definované pro obecnou třídu
+– nesmí být „abstract“
+– nesmí přijímat žádné parametry
+– návratový typ musí být „void“, „Task“ nebo „ValueTask“
+– nesmí být „async void“
+– nesmí se jednat o speciální metodu (finalizační metoda, operátor...).</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
         <source>TestInitialize method '{0}' signature is invalid</source>
-        <target state="new">TestInitialize method '{0}' signature is invalid</target>
+        <target state="translated">Signatura „{0}“ metody TestInitialize je neplatná</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
@@ -506,12 +510,12 @@
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
-        <target state="new">Asynchronous test fixture methods do not require the 'Async' suffix</target>
+        <target state="translated">Asynchronní metody testovacích přípravků nevyžadují příponu Async.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
-        <target state="new">Asynchronous test methods do not require the 'Async' suffix</target>
+        <target state="translated">Asynchronní testovací metody nevyžadují příponu Async.</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">

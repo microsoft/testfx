@@ -103,23 +103,23 @@ public class DummyTestAdapter : ITestFramework, IDataProducer
     public async Task If_IgnoreExitCode_Specified_Should_Return_Success_ExitCode(string tfm, BuildConfiguration buildConfiguration, string commandLine, string environmentVariable)
     {
         using TestAsset generator = await TestAsset.GenerateAssetAsync(
-        AssetName,
-        SourceCode
-        .PatchCodeWithReplace("$TargetFramework$", tfm)
-        .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
+            AssetName,
+            SourceCode
+                .PatchCodeWithReplace("$TargetFramework$", tfm)
+                .PatchCodeWithReplace("$MicrosoftTestingPlatformVersion$", MicrosoftTestingPlatformVersion));
 
-        DotnetMuxerResult compilationResult = await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {generator.TargetAssetPath} -r {RID}", _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        compilationResult = await DotnetCli.RunAsync(
-            $"build -m:1 -nodeReuse:false {generator.TargetAssetPath} -c {buildConfiguration} -r {RID}",
-            _acceptanceFixture.NuGetGlobalPackagesFolder.Path);
-        var testHost = TestInfrastructure.TestHost.LocateFrom(generator.TargetAssetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
-        TestHostResult testHostResult = await testHost.ExecuteAsync(
+        string assetPath = generator.TargetAssetPath;
+        string globalPackagesPath = _acceptanceFixture.NuGetGlobalPackagesFolder.Path;
+        await DotnetCli.RunAsync($"restore -m:1 -nodeReuse:false {assetPath} -r {RID}", globalPackagesPath);
+        await DotnetCli.RunAsync($"build -m:1 -nodeReuse:false {assetPath} -c {buildConfiguration} -r {RID}", globalPackagesPath);
+        var host = TestInfrastructure.TestHost.LocateFrom(assetPath, AssetName, tfm, buildConfiguration: buildConfiguration);
+        TestHostResult hostResult = await host.ExecuteAsync(
             command: commandLine,
-            environmentVariables: environmentVariable is null ? null : new Dictionary<string, string>()
+            environmentVariables: new Dictionary<string, string>
             {
                 { EnvironmentVariableConstants.TESTINGPLATFORM_EXITCODE_IGNORE, environmentVariable },
             });
-        testHostResult.AssertOutputContains("Failed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1");
-        Assert.AreEqual(0, testHostResult.ExitCode);
+        hostResult.AssertOutputContains("Failed! - Failed: 1, Passed: 0, Skipped: 0, Total: 1");
+        Assert.AreEqual(0, hostResult.ExitCode);
     }
 }

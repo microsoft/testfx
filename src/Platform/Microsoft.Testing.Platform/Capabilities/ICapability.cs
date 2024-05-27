@@ -6,6 +6,4 @@ namespace Microsoft.Testing.Platform.Capabilities;
 /// <summary>
 /// Represents a capability.
 /// </summary>
-public interface ICapability
-{
-}
+public interface ICapability;

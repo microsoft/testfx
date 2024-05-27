@@ -27,7 +27,7 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Console.WriteLine("Skip run, not supported in Windows");
-            return new Files(Array.Empty<string>());
+            return new Files([]);
         }
 
         string vsProgramFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Microsoft Visual Studio");
@@ -90,6 +90,6 @@ internal class VSDiagnostics : IStep<BuildArtifact, Files>
         Console.WriteLine($"Compressing to '{sample}'");
         ZipFile.CreateFromDirectory(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
 
-        return new Files(new[] { sample });
+        return new Files([sample]);
     }
 }

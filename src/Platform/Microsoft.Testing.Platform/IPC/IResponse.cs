@@ -3,6 +3,4 @@
 
 namespace Microsoft.Testing.Platform.IPC;
 
-internal interface IResponse
-{
-}
+internal interface IResponse;

@@ -30,7 +30,7 @@ internal sealed class ListTestsMessageBus(
     private readonly IAsyncMonitor _asyncMonitor = asyncMonitorFactory.Create();
     private bool _printTitle = true;
 
-    public override IDataConsumer[] DataConsumerServices => Array.Empty<IDataConsumer>();
+    public override IDataConsumer[] DataConsumerServices => [];
 
     public string Uid => nameof(ListTestsMessageBus);
 

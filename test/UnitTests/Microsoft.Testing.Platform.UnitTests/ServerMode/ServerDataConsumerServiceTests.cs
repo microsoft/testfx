@@ -42,10 +42,10 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         await _service.ConsumeAsync(producer, sessionFileArtifact, CancellationToken.None).ConfigureAwait(false);
 
         List<Artifact> actual = _service.Artifacts;
-        List<Artifact> expected = new()
-        {
-            new("file", nameof(DataProducer), "file", "name", "description"),
-        };
+        List<Artifact> expected =
+        [
+            new("file", nameof(DataProducer), "file", "name", "description")
+        ];
 
         Uri actualUri = new(actual[0].Uri);
 
@@ -200,7 +200,7 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
 
         public string Description => string.Empty;
 
-        public Type[] DataTypesProduced => new[] { typeof(SessionFileArtifact) };
+        public Type[] DataTypesProduced => [typeof(SessionFileArtifact)];
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
     }

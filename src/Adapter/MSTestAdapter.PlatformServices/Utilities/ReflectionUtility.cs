@@ -259,8 +259,7 @@ internal class ReflectionUtility
                 typeof(AttributeUsageAttribute),
                 true);
             if (attributeUsageAttributes.Count > 0
-                && attributeUsageAttributes[0] is AttributeUsageAttribute attributeUsageAttribute
-                && !attributeUsageAttribute.AllowMultiple)
+                && attributeUsageAttributes[0] is AttributeUsageAttribute { AllowMultiple: false })
             {
                 if (!uniqueAttributes.ContainsKey(attributeInstance.GetType().FullName))
                 {
@@ -291,7 +290,7 @@ internal class ReflectionUtility
                 return true;
             }
 
-            type1 = type1.GetTypeInfo().BaseType;
+            type1 = type1.BaseType;
         }
 
         return false;
