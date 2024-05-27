@@ -5,9 +5,6 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal sealed class SystemTask : ITask
 {
-    public Task Run(Action action)
-        => Task.Run(action);
-
     public Task Run(Action action, CancellationToken cancellationToken)
         => Task.Run(action, cancellationToken);
 
