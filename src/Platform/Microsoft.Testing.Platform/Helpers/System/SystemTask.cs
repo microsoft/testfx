@@ -5,9 +5,6 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal sealed class SystemTask : ITask
 {
-    public Task<Task> WhenAny(params Task[] tasks)
-        => Task.WhenAny(tasks);
-
     public Task Delay(TimeSpan timeSpan)
         => Task.Delay(timeSpan);
 
