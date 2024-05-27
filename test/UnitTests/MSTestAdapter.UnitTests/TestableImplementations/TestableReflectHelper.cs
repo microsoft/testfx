@@ -40,7 +40,7 @@ internal sealed class TestableReflectHelper : ReflectHelper
 
         return _customAttributes.TryGetValue(hashCode, out Attribute[] value)
             ? value.OfType<TAttribute>().ToArray()
-            : Array.Empty<TAttribute>();
+            : [];
     }
 
     internal override TAttribute[] GetCustomAttributes<TAttribute>(MemberInfo memberInfo)
@@ -49,6 +49,6 @@ internal sealed class TestableReflectHelper : ReflectHelper
 
         return _customAttributes.TryGetValue(hashCode, out Attribute[] value)
             ? value.OfType<TAttribute>().ToArray()
-            : Array.Empty<TAttribute>();
+            : [];
     }
 }

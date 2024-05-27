@@ -212,19 +212,23 @@ public sealed class TestApplication : ITestApplication
 
         if (testHostControllerInfo.HasTestHostController)
         {
+            string? processCorrelationId;
             int? testHostControllerPID = testHostControllerInfo.GetTestHostControllerPID();
-
-            await LogVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID);
-            await LogVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID);
-            await LogVariable(EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME);
-
-            async Task LogVariable(string key)
+            if ((processCorrelationId = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerPID}")) is not null)
             {
-                string? value;
-                if ((value = environment.GetEnvironmentVariable($"{key}_{testHostControllerPID}")) is not null)
-                {
-                    await logger.LogDebugAsync($"{key}_{testHostControllerPID} '{value}'");
-                }
+                await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerPID} '{processCorrelationId}'");
+            }
+
+            string? parentPid;
+            if ((parentPid = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{testHostControllerPID}")) is not null)
+            {
+                await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{testHostControllerPID} '{parentPid}'");
+            }
+
+            string? testHostProcessStartTime;
+            if ((testHostProcessStartTime = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{testHostControllerPID}")) is not null)
+            {
+                await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{testHostControllerPID} '{testHostProcessStartTime}'");
             }
         }
 

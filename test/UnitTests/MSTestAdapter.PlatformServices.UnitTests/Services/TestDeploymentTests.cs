@@ -59,18 +59,18 @@ public class TestDeploymentTests : TestContainer
         var testDeployment = new TestDeployment(new DeploymentItemUtility(_mockReflectionUtility.Object), null, null);
 
         // setup mocks
-        KeyValuePair<string, string>[] methodLevelDeploymentItems = new[]
-        {
+        KeyValuePair<string, string>[] methodLevelDeploymentItems =
+        [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory),
-        };
-        KeyValuePair<string, string>[] classLevelDeploymentItems = new[]
-        {
+                DefaultDeploymentItemOutputDirectory)
+        ];
+        KeyValuePair<string, string>[] classLevelDeploymentItems =
+        [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath + "\\temp2",
-                DefaultDeploymentItemOutputDirectory),
-        };
+                DefaultDeploymentItemOutputDirectory)
+        ];
         MethodInfo memberInfo =
             typeof(TestDeploymentTests).GetMethod(
                 "GetDeploymentItemsReturnsDeploymentItems");
@@ -178,12 +178,12 @@ public class TestDeploymentTests : TestContainer
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseButHasDeploymentItems()
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
-        KeyValuePair<string, string>[] kvpArray = new[]
-        {
+        KeyValuePair<string, string>[] kvpArray =
+        [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory),
-        };
+                DefaultDeploymentItemOutputDirectory)
+        ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
 
         var testDeployment = new TestDeployment(
@@ -256,12 +256,12 @@ public class TestDeploymentTests : TestContainer
     public void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), typeof(TestDeploymentTests).Assembly.Location);
-        KeyValuePair<string, string>[] kvpArray = new[]
-                {
-                    new KeyValuePair<string, string>(
+        KeyValuePair<string, string>[] kvpArray =
+        [
+            new KeyValuePair<string, string>(
                         DefaultDeploymentItemPath,
-                        DefaultDeploymentItemOutputDirectory),
-                };
+                        DefaultDeploymentItemOutputDirectory)
+        ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
@@ -402,12 +402,12 @@ public class TestDeploymentTests : TestContainer
     private static TestCase GetTestCase(string source)
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), source);
-        KeyValuePair<string, string>[] kvpArray = new[]
-        {
+        KeyValuePair<string, string>[] kvpArray =
+        [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory),
-        };
+                DefaultDeploymentItemOutputDirectory)
+        ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
 
         return testCase;

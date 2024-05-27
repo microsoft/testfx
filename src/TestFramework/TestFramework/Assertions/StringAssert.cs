@@ -12,7 +12,7 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// </summary>
 public sealed class StringAssert
 {
-    private static readonly object[] Empty = Array.Empty<object>();
+    private static readonly object[] Empty = [];
 
     #region Singleton constructor
 

@@ -61,7 +61,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         _testablePlatformServiceProvider
             .MockReflectionOperations
             .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.ParallelizeAttribute)))
-            .Returns(new[] { new UTF.ParallelizeAttribute { Workers = 10 } });
+            .Returns([new UTF.ParallelizeAttribute { Workers = 10 }]);
 
         // Act.
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
@@ -80,7 +80,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         _testablePlatformServiceProvider
             .MockReflectionOperations
             .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.ParallelizeAttribute)))
-            .Returns(new[] { new UTF.ParallelizeAttribute { Workers = 0 } });
+            .Returns([new UTF.ParallelizeAttribute { Workers = 0 }]);
 
         // Act.
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
@@ -114,7 +114,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         _testablePlatformServiceProvider
             .MockReflectionOperations
             .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.ParallelizeAttribute)))
-            .Returns(new[] { new UTF.ParallelizeAttribute { Scope = UTF.ExecutionScope.MethodLevel } });
+            .Returns([new UTF.ParallelizeAttribute { Scope = UTF.ExecutionScope.MethodLevel }]);
 
         // Act.
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
@@ -148,7 +148,7 @@ public class TestAssemblySettingsProviderTests : TestContainer
         _testablePlatformServiceProvider
             .MockReflectionOperations
             .Setup(ro => ro.GetCustomAttributes(It.IsAny<Assembly>(), typeof(UTF.DoNotParallelizeAttribute)))
-            .Returns(new[] { new UTF.DoNotParallelizeAttribute() });
+            .Returns([new UTF.DoNotParallelizeAttribute()]);
 
         // Act.
         MSTest.TestAdapter.ObjectModel.TestAssemblySettings settings = TestAssemblySettingsProvider.GetSettings("Foo");
