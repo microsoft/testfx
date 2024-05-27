@@ -112,7 +112,7 @@ internal class UnitTestDiscoverer
             foreach (UnitTestElement testElement in testElements)
             {
                 var testCase = testElement.ToTestCase();
-                bool hasNonRunnableTraits = testCase.Traits.Any(t => t.Name == Constants.NonRunnableTest);
+                bool hasNonRunnableTraits = testCase.Traits.Any(t => t.Name == Constants.FixturesGroup);
 
                 // Filter tests based on test case filters
                 if (filterExpression != null && !filterExpression.MatchTestCase(testCase, (p) => TestMethodFilter.PropertyValueProvider(testCase, p)))

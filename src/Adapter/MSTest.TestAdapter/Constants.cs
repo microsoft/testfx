@@ -13,7 +13,12 @@ internal static class Constants
     /// <summary>
     /// Non runnable test.
     /// </summary>
-    internal const string NonRunnableTest = "NonRunnableTests";
+    internal const string FixturesGroup = "Fixtures";
+
+    /// <summary>
+    /// Discover fixtures or not.
+    /// </summary>
+    internal const string FixturesEnabled = "FixturesEnabled";
 
     /// <summary>
     /// Assembly initialize.
