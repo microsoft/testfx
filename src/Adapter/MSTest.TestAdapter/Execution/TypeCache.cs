@@ -828,7 +828,9 @@ internal class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
-        IEnumerable<MethodInfo> methods = testClassInfo.ClassType.GetRuntimeMethods()
+        IEnumerable<MethodInfo> methods = testClassInfo
+            .ClassType
+            .GetRuntimeMethods()
             .Where(method => method.Name == testMethod.Name &&
                              method.HasCorrectTestMethodSignature(true, discoverInternals));
 
