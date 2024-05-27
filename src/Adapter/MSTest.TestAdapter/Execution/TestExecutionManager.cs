@@ -200,7 +200,7 @@ public class TestExecutionManager
             && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
         {
             // If this is a non runnable test, return true. Non runnable tests are not filtered out and are always available for the status.
-            if (test.Traits.Any(t => t.Name == Constants.FixturesEnabled))
+            if (test.Traits.Any(t => t.Name == Constants.FixturesTestTrait))
             {
                 return true;
             }
@@ -396,7 +396,7 @@ public class TestExecutionManager
 
             // If it is a non-runnable test, add it to the list of non-runnable tests and do not execute it.
             // It is executed by test itself.
-            if (currentTest.Traits.Any(t => t.Name == Constants.FixturesEnabled))
+            if (currentTest.Traits.Any(t => t.Name == Constants.FixturesTestTrait))
             {
                 nonRunnableTests.Add(currentTest);
                 continue;
@@ -436,7 +436,7 @@ public class TestExecutionManager
                 continue;
             }
 
-            Trait trait = currentTest.Traits.First(t => t.Name == Constants.FixturesEnabled);
+            Trait trait = currentTest.Traits.First(t => t.Name == Constants.FixturesTestTrait);
             var unitTestElement = currentTest.ToUnitTestElement(source);
             FixtureTestResult nonRunnableTestResult = testRunner.GetNonRunnableTestMethodResult(unitTestElement.TestMethod, trait.Value);
 

@@ -78,7 +78,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
         var warningMessages = new List<string>();
         var tests = new List<UnitTestElement>();
-        var nonRunnableTests = new HashSet<string>();
+        var fixturesTests = new HashSet<string>();
 
         Assembly assembly = PlatformServiceProvider.Instance.FileOperations.LoadAssembly(assemblyFileName, isReflectionOnly: false);
 
@@ -104,7 +104,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             }
 
             List<UnitTestElement> testsInType = DiscoverTestsInType(assemblyFileName, RunSettingsXml, type, warningMessages, discoverInternals,
-                testDataSourceDiscovery, testIdGenerationStrategy, nonRunnableTests);
+                testDataSourceDiscovery, testIdGenerationStrategy, fixturesTests);
             tests.AddRange(testsInType);
         }
 
@@ -200,7 +200,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
     private List<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string? runSettingsXml, Type type,
         List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
-        TestIdGenerationStrategy testIdGenerationStrategy, HashSet<string> nonRunnableTests)
+        TestIdGenerationStrategy testIdGenerationStrategy, HashSet<string> fixturesTests)
     {
         IDictionary<string, object> tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
         tempSourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(tempSourceLevelParameters)
@@ -228,7 +228,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
                     {
-                        if (DynamicDataAttached(sourceLevelParameters, test, tests, nonRunnableTests))
+                        if (DynamicDataAttached(sourceLevelParameters, test, tests, fixturesTests))
                         {
                             continue;
                         }
@@ -250,7 +250,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return tests;
     }
 
-    private bool DynamicDataAttached(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test, List<UnitTestElement> tests, HashSet<string> nonRunnableTests)
+    private bool DynamicDataAttached(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test, List<UnitTestElement> tests, HashSet<string> fixturesTests)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -274,7 +274,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // Add non-runnable tests like AssemblyInitialize, AssemblyCleanup, ClassInitialize, ClassCleanup.
         if (MSTestSettings.CurrentSettings.FixturesEnabled)
         {
-            AddNonRunnableTests(testMethodInfo, tests, nonRunnableTests);
+            AddNonRunnableTests(testMethodInfo, tests, fixturesTests);
         }
 
         return TryProcessTestDataSourceTests(test, testMethodInfo, tests);
@@ -293,12 +293,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
             {
-                tests.Add(GetAssemblyNonRunnableTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyInitialize));
+                tests.Add(GetAssemblyNonRunnableTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.Parent.AssemblyCleanupMethod is not null)
             {
-                tests.Add(GetAssemblyNonRunnableTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyCleanup));
+                tests.Add(GetAssemblyNonRunnableTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyCleanupFixtureTrait));
             }
         }
 
@@ -308,12 +308,12 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             if (testMethodInfo.Parent.ClassInitializeMethod is not null)
             {
-                tests.Add(GetClassNonRunnableTest(testMethodInfo.Parent.ClassInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassInitialize));
+                tests.Add(GetClassNonRunnableTest(testMethodInfo.Parent.ClassInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.ClassCleanupMethod is not null)
             {
-                tests.Add(GetClassNonRunnableTest(testMethodInfo.Parent.ClassCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassCleanup));
+                tests.Add(GetClassNonRunnableTest(testMethodInfo.Parent.ClassCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassCleanupFixtureTrait));
             }
         }
 
@@ -321,7 +321,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             string assemblyLocation, string methodType)
         {
             string methodName = GetMethodName(methodInfo);
-            string[] hierarchy = [null!, assemblyName, $"[{Constants.AssemblyFixtures}]", methodName];
+            string[] hierarchy = [null!, assemblyName, $"[{Constants.AssemblyFixturesHierarchyName}]", methodName];
             return GetNonRunnableTest(classFullName, assemblyLocation, methodType, methodName, hierarchy);
         }
 
@@ -350,7 +350,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             {
                 DisplayName = $"[{methodType}].{methodName}",
                 Ignored = true,
-                Traits = [new Trait(Constants.FixturesEnabled, methodType)],
+                Traits = [new Trait(Constants.FixturesTestTrait, methodType)],
             };
         }
     }

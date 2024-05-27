@@ -13,32 +13,32 @@ internal static class Constants
     /// <summary>
     /// Assembly.
     /// </summary>
-    internal const string AssemblyFixtures = "Assembly";
+    internal const string AssemblyFixturesHierarchyName = "Assembly";
 
     /// <summary>
     /// Discover fixtures or not.
     /// </summary>
-    internal const string FixturesEnabled = "FixturesEnabled";
+    internal const string FixturesTestTrait = "FixturesTrait";
 
     /// <summary>
     /// Assembly initialize.
     /// </summary>
-    internal const string AssemblyInitialize = "AssemblyInitialize";
+    internal const string AssemblyInitializeFixtureTrait = "AssemblyInitialize";
 
     /// <summary>
     /// Assembly cleanup.
     /// </summary>
-    internal const string AssemblyCleanup = "AssemblyCleanup";
+    internal const string AssemblyCleanupFixtureTrait = "AssemblyCleanup";
 
     /// <summary>
     /// Class initialize.
     /// </summary>
-    internal const string ClassInitialize = "ClassInitialize";
+    internal const string ClassInitializeFixtureTrait = "ClassInitialize";
 
     /// <summary>
     /// Class cleanup.
     /// </summary>
-    internal const string ClassCleanup = "ClassCleanup";
+    internal const string ClassCleanupFixtureTrait = "ClassCleanup";
 
     /// <summary>
     /// Uri of the MSTest executor.

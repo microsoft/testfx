@@ -105,14 +105,14 @@ internal class UnitTestRunner : MarshalByRefObject
         // Get matching testMethodInfo from the cache and return UnitTestOutcome for the non-runnable test.
         if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
         {
-            if (nonRunnableMethodType == Constants.ClassInitialize)
+            if (nonRunnableMethodType == Constants.ClassInitializeFixtureTrait)
             {
                 return testMethodInfo.Parent.IsClassInitializeExecuted
                     ? new(true, GetOutcome(testMethodInfo.Parent.ClassInitializationException), testMethodInfo.Parent.ClassInitializationException?.Message)
                     : new(true, ObjectModel.UnitTestOutcome.Inconclusive, null);
             }
 
-            if (nonRunnableMethodType == Constants.ClassCleanup)
+            if (nonRunnableMethodType == Constants.ClassCleanupFixtureTrait)
             {
                 return testMethodInfo.Parent.IsClassInitializeExecuted
                 ? new(testMethodInfo.Parent.IsClassInitializeExecuted, GetOutcome(testMethodInfo.Parent.ClassCleanupException), testMethodInfo.Parent.ClassCleanupException?.Message)
@@ -122,11 +122,11 @@ internal class UnitTestRunner : MarshalByRefObject
 
         if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName, out testMethodInfo))
         {
-            if (nonRunnableMethodType == Constants.AssemblyInitialize)
+            if (nonRunnableMethodType == Constants.AssemblyInitializeFixtureTrait)
             {
                 return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyInitializationException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
             }
-            else if (nonRunnableMethodType == Constants.AssemblyCleanup)
+            else if (nonRunnableMethodType == Constants.AssemblyCleanupFixtureTrait)
             {
                 return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyCleanupException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
             }
@@ -338,7 +338,7 @@ internal class UnitTestRunner : MarshalByRefObject
             ClassCleanupBehavior lifecycleFromAssembly,
             ReflectHelper? reflectHelper = null)
         {
-            IEnumerable<UnitTestElement> runnableTests = testsToRun.Where(t => t.Traits is null || !t.Traits.Any(t => t.Name == Constants.FixturesEnabled));
+            IEnumerable<UnitTestElement> runnableTests = testsToRun.Where(t => t.Traits is null || !t.Traits.Any(t => t.Name == Constants.FixturesTestTrait));
             _remainingTestsByClass =
                 new(runnableTests.GroupBy(t => t.TestMethod.FullClassName)
                     .ToDictionary(

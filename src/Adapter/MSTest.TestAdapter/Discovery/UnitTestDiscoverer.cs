@@ -112,13 +112,13 @@ internal class UnitTestDiscoverer
             foreach (UnitTestElement testElement in testElements)
             {
                 var testCase = testElement.ToTestCase();
-                bool hasNonRunnableTraits = testCase.Traits.Any(t => t.Name == Constants.FixturesEnabled);
+                bool hasFixtureTraits = testCase.Traits.Any(t => t.Name == Constants.FixturesTestTrait);
 
                 // Filter tests based on test case filters
                 if (filterExpression != null && !filterExpression.MatchTestCase(testCase, (p) => TestMethodFilter.PropertyValueProvider(testCase, p)))
                 {
                     // If test is a non-runnable test, add it to the list of non-runnable tests.
-                    if (hasNonRunnableTraits)
+                    if (hasFixtureTraits)
                     {
                         nonRunnableTests.Add(testCase);
                     }
@@ -128,7 +128,7 @@ internal class UnitTestDiscoverer
 
                 if (!hasAnyRunnableTests)
                 {
-                    hasAnyRunnableTests = !hasNonRunnableTraits;
+                    hasAnyRunnableTests = !hasFixtureTraits;
                 }
 
                 if (!shouldCollectSourceInformation)
