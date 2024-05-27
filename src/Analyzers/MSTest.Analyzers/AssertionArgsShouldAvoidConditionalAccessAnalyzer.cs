@@ -16,18 +16,16 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly ImmutableArray<string> AssertSupportedMethodNames = ImmutableArray.Create(new[]
-    {
+    private static readonly ImmutableArray<string> AssertSupportedMethodNames = ImmutableArray.Create([
         "IsTrue",
         "IsFalse",
         "AreEqual",
         "AreNotEqual",
         "AreSame",
-        "AreNotSame",
-    });
+        "AreNotSame"
+    ]);
 
-    private static readonly ImmutableArray<string> CollectionAssertSupportedMethodNames = ImmutableArray.Create(new[]
-    {
+    private static readonly ImmutableArray<string> CollectionAssertSupportedMethodNames = ImmutableArray.Create([
         "IsTrue",
         "IsFalse",
         "AreEqual",
@@ -40,17 +38,16 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         "AllItemsAreUnique",
         "IsSubsetOf",
         "IsNotSubsetOf",
-        "AllItemsAreInstancesOfType",
-    });
+        "AllItemsAreInstancesOfType"
+    ]);
 
-    private static readonly ImmutableArray<string> StringAssertSupportedMethodNames = ImmutableArray.Create(new[]
-    {
+    private static readonly ImmutableArray<string> StringAssertSupportedMethodNames = ImmutableArray.Create([
         "Contains",
         "StartsWith",
         "EndsWith",
         "Matches",
-        "DoesNotMatch",
-    });
+        "DoesNotMatch"
+    ]);
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessMessageFormat), Resources.ResourceManager, typeof(Resources));

@@ -264,14 +264,14 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        string[] expectedDiscoveredTypes = new[]
-        {
+        string[] expectedDiscoveredTypes =
+        [
             nameof(PublicClass2),
             nameof(PublicClass3),
             nameof(PublicClass2.PublicNestedClassInPublicClass),
             nameof(PublicClass3.PublicClassNestedInPublicClass),
-            nameof(PublicClass3.PublicClassNestedInPublicClass.PublicClassNestedInPublicClassNestedInPublicClass),
-        };
+            nameof(PublicClass3.PublicClassNestedInPublicClass.PublicClassNestedInPublicClassNestedInPublicClass)
+        ];
 
         bool discoverInternal = false;
         string[] actualDiscoveredTypes = allTypes
@@ -287,8 +287,8 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        string[] expectedNonDiscoveredTypes = new[]
-        {
+        string[] expectedNonDiscoveredTypes =
+        [
             nameof(InternalClass),
             nameof(InternalClass.PublicClassNestedInInternalClass),
             nameof(InternalClass.InternalClassNestedInInternalClass),
@@ -313,8 +313,8 @@ public class TypeValidatorTests : TestContainer
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInPublicClass),
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInInternalClass),
             nameof(PrivateClassNames.PrivateClassNestedInPublicClass), // from PublicClass3
-            nameof(PrivateClassNames.PrivateClassNestedInInternalClass),
-        };
+            nameof(PrivateClassNames.PrivateClassNestedInInternalClass)
+        ];
 
         bool discoverInternal = false;
         string[] actualDiscoveredTypes = allTypes
@@ -330,8 +330,8 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        string[] expectedDiscoveredTypes = new[]
-        {
+        string[] expectedDiscoveredTypes =
+        [
             nameof(PublicClass2),
             nameof(PublicClass3),
             nameof(InternalClass),
@@ -348,8 +348,8 @@ public class TypeValidatorTests : TestContainer
             nameof(PublicClass3.InternalClassNestedInPublicClass.InternalClassNestedInInternalClassNestedInPublicClass),
             nameof(InternalClass2.InternalClassNestedInInternalClass),
             nameof(InternalClass2.InternalClassNestedInInternalClass.PublicClassNestedInInternalClassNestedInInternalClass),
-            nameof(InternalClass2.InternalClassNestedInInternalClass.InternalClassNestedInInternalClassNestedInInternalClass),
-        };
+            nameof(InternalClass2.InternalClassNestedInInternalClass.InternalClassNestedInInternalClassNestedInInternalClass)
+        ];
 
         bool discoverInternal = true;
         string[] actualDiscoveredTypes = allTypes
@@ -365,8 +365,8 @@ public class TypeValidatorTests : TestContainer
     {
         Type[] allTypes = GetAllTestTypes();
 
-        string[] expectedNonDiscoveredTypes = new[]
-        {
+        string[] expectedNonDiscoveredTypes =
+        [
             nameof(PrivateClassNames.ProtectedInteralNestedClassInPublicClass),
             nameof(PrivateClassNames.ProtectedNestedClassInPublicClass),
             nameof(PrivateClassNames.PrivateProtectedNestedClassInPublicClass),
@@ -378,8 +378,8 @@ public class TypeValidatorTests : TestContainer
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInPublicClass),
             nameof(PrivateClassNames.PublicClassNestedInPrivateClassNestedInInternalClass),
             nameof(PrivateClassNames.PrivateClassNestedInPublicClass), // from PublicClass3
-            nameof(PrivateClassNames.PrivateClassNestedInInternalClass),
-        };
+            nameof(PrivateClassNames.PrivateClassNestedInInternalClass)
+        ];
 
         bool discoverInternal = true;
         string[] actualDiscoveredTypes = allTypes
@@ -393,7 +393,7 @@ public class TypeValidatorTests : TestContainer
 
     private static Type[] GetAllTestTypes()
     {
-        Type[] types = new[] { typeof(PublicClass2), typeof(PublicClass3), typeof(InternalClass), typeof(InternalClass2) };
+        Type[] types = [typeof(PublicClass2), typeof(PublicClass3), typeof(InternalClass), typeof(InternalClass2)];
         Type[] nestedTypes = types.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)).ToArray();
         Type[] nestedNestedTypes = nestedTypes.SelectMany(t => t.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)).ToArray();
         Type[] allTypes = new[] { types, nestedTypes, nestedNestedTypes }.SelectMany(t => t).ToArray();

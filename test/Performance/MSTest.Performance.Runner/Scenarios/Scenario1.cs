@@ -106,7 +106,7 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
             addPublicFeeds: true);
 
         context.AddDisposable(generator);
-        return new SingleProject(new string[] { "net8.0" }, generator, nameof(Scenario1));
+        return new SingleProject(["net8.0"], generator, nameof(Scenario1));
     }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)

@@ -23,7 +23,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
-        string[] expectedAttributes = new string[] { "DummyA : base", "DummySingleA : base" };
+        string[] expectedAttributes = ["DummyA : base", "DummySingleA : base"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
@@ -36,7 +36,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
-        string[] expectedAttributes = new string[] { "DummyA : derived", "DummySingleA : derived" };
+        string[] expectedAttributes = ["DummyA : derived", "DummySingleA : derived"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
@@ -50,7 +50,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes.Count == 3);
 
         // Notice that the DummySingleA on the base method does not show up since it can only be defined once.
-        string[] expectedAttributes = new string[] { "DummyA : derived", "DummySingleA : derived", "DummyA : base", };
+        string[] expectedAttributes = ["DummyA : derived", "DummySingleA : derived", "DummyA : base"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
@@ -63,7 +63,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
-        string[] expectedAttributes = new string[] { "DummyA : ba" };
+        string[] expectedAttributes = ["DummyA : ba"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
@@ -76,7 +76,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
-        string[] expectedAttributes = new string[] { "DummyA : a" };
+        string[] expectedAttributes = ["DummyA : a"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
@@ -89,7 +89,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
-        string[] expectedAttributes = new string[] { "DummyA : a", "DummyA : ba" };
+        string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
@@ -102,7 +102,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
-        string[] expectedAttributes = new string[] { "DummyA : base" };
+        string[] expectedAttributes = ["DummyA : base"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
@@ -115,7 +115,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
-        string[] expectedAttributes = new string[] { "DummyA : derived" };
+        string[] expectedAttributes = ["DummyA : derived"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
@@ -128,7 +128,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
-        string[] expectedAttributes = new string[] { "DummyA : derived", "DummyA : base", };
+        string[] expectedAttributes = ["DummyA : derived", "DummyA : base"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
@@ -141,7 +141,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
-        string[] expectedAttributes = new string[] { "DummyA : ba" };
+        string[] expectedAttributes = ["DummyA : ba"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
@@ -154,7 +154,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 1);
 
-        string[] expectedAttributes = new string[] { "DummyA : a" };
+        string[] expectedAttributes = ["DummyA : a"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 
@@ -167,7 +167,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
-        string[] expectedAttributes = new string[] { "DummyA : a", "DummyA : ba" };
+        string[] expectedAttributes = ["DummyA : a", "DummyA : ba"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 

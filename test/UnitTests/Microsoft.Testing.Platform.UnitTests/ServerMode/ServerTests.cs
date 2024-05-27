@@ -282,7 +282,7 @@ public class ServerTests : TestBase
     {
         public Func<ExecuteRequestContext, Task>? DiscoveryAction { get; set; }
 
-        public ICapability[] Capabilities => Array.Empty<ICapability>();
+        public ICapability[] Capabilities => [];
 
         public string Uid => nameof(MockTestAdapter);
 

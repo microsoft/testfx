@@ -110,12 +110,12 @@ public class UnitTestElementTests : TestContainer
 
         Verify(testCase.GetPropertyValue(Constants.TestCategoryProperty) is null);
 
-        _unitTestElement.TestCategory = Array.Empty<string>();
+        _unitTestElement.TestCategory = [];
         testCase = _unitTestElement.ToTestCase();
 
         Verify(testCase.GetPropertyValue(Constants.TestCategoryProperty) is null);
 
-        _unitTestElement.TestCategory = new string[] { "TC" };
+        _unitTestElement.TestCategory = ["TC"];
         testCase = _unitTestElement.ToTestCase();
 
         Verify(new string[] { "TC" }.SequenceEqual((string[])testCase.GetPropertyValue(Constants.TestCategoryProperty)));
@@ -144,7 +144,7 @@ public class UnitTestElementTests : TestContainer
 #pragma warning restore CA1827 // Do not use Count() or LongCount() when Any() can be used
 
         var trait = new TestPlatform.ObjectModel.Trait("trait", "value");
-        _unitTestElement.Traits = new TestPlatform.ObjectModel.Trait[] { trait };
+        _unitTestElement.Traits = [trait];
         testCase = _unitTestElement.ToTestCase();
 
         Verify(testCase.Traits.Count() == 1);
@@ -157,7 +157,7 @@ public class UnitTestElementTests : TestContainer
         _unitTestElement.CssIteration = "12";
         _unitTestElement.CssProjectStructure = "ProjectStructure";
         _unitTestElement.Description = "I am a dummy test";
-        _unitTestElement.WorkItemIds = new string[] { "2312", "22332" };
+        _unitTestElement.WorkItemIds = ["2312", "22332"];
 
         var testCase = _unitTestElement.ToTestCase();
 
@@ -174,12 +174,12 @@ public class UnitTestElementTests : TestContainer
 
         Verify(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) is null);
 
-        _unitTestElement.DeploymentItems = Array.Empty<KeyValuePair<string, string>>();
+        _unitTestElement.DeploymentItems = [];
         testCase = _unitTestElement.ToTestCase();
 
         Verify(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) is null);
 
-        _unitTestElement.DeploymentItems = new KeyValuePair<string, string>[] { new("s", "d") };
+        _unitTestElement.DeploymentItems = [new("s", "d")];
         testCase = _unitTestElement.ToTestCase();
 
         Verify(_unitTestElement.DeploymentItems.SequenceEqual(testCase.GetPropertyValue(Constants.DeploymentItemsProperty) as KeyValuePair<string, string>[]));
@@ -232,8 +232,8 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsDisplayName_ExamplesOfTestCaseIdUniqueness()
     {
         TestIdGenerationStrategy testIdStrategy = TestIdGenerationStrategy.DisplayName;
-        TestCase[] testCases = new[]
-        {
+        TestCase[] testCases =
+        [
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy))
             .ToTestCase(),
@@ -263,8 +263,8 @@ public class UnitTestElementTests : TestContainer
             {
                 DisplayName = "SomeOtherDisplayName",
             }
-            .ToTestCase(),
-        };
+            .ToTestCase()
+        ];
 
         Verify(testCases.Select(tc => tc.Id.ToString()).Distinct().Count() == testCases.Length);
     }
@@ -273,8 +273,8 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsDisplayName_ExamplesOfTestCaseIdCollision()
     {
         TestIdGenerationStrategy testIdStrategy = TestIdGenerationStrategy.DisplayName;
-        TestCase[] testCases = new[]
-        {
+        TestCase[] testCases =
+        [
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
                 {
@@ -285,31 +285,31 @@ public class UnitTestElementTests : TestContainer
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
                 {
                     DataType = DynamicDataType.DataSourceAttribute,
-                    SerializedData = new[] { "1", },
+                    SerializedData = ["1"],
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
                 {
                     DataType = DynamicDataType.DataSourceAttribute,
-                    SerializedData = new[] { "2", },
+                    SerializedData = ["2"],
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
                 {
                     DataType = DynamicDataType.ITestDataSource,
-                    SerializedData = new[] { "1", },
+                    SerializedData = ["1"],
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
                 {
                     DataType = DynamicDataType.ITestDataSource,
-                    SerializedData = new[] { "2", },
+                    SerializedData = ["2"],
                 })
-            .ToTestCase(),
-        };
+            .ToTestCase()
+        ];
 
         Verify(testCases.Select(tc => tc.Id.ToString()).Distinct().Count() == 1);
     }
@@ -317,8 +317,8 @@ public class UnitTestElementTests : TestContainer
     public void ToTestCase_WhenStrategyIsFullyQualifiedTest_ExamplesOfTestCaseIdUniqueness()
     {
         TestIdGenerationStrategy testIdStrategy = TestIdGenerationStrategy.FullyQualified;
-        TestCase[] testCases = new[]
-        {
+        TestCase[] testCases =
+        [
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy))
             .ToTestCase(),
@@ -334,22 +334,22 @@ public class UnitTestElementTests : TestContainer
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
                 {
-                    SerializedData = new[] { "System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[]", },
+                    SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[]"],
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
                 {
-                    SerializedData = new[] { "System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1]", },
+                    SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1]"],
                 })
             .ToTestCase(),
             new UnitTestElement(
                 new("MyMethod", "MyProduct.MyNamespace.MyClass", "MyAssembly", false, testIdStrategy)
                 {
-                    SerializedData = new[] { "System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1,1]", },
+                    SerializedData = ["System.Int32[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089", "[1,1]"],
                 })
-            .ToTestCase(),
-        };
+            .ToTestCase()
+        ];
 
         Verify(testCases.Select(tc => tc.Id.ToString()).Distinct().Count() == testCases.Length);
     }
