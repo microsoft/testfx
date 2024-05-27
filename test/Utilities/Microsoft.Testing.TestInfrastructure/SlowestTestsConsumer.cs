@@ -9,9 +9,9 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public sealed class SlowestTestsConsumer : IDataConsumer, ITestSessionLifetimeHandler
 {
-    private readonly List<(string TestId, double Milliseconds)> _testPerf = new();
+    private readonly List<(string TestId, double Milliseconds)> _testPerf = [];
 
-    public Type[] DataTypesConsumed => new[] { typeof(TestNodeUpdateMessage) };
+    public Type[] DataTypesConsumed => [typeof(TestNodeUpdateMessage)];
 
     public string Uid => nameof(SlowestTestsConsumer);
 

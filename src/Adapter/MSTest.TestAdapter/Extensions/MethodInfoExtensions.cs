@@ -160,7 +160,7 @@ internal static class MethodInfoExtensions
             && methodParameters?.Length == 1
             && methodParameters[0].ParameterType == typeof(object[]))
         {
-            task = methodInfo.Invoke(classInstance, new[] { arguments }) as Task;
+            task = methodInfo.Invoke(classInstance, [arguments]) as Task;
         }
         else
         {

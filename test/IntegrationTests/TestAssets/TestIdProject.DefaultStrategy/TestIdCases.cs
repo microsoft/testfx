@@ -45,9 +45,9 @@ public class TestIdCases
     {
         get
         {
-            yield return new object[] { 0, Array.Empty<int>() };
-            yield return new object[] { 0, new int[] { 0 } };
-            yield return new object[] { 0, new int[] { 0, 0, 0 } };
+            yield return [0, Array.Empty<int>()];
+            yield return [0, new int[] { 0 }];
+            yield return [0, new int[] { 0, 0, 0 }];
         }
     }
 
@@ -61,8 +61,8 @@ public class TestIdCases
     {
         get
         {
-            yield return new object[] { (1, "text", true) };
-            yield return new object[] { (1, "text", false) };
+            yield return [(1, "text", true)];
+            yield return [(1, "text", false)];
         }
     }
 
@@ -76,10 +76,10 @@ public class TestIdCases
     {
         get
         {
-            yield return new object[] { new List<int> { 1, 2, 3 }, new List<string> { "a", "b", "c" }, new List<bool> { true, false, true } };
-            yield return new object[] { new List<int> { 1, 2 }, new List<string> { "a", "b", "c" }, new List<bool> { true, false, true } };
-            yield return new object[] { new List<int> { 1, 2, 3 }, new List<string> { "a", "b" }, new List<bool> { true, false, true } };
-            yield return new object[] { new List<int> { 1, 2, 3 }, new List<string> { "a", "b", "c" }, new List<bool> { true, false } };
+            yield return [new List<int> { 1, 2, 3 }, new List<string> { "a", "b", "c" }, new List<bool> { true, false, true }];
+            yield return [new List<int> { 1, 2 }, new List<string> { "a", "b", "c" }, new List<bool> { true, false, true }];
+            yield return [new List<int> { 1, 2, 3 }, new List<string> { "a", "b" }, new List<bool> { true, false, true }];
+            yield return [new List<int> { 1, 2, 3 }, new List<string> { "a", "b", "c" }, new List<bool> { true, false }];
         }
     }
 

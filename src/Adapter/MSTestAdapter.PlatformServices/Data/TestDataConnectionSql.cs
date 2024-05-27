@@ -356,7 +356,7 @@ internal class TestDataConnectionSql : TestDataConnection
         // Try to get quote chars by hand for those providers that for some reason return empty QuotePrefix/Suffix.
         string s = "abcdefgh";
         string quoted = QuoteIdentifier(s);
-        string[] parts = quoted.Split(new string[] { s }, StringSplitOptions.None);
+        string[] parts = quoted.Split([s], StringSplitOptions.None);
 
         DebugEx.Assert(parts is { Length: 2 }, "TestDataConnectionSql.GetQuotesLiteralHelper: Failure when trying to quote an identifier!");
         DebugEx.Assert(!StringEx.IsNullOrEmpty(parts[0]), "TestDataConnectionSql.GetQuotesLiteralHelper: Trying to set empty value for QuotePrefix!");

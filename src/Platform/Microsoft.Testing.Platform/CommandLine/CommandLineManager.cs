@@ -42,10 +42,10 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, IEnviro
             commandLineOptionsProviders.Add(new CommandLineOptionsProviderCache(serviceInstance));
         }
 
-        ICommandLineOptionsProvider[] systemCommandLineOptionsProviders = new[]
-        {
-            new PlatformCommandLineProvider(),
-        };
+        ICommandLineOptionsProvider[] systemCommandLineOptionsProviders =
+        [
+            new PlatformCommandLineProvider()
+        ];
 
         return new CommandLineHandler(args, parseResult, commandLineOptionsProviders.ToArray(),
             systemCommandLineOptionsProviders, _testApplicationModuleInfo, _runtimeFeature, platformOutputDisplay, _environment, _processHandler);

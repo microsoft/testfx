@@ -39,7 +39,7 @@ internal class EntryPoint
     {
         var pipelineRunner = new PipelinesRunner();
 
-        pipelineRunner.AddPipeline("Default", "Scenario1_PerfView", new[] { OSPlatform.Windows }, parametersBag =>
+        pipelineRunner.AddPipeline("Default", "Scenario1_PerfView", [OSPlatform.Windows], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
@@ -47,7 +47,7 @@ internal class EntryPoint
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
-        pipelineRunner.AddPipeline("Default", "Scenario1_DotnetTrace", new[] { OSPlatform.Windows }, parametersBag =>
+        pipelineRunner.AddPipeline("Default", "Scenario1_DotnetTrace", [OSPlatform.Windows], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
@@ -56,14 +56,14 @@ internal class EntryPoint
             .NextStep(() => new CleanupDisposable()));
 
         // C:\Program Files\Microsoft Visual Studio\2022\Preview\Team Tools\DiagnosticsHub\Collector\AgentConfigs
-        pipelineRunner.AddPipeline("Default", "Scenario1_DotNetObjectAllocBase", new[] { OSPlatform.Windows }, parametersBag =>
+        pipelineRunner.AddPipeline("Default", "Scenario1_DotNetObjectAllocBase", [OSPlatform.Windows], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
             .NextStep(() => new VSDiagnostics("DotNetObjectAllocLow.json", "Scenario1_DotNetObjectAllocBase.zip"))
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
-        pipelineRunner.AddPipeline("Default", "Scenario1_CpuUsageLow", new[] { OSPlatform.Windows }, parametersBag =>
+        pipelineRunner.AddPipeline("Default", "Scenario1_CpuUsageLow", [OSPlatform.Windows], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
@@ -71,7 +71,7 @@ internal class EntryPoint
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
-        pipelineRunner.AddPipeline("Default", "Scenario1_ConcurrencyVisualizer", new[] { OSPlatform.Windows }, parametersBag =>
+        pipelineRunner.AddPipeline("Default", "Scenario1_ConcurrencyVisualizer", [OSPlatform.Windows], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))
@@ -79,7 +79,7 @@ internal class EntryPoint
             .NextStep(() => new MoveFiles("*.zip", Path.Combine(Directory.GetCurrentDirectory(), "Results")))
             .NextStep(() => new CleanupDisposable()));
 
-        pipelineRunner.AddPipeline("Default", "Scenario1_PlainProcess", new[] { OSPlatform.Windows }, parametersBag =>
+        pipelineRunner.AddPipeline("Default", "Scenario1_PlainProcess", [OSPlatform.Windows], parametersBag =>
         Pipeline
             .FirstStep(() => new Scenario1(numberOfClass: 100, methodsPerClass: 100, tfm: "net8.0", executionScope: ExecutionScope.MethodLevel), parametersBag)
             .NextStep(() => new DotnetMuxer(BuildConfiguration.Debug))

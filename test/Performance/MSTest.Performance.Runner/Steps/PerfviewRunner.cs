@@ -32,7 +32,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             Console.WriteLine("Skip run, not supported in Windows");
-            return new Files(Array.Empty<string>());
+            return new Files([]);
         }
 
         await PerfviewExecutable();
@@ -104,7 +104,7 @@ internal class PerfviewRunner : IStep<BuildArtifact, Files>
             ZipFile.CreateFromDirectory(dataFileDirectory, sample, _compressionLevel, includeBaseDirectory: true);
         }
 
-        return new Files(new[] { sample });
+        return new Files([sample]);
     }
 
     private async Task<string> PerfviewExecutable()

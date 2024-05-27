@@ -158,7 +158,7 @@ public class TestSourceHost : ITestSourceHost
             object resolver = AppDomainUtilities.CreateInstance(
                 AppDomain,
                 assemblyResolverType,
-                new object[] { resolutionPaths });
+                [resolutionPaths]);
 
             EqtTrace.Info(
                 "DesktopTestSourceHost.SetupHost(): resolver type: {0} , resolve type assembly: {1} ",

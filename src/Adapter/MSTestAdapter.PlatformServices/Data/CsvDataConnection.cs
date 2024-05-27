@@ -39,10 +39,10 @@ internal sealed class CsvDataConnection : TestDataConnection
 
     public override List<string> GetDataTablesAndViews()
     {
-        List<string> tableNames = new(1)
-        {
-            TableName,
-        };
+        List<string> tableNames =
+        [
+            TableName
+        ];
         return tableNames;
     }
 

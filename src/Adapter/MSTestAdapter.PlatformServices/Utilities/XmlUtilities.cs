@@ -120,7 +120,7 @@ internal class XmlUtilities
                 publicKeyTokenString.AppendFormat(
                     System.Globalization.CultureInfo.InvariantCulture,
                     "{0:x2}",
-                    new object[] { publicKeyToken[i] });
+                    [publicKeyToken[i]]);
             }
         }
 

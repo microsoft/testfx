@@ -104,7 +104,7 @@ internal static class AppDomainUtilities
             CreateInstance(
                 appDomain,
                 assemblyResolverType,
-                new object[] { resolutionPaths });
+                [resolutionPaths]);
 
             var assemblyLoadWorker =
                 (AssemblyLoadWorker)CreateInstance(
