@@ -828,32 +828,21 @@ internal class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
-        MethodInfo? testMethodInfo;
+        IEnumerable<MethodInfo> methods = testClassInfo.ClassType.GetRuntimeMethods()
+            .Where(method => method.Name == testMethod.Name &&
+                             method.HasCorrectTestMethodSignature(true, discoverInternals));
 
-        MethodInfo[] methodsInClass = testClassInfo.ClassType.GetRuntimeMethods().ToArray();
-
-        if (testMethod.DeclaringClassFullName != null)
-        {
-            // Only find methods that match the given declaring name.
-            testMethodInfo =
-                Array.Find(
-                    methodsInClass,
-                    method => method.Name.Equals(testMethod.Name, StringComparison.Ordinal)
-                        && method.DeclaringType!.FullName!.Equals(testMethod.DeclaringClassFullName, StringComparison.Ordinal)
-                        && method.HasCorrectTestMethodSignature(true, discoverInternals));
-        }
-        else
+        if (testMethod.DeclaringClassFullName == null)
         {
             // Either the declaring class is the same as the test class, or
             // the declaring class information wasn't passed in the test case.
             // Prioritize the former while maintaining previous behavior for the latter.
             string? className = testClassInfo.ClassType.FullName;
-            testMethodInfo =
-                methodsInClass.Where(method => method.Name.Equals(testMethod.Name, StringComparison.Ordinal) && method.HasCorrectTestMethodSignature(true, discoverInternals))
-                    .OrderByDescending(method => method.DeclaringType!.FullName!.Equals(className, StringComparison.Ordinal)).FirstOrDefault();
+            return methods.MaxBy(method => method.DeclaringType!.FullName == className);
         }
 
-        return testMethodInfo;
+        // Only find methods that match the given declaring name.
+        return methods.FirstOrDefault(method => method.DeclaringType!.FullName == testMethod.DeclaringClassFullName);
     }
 
     /// <summary>
