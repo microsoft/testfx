@@ -306,17 +306,19 @@ internal class TypeCache : MarshalByRefObject
 
         foreach (MethodInfo methodInfo in classType.GetTypeInfo().DeclaredMethods)
         {
-            if (methodInfo.IsPublic && !methodInfo.IsStatic)
-            {
-                // Update test initialize/cleanup method
-                UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, false, instanceMethods);
-            }
+            // TODO: should this be wrapped or the ifs in code below should be removed?
+            // if (methodInfo.IsPublic && !methodInfo.IsStatic)
+            // {
+            // Update test initialize/cleanup method
+            UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, false, instanceMethods);
 
-            if (methodInfo.IsPublic && methodInfo.IsStatic)
-            {
-                // Update class initialize/cleanup method
-                UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods);
-            }
+            // }
+            // if (methodInfo.IsPublic && methodInfo.IsStatic)
+            // {
+            // Update class initialize/cleanup method
+            UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods);
+
+            // }
         }
 
         Type? baseType = classType.GetTypeInfo().BaseType;
@@ -486,11 +488,10 @@ internal class TypeCache : MarshalByRefObject
         where TInitializeAttribute : Attribute
     {
         // TODO: can we? it will then never throw for invalid, this is inconsistent in the codebase.
-        //if (!methodInfo.IsStatic)
-        //{
+        // if (!methodInfo.IsStatic)
+        // {
         //    return false;
-        //}
-
+        // }
         if (!_reflectionHelper.IsNonDerivedAttributeDefined<TInitializeAttribute>(methodInfo, false))
         {
             return false;
@@ -514,12 +515,11 @@ internal class TypeCache : MarshalByRefObject
     private bool IsAssemblyOrClassCleanupMethod<TCleanupAttribute>(MethodInfo methodInfo)
         where TCleanupAttribute : Attribute
     {
-        // TODO: can we? it will then never throw for invalid, this is inconsitent in the codebase.
-        //if (!methodInfo.IsStatic)
-        //{
+        // TODO: can we? it will then never throw for invalid, this is inconsistent in the codebase.
+        // if (!methodInfo.IsStatic)
+        // {
         //    return false;
-        //}
-
+        // }
         if (!_reflectionHelper.IsNonDerivedAttributeDefined<TCleanupAttribute>(methodInfo, false))
         {
             return false;

@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Security;
+using System.Xml.Serialization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -543,5 +544,11 @@ internal class ReflectHelper : MarshalByRefObject
 
             return attributesArray; // TODO: Investigate if we rely on NRE
         }
+    }
+
+    internal void ClearCache()
+    {
+        _inheritedAttributeCache.Clear();
+        _nonInheritedAttributeCache.Clear();
     }
 }

@@ -158,17 +158,21 @@ internal class TypeEnumerator
         // The foreach below could move to ReflectHelper, but this is only place where we want to check if
         // an attribute implements something different than an Attribute derived class. So instead we just
         // grab all attributes, and do the check ourselves.
-        bool isDataDriven = false;
+        DynamicDataType dynamicDataType = DynamicDataType.None;
         foreach (Attribute attribute in _reflectHelper.GetDerivedAttributes<Attribute>(method, inherit: true))
         {
             if (AttributeComparer.IsDerived<ITestDataSource>(attribute))
             {
-                isDataDriven = true;
+                dynamicDataType = DynamicDataType.ITestDataSource;
                 break;
+            }
+            else if (AttributeComparer.IsDerived<DataSourceAttribute>(attribute))
+            {
+                dynamicDataType = DynamicDataType.DataSourceAttribute;
             }
         }
 
-        testMethod.DataType = isDataDriven ? DynamicDataType.ITestDataSource : DynamicDataType.None;
+        testMethod.DataType = dynamicDataType;
 
         var testElement = new UnitTestElement(testMethod)
         {

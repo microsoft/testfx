@@ -263,7 +263,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
-        if (test.TestMethod.DataType != DynamicDataType.ITestDataSource)
+        if (test.TestMethod.DataType == DynamicDataType.None)
         {
             return false;
         }

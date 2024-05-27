@@ -39,6 +39,8 @@ public class TypeCacheTests : TestContainer
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
 
+        ReflectHelper.Instance.ClearCache();
+
         SetupMocks();
     }
 
@@ -315,7 +317,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("M", type.FullName, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<UTF.TestClassAttribute>(type.GetTypeInfo(), true)).Returns(true);
+            rh => rh.IsDerivedAttributeDefined<UTF.TestClassAttribute>(type.GetTypeInfo(), true)).Returns(true);
 
         _mockReflectHelper.Setup(
             rh => rh.IsNonDerivedAttributeDefined<UTF.AssemblyInitializeAttribute>(type.GetMethod("AssemblyInit"), false)).Returns(true);
@@ -347,7 +349,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("M", type.FullName, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<UTF.TestClassAttribute>(type.GetTypeInfo(), true)).Returns(true);
+            rh => rh.IsDerivedAttributeDefined<UTF.TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
             rh => rh.IsNonDerivedAttributeDefined<UTF.AssemblyCleanupAttribute>(type.GetMethod("AssemblyCleanup"), false)).Returns(true);
@@ -651,7 +653,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("M", type.FullName, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<UTF.TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsDerivedAttributeDefined<UTF.TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
             rh => rh.IsNonDerivedAttributeDefined<UTF.ClassInitializeAttribute>(type.GetMethod("AssemblyInit"), false)).Returns(true);
@@ -683,7 +685,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("M", type.FullName, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<UTF.TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsDerivedAttributeDefined<UTF.TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
             rh => rh.IsNonDerivedAttributeDefined<UTF.ClassCleanupAttribute>(type.GetMethod("AssemblyCleanup"), false)).Returns(true);
@@ -755,7 +757,7 @@ public class TypeCacheTests : TestContainer
         var testMethod = new TestMethod("M", type.FullName, "A", isAsync: false);
 
         _mockReflectHelper.Setup(
-            rh => rh.IsNonDerivedAttributeDefined<UTF.TestClassAttribute>(type, true)).Returns(true);
+            rh => rh.IsDerivedAttributeDefined<UTF.TestClassAttribute>(type, true)).Returns(true);
 
         _mockReflectHelper.Setup(
             rh => rh.IsNonDerivedAttributeDefined<UTF.TestInitializeAttribute>(type.GetMethod("TestInit"), false)).Returns(true);

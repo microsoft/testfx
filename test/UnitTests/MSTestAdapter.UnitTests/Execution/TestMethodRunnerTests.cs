@@ -7,6 +7,7 @@ using System.Text;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
+using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
@@ -89,6 +90,8 @@ public class TestMethodRunnerTests : TestContainer
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _testablePlatformServiceProvider.SetupMockReflectionOperations();
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
+
+        ReflectHelper.Instance.ClearCache();
     }
 
     protected override void Dispose(bool disposing)
@@ -306,7 +309,7 @@ public class TestMethodRunnerTests : TestContainer
         TestDataSource testDataSource = new();
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
 
         UnitTestResult[] results = testMethodRunner.RunTestMethod();
@@ -352,7 +355,7 @@ public class TestMethodRunnerTests : TestContainer
         var attributes = new Attribute[] { dataSourceAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
 
         UnitTestResult[] results = testMethodRunner.RunTestMethod();
@@ -378,7 +381,7 @@ public class TestMethodRunnerTests : TestContainer
         var attributes = new Attribute[] { dataSourceAttribute, dataRowAttribute };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
         _testablePlatformServiceProvider.MockTestDataSource.Setup(tds => tds.GetData(testMethodInfo, _testContextImplementation)).Returns(new object[] { 1, 2, 3 });
 
         UnitTestResult[] results = testMethodRunner.RunTestMethod();
@@ -454,7 +457,7 @@ public class TestMethodRunnerTests : TestContainer
         var attributes = new Attribute[] { dataRowAttribute1, dataRowAttribute2 };
 
         // Setup mocks
-        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<Type>(), It.IsAny<bool>())).Returns(attributes);
+        _testablePlatformServiceProvider.MockReflectionOperations.Setup(rf => rf.GetCustomAttributes(_methodInfo, It.IsAny<bool>())).Returns(attributes);
 
         UnitTestResult[] results = testMethodRunner.RunTestMethod();
         Verify(results[0].ResultFiles.ToList().Contains("C:\\temp.txt"));

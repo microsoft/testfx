@@ -98,8 +98,7 @@ internal static class MethodInfoExtensions
         // TODO: redesign this, probably change this to GetTimeout? so we don't have to do this weird dance?
         timeoutAttribute ??= ReflectHelper.Instance.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(method, inherit: false);
 
-        // Timeout cannot be less than 0.
-        return !(timeoutAttribute?.Timeout < 0);
+        return timeoutAttribute?.Timeout > 0;
     }
 
     /// <summary>
