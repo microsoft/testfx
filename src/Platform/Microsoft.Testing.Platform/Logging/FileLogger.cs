@@ -42,7 +42,6 @@ internal sealed class FileLogger : IDisposable
         FileLoggerOptions options,
         LogLevel logLevel,
         IClock clock,
-        ITask task,
         IConsole console,
         IFileSystem fileSystem,
         IFileStreamFactory fileStreamFactory)

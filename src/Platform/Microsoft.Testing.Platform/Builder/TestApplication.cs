@@ -379,7 +379,6 @@ public sealed class TestApplication : ITestApplication
                 logLevel,
                 customDirectory,
                 clock,
-                task,
                 console,
                 new SystemFileSystem(),
                 new SystemFileStreamFactory()),

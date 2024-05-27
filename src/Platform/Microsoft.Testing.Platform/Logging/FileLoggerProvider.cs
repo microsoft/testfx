@@ -10,7 +10,6 @@ internal sealed class FileLoggerProvider(
     LogLevel logLevel,
     bool customDirectory,
     IClock clock,
-    ITask task,
     IConsole console,
     IFileSystem fileSystem,
     IFileStreamFactory fileStreamFactory)
@@ -23,7 +22,6 @@ internal sealed class FileLoggerProvider(
 {
     private readonly FileLoggerOptions _options = options;
     private readonly IClock _clock = clock;
-    private readonly ITask _task = task;
     private readonly IConsole _console = console;
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly bool _customDirectory = customDirectory;
@@ -35,7 +33,6 @@ internal sealed class FileLoggerProvider(
         options,
         logLevel,
         clock,
-        task,
         console,
         fileSystem,
         fileStreamFactory);
@@ -63,7 +60,6 @@ internal sealed class FileLoggerProvider(
             new FileLoggerOptions(testResultDirectory, _options.LogPrefixName, fileName, _options.SyncFlush),
             LogLevel,
             _clock,
-            _task,
             _console,
             _fileSystem,
             _fileStreamFactory);
