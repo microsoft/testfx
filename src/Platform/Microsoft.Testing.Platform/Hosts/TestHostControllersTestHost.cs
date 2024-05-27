@@ -99,11 +99,11 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 ServiceProvider.GetTask(), abortRun);
             testHostControllerIpc.RegisterAllSerializers();
 
-            #if NET8_0_OR_GREATER
+#if NET8_0_OR_GREATER
             IEnumerable<string> arguments = finalCommandLine.Arguments;
-            #else
+#else
             string arguments = string.Join(" ", finalCommandLine.Arguments);
-            #endif
+#endif
             ProcessStartInfo processStartInfo = new(
                 finalCommandLine.FileName,
                 arguments)
