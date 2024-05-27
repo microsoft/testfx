@@ -440,7 +440,7 @@ public class TestExecutionManager
             var unitTestElement = currentTest.ToUnitTestElement(source);
             NonRunnableTestResult nonRunnableTestResult = testRunner.GetNonRunnableTestMethodResult(unitTestElement.TestMethod, trait.Value);
 
-            if (nonRunnableTestResult.ReportTest)
+            if (nonRunnableTestResult.IsExecuted)
             {
                 var result = new UnitTestResult(nonRunnableTestResult.Outcome, null);
                 SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
