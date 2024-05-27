@@ -8,8 +8,6 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
-using Moq;
-
 using TestFramework.ForTestingMSTest;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Discovery;
@@ -20,7 +18,6 @@ public class TestMethodValidatorTests : TestContainer
     private readonly ReflectHelper _reflectHelper;
     private readonly List<string> _warnings;
 
-    private readonly Mock<MethodInfo> _mockMethodInfo;
     private readonly Type _type;
 
     public TestMethodValidatorTests()
