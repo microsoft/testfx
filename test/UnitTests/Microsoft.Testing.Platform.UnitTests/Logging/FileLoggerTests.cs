@@ -55,7 +55,6 @@ public class FileLoggerTests : TestBase, IDisposable
             new FileLoggerOptions(tempDirectory.Path, "Test", fileName: null, true),
             LogLevel.Trace,
             new SystemClock(),
-            new SystemTask(),
             new SystemConsole(),
             new SystemFileSystem(),
             new SystemFileStreamFactory());
@@ -86,7 +85,6 @@ public class FileLoggerTests : TestBase, IDisposable
             new(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
-            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockFileStreamFactory.Object))
@@ -117,7 +115,6 @@ public class FileLoggerTests : TestBase, IDisposable
             new(LogFolder, LogPrefix, fileName: null, syncFlush: true),
             LogLevel.Trace,
             _mockClock.Object,
-            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockFileStreamFactory.Object));
@@ -140,7 +137,6 @@ public class FileLoggerTests : TestBase, IDisposable
             new(LogFolder, LogPrefix, fileName: FileName, syncFlush: syncFlush),
             LogLevel.Trace,
             _mockClock.Object,
-            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockFileStreamFactory.Object))
@@ -166,7 +162,6 @@ public class FileLoggerTests : TestBase, IDisposable
             new(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
             defaultLogLevel,
             _mockClock.Object,
-            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockFileStreamFactory.Object);
@@ -200,7 +195,6 @@ public class FileLoggerTests : TestBase, IDisposable
             new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
             defaultLogLevel,
             _mockClock.Object,
-            new SystemTask(),
             _mockConsole.Object,
             _mockFileSystem.Object,
             _mockFileStreamFactory.Object);

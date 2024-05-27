@@ -96,7 +96,7 @@ public sealed class TestApplication : ITestApplication
         ApplicationStateGuard.Ensure(s_unhandledExceptionHandler is not null);
 
         // First task is to setup the logger if enabled and we take the info from the command line or env vars.
-        ApplicationLoggingState loggingState = CreateFileLoggerIfDiagnosticIsEnabled(parseResult, testApplicationModuleInfo, systemClock, systemEnvironment, new SystemTask(), new SystemConsole());
+        ApplicationLoggingState loggingState = CreateFileLoggerIfDiagnosticIsEnabled(parseResult, testApplicationModuleInfo, systemClock, systemEnvironment, new SystemConsole());
 
         if (loggingState.FileLoggerProvider is not null)
         {
@@ -270,7 +270,7 @@ public sealed class TestApplication : ITestApplication
     */
     private static ApplicationLoggingState CreateFileLoggerIfDiagnosticIsEnabled(
         CommandLineParseResult result, CurrentTestApplicationModuleInfo testApplicationModuleInfo, SystemClock clock,
-        SystemEnvironment environment, SystemTask task, SystemConsole console)
+        SystemEnvironment environment, SystemConsole console)
     {
         LogLevel logLevel = LogLevel.None;
 

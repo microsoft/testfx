@@ -95,8 +95,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         serviceProvider.TryAddService(systemEnvironment);
         SystemConsole systemConsole = new();
         serviceProvider.TryAddService(systemConsole);
-        SystemTask systemTask = new();
-        serviceProvider.TryAddService(systemTask);
         serviceProvider.TryAddService(runtimeFeature);
         serviceProvider.TryAddService(processHandler);
         serviceProvider.TryAddService(_fileSystem);

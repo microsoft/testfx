@@ -5,7 +5,6 @@ using System.Globalization;
 
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.Extensions.Messages;
-using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Hosts;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Services;
@@ -31,14 +30,13 @@ public class ServerLoggerForwarderTests : TestBase
         : base(testExecutionContext)
     {
         _mockServerTestHost.Setup(x => x.PushDataAsync(It.IsAny<IData>())).Returns(Task.CompletedTask);
-        _serviceProvider.AddService(new SystemTask());
         _serviceProvider.AddService(_mockServerTestHost.Object);
     }
 
     [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     public void ServerLoggerForwarder_Log(LogLevel defaultLevel, LogLevel currentLevel)
     {
-        using (ServerLoggerForwarder serverLoggerForwarder = new(defaultLevel, new SystemTask(), _mockServerTestHost.Object))
+        using (ServerLoggerForwarder serverLoggerForwarder = new(defaultLevel, _mockServerTestHost.Object))
         {
             serverLoggerForwarder.Log(currentLevel, Message, null, Formatter);
         }
@@ -49,7 +47,7 @@ public class ServerLoggerForwarderTests : TestBase
     [ArgumentsProvider(nameof(LogTestHelpers.GetLogLevelCombinations), typeof(LogTestHelpers))]
     public async Task ServerLoggerForwarder_LogAsync(LogLevel defaultLevel, LogLevel currentLevel)
     {
-        using (ServerLoggerForwarder serverLoggerForwarder = new(defaultLevel, new SystemTask(), _mockServerTestHost.Object))
+        using (ServerLoggerForwarder serverLoggerForwarder = new(defaultLevel, _mockServerTestHost.Object))
         {
             await serverLoggerForwarder.LogAsync(currentLevel, Message, null, Formatter);
         }

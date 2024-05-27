@@ -131,9 +131,6 @@ public static class ServiceProviderExtensions
     internal static IClock GetSystemClock(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IClock>();
 
-    internal static ITask GetTask(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<ITask>();
-
     internal static IPlatformOutputDevice GetPlatformOutputDevice(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IPlatformOutputDevice>();
 

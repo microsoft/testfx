@@ -22,7 +22,6 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
 {
     private readonly PerRequestServerDataConsumer _service;
     private readonly ServiceProvider _serviceProvider = new();
-    private readonly Mock<ITask> _task = new();
     private readonly Mock<IServerTestHost> _serverTestHost = new();
 
     private readonly Guid _runId = Guid.NewGuid();
@@ -31,7 +30,7 @@ public sealed class ServerDataConsumerServiceTests : TestBase, IAsyncCleanable, 
         : base(testExecutionContext)
     {
         _serviceProvider.TryAddService(new PerRequestTestSessionContext(CancellationToken.None, CancellationToken.None));
-        _service = new PerRequestServerDataConsumer(_serviceProvider, _serverTestHost.Object, _runId, _task.Object);
+        _service = new PerRequestServerDataConsumer(_serviceProvider, _serverTestHost.Object, _runId);
     }
 
     public async Task ConsumeAsync_WithSessionFileArtifact()

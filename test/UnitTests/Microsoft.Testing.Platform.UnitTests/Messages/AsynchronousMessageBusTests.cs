@@ -27,7 +27,6 @@ public sealed class AsynchronousMessageBusTests : TestBase
         AsynchronousMessageBus asynchronousMessageBus = new(
             [consumer],
             new CTRLPlusCCancellationTokenSource(),
-            new SystemTask(),
             new NopLoggerFactory(),
             new SystemEnvironment());
         await asynchronousMessageBus.InitAsync();
@@ -47,7 +46,6 @@ public sealed class AsynchronousMessageBusTests : TestBase
         AsynchronousMessageBus asynchronousMessageBus = new(
             [consumerA, consumerB],
             new CTRLPlusCCancellationTokenSource(),
-            new SystemTask(),
             new NopLoggerFactory(),
             new SystemEnvironment());
         await asynchronousMessageBus.InitAsync();
@@ -77,7 +75,6 @@ public sealed class AsynchronousMessageBusTests : TestBase
         AsynchronousMessageBus asynchronousMessageBus = new(
             [consumerA, consumerB],
             new CTRLPlusCCancellationTokenSource(),
-            new SystemTask(),
             new NopLoggerFactory(),
             new SystemEnvironment());
         await asynchronousMessageBus.InitAsync();
@@ -115,7 +112,6 @@ public sealed class AsynchronousMessageBusTests : TestBase
         using AsynchronousMessageBus asynchronousMessageBus = new(
             dummyConsumers.ToArray(),
             new CTRLPlusCCancellationTokenSource(),
-            new SystemTask(),
             new NopLoggerFactory(),
             new SystemEnvironment());
         await asynchronousMessageBus.InitAsync();

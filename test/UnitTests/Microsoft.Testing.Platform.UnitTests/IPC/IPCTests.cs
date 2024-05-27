@@ -43,7 +43,6 @@ public sealed class IPCTests : TestBase
                         async _ => await Task.FromResult(VoidResponse.CachedInstance),
                         new SystemEnvironment(),
                         new Mock<ILogger>().Object,
-                        new SystemTask(),
                         _testExecutionContext.CancellationToken);
 
                     await singleConnectionNamedPipeServer.WaitConnectionAsync(_testExecutionContext.CancellationToken);
@@ -131,7 +130,6 @@ public sealed class IPCTests : TestBase
             },
             new SystemEnvironment(),
             new Mock<ILogger>().Object,
-            new SystemTask(),
             CancellationToken.None);
         singleConnectionNamedPipeServer.RegisterSerializer<VoidResponse>(new VoidResponseSerializer());
         singleConnectionNamedPipeServer.RegisterSerializer<TextMessage>(new TextMessageSerializer());
@@ -183,7 +181,6 @@ public sealed class IPCTests : TestBase
                        async _ => await Task.FromResult(VoidResponse.CachedInstance),
                        new SystemEnvironment(),
                        new Mock<ILogger>().Object,
-                       new SystemTask(),
                        maxNumberOfServerInstances: 3,
                        _testExecutionContext.CancellationToken));
         }
@@ -195,7 +192,6 @@ public sealed class IPCTests : TestBase
                 async _ => await Task.FromResult(VoidResponse.CachedInstance),
                 new SystemEnvironment(),
                 new Mock<ILogger>().Object,
-                new SystemTask(),
                 maxNumberOfServerInstances: 3,
                 _testExecutionContext.CancellationToken));
         Assert.Contains("All pipe instances are busy.", exception.Message);
