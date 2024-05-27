@@ -86,6 +86,7 @@ class AssemblyResolver :
     /// </summary>
     private readonly object _syncLock = new();
 
+    private Stack<string>? _currentlyResolvingResources;
     private bool _disposed;
 
     /// <summary>
@@ -335,7 +336,7 @@ class AssemblyResolver :
                     if (EqtTrace.IsInfoEnabled)
                     {
                         EqtTrace.Info(
-                            "AssemblyResolver: {0}: Failed to create assemblyName. Reason:{1} ",
+                            "MSTest.AssemblyResolver.OnResolve: Failed to create assemblyName '{0}'. Reason: {1} ",
                             name,
                             ex);
                     }
@@ -344,7 +345,7 @@ class AssemblyResolver :
             return null;
         }
 
-        DebugEx.Assert(requestedName != null && !StringEx.IsNullOrEmpty(requestedName.Name), "AssemblyResolver.OnResolve: requested is null or name is empty!");
+        DebugEx.Assert(requestedName != null && !StringEx.IsNullOrEmpty(requestedName.Name), "MSTest.AssemblyResolver.OnResolve: requested is null or name is empty!");
 
         foreach (string dir in searchDirectorypaths)
         {
@@ -359,7 +360,7 @@ class AssemblyResolver :
                 {
                     if (EqtTrace.IsVerboseEnabled)
                     {
-                        EqtTrace.Verbose("AssemblyResolver: Searching assembly: {0} in the directory: {1}", requestedName.Name, dir);
+                        EqtTrace.Verbose("MSTest.AssemblyResolver.OnResolve: Searching assembly '{0}' in the directory '{1}'", requestedName.Name, dir);
                     }
                 });
 
@@ -367,7 +368,33 @@ class AssemblyResolver :
             {
                 string assemblyPath = Path.Combine(dir, requestedName.Name + extension);
 
+                bool isPushed = false;
+                bool isResource = requestedName.Name.EndsWith(".resources", StringComparison.InvariantCulture);
+                if (isResource)
+                {
+                    // Check for recursive resource lookup.
+                    // This can happen when we are on non-english locale, and we try to load mscorlib.resources
+                    // (or potentially some other resources). This will trigger a new Resolve and call the method
+                    // we are currently in. If then some code in this Resolve method (like File.Exists) will again
+                    // try to access mscorlib.resources it will end up recursing forever.
+                    if (_currentlyResolvingResources != null && _currentlyResolvingResources.Count > 0 && _currentlyResolvingResources.Contains(assemblyPath))
+                    {
+                        EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Assembly '{0}' is searching for itself recursively '{1}', returning as not found.", name, assemblyPath);
+                        _resolvedAssemblies[name] = null;
+                        return null;
+                    }
+
+                    _currentlyResolvingResources ??= new Stack<string>(4);
+                    _currentlyResolvingResources.Push(assemblyPath);
+                    isPushed = true;
+                }
+
                 Assembly? assembly = SearchAndLoadAssembly(assemblyPath, name, requestedName, isReflectionOnly);
+                if (isResource && isPushed)
+                {
+                    _currentlyResolvingResources?.Pop();
+                }
+
                 if (assembly != null)
                 {
                     return assembly;
@@ -447,7 +474,7 @@ class AssemblyResolver :
     {
         if (StringEx.IsNullOrEmpty(args.Name))
         {
-            Debug.Fail("AssemblyResolver.OnResolve: args.Name is null or empty.");
+            Debug.Fail("MSTest.AssemblyResolver.OnResolve: args.Name is null or empty.");
             return null;
         }
 
@@ -457,7 +484,7 @@ class AssemblyResolver :
             {
                 if (EqtTrace.IsInfoEnabled)
                 {
-                    EqtTrace.Info("AssemblyResolver: Resolving assembly: {0}.", args.Name);
+                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly '{0}'", args.Name);
                 }
             });
 
@@ -469,7 +496,7 @@ class AssemblyResolver :
             {
                 if (EqtTrace.IsInfoEnabled)
                 {
-                    EqtTrace.Info("AssemblyResolver: Resolving assembly after applying policy: {0}.", assemblyNameToLoad);
+                    EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolving assembly after applying policy '{0}'", assemblyNameToLoad);
                 }
             });
 
@@ -488,54 +515,53 @@ class AssemblyResolver :
                 return assembly;
             }
 
-            if (_directoryList != null && _directoryList.Count != 0)
+            bool isResource = assemblyNameToLoad.EndsWith(".resources", StringComparison.InvariantCulture);
+
+            // required assembly is not present in searchDirectories??
+            // see, if we can find it in user specified search directories.
+            while (assembly == null && _directoryList?.Count > 0)
             {
-                // required assembly is not present in searchDirectories??
-                // see, if we can find it in user specified search directories.
-                while (assembly == null && _directoryList.Count > 0)
+                // instead of loading whole search directory in one time, we are adding directory on the basis of need
+                RecursiveDirectoryPath currentNode = _directoryList.Dequeue();
+
+                List<string> incrementalSearchDirectory = [];
+
+                if (DoesDirectoryExist(currentNode.DirectoryPath))
                 {
-                    // instead of loading whole search directory in one time, we are adding directory on the basis of need
-                    RecursiveDirectoryPath currentNode = _directoryList.Dequeue();
+                    incrementalSearchDirectory.Add(currentNode.DirectoryPath);
 
-                    List<string> incrementalSearchDirectory = [];
-
-                    if (DoesDirectoryExist(currentNode.DirectoryPath))
+                    if (currentNode.IncludeSubDirectories)
                     {
-                        incrementalSearchDirectory.Add(currentNode.DirectoryPath);
+                        // Add all its sub-directory in depth first search order.
+                        AddSubdirectories(currentNode.DirectoryPath, incrementalSearchDirectory);
+                    }
 
-                        if (currentNode.IncludeSubDirectories)
+                    // Add this directory list in this.searchDirectories so that when we will try to resolve some other
+                    // assembly, then it will look in this whole directory first.
+                    _searchDirectories.AddRange(incrementalSearchDirectory);
+
+                    assembly = SearchAssembly(incrementalSearchDirectory, assemblyNameToLoad, isReflectionOnly);
+                }
+                else
+                {
+                    // generate warning that path does not exist.
+                    SafeLog(
+                        assemblyNameToLoad,
+                        () =>
                         {
-                            // Add all its sub-directory in depth first search order.
-                            AddSubdirectories(currentNode.DirectoryPath, incrementalSearchDirectory);
-                        }
-
-                        // Add this directory list in this.searchDirectories so that when we will try to resolve some other
-                        // assembly, then it will look in this whole directory first.
-                        _searchDirectories.AddRange(incrementalSearchDirectory);
-
-                        assembly = SearchAssembly(incrementalSearchDirectory, assemblyNameToLoad, isReflectionOnly);
-                    }
-                    else
-                    {
-                        // generate warning that path does not exist.
-                        SafeLog(
-                            assemblyNameToLoad,
-                            () =>
+                            if (EqtTrace.IsWarningEnabled)
                             {
-                                if (EqtTrace.IsWarningEnabled)
-                                {
-                                    EqtTrace.Warning(
-                                    "The Directory: {0}, does not exist",
-                                    currentNode.DirectoryPath);
-                                }
-                            });
-                    }
+                                EqtTrace.Warning(
+                                "MSTest.AssemblyResolver.OnResolve: the directory '{0}', does not exist",
+                                currentNode.DirectoryPath);
+                            }
+                        });
                 }
+            }
 
-                if (assembly != null)
-                {
-                    return assembly;
-                }
+            if (assembly != null)
+            {
+                return assembly;
             }
 
             // Try for default load for System dlls that can't be found in search paths. Needs to loaded just by name.
@@ -580,7 +606,7 @@ class AssemblyResolver :
                     {
                         if (EqtTrace.IsInfoEnabled)
                         {
-                            EqtTrace.Info("AssemblyResolver: {0}: Failed to load assembly. Reason: {1}", assemblyNameToLoad, ex);
+                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason: {1}", assemblyNameToLoad, ex);
                         }
                     });
             }
@@ -609,7 +635,7 @@ class AssemblyResolver :
                 {
                     if (EqtTrace.IsInfoEnabled)
                     {
-                        EqtTrace.Info("AssemblyResolver: Resolved: {0}.", assemblyName);
+                        EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolved '{0}'", assemblyName);
                     }
                 });
             return true;
@@ -685,7 +711,7 @@ class AssemblyResolver :
                     {
                         if (EqtTrace.IsInfoEnabled)
                         {
-                            EqtTrace.Info("AssemblyResolver: Resolved assembly: {0}. ", assemblyName);
+                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Resolved assembly '{0}'", assemblyName);
                         }
                     });
 
@@ -699,7 +725,7 @@ class AssemblyResolver :
                     {
                         if (EqtTrace.IsInfoEnabled)
                         {
-                            EqtTrace.Info("AssemblyResolver: Failed to load assembly: {0}. Reason:{1} ", assemblyName, ex);
+                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
                         }
                     });
 
@@ -717,7 +743,7 @@ class AssemblyResolver :
                     {
                         if (EqtTrace.IsInfoEnabled)
                         {
-                            EqtTrace.Info("AssemblyResolver: Failed to load assembly: {0}. Reason:{1} ", assemblyName, ex);
+                            EqtTrace.Info("MSTest.AssemblyResolver.OnResolve: Failed to load assembly '{0}'. Reason:{1} ", assemblyName, ex);
                         }
                     });
         }
