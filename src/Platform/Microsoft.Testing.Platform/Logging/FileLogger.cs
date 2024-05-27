@@ -70,7 +70,7 @@ internal sealed class FileLogger : IDisposable
             _asyncLogs = [];
 #endif
 
-            _logLoop = task.Run(WriteLogToFileAsync, CancellationToken.None);
+            _logLoop = Task.Run(WriteLogToFileAsync, CancellationToken.None);
         }
 
         if (_options.FileName is not null)

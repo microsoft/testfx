@@ -40,7 +40,7 @@ internal class AsyncConsumerDataProcessor : IDisposable
         DataConsumer = consumer;
         _task = task;
         _cancellationToken = cancellationToken;
-        _consumeTask = task.Run(ConsumeAsync, cancellationToken);
+        _consumeTask = Task.Run(ConsumeAsync, cancellationToken);
     }
 
     public IDataConsumer DataConsumer { get; }

@@ -58,7 +58,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
 #else
         _asyncLogs = [];
 #endif
-        _logLoop = task.Run(WriteLogMessageAsync, CancellationToken.None);
+        _logLoop = Task.Run(WriteLogMessageAsync, CancellationToken.None);
     }
 
     private async Task WriteLogMessageAsync()
