@@ -127,7 +127,7 @@ internal class AsyncConsumerDataProcessor : IDisposable
                 break;
             }
 
-            await _task.Delay(currentDelayTimeMs);
+            await Task.Delay(currentDelayTimeMs);
             currentDelayTimeMs = Math.Min(currentDelayTimeMs + minDelayTimeMs, 200);
 
             if (_consumerState.Task.IsFaulted)

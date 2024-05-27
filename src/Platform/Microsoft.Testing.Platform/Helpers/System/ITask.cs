@@ -11,6 +11,4 @@ internal interface ITask
     Task Delay(int millisecondDelay);
 
     Task Delay(TimeSpan timeSpan, CancellationToken cancellation);
-
-    Task Delay(TimeSpan timeSpan);
 }

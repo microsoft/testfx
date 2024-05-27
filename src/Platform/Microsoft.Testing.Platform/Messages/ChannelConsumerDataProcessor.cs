@@ -14,7 +14,6 @@ namespace Microsoft.Testing.Platform.Messages;
 [DebuggerDisplay("DataConsumer = {DataConsumer.Uid}")]
 internal class AsyncConsumerDataProcessor : IDisposable
 {
-    private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
     private readonly Channel<(IDataProducer DataProducer, IData Data)> _channel = Channel.CreateUnbounded<(IDataProducer DataProducer, IData Data)>(new UnboundedChannelOptions()
     {
@@ -38,7 +37,6 @@ internal class AsyncConsumerDataProcessor : IDisposable
     public AsyncConsumerDataProcessor(IDataConsumer consumer, ITask task, CancellationToken cancellationToken)
     {
         DataConsumer = consumer;
-        _task = task;
         _cancellationToken = cancellationToken;
         _consumeTask = Task.Run(ConsumeAsync, cancellationToken);
     }
@@ -137,7 +135,7 @@ internal class AsyncConsumerDataProcessor : IDisposable
                 break;
             }
 
-            await _task.Delay(currentDelayTimeMs);
+            await Task.Delay(currentDelayTimeMs);
             currentDelayTimeMs = Math.Min(currentDelayTimeMs + minDelayTimeMs, 200);
 
             if (_consumerState.Task.IsFaulted)
