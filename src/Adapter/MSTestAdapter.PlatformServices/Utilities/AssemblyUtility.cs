@@ -280,12 +280,9 @@ internal class AssemblyUtility
         string executingAssembly = Path.GetDirectoryName(Path.GetFullPath(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath))!;
 
         // Add the application base for this domain.
-        if (string.Equals(executingAssembly, baseDirectory, StringComparison.OrdinalIgnoreCase))
-        {
-            return [executingAssembly];
-        }
-
-        return [executingAssembly, baseDirectory];
+        return string.Equals(executingAssembly, baseDirectory, StringComparison.OrdinalIgnoreCase) ?
+            [executingAssembly] :
+            [executingAssembly, baseDirectory];
     }
 #endif
 }
