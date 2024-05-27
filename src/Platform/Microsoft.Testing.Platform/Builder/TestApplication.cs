@@ -221,9 +221,10 @@ public sealed class TestApplication : ITestApplication
             async Task LogVariableAsync(string key)
             {
                 string? value;
-                if ((value = environment.GetEnvironmentVariable($"{key}_{testHostControllerPID}")) is not null)
+                key = $"{key}_{testHostControllerPID}";
+                if ((value = environment.GetEnvironmentVariable(key)) is not null)
                 {
-                    await logger.LogDebugAsync($"{key}_{testHostControllerPID} '{value}'");
+                    await logger.LogDebugAsync($"{key} '{value}'");
                 }
             }
         }
