@@ -23,7 +23,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
     private readonly IEnvironment _environment;
     private readonly NamedPipeServerStream _namedPipeServerStream;
     private readonly ILogger _logger;
-    private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
     private readonly MemoryStream _serializationBuffer = new();
     private readonly MemoryStream _messageBuffer = new();
@@ -36,9 +35,8 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         Func<IRequest, Task<IResponse>> callback,
         IEnvironment environment,
         ILogger logger,
-        ITask task,
         CancellationToken cancellationToken)
-        : this(GetPipeName(name), callback, environment, logger, task, cancellationToken)
+        : this(GetPipeName(name), callback, environment, logger, cancellationToken)
     {
     }
 
@@ -47,9 +45,8 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         Func<IRequest, Task<IResponse>> callback,
         IEnvironment environment,
         ILogger logger,
-        ITask task,
         CancellationToken cancellationToken)
-        : this(pipeNameDescription, callback, environment, logger, task, maxNumberOfServerInstances: 1, cancellationToken)
+        : this(pipeNameDescription, callback, environment, logger, maxNumberOfServerInstances: 1, cancellationToken)
     {
     }
 
@@ -58,7 +55,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         Func<IRequest, Task<IResponse>> callback,
         IEnvironment environment,
         ILogger logger,
-        ITask task,
         int maxNumberOfServerInstances,
         CancellationToken cancellationToken)
     {
@@ -67,7 +63,6 @@ internal sealed class NamedPipeServer : NamedPipeBase, IServer
         _callback = callback;
         _environment = environment;
         _logger = logger;
-        _task = task;
         _cancellationToken = cancellationToken;
     }
 

@@ -97,7 +97,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 HandleRequestAsync,
                 _environment,
                 _loggerFactory.CreateLogger<NamedPipeServer>(),
-                ServiceProvider.GetTask(), abortRun);
+                abortRun);
             testHostControllerIpc.RegisterAllSerializers();
 
 #if NET8_0_OR_GREATER
