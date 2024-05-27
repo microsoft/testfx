@@ -31,10 +31,7 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
                 continue;
             }
 
-            if (serviceInstance is IAsyncInitializableExtension async)
-            {
-                await async.InitializeAsync();
-            }
+            await serviceInstance.TryInitializeAsync();
 
             IConfigurationProvider configurationProvider = serviceInstance.Build();
             await configurationProvider.LoadAsync();

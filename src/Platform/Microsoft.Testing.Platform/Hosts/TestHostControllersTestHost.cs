@@ -86,7 +86,6 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 $"--{PlatformCommandLineProvider.TestHostControllerPIDOptionKey}",
                 processIdString,
             };
-            CommandLineInfo finalCommandLine = new(executableInfo.FileName, partialCommandLine, testApplicationFullPath);
 
             // Prepare the environment variables used by the test host
             string processCorrelationId = Guid.NewGuid().ToString("N");
@@ -101,12 +100,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             testHostControllerIpc.RegisterAllSerializers();
 
 #if NET8_0_OR_GREATER
-            IEnumerable<string> arguments = finalCommandLine.Arguments;
+            IEnumerable<string> arguments = partialCommandLine;
 #else
-            string arguments = string.Join(" ", finalCommandLine.Arguments);
+            string arguments = string.Join(" ", partialCommandLine);
 #endif
             ProcessStartInfo processStartInfo = new(
-                finalCommandLine.FileName,
+                executableInfo.FileName,
                 arguments)
             {
                 EnvironmentVariables =
