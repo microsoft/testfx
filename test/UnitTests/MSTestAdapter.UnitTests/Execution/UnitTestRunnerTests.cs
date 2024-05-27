@@ -378,10 +378,6 @@ public class UnitTestRunnerTests : TestContainer
     [DummyTestClass]
     private class DummyTestClassWithCleanupMethods
     {
-        public DummyTestClassWithCleanupMethods()
-        {
-        }
-
         public static Action AssemblyCleanupMethodBody { get; set; }
 
         public static Action ClassCleanupMethodBody { get; set; }
@@ -400,9 +396,7 @@ public class UnitTestRunnerTests : TestContainer
         public void TestMethod() => TestMethodBody?.Invoke(TestContext);
     }
 
-    private class DummyTestClassAttribute : UTF.TestClassAttribute
-    {
-    }
+    private class DummyTestClassAttribute : UTF.TestClassAttribute;
 
     #endregion
 }

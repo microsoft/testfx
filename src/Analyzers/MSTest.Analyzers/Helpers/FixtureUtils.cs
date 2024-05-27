@@ -87,7 +87,7 @@ internal static class FixtureUtils
             : methodSymbol.Parameters.Length == 1 && SymbolEqualityComparer.Default.Equals(methodSymbol.Parameters[0].Type, testContextSymbol);
 
     private static bool HasValidReturnType(IMethodSymbol methodSymbol, INamedTypeSymbol? taskSymbol, INamedTypeSymbol? valueTaskSymbol)
-        => (methodSymbol.ReturnsVoid && !methodSymbol.IsAsync)
+        => methodSymbol is { ReturnsVoid: true, IsAsync: false }
         || (taskSymbol is not null && SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol))
         || (valueTaskSymbol is not null && SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol));
 }

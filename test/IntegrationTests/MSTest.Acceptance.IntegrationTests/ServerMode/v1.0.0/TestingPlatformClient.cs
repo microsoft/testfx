@@ -156,7 +156,7 @@ public sealed class TestingPlatformClient : IDisposable
         _processHandler.Dispose();
     }
 
-    public record class Log(LogLevel LogLevel, string Message);
+    public record Log(LogLevel LogLevel, string Message);
 
     private sealed class TargetHandler
     {

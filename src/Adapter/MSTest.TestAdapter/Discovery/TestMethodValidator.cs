@@ -68,9 +68,9 @@ internal class TestMethodValidator
         // Todo: Decide whether parameter count matters.
         // The isGenericMethod check below id to verify that there are no closed generic methods slipping through.
         // Closed generic methods being GenericMethod<int> and open being GenericMethod<TAttribute>.
-        bool isValidTestMethod = isAccessible && !testMethodInfo.IsAbstract && !testMethodInfo.IsStatic
-                                && !testMethodInfo.IsGenericMethod
-                                && testMethodInfo.IsValidReturnType();
+        bool isValidTestMethod = isAccessible &&
+                                 testMethodInfo is { IsAbstract: false, IsStatic: false, IsGenericMethod: false } &&
+                                 testMethodInfo.IsValidReturnType();
 
         if (!isValidTestMethod)
         {

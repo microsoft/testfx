@@ -28,7 +28,7 @@ internal sealed class SystemEnvironmentVariableProvider(IEnvironment environment
     {
         foreach (DictionaryEntry entry in _environment.GetEnvironmentVariables())
         {
-            environmentVariables.SetVariable(new(entry.Key!.ToString()!, entry.Value!.ToString(), false, false));
+            environmentVariables.SetVariable(new(entry.Key.ToString()!, entry.Value!.ToString(), false, false));
         }
 
         return Task.CompletedTask;

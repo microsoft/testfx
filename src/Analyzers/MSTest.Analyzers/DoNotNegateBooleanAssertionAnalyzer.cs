@@ -56,7 +56,7 @@ public sealed class DoNotNegateBooleanAssertionAnalyzer : DiagnosticAnalyzer
 
         IArgumentOperation? conditionArgument = invocationOperation.Arguments.FirstOrDefault(x => x.Parameter?.Name == "condition");
         if (conditionArgument != null
-            && conditionArgument.Children.Any(op => op is IUnaryOperation unary && unary.OperatorKind == UnaryOperatorKind.Not))
+            && conditionArgument.Children.Any(op => op is IUnaryOperation { OperatorKind: UnaryOperatorKind.Not }))
         {
             context.ReportDiagnostic(invocationOperation.CreateDiagnostic(Rule));
         }

@@ -6,6 +6,4 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 /// <summary>
 /// Represents a color.
 /// </summary>
-public interface IColor
-{
-}
+public interface IColor;

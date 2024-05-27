@@ -3,6 +3,4 @@
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal sealed class RemoteInvocationException : Exception
-{
-}
+internal sealed class RemoteInvocationException : Exception;

@@ -406,6 +406,12 @@
   <data name="TestMethodShouldNotBeIgnoredAnalyzerTitle" xml:space="preserve">
     <value>Test method should not be ignored</value>
   </data>
+  <data name="UseAsyncSuffixTestFixtureMethodSuppressorJustification" xml:space="preserve">
+    <value>Asynchronous test fixture methods do not require the 'Async' suffix</value>
+  </data>
+  <data name="UseAsyncSuffixTestMethodSuppressorJustification" xml:space="preserve">
+    <value>Asynchronous test methods do not require the 'Async' suffix</value>
+  </data>
   <data name="UseAttributeOnTestMethodAnalyzerMessageFormat" xml:space="preserve">
     <value>[{0}] can only be set on methods marked with [TestMethod]</value>
   </data>

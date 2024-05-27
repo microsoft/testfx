@@ -65,6 +65,6 @@ internal class PlainProcess : IStep<BuildArtifact, Files>
 
         ZipFile.CreateFromDirectory(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
 
-        return new Files(new[] { sample });
+        return new Files([sample]);
     }
 }

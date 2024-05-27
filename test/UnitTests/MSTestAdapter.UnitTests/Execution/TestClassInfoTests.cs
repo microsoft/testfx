@@ -646,9 +646,7 @@ public class TestClassInfoTests : TestContainer
         public static void ClassCleanupMethod() => ClassCleanupMethodBody?.Invoke();
     }
 
-    private class DummyTestClassAttribute : UTF.TestClassAttribute
-    {
-    }
+    private class DummyTestClassAttribute : UTF.TestClassAttribute;
 
     private static class FailingStaticHelper
     {

@@ -3,6 +3,4 @@
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal sealed class NopFilter : ITestExecutionFilter
-{
-}
+internal sealed class NopFilter : ITestExecutionFilter;

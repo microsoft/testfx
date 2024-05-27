@@ -417,7 +417,7 @@ internal abstract class DeploymentUtilityBase
 
         // Log warnings
         LogWarnings(testExecutionRecorder, warnings);
-        return deploymentItems != null && deploymentItems.Count > 0;
+        return deploymentItems is { Count: > 0 };
     }
 
     private bool IsDeploymentItemSourceAFile(string deploymentItemSourcePath, string testSource, out string file)

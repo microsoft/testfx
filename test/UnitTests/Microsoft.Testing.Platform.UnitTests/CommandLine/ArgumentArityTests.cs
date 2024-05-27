@@ -23,15 +23,15 @@ public class ArgumentArityTests : TestBase
     private readonly Mock<IRuntimeFeature> _runtimeFeatureMock = new();
     private readonly Mock<IEnvironment> _environmentMock = new();
     private readonly Mock<IProcessHandler> _processHandlerMock = new();
-    private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders = new[]
-    {
-        new PlatformCommandLineProvider(),
-    };
+    private readonly ICommandLineOptionsProvider[] _systemCommandLineOptionsProviders =
+    [
+        new PlatformCommandLineProvider()
+    ];
 
-    private readonly ICommandLineOptionsProvider[] _extensionCommandLineOptionsProviders = new[]
-    {
-        new ExtensionCommandLineProviderMockOptionsWithDifferentArity(),
-    };
+    private readonly ICommandLineOptionsProvider[] _extensionCommandLineOptionsProviders =
+    [
+        new ExtensionCommandLineProviderMockOptionsWithDifferentArity()
+    ];
 
     public ArgumentArityTests(ITestExecutionContext testExecutionContext)
         : base(testExecutionContext)

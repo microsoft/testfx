@@ -7,6 +7,4 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// The test cleanup attribute marks methods that are executed after every test marked with a <see cref="TestMethodAttribute"/>.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-public sealed class TestCleanupAttribute : Attribute
-{
-}
+public sealed class TestCleanupAttribute : Attribute;

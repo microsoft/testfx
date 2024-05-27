@@ -24,10 +24,10 @@ public class LoggerFactoryTests : TestBase
         _mockMonitor.Setup(x => x.Lock(It.IsAny<object>())).Returns(new Mock<IDisposable>().Object);
         _mockLoggerProvider.Setup(x => x.CreateLogger(It.IsAny<string>())).Returns(_mockLogger.Object);
 
-        _loggerProviders = new[]
-        {
-            _mockLoggerProvider.Object,
-        };
+        _loggerProviders =
+        [
+            _mockLoggerProvider.Object
+        ];
     }
 
     public void LoggerFactory_LoggerCreatedOnlyOnce()
@@ -41,6 +41,4 @@ public class LoggerFactoryTests : TestBase
     }
 }
 
-internal interface IDisposableLoggerProvider : ILoggerProvider, IDisposable
-{
-}
+internal interface IDisposableLoggerProvider : ILoggerProvider, IDisposable;

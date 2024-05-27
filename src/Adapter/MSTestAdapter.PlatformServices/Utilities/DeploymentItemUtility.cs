@@ -117,7 +117,7 @@ internal class DeploymentItemUtility
     {
         KeyValuePair<string, string>[]? deploymentItems = GetDeploymentItems(testCase);
 
-        return deploymentItems != null && deploymentItems.Length > 0;
+        return deploymentItems is { Length: > 0 };
     }
 
     internal static IList<DeploymentItem> GetDeploymentItems(IEnumerable<TestCase> tests)

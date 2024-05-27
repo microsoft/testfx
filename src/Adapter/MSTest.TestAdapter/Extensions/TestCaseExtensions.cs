@@ -127,13 +127,13 @@ internal static class TestCaseExtensions
         }
 
         string[]? workItemIds = testCase.GetPropertyValue<string[]>(Constants.WorkItemIdsProperty, null);
-        if (workItemIds != null && workItemIds.Length > 0)
+        if (workItemIds is { Length: > 0 })
         {
             testElement.WorkItemIds = workItemIds;
         }
 
         KeyValuePair<string, string>[]? deploymentItems = testCase.GetPropertyValue<KeyValuePair<string, string>[]>(Constants.DeploymentItemsProperty, null);
-        if (deploymentItems != null && deploymentItems.Length > 0)
+        if (deploymentItems is { Length: > 0 })
         {
             testElement.DeploymentItems = deploymentItems;
         }
