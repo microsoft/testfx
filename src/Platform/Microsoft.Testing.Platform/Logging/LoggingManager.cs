@@ -28,10 +28,7 @@ internal sealed class LoggingManager : ILoggingManager
                 continue;
             }
 
-            if (serviceInstance is IAsyncInitializableExtension async)
-            {
-                await async.InitializeAsync();
-            }
+            await serviceInstance.TryInitialize();
 
             loggerProviders.Add(serviceInstance);
         }

@@ -26,10 +26,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             IPlatformOutputDevice platformOutputDevice = _platformOutputDeviceFactory(serviceProvider);
             if (await platformOutputDevice.IsEnabledAsync())
             {
-                if (platformOutputDevice is IAsyncInitializableExtension platformOutputDeviceAsync)
-                {
-                    await platformOutputDeviceAsync.InitializeAsync();
-                }
+                await platformOutputDevice.TryInitialize();
 
                 return platformOutputDevice;
             }

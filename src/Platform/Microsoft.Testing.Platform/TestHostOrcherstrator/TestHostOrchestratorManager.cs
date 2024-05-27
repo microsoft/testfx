@@ -42,10 +42,7 @@ internal class TestHostOrchestratorManager : ITestHostOrchestratorManager
             // We initialize only if enabled
             if (await orchestrator.IsEnabledAsync())
             {
-                if (orchestrator is IAsyncInitializableExtension async)
-                {
-                    await async.InitializeAsync();
-                }
+                await orchestrator.TryInitialize();
 
                 // Register the extension for usage
                 orchestrators.Add(orchestrator);

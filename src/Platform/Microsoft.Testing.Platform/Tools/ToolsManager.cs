@@ -27,10 +27,7 @@ internal sealed class ToolsManager : IToolsManager
                 continue;
             }
 
-            if (tool is IAsyncInitializableExtension async)
-            {
-                await async.InitializeAsync();
-            }
+            await tool.TryInitialize();
 
             tools.Add(tool);
         }

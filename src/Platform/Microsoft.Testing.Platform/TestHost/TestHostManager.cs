@@ -51,10 +51,7 @@ internal sealed class TestHostManager : ITestHostManager
         // We initialize only if enabled
         if (await testAdapterInvoke.IsEnabledAsync())
         {
-            if (testAdapterInvoke is IAsyncInitializableExtension async)
-            {
-                await async.InitializeAsync();
-            }
+            await testAdapterInvoke.TryInitialize();
 
             return ActionResult.Ok(testAdapterInvoke);
         }
@@ -85,10 +82,7 @@ internal sealed class TestHostManager : ITestHostManager
         // We initialize only if enabled
         if (await testExecutionFilterFactory.IsEnabledAsync())
         {
-            if (testExecutionFilterFactory is IAsyncInitializableExtension async)
-            {
-                await async.InitializeAsync();
-            }
+            await testExecutionFilterFactory.TryInitialize();
 
             return ActionResult.Ok(testExecutionFilterFactory);
         }
@@ -119,10 +113,7 @@ internal sealed class TestHostManager : ITestHostManager
             // We initialize only if enabled
             if (await service.IsEnabledAsync())
             {
-                if (service is IAsyncInitializableExtension async)
-                {
-                    await async.InitializeAsync();
-                }
+                await service.TryInitialize();
 
                 // Register the extension for usage
                 testApplicationLifecycleCallbacks.Add(service);
@@ -169,10 +160,7 @@ internal sealed class TestHostManager : ITestHostManager
             // We initialize only if enabled
             if (await service.IsEnabledAsync())
             {
-                if (service is IAsyncInitializableExtension async)
-                {
-                    await async.InitializeAsync();
-                }
+                await service.TryInitialize();
 
                 // Register the extension for usage
                 dataConsumers.Add((service, _factoryOrdering.IndexOf(dataConsumerFactory)));
@@ -202,10 +190,7 @@ internal sealed class TestHostManager : ITestHostManager
                 // We initialize only if enabled
                 if (await instance.IsEnabledAsync())
                 {
-                    if (instance is IAsyncInitializableExtension async)
-                    {
-                        await async.InitializeAsync();
-                    }
+                    await instance.TryInitialize();
                 }
 
                 // Add to the list of shared singletons
@@ -269,10 +254,7 @@ internal sealed class TestHostManager : ITestHostManager
             // We initialize only if enabled
             if (await service.IsEnabledAsync())
             {
-                if (service is IAsyncInitializableExtension async)
-                {
-                    await async.InitializeAsync();
-                }
+                await service.TryInitialize();
 
                 // Register the extension for usage
                 testSessionLifetimeHandlers.Add((service, _factoryOrdering.IndexOf(testSessionLifetimeHandlerFactory)));
@@ -302,10 +284,7 @@ internal sealed class TestHostManager : ITestHostManager
                 // We initialize only if enabled
                 if (await instance.IsEnabledAsync())
                 {
-                    if (instance is IAsyncInitializableExtension async)
-                    {
-                        await async.InitializeAsync();
-                    }
+                    await instance.TryInitialize();
                 }
 
                 // Add to the list of shared singletons

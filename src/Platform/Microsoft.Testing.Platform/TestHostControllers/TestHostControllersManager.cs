@@ -111,10 +111,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             // We initialize only if enabled
             if (await envVarProvider.IsEnabledAsync())
             {
-                if (envVarProvider is IAsyncInitializableExtension async)
-                {
-                    await async.InitializeAsync();
-                }
+                await envVarProvider.TryInitialize();
 
                 // Register the extension for usage
                 environmentVariableProviders.Add((envVarProvider, _factoryOrdering.IndexOf(environmentVariableProviderFactory)));
@@ -140,10 +137,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 // We initialize only if enabled
                 if (await instance.IsEnabledAsync())
                 {
-                    if (instance is IAsyncInitializableExtension async)
-                    {
-                        await async.InitializeAsync();
-                    }
+                    await instance.TryInitialize();
                 }
 
                 // Add to the list of shared singletons
@@ -184,10 +178,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             // We initialize only if enabled
             if (await lifetimeHandler.IsEnabledAsync())
             {
-                if (lifetimeHandler is IAsyncInitializableExtension async)
-                {
-                    await async.InitializeAsync();
-                }
+                await lifetimeHandler.TryInitialize();
 
                 // Register the extension for usage
                 lifetimeHandlers.Add((lifetimeHandler, _factoryOrdering.IndexOf(lifetimeHandlerFactory)));
@@ -212,10 +203,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 // We initialize only if enabled
                 if (await instance.IsEnabledAsync())
                 {
-                    if (instance is IAsyncInitializableExtension async)
-                    {
-                        await async.InitializeAsync();
-                    }
+                    await instance.TryInitialize();
                 }
 
                 // Add to the list of shared singletons
@@ -256,10 +244,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
             // We initialize only if enabled
             if (await service.IsEnabledAsync())
             {
-                if (service is IAsyncInitializableExtension async)
-                {
-                    await async.InitializeAsync();
-                }
+                await service.TryInitialize();
 
                 // Register the extension for usage
                 dataConsumers.Add((service, _factoryOrdering.IndexOf(dataConsumerFactory)));
@@ -289,10 +274,7 @@ internal sealed class TestHostControllersManager : ITestHostControllersManager
                 // We initialize only if enabled
                 if (await instance.IsEnabledAsync())
                 {
-                    if (instance is IAsyncInitializableExtension async)
-                    {
-                        await async.InitializeAsync();
-                    }
+                    await instance.TryInitialize();
                 }
 
                 // Add to the list of shared singletons

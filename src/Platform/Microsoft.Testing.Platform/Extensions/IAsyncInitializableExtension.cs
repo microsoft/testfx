@@ -13,3 +13,14 @@ public interface IAsyncInitializableExtension
     /// </summary>
     Task InitializeAsync();
 }
+
+internal static class InitializableExtension
+{
+    public static async Task TryInitialize(this object target)
+    {
+        if (target is IAsyncInitializableExtension initializable)
+        {
+            await initializable.InitializeAsync();
+        }
+    }
+}
