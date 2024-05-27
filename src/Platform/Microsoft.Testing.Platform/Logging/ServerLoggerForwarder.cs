@@ -39,7 +39,7 @@ internal sealed class ServerLoggerForwarder : ILogger, IDisposable
     private bool _isDisposed;
 
     // NOTE: We have to take the service provider because when the logger is created, the ServerTestHost is not yet registered.
-    public ServerLoggerForwarder(LogLevel logLevel, ITask task, IServerTestHost serverTestHost)
+    public ServerLoggerForwarder(LogLevel logLevel, IServerTestHost serverTestHost)
     {
         _logLevel = logLevel;
         _serverTestHost = serverTestHost;

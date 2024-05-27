@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using Microsoft.Testing.Platform.Hosts;
-using Microsoft.Testing.Platform.Services;
 
 namespace Microsoft.Testing.Platform.Logging;
 
@@ -18,7 +17,7 @@ internal sealed class ServerLoggerForwarderProvider(LogLevel logLevel, IServiceP
     public ILogger CreateLogger(string categoryName)
         => _serverTestHost is null
         ? _serverLogMessageInMemoryStore
-        : new ServerLoggerForwarder(_logLevel, serviceProvider.GetTask(), _serverTestHost);
+        : new ServerLoggerForwarder(_logLevel, _serverTestHost);
 
     public async Task InitializeAsync(ServerTestHost serverTestHost)
     {
