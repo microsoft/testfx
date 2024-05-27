@@ -5,7 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Security;
-using System.Xml.Serialization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
@@ -93,7 +92,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// Checks to see if a member or type is decorated with the given attribute, or an attribute that derives from it. e.g. [MyTestClass] from [TestClass] will match if you look for [TestClass]. The inherit parameter does not impact this checking.
     /// </summary>
     /// <typeparam name="TAttribute">Attribute to search for.</typeparam>
-    /// <param name="type">Type to test.</param>
+    /// <param name="memberInfo">Member to inspect for attributes.</param>
     /// <param name="inherit">Inspect inheritance chain of the member or class. E.g. if parent class has this attribute defined.</param>
     /// <returns>True if the attribute of the specified type is defined on this member or a class.</returns>
     public virtual /* for testing */ bool IsDerivedAttributeDefined<TAttribute>(MemberInfo memberInfo, bool inherit)
@@ -106,19 +105,6 @@ internal class ReflectHelper : MarshalByRefObject
 
         // Get all attributes on the member.
         Attribute[] attributes = GetCustomAttributesCached(memberInfo, inherit);
-        if (attributes == null)
-        {
-            // TODO:
-            bool a = true;
-            if (a)
-            {
-                throw new NotSupportedException("THIS FALLBACK!");
-            }
-
-            PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning($"{nameof(ReflectHelper)}.{nameof(GetCustomAttributesCached)}: {Resource.FailedFetchAttributeCache}");
-
-            return IsNonDerivedAttributeDefined<TAttribute>(memberInfo, inherit);
-        }
 
         // Try to find the attribute that is derived from baseAttrType.
         foreach (Attribute attribute in attributes)
@@ -166,13 +152,7 @@ internal class ReflectHelper : MarshalByRefObject
             throw new TypeInspectionException(errorMessage);
         }
 
-        // TODO: we can probably do better if we grab the enumerator? 
-        if (expectedException == null)
-        {
-            return null;
-        }
-
-        return expectedException;
+        return expectedException ?? null;
     }
 
     /// <summary>
@@ -397,7 +377,6 @@ internal class ReflectHelper : MarshalByRefObject
         }
     }
 
-
     /// <summary>
     /// Get attribute defined on a method which is of given type of subtype of given type.
     /// </summary>
@@ -433,8 +412,6 @@ internal class ReflectHelper : MarshalByRefObject
 
         return ownerAttribute?.Owner;
     }
-
-
 
     /// <summary>
     /// Gets and caches the attributes for the given type, or method.
@@ -489,12 +466,7 @@ internal class ReflectHelper : MarshalByRefObject
 
                 PlatformServiceProvider.Instance.AdapterTraceLogger.LogWarning(Resource.FailedToGetCustomAttribute, attributeProvider.GetType().FullName!, description);
 
-                // Since we cannot check by attribute names, do it in reflection way.
-                // Note 1: this will not work for different version of assembly but it is better than nothing.
-                // Note 2: we cannot cache this because we don't know if there are other attributes defined.
-
-                // TODO: handle this instead polluting the api with null check, that we don't handle correctly in most places. This path is already expensive and this way we can at least keep it unified.
-                return null;
+                return Array.Empty<Attribute>();
             }
 
             DebugEx.Assert(attributes != null, "attributes should not be null.");
@@ -525,7 +497,7 @@ internal class ReflectHelper : MarshalByRefObject
     internal class NotCachedAttributeHelper : INotCachedAttributeHelper
     {
         /// <summary>
-        /// Get custom attributes on a member without cache. 
+        /// Get custom attributes on a member without cache.
         /// </summary>
         /// <param name="attributeProvider">Member for which attributes needs to be retrieved.</param>
         /// <param name="inherit">If inherited type of attribute.</param>
@@ -546,8 +518,9 @@ internal class ReflectHelper : MarshalByRefObject
         }
     }
 
-    internal void ClearCache()
+    internal /* for tests */ void ClearCache()
     {
+        // Tests manipulate the platform reflection provider, and we end up caching different attributes than the class / method actually has.
         _inheritedAttributeCache.Clear();
         _nonInheritedAttributeCache.Clear();
     }
