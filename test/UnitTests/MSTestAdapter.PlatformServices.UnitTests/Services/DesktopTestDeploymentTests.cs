@@ -139,12 +139,12 @@ public class DesktopTestDeploymentTests : TestContainer
     private TestCase GetTestCase(string source)
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), source);
-        KeyValuePair<string, string>[] kvpArray = new[]
-                {
-                    new KeyValuePair<string, string>(
+        KeyValuePair<string, string>[] kvpArray =
+        [
+            new KeyValuePair<string, string>(
                         DefaultDeploymentItemPath,
-                        DefaultDeploymentItemOutputDirectory),
-                };
+                        DefaultDeploymentItemOutputDirectory)
+        ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
 
         return testCase;

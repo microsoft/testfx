@@ -21,7 +21,7 @@ public class AssemblyLoadWorkerTests : TestContainer
         var v1AssemblyName = new AssemblyName("Microsoft.VisualStudio.QualityTools.UnitTestFramework");
         var testableAssembly = new TestableAssembly
         {
-            GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName },
+            GetReferencedAssembliesSetter = () => [v1AssemblyName],
         };
 
         var mockAssemblyUtility = new Mock<IAssemblyUtility>();
@@ -47,12 +47,12 @@ public class AssemblyLoadWorkerTests : TestContainer
         var dependentAssemblyName = new AssemblyName("Common.TestFramework");
         var dependentAssembly = new TestableAssembly(dependentAssemblyName.Name)
         {
-            GetReferencedAssembliesSetter = () => new AssemblyName[] { v1AssemblyName },
+            GetReferencedAssembliesSetter = () => [v1AssemblyName],
         };
 
         var testableAssembly = new TestableAssembly
         {
-            GetReferencedAssembliesSetter = () => new AssemblyName[] { dependentAssemblyName },
+            GetReferencedAssembliesSetter = () => [dependentAssemblyName],
         };
 
         var mockAssemblyUtility = new Mock<IAssemblyUtility>();
@@ -121,7 +121,7 @@ public class AssemblyLoadWorkerTests : TestContainer
 
         public Func<string> FullNameSetter { get; set; }
 
-        public override AssemblyName[] GetReferencedAssemblies() => GetReferencedAssembliesSetter != null ? GetReferencedAssembliesSetter.Invoke() : Array.Empty<AssemblyName>();
+        public override AssemblyName[] GetReferencedAssemblies() => GetReferencedAssembliesSetter != null ? GetReferencedAssembliesSetter.Invoke() : [];
 
         public string Name
         {
@@ -134,7 +134,7 @@ public class AssemblyLoadWorkerTests : TestContainer
 
         public override string Location => Path.Combine(Path.GetDirectoryName(GetExecutingAssembly().Location), Name);
 
-        public override Module[] GetModules(bool getResourceModules) => Array.Empty<Module>();
+        public override Module[] GetModules(bool getResourceModules) => [];
     }
 
     #endregion

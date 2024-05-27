@@ -1135,7 +1135,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedTestClasses()
     {
         Type type = typeof(DerivedTestClass);
-        MethodInfo methodInfo = type.GetRuntimeMethod("DummyTestMethod", Array.Empty<Type>());
+        MethodInfo methodInfo = type.GetRuntimeMethod("DummyTestMethod", []);
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
         TestMethodInfo testMethodInfo = _typeCache.GetTestMethodInfo(
@@ -1152,7 +1152,7 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoShouldReturnTestMethodInfoForDerivedClassMethodOverloadByDefault()
     {
         Type type = typeof(DerivedTestClass);
-        MethodInfo methodInfo = type.GetRuntimeMethod("OverloadedTestMethod", Array.Empty<Type>());
+        MethodInfo methodInfo = type.GetRuntimeMethod("OverloadedTestMethod", []);
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false);
 
         TestMethodInfo testMethodInfo = _typeCache.GetTestMethodInfo(
@@ -1170,7 +1170,7 @@ public class TypeCacheTests : TestContainer
     {
         Type baseType = typeof(BaseTestClass);
         Type type = typeof(DerivedTestClass);
-        MethodInfo methodInfo = baseType.GetRuntimeMethod("OverloadedTestMethod", Array.Empty<Type>());
+        MethodInfo methodInfo = baseType.GetRuntimeMethod("OverloadedTestMethod", []);
         var testMethod = new TestMethod(methodInfo.Name, type.FullName, "A", isAsync: false)
         {
             DeclaringClassFullName = baseType.FullName,

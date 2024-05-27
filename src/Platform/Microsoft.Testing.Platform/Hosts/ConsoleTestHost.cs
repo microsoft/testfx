@@ -79,7 +79,7 @@ internal sealed class ConsoleTestHost(
             testAdapterInvoker,
             testExecutionFilterFactory,
             ServiceProvider.GetPlatformOutputDevice(),
-            Enumerable.Empty<IDataConsumer>(),
+            [],
             _testFrameworkManager,
             _testHostManager,
             new MessageBusProxy(),

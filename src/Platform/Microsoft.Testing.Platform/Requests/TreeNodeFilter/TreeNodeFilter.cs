@@ -294,11 +294,11 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
         {
             case OperatorKind.And:
             case OperatorKind.Or:
-                List<FilterExpression> subexprs = new()
-                {
+                List<FilterExpression> subexprs =
+                [
                     expr.Pop(),
-                    expr.Pop(),
-                };
+                    expr.Pop()
+                ];
 
                 // Note: An OR/AND operator allow to pass it in a list of expressions.
                 // We can keep popping following operators and add them to the collection,

@@ -98,50 +98,50 @@ public class DynamicDataTests
 
     public static IEnumerable<object[]> GetParseUserData()
     {
-        yield return new object[]
-        {
+        yield return
+        [
             "John;Doe",
             new User()
             {
                 FirstName = "John",
                 LastName = "Doe",
-            },
-        };
+            }
+        ];
 
-        yield return new object[]
-        {
+        yield return
+        [
             "Jane;Doe",
             new User()
             {
                 FirstName = "Jane",
                 LastName = "Doe",
-            },
-        };
+            }
+        ];
     }
 
     public static IEnumerable<object[]> ParseUserData
     {
         get
         {
-            yield return new object[]
-            {
+            yield return
+            [
                 "John;Doe",
                 new User()
                 {
                     FirstName = "John",
                     LastName = "Doe",
-                },
-            };
+                }
+            ];
 
-            yield return new object[]
-            {
+            yield return
+            [
                 "Jane;Doe",
                 new User()
                 {
                     FirstName = "Jane",
                     LastName = "Doe",
-                },
-            };
+                }
+            ];
         }
     }
 

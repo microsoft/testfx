@@ -88,7 +88,7 @@ public class TestMethodInfo : ITestMethod
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
         => ReflectHelper.GetAttributes<TAttributeType>(TestMethod, inherit)
-        ?? Array.Empty<TAttributeType>();
+        ?? [];
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
@@ -105,27 +105,25 @@ public class TestMethodInfo : ITestMethod
         // check if arguments are set for data driven tests
         arguments ??= Arguments;
 
-        using (LogMessageListener listener = new(TestMethodOptions.CaptureDebugTraces))
+        using LogMessageListener listener = new(TestMethodOptions.CaptureDebugTraces);
+        watch.Start();
+        try
         {
-            watch.Start();
-            try
-            {
-                result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
-            }
-            finally
-            {
-                // Handle logs & debug traces.
-                watch.Stop();
+            result = IsTimeoutSet ? ExecuteInternalWithTimeout(arguments) : ExecuteInternal(arguments);
+        }
+        finally
+        {
+            // Handle logs & debug traces.
+            watch.Stop();
 
-                if (result != null)
-                {
-                    result.Duration = watch.Elapsed;
-                    result.DebugTrace = listener.GetAndClearDebugTrace();
-                    result.LogOutput = listener.GetAndClearStandardOutput();
-                    result.LogError = listener.GetAndClearStandardError();
-                    result.TestContextMessages = TestMethodOptions.TestContext?.GetAndClearDiagnosticMessages();
-                    result.ResultFiles = TestMethodOptions.TestContext?.GetResultFiles();
-                }
+            if (result != null)
+            {
+                result.Duration = watch.Elapsed;
+                result.DebugTrace = listener.GetAndClearDebugTrace();
+                result.LogOutput = listener.GetAndClearStandardOutput();
+                result.LogError = listener.GetAndClearStandardError();
+                result.TestContextMessages = TestMethodOptions.TestContext?.GetAndClearDiagnosticMessages();
+                result.ResultFiles = TestMethodOptions.TestContext?.GetResultFiles();
             }
         }
 
@@ -178,7 +176,7 @@ public class TestMethodInfo : ITestMethod
                 // If this is the params parameter, instantiate a new object of that type
                 if (argumentIndex == parametersInfo.Length - 1)
                 {
-                    paramsValues = Activator.CreateInstance(parametersInfo[argumentIndex].ParameterType, new object[] { arguments.Length - argumentIndex });
+                    paramsValues = Activator.CreateInstance(parametersInfo[argumentIndex].ParameterType, [arguments.Length - argumentIndex]);
                     newParameters[argumentIndex] = paramsValues;
                 }
 
@@ -466,9 +464,7 @@ public class TestMethodInfo : ITestMethod
                 while (baseTestCleanupQueue.Count > 0 && testCleanupException is null)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupException = testCleanupMethod is not null
-                        ? InvokeCleanupMethod(testCleanupMethod, classInstance, baseTestCleanupQueue.Count)
-                        : null;
+                    testCleanupException = InvokeCleanupMethod(testCleanupMethod, classInstance, baseTestCleanupQueue.Count);
                 }
             }
             finally

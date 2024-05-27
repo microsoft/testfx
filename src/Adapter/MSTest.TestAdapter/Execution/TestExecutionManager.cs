@@ -229,7 +229,7 @@ public class TestExecutionManager
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
         var testRunner = (UnitTestRunner)isolationHost.CreateInstanceForType(
             typeof(UnitTestRunner),
-            new object[] { MSTestSettings.CurrentSettings })!;
+            [MSTestSettings.CurrentSettings])!;
 
         PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Created unit-test runner {0}", source);
 
@@ -290,7 +290,7 @@ public class TestExecutionManager
                 string.Format(CultureInfo.CurrentCulture, Resource.TestParallelizationBanner, source, parallelWorkers, parallelScope));
 
             // Create test sets for execution, we can execute them in parallel based on parallel settings
-            IEnumerable<IGrouping<bool, TestCase>> testSets = Enumerable.Empty<IGrouping<bool, TestCase>>();
+            IEnumerable<IGrouping<bool, TestCase>> testSets = [];
 
             // Parallel and not parallel sets.
             testSets = testsToRun.GroupBy(t => t.GetPropertyValue(TestAdapter.Constants.DoNotParallelizeProperty, false));

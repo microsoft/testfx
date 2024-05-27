@@ -163,7 +163,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
 
         public List<DummyData> DummyDataList { get; } = [];
 
-        public Type[] DataTypesConsumed => new[] { typeof(DummyData) };
+        public Type[] DataTypesConsumed => [typeof(DummyData)];
 
         public string Uid => nameof(DummyConsumer);
 
@@ -197,7 +197,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
 
         public sealed class DummyProducer : IDataProducer
         {
-            public Type[] DataTypesProduced => new[] { typeof(DummyData) };
+            public Type[] DataTypesProduced => [typeof(DummyData)];
 
             public string Uid => nameof(DummyProducer);
 
@@ -228,7 +228,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
             _messageBus = messageBus;
         }
 
-        public Type[] DataTypesConsumed => new[] { typeof(LoopDataB) };
+        public Type[] DataTypesConsumed => [typeof(LoopDataB)];
 
         public string Uid => nameof(LoopConsumerA);
 
@@ -238,7 +238,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
 
         public string Description => string.Empty;
 
-        public Type[] DataTypesProduced => new[] { typeof(LoopDataA) };
+        public Type[] DataTypesProduced => [typeof(LoopDataA)];
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -282,7 +282,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
             _messageBus = messageBus;
         }
 
-        public Type[] DataTypesConsumed => new[] { typeof(LoopDataA) };
+        public Type[] DataTypesConsumed => [typeof(LoopDataA)];
 
         public string Uid => nameof(LoopConsumerA);
 
@@ -292,7 +292,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
 
         public string Description => string.Empty;
 
-        public Type[] DataTypesProduced => new[] { typeof(LoopDataB) };
+        public Type[] DataTypesProduced => [typeof(LoopDataB)];
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -321,7 +321,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
 
         public List<IData> ConsumedData { get; } = [];
 
-        public Type[] DataTypesConsumed => new[] { typeof(Data) };
+        public Type[] DataTypesConsumed => [typeof(Data)];
 
         public string Uid { get; set; }
 
@@ -331,7 +331,7 @@ public sealed class AsynchronousMessageBusTests : TestBase
 
         public string Description => string.Empty;
 
-        public Type[] DataTypesProduced => new[] { typeof(Data) };
+        public Type[] DataTypesProduced => [typeof(Data)];
 
         public Task<bool> IsEnabledAsync() => Task.FromResult(true);
 
@@ -354,11 +354,11 @@ public sealed class AsynchronousMessageBusTests : TestBase
 
         public ManualResetEvent Published { get; set; } = new(false);
 
-        public Type[] DataTypesConsumed => new[] { typeof(ValidDataToProduce) };
+        public Type[] DataTypesConsumed => [typeof(ValidDataToProduce)];
 
         public string Uid => nameof(InvalidTypePublished);
 
-        public Type[] DataTypesProduced => new[] { typeof(ValidDataToProduce) };
+        public Type[] DataTypesProduced => [typeof(ValidDataToProduce)];
 
         public string Version => "1.0.0";
 

@@ -34,18 +34,15 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, IEnviro
                 continue;
             }
 
-            if (serviceInstance is IAsyncInitializableExtension async)
-            {
-                await async.InitializeAsync();
-            }
+            await serviceInstance.TryInitializeAsync();
 
             commandLineOptionsProviders.Add(new CommandLineOptionsProviderCache(serviceInstance));
         }
 
-        ICommandLineOptionsProvider[] systemCommandLineOptionsProviders = new[]
-        {
-            new PlatformCommandLineProvider(),
-        };
+        ICommandLineOptionsProvider[] systemCommandLineOptionsProviders =
+        [
+            new PlatformCommandLineProvider()
+        ];
 
         return new CommandLineHandler(args, parseResult, commandLineOptionsProviders.ToArray(),
             systemCommandLineOptionsProviders, _testApplicationModuleInfo, _runtimeFeature, platformOutputDisplay, _environment, _processHandler);

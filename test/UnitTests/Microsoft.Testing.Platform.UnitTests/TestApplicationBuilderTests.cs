@@ -26,7 +26,7 @@ public sealed class TestApplicationBuilderTests : TestBase
         : base(testExecutionContext)
     {
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
-        AggregatedConfiguration configuration = new(Array.Empty<IConfigurationProvider>(), testApplicationModuleInfo, new SystemFileSystem());
+        AggregatedConfiguration configuration = new([], testApplicationModuleInfo, new SystemFileSystem());
         configuration.SetCurrentWorkingDirectory(string.Empty);
         configuration.SetCurrentWorkingDirectory(string.Empty);
         _serviceProvider.AddService(configuration);
@@ -90,7 +90,7 @@ public sealed class TestApplicationBuilderTests : TestBase
             : new(() => new TestSessionLifetimeHandlerPlusConsumer());
         testHostManager.AddTestSessionLifetimeHandle(compositeExtensionFactory);
         testHostManager.AddDataConsumer(compositeExtensionFactory);
-        List<ICompositeExtensionFactory> compositeExtensions = new();
+        List<ICompositeExtensionFactory> compositeExtensions = [];
         IDataConsumer[] consumers = (await testHostManager.BuildDataConsumersAsync(_serviceProvider, compositeExtensions)).Select(x => (IDataConsumer)x.Consumer).ToArray();
         ITestSessionLifetimeHandler[] sessionLifetimeHandle = (await testHostManager.BuildTestSessionLifetimeHandleAsync(_serviceProvider, compositeExtensions)).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler).ToArray();
         Assert.AreEqual(1, consumers.Length);
@@ -305,7 +305,7 @@ public sealed class TestApplicationBuilderTests : TestBase
 
         public string Description => nameof(TestSessionLifetimeHandlerPlusConsumer);
 
-        public Type[] DataTypesConsumed => Array.Empty<Type>();
+        public Type[] DataTypesConsumed => [];
 
         public Task ConsumeAsync(IDataProducer dataProducer, IData value, CancellationToken cancellationToken) => throw new NotImplementedException();
 

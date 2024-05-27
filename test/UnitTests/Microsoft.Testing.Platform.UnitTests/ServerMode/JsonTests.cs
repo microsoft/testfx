@@ -87,11 +87,11 @@ public class JsonTests : TestBase
         Dictionary<Type, JsonSerializer> converters = new()
         {
             [typeof(Person)] = new JsonObjectSerializer<Person>(
-                n => new (string Key, object? Value)[]
-                {
+                n =>
+                [
                     ("name", n.Name),
-                    ("children", n.Children),
-                }),
+                    ("children", n.Children)
+                ]),
         };
 
         Person person = new()
@@ -126,7 +126,7 @@ public class JsonTests : TestBase
                 Children = json.Bind<List<Person>>(jsonElement, "children"),
             }),
 
-            [typeof(List<Person>)] = new JsonCollectionDeserializer<List<Person>, Person>(_ => new List<Person>(), (c, i) => c.Add(i)),
+            [typeof(List<Person>)] = new JsonCollectionDeserializer<List<Person>, Person>(_ => [], (c, i) => c.Add(i)),
         });
 
         // Act
@@ -150,7 +150,7 @@ public class JsonTests : TestBase
                 Children = json.Bind<List<Person>>(jsonElement, "children"),
             }),
 
-            [typeof(List<Person>)] = new JsonCollectionDeserializer<List<Person>, Person>(_ => new List<Person>(), (c, i) => c.Add(i)),
+            [typeof(List<Person>)] = new JsonCollectionDeserializer<List<Person>, Person>(_ => [], (c, i) => c.Add(i)),
         });
 
         // Act
