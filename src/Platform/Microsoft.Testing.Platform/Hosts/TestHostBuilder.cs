@@ -148,7 +148,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Check the environment variable, it wins on all the other configuration.
         string? environmentSetting = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION);
         bool? isEnvConfiguredToFailFast = null;
-        if (environmentSetting is not null and ("1" or "0"))
+        if (environmentSetting is "1" or "0")
         {
             isEnvConfiguredToFailFast = environmentSetting == "1";
         }
