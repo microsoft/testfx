@@ -99,7 +99,7 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
-    internal NonRunnableTestResult GetNonRunnableTestMethodResult(TestMethod testMethod, string nonRunnableMethodType)
+    internal FixtureTestResult GetNonRunnableTestMethodResult(TestMethod testMethod, string nonRunnableMethodType)
     {
         // For the non-runnable methods, we need to return the appropriate result.
         // Get matching testMethodInfo from the cache and return UnitTestOutcome for the non-runnable test.
@@ -107,12 +107,16 @@ internal class UnitTestRunner : MarshalByRefObject
         {
             if (nonRunnableMethodType == Constants.ClassInitialize)
             {
-                return new(true, GetOutcome(testMethodInfo.Parent.ClassInitializationException), testMethodInfo.Parent.ClassInitializationException?.Message);
+                return testMethodInfo.Parent.IsClassInitializeExecuted
+                    ? new(true, GetOutcome(testMethodInfo.Parent.ClassInitializationException), testMethodInfo.Parent.ClassInitializationException?.Message)
+                    : new(true, ObjectModel.UnitTestOutcome.Inconclusive, null);
             }
 
             if (nonRunnableMethodType == Constants.ClassCleanup)
             {
-                return new(true, GetOutcome(testMethodInfo.Parent.ClassCleanupException), testMethodInfo.Parent.ClassCleanupException?.Message);
+                return testMethodInfo.Parent.IsClassInitializeExecuted
+                ? new(testMethodInfo.Parent.IsClassInitializeExecuted, GetOutcome(testMethodInfo.Parent.ClassCleanupException), testMethodInfo.Parent.ClassCleanupException?.Message)
+                : new(true, ObjectModel.UnitTestOutcome.Inconclusive, null);
             }
         }
 

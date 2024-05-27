@@ -271,12 +271,11 @@ public class TestAssemblyInfo
             return;
         }
 
-        Exception? assemblyCleanupException;
         lock (_assemblyInfoExecuteSyncObject)
         {
             try
             {
-                assemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
+                AssemblyCleanupException = FixtureMethodRunner.RunWithTimeoutAndCancellation(
                      () => AssemblyCleanupMethod.InvokeAsSynchronousTask(null),
                      new CancellationTokenSource(),
                      AssemblyCleanupMethodTimeoutMilliseconds,
@@ -287,23 +286,23 @@ public class TestAssemblyInfo
             }
             catch (Exception ex)
             {
-                assemblyCleanupException = ex;
+                AssemblyCleanupException = ex;
             }
         }
 
         // If assemblyCleanup was successful, then don't do anything
-        if (assemblyCleanupException is null)
+        if (AssemblyCleanupException is null)
         {
             return;
         }
 
         // If the exception is already a `TestFailedException` we throw it as-is
-        if (assemblyCleanupException is TestFailedException)
+        if (AssemblyCleanupException is TestFailedException)
         {
-            throw assemblyCleanupException;
+            throw AssemblyCleanupException;
         }
 
-        Exception realException = assemblyCleanupException.GetRealException();
+        Exception realException = AssemblyCleanupException.GetRealException();
 
         // special case AssertFailedException to trim off part of the stack trace
         string errorMessage = realException is AssertFailedException or AssertInconclusiveException

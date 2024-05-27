@@ -4,11 +4,11 @@
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 
 [Serializable]
-internal class NonRunnableTestResult
+internal class FixtureTestResult
 {
-    internal NonRunnableTestResult(bool reportTest, UnitTestOutcome outcome, string? exceptionMessage)
+    internal FixtureTestResult(bool isExecuted, UnitTestOutcome outcome, string? exceptionMessage)
     {
-        IsExecuted = reportTest;
+        IsExecuted = isExecuted;
         Outcome = outcome;
         ExceptionMessage = exceptionMessage;
     }

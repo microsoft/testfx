@@ -227,6 +227,7 @@ public class MSTestSettings
         CurrentSettings.ClassCleanupTimeout = settings.ClassCleanupTimeout;
         CurrentSettings.TestInitializeTimeout = settings.TestInitializeTimeout;
         CurrentSettings.TestCleanupTimeout = settings.TestCleanupTimeout;
+        CurrentSettings.FixturesEnabled = settings.FixturesEnabled;
     }
 
     /// <summary>

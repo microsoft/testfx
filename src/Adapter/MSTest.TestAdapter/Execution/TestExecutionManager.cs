@@ -438,7 +438,7 @@ public class TestExecutionManager
 
             Trait trait = currentTest.Traits.First(t => t.Name == Constants.FixturesEnabled);
             var unitTestElement = currentTest.ToUnitTestElement(source);
-            NonRunnableTestResult nonRunnableTestResult = testRunner.GetNonRunnableTestMethodResult(unitTestElement.TestMethod, trait.Value);
+            FixtureTestResult nonRunnableTestResult = testRunner.GetNonRunnableTestMethodResult(unitTestElement.TestMethod, trait.Value);
 
             if (nonRunnableTestResult.IsExecuted)
             {
