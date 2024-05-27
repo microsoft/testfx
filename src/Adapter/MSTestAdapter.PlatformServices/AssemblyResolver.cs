@@ -509,12 +509,10 @@ class AssemblyResolver :
             }
 
             assembly = SearchAssembly(_searchDirectories, assemblyNameToLoad, isReflectionOnly);
-
             if (assembly != null)
             {
                 return assembly;
             }
-
 
             // required assembly is not present in searchDirectories??
             // see, if we can find it in user specified search directories.
