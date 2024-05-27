@@ -61,7 +61,7 @@ internal static class DiaSessionOperations
         if (s_typeDiaSession != null && s_typeDiaNavigationData != null)
         {
             string messageFormatOnException = string.Join("MSTestDiscoverer:DiaSession: Could not get navigation data for class:", className, ". Reason:{0}");
-            object? data = SafeInvoke(() => s_methodGetNavigationData!.Invoke(navigationSession, new object[] { className, methodName }));
+            object? data = SafeInvoke(() => s_methodGetNavigationData!.Invoke(navigationSession, [className, methodName]));
 
             if (data != null)
             {

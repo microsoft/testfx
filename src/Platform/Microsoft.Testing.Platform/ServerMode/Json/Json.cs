@@ -136,7 +136,7 @@ internal sealed class Json
             return list;
         });
 
-        _serializers[typeof(DiscoverResponseArgs)] = new JsonObjectSerializer<DiscoverResponseArgs>(response => Array.Empty<(string, object?)>());
+        _serializers[typeof(DiscoverResponseArgs)] = new JsonObjectSerializer<DiscoverResponseArgs>(response => []);
 
         _serializers[typeof(RunResponseArgs)] = new JsonObjectSerializer<RunResponseArgs>(response =>
         {
@@ -172,11 +172,11 @@ internal sealed class Json
 
         _serializers[typeof(TestNode)] = new JsonObjectSerializer<TestNode>(message =>
         {
-            List<(string Name, object? Value)> properties = new()
-            {
-                (JsonRpcStrings.Uid,  message.Uid.Value),
-                (JsonRpcStrings.DisplayName, message.DisplayName),
-            };
+            List<(string Name, object? Value)> properties =
+            [
+                (JsonRpcStrings.Uid, message.Uid.Value),
+                (JsonRpcStrings.DisplayName, message.DisplayName)
+            ];
 
             TestMetadataProperty[] metadataProperties = message.Properties.OfType<TestMetadataProperty>();
             bool hasActionNodeType = false;

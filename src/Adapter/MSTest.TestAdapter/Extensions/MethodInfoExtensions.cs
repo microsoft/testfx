@@ -91,13 +91,13 @@ internal static class MethodInfoExtensions
 
         // There should be one and only one TimeoutAttribute.
         TimeoutAttribute[] attributes = ReflectHelper.GetCustomAttributes<TimeoutAttribute>(method, false);
-        if (attributes?.Length != 1)
+        if (attributes.Length != 1)
         {
             return false;
         }
 
         // Timeout cannot be less than 0.
-        return !(attributes[0]?.Timeout < 0);
+        return !(attributes[0].Timeout < 0);
     }
 
     /// <summary>
@@ -160,7 +160,7 @@ internal static class MethodInfoExtensions
             && methodParameters?.Length == 1
             && methodParameters[0].ParameterType == typeof(object[]))
         {
-            task = methodInfo.Invoke(classInstance, new[] { arguments }) as Task;
+            task = methodInfo.Invoke(classInstance, [arguments]) as Task;
         }
         else
         {

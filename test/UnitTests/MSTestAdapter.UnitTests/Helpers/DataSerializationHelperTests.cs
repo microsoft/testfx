@@ -14,7 +14,7 @@ public class DataSerializationHelperTests : TestContainer
         var source = new DateTimeOffset(628381323438126060, TimeSpan.FromHours(-8));
 
         object[] actual = DataSerializationHelper.Deserialize(
-            DataSerializationHelper.Serialize(new object[] { source }));
+            DataSerializationHelper.Serialize([source]));
 
         Verify(actual.Length == 1);
         Verify(actual[0].GetType() == typeof(DateTimeOffset));
@@ -26,7 +26,7 @@ public class DataSerializationHelperTests : TestContainer
         var source = new DateTime(628381323438126060);
 
         object[] actual = DataSerializationHelper.Deserialize(
-            DataSerializationHelper.Serialize(new object[] { source }));
+            DataSerializationHelper.Serialize([source]));
 
         Verify(actual.Length == 1);
         Verify(actual[0].GetType() == typeof(DateTime));
@@ -39,7 +39,7 @@ public class DataSerializationHelperTests : TestContainer
         var source = new DateTime(628381323438126060, DateTimeKind.Local);
 
         object[] actual = DataSerializationHelper.Deserialize(
-            DataSerializationHelper.Serialize(new object[] { source }));
+            DataSerializationHelper.Serialize([source]));
 
         Verify(actual.Length == 1);
         Verify(actual[0].GetType() == typeof(DateTime));
@@ -52,7 +52,7 @@ public class DataSerializationHelperTests : TestContainer
         var source = new DateTime(628381323438126060, DateTimeKind.Utc);
 
         object[] actual = DataSerializationHelper.Deserialize(
-            DataSerializationHelper.Serialize(new object[] { source }));
+            DataSerializationHelper.Serialize([source]));
 
         Verify(actual.Length == 1);
         Verify(actual[0].GetType() == typeof(DateTime));

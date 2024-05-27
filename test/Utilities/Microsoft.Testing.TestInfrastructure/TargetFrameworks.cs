@@ -9,16 +9,16 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class TargetFrameworks
 {
-    public static TestArgumentsEntry<string>[] Net { get; } = new TestArgumentsEntry<string>[]
-    {
+    public static TestArgumentsEntry<string>[] Net { get; } =
+    [
         new("net8.0", "net8.0"),
         new("net7.0", "net7.0"),
-        new("net6.0", "net6.0"),
-    };
+        new("net6.0", "net6.0")
+    ];
 
     public static TestArgumentsEntry<string> NetCurrent { get; } = Net[0];
 
-    public static TestArgumentsEntry<string>[] NetFramework { get; } = new TestArgumentsEntry<string>[] { new("net462", "net462") };
+    public static TestArgumentsEntry<string>[] NetFramework { get; } = [new("net462", "net462")];
 
     public static TestArgumentsEntry<string>[] All { get; } = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
         ? Net.Concat(NetFramework).ToArray()

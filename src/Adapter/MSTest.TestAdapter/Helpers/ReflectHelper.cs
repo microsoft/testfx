@@ -206,7 +206,7 @@ internal class ReflectHelper : MarshalByRefObject
         where TAttribute : Attribute
     {
         TAttribute[]? attributeArray = GetCustomAttributes<TAttribute>(methodBase, inherit);
-        return attributeArray == null || attributeArray.Length == 0
+        return attributeArray.Length == 0
             ? null
             : attributeArray;
     }
@@ -413,7 +413,7 @@ internal class ReflectHelper : MarshalByRefObject
     {
         TAttribute[] attribute = GetCustomAttributes<TAttribute>(attributeProvider, true);
 
-        return attribute == null || attribute.Length != 1
+        return attribute.Length != 1
             ? null
             : attribute[0];
     }
@@ -451,7 +451,7 @@ internal class ReflectHelper : MarshalByRefObject
     {
         PriorityAttribute[] priorityAttribute = GetCustomAttributes<PriorityAttribute>(priorityAttributeProvider, true);
 
-        return priorityAttribute == null || priorityAttribute.Length != 1
+        return priorityAttribute.Length != 1
             ? null
             : priorityAttribute[0].Priority;
     }
@@ -466,7 +466,7 @@ internal class ReflectHelper : MarshalByRefObject
     {
         IgnoreAttribute[]? ignoreAttribute = GetCustomAttributes<IgnoreAttribute>(ignoreAttributeProvider, true);
 
-        return ignoreAttribute is null || ignoreAttribute.Length == 0
+        return ignoreAttribute.Length == 0
             ? null
             : ignoreAttribute[0].IgnoreMessage;
     }
@@ -507,9 +507,7 @@ internal class ReflectHelper : MarshalByRefObject
 
         foreach (TestPropertyAttribute testProperty in testPropertyAttributes)
         {
-            Trait testPropertyPair = testProperty.Name == null
-                ? new Trait(string.Empty, testProperty.Value)
-                : new Trait(testProperty.Name, testProperty.Value);
+            var testPropertyPair = new Trait(testProperty.Name, testProperty.Value);
             yield return testPropertyPair;
         }
     }
@@ -585,7 +583,7 @@ internal class ReflectHelper : MarshalByRefObject
     {
         OwnerAttribute[] ownerAttribute = GetCustomAttributes<OwnerAttribute>(ownerAttributeProvider, true);
 
-        return ownerAttribute == null || ownerAttribute.Length != 1
+        return ownerAttribute.Length != 1
             ? null
             : ownerAttribute[0].Owner;
     }

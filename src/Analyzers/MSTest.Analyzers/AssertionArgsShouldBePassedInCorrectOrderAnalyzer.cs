@@ -17,13 +17,12 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AssertionArgsShouldBePassedInCorrectOrderAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly ImmutableArray<string> SupportedMethodNames = ImmutableArray.Create(new[]
-    {
+    private static readonly ImmutableArray<string> SupportedMethodNames = ImmutableArray.Create([
         "AreEqual",
         "AreNotEqual",
         "AreSame",
-        "AreNotSame",
-    });
+        "AreNotSame"
+    ]);
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AssertionArgsShouldBePassedInCorrectOrderTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString Description = new(nameof(Resources.AssertionArgsShouldBePassedInCorrectOrderDescription), Resources.ResourceManager, typeof(Resources));
