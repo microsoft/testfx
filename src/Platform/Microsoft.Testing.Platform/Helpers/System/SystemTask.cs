@@ -11,9 +11,6 @@ internal sealed class SystemTask : ITask
     public Task Run(Action action, CancellationToken cancellationToken)
         => Task.Run(action, cancellationToken);
 
-    public Task Run(Func<Task> function, CancellationToken cancellationToken)
-        => Task.Run(function, cancellationToken);
-
     public Task<T> Run<T>(Func<Task<T>?> function, CancellationToken cancellationToken)
         => Task.Run(function, cancellationToken);
 
