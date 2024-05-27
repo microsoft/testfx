@@ -68,7 +68,7 @@ public class DataRowTests_Regular
     public void NullValue(object o) => Assert.IsNull(o);
 
     [TestMethod]
-    [DataRow([""])]
+    [DataRow(new string[] { "" })]
     public void OneStringArray(string[] lines) => Assert.AreEqual(1, lines.Length);
 
     [TestMethod]
@@ -80,7 +80,7 @@ public class DataRowTests_Regular
     }
 
     [TestMethod]
-    [DataRow(["", 1])]
+    [DataRow(new object[] { "", 1 })]
     public void OneObjectArray(object[] objects) => Assert.AreEqual(2, objects.Length);
 
     [TestMethod]
