@@ -99,7 +99,7 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
-    internal (bool ReportTest, ObjectModel.UnitTestOutcome Outcome, string? ExceptionMessage) GetNonRunnableTestMethodResult(TestMethod testMethod, string nonRunnableMethodType)
+    internal NonRunnableTestResult GetNonRunnableTestMethodResult(TestMethod testMethod, string nonRunnableMethodType)
     {
         // For the non-runnable methods, we need to return the appropriate result.
         // Get matching testMethodInfo from the cache and return UnitTestOutcome for the non-runnable test.
@@ -107,12 +107,12 @@ internal class UnitTestRunner : MarshalByRefObject
         {
             if (nonRunnableMethodType == Constants.ClassInitialize)
             {
-                return (true, GetOutcome(testMethodInfo.Parent.ClassInitializationException), testMethodInfo.Parent.ClassInitializationException?.Message);
+                return new(true, GetOutcome(testMethodInfo.Parent.ClassInitializationException), testMethodInfo.Parent.ClassInitializationException?.Message);
             }
 
             if (nonRunnableMethodType == Constants.ClassCleanup)
             {
-                return (true, GetOutcome(testMethodInfo.Parent.ClassCleanupException), testMethodInfo.Parent.ClassCleanupException?.Message);
+                return new(true, GetOutcome(testMethodInfo.Parent.ClassCleanupException), testMethodInfo.Parent.ClassCleanupException?.Message);
             }
         }
 
@@ -120,15 +120,15 @@ internal class UnitTestRunner : MarshalByRefObject
         {
             if (nonRunnableMethodType == Constants.AssemblyInitialize)
             {
-                return (true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyInitializationException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
+                return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyInitializationException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
             }
             else if (nonRunnableMethodType == Constants.AssemblyCleanup)
             {
-                return (true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyCleanupException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
+                return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyCleanupException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
             }
         }
 
-        return (false, ObjectModel.UnitTestOutcome.Inconclusive, null);
+        return new(false, ObjectModel.UnitTestOutcome.Inconclusive, null);
 
         static ObjectModel.UnitTestOutcome GetOutcome(Exception? exception) => exception == null ? ObjectModel.UnitTestOutcome.Passed : ObjectModel.UnitTestOutcome.Failed;
     }

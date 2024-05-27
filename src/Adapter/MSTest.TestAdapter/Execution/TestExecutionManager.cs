@@ -438,11 +438,11 @@ public class TestExecutionManager
 
             Trait trait = currentTest.Traits.First(t => t.Name == Constants.NonRunnableTest);
             var unitTestElement = currentTest.ToUnitTestElement(source);
-            (bool reportTest, ObjectModel.UnitTestOutcome outcome, string? exception) = testRunner.GetNonRunnableTestMethodResult(unitTestElement.TestMethod, trait.Value);
+            NonRunnableTestResult nonRunnableTestResult = testRunner.GetNonRunnableTestMethodResult(unitTestElement.TestMethod, trait.Value);
 
-            if (reportTest)
+            if (nonRunnableTestResult.ReportTest)
             {
-                var result = new UnitTestResult(outcome, null);
+                var result = new UnitTestResult(nonRunnableTestResult.Outcome, null);
                 SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
             }
         }
