@@ -218,7 +218,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         ICommandLineOptions commandLineOptions = serviceProvider.GetCommandLineOptions();
         if (commandLineOptions.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey) && loggingState.FileLoggerProvider is not null)
         {
-            ServerLoggerForwarderProvider serverLoggerProxy = new(loggingState.LogLevel, serviceProvider);
+            ServerLoggerForwarderProvider serverLoggerProxy = new(loggingState.LogLevel);
             serviceProvider.AddService(serverLoggerProxy);
             Logging.AddProvider((logLevel, services) => serverLoggerProxy);
         }

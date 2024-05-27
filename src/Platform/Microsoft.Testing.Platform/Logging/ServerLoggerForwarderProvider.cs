@@ -5,7 +5,7 @@ using Microsoft.Testing.Platform.Hosts;
 
 namespace Microsoft.Testing.Platform.Logging;
 
-internal sealed class ServerLoggerForwarderProvider(LogLevel logLevel, IServiceProvider serviceProvider)
+internal sealed class ServerLoggerForwarderProvider(LogLevel logLevel)
     : ILoggerProvider
 {
     private readonly LogLevel _logLevel = logLevel;
