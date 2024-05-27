@@ -88,28 +88,8 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             };
             CommandLineInfo finalCommandLine = new(executableInfo.FileName, partialCommandLine, testApplicationFullPath);
 
-            ProcessStartInfo processStartInfo = new()
-            {
-                FileName = finalCommandLine.FileName,
-#if !NETCOREAPP
-                UseShellExecute = false,
-#endif
-            };
-
-            foreach (string argument in finalCommandLine.Arguments)
-            {
-#if !NETCOREAPP
-                processStartInfo.Arguments += argument + " ";
-#else
-                processStartInfo.ArgumentList.Add(argument);
-#endif
-            }
-
             // Prepare the environment variables used by the test host
             string processCorrelationId = Guid.NewGuid().ToString("N");
-            processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID}", processCorrelationId);
-            processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", processIdString);
-            processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPID}", "1");
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID} '{processCorrelationId}'");
 
             NamedPipeServer testHostControllerIpc = new(
@@ -119,7 +99,27 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 _loggerFactory.CreateLogger<NamedPipeServer>(),
                 ServiceProvider.GetTask(), abortRun);
             testHostControllerIpc.RegisterAllSerializers();
-            processStartInfo.EnvironmentVariables[$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}"] = testHostControllerIpc.PipeName.Name;
+
+#if NET8_0_OR_GREATER
+            IEnumerable<string> arguments = finalCommandLine.Arguments;
+#else
+            string arguments = string.Join(" ", finalCommandLine.Arguments);
+#endif
+            ProcessStartInfo processStartInfo = new(
+                finalCommandLine.FileName,
+                arguments)
+            {
+                EnvironmentVariables =
+                {
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID}", processCorrelationId },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", process.GetCurrentProcess()?.Id.ToString(CultureInfo.InvariantCulture) ?? "null pid" },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPID}", "1" },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}", testHostControllerIpc.PipeName.Name },
+                },
+#if !NETCOREAPP
+                UseShellExecute = false,
+#endif
+            };
 
             List<IDataConsumer> dataConsumersBuilder = [];
             if (_testHostsInformation.DataConsumer.Length > 0)
