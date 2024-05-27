@@ -5,6 +5,4 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal sealed class SystemTask : ITask
 {
-    public Task Delay(TimeSpan timeSpan, CancellationToken cancellation)
-        => Task.Delay(timeSpan, cancellation);
 }

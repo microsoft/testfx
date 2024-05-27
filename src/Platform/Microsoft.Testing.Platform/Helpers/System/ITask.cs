@@ -8,5 +8,4 @@ namespace Microsoft.Testing.Platform.Helpers;
 [SuppressMessage("Style", "VSTHRD200:Use \"Async\" suffix for async methods", Justification = "Match the Task API")]
 internal interface ITask
 {
-    Task Delay(TimeSpan timeSpan, CancellationToken cancellation);
 }
