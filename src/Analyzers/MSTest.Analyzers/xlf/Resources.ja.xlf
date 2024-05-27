@@ -507,7 +507,7 @@
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
-        <target state="new">Asynchronous test fixture methods do not require the 'Async' suffix</target>
+        <target state="translated">非同期テスト フィクスチャには 'Async' サフィックスは不要です</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
