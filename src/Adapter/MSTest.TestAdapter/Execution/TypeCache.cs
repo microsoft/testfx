@@ -840,7 +840,9 @@ internal class TypeCache : MarshalByRefObject
             // the declaring class information wasn't passed in the test case.
             // Prioritize the former while maintaining previous behavior for the latter.
             string? className = testClassInfo.ClassType.FullName;
-            return methods.MaxBy(method => method.DeclaringType!.FullName == className);
+            return methods
+                .OrderByDescending(method => method.DeclaringType!.FullName == className)
+                .FirstOrDefault();
         }
 
         // Only find methods that match the given declaring name.
