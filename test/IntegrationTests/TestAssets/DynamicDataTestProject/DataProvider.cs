@@ -11,50 +11,50 @@ public class DataProvider
 {
     public static IEnumerable<object[]> GetUserDataAndExceptedParsedUser()
     {
-        yield return new object[]
-        {
+        yield return
+        [
             "John;Doe",
             new User()
             {
                 FirstName = "John",
                 LastName = "Doe",
-            },
-        };
+            }
+        ];
 
-        yield return new object[]
-        {
+        yield return
+        [
             "Jane;Doe",
             new User()
             {
                 FirstName = "Jane",
                 LastName = "Doe",
-            },
-        };
+            }
+        ];
     }
 
     public static IEnumerable<object[]> UserDataAndExceptedParsedUser
     {
         get
         {
-            yield return new object[]
-            {
+            yield return
+            [
                 "John;Doe",
                 new User()
                 {
                     FirstName = "John",
                     LastName = "Doe",
-                },
-            };
+                }
+            ];
 
-            yield return new object[]
-            {
+            yield return
+            [
                 "Jane;Doe",
                 new User()
                 {
                     FirstName = "Jane",
                     LastName = "Doe",
-                },
-            };
+                }
+            ];
         }
     }
 

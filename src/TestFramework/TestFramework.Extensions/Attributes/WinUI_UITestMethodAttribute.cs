@@ -87,7 +87,7 @@ public class UITestMethodAttribute : TestMethodAttribute
                 {
                     try
                     {
-                        result = testMethod.Invoke(Array.Empty<object>());
+                        result = testMethod.Invoke([]);
                         taskCompletionSource.SetResult(null);
                     }
                     catch (Exception e)

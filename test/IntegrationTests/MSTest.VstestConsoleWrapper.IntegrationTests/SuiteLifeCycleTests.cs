@@ -1632,11 +1632,11 @@ public class SuiteLifeCycleTests : CLITestBase
             {GenerateTraceDebugPrefixedMessage("AssemblyCleanup was called")}
 
             """
-            .Split(new[] { "\r\n" }, StringSplitOptions.None);
+            .Split(["\r\n"], StringSplitOptions.None);
         caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
             .Messages[1].Text
             .Substring(expectedStart.Length)
-            .Split(new[] { "\r\n" }, StringSplitOptions.None)
+            .Split(["\r\n"], StringSplitOptions.None)
             .Should().BeEquivalentTo(expectedRemainingMessages);
 
         expectedStart =
@@ -1682,11 +1682,11 @@ public class SuiteLifeCycleTests : CLITestBase
             AssemblyCleanup was called
 
             """
-            .Split(new[] { "\r\n" }, StringSplitOptions.None);
+            .Split(["\r\n"], StringSplitOptions.None);
         caseDerivedClassInitializeNoneAndClassCleanupBeforeEachDerivedClassParentTestMethod
             .Messages[2].Text
             .Substring(expectedStart.Length)
-            .Split(new[] { "\r\n" }, StringSplitOptions.None)
+            .Split(["\r\n"], StringSplitOptions.None)
             .Should().BeEquivalentTo(expectedRemainingMessages);
     }
 

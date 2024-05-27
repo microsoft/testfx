@@ -20,10 +20,10 @@ public sealed class TestCategoryAttribute : TestCategoryBaseAttribute
     /// </param>
     public TestCategoryAttribute(string testCategory)
     {
-        List<string> categories = new(1)
-        {
-            testCategory,
-        };
+        List<string> categories =
+        [
+            testCategory
+        ];
         TestCategories = categories;
     }
 

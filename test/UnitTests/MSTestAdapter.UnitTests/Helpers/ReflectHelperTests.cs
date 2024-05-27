@@ -46,7 +46,7 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtClassLevel()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel") }, MemberTypes.TypeInfo);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
 
         string[] expected = ["ClassLevel"];
         string[] actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
@@ -59,10 +59,10 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtAllLevels()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel1"), new UTF.TestCategoryAttribute("AsmLevel2") }, MemberTypes.All);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel3") }, MemberTypes.All);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel") }, MemberTypes.TypeInfo);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel") }, MemberTypes.Method);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel1"), new UTF.TestCategoryAttribute("AsmLevel2")], MemberTypes.All);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel3")], MemberTypes.All);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
 
         string[] actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
         string[] expected = ["MethodLevel", "ClassLevel", "AsmLevel1", "AsmLevel2", "AsmLevel3"];
@@ -75,12 +75,12 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldConcatCustomAttributeOfSameType()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel1") }, MemberTypes.All);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel2") }, MemberTypes.All);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel1") }, MemberTypes.TypeInfo);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel2") }, MemberTypes.TypeInfo);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel1") }, MemberTypes.Method);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel2") }, MemberTypes.Method);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel1")], MemberTypes.All);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel2")], MemberTypes.All);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel1")], MemberTypes.TypeInfo);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel2")], MemberTypes.TypeInfo);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel1")], MemberTypes.Method);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel2")], MemberTypes.Method);
 
         string[] actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
         string[] expected = ["MethodLevel1", "MethodLevel2", "ClassLevel1", "ClassLevel2", "AsmLevel1", "AsmLevel2"];
@@ -93,7 +93,7 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtAssemblyLevel()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel") }, MemberTypes.All);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel")], MemberTypes.All);
 
         string[] expected = ["AsmLevel"];
 
@@ -107,7 +107,7 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeMultipleTestCategoriesAtClassLevel()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("ClassLevel"), new UTF.TestCategoryAttribute("ClassLevel1") }, MemberTypes.TypeInfo);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel"), new UTF.TestCategoryAttribute("ClassLevel1")], MemberTypes.TypeInfo);
 
         string[] expected = ["ClassLevel", "ClassLevel1"];
         string[] actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
@@ -120,7 +120,7 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeMultipleTestCategoriesAtAssemblyLevel()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("AsmLevel"), new UTF.TestCategoryAttribute("AsmLevel1") }, MemberTypes.All);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel"), new UTF.TestCategoryAttribute("AsmLevel1")], MemberTypes.All);
 
         string[] expected = ["AsmLevel", "AsmLevel1"];
         string[] actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
@@ -132,7 +132,7 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtMethodLevel()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), new[] { new UTF.TestCategoryAttribute("MethodLevel") }, MemberTypes.Method);
+        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
 
         string[] expected = ["MethodLevel"];
         string[] actual = _reflectHelper.GetCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();

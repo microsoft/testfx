@@ -103,7 +103,7 @@ internal class AssemblyEnumeratorWrapper
         using MSTestAdapter.PlatformServices.Interface.ITestSourceHost isolationHost = PlatformServiceProvider.Instance.CreateTestSourceHost(fullFilePath, runSettings, frameworkHandle: null);
 
         // Create an instance of a type defined in adapter so that adapter gets loaded in the child app domain
-        var assemblyEnumerator = (AssemblyEnumerator)isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), new object[] { MSTestSettings.CurrentSettings })!;
+        var assemblyEnumerator = (AssemblyEnumerator)isolationHost.CreateInstanceForType(typeof(AssemblyEnumerator), [MSTestSettings.CurrentSettings])!;
 
         // This might not be supported if an older version of Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices
         // assembly is already loaded into the App Domain.
