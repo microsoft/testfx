@@ -216,13 +216,13 @@ public sealed class TestApplication : ITestApplication
             int? testHostControllerPID = testHostControllerInfo.GetTestHostControllerPID();
             if ((processCorrelationId = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerPID}")) is not null)
             {
-                await logger.LogDebugAsync($"{$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerPID}"} '{processCorrelationId}'");
+                await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{testHostControllerPID} '{processCorrelationId}'");
             }
 
             string? parentPid;
             if ((parentPid = environment.GetEnvironmentVariable($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{testHostControllerPID}")) is not null)
             {
-                await logger.LogDebugAsync($"{$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{testHostControllerPID}"} '{parentPid}'");
+                await logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{testHostControllerPID} '{parentPid}'");
             }
 
             string? testHostProcessStartTime;
