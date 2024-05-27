@@ -47,10 +47,11 @@ public class MSTestSettingsTests : TestContainer
     public void MapInconclusiveToFailedIsByDefaultFalseWhenNotSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
             """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
