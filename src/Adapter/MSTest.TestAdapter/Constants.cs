@@ -11,9 +11,9 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 internal static class Constants
 {
     /// <summary>
-    /// Non runnable test.
+    /// Assembly.
     /// </summary>
-    internal const string FixturesGroup = "Fixtures";
+    internal const string AssemblyFixtures = "Assembly";
 
     /// <summary>
     /// Discover fixtures or not.

@@ -272,7 +272,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
 
         // Add non-runnable tests like AssemblyInitialize, AssemblyCleanup, ClassInitialize, ClassCleanup.
-        if (sourceLevelParameters.TryGetValue(Constants.FixturesEnabled, out object? addFixtures) && addFixtures is bool addFixturesValue && addFixturesValue)
+        if (MSTestSettings.CurrentSettings.FixturesEnabled)
         {
             AddNonRunnableTests(testMethodInfo, tests, nonRunnableTests);
         }
@@ -321,7 +321,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
             string assemblyLocation, string methodType)
         {
             string methodName = GetMethodName(methodInfo);
-            string[] hierarchy = [null!, assemblyName, $"[{Constants.FixturesGroup}]", methodName];
+            string[] hierarchy = [null!, assemblyName, $"[{Constants.AssemblyFixtures}]", methodName];
             return GetNonRunnableTest(classFullName, assemblyLocation, methodType, methodName, hierarchy);
         }
 
@@ -348,9 +348,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 TestIdGenerationStrategy.FullyQualified);
             return new UnitTestElement(method)
             {
-                DisplayName = $"[{methodType}]",
+                DisplayName = $"[{methodType}].{methodName}",
                 Ignored = true,
-                Traits = [new Trait(Constants.FixturesGroup, methodType)],
+                Traits = [new Trait(Constants.FixturesEnabled, methodType)],
             };
         }
     }

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
@@ -190,6 +190,11 @@ public class MSTestSettings
     /// Gets a value indicating whether failures in class cleanups should be treated as errors.
     /// </summary>
     public bool TreatClassAndAssemblyCleanupWarningsAsErrors { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether initialize and cleanup methods are added in test results or not.
+    /// </summary>
+    public bool FixturesEnabled { get; private set; }
 
     /// <summary>
     /// Populate settings based on existing settings object.
@@ -546,6 +551,16 @@ public class MSTestSettings
                             if (bool.TryParse(reader.ReadInnerXml(), out result))
                             {
                                 settings.TreatClassAndAssemblyCleanupWarningsAsErrors = result;
+                            }
+
+                            break;
+                        }
+
+                    case "FIXTURESENABLED":
+                        {
+                            if (bool.TryParse(reader.ReadInnerXml(), out result))
+                            {
+                                settings.FixturesEnabled = result;
                             }
 
                             break;
