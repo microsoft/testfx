@@ -72,17 +72,7 @@ internal class AssemblyUtility
     /// <remarks> Path.GetExtension() returns extension with leading dot. </remarks>
     /// <returns> True if this is an assembly extension. </returns>
     internal bool IsAssemblyExtension(string extensionWithLeadingDot)
-    {
-        foreach (string realExtension in _assemblyExtensions)
-        {
-            if (string.Equals(extensionWithLeadingDot, realExtension, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => _assemblyExtensions.Contains(extensionWithLeadingDot, StringComparer.OrdinalIgnoreCase);
 
 #if NETFRAMEWORK
     /// <summary>
