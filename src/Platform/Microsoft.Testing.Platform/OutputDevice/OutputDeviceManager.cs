@@ -30,34 +30,21 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
 
                 return platformOutputDevice;
             }
-            else
-            {
-                return CreateDefault();
-            }
-        }
-        else
-        {
-            return CreateDefault();
         }
 
-        IPlatformOutputDevice CreateDefault()
-        {
-            ConsoleOutputDevice defaultConsoleOutputDevice = new(
-               serviceProvider.GetTestApplicationCancellationTokenSource(),
-               serviceProvider.GetConsole(),
-               serviceProvider.GetTestApplicationModuleInfo(),
-               serviceProvider.GetTestHostControllerInfo(),
-               serviceProvider.GetAsyncMonitorFactory().Create(),
-               serviceProvider.GetRuntimeFeature(),
-               serviceProvider.GetEnvironment(),
-               serviceProvider.GetProcessHandler(),
-               loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey),
-               loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
-               loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey),
-               PlatformCommandLineProvider.GetMinimumExpectedTests(loggingState.CommandLineParseResult),
-               loggingState.FileLoggerProvider);
-
-            return defaultConsoleOutputDevice;
-        }
+        return new ConsoleOutputDevice(
+            serviceProvider.GetTestApplicationCancellationTokenSource(),
+            serviceProvider.GetConsole(),
+            serviceProvider.GetTestApplicationModuleInfo(),
+            serviceProvider.GetTestHostControllerInfo(),
+            serviceProvider.GetAsyncMonitorFactory().Create(),
+            serviceProvider.GetRuntimeFeature(),
+            serviceProvider.GetEnvironment(),
+            serviceProvider.GetProcessHandler(),
+            loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey),
+            loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
+            loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey),
+            PlatformCommandLineProvider.GetMinimumExpectedTests(loggingState.CommandLineParseResult),
+            loggingState.FileLoggerProvider);
     }
 }
