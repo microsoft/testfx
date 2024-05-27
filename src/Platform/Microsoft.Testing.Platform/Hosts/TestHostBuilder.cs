@@ -652,7 +652,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             AsynchronousMessageBus concreteMessageBusService = new(
                 dataConsumerServices,
                 serviceProvider.GetTestApplicationCancellationTokenSource(),
-                serviceProvider.GetTask(),
                 serviceProvider.GetLoggerFactory(),
                 serviceProvider.GetEnvironment());
             await concreteMessageBusService.InitAsync();

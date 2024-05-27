@@ -136,7 +136,6 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             AsynchronousMessageBus concreteMessageBusService = new(
                 dataConsumersBuilder.ToArray(),
                 ServiceProvider.GetTestApplicationCancellationTokenSource(),
-                ServiceProvider.GetTask(),
                 ServiceProvider.GetLoggerFactory(),
                 ServiceProvider.GetEnvironment());
             await concreteMessageBusService.InitAsync();

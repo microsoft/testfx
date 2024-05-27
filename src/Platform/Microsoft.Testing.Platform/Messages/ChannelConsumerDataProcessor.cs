@@ -7,7 +7,6 @@ using System.Threading.Channels;
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Messages;
 
@@ -34,7 +33,7 @@ internal class AsyncConsumerDataProcessor : IDisposable
     private long _totalPayloadReceived;
     private long _totalPayloadProcessed;
 
-    public AsyncConsumerDataProcessor(IDataConsumer consumer, ITask task, CancellationToken cancellationToken)
+    public AsyncConsumerDataProcessor(IDataConsumer consumer, CancellationToken cancellationToken)
     {
         DataConsumer = consumer;
         _cancellationToken = cancellationToken;

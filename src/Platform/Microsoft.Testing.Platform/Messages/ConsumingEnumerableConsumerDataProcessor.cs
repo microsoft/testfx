@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 
 using Microsoft.Testing.Platform.Extensions.Messages;
 using Microsoft.Testing.Platform.Extensions.TestHost;
-using Microsoft.Testing.Platform.Helpers;
 
 namespace Microsoft.Testing.Platform.Messages;
 
@@ -15,7 +14,6 @@ internal class AsyncConsumerDataProcessor : IDisposable
     // The default underlying collection is a ConcurrentQueue<T> object, which provides first in, first out (FIFO) behavior.
     private readonly BlockingCollection<(IDataProducer DataProducer, IData Data)> _payloads = [];
 
-    private readonly ITask _task;
     private readonly CancellationToken _cancellationToken;
 
     // This is needed to avoid possible race condition between drain and _totalPayloadProcessed race condition.
@@ -26,10 +24,9 @@ internal class AsyncConsumerDataProcessor : IDisposable
     private long _totalPayloadReceived;
     private long _totalPayloadProcessed;
 
-    public AsyncConsumerDataProcessor(IDataConsumer dataConsumer, ITask task, CancellationToken cancellationToken)
+    public AsyncConsumerDataProcessor(IDataConsumer dataConsumer, CancellationToken cancellationToken)
     {
         DataConsumer = dataConsumer;
-        _task = task;
         _cancellationToken = cancellationToken;
         _consumeTask = Task.Run(ConsumeAsync, cancellationToken);
     }

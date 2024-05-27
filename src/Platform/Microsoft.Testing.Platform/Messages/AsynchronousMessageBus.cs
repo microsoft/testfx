@@ -18,7 +18,6 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
     // This is an arbitrary number of attempts to drain the message bus.
     // The number of attempts is configurable via the environment variable TESTINGPLATFORM_MESSAGEBUS_DRAINDATA_ATTEMPTS.
     private const int DefaultDrainAttempt = 5;
-    private readonly ITask _task;
     private readonly IEnvironment _environment;
     private readonly ILogger<AsynchronousMessageBus> _logger;
     private readonly bool _isTraceLoggingEnabled;
@@ -31,13 +30,11 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
     public AsynchronousMessageBus(
         IDataConsumer[] dataConsumers,
         ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
-        ITask task,
         ILoggerFactory loggerFactory,
         IEnvironment environment)
     {
         _dataConsumers = dataConsumers;
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
-        _task = task;
         _environment = environment;
         _logger = loggerFactory.CreateLogger<AsynchronousMessageBus>();
         _isTraceLoggingEnabled = _logger.IsEnabled(LogLevel.Trace);
@@ -72,7 +69,7 @@ internal class AsynchronousMessageBus : BaseMessageBus, IMessageBus, IDisposable
 
                 if (!_consumerProcessor.TryGetValue(consumer, out AsyncConsumerDataProcessor? asyncMultiProducerMultiConsumerDataProcessor))
                 {
-                    asyncMultiProducerMultiConsumerDataProcessor = new AsyncConsumerDataProcessor(consumer, _task, _testApplicationCancellationTokenSource.CancellationToken);
+                    asyncMultiProducerMultiConsumerDataProcessor = new AsyncConsumerDataProcessor(consumer, _testApplicationCancellationTokenSource.CancellationToken);
                     _consumerProcessor.Add(consumer, asyncMultiProducerMultiConsumerDataProcessor);
                 }
 
