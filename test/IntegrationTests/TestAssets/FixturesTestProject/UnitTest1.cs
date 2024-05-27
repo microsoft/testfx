@@ -11,7 +11,6 @@ public class UnitTest1
     [AssemblyInitialize]
     public static void AssemblyInitialize(TestContext context)
     {
-        System.Diagnostics.Debug.Assert(false);
         bool? condition = GetCondition("AssemblyInitialize");
         Assert.IsNotNull(condition);
         Assert.IsTrue(condition.Value);
