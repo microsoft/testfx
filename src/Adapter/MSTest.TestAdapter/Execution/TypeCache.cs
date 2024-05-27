@@ -834,15 +834,19 @@ internal class TypeCache : MarshalByRefObject
             .Where(method => method.Name == testMethod.Name &&
                              method.HasCorrectTestMethodSignature(true, discoverInternals));
 
-        string? className =
+        if (testMethod.DeclaringClassFullName == null)
+        {
             // Either the declaring class is the same as the test class, or
             // the declaring class information wasn't passed in the test case.
             // Prioritize the former while maintaining previous behavior for the latter.
-            testMethod.DeclaringClassFullName ??
-            // Only find methods that match the given declaring name.
-            testClassInfo.ClassType.FullName;
+            string? className = testClassInfo.ClassType.FullName;
+            return methods
+                .OrderByDescending(method => method.DeclaringType!.FullName == className)
+                .FirstOrDefault();
+        }
 
-        return methods.FirstOrDefault(method => method.DeclaringType!.FullName == className);
+        // Only find methods that match the given declaring name.
+        return methods.FirstOrDefault(method => method.DeclaringType!.FullName == testMethod.DeclaringClassFullName);
     }
 
     /// <summary>
