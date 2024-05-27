@@ -219,7 +219,7 @@ public sealed class DataRowShouldBeValidAnalyzer : DiagnosticAnalyzer
     {
         int optionalParametersCount = methodParameters.Count(x => x.HasExplicitDefaultValue);
         bool isLastParameterParams = methodParameters[^1].IsParams;
-        bool isOnlyParameterAndIsArray = methodParameters.Length == 1 && methodParameters[0].Type.Kind == SymbolKind.ArrayType;
+        bool isOnlyParameterAndIsArray = methodParameters is [{ Type.Kind: SymbolKind.ArrayType }];
 
         if (isOnlyParameterAndIsArray)
         {

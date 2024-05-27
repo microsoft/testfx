@@ -22,10 +22,6 @@ internal class ReflectHelper : MarshalByRefObject
     /// </summary>
     private readonly Dictionary<MemberInfo, Dictionary<string, object>> _attributeCache = [];
 
-    internal ReflectHelper()
-    {
-    }
-
     public static ReflectHelper Instance => InstanceValue.Value;
 
     /// <summary>
@@ -130,7 +126,7 @@ internal class ReflectHelper : MarshalByRefObject
             DebugEx.Assert(attribute != null, $"{nameof(ReflectHelper)}.{nameof(GetAttributes)}: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
-            if (attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttribute)))
+            if (attributeType.IsSubclassOf(typeof(TAttribute)))
             {
                 return true;
             }
@@ -246,7 +242,7 @@ internal class ReflectHelper : MarshalByRefObject
             typeof(TAttribute),
             inherit);
 
-        return attributesArray!.OfType<TAttribute>().ToArray(); // TODO: Investigate if we rely on NRE
+        return attributesArray.OfType<TAttribute>().ToArray();
     }
 
     /// <summary>
@@ -267,7 +263,7 @@ internal class ReflectHelper : MarshalByRefObject
             memberInfo,
             inherit);
 
-        return attributesArray!.ToArray(); // TODO: Investigate if we rely on NRE
+        return attributesArray.ToArray();
     }
 
     /// <summary>
@@ -297,7 +293,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="type">The type declared in the assembly to check.</param>
     /// <returns>True if the method is declared in the assembly where the type is declared.</returns>
     internal virtual bool IsMethodDeclaredInSameAssemblyAsType(MethodInfo method, Type type)
-        => method.DeclaringType!.GetTypeInfo().Assembly.Equals(type.GetTypeInfo().Assembly); // TODO: Investigate if we rely on NRE
+        => method.DeclaringType!.Assembly.Equals(type.GetTypeInfo().Assembly); // TODO: Investigate if we rely on NRE
 
     /// <summary>
     /// Get categories applied to the test method.
@@ -328,7 +324,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns> The parallelization level if set. -1 otherwise. </returns>
     internal static ParallelizeAttribute? GetParallelizeAttribute(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ParallelizeAttribute))
-            !.OfType<ParallelizeAttribute>() // TODO: Investigate if we rely on NRE
+            .OfType<ParallelizeAttribute>()
             .FirstOrDefault();
 
     /// <summary>
@@ -348,7 +344,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>True if test assembly should not run in parallel.</returns>
     internal static bool IsDoNotParallelizeSet(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute))
-            !.Length != 0; // TODO: Investigate if we rely on NRE
+            .Length != 0;
 
     /// <summary>
     /// Gets the class cleanup lifecycle set on an assembly.
@@ -357,7 +353,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
     internal static ClassCleanupExecutionAttribute? GetClassCleanupAttribute(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute))
-            !.OfType<ClassCleanupExecutionAttribute>() // TODO: Investigate if we rely on NRE
+            .OfType<ClassCleanupExecutionAttribute>()
             .FirstOrDefault();
 
     /// <summary>
@@ -393,7 +389,7 @@ internal class ReflectHelper : MarshalByRefObject
         where TAttribute : Attribute
         => PlatformServiceProvider.Instance.ReflectionOperations
             .GetCustomAttributes(memberInfo.Module.Assembly, typeof(TAttribute))
-            !.OfType<TAttribute>()
+            .OfType<TAttribute>()
             .ToArray();
 
     /// <summary>
@@ -540,7 +536,7 @@ internal class ReflectHelper : MarshalByRefObject
             DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
-            if (attributeType.Equals(typeof(TAttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttributeType)))
+            if (attributeType.Equals(typeof(TAttributeType)) || attributeType.IsSubclassOf(typeof(TAttributeType)))
             {
                 return attribute as TAttributeType;
             }
@@ -571,7 +567,7 @@ internal class ReflectHelper : MarshalByRefObject
             DebugEx.Assert(attribute != null, "ReflectHelper.DefinesAttributeDerivedFrom: internal error: wrong value in the attributes dictionary.");
 
             Type attributeType = attribute.GetType();
-            if (attributeType.Equals(typeof(TAttributeType)) || attributeType.GetTypeInfo().IsSubclassOf(typeof(TAttributeType)))
+            if (attributeType.Equals(typeof(TAttributeType)) || attributeType.IsSubclassOf(typeof(TAttributeType)))
             {
                 return attribute as TAttributeType;
             }

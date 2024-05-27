@@ -396,9 +396,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
 #region Testable Implementations
 
-public class TestableAssembly : Assembly
-{
-}
+public class TestableAssembly : Assembly;
 
 internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
 {

@@ -6,9 +6,7 @@ using Microsoft.Testing.Platform.Logging;
 
 namespace Microsoft.Testing.Platform.ServerMode;
 
-internal abstract record RpcMessage()
-{
-}
+internal abstract record RpcMessage();
 
 /// <summary>
 /// A request is a message for which the server should return a corresponding
@@ -48,7 +46,7 @@ internal record DiscoverRequestArgs(Guid RunId, ICollection<TestNode>? TestNodes
 
 internal record ResponseArgsBase;
 
-internal record DiscoverResponseArgs() : ResponseArgsBase;
+internal record DiscoverResponseArgs : ResponseArgsBase;
 
 internal record RunRequestArgs(Guid RunId, ICollection<TestNode>? TestNodes, string? GraphFilter) :
     RequestArgsBase(RunId, TestNodes, GraphFilter);
@@ -59,7 +57,7 @@ internal record Artifact(string Uri, string Producer, string Type, string Displa
 
 internal record CancelRequestArgs(int CancelRequestId);
 
-internal record ExitRequestArgs();
+internal record ExitRequestArgs;
 
 internal record ClientInfo(string Name, string Version);
 

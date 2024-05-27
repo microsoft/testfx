@@ -6,6 +6,4 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 /// <summary>
 /// Represents a capability for a test framework.
 /// </summary>
-public interface ITestFrameworkCapability : ICapability
-{
-}
+public interface ITestFrameworkCapability : ICapability;

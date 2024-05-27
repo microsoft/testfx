@@ -692,7 +692,7 @@ public class PrivateObject
 
         foreach (MethodInfo member in members)
         {
-            if (!member.IsGenericMethod && !member.IsGenericMethodDefinition)
+            if (member is { IsGenericMethod: false, IsGenericMethodDefinition: false })
             {
                 continue;
             }

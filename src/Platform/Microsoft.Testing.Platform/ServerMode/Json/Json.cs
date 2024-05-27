@@ -136,7 +136,7 @@ internal sealed class Json
             return list;
         });
 
-        _serializers[typeof(DiscoverResponseArgs)] = new JsonObjectSerializer<DiscoverResponseArgs>(response => Array.Empty<(string, object?)>());
+        _serializers[typeof(DiscoverResponseArgs)] = new JsonObjectSerializer<DiscoverResponseArgs>(response => []);
 
         _serializers[typeof(RunResponseArgs)] = new JsonObjectSerializer<RunResponseArgs>(response =>
         {
@@ -172,11 +172,11 @@ internal sealed class Json
 
         _serializers[typeof(TestNode)] = new JsonObjectSerializer<TestNode>(message =>
         {
-            List<(string Name, object? Value)> properties = new()
-            {
-                (JsonRpcStrings.Uid,  message.Uid.Value),
-                (JsonRpcStrings.DisplayName, message.DisplayName),
-            };
+            List<(string Name, object? Value)> properties =
+            [
+                (JsonRpcStrings.Uid, message.Uid.Value),
+                (JsonRpcStrings.DisplayName, message.DisplayName)
+            ];
 
             TestMetadataProperty[] metadataProperties = message.Properties.OfType<TestMetadataProperty>();
             bool hasActionNodeType = false;
@@ -257,10 +257,10 @@ internal sealed class Json
                         case FailedTestNodeStateProperty failedTestNodeStateProperty:
                             {
                                 properties.Add(("execution-state", "failed"));
-                                properties.Add(("error.message", failedTestNodeStateProperty?.Explanation ?? failedTestNodeStateProperty?.Exception?.Message));
-                                if (failedTestNodeStateProperty?.Exception is not null)
+                                Exception? exception = failedTestNodeStateProperty.Exception;
+                                properties.Add(("error.message", failedTestNodeStateProperty.Explanation ?? exception?.Message));
+                                if (exception is not null)
                                 {
-                                    Exception exception = failedTestNodeStateProperty.Exception;
                                     properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));
                                     properties.Add(("assert.actual", exception.Data["assert.actual"] ?? string.Empty));
                                     properties.Add(("assert.expected", exception.Data["assert.expected"] ?? string.Empty));
@@ -272,10 +272,11 @@ internal sealed class Json
                         case TimeoutTestNodeStateProperty timeoutTestNodeStateProperty:
                             {
                                 properties.Add(("execution-state", "timed-out"));
-                                properties.Add(("error.message", timeoutTestNodeStateProperty?.Explanation ?? timeoutTestNodeStateProperty?.Exception?.Message));
-                                if (timeoutTestNodeStateProperty?.Exception is not null)
+                                Exception? exception = timeoutTestNodeStateProperty.Exception;
+                                properties.Add(("error.message", timeoutTestNodeStateProperty.Explanation ?? exception?.Message));
+                                if (exception is not null)
                                 {
-                                    properties.Add(("error.stacktrace", timeoutTestNodeStateProperty?.Exception?.StackTrace ?? string.Empty));
+                                    properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));
                                 }
 
                                 break;
@@ -284,10 +285,11 @@ internal sealed class Json
                         case ErrorTestNodeStateProperty errorTestNodeStateProperty:
                             {
                                 properties.Add(("execution-state", "error"));
-                                properties.Add(("error.message", errorTestNodeStateProperty?.Explanation ?? errorTestNodeStateProperty?.Exception?.Message));
-                                if (errorTestNodeStateProperty?.Exception is not null)
+                                Exception? exception = errorTestNodeStateProperty.Exception;
+                                properties.Add(("error.message", errorTestNodeStateProperty.Explanation ?? exception?.Message));
+                                if (exception is not null)
                                 {
-                                    properties.Add(("error.stacktrace", errorTestNodeStateProperty?.Exception?.StackTrace ?? string.Empty));
+                                    properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));
                                 }
 
                                 break;
@@ -296,10 +298,11 @@ internal sealed class Json
                         case CancelledTestNodeStateProperty cancelledTestNodeStateProperty:
                             {
                                 properties.Add(("execution-state", "cancelled"));
-                                properties.Add(("error.message", cancelledTestNodeStateProperty?.Explanation ?? cancelledTestNodeStateProperty?.Exception?.Message));
-                                if (cancelledTestNodeStateProperty?.Exception is not null)
+                                Exception? exception = cancelledTestNodeStateProperty.Exception;
+                                properties.Add(("error.message", cancelledTestNodeStateProperty.Explanation ?? exception?.Message));
+                                if (exception is not null)
                                 {
-                                    properties.Add(("error.stacktrace", cancelledTestNodeStateProperty?.Exception?.StackTrace ?? string.Empty));
+                                    properties.Add(("error.stacktrace", exception.StackTrace ?? string.Empty));
                                 }
 
                                 break;

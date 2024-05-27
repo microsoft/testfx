@@ -236,7 +236,7 @@ internal class TestMethodRunner
         bool isDataDriven = false;
 
         DataSourceAttribute[] dataSourceAttribute = _testMethodInfo.GetAttributes<DataSourceAttribute>(false);
-        if (dataSourceAttribute != null && dataSourceAttribute.Length == 1)
+        if (dataSourceAttribute is { Length: 1 })
         {
             isDataDriven = true;
             Stopwatch watch = new();

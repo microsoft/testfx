@@ -16,18 +16,16 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly ImmutableArray<string> AssertSupportedMethodNames = ImmutableArray.Create(new[]
-    {
+    private static readonly ImmutableArray<string> AssertSupportedMethodNames = ImmutableArray.Create([
         "IsTrue",
         "IsFalse",
         "AreEqual",
         "AreNotEqual",
         "AreSame",
-        "AreNotSame",
-    });
+        "AreNotSame"
+    ]);
 
-    private static readonly ImmutableArray<string> CollectionAssertSupportedMethodNames = ImmutableArray.Create(new[]
-    {
+    private static readonly ImmutableArray<string> CollectionAssertSupportedMethodNames = ImmutableArray.Create([
         "IsTrue",
         "IsFalse",
         "AreEqual",
@@ -40,17 +38,16 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
         "AllItemsAreUnique",
         "IsSubsetOf",
         "IsNotSubsetOf",
-        "AllItemsAreInstancesOfType",
-    });
+        "AllItemsAreInstancesOfType"
+    ]);
 
-    private static readonly ImmutableArray<string> StringAssertSupportedMethodNames = ImmutableArray.Create(new[]
-    {
+    private static readonly ImmutableArray<string> StringAssertSupportedMethodNames = ImmutableArray.Create([
         "Contains",
         "StartsWith",
         "EndsWith",
         "Matches",
-        "DoesNotMatch",
-    });
+        "DoesNotMatch"
+    ]);
 
     private static readonly LocalizableResourceString Title = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessTitle), Resources.ResourceManager, typeof(Resources));
     private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.AssertionArgsShouldAvoidConditionalAccessMessageFormat), Resources.ResourceManager, typeof(Resources));
@@ -114,12 +111,9 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
             //      a?.b
             //      a?.b?.c
             //      a.b?.c
-            if (argument.Value is IConditionalAccessOperation conditionalAccessOperation)
+            if (argument.Value is IConditionalAccessOperation { Kind: OperationKind.ConditionalAccess })
             {
-                if (conditionalAccessOperation.Kind == OperationKind.ConditionalAccess)
-                {
-                    return true;
-                }
+                return true;
             }
 
             // Check for binary operations with conditional access => s?.Length > 1.
@@ -132,12 +126,9 @@ public sealed class AssertionArgsShouldAvoidConditionalAccessAnalyzer : Diagnost
             }
 
             // Check for conversion operations with conditional access => (s?.Length).
-            if (argument.Value is IConversionOperation conversionOperation)
+            if (argument.Value is IConversionOperation { Operand.Kind: OperationKind.ConditionalAccess })
             {
-                if (conversionOperation.Operand.Kind == OperationKind.ConditionalAccess)
-                {
-                    return true;
-                }
+                return true;
             }
         }
 

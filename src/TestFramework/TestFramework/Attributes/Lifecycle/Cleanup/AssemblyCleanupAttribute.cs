@@ -7,6 +7,4 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 /// The assembly cleanup attribute.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-public sealed class AssemblyCleanupAttribute : Attribute
-{
-}
+public sealed class AssemblyCleanupAttribute : Attribute;

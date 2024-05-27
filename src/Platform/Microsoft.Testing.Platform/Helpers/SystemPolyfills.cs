@@ -235,7 +235,7 @@ namespace System
 
         /// <summary>Converts the value of the current Range object to its equivalent string representation.</summary>
         public override string ToString()
-            => Start.ToString() + ".." + End.ToString();
+            => $"{Start}..{End}";
 
         /// <summary>Create a Range object starting from start index to the end of the collection.</summary>
         public static Range StartAt(Index start) => new(start, Index.End);
@@ -270,7 +270,7 @@ namespace System
 
             return (uint)end > (uint)length || (uint)start > (uint)end
                 ? throw new ArgumentOutOfRangeException(nameof(length))
-                : ((int Offset, int Length))(start, end - start);
+                : (start, end - start);
         }
     }
 #endif
@@ -449,7 +449,7 @@ namespace System.Diagnostics.CodeAnalysis
         /// <param name="member">
         /// The field or property member that is promised to be not-null.
         /// </param>
-        public MemberNotNullAttribute(string member) => Members = new[] { member };
+        public MemberNotNullAttribute(string member) => Members = [member];
 
         /// <summary>Initializes the attribute with the list of field and property members.</summary>
         /// <param name="members">
@@ -475,7 +475,7 @@ namespace System.Diagnostics.CodeAnalysis
         public MemberNotNullWhenAttribute(bool returnValue, string member)
         {
             ReturnValue = returnValue;
-            Members = new[] { member };
+            Members = [member];
         }
 
         /// <summary>Initializes the attribute with the specified return value condition and list of field and property members.</summary>

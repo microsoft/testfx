@@ -3,6 +3,4 @@
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal abstract class FilterExpression
-{
-}
+internal abstract class FilterExpression;
