@@ -124,15 +124,15 @@ public sealed class ServiceProviderTests : TestBase
     public void AddServices_SameInstance_ShouldFail()
     {
         TestHostProcessLifetimeHandler instance = new();
-        _serviceProvider.AddServices(new[] { instance });
-        _ = Assert.Throws<InvalidOperationException>(() => _serviceProvider.AddServices(new[] { instance }));
+        _serviceProvider.AddServices([instance]);
+        _ = Assert.Throws<InvalidOperationException>(() => _serviceProvider.AddServices([instance]));
     }
 
     public void AddServices_SameInstance_ShouldNotFail()
     {
         TestHostProcessLifetimeHandler instance = new();
-        _serviceProvider.AddServices(new[] { instance });
-        _serviceProvider.AddServices(new[] { instance }, throwIfSameInstanceExit: false);
+        _serviceProvider.AddServices([instance]);
+        _serviceProvider.AddServices([instance], throwIfSameInstanceExit: false);
     }
 
     public void TryAddService_SameInstance_ShouldReturnFalse()

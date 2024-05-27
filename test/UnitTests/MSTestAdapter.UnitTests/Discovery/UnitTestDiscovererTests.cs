@@ -62,7 +62,7 @@ public class UnitTestDiscovererTests : TestContainer
 
     public void DiscoverTestsShouldDiscoverForAllSources()
     {
-        string[] sources = new string[] { "DummyAssembly1.dll", "DummyAssembly2.dll" };
+        string[] sources = ["DummyAssembly1.dll", "DummyAssembly2.dll"];
 
         // Setup mocks.
         foreach (string source in sources)

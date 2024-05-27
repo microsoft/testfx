@@ -5,8 +5,8 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class WellKnownEnvironmentVariables
 {
-    public static readonly string[] ToSkipEnvironmentVariables = new[]
-   {
+    public static readonly string[] ToSkipEnvironmentVariables =
+    [
         // Skip dotnet root, we redefine it below.
         "DOTNET_ROOT",
 
@@ -40,6 +40,6 @@ public static class WellKnownEnvironmentVariables
         "TESTINGPLATFORM_DIAGNOSTIC",
 
         // Isolate from the skip banner in case of parent, children tests
-        "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER",
-   };
+        "TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER"
+    ];
 }

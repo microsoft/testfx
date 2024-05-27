@@ -24,7 +24,7 @@ public class ReflectionUtilityTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Count == 2);
 
-        string[] expectedAttributes = new string[] { "DummyA : a1", "DummyA : a2" };
+        string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];
         Verify(expectedAttributes.SequenceEqual(GetAttributeValuePairs(attributes)));
     }
 

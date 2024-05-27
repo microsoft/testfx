@@ -61,7 +61,7 @@ public class TestAsset : IDisposable
     public static async Task<TestAsset> GenerateAssetAsync(string assetName, string code, bool addDefaultNuGetConfigFile = true, bool addPublicFeeds = false)
     {
         TestAsset testAsset = new(assetName, addDefaultNuGetConfigFile ? string.Concat(code, GetNuGetConfig(addPublicFeeds)) : code);
-        string[] splitFiles = testAsset._assetCode.Split(new string[] { FileTag }, StringSplitOptions.RemoveEmptyEntries);
+        string[] splitFiles = testAsset._assetCode.Split([FileTag], StringSplitOptions.RemoveEmptyEntries);
         foreach (string fileContent in splitFiles)
         {
             (string, string) fileInfo = ParseFile(fileContent);

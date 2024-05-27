@@ -11,19 +11,19 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [AssemblyCleanup] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">[AssemblyCleanup] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+- 'public' である 
+- 'static' である
+- ジェネリックではなく、ジェネリック クラスでも定義されていない
+- パラメーターを受け取りません
+- 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
+- 'async void' ではありません
+- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidMessageFormat">
         <source>AssemblyCleanup method '{0}' signature is invalid</source>
-        <target state="new">AssemblyCleanup method '{0}' signature is invalid</target>
+        <target state="translated">AssemblyCleanup メソッド '{0}' シグネチャが無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyCleanupShouldBeValidTitle">
@@ -40,19 +40,19 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [AssemblyInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">[AssemblyInitialize] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+- 'public' である 
+- 'static' である
+- ジェネリックではなく、ジェネリック クラスでも定義されていない
+- 'TestContext' 型のパラメーターを 1 つ受け取ります
+- 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
+- 'async void' ではありません
+- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidMessageFormat">
         <source>AssemblyInitialize method '{0}' signature is invalid</source>
-        <target state="new">AssemblyInitialize method '{0}' signature is invalid</target>
+        <target state="translated">AssemblyInitialize メソッド '{0}' シグネチャが無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="AssemblyInitializeShouldBeValidTitle">
@@ -109,19 +109,19 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [ClassCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">[ClassCleanup] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+- 'public' である 
+- 'static' ではありません
+- ジェネリックではなく、ジェネリック クラスでも定義されていない
+- パラメーターを受け取りません
+- 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
+- 'async void' ではありません
+- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidMessageFormat">
         <source>ClassCleanup method '{0}' signature is invalid</source>
-        <target state="new">ClassCleanup method '{0}' signature is invalid</target>
+        <target state="translated">ClassCleanup メソッド '{0}' シグネチャが無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassCleanupShouldBeValidTitle">
@@ -138,19 +138,19 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [ClassInitialize] should follow the following layout to be valid:
-- be 'public' 
-- be 'static'
-- not be generic nor be defined on a generic class
-- take a single parameter of type 'TestContext'
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">[ClassInitialize] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります:
+- 'public' である 
+- 'static' である
+- ジェネリックではなく、ジェネリック クラスでも定義されていない
+- 'TestContext' 型のパラメーターを 1 つ受け取ります
+- 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
+- 'async void' ではありません
+- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidMessageFormat">
         <source>ClassInitialize method '{0}' signature is invalid</source>
-        <target state="new">ClassInitialize method '{0}' signature is invalid</target>
+        <target state="translated">ClassInitialize メソッド '{0}' シグネチャが無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="ClassInitializeShouldBeValidTitle">
@@ -330,20 +330,20 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [TestCleanup] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic or be defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">[TestCleanup] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+- 'public' である 
+- 'static' ではありません
+- ジェネリックではないか、ジェネリック クラスで定義されている
+- 'abstract' ではありません
+- パラメーターを受け取りません
+- 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
+- 'async void' ではありません
+- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidMessageFormat">
         <source>TestCleanup method '{0}' signature is invalid</source>
-        <target state="new">TestCleanup method '{0}' signature is invalid</target>
+        <target state="translated">TestCleanup メソッド '{0}' シグネチャが無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="TestCleanupShouldBeValidTitle">
@@ -405,20 +405,20 @@
 - return type should be 'void', 'Task' or 'ValueTask'
 - not be 'async void'
 - not be a special method (finalizer, operator...).</source>
-        <target state="new">Methods marked with [TestInitialize] should follow the following layout to be valid:
-- be 'public' 
-- not be 'static'
-- not be generic nor defined on a generic class
-- not be 'abstract'
-- not take any parameter
-- return type should be 'void', 'Task' or 'ValueTask'
-- not be 'async void'
-- not be a special method (finalizer, operator...).</target>
+        <target state="translated">[TestInitialize] でマークされたメソッドを有効にするには、次のレイアウトに従う必要があります: 
+- 'public' である 
+- 'static' ではありません
+- ジェネリックではなく、ジェネリック クラスでも定義されていない
+- 'abstract' ではありません
+- パラメーターを受け取りません
+- 戻り値の型が 'void'、'Task'、または 'ValueTask' である必要があります
+- 'async void' ではありません
+- 特殊なメソッド (ファイナライザー、演算子...) ではありません。</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidMessageFormat">
         <source>TestInitialize method '{0}' signature is invalid</source>
-        <target state="new">TestInitialize method '{0}' signature is invalid</target>
+        <target state="translated">TestInitialize メソッド '{0}' シグネチャが無効です</target>
         <note />
       </trans-unit>
       <trans-unit id="TestInitializeShouldBeValidTitle">
@@ -507,12 +507,12 @@
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestFixtureMethodSuppressorJustification">
         <source>Asynchronous test fixture methods do not require the 'Async' suffix</source>
-        <target state="new">Asynchronous test fixture methods do not require the 'Async' suffix</target>
+        <target state="translated">非同期テスト フィクスチャには 'Async' サフィックスは不要です</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAsyncSuffixTestMethodSuppressorJustification">
         <source>Asynchronous test methods do not require the 'Async' suffix</source>
-        <target state="new">Asynchronous test methods do not require the 'Async' suffix</target>
+        <target state="translated">非同期テスト メソッドには 'Async' サフィックスは不要です</target>
         <note />
       </trans-unit>
       <trans-unit id="UseAttributeOnTestMethodAnalyzerMessageFormat">

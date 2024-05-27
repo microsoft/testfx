@@ -112,8 +112,8 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         isEnabledByDefault: true);
 
     // IMPORTANT: Remember to add any new rule to the rule tuple.
-    private static readonly List<(string AttributeFullyQualifiedName, DiagnosticDescriptor Rule)> RuleTuples = new()
-    {
+    private static readonly List<(string AttributeFullyQualifiedName, DiagnosticDescriptor Rule)> RuleTuples =
+    [
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingOwnerAttribute, OwnerRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingPriorityAttribute, PriorityRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestPropertyAttribute, TestPropertyRule),
@@ -121,8 +121,8 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingDescriptionAttribute, DescriptionRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingExpectedExceptionAttribute, ExpectedExceptionRule),
         (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssIterationAttribute, CssIterationRule),
-        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute, CssProjectStructureRule),
-    };
+        (WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingCssProjectStructureAttribute, CssProjectStructureRule)
+    ];
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
         = ImmutableArray.Create(OwnerRule);
@@ -146,7 +146,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
 
             // Get a list of attributes and associated rules that are found in the current compilation
             // context.
-            List<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> attributeRuleTuples = new();
+            List<(INamedTypeSymbol AttributeSymbol, DiagnosticDescriptor Rule)> attributeRuleTuples = [];
             foreach ((string attributeFullyQualifiedName, DiagnosticDescriptor rule) in RuleTuples)
             {
                 if (context.Compilation.TryGetOrCreateTypeByMetadataName(attributeFullyQualifiedName, out INamedTypeSymbol? attributeSymbol))
@@ -172,7 +172,7 @@ public sealed class UseAttributeOnTestMethodAnalyzer : DiagnosticAnalyzer
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
 
-        List<(AttributeData AttributeData, DiagnosticDescriptor Rule)> attributes = new();
+        List<(AttributeData AttributeData, DiagnosticDescriptor Rule)> attributes = [];
         foreach (AttributeData methodAttribute in methodSymbol.GetAttributes())
         {
             // Current method should be a test method or should inherit from the TestMethod attribute.

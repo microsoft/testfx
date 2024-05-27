@@ -206,7 +206,7 @@ internal class ReflectHelper : MarshalByRefObject
         where TAttribute : Attribute
     {
         TAttribute[]? attributeArray = GetCustomAttributes<TAttribute>(methodBase, inherit);
-        return attributeArray == null || attributeArray.Length == 0
+        return attributeArray.Length == 0
             ? null
             : attributeArray;
     }
@@ -242,7 +242,7 @@ internal class ReflectHelper : MarshalByRefObject
             typeof(TAttribute),
             inherit);
 
-        return attributesArray!.OfType<TAttribute>().ToArray(); // TODO: Investigate if we rely on NRE
+        return attributesArray.OfType<TAttribute>().ToArray();
     }
 
     /// <summary>
@@ -263,7 +263,7 @@ internal class ReflectHelper : MarshalByRefObject
             memberInfo,
             inherit);
 
-        return attributesArray!.ToArray(); // TODO: Investigate if we rely on NRE
+        return attributesArray.ToArray();
     }
 
     /// <summary>
@@ -324,7 +324,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns> The parallelization level if set. -1 otherwise. </returns>
     internal static ParallelizeAttribute? GetParallelizeAttribute(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ParallelizeAttribute))
-            !.OfType<ParallelizeAttribute>() // TODO: Investigate if we rely on NRE
+            .OfType<ParallelizeAttribute>()
             .FirstOrDefault();
 
     /// <summary>
@@ -344,7 +344,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>True if test assembly should not run in parallel.</returns>
     internal static bool IsDoNotParallelizeSet(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(DoNotParallelizeAttribute))
-            !.Length != 0; // TODO: Investigate if we rely on NRE
+            .Length != 0;
 
     /// <summary>
     /// Gets the class cleanup lifecycle set on an assembly.
@@ -353,7 +353,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns> The class cleanup lifecycle attribute if set. null otherwise. </returns>
     internal static ClassCleanupExecutionAttribute? GetClassCleanupAttribute(Assembly assembly)
         => PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(assembly, typeof(ClassCleanupExecutionAttribute))
-            !.OfType<ClassCleanupExecutionAttribute>() // TODO: Investigate if we rely on NRE
+            .OfType<ClassCleanupExecutionAttribute>()
             .FirstOrDefault();
 
     /// <summary>
@@ -389,7 +389,7 @@ internal class ReflectHelper : MarshalByRefObject
         where TAttribute : Attribute
         => PlatformServiceProvider.Instance.ReflectionOperations
             .GetCustomAttributes(memberInfo.Module.Assembly, typeof(TAttribute))
-            !.OfType<TAttribute>()
+            .OfType<TAttribute>()
             .ToArray();
 
     /// <summary>
@@ -413,7 +413,7 @@ internal class ReflectHelper : MarshalByRefObject
     {
         TAttribute[] attribute = GetCustomAttributes<TAttribute>(attributeProvider, true);
 
-        return attribute == null || attribute.Length != 1
+        return attribute.Length != 1
             ? null
             : attribute[0];
     }
@@ -451,7 +451,7 @@ internal class ReflectHelper : MarshalByRefObject
     {
         PriorityAttribute[] priorityAttribute = GetCustomAttributes<PriorityAttribute>(priorityAttributeProvider, true);
 
-        return priorityAttribute == null || priorityAttribute.Length != 1
+        return priorityAttribute.Length != 1
             ? null
             : priorityAttribute[0].Priority;
     }
@@ -466,7 +466,7 @@ internal class ReflectHelper : MarshalByRefObject
     {
         IgnoreAttribute[]? ignoreAttribute = GetCustomAttributes<IgnoreAttribute>(ignoreAttributeProvider, true);
 
-        return ignoreAttribute is null || ignoreAttribute.Length == 0
+        return ignoreAttribute.Length == 0
             ? null
             : ignoreAttribute[0].IgnoreMessage;
     }
@@ -507,9 +507,7 @@ internal class ReflectHelper : MarshalByRefObject
 
         foreach (TestPropertyAttribute testProperty in testPropertyAttributes)
         {
-            Trait testPropertyPair = testProperty.Name == null
-                ? new Trait(string.Empty, testProperty.Value)
-                : new Trait(testProperty.Name, testProperty.Value);
+            var testPropertyPair = new Trait(testProperty.Name, testProperty.Value);
             yield return testPropertyPair;
         }
     }
@@ -585,7 +583,7 @@ internal class ReflectHelper : MarshalByRefObject
     {
         OwnerAttribute[] ownerAttribute = GetCustomAttributes<OwnerAttribute>(ownerAttributeProvider, true);
 
-        return ownerAttribute == null || ownerAttribute.Length != 1
+        return ownerAttribute.Length != 1
             ? null
             : ownerAttribute[0].Owner;
     }
