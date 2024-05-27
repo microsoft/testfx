@@ -196,22 +196,14 @@ internal class TypeCache : MarshalByRefObject
                 continue;
             }
 
-#if NETCOREAPP
+#if NETCOREAPP || WINDOWS_UWP
             if (hierarchyPart.StartsWith('\'') && hierarchyPart.EndsWith('\''))
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart.AsSpan(1, hierarchyPart.Length - 2));
-            }
-#elif WINDOWS_UWP
-            if (hierarchyPart.StartsWith('\'') && hierarchyPart.EndsWith('\''))
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart.Substring(1, hierarchyPart.Length - 2));
-            }
 #else
             if (hierarchyPart.StartsWith("'", StringComparison.Ordinal) && hierarchyPart.EndsWith("'", StringComparison.Ordinal))
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart.Substring(1, hierarchyPart.Length - 2));
-            }
 #endif
+            {
+                unescapedTypeNameBuilder.Append(hierarchyPart, 1, hierarchyPart.Length - 2);
+            }
             else
             {
                 unescapedTypeNameBuilder.Append(hierarchyPart);
@@ -313,25 +305,25 @@ internal class TypeCache : MarshalByRefObject
             UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods);
         }
 
-        Type? baseType = classType.GetTypeInfo().BaseType;
+        Type? baseType = classType.BaseType;
         while (baseType != null)
         {
             foreach (MethodInfo methodInfo in baseType.GetTypeInfo().DeclaredMethods)
             {
-                if (methodInfo.IsPublic && !methodInfo.IsStatic)
+                if (methodInfo is { IsPublic: true, IsStatic: false })
                 {
                     // Update test initialize/cleanup method from base type.
                     UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, instanceMethods);
                 }
 
-                if (methodInfo.IsPublic && methodInfo.IsStatic)
+                if (methodInfo is { IsPublic: true, IsStatic: true })
                 {
                     UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, true, ref initAndCleanupMethods);
                 }
             }
 
             UpdateInfoWithInitializeAndCleanupMethods(classInfo, ref initAndCleanupMethods);
-            baseType = baseType.GetTypeInfo().BaseType;
+            baseType = baseType.BaseType;
         }
 
         return classInfo;
@@ -380,7 +372,7 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
     private TestAssemblyInfo GetAssemblyInfo(Type type)
     {
-        Assembly assembly = type.GetTypeInfo().Assembly;
+        Assembly assembly = type.Assembly;
 
         if (_testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo? assemblyInfo))
         {
@@ -742,11 +734,6 @@ internal class TypeCache : MarshalByRefObject
         DebugEx.Assert(testClassInfo != null, "testClassInfo is Null");
 
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
-        if (methodInfo == null)
-        {
-            // Means the specified test method could not be found.
-            return null;
-        }
 
         ExpectedExceptionBaseAttribute? expectedExceptionAttribute = _reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
         int timeout = GetTestTimeout(methodInfo, testMethod);

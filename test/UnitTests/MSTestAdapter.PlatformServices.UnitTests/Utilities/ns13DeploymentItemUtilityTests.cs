@@ -55,12 +55,12 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void GetClassLevelDeploymentItemsShouldReturnADeploymentItem()
     {
-        KeyValuePair<string, string>[] kvpArray = new[]
-        {
+        KeyValuePair<string, string>[] kvpArray =
+        [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory),
-        };
+                _defaultDeploymentItemOutputDirectory)
+        ];
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), kvpArray);
 
         IList<DeploymentItem> deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
@@ -75,15 +75,15 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void GetClassLevelDeploymentItemsShouldReturnMoreThanOneDeploymentItems()
     {
-        KeyValuePair<string, string>[] deploymentItemAttributes = new[]
-        {
+        KeyValuePair<string, string>[] deploymentItemAttributes =
+        [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory),
-        };
+                _defaultDeploymentItemOutputDirectory)
+        ];
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
         IList<DeploymentItem> deploymentItems =
@@ -106,15 +106,15 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void GetClassLevelDeploymentItemsShouldNotReturnDuplicateDeploymentItemEntries()
     {
-        KeyValuePair<string, string>[] deploymentItemAttributes = new[]
-        {
+        KeyValuePair<string, string>[] deploymentItemAttributes =
+        [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory),
-        };
+                _defaultDeploymentItemOutputDirectory)
+        ];
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
         IList<DeploymentItem> deploymentItems =
@@ -122,27 +122,27 @@ public class DeploymentItemUtilityTests : TestContainer
                 typeof(DeploymentItemUtilityTests),
                 _warnings);
 
-        DeploymentItem[] expectedDeploymentItems = new[]
-        {
+        DeploymentItem[] expectedDeploymentItems =
+        [
             new DeploymentItem(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory),
-        };
+                _defaultDeploymentItemOutputDirectory)
+        ];
 
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
     }
 
     public void GetClassLevelDeploymentItemsShouldReportWarningsForInvalidDeploymentItems()
     {
-        KeyValuePair<string, string>[] deploymentItemAttributes = new[]
-        {
+        KeyValuePair<string, string>[] deploymentItemAttributes =
+        [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 null,
-                _defaultDeploymentItemOutputDirectory),
-        };
+                _defaultDeploymentItemOutputDirectory)
+        ];
         SetupDeploymentItems(typeof(DeploymentItemUtilityTests).GetTypeInfo(), deploymentItemAttributes);
 
         IList<DeploymentItem> deploymentItems = _deploymentItemUtility.GetClassLevelDeploymentItems(typeof(DeploymentItemUtilityTests), _warnings);
@@ -174,15 +174,15 @@ public class DeploymentItemUtilityTests : TestContainer
 
     public void GetDeploymentItemsShouldReturnMethodLevelDeploymentItemsOnly()
     {
-        KeyValuePair<string, string>[] deploymentItemAttributes = new[]
-        {
+        KeyValuePair<string, string>[] deploymentItemAttributes =
+        [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory),
-        };
+                _defaultDeploymentItemOutputDirectory)
+        ];
         MethodInfo memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
                 "GetDeploymentItemsShouldReturnNullOnNoDeploymentItems");
@@ -218,15 +218,15 @@ public class DeploymentItemUtilityTests : TestContainer
         KeyValuePair<string, string>[] deploymentItems = _deploymentItemUtility.GetDeploymentItems(method, classLevelDeploymentItems, _warnings);
 
         // Assert.
-        KeyValuePair<string, string>[] expectedDeploymentItems = new[]
-        {
+        KeyValuePair<string, string>[] expectedDeploymentItems =
+        [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory),
-        };
+                _defaultDeploymentItemOutputDirectory)
+        ];
 
         Verify(expectedDeploymentItems.SequenceEqual(deploymentItems.ToArray()));
     }
@@ -234,23 +234,23 @@ public class DeploymentItemUtilityTests : TestContainer
     public void GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItems()
     {
         // Arrange.
-        KeyValuePair<string, string>[] deploymentItemAttributes = new[]
-        {
+        KeyValuePair<string, string>[] deploymentItemAttributes =
+        [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory),
-        };
+                _defaultDeploymentItemOutputDirectory)
+        ];
         MethodInfo memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
                 "GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItems");
         SetupDeploymentItems(memberInfo, deploymentItemAttributes);
 
-        DeploymentItem[] classLevelDeploymentItems = new[]
-        {
+        DeploymentItem[] classLevelDeploymentItems =
+        [
             new DeploymentItem(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory),
-        };
+                _defaultDeploymentItemOutputDirectory)
+        ];
 
         // Act.
         KeyValuePair<string, string>[] deploymentItems = _deploymentItemUtility.GetDeploymentItems(
@@ -275,15 +275,15 @@ public class DeploymentItemUtilityTests : TestContainer
     public void GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItemsWithoutDuplicates()
     {
         // Arrange.
-        KeyValuePair<string, string>[] deploymentItemAttributes = new[]
-        {
+        KeyValuePair<string, string>[] deploymentItemAttributes =
+        [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
                 _defaultDeploymentItemOutputDirectory),
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath + "\\temp2",
-                _defaultDeploymentItemOutputDirectory),
-        };
+                _defaultDeploymentItemOutputDirectory)
+        ];
         MethodInfo memberInfo =
             typeof(DeploymentItemUtilityTests).GetMethod(
                 "GetDeploymentItemsShouldReturnClassAndMethodLevelDeploymentItems");
@@ -406,12 +406,12 @@ public class DeploymentItemUtilityTests : TestContainer
     public void HasDeployItemsShouldReturnTrueWhenDeploymentItemsArePresent()
     {
         TestCase testCase = new("A.C.M", new System.Uri("executor://testExecutor"), "A");
-        KeyValuePair<string, string>[] kvpArray = new[]
-        {
+        KeyValuePair<string, string>[] kvpArray =
+        [
             new KeyValuePair<string, string>(
                 _defaultDeploymentItemPath,
-                _defaultDeploymentItemOutputDirectory),
-        };
+                _defaultDeploymentItemOutputDirectory)
+        ];
         testCase.SetPropertyValue(DeploymentItemsProperty, kvpArray);
 
         Verify(DeploymentItemUtility.HasDeploymentItems(testCase));

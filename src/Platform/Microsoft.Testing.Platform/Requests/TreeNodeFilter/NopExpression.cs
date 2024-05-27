@@ -3,6 +3,4 @@
 
 namespace Microsoft.Testing.Platform.Requests;
 
-internal sealed class NopExpression : FilterExpression
-{
-}
+internal sealed class NopExpression : FilterExpression;

@@ -243,7 +243,5 @@ public class TestMethodFilterTests : TestContainer
         public bool MatchTestCase(TestCase testCase, Func<string, object> propertyValueProvider) => throw new NotImplementedException();
     }
 
-    private class DummyTestClassAttribute : UTF.TestClassAttribute
-    {
-    }
+    private class DummyTestClassAttribute : UTF.TestClassAttribute;
 }

@@ -363,15 +363,14 @@ public sealed class AssemblyInitializeShouldBeValidAnalyzerTests(ITestExecutionC
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            new[]
-            {
+            [
                 VerifyCS.Diagnostic().WithLocation(0).WithArguments("AssemblyInitialize0"),
                 VerifyCS.Diagnostic().WithLocation(1).WithArguments("AssemblyInitialize1"),
                 VerifyCS.Diagnostic().WithLocation(2).WithArguments("AssemblyInitialize2"),
                 VerifyCS.Diagnostic().WithLocation(3).WithArguments("AssemblyInitialize3"),
                 VerifyCS.Diagnostic().WithLocation(4).WithArguments("AssemblyInitialize4"),
-                VerifyCS.Diagnostic().WithLocation(5).WithArguments("AssemblyInitialize5"),
-            },
+                VerifyCS.Diagnostic().WithLocation(5).WithArguments("AssemblyInitialize5")
+            ],
             fixedCode);
     }
 

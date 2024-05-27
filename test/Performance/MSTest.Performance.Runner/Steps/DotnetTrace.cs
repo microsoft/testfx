@@ -55,6 +55,6 @@ internal class DotnetTrace : IStep<BuildArtifact, Files>
         Console.WriteLine($"Compressing to '{sample}'");
         ZipFile.CreateFromDirectory(payload.TestAsset.TargetAssetPath, sample, _compressionLevel, includeBaseDirectory: true);
 
-        return new Files(new[] { sample });
+        return new Files([sample]);
     }
 }

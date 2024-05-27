@@ -806,6 +806,24 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Asynchronous test fixture methods do not require the &apos;Async&apos; suffix.
+        /// </summary>
+        internal static string UseAsyncSuffixTestFixtureMethodSuppressorJustification {
+            get {
+                return ResourceManager.GetString("UseAsyncSuffixTestFixtureMethodSuppressorJustification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Asynchronous test methods do not require the &apos;Async&apos; suffix.
+        /// </summary>
+        internal static string UseAsyncSuffixTestMethodSuppressorJustification {
+            get {
+                return ResourceManager.GetString("UseAsyncSuffixTestMethodSuppressorJustification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to [{0}] can only be set on methods marked with [TestMethod].
         /// </summary>
         internal static string UseAttributeOnTestMethodAnalyzerMessageFormat {

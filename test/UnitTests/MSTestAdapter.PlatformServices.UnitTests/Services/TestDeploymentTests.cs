@@ -59,18 +59,18 @@ public class TestDeploymentTests : TestContainer
         var testDeployment = new TestDeployment(new DeploymentItemUtility(_mockReflectionUtility.Object), null, null);
 
         // setup mocks
-        KeyValuePair<string, string>[] methodLevelDeploymentItems = new[]
-        {
+        KeyValuePair<string, string>[] methodLevelDeploymentItems =
+        [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory),
-        };
-        KeyValuePair<string, string>[] classLevelDeploymentItems = new[]
-        {
+                DefaultDeploymentItemOutputDirectory)
+        ];
+        KeyValuePair<string, string>[] classLevelDeploymentItems =
+        [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath + "\\temp2",
-                DefaultDeploymentItemOutputDirectory),
-        };
+                DefaultDeploymentItemOutputDirectory)
+        ];
         MethodInfo memberInfo =
             typeof(TestDeploymentTests).GetMethod(
                 "GetDeploymentItemsReturnsDeploymentItems");
@@ -116,7 +116,7 @@ public class TestDeploymentTests : TestContainer
         MSTestSettingsProvider mstestSettingsProvider = new();
         mstestSettingsProvider.Load(reader);
 
-        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
@@ -133,7 +133,7 @@ public class TestDeploymentTests : TestContainer
 
     public void CleanupShouldDeleteRootDeploymentDirectory()
     {
-        TestCase testCase = GetTestCase(typeof(DeploymentUtilityTests).GetTypeInfo().Assembly.Location);
+        TestCase testCase = GetTestCase(typeof(DeploymentUtilityTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
@@ -157,7 +157,7 @@ public class TestDeploymentTests : TestContainer
 
     public void GetDeploymentDirectoryShouldReturnDeploymentOutputDirectory()
     {
-        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
@@ -178,12 +178,12 @@ public class TestDeploymentTests : TestContainer
     public void DeployShouldReturnFalseWhenDeploymentEnabledSetToFalseButHasDeploymentItems()
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), "A");
-        KeyValuePair<string, string>[] kvpArray = new[]
-        {
+        KeyValuePair<string, string>[] kvpArray =
+        [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory),
-        };
+                DefaultDeploymentItemOutputDirectory)
+        ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
 
         var testDeployment = new TestDeployment(
@@ -255,13 +255,13 @@ public class TestDeploymentTests : TestContainer
     [Ignore]
     public void DeployShouldReturnTrueWhenDeploymentEnabledSetToTrueAndHasDeploymentItems()
     {
-        var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
-        KeyValuePair<string, string>[] kvpArray = new[]
-                {
-                    new KeyValuePair<string, string>(
+        var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), typeof(TestDeploymentTests).Assembly.Location);
+        KeyValuePair<string, string>[] kvpArray =
+        [
+            new KeyValuePair<string, string>(
                         DefaultDeploymentItemPath,
-                        DefaultDeploymentItemOutputDirectory),
-                };
+                        DefaultDeploymentItemOutputDirectory)
+        ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
         var testDeployment = new TestDeployment(
             new DeploymentItemUtility(_mockReflectionUtility.Object),
@@ -289,9 +289,9 @@ public class TestDeploymentTests : TestContainer
     public void GetDeploymentInformationShouldReturnAppBaseDirectoryIfRunDirectoryIsNull()
     {
         TestDeployment.Reset();
-        IDictionary<string, object> properties = TestDeployment.GetDeploymentInformation(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        IDictionary<string, object> properties = TestDeployment.GetDeploymentInformation(typeof(TestDeploymentTests).Assembly.Location);
 
-        string applicationBaseDirectory = Path.GetDirectoryName(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        string applicationBaseDirectory = Path.GetDirectoryName(typeof(TestDeploymentTests).Assembly.Location);
         var expectedProperties = new Dictionary<string, object>
         {
             [TestContext.TestRunDirectoryLabel] = applicationBaseDirectory,
@@ -312,7 +312,7 @@ public class TestDeploymentTests : TestContainer
     public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNull()
     {
         // Arrange.
-        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
@@ -347,7 +347,7 @@ public class TestDeploymentTests : TestContainer
     public void GetDeploymentInformationShouldReturnRunDirectoryInformationIfSourceIsNotNull()
     {
         // Arrange.
-        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        TestCase testCase = GetTestCase(typeof(TestDeploymentTests).Assembly.Location);
 
         // Setup mocks.
         TestDeployment testDeployment = CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories);
@@ -358,7 +358,7 @@ public class TestDeploymentTests : TestContainer
         Verify(testDeployment.Deploy(new List<TestCase> { testCase }, mockRunContext.Object, new Mock<IFrameworkHandle>().Object));
 
         // Act.
-        IDictionary<string, object> properties = TestDeployment.GetDeploymentInformation(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        IDictionary<string, object> properties = TestDeployment.GetDeploymentInformation(typeof(TestDeploymentTests).Assembly.Location);
 
         // Assert.
         var expectedProperties = new Dictionary<string, object>
@@ -402,12 +402,12 @@ public class TestDeploymentTests : TestContainer
     private static TestCase GetTestCase(string source)
     {
         var testCase = new TestCase("A.C.M", new System.Uri("executor://testExecutor"), source);
-        KeyValuePair<string, string>[] kvpArray = new[]
-        {
+        KeyValuePair<string, string>[] kvpArray =
+        [
             new KeyValuePair<string, string>(
                 DefaultDeploymentItemPath,
-                DefaultDeploymentItemOutputDirectory),
-        };
+                DefaultDeploymentItemOutputDirectory)
+        ];
         testCase.SetPropertyValue(DeploymentItemUtilityTests.DeploymentItemsProperty, kvpArray);
 
         return testCase;
@@ -415,7 +415,7 @@ public class TestDeploymentTests : TestContainer
 
     private TestDeployment CreateAndSetupDeploymentRelatedUtilities(out TestRunDirectories testRunDirectories)
     {
-        string currentExecutingFolder = Path.GetDirectoryName(typeof(TestDeploymentTests).GetTypeInfo().Assembly.Location);
+        string currentExecutingFolder = Path.GetDirectoryName(typeof(TestDeploymentTests).Assembly.Location);
 
         testRunDirectories = new TestRunDirectories(currentExecutingFolder);
 

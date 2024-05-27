@@ -102,7 +102,7 @@ public sealed class TestMethodShouldBeValidAnalyzer : DiagnosticAnalyzer
             }
         }
 
-        if (methodSymbol.ReturnsVoid && methodSymbol.IsAsync)
+        if (methodSymbol is { ReturnsVoid: true, IsAsync: true })
         {
             context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAsyncVoidRule, methodSymbol.Name));
         }
