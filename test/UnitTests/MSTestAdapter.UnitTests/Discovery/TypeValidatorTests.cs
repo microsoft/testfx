@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -40,7 +40,8 @@ public class TypeValidatorTests : TestContainer
 
     #region Type is class, TestClassAttribute or attribute derived from TestClassAttribute
 
-    public void IsValidTestClassShouldReturnFalseForNonClassTypes() => Verify(!_typeValidator.IsValidTestClass(typeof(IDummyInterface), _warnings));
+    public void IsValidTestClassShouldReturnFalseForNonClassTypes() =>
+        Verify(!_typeValidator.IsValidTestClass(typeof(IDummyInterface), _warnings));
 
     public void IsValidTestClassShouldReturnFalseForClassesNotHavingTestClassAttributeOrDerivedAttributeTypes()
     {

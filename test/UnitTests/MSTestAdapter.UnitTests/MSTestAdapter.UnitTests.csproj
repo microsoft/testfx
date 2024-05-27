@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <NetStandardNetFrameworkHolder>net48</NetStandardNetFrameworkHolder>
@@ -22,6 +22,7 @@
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework\TestFramework.csproj" />
     <ProjectReference Include="$(RepoRoot)src\TestFramework\TestFramework.Extensions\TestFramework.Extensions.csproj" Condition=" '$(TargetFramework)' != '$(NetStandardNetFrameworkHolder)' " />
     <ProjectReference Include="$(RepoRoot)test\Utilities\TestFramework.ForTestingMSTest\TestFramework.ForTestingMSTest.csproj" />
+    <ProjectReference Include="$(RepoRoot)test\UnitTests\MSTestAdapter.UnitTests.Examples.DifferentAssembly\MSTestAdapter.UnitTests.Examples.DifferentAssembly.csproj" />
   </ItemGroup>
 
   <ItemGroup>
