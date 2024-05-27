@@ -477,7 +477,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         // Build the per request objects
         ServerTestExecutionFilterFactory filterFactory = new();
         TestHostTestFrameworkInvoker invoker = new(perRequestServiceProvider);
-        PerRequestServerDataConsumer testNodeUpdateProcessor = new(perRequestServiceProvider, this, args.RunId, perRequestServiceProvider.GetTask());
+        PerRequestServerDataConsumer testNodeUpdateProcessor = new(perRequestServiceProvider, this, args.RunId);
 
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
 
