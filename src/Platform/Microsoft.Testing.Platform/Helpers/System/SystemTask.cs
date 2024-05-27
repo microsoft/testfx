@@ -5,12 +5,6 @@ namespace Microsoft.Testing.Platform.Helpers;
 
 internal sealed class SystemTask : ITask
 {
-    public Task WhenAll(IEnumerable<Task> tasks)
-        => Task.WhenAll(tasks);
-
-    public Task WhenAll(params Task[] tasks)
-        => Task.WhenAll(tasks);
-
     public Task<Task> WhenAny(params Task[] tasks)
         => Task.WhenAny(tasks);
 
