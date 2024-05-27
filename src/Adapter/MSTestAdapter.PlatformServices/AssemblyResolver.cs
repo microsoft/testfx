@@ -515,7 +515,6 @@ class AssemblyResolver :
                 return assembly;
             }
 
-            bool isResource = assemblyNameToLoad.EndsWith(".resources", StringComparison.InvariantCulture);
 
             // required assembly is not present in searchDirectories??
             // see, if we can find it in user specified search directories.
