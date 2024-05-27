@@ -85,17 +85,16 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 $"--{PlatformCommandLineProvider.TestHostControllerPIDOptionKey}",
                 process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture),
             };
-            CommandLineInfo finalCommandLine = new(executableInfo.FileName, partialCommandLine, testApplicationFullPath);
 
             ProcessStartInfo processStartInfo = new()
             {
-                FileName = finalCommandLine.FileName,
+                FileName = executableInfo.FileName,
 #if !NETCOREAPP
                 UseShellExecute = false,
 #endif
             };
 
-            foreach (string argument in finalCommandLine.Arguments)
+            foreach (string argument in partialCommandLine)
             {
 #if !NETCOREAPP
                 processStartInfo.Arguments += argument + " ";
