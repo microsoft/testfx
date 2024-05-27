@@ -16,7 +16,7 @@ public interface IAsyncInitializableExtension
 
 internal static class InitializableExtension
 {
-    public static async Task TryInitialize(this object target)
+    public static async Task TryInitializeAsync(this object target)
     {
         if (target is IAsyncInitializableExtension initializable)
         {

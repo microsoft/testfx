@@ -31,7 +31,7 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
                 continue;
             }
 
-            await serviceInstance.TryInitialize();
+            await serviceInstance.TryInitializeAsync();
 
             IConfigurationProvider configurationProvider = serviceInstance.Build();
             await configurationProvider.LoadAsync();

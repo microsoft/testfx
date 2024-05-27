@@ -27,7 +27,7 @@ internal sealed class ToolsManager : IToolsManager
                 continue;
             }
 
-            await tool.TryInitialize();
+            await tool.TryInitializeAsync();
 
             tools.Add(tool);
         }

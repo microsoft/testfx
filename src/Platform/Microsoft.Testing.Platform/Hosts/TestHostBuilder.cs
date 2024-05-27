@@ -546,7 +546,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Create the test framework capabilities
         ITestFrameworkCapabilities testFrameworkCapabilities = testFrameworkManager.TestFrameworkCapabilitiesFactory(serviceProvider);
-        await testFrameworkCapabilities.TryInitialize();
+        await testFrameworkCapabilities.TryInitializeAsync();
 
         // Register the test framework capabilities to be used by services
         serviceProvider.AddService(testFrameworkCapabilities);
@@ -562,7 +562,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Create the test framework adapter
         ITestFramework testFramework = testFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
-        await testFramework.TryInitialize();
+        await testFramework.TryInitializeAsync();
 
         serviceProvider.AllowTestAdapterFrameworkRegistration = true;
         try

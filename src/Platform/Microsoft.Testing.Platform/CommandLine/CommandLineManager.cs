@@ -34,7 +34,7 @@ internal sealed class CommandLineManager(IRuntimeFeature runtimeFeature, IEnviro
                 continue;
             }
 
-            await serviceInstance.TryInitialize();
+            await serviceInstance.TryInitializeAsync();
 
             commandLineOptionsProviders.Add(new CommandLineOptionsProviderCache(serviceInstance));
         }
