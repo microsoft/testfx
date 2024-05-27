@@ -293,7 +293,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             if (namedPipeClient is not null)
             {
-                await SendCommandLineOptionsToDotnetTestPipeAsync(namedPipeClient, commandLineHandler, testApplicationCancellationTokenSource);
+                await SendCommandLineOptionsToDotnetTestPipeAsync(namedPipeClient, commandLineHandler, testApplicationCancellationTokenSource.CancellationToken);
             }
             else
             {
@@ -445,7 +445,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         }
     }
 
-    private async Task SendCommandLineOptionsToDotnetTestPipeAsync(NamedPipeClient namedPipeClient, CommandLineHandler commandLineHandler, CTRLPlusCCancellationTokenSource cancellationTokenSource)
+    private async Task SendCommandLineOptionsToDotnetTestPipeAsync(NamedPipeClient namedPipeClient, CommandLineHandler commandLineHandler, CancellationToken cancellationToken)
     {
         List<CommandLineOptionMessage> commandLineHelpOptions = new();
         foreach (ICommandLineOptionsProvider commandLineOptionProvider in commandLineHandler.CommandLineOptionsProviders)
@@ -488,7 +488,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             }
         }
 
-        await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationTokenSource.CancellationToken);
+        await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationToken);
     }
 
     private static async Task<NamedPipeClient?> ConnectToDotnetTestPipeIfAvailableAsync(CommandLineHandler commandLineHandler, CTRLPlusCCancellationTokenSource cancellationTokenSource)

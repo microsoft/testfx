@@ -6,37 +6,38 @@ using Microsoft.Testing.Platform.IPC.Models;
 namespace Microsoft.Testing.Platform.IPC.Serializers;
 
 /*
-|---FieldCount----| 2 bytes
+|---FieldCount---| 2 bytes
 
-|---ModuleName Id----| id (2 bytes)
-|---ModuleName Size----| (4 bytes)
-|---ModuleName Value----| (n bytes)
+|---ModuleName Id---| 1 (2 bytes)
+|---ModuleName Size---| (4 bytes)
+|---ModuleName Value---| (n bytes)
 
-|---CommandLineOptionMessageList Id----| id (2 bytes)
-|---CommandLineOptionMessageList Size----| (4 bytes)
-|---CommandLineOptionMessageList Value----| (n bytes)
-    |---CommandLineOptionMessageList Length----| (4 bytes)
+|---CommandLineOptionMessageList Id---| 2 (2 bytes)
+|---CommandLineOptionMessageList Size---| (4 bytes)
+|---CommandLineOptionMessageList Value---| (n bytes)
+    |---CommandLineOptionMessageList Length---| (4 bytes)
 
-    |---CommandLineOptionMessageList[0] FieldCount----| 2 bytes
-    |---CommandLineOptionMessageList[0] Name Id----| id (2 bytes)
-    |---CommandLineOptionMessageList[0] Name Size----| (4 bytes)
-    |---CommandLineOptionMessageList[0] Name Value----| (n bytes)
+    |---CommandLineOptionMessageList[0] FieldCount---| 2 bytes
 
-    |---CommandLineOptionMessageList[1] Description Id----| id (2 bytes)
-    |---CommandLineOptionMessageList[1] Description Size----| (4 bytes)
-    |---CommandLineOptionMessageList[1] Description Value----| (n bytes)
+    |---CommandLineOptionMessageList[0] Name Id---| 1 (2 bytes)
+    |---CommandLineOptionMessageList[0] Name Size---| (4 bytes)
+    |---CommandLineOptionMessageList[0] Name Value---| (n bytes)
 
-    |---CommandLineOptionMessageList[2] Arity Id----| id (2 bytes)
-    |---CommandLineOptionMessageList[2] Arity Size----| (4 bytes)
-    |---CommandLineOptionMessageList[2] Arity Value----| (n bytes)
+    |---CommandLineOptionMessageList[1] Description Id---| 2 (2 bytes)
+    |---CommandLineOptionMessageList[1] Description Size---| (4 bytes)
+    |---CommandLineOptionMessageList[1] Description Value---| (n bytes)
 
-    |---CommandLineOptionMessageList[3] IsHidden Id----| id (2 bytes)
-    |---CommandLineOptionMessageList[3] IsHidden Size----| (4 bytes)
-    |---CommandLineOptionMessageList[3] IsHidden Value----| (1 byte)
+    |---CommandLineOptionMessageList[2] Arity Id---| 3 (2 bytes)
+    |---CommandLineOptionMessageList[2] Arity Size---| (4 bytes)
+    |---CommandLineOptionMessageList[2] Arity Value---| (n bytes)
 
-    |---CommandLineOptionMessageList[4] IsBuiltIn Id----| id (2 bytes)
-    |---CommandLineOptionMessageList[4] IsBuiltIn Size----| (4 bytes)
-    |---CommandLineOptionMessageList[4] IsBuiltIn Value----| (1 byte)
+    |---CommandLineOptionMessageList[3] IsHidden Id---| 4 (2 bytes)
+    |---CommandLineOptionMessageList[3] IsHidden Size---| (4 bytes)
+    |---CommandLineOptionMessageList[3] IsHidden Value---| (1 byte)
+
+    |---CommandLineOptionMessageList[4] IsBuiltIn Id---| 5 (2 bytes)
+    |---CommandLineOptionMessageList[4] IsBuiltIn Size---| (4 bytes)
+    |---CommandLineOptionMessageList[4] IsBuiltIn Value---| (1 byte)
 */
 
 internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INamedPipeSerializer
@@ -48,12 +49,12 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         string moduleName = string.Empty;
         List<CommandLineOptionMessage>? commandLineOptionMessages = null;
 
-        short fieldCount = ReadShort(stream);
+        ushort fieldCount = ReadShort(stream);
 
         for (int i = 0; i < fieldCount; i++)
         {
             int fieldId = ReadShort(stream);
-            var fieldSize = ReadInt(stream);
+            int fieldSize = ReadInt(stream);
 
             switch (fieldId)
             {
@@ -90,7 +91,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
             for (int j = 0; j < fieldCount; j++)
             {
                 int fieldId = ReadShort(stream);
-                var fieldSize = ReadInt(stream);
+                int fieldSize = ReadInt(stream);
 
                 switch (fieldId)
                 {
@@ -130,7 +131,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
     {
         RoslynDebug.Assert(stream.CanSeek, "We expect a seekable stream.");
 
-        CommandLineOptionMessages commandLineOptionMessages = (CommandLineOptionMessages)objectToSerialize;
+        var commandLineOptionMessages = (CommandLineOptionMessages)objectToSerialize;
 
         WriteShort(stream, GetFieldCount(commandLineOptionMessages));
 
@@ -169,23 +170,13 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
     }
 
-    private static short GetFieldCount(CommandLineOptionMessages commandLineOptionMessages)
-    {
-        return (short)((RoslynString.IsNullOrEmpty(commandLineOptionMessages.ModuleName) ? 0 : 1) +
+    private static ushort GetFieldCount(CommandLineOptionMessages commandLineOptionMessages) => (ushort)((RoslynString.IsNullOrEmpty(commandLineOptionMessages.ModuleName) ? 0 : 1) +
            (commandLineOptionMessages is null ? 0 : 1));
-    }
 
-    private static short GetFieldCount(CommandLineOptionMessage commandLineOptionMessage)
-    {
-        return (short)((short)(RoslynString.IsNullOrEmpty(commandLineOptionMessage.Name) ? 0 : 1) +
-            (short)(RoslynString.IsNullOrEmpty(commandLineOptionMessage.Description) ? 0 : 1) +
-            (short)(RoslynString.IsNullOrEmpty(commandLineOptionMessage.Arity) ? 0 : 1) +
-            1 +
-            1);
-    }
+    private static ushort GetFieldCount(CommandLineOptionMessage commandLineOptionMessage) => (ushort)((RoslynString.IsNullOrEmpty(commandLineOptionMessage.Name) ? 0 : 1) +
+            (RoslynString.IsNullOrEmpty(commandLineOptionMessage.Description) ? 0 : 1) +
+            (RoslynString.IsNullOrEmpty(commandLineOptionMessage.Arity) ? 0 : 1) +
+            2);
 
-    private static bool IsNull<T>(T[] items)
-    {
-        return items is null || items.Length == 0;
-    }
+    private static bool IsNull<T>(T[] items) => items is null || items.Length == 0;
 }
