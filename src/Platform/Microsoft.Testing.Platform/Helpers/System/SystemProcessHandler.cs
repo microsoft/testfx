@@ -3,6 +3,9 @@
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Helpers;
 
@@ -15,8 +18,10 @@ internal sealed class SystemProcessHandler : IProcessHandler
 
     public IProcess Start(ProcessStartInfo startInfo)
     {
-        var process = Process.Start(startInfo)
-            ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotStartProcessErrorMessage, processStartInfo.FileName));
+        Process process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.CannotStartProcessErrorMessage, startInfo.FileName));
         process.EnableRaisingEvents = true;
         return new SystemProcess(process);
     }
