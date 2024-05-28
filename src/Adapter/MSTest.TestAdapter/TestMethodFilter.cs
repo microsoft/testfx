@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -89,6 +89,17 @@ internal class TestMethodFilter
                 if (currentTest.Properties.Contains(testProperty))
                 {
                     return currentTest.GetPropertyValue(testProperty);
+                }
+            }
+            else
+            {
+                // Everything that it's not a supported property we use traits
+                foreach (Trait trait in currentTest.Traits)
+                {
+                    if (trait.Name.Equals(propertyName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return trait.Value;
+                    }
                 }
             }
         }
