@@ -389,23 +389,14 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     _client = new(args.ClientInfo.Name, args.ClientInfo.Version);
                     await _logger.LogInformationAsync($"Connection established with '{_client.Id}', protocol version {_client.Version}");
 
-                    // Get the capabilities of the test framework
-                    ITestFrameworkCapabilities capabilities = _testFrameworkManager.TestFrameworkCapabilitiesFactory(ServiceProvider);
-                    try
-                    {
-                        INamedFeatureCapability? namedFeatureCapability = capabilities.GetCapability<INamedFeatureCapability>();
-                        return new InitializeResponseArgs(
-                            ServerInfo: new ServerInfo("test-anywhere", Version: ProtocolVersion),
-                            Capabilities: new ServerCapabilities(
-                                new ServerTestingCapabilities(
-                                    SupportsDiscovery: true,
-                                    MultiRequestSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.MultiRequestSupport) == true,
-                                    VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true)));
-                    }
-                    finally
-                    {
-                        await DisposeHelper.DisposeAsync(capabilities);
-                    }
+                    INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
+                    return new InitializeResponseArgs(
+                        ServerInfo: new ServerInfo("test-anywhere", Version: ProtocolVersion),
+                        Capabilities: new ServerCapabilities(
+                            new ServerTestingCapabilities(
+                                SupportsDiscovery: true,
+                                MultiRequestSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.MultiRequestSupport) == true,
+                                VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true)));
                 }
 
             case (JsonRpcMethods.TestingDiscoverTests, DiscoverRequestArgs args):

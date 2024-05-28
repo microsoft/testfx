@@ -7,7 +7,6 @@ using System.Globalization;
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
-using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
@@ -53,7 +52,7 @@ internal sealed class ConsoleTestHost(
             ?? new TestHostTestFrameworkInvoker(ServiceProvider);
 
         ServiceProvider.TryAddService(new Services.TestSessionContext(abortRun));
-        ITestFramework testFramework = await _buildTestFrameworkAsync(
+        ITestFramework testFramework = await _buildTestFrameworkAsync(new(
             ServiceProvider,
             new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), testExecutionFilterFactory),
             testAdapterInvoker,

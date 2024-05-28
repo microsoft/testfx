@@ -5,5 +5,5 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 
 public interface IBannerMessageOwnerCapability : ITestFrameworkCapability
 {
-    string GetBannerMessage();
+    Task<string> GetBannerMessageAsync();
 }

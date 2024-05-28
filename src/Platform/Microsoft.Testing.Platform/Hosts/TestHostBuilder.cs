@@ -32,7 +32,7 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.Hosts;
 
-internal partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
+internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
@@ -109,6 +109,9 @@ internal partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature r
         serviceProvider.TryAddService(systemMonitor);
         SystemMonitorAsyncFactory systemMonitorAsyncFactory = new();
         serviceProvider.TryAddService(systemMonitorAsyncFactory);
+
+        PlatformInformation platformInformation = new();
+        serviceProvider.AddService(platformInformation);
 
         ILogger? logger = null;
         if (loggingState.FileLoggerProvider is not null)
@@ -559,7 +562,7 @@ internal partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature r
 
         // Create the test framework adapter
         ITestFrameworkCapabilities testFrameworkCapabilities = serviceProvider.GetTestFrameworkCapabilities();
-        ITestFramework testFramework = testFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
+        ITestFramework testFramework = testFrameworkBuilderData.TestFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
         await testFramework.TryInitializeAsync();
 
         serviceProvider.AllowTestAdapterFrameworkRegistration = true;
@@ -720,7 +723,10 @@ internal partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature r
         string? dotnetNoLogoEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
         if (!isNoBannerSet && !(noBannerEnvironmentVar is "1" or "true") && !(dotnetNoLogoEnvironmentVar is "1" or "true"))
         {
-            string? bannerMessage = testFrameworkCapabilities.GetCapability<IBannerMessageOwnerCapability>()?.GetBannerMessage();
+            IBannerMessageOwnerCapability? bannerMessageOwnerCapability = testFrameworkCapabilities.GetCapability<IBannerMessageOwnerCapability>();
+            string? bannerMessage = bannerMessageOwnerCapability is not null
+                ? await bannerMessageOwnerCapability.GetBannerMessageAsync()
+                : null;
             await platformOutputDevice.DisplayBannerAsync(bannerMessage);
         }
     }
