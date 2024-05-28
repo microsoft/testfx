@@ -260,6 +260,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
+        // REVIEW: We started setting this value to that actual DataType earlier so we can skip this expensive code
+        // but some of the code after is expecting this property to stay NONE (acceptance tests fail if you don't do this
+        // so we reset is here to None.
+        test.TestMethod.DataType = DynamicDataType.None;
+
         // NOTE: From this place we don't have any path that would let the user write a message on the TestContext and we don't do
         // anything with what would be printed anyway so we can simply use a simple StringWriter.
         using var writer = new StringWriter();
