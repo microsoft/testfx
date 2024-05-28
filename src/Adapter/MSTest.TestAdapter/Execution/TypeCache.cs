@@ -298,19 +298,9 @@ internal class TypeCache : MarshalByRefObject
 
         foreach (MethodInfo methodInfo in classType.GetTypeInfo().DeclaredMethods)
         {
-            // TODO: should this be wrapped or the ifs in code below should be removed? issue: https://github.com/microsoft/testfx/issues/2999
-            // if (methodInfo.IsPublic && !methodInfo.IsStatic)
-            // {
-            // Update test initialize/cleanup method
             UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, false, instanceMethods);
 
-            // }
-            // if (methodInfo.IsPublic && methodInfo.IsStatic)
-            // {
-            // Update class initialize/cleanup method
             UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods);
-
-            // }
         }
 
         Type? baseType = classType.BaseType;
@@ -319,14 +309,12 @@ internal class TypeCache : MarshalByRefObject
         {
             foreach (MethodInfo methodInfo in baseType.GetTypeInfo().DeclaredMethods)
             {
-                // TODO: this is inconsistent, normally we inspect all methods for attributes and throw when they have incorrect shape, issue: https://github.com/microsoft/testfx/issues/2999
                 if (methodInfo is { IsPublic: true, IsStatic: false })
                 {
                     // Update test initialize/cleanup method from base type.
                     UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, instanceMethods);
                 }
 
-                // TODO: this is inconsistent, normally we inspect all methods for attributes and throw when they have incorrect shape, issue: https://github.com/microsoft/testfx/issues/2999
                 if (methodInfo is { IsPublic: true, IsStatic: true })
                 {
                     UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, true, ref initAndCleanupMethods);

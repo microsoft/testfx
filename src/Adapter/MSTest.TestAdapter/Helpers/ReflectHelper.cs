@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Security;
@@ -15,7 +14,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal class ReflectHelper : MarshalByRefObject
 {
-    private static readonly Lazy<ReflectHelper> InstanceValue = new(() => new ReflectHelper(new NotCachedAttributeHelper()));
+    private static readonly Lazy<ReflectHelper> InstanceValue = new(() => new ReflectHelper(new NotCachedReflectionAccessor()));
 
     // PERF: This was moved from Dictionary<MemberInfo, Dictionary<string, object>> to Dictionary<ICustomAttributeProvider, Attribute[]>
     // this allows us to store multiple attributes of the same type if we find them. It also has lower memory footprint, and is faster
@@ -23,11 +22,11 @@ internal class ReflectHelper : MarshalByRefObject
     private readonly Dictionary<ICustomAttributeProvider, Attribute[]> _inheritedAttributeCache = [];
     private readonly Dictionary<ICustomAttributeProvider, Attribute[]> _nonInheritedAttributeCache = [];
 
-    internal /* for tests only */ ReflectHelper(INotCachedAttributeHelper notCachedAttributeHelper) =>
-        NotCachedAttributes = notCachedAttributeHelper ?? new NotCachedAttributeHelper();
+    internal /* for tests only */ ReflectHelper(INotCachedReflectionAccessor notCachedAttributeHelper) =>
+        NotCachedAttributes = notCachedAttributeHelper ?? new NotCachedReflectionAccessor();
 
     internal /* for tests only, because of Moq */ ReflectHelper()
-        : this(new NotCachedAttributeHelper())
+        : this(new NotCachedReflectionAccessor())
     {
     }
 
@@ -35,7 +34,7 @@ internal class ReflectHelper : MarshalByRefObject
 
     public static ReflectHelper Instance => InstanceValue.Value;
 
-    public INotCachedAttributeHelper NotCachedAttributes { get; }
+    public INotCachedReflectionAccessor NotCachedAttributes { get; }
 
     /// <summary>
     /// Checks to see if a member or type is decorated with the given attribute. The type is checked exactly. If attribute is derived (inherits from) a class, e.g. [MyTestClass] from [TestClass] it won't match if you look for [TestClass]. The inherit parameter does not impact this checking.
@@ -225,9 +224,12 @@ internal class ReflectHelper : MarshalByRefObject
     /// <param name="method">The method to inspect.</param>
     /// <param name="returnType">The return type to match.</param>
     /// <returns>True if there is a match.</returns>
-    internal static bool MatchReturnType(MethodInfo method, Type returnType) => method == null
+    internal static bool MatchReturnType(MethodInfo method, Type returnType) =>
+        method == null
             ? throw new ArgumentNullException(nameof(method))
-            : returnType == null ? throw new ArgumentNullException(nameof(returnType)) : method.ReturnType.Equals(returnType);
+            : returnType == null
+                ? throw new ArgumentNullException(nameof(returnType))
+                : method.ReturnType.Equals(returnType);
 
     /// <summary>
     /// Returns true when the method is declared in the assembly where the type is declared.
@@ -492,7 +494,7 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Reflection helper that is accessing Reflection directly, and won't cache the results.
     /// </summary>
-    internal class NotCachedAttributeHelper : INotCachedAttributeHelper
+    internal class NotCachedReflectionAccessor : INotCachedReflectionAccessor
     {
         /// <summary>
         /// Get custom attributes on a member without cache.
@@ -500,14 +502,8 @@ internal class ReflectHelper : MarshalByRefObject
         /// <param name="attributeProvider">Member for which attributes needs to be retrieved.</param>
         /// <param name="inherit">If inherited type of attribute.</param>
         /// <returns>All attributes of give type on member.</returns>
-        [return: NotNullIfNotNull(nameof(attributeProvider))]
         public object[]? GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit)
         {
-            if (attributeProvider == null)
-            {
-                return null;
-            }
-
             object[] attributesArray = attributeProvider is MemberInfo memberInfo
                 ? PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(memberInfo, inherit)
                 : PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes((Assembly)attributeProvider, typeof(Attribute));

@@ -5,7 +5,10 @@ using System.Reflection;
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
-internal interface INotCachedAttributeHelper
+/// <summary>
+/// This interface is for unit tests tests so they can easily replace the implementation of accessing the attributes.
+/// </summary>
+internal interface INotCachedReflectionAccessor
 {
     object[]? GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit);
 }
