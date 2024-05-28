@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## <a name="3.4.1"></a>[3.4.1] - 2023-05-27
+## <a name="3.4.1"></a>[3.4.1] - 2024-05-27
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.4.0...v3.4.1)
 
@@ -25,7 +25,7 @@ See full log [here](https://github.com/microsoft/testfx/compare/v3.4.0...v3.4.1)
 * Microsoft.Testing.Extensions.Retry: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.Retry/1.2.1)
 * Microsoft.Testing.Extensions.TrxReport: [1.2.1](https://www.nuget.org/packages/Microsoft.Testing.Extensions.TrxReport/1.2.1)
 
-## <a name="3.4.0"></a>[3.4.0] - 2023-05-23
+## <a name="3.4.0"></a>[3.4.0] - 2024-05-23
 
 See full log [here](https://github.com/microsoft/testfx/compare/v3.3.1...v3.4.0)
 
