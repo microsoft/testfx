@@ -48,7 +48,7 @@ internal class TestMethodValidator
     /// <returns> Return true if a method is a valid test method. </returns>
     internal virtual bool IsValidTestMethod(MethodInfo testMethodInfo, Type type, ICollection<string> warnings)
     {
-        // PERF: Contrary to my intuition, we are doing caching reflection here, meaning we will cache every method info in the
+        // PERF: We are doing caching reflection here, meaning we will cache every method info in the
         // assembly, this is because when we discover and run we will repeatedly inspect all the methods in the assembly, and this
         // gives us a better performance.
         // It would be possible to use non-caching reflection here if we knew that we are only doing discovery that won't be followed by run,

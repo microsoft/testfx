@@ -316,7 +316,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", dataSource.GetType().Name));
                 }
             }
-            catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+            catch (ArgumentException aex) when (MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
             {
                 UnitTestElement discoveredTest = test.Clone();
                 // Make the test not data driven, because it had no data.

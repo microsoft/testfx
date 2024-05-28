@@ -97,9 +97,6 @@
       <Compile Include="$(Compile);$(IntermediateOutputPath)/MSTestVersion.cs" />
     </ItemGroup>
   </Target>
-  <ItemGroup>
-    <None Remove="BannedSymbols.txt" />
-  </ItemGroup>
 
   <!-- Version templating -->
   <ItemGroup>

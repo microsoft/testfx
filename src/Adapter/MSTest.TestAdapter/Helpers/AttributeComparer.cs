@@ -3,7 +3,7 @@
 
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
-internal class AttributeComparer
+internal sealed class AttributeComparer
 {
     public static bool IsNonDerived<TAttribute>(Attribute attribute) =>
         attribute is TAttribute;
