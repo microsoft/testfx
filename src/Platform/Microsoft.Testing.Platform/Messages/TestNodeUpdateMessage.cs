@@ -34,7 +34,7 @@ public sealed class TestNodeUpdateMessage(SessionUid sessionUid, TestNode testNo
                 builder.Append(',');
             }
 
-            builder.Append(' ').Append(property.ToString());
+            builder.Append(' ').Append(property);
         }
 
         if (hasAnyProperty)
@@ -45,7 +45,7 @@ public sealed class TestNodeUpdateMessage(SessionUid sessionUid, TestNode testNo
         builder.Append("], ParentTestNodeUid = ")
             .Append(ParentTestNodeUid?.ToString() ?? "<null>")
             .Append(", TestNode = ")
-            .Append(TestNode.ToString())
+            .Append(TestNode)
             .Append(" }");
 
         return builder.ToString();

@@ -43,11 +43,7 @@ public class CountDownEventTests : TestBase
         CountdownEvent countdownEvent = new(1);
         CancellationTokenSource cts = new();
         var waiter = Task.Run(() => countdownEvent.WaitAsync(cts.Token));
-#if NET8_0_OR_GREATER
         await cts.CancelAsync();
-#else
-        cts.Cancel();
-#endif
         await Assert.ThrowsAsync<OperationCanceledException>(async () => await waiter);
     }
 
