@@ -86,11 +86,7 @@ public sealed class CommandLine : IDisposable
             var timedOut = Task.Delay(TimeSpan.FromSeconds(seconds), stopTheTimer.Token);
             if (await Task.WhenAny(exited, timedOut) == exited)
             {
-#if NET8_0_OR_GREATER
                 await stopTheTimer.CancelAsync();
-#else
-                stopTheTimer.Cancel();
-#endif
                 return await exited;
             }
             else
