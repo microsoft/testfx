@@ -25,18 +25,20 @@ public class DesktopTestSourceHostTests : TestContainer
     {
         string sampleProjectDirPath = Path.GetDirectoryName(GetTestAssemblyPath("SampleProjectForAssemblyResolution"));
         string runSettingXml =
-        $@"<RunSettings>
+            $"""
+             <RunSettings>
                 <RunConfiguration>
                     <DisableAppDomain>True</DisableAppDomain>
                 </RunConfiguration>
                 <MSTestV2>
                     <AssemblyResolution>
-                        <Directory path = "" % Temp %\directory"" includeSubDirectories = ""true"" />
-                        <Directory path = ""C:\windows"" includeSubDirectories = ""false"" />
-                        <Directory path = ""{sampleProjectDirPath}"" />
+                        <Directory path = " % Temp %\directory" includeSubDirectories = "true" />
+                        <Directory path = "C:\windows" includeSubDirectories = "false" />
+                        <Directory path = "{sampleProjectDirPath}" />
                     </AssemblyResolution>
                 </MSTestV2>
-             </RunSettings>";
+             </RunSettings>
+             """;
 
         _testSourceHost = new TestSourceHost(
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
@@ -54,18 +56,20 @@ public class DesktopTestSourceHostTests : TestContainer
         string sampleProjectPath = GetTestAssemblyPath("SampleProjectForAssemblyResolution");
         string sampleProjectDirPath = Path.GetDirectoryName(sampleProjectPath);
         string runSettingXml =
-        $@"<RunSettings>
-                <RunConfiguration>
-                    <DisableAppDomain>False</DisableAppDomain>
-                </RunConfiguration>
-                <MSTestV2>
-                    <AssemblyResolution>
-                        <Directory path = "" % Temp %\directory"" includeSubDirectories = ""true"" />
-                        <Directory path = ""C:\windows"" includeSubDirectories = ""false"" />
-                        <Directory path = ""{sampleProjectDirPath}"" />
-                    </AssemblyResolution>
-                </MSTestV2>
-             </RunSettings>";
+            $"""
+             <RunSettings>
+               <RunConfiguration>
+                 <DisableAppDomain>False</DisableAppDomain>
+               </RunConfiguration>
+               <MSTestV2>
+                 <AssemblyResolution>
+                   <Directory path = " % Temp %\directory" includeSubDirectories = "true" />
+                   <Directory path = "C:\windows" includeSubDirectories = "false" />
+                   <Directory path = "{sampleProjectDirPath}" />
+                 </AssemblyResolution>
+               </MSTestV2>
+             </RunSettings>
+             """;
 
         _testSourceHost = new TestSourceHost(
             GetTestAssemblyPath("DesktopTestProjectx86Debug"),
