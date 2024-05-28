@@ -15,8 +15,8 @@ internal sealed class SystemProcessHandler : IProcessHandler
 
     public IProcess Start(ProcessStartInfo startInfo)
     {
-        var process = Process.Start(startInfo);
-        ApplicationStateGuard.Ensure(process is not null);
+        var process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotStartProcessErrorMessage, processStartInfo.FileName));
         process.EnableRaisingEvents = true;
         return new SystemProcess(process);
     }
