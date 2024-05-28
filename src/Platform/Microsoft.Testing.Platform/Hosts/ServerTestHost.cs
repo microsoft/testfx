@@ -527,10 +527,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         }
         finally
         {
-            if (requestExecuteStop == null)
-            {
-                requestExecuteStop = _clock.UtcNow;
-            }
+            requestExecuteStop ??= _clock.UtcNow;
 
             // Cleanup all services
             // We skip all services that are "cloned" per call because are reused and will be disposed on shutdown.

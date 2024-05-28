@@ -628,15 +628,9 @@ public class MSTestSettings
         }
 
         // If any of these properties are not set, resort to the defaults.
-        if (!settings.ParallelizationWorkers.HasValue)
-        {
-            settings.ParallelizationWorkers = Environment.ProcessorCount;
-        }
+        settings.ParallelizationWorkers ??= Environment.ProcessorCount;
 
-        if (!settings.ParallelizationScope.HasValue)
-        {
-            settings.ParallelizationScope = ExecutionScope.ClassLevel;
-        }
+        settings.ParallelizationScope ??= ExecutionScope.ClassLevel;
     }
 
     private static bool TryParseEnum<T>(string value, out T result)
