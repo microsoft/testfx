@@ -79,9 +79,9 @@ public class DataRowAttributeTests : TestContainer
         var dummyTestClass = new DummyTestClass();
         MethodInfo testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
 
-        string[] data = new string[] { "First", "Second", null };
-        string[] data1 = new string[] { null, "First", "Second" };
-        string[] data2 = new string[] { "First", null, "Second" };
+        string[] data = ["First", "Second", null];
+        string[] data1 = [null, "First", "Second"];
+        string[] data2 = ["First", null, "Second"];
 
         string displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
         Verify(displayName == "DataRowTestMethod (First,Second,)");
@@ -103,7 +103,7 @@ public class DataRowAttributeTests : TestContainer
         var dummyTestClass = new DummyTestClass();
         MethodInfo testMethodInfo = dummyTestClass.GetType().GetTypeInfo().GetDeclaredMethod("DataRowTestMethod");
 
-        string[] data = new string[] { "First", "Second", null };
+        string[] data = ["First", "Second", null];
 
         string displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
         Verify(displayName == "DataRowTestWithDisplayName");
@@ -112,7 +112,7 @@ public class DataRowAttributeTests : TestContainer
     public void GetDisplayNameForArrayOfOneItem()
     {
         // Arrange
-        var dataRow = new DataRowAttribute(new[] { "a" });
+        var dataRow = new DataRowAttribute(["a"]);
         var methodInfoMock = new Mock<MethodInfo>();
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
@@ -139,7 +139,7 @@ public class DataRowAttributeTests : TestContainer
     public void GetDisplayNameForArrayOfMultipleItems()
     {
         // Arrange
-        var dataRow = new DataRowAttribute(new[] { "a", "b", "c" });
+        var dataRow = new DataRowAttribute(["a", "b", "c"]);
         var methodInfoMock = new Mock<MethodInfo>();
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
@@ -180,11 +180,6 @@ public class DataRowAttributeTests : TestContainer
 
     private class DummyDataRowAttribute : DataRowAttribute
     {
-        public DummyDataRowAttribute()
-            : base()
-        {
-        }
-
         public override string GetDisplayName(MethodInfo methodInfo, object[] data) => "Overridden DisplayName";
     }
 }

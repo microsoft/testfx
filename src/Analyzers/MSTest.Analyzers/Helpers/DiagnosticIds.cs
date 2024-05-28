@@ -30,4 +30,6 @@ internal static class DiagnosticIds
     public const string DoNotStoreStaticTestContextAnalyzerRuleId = "MSTEST0024";
     public const string PreferAssertFailOverAlwaysFalseConditionsRuleId = "MSTEST0025";
     public const string AssertionArgsShouldAvoidConditionalAccessRuleId = "MSTEST0026";
+    public const string UseAsyncSuffixTestMethodSuppressorRuleId = "MSTEST0027";
+    public const string UseAsyncSuffixTestFixtureMethodSuppressorRuleId = "MSTEST0028";
 }

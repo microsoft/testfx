@@ -251,9 +251,7 @@ public static class VSInstallationUtilities
     /// </summary>
     [ComImport]
     [Guid("177F0C4A-1CD3-4DE7-A32C-71DBBB9FA36D")]
-    public class SetupConfiguration
-    {
-    }
+    public class SetupConfiguration;
 }
 
 #endif

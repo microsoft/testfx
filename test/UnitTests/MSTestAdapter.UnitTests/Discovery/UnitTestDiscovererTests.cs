@@ -62,7 +62,7 @@ public class UnitTestDiscovererTests : TestContainer
 
     public void DiscoverTestsShouldDiscoverForAllSources()
     {
-        string[] sources = new string[] { "DummyAssembly1.dll", "DummyAssembly2.dll" };
+        string[] sources = ["DummyAssembly1.dll", "DummyAssembly2.dll"];
 
         // Setup mocks.
         foreach (string source in sources)
@@ -102,12 +102,14 @@ public class UnitTestDiscovererTests : TestContainer
             .Returns(false);
 
         string settingsXml =
-        @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                    <MSTestV2>
-                        <TreatDiscoveryWarningsAsErrors>True</TreatDiscoveryWarningsAsErrors>
-                    </MSTestV2>
-                </RunSettings>";
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+              <MSTestV2>
+                <TreatDiscoveryWarningsAsErrors>True</TreatDiscoveryWarningsAsErrors>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(settingsXml);
 
@@ -176,13 +178,15 @@ public class UnitTestDiscovererTests : TestContainer
     public void SendTestCasesShouldSendTestCasesWithoutNavigationDataWhenCollectSourceInformationIsFalse()
     {
         string settingsXml =
-        @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <CollectSourceInformation>false</CollectSourceInformation>
-                     </RunConfiguration>
-                </RunSettings>";
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+               <RunConfiguration>
+                 <ResultsDirectory>.\TestResults</ResultsDirectory>
+                 <CollectSourceInformation>false</CollectSourceInformation>
+               </RunConfiguration>
+            </RunSettings>
+            """;
 
         // Setup mocks.
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.CreateNavigationSession(Source))

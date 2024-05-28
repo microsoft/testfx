@@ -31,7 +31,7 @@ public class DesktopReflectionOperationsTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
-        string[] expectedAttributes = new string[] { "DummyA : base", "DummySingleA : base" };
+        string[] expectedAttributes = ["DummyA : base", "DummySingleA : base"];
         Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
     }
 
@@ -44,7 +44,7 @@ public class DesktopReflectionOperationsTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Length == 1);
 
-        string[] expectedAttributes = new string[] { "DummyA : ba" };
+        string[] expectedAttributes = ["DummyA : ba"];
         Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
     }
 
@@ -57,7 +57,7 @@ public class DesktopReflectionOperationsTests : TestContainer
         Verify(attributes is not null);
         Verify(attributes.Length == 2);
 
-        string[] expectedAttributes = new string[] { "DummyA : a1", "DummyA : a2" };
+        string[] expectedAttributes = ["DummyA : a1", "DummyA : a2"];
         Verify(expectedAttributes.SequenceEqual(ReflectionUtilityTests.GetAttributeValuePairs(attributes)));
     }
 }

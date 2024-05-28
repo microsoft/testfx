@@ -234,7 +234,7 @@ public class MSTestSettings
     {
         RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
-        if (context == null || context.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
+        if (context?.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
         {
             // This will contain default adapter settings
             CurrentSettings = new MSTestSettings();
@@ -628,15 +628,9 @@ public class MSTestSettings
         }
 
         // If any of these properties are not set, resort to the defaults.
-        if (!settings.ParallelizationWorkers.HasValue)
-        {
-            settings.ParallelizationWorkers = Environment.ProcessorCount;
-        }
+        settings.ParallelizationWorkers ??= Environment.ProcessorCount;
 
-        if (!settings.ParallelizationScope.HasValue)
-        {
-            settings.ParallelizationScope = ExecutionScope.ClassLevel;
-        }
+        settings.ParallelizationScope ??= ExecutionScope.ClassLevel;
     }
 
     private static bool TryParseEnum<T>(string value, out T result)

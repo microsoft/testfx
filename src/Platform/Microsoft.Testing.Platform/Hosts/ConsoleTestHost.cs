@@ -53,13 +53,13 @@ internal sealed class ConsoleTestHost(
             ?? new TestHostTestFrameworkInvoker(ServiceProvider);
 
         ServiceProvider.TryAddService(new Services.TestSessionContext(abortRun));
-        ITestFramework testFrameworkAdapter = await _buildTestFrameworkAsync(new(
+        ITestFramework testFramework = await _buildTestFrameworkAsync(
             ServiceProvider,
             new ConsoleTestExecutionRequestFactory(ServiceProvider.GetCommandLineOptions(), testExecutionFilterFactory),
             testAdapterInvoker,
             testExecutionFilterFactory,
             ServiceProvider.GetPlatformOutputDevice(),
-            Enumerable.Empty<IDataConsumer>(),
+            [],
             _testFrameworkManager,
             _testHostManager,
             new MessageBusProxy(),
@@ -83,7 +83,7 @@ internal sealed class ConsoleTestHost(
                 testSessionInfo,
                 ServiceProvider,
                 ServiceProvider.GetBaseMessageBus(),
-                testFrameworkAdapter,
+                testFramework,
                 Client);
             requestExecuteStop = _clock.UtcNow;
 
@@ -102,10 +102,7 @@ internal sealed class ConsoleTestHost(
         }
         catch (OperationCanceledException oc) when (oc.CancellationToken == abortRun)
         {
-            if (requestExecuteStop == null)
-            {
-                requestExecuteStop = _clock.UtcNow;
-            }
+            requestExecuteStop ??= _clock.UtcNow;
 
             exitCode = ExitCodes.TestSessionAborted;
             await _logger.LogInformationAsync("Test session cancelled.");

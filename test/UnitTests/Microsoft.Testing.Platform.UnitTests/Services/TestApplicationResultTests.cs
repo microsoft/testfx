@@ -191,7 +191,7 @@ public sealed class TestApplicationResultTests : TestBase
         foreach (TestApplicationResult testApplicationResult in new TestApplicationResult[]
         {
             new(new Mock<IOutputDevice>().Object, new Mock<ITestApplicationCancellationTokenSource>().Object,
-                new CommandLineOption(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, argument is null ? Array.Empty<string>() : new[] { argument }),
+                new CommandLineOption(PlatformCommandLineProvider.IgnoreExitCodeOptionKey, argument is null ? [] : [argument]),
                 new Mock<IEnvironment>().Object),
             new(new Mock<IOutputDevice>().Object, new Mock<ITestApplicationCancellationTokenSource>().Object,
                 new Mock<ICommandLineOptions>().Object,

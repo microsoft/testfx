@@ -31,10 +31,7 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
                 continue;
             }
 
-            if (serviceInstance is IAsyncInitializableExtension async)
-            {
-                await async.InitializeAsync();
-            }
+            await serviceInstance.TryInitializeAsync();
 
             IConfigurationProvider configurationProvider = serviceInstance.Build();
             await configurationProvider.LoadAsync();
@@ -51,7 +48,7 @@ internal sealed class ConfigurationManager(IFileSystem fileSystem, ITestApplicat
             ILogger logger = syncFileLoggerProvider.CreateLogger(nameof(ConfigurationManager));
             if (logger.IsEnabled(LogLevel.Trace))
             {
-                if (defaultJsonConfiguration is not null && defaultJsonConfiguration.ConfigurationFile is not null)
+                if (defaultJsonConfiguration?.ConfigurationFile != null)
                 {
                     using Stream configFileStream = _fileSystem.NewFileStream(defaultJsonConfiguration.ConfigurationFile, FileMode.Open);
                     StreamReader streamReader = new(configFileStream);

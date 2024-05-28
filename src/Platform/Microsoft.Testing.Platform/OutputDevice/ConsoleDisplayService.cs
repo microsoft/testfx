@@ -44,7 +44,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private readonly ILogger? _logger;
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly bool _underProcessMonitor;
-    private static readonly char[] PlusSign = new[] { '+' };
+    private static readonly char[] PlusSign = ['+'];
 
     private int _totalTests;
     private int _totalPassedTests;

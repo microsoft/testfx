@@ -3,6 +3,4 @@
 
 namespace MSTest.Performance.Runner;
 
-internal interface IPayload
-{
-}
+internal interface IPayload;

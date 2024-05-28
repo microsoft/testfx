@@ -121,10 +121,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>Gets the types defined in the provided assembly.</returns>
     internal static IReadOnlyList<Type> GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
     {
-        var types = new List<Type>();
         try
         {
-            types.AddRange(assembly.DefinedTypes.Select(typeInfo => typeInfo.AsType()));
+            return assembly.DefinedTypes.Select(typeInfo => typeInfo.AsType()).ToList();
         }
         catch (ReflectionTypeLoadException ex)
         {
@@ -146,8 +145,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             return ex.Types!;
         }
-
-        return types;
     }
 
     /// <summary>
@@ -218,12 +215,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
-            ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string>? warningsFromTypeEnumerator);
+            ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string> warningsFromTypeEnumerator);
 
-            if (warningsFromTypeEnumerator != null)
-            {
-                warningMessages.AddRange(warningsFromTypeEnumerator);
-            }
+            warningMessages.AddRange(warningsFromTypeEnumerator);
 
             if (unitTestCases != null)
             {

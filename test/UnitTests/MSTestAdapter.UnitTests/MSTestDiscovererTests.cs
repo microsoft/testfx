@@ -51,35 +51,35 @@ public class MSTestDiscovererTests : TestContainer
 
     public void MSTestDiscovererHasMSTestAdapterAsExecutorUri()
     {
-        DefaultExecutorUriAttribute attribute = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(DefaultExecutorUriAttribute)).Cast<DefaultExecutorUriAttribute>().First();
+        DefaultExecutorUriAttribute attribute = typeof(MSTestDiscoverer).GetCustomAttributes(typeof(DefaultExecutorUriAttribute)).Cast<DefaultExecutorUriAttribute>().First();
         Verify(attribute is not null);
         Verify(attribute.ExecutorUri == "executor://MSTestAdapter/v2");
     }
 
     public void MSTestDiscovererHasXapAsFileExtension()
     {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
+        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
         Verify(attributes is not null);
         Verify(attributes.Count(attribute => attribute.FileExtension == ".xap") == 1);
     }
 
     public void MSTestDiscovererHasAppxAsFileExtension()
     {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
+        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
         Verify(attributes is not null);
         Verify(attributes.Count(attribute => attribute.FileExtension == ".appx") == 1);
     }
 
     public void MSTestDiscovererHasDllAsFileExtension()
     {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
+        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
         Verify(attributes is not null);
         Verify(attributes.Count(attribute => attribute.FileExtension == ".dll") == 1);
     }
 
     public void MSTestDiscovererHasExeAsFileExtension()
     {
-        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetTypeInfo().GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
+        IEnumerable<FileExtensionAttribute> attributes = typeof(MSTestDiscoverer).GetCustomAttributes(typeof(FileExtensionAttribute)).Cast<FileExtensionAttribute>();
         Verify(attributes is not null);
         Verify(attributes.Count(attribute => attribute.FileExtension == ".exe") == 1);
     }
@@ -161,13 +161,15 @@ public class MSTestDiscovererTests : TestContainer
     public void DiscoveryShouldNotHappenIfTestSettingsIsGiven()
     {
         string runSettingsXml =
-        @"<RunSettings>   
-                    <MSTest>   
-                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                        <ForcedLegacyMode>true</ForcedLegacyMode>    
-                        <IgnoreTestImpact>true</IgnoreTestImpact>  
-                    </MSTest>
-            </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <ForcedLegacyMode>true</ForcedLegacyMode>
+                <IgnoreTestImpact>true</IgnoreTestImpact>
+              </MSTest>
+            </RunSettings>
+            """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
@@ -182,13 +184,15 @@ public class MSTestDiscovererTests : TestContainer
     public void DiscoveryShouldReportAndBailOutOnSettingsException()
     {
         string runSettingsXml =
-        @"<RunSettings>   
-                    <MSTest>   
-                        <Parallelize>
-                          <Scope>Pond</Scope>
-                        </Parallelize>
-                    </MSTest>
-            </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <Parallelize>
+                  <Scope>Pond</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });

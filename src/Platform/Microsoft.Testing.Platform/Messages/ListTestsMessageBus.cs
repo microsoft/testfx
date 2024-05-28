@@ -13,7 +13,7 @@ using Microsoft.Testing.Platform.Services;
 namespace Microsoft.Testing.Platform.Messages;
 
 internal sealed class ListTestsMessageBus(
-    ITestFramework testFrameworkAdapter,
+    ITestFramework testFramework,
     ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource,
     ILoggerFactory loggerFactory,
     IOutputDevice outputDisplay,
@@ -21,7 +21,7 @@ internal sealed class ListTestsMessageBus(
     IEnvironment environment,
     ITestApplicationProcessExitCode testApplicationProcessExitCode) : BaseMessageBus, IMessageBus, IDisposable, IOutputDeviceDataProducer
 {
-    private readonly ITestFramework _testFrameworkAdapter = testFrameworkAdapter;
+    private readonly ITestFramework _testFramework = testFramework;
     private readonly ITestApplicationCancellationTokenSource _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
     private readonly IOutputDevice _outputDisplay = outputDisplay;
     private readonly IEnvironment _environment = environment;
@@ -30,7 +30,7 @@ internal sealed class ListTestsMessageBus(
     private readonly IAsyncMonitor _asyncMonitor = asyncMonitorFactory.Create();
     private bool _printTitle = true;
 
-    public override IDataConsumer[] DataConsumerServices => Array.Empty<IDataConsumer>();
+    public override IDataConsumer[] DataConsumerServices => [];
 
     public string Uid => nameof(ListTestsMessageBus);
 
@@ -59,7 +59,7 @@ internal sealed class ListTestsMessageBus(
             return;
         }
 
-        if (_testFrameworkAdapter.Uid != dataProducer.Uid
+        if (_testFramework.Uid != dataProducer.Uid
             || data is not TestNodeUpdateMessage testNodeUpdatedMessage
             || testNodeUpdatedMessage.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not DiscoveredTestNodeStateProperty)
         {

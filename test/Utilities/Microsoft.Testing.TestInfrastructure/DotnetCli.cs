@@ -10,8 +10,8 @@ namespace Microsoft.Testing.TestInfrastructure;
 
 public static class DotnetCli
 {
-    private static readonly string[] CodeCoverageEnvironmentVariables = new[]
-{
+    private static readonly string[] CodeCoverageEnvironmentVariables =
+    [
         "MicrosoftInstrumentationEngine_ConfigPath32_VanguardInstrumentationProfiler",
         "MicrosoftInstrumentationEngine_ConfigPath64_VanguardInstrumentationProfiler",
         "CORECLR_PROFILER_PATH_32",
@@ -26,8 +26,8 @@ public static class DotnetCli
         "CODE_COVERAGE_PIPE_PATH",
         "MicrosoftInstrumentationEngine_LogLevel",
         "MicrosoftInstrumentationEngine_DisableCodeSignatureValidation",
-        "MicrosoftInstrumentationEngine_FileLogPath",
-};
+        "MicrosoftInstrumentationEngine_FileLogPath"
+    ];
 
     private static int s_maxOutstandingCommand = Environment.ProcessorCount;
     private static SemaphoreSlim s_maxOutstandingCommands_semaphore = new(s_maxOutstandingCommand, s_maxOutstandingCommand);
@@ -63,7 +63,8 @@ public static class DotnetCli
             foreach (DictionaryEntry entry in Environment.GetEnvironmentVariables())
             {
                 // Skip all unwanted environment variables.
-                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
+                string? key = entry.Key.ToString();
+                if (WellKnownEnvironmentVariables.ToSkipEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -71,13 +72,13 @@ public static class DotnetCli
                 if (disableCodeCoverage)
                 {
                     // Disable the code coverage during the build.
-                    if (CodeCoverageEnvironmentVariables.Contains(entry.Key!.ToString(), StringComparer.OrdinalIgnoreCase))
+                    if (CodeCoverageEnvironmentVariables.Contains(key, StringComparer.OrdinalIgnoreCase))
                     {
                         continue;
                     }
                 }
 
-                environmentVariables.Add(entry.Key!.ToString()!, entry.Value!.ToString()!);
+                environmentVariables.Add(key!, entry.Value!.ToString()!);
             }
 
             if (disableTelemetry)

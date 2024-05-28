@@ -504,10 +504,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         }
         finally
         {
-            if (requestExecuteStop == null)
-            {
-                requestExecuteStop = _clock.UtcNow;
-            }
+            requestExecuteStop ??= _clock.UtcNow;
 
             // Cleanup all services
             // We skip all services that are "cloned" per call because are reused and will be disposed on shutdown.
@@ -528,14 +525,14 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                 (RunRequestArgs)args,
                 requestStart, requestStop,
                 adapterLoadStart, adapterLoadStop,
-                requestExecuteStart, (DateTimeOffset)requestExecuteStop!,
+                requestExecuteStart, (DateTimeOffset)requestExecuteStop,
                 testNodeUpdateProcessor.GetTestNodeStatistics())
             : method == JsonRpcMethods.TestingDiscoverTests
                 ? GetDiscoveryMetrics(
                     (DiscoverRequestArgs)args,
                     requestStart, requestStop,
                     adapterLoadStart, adapterLoadStop,
-                    requestExecuteStart, (DateTimeOffset)requestExecuteStop!,
+                    requestExecuteStart, (DateTimeOffset)requestExecuteStop,
                     testNodeUpdateProcessor.GetTestNodeStatistics().TotalDiscoveredTests)
                 : throw new NotImplementedException($"Request not implemented '{method}'");
 

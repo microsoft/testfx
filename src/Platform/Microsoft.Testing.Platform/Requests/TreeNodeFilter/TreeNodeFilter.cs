@@ -268,8 +268,8 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
         switch (expr)
         {
             case OperatorExpression { Op: FilterOperator.Not, SubExpressions: var subexprsNot } when subexprsNot.Count != 1:
-            case OperatorExpression { Op: FilterOperator.And, SubExpressions: var subexprsAnd } when subexprsAnd.Count < 2:
-            case OperatorExpression { Op: FilterOperator.Or, SubExpressions: var subexprsOr } when subexprsOr.Count < 2:
+            case OperatorExpression { Op: FilterOperator.And, SubExpressions.Count: < 2 }:
+            case OperatorExpression { Op: FilterOperator.Or, SubExpressions.Count: < 2 }:
                 throw ApplicationStateGuard.Unreachable();
 
             case OperatorExpression opExpr:
@@ -294,11 +294,11 @@ internal sealed class TreeNodeFilter : ITestExecutionFilter
         {
             case OperatorKind.And:
             case OperatorKind.Or:
-                List<FilterExpression> subexprs = new()
-                {
+                List<FilterExpression> subexprs =
+                [
                     expr.Pop(),
-                    expr.Pop(),
-                };
+                    expr.Pop()
+                ];
 
                 // Note: An OR/AND operator allow to pass it in a list of expressions.
                 // We can keep popping following operators and add them to the collection,

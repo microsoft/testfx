@@ -25,8 +25,7 @@ internal static class MethodInfoExtensions
         ParameterInfo[] parameters = method.GetParameters();
 
         return
-            method.IsStatic &&
-            method.IsPublic &&
+            method is { IsStatic: true, IsPublic: true } &&
             (parameters.Length == 1) &&
             parameters[0].ParameterType == typeof(TestContext) &&
             method.IsValidReturnType();
@@ -42,8 +41,7 @@ internal static class MethodInfoExtensions
         DebugEx.Assert(method != null, "method should not be null.");
 
         return
-            method.IsStatic &&
-            method.IsPublic &&
+            method is { IsStatic: true, IsPublic: true } &&
             (method.GetParameters().Length == 0) &&
             method.IsValidReturnType();
     }
@@ -58,8 +56,7 @@ internal static class MethodInfoExtensions
         DebugEx.Assert(method != null, "method should not be null.");
 
         return
-            !method.IsStatic &&
-            method.IsPublic &&
+            method is { IsStatic: false, IsPublic: true } &&
             (method.GetParameters().Length == 0) &&
             method.IsValidReturnType();
     }
@@ -77,9 +74,7 @@ internal static class MethodInfoExtensions
         DebugEx.Assert(method != null, "method should not be null.");
 
         return
-            !method.IsAbstract &&
-            !method.IsStatic &&
-            !method.IsGenericMethod &&
+            method is { IsAbstract: false, IsStatic: false, IsGenericMethod: false } &&
             (method.IsPublic || (discoverInternals && method.IsAssembly)) &&
             (method.GetParameters().Length == 0 || ignoreParameterLength) &&
             method.IsValidReturnType(); // Match return type Task for async methods only. Else return type void.
@@ -96,13 +91,13 @@ internal static class MethodInfoExtensions
 
         // There should be one and only one TimeoutAttribute.
         TimeoutAttribute[] attributes = ReflectHelper.GetCustomAttributes<TimeoutAttribute>(method, false);
-        if (attributes?.Length != 1)
+        if (attributes.Length != 1)
         {
             return false;
         }
 
         // Timeout cannot be less than 0.
-        return !(attributes[0]?.Timeout < 0);
+        return !(attributes[0].Timeout < 0);
     }
 
     /// <summary>
@@ -148,7 +143,7 @@ internal static class MethodInfoExtensions
 
         // check if test method expected parameter values but no test data was provided,
         // throw error with appropriate message.
-        if (methodParameters != null && methodParameters.Length > 0 && arguments == null)
+        if (methodParameters is { Length: > 0 } && arguments == null)
         {
             throw new TestFailedException(
                 ObjectModel.UnitTestOutcome.Error,
@@ -165,7 +160,7 @@ internal static class MethodInfoExtensions
             && methodParameters?.Length == 1
             && methodParameters[0].ParameterType == typeof(object[]))
         {
-            task = methodInfo.Invoke(classInstance, new[] { arguments }) as Task;
+            task = methodInfo.Invoke(classInstance, [arguments]) as Task;
         }
         else
         {

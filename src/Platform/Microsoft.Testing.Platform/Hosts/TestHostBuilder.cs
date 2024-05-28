@@ -148,7 +148,7 @@ internal partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature r
         // Check the environment variable, it wins on all the other configuration.
         string? environmentSetting = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_EXIT_PROCESS_ON_UNHANDLED_EXCEPTION);
         bool? isEnvConfiguredToFailFast = null;
-        if (environmentSetting is not null and ("1" or "0"))
+        if (environmentSetting is "1" or "0")
         {
             isEnvConfiguredToFailFast = environmentSetting == "1";
         }
@@ -559,16 +559,13 @@ internal partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature r
 
         // Create the test framework adapter
         ITestFrameworkCapabilities testFrameworkCapabilities = serviceProvider.GetTestFrameworkCapabilities();
-        ITestFramework testFrameworkAdapter = testFrameworkBuilderData.TestFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
-        if (testFrameworkAdapter is IAsyncInitializableExtension testFrameworkAsyncInitializable)
-        {
-            await testFrameworkAsyncInitializable.InitializeAsync();
-        }
+        ITestFramework testFramework = testFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
+        await testFramework.TryInitializeAsync();
 
         serviceProvider.AllowTestAdapterFrameworkRegistration = true;
         try
         {
-            await RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkProxy(testFrameworkAdapter), serviceProvider, dataConsumersBuilder);
+            await RegisterAsServiceOrConsumerOrBothAsync(new TestFrameworkProxy(testFramework), serviceProvider, dataConsumersBuilder);
         }
         finally
         {
@@ -660,7 +657,7 @@ internal partial class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature r
             testFrameworkBuilderData.MessageBusProxy.SetBuiltMessageBus(concreteMessageBusService);
         }
 
-        return testFrameworkAdapter;
+        return testFramework;
     }
 
     protected virtual ConsoleTestHost CreateConsoleTestHost(
