@@ -72,6 +72,24 @@ public class FixturesTests : CLITestBase
         ValidatePassedTests([AssemblyInitialize, ClassInitialize, ClassCleanup]);
     }
 
+    public void ClassInitialize_OnlyFails_ClassInitialize()
+    {
+        string runSettings = GetRunSettings(true, true, true, false, true, true);
+
+        InvokeVsTestForExecution([AssetName], runSettings);
+        ValidateFailedTests(false, [ClassInitialize, TestMethod]);
+        ValidatePassedTests([AssemblyInitialize, AssemblyCleanup, ClassCleanup]);
+    }
+
+    public void ClassCleanup_OnlyFails_ClassCleanup()
+    {
+        string runSettings = GetRunSettings(true, true, true, true, false, true);
+
+        InvokeVsTestForExecution([AssetName], runSettings);
+        ValidateFailedTests(false, [ClassCleanup, TestMethod]);
+        ValidatePassedTests([AssemblyInitialize, AssemblyCleanup, ClassInitialize]);
+    }
+
     private string GetRunSettings(bool fixturesEnabled, bool assemblyInitialize, bool assemblyCleanup, bool classInitialize, bool classCleanup, bool test)
         => $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <RunSettings>
