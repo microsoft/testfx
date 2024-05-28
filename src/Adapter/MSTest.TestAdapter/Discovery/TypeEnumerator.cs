@@ -22,6 +22,7 @@ internal class TypeEnumerator
     private readonly TypeValidator _typeValidator;
     private readonly TestMethodValidator _testMethodValidator;
     private readonly TestIdGenerationStrategy _testIdGenerationStrategy;
+    private readonly TestDataSourceDiscoveryOption _discoveryOption;
     private readonly ReflectHelper _reflectHelper;
 
     /// <summary>
@@ -33,7 +34,7 @@ internal class TypeEnumerator
     /// <param name="typeValidator"> The validator for test classes. </param>
     /// <param name="testMethodValidator"> The validator for test methods. </param>
     /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
-    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal TypeEnumerator(Type type, string assemblyFilePath, ReflectHelper reflectHelper, TypeValidator typeValidator, TestMethodValidator testMethodValidator, TestDataSourceDiscoveryOption discoveryOption, TestIdGenerationStrategy testIdGenerationStrategy)
     {
         _type = type;
         _assemblyFilePath = assemblyFilePath;
@@ -41,6 +42,7 @@ internal class TypeEnumerator
         _typeValidator = typeValidator;
         _testMethodValidator = testMethodValidator;
         _testIdGenerationStrategy = testIdGenerationStrategy;
+        _discoveryOption = discoveryOption;
     }
 
     /// <summary>
@@ -149,31 +151,21 @@ internal class TypeEnumerator
                     method.DeclaringType.Assembly);
         }
 
-        // PERF: AssemblyEnumerator would later try to figure if this is a data driven test method
-        // by creating a TestMethodInfo. This is really expensive for discovery, and should be done only
-        // when we are a data driven test.
-        // Instead we check if we have any data driven attribute here, and skip creating TestMethod info
-        // in AssemblyEnumerator.
+        // PERF: When discovery option is set to DuringDiscovery, we will expand data on tests to one test case
+        // per data item. This will happen in AssemblyEnumerator. But AssemblyEnumerator does not have direct access to
+        // the method info or method attributes, so it would create a TestMethodInfo to see if the test is data driven.
+        // Creating TestMethodInfo is expensive and should be done only for a test that we know is data driven.
         //
-        // The foreach below could move to ReflectHelper, but this is only place where we want to check if
-        // an attribute implements something different than an Attribute derived class. So instead we just
-        // grab all attributes, and do the check ourselves.
-        DynamicDataType dynamicDataType = DynamicDataType.None;
-        foreach (Attribute attribute in _reflectHelper.GetDerivedAttributes<Attribute>(method, inherit: true))
+        // So to optimize this we check if we have some data source attribute. Because here we have access to all attributes
+        // and we store that info in DataType. AssemblyEnumerator will pick this up and will get the real test data in the expensive way
+        // or it will skip over getting the data cheaply, when DataType = DynamicDataType.None.
+        //
+        // This needs to be done only when DuringDiscovery is set, because otherwise we would populate the DataType, but we would not populate
+        // and execution would not try to re-populate the data, because DataType is already set to data driven, so it would just throw error about empty data.
+        if (_discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
         {
-            if (AttributeComparer.IsDerived<ITestDataSource>(attribute))
-            {
-                dynamicDataType = DynamicDataType.ITestDataSource;
-                break;
-            }
-            else if (AttributeComparer.IsDerived<DataSourceAttribute>(attribute))
-            {
-                dynamicDataType = DynamicDataType.DataSourceAttribute;
-                break;
-            }
+            testMethod.DataType = GetDynamicDataType(method);
         }
-
-        testMethod.DataType = dynamicDataType;
 
         var testElement = new UnitTestElement(testMethod)
         {
@@ -228,5 +220,23 @@ internal class TypeEnumerator
         testElement.DisplayName = testMethodAttribute?.DisplayName ?? method.Name;
 
         return testElement;
+    }
+
+    private DynamicDataType GetDynamicDataType(MethodInfo method)
+    {
+        foreach (Attribute attribute in _reflectHelper.GetDerivedAttributes<Attribute>(method, inherit: true))
+        {
+            if (AttributeComparer.IsDerived<ITestDataSource>(attribute))
+            {
+                return DynamicDataType.ITestDataSource;
+            }
+
+            if (AttributeComparer.IsDerived<DataSourceAttribute>(attribute))
+            {
+                return DynamicDataType.DataSourceAttribute;
+            }
+        }
+
+        return DynamicDataType.None;
     }
 }

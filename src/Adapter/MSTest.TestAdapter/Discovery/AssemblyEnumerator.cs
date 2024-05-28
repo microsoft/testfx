@@ -188,14 +188,15 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The reflected assembly name.</param>
     /// <param name="discoverInternals">True to discover test classes which are declared internal in
     /// addition to test classes which are declared public.</param>
+    /// <param name="discoveryOption"><see cref="TestDataSourceDiscoveryOption"/> to use when generating tests.</param>
     /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
     /// <returns>a TypeEnumerator instance.</returns>
-    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption, TestIdGenerationStrategy testIdGenerationStrategy)
     {
         var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
         var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
 
-        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
+        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, discoveryOption, testIdGenerationStrategy);
     }
 
     private List<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string? runSettingsXml, Type type,
@@ -214,7 +215,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             typeFullName = type.FullName;
-            TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
+            TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, discoveryOption, testIdGenerationStrategy);
             ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string> warningsFromTypeEnumerator);
             warningMessages.AddRange(warningsFromTypeEnumerator);
 
@@ -260,9 +261,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
-        // REVIEW: We started setting this value to that actual DataType earlier so we can skip this expensive code
-        // but some of the code after is expecting this property to stay NONE (acceptance tests fail if you don't do this
-        // so we reset is here to None.
+        // PERF: For perf we started setting DataType in TypeEnumerator, so when it is None we will not reach this line.
+        // But if we do run this code, we still reset it to None, because the code that determines if this is data drive test expects the value to be None
+        // and only sets it when needed.
+        //
+        // If you remove this line and acceptance tests still pass you are okay.
         test.TestMethod.DataType = DynamicDataType.None;
 
         // NOTE: From this place we don't have any path that would let the user write a message on the TestContext and we don't do

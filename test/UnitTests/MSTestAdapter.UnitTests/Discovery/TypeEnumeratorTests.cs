@@ -564,6 +564,7 @@ public class TypeEnumeratorTests : TestContainer
     }
 
     private TypeEnumerator GetTypeEnumeratorInstance(Type type, string assemblyName,
+        TestDataSourceDiscoveryOption discoveryOption = TestDataSourceDiscoveryOption.DuringExecution,
         TestIdGenerationStrategy idGenerationStrategy = TestIdGenerationStrategy.FullyQualified)
         => new(
             type,
@@ -571,6 +572,7 @@ public class TypeEnumeratorTests : TestContainer
             _mockReflectHelper.Object,
             _mockTypeValidator.Object,
             _mockTestMethodValidator.Object,
+            discoveryOption,
             idGenerationStrategy);
 
     #endregion
