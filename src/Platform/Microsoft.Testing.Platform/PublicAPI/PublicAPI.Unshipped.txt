@@ -1,6 +1,6 @@
 #nullable enable
 Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability
-Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability.GetBannerMessageAsync() -> System.Threading.Tasks.Task<string!>!
+Microsoft.Testing.Platform.Capabilities.TestFramework.IBannerMessageOwnerCapability.GetBannerMessageAsync() -> System.Threading.Tasks.Task<string?>!
 Microsoft.Testing.Platform.Services.IPlatformInformation
 Microsoft.Testing.Platform.Services.IPlatformInformation.BuildDate.get -> System.DateTimeOffset?
 Microsoft.Testing.Platform.Services.IPlatformInformation.CommitHash.get -> string?
