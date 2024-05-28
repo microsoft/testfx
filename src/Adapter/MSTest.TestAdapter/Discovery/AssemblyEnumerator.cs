@@ -12,6 +12,8 @@ using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
+using FrameworkITestDataSource = Microsoft.VisualStudio.TestTools.UnitTesting.ITestDataSource;
+
 namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
 
 /// <summary>
@@ -214,7 +216,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
             ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string> warningsFromTypeEnumerator);
-            bool typeIgnored = ReflectHelper.IsNonDerivedAttributeDefined<IgnoreAttribute>(type, false);
             warningMessages.AddRange(warningsFromTypeEnumerator);
 
             if (unitTestCases != null)
@@ -275,7 +276,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
         // attributes and filter them. We don't have to care if there is one, because this method is only entered when
         // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
-        IEnumerable<ITestDataSource>? testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(methodInfo, inherit: false).OfType<ITestDataSource>();
+        IEnumerable<FrameworkITestDataSource>? testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(methodInfo, inherit: false).OfType<FrameworkITestDataSource>();
 
         try
         {
@@ -289,10 +290,10 @@ internal class AssemblyEnumerator : MarshalByRefObject
         }
     }
 
-    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, IEnumerable<ITestDataSource> testDataSources,
+    private static bool ProcessTestDataSourceTests(UnitTestElement test, MethodInfo methodInfo, IEnumerable<FrameworkITestDataSource> testDataSources,
         List<UnitTestElement> tests)
     {
-        foreach (ITestDataSource dataSource in testDataSources)
+        foreach (FrameworkITestDataSource dataSource in testDataSources)
         {
             IEnumerable<object?[]>? data;
 

@@ -57,7 +57,6 @@ public class TestMethodValidatorTests : TestContainer
     {
         SetupTestMethod();
 
-        // _mockMethodInfo.Setup(mi => mi.Module.Assembly.ReflectionOnly).Returns(false);
         _mockMethodInfo.Setup(mi => mi.IsGenericMethodDefinition).Returns(true);
         _mockMethodInfo.Setup(mi => mi.DeclaringType.FullName).Returns("DummyTestClass");
         _mockMethodInfo.Setup(mi => mi.Name).Returns("DummyTestMethod");
