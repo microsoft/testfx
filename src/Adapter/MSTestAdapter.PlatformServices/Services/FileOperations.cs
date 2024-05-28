@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Reflection;
 
 #if WIN_UI
@@ -19,7 +20,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 public class FileOperations : IFileOperations
 {
-    private readonly Dictionary<string, Assembly> _assemblyCache = new();
+    private readonly ConcurrentDictionary<string, Assembly> _assemblyCache = new();
 
 #if WIN_UI
     private readonly bool _isPackaged;
@@ -47,15 +48,9 @@ public class FileOperations : IFileOperations
         }
 #endif
         string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
-        if (_assemblyCache.TryGetValue(fileNameWithoutExtension, out Assembly? assembly))
-        {
-            return assembly;
-        }
+        Assembly assembly = _assemblyCache.GetOrAdd(fileNameWithoutExtension, fileNameWithoutExtension => Assembly.Load(new AssemblyName(fileNameWithoutExtension)));
 
-        var asm = Assembly.Load(new AssemblyName(fileNameWithoutExtension));
-        _assemblyCache.Add(fileNameWithoutExtension, asm);
-
-        return asm;
+        return assembly;
 #elif NETFRAMEWORK
         if (isReflectionOnly)
         {
@@ -63,15 +58,8 @@ public class FileOperations : IFileOperations
         }
         else
         {
-            if (_assemblyCache.TryGetValue(assemblyName, out Assembly? assembly))
-            {
-                return assembly;
-            }
-
-            var asm = Assembly.LoadFrom(assemblyName);
-            _assemblyCache.Add(assemblyName, asm);
-
-            return asm;
+            Assembly assembly = _assemblyCache.GetOrAdd(assemblyName, Assembly.LoadFrom);
+            return assembly;
         }
 #endif
     }

@@ -169,6 +169,7 @@ internal class TypeEnumerator
             else if (AttributeComparer.IsDerived<DataSourceAttribute>(attribute))
             {
                 dynamicDataType = DynamicDataType.DataSourceAttribute;
+                break;
             }
         }
 
