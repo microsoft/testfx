@@ -56,7 +56,11 @@ public class AppDomainUtilitiesTests : TestContainer
         byte[] observedConfigBytes = setup.GetConfigurationBytes();
         string observedXml = System.Text.Encoding.UTF8.GetString(observedConfigBytes);
 
-        Verify(observedXml.Replace("\r\n", string.Empty).Replace(" ", string.Empty).Contains(expectedRedir.Replace(" ", string.Empty)), "Config must have OM redirection");
+        Verify(SanitizeString(observedXml).Contains(SanitizeString(expectedRedir)), "Config must have OM redirection");
+
+        // Local functions
+        static string SanitizeString(string str)
+            => str.Replace("\r\n", string.Empty).Replace(" ", string.Empty);
     }
 
     public void SetConfigurationFileShouldSetToCurrentDomainsConfigFileIfSourceDoesNotHaveAConfig()
