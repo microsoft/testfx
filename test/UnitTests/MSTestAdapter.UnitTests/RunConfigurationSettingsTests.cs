@@ -38,10 +38,12 @@ public class RunConfigurationSettingsTests : TestContainer
     public void CollectSourceInformationIsByDefaultTrueWhenNotSpecified()
     {
         string runSettingxml =
-            @"<RunSettings>
-                  <RunConfiguration>
-                  </RunConfiguration>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <RunConfiguration>
+              </RunConfiguration>
+            </RunSettings>
+            """;
 
         var configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
         Verify(configurationSettings.CollectSourceInformation);
@@ -50,13 +52,15 @@ public class RunConfigurationSettingsTests : TestContainer
     public void CollectSourceInformationShouldBeConsumedFromRunSettingsWhenSpecified()
     {
         string runSettingxml =
-            @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <CollectSourceInformation>false</CollectSourceInformation>
-                     </RunConfiguration>
-                </RunSettings>";
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+               <RunConfiguration>
+                 <ResultsDirectory>.\TestResults</ResultsDirectory>
+                 <CollectSourceInformation>false</CollectSourceInformation>
+               </RunConfiguration>
+            </RunSettings>
+            """;
 
         var configurationSettings = RunConfigurationSettings.GetSettings(runSettingxml, RunConfigurationSettings.SettingsName);
         Verify(!configurationSettings.CollectSourceInformation);
@@ -109,11 +113,13 @@ public class RunConfigurationSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeSettingsToDefaultIfNotSpecified()
     {
         string runSettingxml =
-        @"<RunSettings>
-                 <FooUnit>   
-                  <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                 </FooUnit>
-               </RunSettings>";
+            """
+            <RunSettings>
+              <FooUnit>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+              </FooUnit>
+            </RunSettings>
+            """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
@@ -129,12 +135,14 @@ public class RunConfigurationSettingsTests : TestContainer
     public void PopulateSettingsShouldInitializeSettingsFromRunConfigurationSection()
     {
         string runSettingxml =
-        @"<RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <CollectSourceInformation>false</CollectSourceInformation>
-                     </RunConfiguration>
-              </RunSettings>";
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <ResultsDirectory>.\TestResults</ResultsDirectory>
+                <CollectSourceInformation>false</CollectSourceInformation>
+              </RunConfiguration>
+            </RunSettings>
+            """;
 
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);

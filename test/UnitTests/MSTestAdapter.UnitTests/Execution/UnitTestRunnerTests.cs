@@ -53,12 +53,14 @@ public class UnitTestRunnerTests : TestContainer
     public void ConstructorShouldPopulateSettings()
     {
         string runSettingsXml =
-             @"<RunSettings>
-                     <MSTest>
-                        <ForcedLegacyMode>True</ForcedLegacyMode>
-                        <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
-                     </MSTest>
-                   </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <ForcedLegacyMode>True</ForcedLegacyMode>
+                <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
+              </MSTest>
+            </RunSettings>
+            """;
 
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
@@ -323,11 +325,13 @@ public class UnitTestRunnerTests : TestContainer
     private MSTestSettings GetSettingsWithDebugTrace(bool captureDebugTraceValue)
     {
         string runSettingsXml =
-             @"<RunSettings>
-                     <MSTest>
-                        <CaptureTraceOutput>" + captureDebugTraceValue + @"</CaptureTraceOutput>
-                     </MSTest>
-                   </RunSettings>";
+            $"""
+             <RunSettings>
+               <MSTest>
+                 <CaptureTraceOutput>{captureDebugTraceValue}</CaptureTraceOutput>
+               </MSTest>
+             </RunSettings>
+             """;
 
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
