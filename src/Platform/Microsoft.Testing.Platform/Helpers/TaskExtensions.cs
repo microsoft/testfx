@@ -128,7 +128,7 @@ internal static class TaskExtensions
         CancellationTokenSource cts = new();
         if (task == await Task.WhenAny(task, Task.Delay(timeout, cts.Token)).ConfigureAwait(false))
         {
-            cts.Cancel();
+            await cts.CancelAsync();
             await task.ConfigureAwait(false);
         }
         else
@@ -178,7 +178,7 @@ internal static class TaskExtensions
         var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(token, cts.Token);
         if (task == await Task.WhenAny(task, Task.Delay(timeout, linkedTokenSource.Token)).ConfigureAwait(false))
         {
-            cts.Cancel();
+            await cts.CancelAsync();
             await task.ConfigureAwait(false);
         }
         else
