@@ -181,11 +181,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     if (!_serverClosingTokenSource.IsCancellationRequested)
                     {
                         await _logger.LogInformationAsync("Server requested to shutdown");
-#if NET8_0_OR_GREATER
                         await _serverClosingTokenSource.CancelAsync();
-#else
-                        _serverClosingTokenSource.Cancel();
-#endif
                     }
 
                     // Signal the exit call
@@ -194,11 +190,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     // If there're no in-flight request we can close the server
                     if (_clientToServerRequests.IsEmpty)
                     {
-#if NET8_0_OR_GREATER
                         await _stopMessageHandler.CancelAsync();
-#else
-                        _stopMessageHandler.Cancel();
-#endif
                     }
 
                     continue;
