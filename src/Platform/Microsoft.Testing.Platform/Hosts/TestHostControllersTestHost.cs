@@ -72,7 +72,6 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         int currentPID = process.GetCurrentProcess().Id;
         ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ExecutableInfo executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
-        string testApplicationFullPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
         string? extensionInformation = null;
