@@ -234,7 +234,7 @@ public class MSTestSettings
     {
         RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
-        if (context == null || context.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
+        if (context?.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
         {
             // This will contain default adapter settings
             CurrentSettings = new MSTestSettings();
