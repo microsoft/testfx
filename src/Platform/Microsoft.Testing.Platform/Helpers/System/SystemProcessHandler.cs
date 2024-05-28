@@ -13,11 +13,11 @@ internal sealed class SystemProcessHandler : IProcessHandler
 
     public IProcess GetProcessById(int pid) => new SystemProcess(Process.GetProcessById(pid));
 
-    public IProcess? Start(ProcessStartInfo startInfo)
+    public IProcess Start(ProcessStartInfo startInfo)
     {
         var process = Process.Start(startInfo);
         ApplicationStateGuard.Ensure(process is not null);
         process.EnableRaisingEvents = true;
-        return process is null ? null : (IProcess)new SystemProcess(process);
+        return new SystemProcess(process);
     }
 }
