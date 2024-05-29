@@ -280,7 +280,9 @@ public class MSTestSettings
     /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
     /// <param name="settingName"> The name of the adapter settings to fetch - Its either MSTest or MSTestV2. </param>
     /// <returns> The settings if found. Null otherwise. </returns>
-    internal static MSTestSettings? GetSettings(string? runSettingsXml, string settingName)
+    internal static MSTestSettings? GetSettings(
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        string settingName)
     {
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
         {
@@ -636,7 +638,9 @@ public class MSTestSettings
     private static bool TryParseEnum<T>(string value, out T result)
         where T : struct, Enum => Enum.TryParse(value, true, out result) && Enum.IsDefined(typeof(T), result);
 
-    private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings)
+    private static void SetGlobalSettings(
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
+        MSTestSettings settings)
     {
         XElement? runConfigElement = XDocument.Parse(runsettingsXml)?.Element("RunSettings")?.Element("RunConfiguration");
 

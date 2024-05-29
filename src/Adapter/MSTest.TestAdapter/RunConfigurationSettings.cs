@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Xml;
 
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -61,7 +62,9 @@ public class RunConfigurationSettings
     /// <param name="runsettingsXml"> The xml with the settings passed from the test platform. </param>
     /// <param name="settingName"> The name of the settings to fetch.</param>
     /// <returns> The settings if found. Null otherwise. </returns>
-    internal static RunConfigurationSettings? GetSettings(string runsettingsXml, string settingName)
+    internal static RunConfigurationSettings? GetSettings(
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
+        string settingName)
     {
         using var stringReader = new StringReader(runsettingsXml);
         var reader = XmlReader.Create(stringReader, XmlRunSettingsUtilities.ReaderSettings);
