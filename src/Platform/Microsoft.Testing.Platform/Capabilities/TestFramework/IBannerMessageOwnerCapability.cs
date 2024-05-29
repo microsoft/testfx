@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
+
 namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 
 /// <summary>
@@ -10,6 +12,7 @@ namespace Microsoft.Testing.Platform.Capabilities.TestFramework;
 /// This capability implementation allows to abstract away the various conditions that the test framework may need to consider
 /// to decide whether or not the banner message should be displayed.
 /// </summary>
+[Experimental("TAEXP001")]
 public interface IBannerMessageOwnerCapability : ITestFrameworkCapability
 {
     /// <summary>
