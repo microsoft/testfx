@@ -13,8 +13,7 @@ public class RunSettingsUtilitiesTests : TestContainer
     public void GetTestRunParametersReturnsEmptyDictionaryOnNullRunSettings()
     {
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(null);
-        Verify(trp is not null);
-        Verify(trp.Count == 0);
+        Verify(trp is null);
     }
 
     public void GetTestRunParametersReturnsEmptyDictionaryWhenNoTestRunParameters()

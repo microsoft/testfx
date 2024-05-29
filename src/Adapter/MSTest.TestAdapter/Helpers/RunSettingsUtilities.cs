@@ -35,6 +35,7 @@ internal class RunSettingsUtilities
     /// <param name="settingsXml">The runsettings xml.</param>
     /// <returns>The test run parameters.</returns>
     /// <remarks>If there is no test run parameters section defined in the settingsxml a blank dictionary is returned.</remarks>
+<<<<<<< Updated upstream
     internal static Dictionary<string, object> GetTestRunParameters([StringSyntax(StringSyntaxAttribute.Xml, nameof(settingsXml))] string? settingsXml)
     {
         Dictionary<string, object>? nodeValue = GetNodeValue(settingsXml, Constants.TestRunParametersName, TestRunParameters.FromXml);
@@ -46,6 +47,10 @@ internal class RunSettingsUtilities
 
         return nodeValue;
     }
+=======
+    internal static Dictionary<string, object>? GetTestRunParameters(string? settingsXml) =>
+        GetNodeValue(settingsXml, Constants.TestRunParametersName, TestRunParameters.FromXml);
+>>>>>>> Stashed changes
 
     /// <summary>
     /// Throws if the node has an attribute.
