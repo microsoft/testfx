@@ -82,7 +82,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             string processIdString = process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture);
             List<string> partialCommandLine =
             [
-                ..executableInfo.Arguments,
+                .. executableInfo.Arguments,
                 $"--{PlatformCommandLineProvider.TestHostControllerPIDOptionKey}",
                 processIdString
             ];
@@ -120,7 +120,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 #endif
             };
 
-            List<IDataConsumer> dataConsumersBuilder = [.._testHostsInformation.DataConsumer];
+            List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
 
             IPlatformOutputDevice? display = ServiceProvider.GetServiceInternal<IPlatformOutputDevice>();
             if (display is IDataConsumer dataConsumerDisplay)
