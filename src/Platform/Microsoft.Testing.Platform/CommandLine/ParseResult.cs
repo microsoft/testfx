@@ -11,7 +11,7 @@ internal sealed class CommandLineParseResult(string? toolName, OptionRecord[] op
 
     public static CommandLineParseResult Empty => new(null, [], [], []);
 
-    public string? ToolName { get; set; } = toolName;
+    public string? ToolName { get; } = toolName;
 
     public OptionRecord[] Options { get; } = options;
 
