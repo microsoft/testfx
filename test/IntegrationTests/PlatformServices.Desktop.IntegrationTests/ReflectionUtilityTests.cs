@@ -54,7 +54,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
-        string[] expectedAttributes = new string[] { "TestCategory : base", "Owner : base" };
+        string[] expectedAttributes = ["TestCategory : base", "Owner : base"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -67,7 +67,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
-        string[] expectedAttributes = new string[] { "TestCategory : derived", "Owner : derived" };
+        string[] expectedAttributes = ["TestCategory : derived", "Owner : derived"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -81,7 +81,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().HaveCount(3);
 
         // Notice that the Owner on the base method does not show up since it can only be defined once.
-        string[] expectedAttributes = new string[] { "TestCategory : derived", "TestCategory : base", "Owner : derived" };
+        string[] expectedAttributes = ["TestCategory : derived", "TestCategory : base", "Owner : derived"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -94,7 +94,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
-        string[] expectedAttributes = new string[] { "TestCategory : ba" };
+        string[] expectedAttributes = ["TestCategory : ba"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -107,7 +107,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
-        string[] expectedAttributes = new string[] { "TestCategory : a" };
+        string[] expectedAttributes = ["TestCategory : a"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -120,7 +120,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
-        string[] expectedAttributes = new string[] { "TestCategory : a", "TestCategory : ba" };
+        string[] expectedAttributes = ["TestCategory : a", "TestCategory : ba"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -133,7 +133,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
-        string[] expectedAttributes = new string[] { "TestCategory : base" };
+        string[] expectedAttributes = ["TestCategory : base"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -146,7 +146,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
-        string[] expectedAttributes = new string[] { "TestCategory : derived" };
+        string[] expectedAttributes = ["TestCategory : derived"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -160,7 +160,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
-        string[] expectedAttributes = new string[] { "TestCategory : derived", "TestCategory : base", };
+        string[] expectedAttributes = ["TestCategory : derived", "TestCategory : base"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -173,7 +173,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(3);
 
-        string[] expectedAttributes = new string[] { "Duration : superfast", "TestCategory : base", "Owner : base" };
+        string[] expectedAttributes = ["Duration : superfast", "TestCategory : base", "Owner : base"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -186,7 +186,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
-        string[] expectedAttributes = new string[] { "Duration : superfast" };
+        string[] expectedAttributes = ["Duration : superfast"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -199,7 +199,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
-        string[] expectedAttributes = new string[] { "CategoryAttribute : foo,foo2" };
+        string[] expectedAttributes = ["CategoryAttribute : foo,foo2"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -212,7 +212,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
-        string[] expectedAttributes = new string[] { "TestCategory : ba" };
+        string[] expectedAttributes = ["TestCategory : ba"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -225,7 +225,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(1);
 
-        string[] expectedAttributes = new string[] { "TestCategory : a" };
+        string[] expectedAttributes = ["TestCategory : a"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -238,7 +238,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
-        string[] expectedAttributes = new string[] { "TestCategory : a", "TestCategory : ba" };
+        string[] expectedAttributes = ["TestCategory : a", "TestCategory : ba"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 
@@ -251,7 +251,7 @@ public class ReflectionUtilityTests : TestContainer
         attributes.Should().NotBeNull();
         attributes.Should().HaveCount(2);
 
-        string[] expectedAttributes = new string[] { "TestCategory : a1", "TestCategory : a2" };
+        string[] expectedAttributes = ["TestCategory : a1", "TestCategory : a2"];
         GetAttributeValuePairs(attributes).Should().Equal(expectedAttributes);
     }
 

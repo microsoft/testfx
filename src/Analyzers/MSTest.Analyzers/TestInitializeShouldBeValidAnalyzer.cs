@@ -15,29 +15,16 @@ namespace MSTest.Analyzers;
 [DiagnosticAnalyzer(LanguageNames.CSharp, LanguageNames.VisualBasic)]
 public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
 {
-    private static readonly LocalizableResourceString Title = new(nameof(Resources.TestInitializeShouldBeValidTitle), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString Description = new(nameof(Resources.TestInitializeShouldBeValidDescription), Resources.ResourceManager, typeof(Resources));
-    private static readonly LocalizableResourceString MessageFormat = new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_Public), Resources.ResourceManager, typeof(Resources));
-
-    internal static readonly DiagnosticDescriptor PublicRule = DiagnosticDescriptorHelper.Create(
+    internal static readonly DiagnosticDescriptor Rule = DiagnosticDescriptorHelper.Create(
         DiagnosticIds.TestInitializeShouldBeValidRuleId,
-        Title,
-        MessageFormat,
-        Description,
+        new LocalizableResourceString(nameof(Resources.TestInitializeShouldBeValidTitle), Resources.ResourceManager, typeof(Resources)),
+        new LocalizableResourceString(nameof(Resources.TestInitializeShouldBeValidMessageFormat), Resources.ResourceManager, typeof(Resources)),
+        new LocalizableResourceString(nameof(Resources.TestInitializeShouldBeValidDescription), Resources.ResourceManager, typeof(Resources)),
         Category.Usage,
         DiagnosticSeverity.Warning,
         isEnabledByDefault: true);
 
-    internal static readonly DiagnosticDescriptor NotStaticRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_NotStatic), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NoParametersRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_NoParameters), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor ReturnTypeRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_ReturnType), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NotAsyncVoidRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_NotAsyncVoid), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NotAbstractRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_NotAbstract), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor NotGenericRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_NotGeneric), Resources.ResourceManager, typeof(Resources)));
-    internal static readonly DiagnosticDescriptor OrdinaryRule = PublicRule.WithMessage(new(nameof(Resources.TestInitializeShouldBeValidMessageFormat_Ordinary), Resources.ResourceManager, typeof(Resources)));
-
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
-        = ImmutableArray.Create(PublicRule);
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(Rule);
 
     public override void Initialize(AnalysisContext context)
     {
@@ -62,54 +49,13 @@ public sealed class TestInitializeShouldBeValidAnalyzer : DiagnosticAnalyzer
         INamedTypeSymbol? valueTaskSymbol, bool canDiscoverInternals)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
-        if (!methodSymbol.IsTestInitializeMethod(testInitializeAttributeSymbol))
+        if (methodSymbol.IsTestInitializeMethod(testInitializeAttributeSymbol)
+            && !methodSymbol.HasValidFixtureMethodSignature(taskSymbol, valueTaskSymbol, canDiscoverInternals, shouldBeStatic: false,
+                allowGenericType: false, testContextSymbol: null, out bool isFixable))
         {
-            return;
-        }
-
-        if (methodSymbol.MethodKind != MethodKind.Ordinary)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(OrdinaryRule, methodSymbol.Name));
-
-            // Do not check the other criteria, users should fix the method kind first.
-            return;
-        }
-
-        if (methodSymbol.IsAbstract)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAbstractRule, methodSymbol.Name));
-        }
-
-        if (methodSymbol.IsGenericMethod)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotGenericRule, methodSymbol.Name));
-        }
-
-        if (methodSymbol.Parameters.Length > 0)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NoParametersRule, methodSymbol.Name));
-        }
-
-        if (methodSymbol.IsStatic)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotStaticRule, methodSymbol.Name));
-        }
-
-        if (methodSymbol.ReturnsVoid && methodSymbol.IsAsync)
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(NotAsyncVoidRule, methodSymbol.Name));
-        }
-
-        if (!methodSymbol.IsPublicAndHasCorrectResultantVisibility(canDiscoverInternals))
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(PublicRule, methodSymbol.Name));
-        }
-
-        if (!methodSymbol.ReturnsVoid
-            && (taskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, taskSymbol))
-            && (valueTaskSymbol is null || !SymbolEqualityComparer.Default.Equals(methodSymbol.ReturnType, valueTaskSymbol)))
-        {
-            context.ReportDiagnostic(methodSymbol.CreateDiagnostic(ReturnTypeRule, methodSymbol.Name));
+            context.ReportDiagnostic(isFixable
+                ? methodSymbol.CreateDiagnostic(Rule, methodSymbol.Name)
+                : methodSymbol.CreateDiagnostic(Rule, DiagnosticDescriptorHelper.CannotFixProperties, methodSymbol.Name));
         }
     }
 }

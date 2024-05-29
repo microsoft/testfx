@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Xml;
 
@@ -34,7 +35,7 @@ internal class RunSettingsUtilities
     /// <param name="settingsXml">The runsettings xml.</param>
     /// <returns>The test run parameters.</returns>
     /// <remarks>If there is no test run parameters section defined in the settingsxml a blank dictionary is returned.</remarks>
-    internal static Dictionary<string, object> GetTestRunParameters(string? settingsXml)
+    internal static Dictionary<string, object> GetTestRunParameters([StringSyntax(StringSyntaxAttribute.Xml, nameof(settingsXml))] string? settingsXml)
     {
         Dictionary<string, object>? nodeValue = GetNodeValue(settingsXml, Constants.TestRunParametersName, TestRunParameters.FromXml);
         if (nodeValue == default(Dictionary<string, object>))
@@ -65,7 +66,10 @@ internal class RunSettingsUtilities
         }
     }
 
-    private static T? GetNodeValue<T>(string? settingsXml, string nodeName, Func<XmlReader, T> nodeParser)
+    private static T? GetNodeValue<T>(
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(settingsXml))] string? settingsXml,
+        string nodeName,
+        Func<XmlReader, T> nodeParser)
     {
         if (StringEx.IsNullOrWhiteSpace(settingsXml))
         {
@@ -73,26 +77,24 @@ internal class RunSettingsUtilities
         }
 
         // use XmlReader to avoid loading of the plugins in client code (mainly from VS).
-        using (StringReader stringReader = new(settingsXml))
+        using StringReader stringReader = new(settingsXml);
+        var reader = XmlReader.Create(stringReader, ReaderSettings);
+
+        // read to the fist child
+        XmlReaderUtilities.ReadToRootNode(reader);
+        reader.ReadToNextElement();
+
+        // Read till we reach nodeName element or reach EOF
+        while (!string.Equals(reader.Name, nodeName, StringComparison.OrdinalIgnoreCase)
+               && !reader.EOF)
         {
-            var reader = XmlReader.Create(stringReader, ReaderSettings);
+            reader.SkipToNextElement();
+        }
 
-            // read to the fist child
-            XmlReaderUtilities.ReadToRootNode(reader);
-            reader.ReadToNextElement();
-
-            // Read till we reach nodeName element or reach EOF
-            while (!string.Equals(reader.Name, nodeName, StringComparison.OrdinalIgnoreCase)
-                    && !reader.EOF)
-            {
-                reader.SkipToNextElement();
-            }
-
-            if (!reader.EOF)
-            {
-                // read nodeName element.
-                return nodeParser(reader);
-            }
+        if (!reader.EOF)
+        {
+            // read nodeName element.
+            return nodeParser(reader);
         }
 
         return default;

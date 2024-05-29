@@ -196,22 +196,14 @@ internal class TypeCache : MarshalByRefObject
                 continue;
             }
 
-#if NETCOREAPP
+#if NETCOREAPP || WINDOWS_UWP
             if (hierarchyPart.StartsWith('\'') && hierarchyPart.EndsWith('\''))
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart.AsSpan(1, hierarchyPart.Length - 2));
-            }
-#elif WINDOWS_UWP
-            if (hierarchyPart.StartsWith('\'') && hierarchyPart.EndsWith('\''))
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart.Substring(1, hierarchyPart.Length - 2));
-            }
 #else
             if (hierarchyPart.StartsWith("'", StringComparison.Ordinal) && hierarchyPart.EndsWith("'", StringComparison.Ordinal))
-            {
-                unescapedTypeNameBuilder.Append(hierarchyPart.Substring(1, hierarchyPart.Length - 2));
-            }
 #endif
+            {
+                unescapedTypeNameBuilder.Append(hierarchyPart, 1, hierarchyPart.Length - 2);
+            }
             else
             {
                 unescapedTypeNameBuilder.Append(hierarchyPart);
@@ -313,25 +305,25 @@ internal class TypeCache : MarshalByRefObject
             UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods);
         }
 
-        Type? baseType = classType.GetTypeInfo().BaseType;
+        Type? baseType = classType.BaseType;
         while (baseType != null)
         {
             foreach (MethodInfo methodInfo in baseType.GetTypeInfo().DeclaredMethods)
             {
-                if (methodInfo.IsPublic && !methodInfo.IsStatic)
+                if (methodInfo is { IsPublic: true, IsStatic: false })
                 {
                     // Update test initialize/cleanup method from base type.
                     UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, true, instanceMethods);
                 }
 
-                if (methodInfo.IsPublic && methodInfo.IsStatic)
+                if (methodInfo is { IsPublic: true, IsStatic: true })
                 {
                     UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, true, ref initAndCleanupMethods);
                 }
             }
 
             UpdateInfoWithInitializeAndCleanupMethods(classInfo, ref initAndCleanupMethods);
-            baseType = baseType.GetTypeInfo().BaseType;
+            baseType = baseType.BaseType;
         }
 
         return classInfo;
@@ -380,7 +372,7 @@ internal class TypeCache : MarshalByRefObject
     /// <returns> The <see cref="TestAssemblyInfo"/> instance. </returns>
     private TestAssemblyInfo GetAssemblyInfo(Type type)
     {
-        Assembly assembly = type.GetTypeInfo().Assembly;
+        Assembly assembly = type.Assembly;
 
         if (_testAssemblyInfoCache.TryGetValue(assembly, out TestAssemblyInfo? assemblyInfo))
         {
@@ -742,11 +734,6 @@ internal class TypeCache : MarshalByRefObject
         DebugEx.Assert(testClassInfo != null, "testClassInfo is Null");
 
         MethodInfo methodInfo = GetMethodInfoForTestMethod(testMethod, testClassInfo);
-        if (methodInfo == null)
-        {
-            // Means the specified test method could not be found.
-            return null;
-        }
 
         ExpectedExceptionBaseAttribute? expectedExceptionAttribute = _reflectionHelper.ResolveExpectedExceptionHelper(methodInfo, testMethod);
         int timeout = GetTestTimeout(methodInfo, testMethod);
@@ -841,32 +828,25 @@ internal class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
-        MethodInfo? testMethodInfo;
+        IEnumerable<MethodInfo> methods = testClassInfo
+            .ClassType
+            .GetRuntimeMethods()
+            .Where(method => method.Name == testMethod.Name &&
+                             method.HasCorrectTestMethodSignature(true, discoverInternals));
 
-        MethodInfo[] methodsInClass = testClassInfo.ClassType.GetRuntimeMethods().ToArray();
-
-        if (testMethod.DeclaringClassFullName != null)
-        {
-            // Only find methods that match the given declaring name.
-            testMethodInfo =
-                Array.Find(
-                    methodsInClass,
-                    method => method.Name.Equals(testMethod.Name, StringComparison.Ordinal)
-                        && method.DeclaringType!.FullName!.Equals(testMethod.DeclaringClassFullName, StringComparison.Ordinal)
-                        && method.HasCorrectTestMethodSignature(true, discoverInternals));
-        }
-        else
+        if (testMethod.DeclaringClassFullName == null)
         {
             // Either the declaring class is the same as the test class, or
             // the declaring class information wasn't passed in the test case.
             // Prioritize the former while maintaining previous behavior for the latter.
             string? className = testClassInfo.ClassType.FullName;
-            testMethodInfo =
-                methodsInClass.Where(method => method.Name.Equals(testMethod.Name, StringComparison.Ordinal) && method.HasCorrectTestMethodSignature(true, discoverInternals))
-                    .OrderByDescending(method => method.DeclaringType!.FullName!.Equals(className, StringComparison.Ordinal)).FirstOrDefault();
+            return methods
+                .OrderByDescending(method => method.DeclaringType!.FullName == className)
+                .FirstOrDefault();
         }
 
-        return testMethodInfo;
+        // Only find methods that match the given declaring name.
+        return methods.FirstOrDefault(method => method.DeclaringType!.FullName == testMethod.DeclaringClassFullName);
     }
 
     /// <summary>

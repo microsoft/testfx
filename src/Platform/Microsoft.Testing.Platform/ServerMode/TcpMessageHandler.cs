@@ -23,23 +23,14 @@ internal sealed class TcpMessageHandler(
         // Client close the connection in an unexpected way
         catch (Exception ex)
         {
-            if (ex is SocketException se)
+            switch (ex)
             {
-                if (se.SocketErrorCode == SocketError.ConnectionReset)
-                {
+                case SocketException { SocketErrorCode: SocketError.ConnectionReset }:
+                case IOException { InnerException: SocketException { SocketErrorCode: SocketError.ConnectionReset } }:
                     return null;
-                }
+                default:
+                    throw;
             }
-
-            if (ex is IOException iOException && iOException.InnerException is SocketException iose)
-            {
-                if (iose.SocketErrorCode == SocketError.ConnectionReset)
-                {
-                    return null;
-                }
-            }
-
-            throw;
         }
     }
 

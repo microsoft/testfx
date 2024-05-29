@@ -5,7 +5,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
   <PropertyGroup Label="Product dependencies">
-    <AspireHostingTestingVersion>8.0.0-preview.6.24214.1</AspireHostingTestingVersion>
+    <AspireHostingTestingVersion>8.0.1</AspireHostingTestingVersion>
     <!-- Test Platform, .NET Test SDK and Object Model  -->
     <MicrosoftNETTestSdkVersion>17.10.0</MicrosoftNETTestSdkVersion>
     <!-- UWP and WinUI dependencies -->
@@ -18,10 +18,10 @@
     <MicrosoftCodeAnalysisVersion>3.11.0</MicrosoftCodeAnalysisVersion>
     <MicrosoftCodeAnalysisPublicApiAnalyzersVersion>$(MicrosoftCodeAnalysisAnalyzersVersion)</MicrosoftCodeAnalysisPublicApiAnalyzersVersion>
     <MicrosoftCodeAnalysisBannedApiAnalyzersVersion>$(MicrosoftCodeAnalysisPublicApiAnalyzersVersion)</MicrosoftCodeAnalysisBannedApiAnalyzersVersion>
-    <MicrosoftPlaywrightVersion>1.42.0</MicrosoftPlaywrightVersion>
+    <MicrosoftPlaywrightVersion>1.44.0</MicrosoftPlaywrightVersion>
   </PropertyGroup>
   <PropertyGroup Label="Test dependencies">
-    <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.2-beta1.24169.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
+    <MicrosoftCodeAnalysisAnalyzerTestingVersion>1.1.2-beta1.24273.1</MicrosoftCodeAnalysisAnalyzerTestingVersion>
   </PropertyGroup>
   <ItemGroup Label="Product dependencies">
     <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="$(MicrosoftCodeAnalysisAnalyzersVersion)" />
@@ -46,6 +46,7 @@
     <PackageVersion Include="Microsoft.TestPlatform" Version="$(MicrosoftNETTestSdkVersion)" />
     <PackageVersion Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.10.48" />
     <PackageVersion Include="Microsoft.WindowsAppSDK" Version="1.0.0" />
+    <PackageVersion Include="Polyfill" Version="5.2.2" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
     <!-- CVE-2019-0820 -->
     <PackageVersion Include="System.Diagnostics.TextWriterTraceListener" Version="4.3.0" />
@@ -62,10 +63,10 @@
     <PackageVersion Include="MSBuild.StructuredLogger" Version="2.2.206" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
     <!-- CVE-2024-0057 / Transitive deps of code analysis testing packages -->
-    <PackageVersion Include="NuGet.Packaging" Version="6.9.1" />
-    <PackageVersion Include="Polly" Version="8.3.1" />
+    <PackageVersion Include="NuGet.Packaging" Version="6.10.0" />
+    <PackageVersion Include="Polly" Version="8.4.0" />
     <PackageVersion Include="Polly.Contrib.WaitAndRetry" Version="1.1.1" />
-    <PackageVersion Include="StreamJsonRpc" Version="2.17.11" />
+    <PackageVersion Include="StreamJsonRpc" Version="2.18.48" />
     <PackageVersion Include="StrongNamer" Version="0.2.5" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     <PackageVersion Include="System.Management" Version="8.0.0" />

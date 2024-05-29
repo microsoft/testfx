@@ -47,32 +47,44 @@ internal class Scenario1 : IStep<NoInputOutput, SingleProject>
         StringBuilder stringBuilder = new();
         for (int i = 0; i < _numberOfClass; i++)
         {
-            stringBuilder.AppendLine(CultureInfo.InvariantCulture, $@"
-[TestClass]
-public class UnitTest{i}
-{{");
+            stringBuilder.AppendLine(
+                CultureInfo.InvariantCulture,
+                $$"""
+
+                  [TestClass]
+                  public class UnitTest{{i}}
+                  {
+                  """);
             for (int k = 1; k < _methodsPerClass + 1; k++)
             {
                 if (k % 2 == 0)
                 {
-                    stringBuilder.AppendLine(CultureInfo.InvariantCulture, $@"
-        [TestMethod]
-        [System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        public System.Threading.Tasks.Task TestMethod{k}()
-        {{
-            return System.Threading.Tasks.Task.CompletedTask;
-        }}
-");
+                    stringBuilder.AppendLine(
+                        CultureInfo.InvariantCulture,
+                        $$"""
+
+                                  [TestMethod]
+                                  [System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+                                  public System.Threading.Tasks.Task TestMethod{{k}}()
+                                  {
+                                      return System.Threading.Tasks.Task.CompletedTask;
+                                  }
+
+                          """);
                 }
                 else
                 {
-                    stringBuilder.AppendLine(CultureInfo.InvariantCulture, $@"
-        [TestMethod]
-        [System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        public void TestMethod{k}()
-        {{
-        }}
-");
+                    stringBuilder.AppendLine(
+                        CultureInfo.InvariantCulture,
+                        $$"""
+
+                                  [TestMethod]
+                                  [System.Runtime.CompilerServices.MethodImplAttribute(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+                                  public void TestMethod{{k}}()
+                                  {
+                                  }
+
+                          """);
                 }
             }
 
@@ -94,7 +106,7 @@ public class UnitTest{i}
             addPublicFeeds: true);
 
         context.AddDisposable(generator);
-        return new SingleProject(new string[] { "net8.0" }, generator, nameof(Scenario1));
+        return new SingleProject(["net8.0"], generator, nameof(Scenario1));
     }
 
     private static string ExtractVersionFromPackage(string rootFolder, string packagePrefixName)

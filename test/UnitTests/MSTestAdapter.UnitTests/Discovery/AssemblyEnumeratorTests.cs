@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.ObjectModel;
@@ -50,12 +50,14 @@ public class AssemblyEnumeratorTests : TestContainer
     public void ConstructorShouldPopulateSettings()
     {
         string runSettingsXml =
-             @"<RunSettings>
-                     <MSTest>
-                        <ForcedLegacyMode>True</ForcedLegacyMode>
-                        <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
-                     </MSTest>
-                   </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <ForcedLegacyMode>True</ForcedLegacyMode>
+                <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
+              </MSTest>
+            </RunSettings>
+            """;
 
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
@@ -306,7 +308,7 @@ public class AssemblyEnumeratorTests : TestContainer
     {
         Mock<TestableAssembly> mockAssembly = CreateMockTestableAssembly();
         var testableAssemblyEnumerator = new TestableAssemblyEnumerator();
-        ICollection<string> warningsFromTypeEnumerator = null;
+        ICollection<string> warningsFromTypeEnumerator = [];
 
         // Setup mocks
         mockAssembly.Setup(a => a.GetTypes())
@@ -396,9 +398,7 @@ public class AssemblyEnumeratorTests : TestContainer
 
 #region Testable Implementations
 
-public class TestableAssembly : Assembly
-{
-}
+public class TestableAssembly : Assembly;
 
 internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
 {

@@ -50,7 +50,7 @@ public abstract class DataWithSessionUid : PropertyBagData
                 builder.Append(',');
             }
 
-            builder.Append(' ').Append(property.ToString());
+            builder.Append(' ').Append(property);
         }
 
         if (hasAnyProperty)

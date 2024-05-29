@@ -46,12 +46,21 @@ public class AppDomainUtilitiesTests : TestContainer
         Verify(configFile == setup.ConfigurationFile);
 
         // Assert Config Bytes.
-        string expectedRedir = "<dependentAssembly><assemblyIdentity name=\"Microsoft.VisualStudio.TestPlatform.ObjectModel\" publicKeyToken=\"b03f5f7f11d50a3a\" culture=\"neutral\" /><bindingRedirect oldVersion=\"11.0.0.0\" newVersion=\"15.0.0.0\" />";
+        string expectedRedir =
+            """
+            <dependentAssembly>
+            <assemblyIdentity name="Microsoft.VisualStudio.TestPlatform.ObjectModel" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+            <bindingRedirect oldVersion="11.0.0.0" newVersion="15.0.0.0" />
+            """;
 
         byte[] observedConfigBytes = setup.GetConfigurationBytes();
         string observedXml = System.Text.Encoding.UTF8.GetString(observedConfigBytes);
 
-        Verify(observedXml.Replace("\r\n", string.Empty).Replace(" ", string.Empty).Contains(expectedRedir.Replace(" ", string.Empty)), "Config must have OM redirection");
+        Verify(SanitizeString(observedXml).Contains(SanitizeString(expectedRedir)), "Config must have OM redirection");
+
+        // Local functions
+        static string SanitizeString(string str)
+            => str.Replace("\r\n", string.Empty).Replace(" ", string.Empty);
     }
 
     public void SetConfigurationFileShouldSetToCurrentDomainsConfigFileIfSourceDoesNotHaveAConfig()

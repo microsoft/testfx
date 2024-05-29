@@ -1,10 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#if !NETCOREAPP
-using System.Reflection;
-#endif
-
 using System.Globalization;
 
 using Microsoft.Testing.Platform.Extensions.TestFramework;
@@ -23,8 +19,8 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
 
     public bool AllowTestAdapterFrameworkRegistration { get; set; }
 
-    private static Type[] InternalOnlyExtensions => new[]
-    {
+    private static Type[] InternalOnlyExtensions =>
+    [
         // TestHost
         typeof(ITestApplicationLifecycleCallbacks),
         typeof(IDataConsumer),
@@ -32,8 +28,8 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
 
         // TestHostControllers
         typeof(ITestHostEnvironmentVariableProvider),
-        typeof(ITestHostProcessLifetimeHandler),
-    };
+        typeof(ITestHostProcessLifetimeHandler)
+    ];
 
     public void AddService(object service, bool throwIfSameInstanceExit = true)
     {
@@ -88,7 +84,7 @@ internal sealed class ServiceProvider : IServiceProvider, ICloneable
         foreach (object serviceInstance in _services)
         {
 #if !NETCOREAPP
-            if (serviceType.GetTypeInfo().IsAssignableFrom(serviceInstance.GetType()))
+            if (serviceType.IsAssignableFrom(serviceInstance.GetType()))
             {
                 yield return serviceInstance;
                 if (stopAtFirst)

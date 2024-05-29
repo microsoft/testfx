@@ -24,24 +24,24 @@ internal class AssemblyUtility
 #endif
 {
 #if NETFRAMEWORK
-    private static Dictionary<string, object?>? s_cultures;
+    private static HashSet<string>? s_cultures;
 #endif
     private readonly string[] _assemblyExtensions = [".dll", ".exe"];
 
 #if NETFRAMEWORK
     /// <summary>
-    /// Gets all supported culture names in Keys. The Values are always null.
+    /// Gets all supported culture names in Keys.
     /// </summary>
-    private static Dictionary<string, object?> Cultures
+    private static HashSet<string> Cultures
     {
         get
         {
             if (s_cultures == null)
             {
-                s_cultures = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
+                s_cultures = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 foreach (CultureInfo? info in CultureInfo.GetCultures(CultureTypes.AllCultures))
                 {
-                    s_cultures.Add(info.Name, null);
+                    s_cultures.Add(info.Name);
                 }
             }
 
@@ -72,17 +72,7 @@ internal class AssemblyUtility
     /// <remarks> Path.GetExtension() returns extension with leading dot. </remarks>
     /// <returns> True if this is an assembly extension. </returns>
     internal bool IsAssemblyExtension(string extensionWithLeadingDot)
-    {
-        foreach (string realExtension in _assemblyExtensions)
-        {
-            if (string.Equals(extensionWithLeadingDot, realExtension, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
+        => _assemblyExtensions.Contains(extensionWithLeadingDot, StringComparer.OrdinalIgnoreCase);
 
 #if NETFRAMEWORK
     /// <summary>
@@ -136,11 +126,12 @@ internal class AssemblyUtility
         }
 
         assemblyPath = Path.GetFullPath(assemblyPath);
+        string assemblyFileName = Path.GetFileName(assemblyPath);
         string assemblyDir = Path.GetDirectoryName(assemblyPath);
         var satellites = new List<string>();
 
         // Directory.Exists for 266 dirs takes 9ms while Path.GetDirectories can take up to 80ms on 10k dirs.
-        foreach (string dir in Cultures.Keys)
+        foreach (string dir in Cultures)
         {
             string dirPath = Path.Combine(assemblyDir, dir);
             if (!Directory.Exists(dirPath))
@@ -154,7 +145,7 @@ internal class AssemblyUtility
             foreach (string extension in _assemblyExtensions)
             {
                 // extension contains leading dot.
-                string satellite = Path.ChangeExtension(Path.GetFileName(assemblyPath), "resources" + extension);
+                string satellite = Path.ChangeExtension(assemblyFileName, "resources" + extension);
                 string satellitePath = Path.Combine(assemblyDir, Path.Combine(dir, satellite));
 
                 // We don't use Assembly.LoadFrom/Assembly.GetSatelliteAssemblies because this is rather slow
@@ -234,7 +225,7 @@ internal class AssemblyUtility
                     (AssemblyResolver)AppDomainUtilities.CreateInstance(
                                                 appDomain,
                                                 assemblyResolverType,
-                                                new object[] { GetResolutionPaths() });
+                                                [GetResolutionPaths()]);
 
             // This has to be Load, otherwise Serialization of argument types will not work correctly.
             var worker =
@@ -274,24 +265,15 @@ internal class AssemblyUtility
     /// <returns> The <see cref="IList{T}"/> of resolution paths. </returns>
     internal static IList<string> GetResolutionPaths()
     {
-        // Use dictionary to ensure we get a list of unique paths, but keep a list as the
-        // dictionary does not guarantee order.
-        Dictionary<string, object?> resolutionPathsDictionary = new(StringComparer.OrdinalIgnoreCase);
-        List<string> resolutionPaths = [];
+        string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
-        // Add the path of the currently executing assembly (use Uri(CodeBase).LocalPath as Location can be on shadow dir).
-        string currentlyExecutingAssembly = Path.GetDirectoryName(Path.GetFullPath(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath));
-        resolutionPaths.Add(currentlyExecutingAssembly);
-        resolutionPathsDictionary[currentlyExecutingAssembly] = null;
+        // Use the path of the currently executing assembly (use Uri(CodeBase).LocalPath as Location can be on shadow dir).
+        string executingAssembly = Path.GetDirectoryName(Path.GetFullPath(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath))!;
 
         // Add the application base for this domain.
-        if (!resolutionPathsDictionary.ContainsKey(AppDomain.CurrentDomain.BaseDirectory))
-        {
-            resolutionPaths.Add(AppDomain.CurrentDomain.BaseDirectory);
-            resolutionPathsDictionary[AppDomain.CurrentDomain.BaseDirectory] = null;
-        }
-
-        return resolutionPaths;
+        return string.Equals(executingAssembly, baseDirectory, StringComparison.OrdinalIgnoreCase) ?
+            [executingAssembly] :
+            [executingAssembly, baseDirectory];
     }
 #endif
 }

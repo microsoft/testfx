@@ -12,11 +12,13 @@ public class DesktopCSharpCLITests : CLITestBase
     private const string X86ReleaseTestProject = "DesktopTestProjectx86Release";
     private const string X64ReleaseTestProject = "DesktopTestProjectx64Release";
     private const string RunSetting =
-        @"<RunSettings>   
-                <RunConfiguration>  
-                    <TargetPlatform>x64</TargetPlatform>   
-                </RunConfiguration>  
-            </RunSettings>";
+        """
+        <RunSettings>
+          <RunConfiguration>
+            <TargetPlatform>x64</TargetPlatform>
+          </RunConfiguration>
+        </RunSettings>
+        """;
 
     public void DiscoverTestsx86Debug()
     {
@@ -69,7 +71,7 @@ public class DesktopCSharpCLITests : CLITestBase
     private void DoDiscoveryAndValidateDiscoveredTests(string[] sources, string runSettings = "")
     {
         InvokeVsTestForDiscovery(sources, runSettings);
-        string[] listOfTests = new string[] { "SampleUnitTestProject.UnitTest1.PassingTest", "SampleUnitTestProject.UnitTest1.FailingTest", "SampleUnitTestProject.UnitTest1.SkippingTest" };
+        string[] listOfTests = ["SampleUnitTestProject.UnitTest1.PassingTest", "SampleUnitTestProject.UnitTest1.FailingTest", "SampleUnitTestProject.UnitTest1.SkippingTest"];
         ValidateDiscoveredTests(listOfTests);
     }
 

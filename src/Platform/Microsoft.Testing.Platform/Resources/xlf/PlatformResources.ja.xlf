@@ -9,17 +9,17 @@
       </trans-unit>
       <trans-unit id="Actual">
         <source>Actual</source>
-        <target state="new">Actual</target>
+        <target state="translated">実際</target>
         <note />
       </trans-unit>
       <trans-unit id="CancelledLowercase">
         <source>cancelled</source>
-        <target state="new">cancelled</target>
+        <target state="translated">キャンセル済み</target>
         <note />
       </trans-unit>
       <trans-unit id="CancellingTestSession">
         <source>Cancelling the test session...</source>
-        <target state="new">Cancelling the test session...</target>
+        <target state="translated">テスト セッションを取り消しています...</target>
         <note />
       </trans-unit>
       <trans-unit id="CannotCreateTestExecutionFilterErrorMessage">
@@ -169,13 +169,13 @@
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithAsyncFlush">
         <source>Diagnostic file (level '{0}' with async flush): {1}"</source>
-        <target state="new">Diagnostic file (level '{0}' with async flush): {1}"</target>
+        <target state="translated">診断ファイル (非同期フラッシュを使用したレベル '{0}'): {1}"</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
       <trans-unit id="DiagnosticFileLevelWithFlush">
         <source>Diagnostic file (level '{0}' with sync flush): {1}"</source>
-        <target state="new">Diagnostic file (level '{0}' with sync flush): {1}"</target>
+        <target state="translated">診断ファイル (同期フラッシュを使用したレベル '{0}'): {1}"</target>
         <note>0 level such as verbose, 
 1 path to file</note>
       </trans-unit>
@@ -186,7 +186,7 @@
       </trans-unit>
       <trans-unit id="Expected">
         <source>Expected</source>
-        <target state="new">Expected</target>
+        <target state="translated">予想</target>
         <note />
       </trans-unit>
       <trans-unit id="ExtensionDoesNotImplementGivenInterfaceErrorMessage">
@@ -206,7 +206,7 @@
       </trans-unit>
       <trans-unit id="FailedLowercase">
         <source>failed</source>
-        <target state="new">failed</target>
+        <target state="translated">失敗</target>
         <note />
       </trans-unit>
       <trans-unit id="FailedToWriteLogToChannelErrorMessage">
@@ -218,7 +218,7 @@
       </trans-unit>
       <trans-unit id="ForTest">
         <source>For test</source>
-        <target state="new">For test</target>
+        <target state="translated">テスト用</target>
         <note>is followed by test name</note>
       </trans-unit>
       <trans-unit id="GlobalValidationOfTestHostEnvironmentVariablesFailedErrorMessage">
@@ -258,7 +258,7 @@
       </trans-unit>
       <trans-unit id="InProcessArtifactsProduced">
         <source>In process file artifacts produced:</source>
-        <target state="new">In process file artifacts produced:</target>
+        <target state="translated">インプロセスのファイル成果物が生成されました:</target>
         <note />
       </trans-unit>
       <trans-unit id="InternalLoopAsyncDidNotExitSuccessfullyErrorMessage">
@@ -298,7 +298,7 @@
       </trans-unit>
       <trans-unit id="MinimumExpectedTestsPolicyViolation">
         <source>Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</source>
-        <target state="new">Minimum expected tests policy violation, tests ran {0}, minimum expected {1}</target>
+        <target state="translated">予想されるテストの最小ポリシー違反、テストの実行数 {0} 件、予想される最小数 {1} 件</target>
         <note>{0}, {1} number of tests</note>
       </trans-unit>
       <trans-unit id="NoSerializerRegisteredWithIdErrorMessage">
@@ -323,7 +323,7 @@
       </trans-unit>
       <trans-unit id="OutOfProcessArtifactsProduced">
         <source>Out of process file artifacts produced:</source>
-        <target state="new">Out of process file artifacts produced:</target>
+        <target state="translated">アウトプロセスのファイル成果物が生成されました:</target>
         <note />
       </trans-unit>
       <trans-unit id="Passed">
@@ -333,7 +333,7 @@
       </trans-unit>
       <trans-unit id="PassedLowercase">
         <source>passed</source>
-        <target state="new">passed</target>
+        <target state="translated">合格しました</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineClientHostOptionDescription">
@@ -531,12 +531,12 @@
       </trans-unit>
       <trans-unit id="SkippedLowercase">
         <source>skipped</source>
-        <target state="new">skipped</target>
+        <target state="translated">スキップされました</target>
         <note />
       </trans-unit>
       <trans-unit id="StackTrace">
         <source>Stack Trace</source>
-        <target state="new">Stack Trace</target>
+        <target state="translated">スタック トレース</target>
         <note />
       </trans-unit>
       <trans-unit id="StartingServer">
@@ -713,7 +713,7 @@ Microsoft Testing Platform テレメトリの詳細: https://aka.ms/testingplatf
       </trans-unit>
       <trans-unit id="ZeroTestsRan">
         <source>Zero tests ran</source>
-        <target state="new">Zero tests ran</target>
+        <target state="translated">0 件のテストが実行されました</target>
         <note />
       </trans-unit>
     </body>

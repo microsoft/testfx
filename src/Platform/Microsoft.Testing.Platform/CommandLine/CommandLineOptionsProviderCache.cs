@@ -9,7 +9,7 @@ namespace Microsoft.Testing.Platform.CommandLine;
 internal struct CommandLineOptionsProviderCache(ICommandLineOptionsProvider commandLineOptionsProvider) : ICommandLineOptionsProvider
 {
     private readonly ICommandLineOptionsProvider _commandLineOptionsProvider = commandLineOptionsProvider;
-    private CommandLineOption[]? _commandLineOptions;
+    private IReadOnlyCollection<CommandLineOption>? _commandLineOptions;
 
     public readonly string Uid => _commandLineOptionsProvider.Uid;
 
@@ -21,7 +21,7 @@ internal struct CommandLineOptionsProviderCache(ICommandLineOptionsProvider comm
 
     public IReadOnlyCollection<CommandLineOption> GetCommandLineOptions()
     {
-        _commandLineOptions ??= _commandLineOptionsProvider.GetCommandLineOptions().ToArray();
+        _commandLineOptions ??= _commandLineOptionsProvider.GetCommandLineOptions();
 
         return _commandLineOptions;
     }

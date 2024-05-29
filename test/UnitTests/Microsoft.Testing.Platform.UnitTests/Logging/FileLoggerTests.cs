@@ -162,7 +162,6 @@ public class FileLoggerTests : TestBase, IDisposable
             .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
 
-        string fileLoggerName = string.Empty;
         using FileLogger fileLogger = new(
             new(LogFolder, LogPrefix, fileName: FileName, syncFlush: true),
             defaultLogLevel,
@@ -197,7 +196,6 @@ public class FileLoggerTests : TestBase, IDisposable
             .Setup(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             .Returns(_mockStream.Object);
 
-        string fileLoggerName = string.Empty;
         using FileLogger fileLogger = new(
             new(LogFolder, LogPrefix, fileName: FileName, syncFlush: false),
             defaultLogLevel,

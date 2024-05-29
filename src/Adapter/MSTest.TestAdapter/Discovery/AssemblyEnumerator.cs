@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -121,10 +122,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <returns>Gets the types defined in the provided assembly.</returns>
     internal static IReadOnlyList<Type> GetTypes(Assembly assembly, string assemblyFileName, ICollection<string>? warningMessages)
     {
-        var types = new List<Type>();
         try
         {
-            types.AddRange(assembly.GetTypes());
+           return assembly.GetTypes();
         }
         catch (ReflectionTypeLoadException ex)
         {
@@ -146,8 +146,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
 
             return ex.Types!;
         }
-
-        return types;
     }
 
     /// <summary>
@@ -201,8 +199,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
     }
 
-    private List<UnitTestElement> DiscoverTestsInType(string assemblyFileName, string? runSettingsXml, Type type,
-        List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
+    private List<UnitTestElement> DiscoverTestsInType(
+        string assemblyFileName,
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        Type type,
+        List<string> warningMessages,
+        bool discoverInternals,
+        TestDataSourceDiscoveryOption discoveryOption,
         TestIdGenerationStrategy testIdGenerationStrategy)
     {
         IDictionary<string, object> tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
@@ -218,13 +221,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
-            ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string>? warningsFromTypeEnumerator);
-            bool typeIgnored = ReflectHelper.IsAttributeDefined<IgnoreAttribute>(type, false);
+            ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string> warningsFromTypeEnumerator);
 
-            if (warningsFromTypeEnumerator != null)
-            {
-                warningMessages.AddRange(warningsFromTypeEnumerator);
-            }
+            warningMessages.AddRange(warningsFromTypeEnumerator);
 
             if (unitTestCases != null)
             {

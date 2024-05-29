@@ -70,6 +70,4 @@ public class ExpectedExceptionAttributeTests : TestContainer
 /// <summary>
 /// Dummy class derived from Exception.
 /// </summary>
-public class DummyTestClassDerivedFromException : Exception
-{
-}
+public class DummyTestClassDerivedFromException : Exception;

@@ -12,11 +12,13 @@ public class DeploymentTests : CLITestBase
     private const string TestAssetNever = "DeploymentTestProject.Never";
     private const string TestAssetPreserveNewest = "DeploymentTestProject.PreserveNewest";
     private const string RunSetting =
-         @"<RunSettings>   
-                <MSTestV2>
-                   <DeployTestSourceDependencies>false</DeployTestSourceDependencies>
-                </MSTestV2>
-            </RunSettings>";
+        """
+        <RunSettings>
+          <MSTestV2>
+            <DeployTestSourceDependencies>false</DeployTestSourceDependencies>
+          </MSTestV2>
+        </RunSettings>
+        """;
 
     public void ValidateTestSourceDependencyDeployment_net462()
         => ValidateTestSourceDependencyDeployment("net462");

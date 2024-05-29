@@ -66,9 +66,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.NotAGenericClassUnlessInheritanceModeSetRule)
-                .WithLocation(0)
-                .WithArguments("ClassInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassInitialize"),
             code);
     }
 
@@ -89,9 +87,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.NotAGenericClassUnlessInheritanceModeSetRule)
-                .WithLocation(0)
-                .WithArguments("ClassInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassInitialize"),
             code);
     }
 
@@ -99,7 +95,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
     {
         string code = """
             using Microsoft.VisualStudio.TestTools.UnitTesting;
-            
+
             [assembly: DiscoverInternals]
 
             [TestClass]
@@ -149,7 +145,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.PublicRule)
+            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.Rule)
                 .WithLocation(0)
                 .WithArguments("ClassInitialize"),
             fixedCode);
@@ -189,9 +185,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.PublicRule)
-                .WithLocation(0)
-                .WithArguments("ClassInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassInitialize"),
             fixedCode);
     }
 
@@ -212,9 +206,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.OrdinaryRule)
-                .WithLocation(0)
-                .WithArguments("Finalize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("Finalize"),
             code);
     }
 
@@ -248,9 +240,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.NotGenericRule)
-                .WithLocation(0)
-                .WithArguments("ClassInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassInitialize"),
             fixedCode);
     }
 
@@ -284,9 +274,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.StaticRule)
-                .WithLocation(0)
-                .WithArguments("ClassInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassInitialize"),
             fixedCode);
     }
 
@@ -320,9 +308,7 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.SingleContextParameterRule)
-                .WithLocation(0)
-                .WithArguments("ClassInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassInitialize"),
             fixedCode);
     }
 
@@ -392,21 +378,12 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            new[]
-            {
-                VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(0)
-                    .WithArguments("ClassInitialize0"),
-                VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(1)
-                    .WithArguments("ClassInitialize1"),
-                VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(2)
-                    .WithArguments("ClassInitialize2"),
-                VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.ReturnTypeRule)
-                    .WithLocation(3)
-                    .WithArguments("ClassInitialize3"),
-            },
+            [
+                VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassInitialize0"),
+                VerifyCS.Diagnostic().WithLocation(1).WithArguments("ClassInitialize1"),
+                VerifyCS.Diagnostic().WithLocation(2).WithArguments("ClassInitialize2"),
+                VerifyCS.Diagnostic().WithLocation(3).WithArguments("ClassInitialize3")
+            ],
             fixedCode);
     }
 
@@ -475,9 +452,45 @@ public sealed class ClassInitializeShouldBeValidAnalyzerTests(ITestExecutionCont
 
         await VerifyCS.VerifyCodeFixAsync(
             code,
-            VerifyCS.Diagnostic(ClassInitializeShouldBeValidAnalyzer.NotAsyncVoidRule)
-                .WithLocation(0)
-                .WithArguments("ClassInitialize"),
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassInitialize"),
+            fixedCode);
+    }
+
+    public async Task WhenMultipleViolations_TheyAllGetFixed()
+    {
+        string code = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassInitialize]
+                public async void {|#0:ClassInitialize|}<T>(int i)
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        string fixedCode = """
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+            using System.Threading.Tasks;
+
+            [TestClass]
+            public class MyTestClass
+            {
+                [ClassInitialize]
+                public static async Task ClassInitialize(TestContext testContext)
+                {
+                    await Task.Delay(0);
+                }
+            }
+            """;
+
+        await VerifyCS.VerifyCodeFixAsync(
+            code,
+            VerifyCS.Diagnostic().WithLocation(0).WithArguments("ClassInitialize"),
             fixedCode);
     }
 }
