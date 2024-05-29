@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class CommandLineParseResult(string? toolName, OptionRecord[] options, string[] errors, string[] originalArguments) : IEquatable<CommandLineParseResult>
+internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<OptionRecord> options, IReadOnlyList<string> errors, IReadOnlyList<string> originalArguments) : IEquatable<CommandLineParseResult>
 {
     public const char OptionPrefix = '-';
 
@@ -13,13 +13,13 @@ internal sealed class CommandLineParseResult(string? toolName, OptionRecord[] op
 
     public string? ToolName { get; } = toolName;
 
-    public OptionRecord[] Options { get; } = options;
+    public IReadOnlyList<OptionRecord> Options { get; } = options;
 
-    public string[] Errors { get; } = errors;
+    public IReadOnlyList<string> Errors { get; } = errors;
 
-    public string[] OriginalArguments { get; } = originalArguments;
+    public IReadOnlyList<string> OriginalArguments { get; } = originalArguments;
 
-    public bool HasError => Errors.Length > 0;
+    public bool HasError => Errors.Count > 0;
 
     public bool HasTool => ToolName is not null;
 
@@ -40,12 +40,12 @@ internal sealed class CommandLineParseResult(string? toolName, OptionRecord[] op
             return false;
         }
 
-        if (Errors.Length != other.Errors.Length)
+        if (Errors.Count != other.Errors.Count)
         {
             return false;
         }
 
-        for (int i = 0; i < Errors.Length; i++)
+        for (int i = 0; i < Errors.Count; i++)
         {
             if (Errors[i] != other.Errors[i])
             {
@@ -53,14 +53,14 @@ internal sealed class CommandLineParseResult(string? toolName, OptionRecord[] op
             }
         }
 
-        if (Options.Length != other.Options.Length)
+        if (Options.Count != other.Options.Count)
         {
             return false;
         }
 
-        OptionRecord[] thisOptions = Options;
-        OptionRecord[] otherOptions = other.Options;
-        for (int i = 0; i < thisOptions.Length; i++)
+        IReadOnlyList<OptionRecord> thisOptions = Options;
+        IReadOnlyList<OptionRecord> otherOptions = other.Options;
+        for (int i = 0; i < thisOptions.Count; i++)
         {
             if (thisOptions[i].Option != otherOptions[i].Option)
             {
