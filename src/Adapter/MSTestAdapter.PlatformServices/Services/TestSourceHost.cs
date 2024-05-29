@@ -154,6 +154,12 @@ public class TestSourceHost : ITestSourceHost
             // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
             EqtTrace.SetupRemoteEqtTraceListeners(AppDomain);
 
+            // Force loading Microsoft.TestPlatform.CoreUtilities in the new app domain to ensure there is no assembly resolution issue.
+            // For unknown reasons, with MSTest 3.4+ we start to see infinite cycles of assembly resolution of this dll in the new app
+            // domain. In older versions, this was not the case, and the callback was allowing to fully lookup and load the dll before
+            // triggering the next resolution.
+            AppDomain.Load(typeof(EqtTrace).Assembly.GetName());
+
             // Add an assembly resolver in the child app-domain...
             Type assemblyResolverType = typeof(AssemblyResolver);
 
