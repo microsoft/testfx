@@ -122,20 +122,17 @@ internal static class CommandLineParser
 
         static void ParseOptionAndSeparators(string arg, out string? currentOption, out string? currentArg)
         {
-            currentArg = null;
-            (int delimiterIndex, string delimiterFound) = new List<(int, string)>
-            {
-                (arg.IndexOf(":", StringComparison.InvariantCultureIgnoreCase), ":"),
-                (arg.IndexOf("=", StringComparison.InvariantCultureIgnoreCase), "="),
-                (arg.IndexOf(" ", StringComparison.InvariantCultureIgnoreCase), " "),
-            }.Where(x => x.Item1 != -1).OrderBy(x => x.Item1).FirstOrDefault();
+            int delimiterIndex = arg.IndexOfAny([':', '=', ' ']);
 
-            currentOption = arg[..(RoslynString.IsNullOrEmpty(delimiterFound) ? arg.Length : arg.IndexOf(delimiterFound, StringComparison.InvariantCultureIgnoreCase))].TrimStart('-');
-
-            if (!RoslynString.IsNullOrEmpty(delimiterFound))
+            if (delimiterIndex == -1)
             {
-                currentArg = arg[(arg.IndexOf(delimiterFound, StringComparison.InvariantCultureIgnoreCase) + 1)..];
+                currentArg = null;
+                currentOption = arg;
+                return;
             }
+
+            currentOption = arg[..delimiterIndex].TrimStart('-');
+            currentArg = arg[(delimiterIndex + 1)..];
         }
 
         static bool TryUnescape(string input, string? option, IEnvironment environment, out string? unescapedArg, out string? error)
