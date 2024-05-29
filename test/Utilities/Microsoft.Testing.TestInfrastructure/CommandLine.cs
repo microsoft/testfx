@@ -89,7 +89,9 @@ public sealed class CommandLine : IDisposable
 #if NET8_0_OR_GREATER
                 await stopTheTimer.CancelAsync();
 #else
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
                 stopTheTimer.Cancel();
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
 #endif
                 return await exited;
             }

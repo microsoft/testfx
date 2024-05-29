@@ -221,12 +221,9 @@ internal class AssemblyEnumerator : MarshalByRefObject
         {
             typeFullName = type.FullName;
             TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
-            ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string>? warningsFromTypeEnumerator);
+            ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string> warningsFromTypeEnumerator);
 
-            if (warningsFromTypeEnumerator != null)
-            {
-                warningMessages.AddRange(warningsFromTypeEnumerator);
-            }
+            warningMessages.AddRange(warningsFromTypeEnumerator);
 
             if (unitTestCases != null)
             {

@@ -945,11 +945,13 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoWhenTimeoutAttributeNotSetShouldReturnTestMethodInfoWithGlobalTimeout()
     {
         string runSettingsXml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <TestTimeout>4000</TestTimeout>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <TestTimeout>4000</TestTimeout>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias));
 
@@ -968,11 +970,13 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoWhenTimeoutAttributeSetShouldReturnTimeoutBasedOnAttributeEvenIfGlobalTimeoutSet()
     {
         string runSettingsXml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <TestTimeout>4000</TestTimeout>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <TestTimeout>4000</TestTimeout>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias));
 
@@ -994,11 +998,13 @@ public class TypeCacheTests : TestContainer
     public void GetTestMethodInfoForInvalidGLobalTimeoutShouldReturnTestMethodInfoWithTimeoutZero()
     {
         string runSettingsXml =
-            @"<RunSettings>
-                    <MSTestV2>
-                        <TestTimeout>30.5</TestTimeout>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+                <TestTimeout>30.5</TestTimeout>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         MSTestSettings.PopulateSettings(MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias));
 

@@ -125,11 +125,13 @@ public class DesktopTestSourceHostTests : TestContainer
         // Arrange
         DummyClass dummyClass = new();
         string runSettingxml =
-        @"<RunSettings>   
-                <RunConfiguration>  
-                    <DisableAppDomain>False</DisableAppDomain>   
-                </RunConfiguration>  
-            </RunSettings>";
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>False</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """;
 
         string location = typeof(TestSourceHost).Assembly.Location;
         var mockRunSettings = new Mock<IRunSettings>();
@@ -197,10 +199,10 @@ public class DesktopTestSourceHostTests : TestContainer
         // Arrange
         DummyClass dummyClass = new();
         string runSettingxml =
-        @"<RunSettings>   
-                <RunConfiguration>  
-                    <DisableAppDomain>True</DisableAppDomain>   
-                </RunConfiguration>  
+        @"<RunSettings>
+                <RunConfiguration>
+                    <DisableAppDomain>True</DisableAppDomain>
+                </RunConfiguration>
             </RunSettings>";
 
         string location = typeof(TestSourceHost).Assembly.Location;
@@ -226,11 +228,13 @@ public class DesktopTestSourceHostTests : TestContainer
         // Arrange
         DummyClass dummyClass = new();
         string runSettingxml =
-        @"<RunSettings>   
-                <RunConfiguration>  
-                    <DisableAppDomain>False</DisableAppDomain>   
-                </RunConfiguration>  
-            </RunSettings>";
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>False</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """;
 
         string location = typeof(TestSourceHost).Assembly.Location;
         var mockRunSettings = new Mock<IRunSettings>();

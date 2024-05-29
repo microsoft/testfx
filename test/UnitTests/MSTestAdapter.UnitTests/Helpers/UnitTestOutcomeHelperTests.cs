@@ -17,10 +17,12 @@ public class UnitTestOutcomeHelperTests : TestContainer
     public UnitTestOutcomeHelperTests()
     {
         string runSettingxml =
-        @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         _adapterSettings = MSTestSettings.GetSettings(runSettingxml, MSTestSettings.SettingsNameAlias);
     }

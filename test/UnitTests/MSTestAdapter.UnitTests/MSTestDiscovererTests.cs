@@ -161,13 +161,15 @@ public class MSTestDiscovererTests : TestContainer
     public void DiscoveryShouldNotHappenIfTestSettingsIsGiven()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTest>
-                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                        <ForcedLegacyMode>true</ForcedLegacyMode>
-                        <IgnoreTestImpact>true</IgnoreTestImpact>
-                    </MSTest>
-            </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <ForcedLegacyMode>true</ForcedLegacyMode>
+                <IgnoreTestImpact>true</IgnoreTestImpact>
+              </MSTest>
+            </RunSettings>
+            """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });
@@ -182,13 +184,15 @@ public class MSTestDiscovererTests : TestContainer
     public void DiscoveryShouldReportAndBailOutOnSettingsException()
     {
         string runSettingsXml =
-        @"<RunSettings>
-                    <MSTest>
-                        <Parallelize>
-                          <Scope>Pond</Scope>
-                        </Parallelize>
-                    </MSTest>
-            </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <Parallelize>
+                  <Scope>Pond</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """;
         _mockDiscoveryContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
         _testablePlatformServiceProvider.MockTestSourceValidator.SetupGet(ts => ts.ValidSourceExtensions).Returns(new List<string> { ".dll" });

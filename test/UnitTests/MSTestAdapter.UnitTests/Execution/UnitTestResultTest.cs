@@ -54,10 +54,12 @@ public class UnitTestResultTest : TestContainer
         DateTimeOffset endTime = DateTimeOffset.Now;
 
         string runSettingsXml =
-            @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
 
@@ -104,10 +106,12 @@ public class UnitTestResultTest : TestContainer
         };
         TestCase testCase = new("Foo", new Uri("Uri", UriKind.Relative), Assembly.GetExecutingAssembly().FullName);
         string runSettingsXml =
-           @"<RunSettings>
-                    <MSTestV2>
-                    </MSTestV2>
-                  </RunSettings>";
+            """
+            <RunSettings>
+              <MSTestV2>
+              </MSTestV2>
+            </RunSettings>
+            """;
 
         var adapterSettings = MSTestSettings.GetSettings(runSettingsXml, MSTestSettings.SettingsNameAlias);
         var testResult = result.ToTestResult(testCase, DateTimeOffset.Now, DateTimeOffset.Now, "MachineName", adapterSettings);

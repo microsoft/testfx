@@ -45,7 +45,7 @@ public class RunConfigurationSettings
     /// <returns>Populated RunConfigurationSettings from the discovery context.</returns>
     public static RunConfigurationSettings PopulateSettings(IDiscoveryContext? context)
     {
-        if (context == null || context.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
+        if (context?.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
         {
             // This will contain default configuration settings
             return new RunConfigurationSettings();

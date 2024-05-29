@@ -10,8 +10,8 @@ namespace MSTest.Acceptance.IntegrationTests;
 [TestGroup]
 public class AssemblyResolverTests : AcceptanceTestBase
 {
-    private readonly TestAssetFixture _testAssetFixture;
     private const string AssetName = "AssemblyResolverCrash";
+    private readonly TestAssetFixture _testAssetFixture;
 
     // There's a bug in TAFX where we need to use it at least one time somewhere to use it inside the fixture self (AcceptanceFixture).
     public AssemblyResolverTests(ITestExecutionContext testExecutionContext, TestAssetFixture testAssetFixture,

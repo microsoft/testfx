@@ -72,7 +72,6 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         int currentPID = process.GetCurrentProcess().Id;
         ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ExecutableInfo executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
-        string testApplicationFullPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
         string? extensionInformation = null;
@@ -80,35 +79,15 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         IConfiguration configuration = ServiceProvider.GetConfiguration();
         try
         {
+            string processIdString = process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture);
             List<string> partialCommandLine = new(executableInfo.Arguments)
             {
                 $"--{PlatformCommandLineProvider.TestHostControllerPIDOptionKey}",
-                process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture),
+                processIdString,
             };
-            CommandLineInfo finalCommandLine = new(executableInfo.FileName, partialCommandLine, testApplicationFullPath);
-
-            ProcessStartInfo processStartInfo = new()
-            {
-                FileName = finalCommandLine.FileName,
-#if !NETCOREAPP
-                UseShellExecute = false,
-#endif
-            };
-
-            foreach (string argument in finalCommandLine.Arguments)
-            {
-#if !NETCOREAPP
-                processStartInfo.Arguments += argument + " ";
-#else
-                processStartInfo.ArgumentList.Add(argument);
-#endif
-            }
 
             // Prepare the environment variables used by the test host
             string processCorrelationId = Guid.NewGuid().ToString("N");
-            processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID}", processCorrelationId);
-            processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", process.GetCurrentProcess()?.Id.ToString(CultureInfo.InvariantCulture) ?? "null pid");
-            processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPID}", "1");
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID} '{processCorrelationId}'");
 
             NamedPipeServer testHostControllerIpc = new(
@@ -118,7 +97,27 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
                 _loggerFactory.CreateLogger<NamedPipeServer>(),
                 ServiceProvider.GetTask(), abortRun);
             testHostControllerIpc.RegisterAllSerializers();
-            processStartInfo.EnvironmentVariables[$"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}"] = testHostControllerIpc.PipeName.Name;
+
+#if NET8_0_OR_GREATER
+            IEnumerable<string> arguments = partialCommandLine;
+#else
+            string arguments = string.Join(" ", partialCommandLine);
+#endif
+            ProcessStartInfo processStartInfo = new(
+                executableInfo.FileName,
+                arguments)
+            {
+                EnvironmentVariables =
+                {
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_CORRELATIONID}_{currentPID}", processCorrelationId },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PARENTPID}_{currentPID}", process.GetCurrentProcess()?.Id.ToString(CultureInfo.InvariantCulture) ?? "null pid" },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_SKIPEXTENSION}_{currentPID}", "1" },
+                    { $"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_PIPENAME}_{currentPID}", testHostControllerIpc.PipeName.Name },
+                },
+#if !NETCOREAPP
+                UseShellExecute = false,
+#endif
+            };
 
             List<IDataConsumer> dataConsumersBuilder = [];
             if (_testHostsInformation.DataConsumer.Length > 0)
@@ -127,7 +126,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             }
 
             IPlatformOutputDevice? display = ServiceProvider.GetServiceInternal<IPlatformOutputDevice>();
-            if (display is not null and IDataConsumer dataConsumerDisplay)
+            if (display is IDataConsumer dataConsumerDisplay)
             {
                 dataConsumersBuilder.Add(dataConsumerDisplay);
             }
@@ -206,8 +205,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID}", testHostProcessStartupTime);
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID} '{testHostProcessStartupTime}'");
             await _logger.LogDebugAsync($"Starting test host process");
-            IProcess testHostProcess = process.Start(processStartInfo)
-                ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotStartProcessErrorMessage, processStartInfo.FileName));
+            IProcess testHostProcess = process.Start(processStartInfo);
 
             testHostProcess.Exited += (sender, e) =>
             {

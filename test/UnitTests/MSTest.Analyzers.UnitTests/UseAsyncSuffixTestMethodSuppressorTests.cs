@@ -20,17 +20,20 @@ public sealed class UseAsyncSuffixTestMethodSuppressorTests(ITestExecutionContex
 {
     public async Task AsyncTestMethodWithoutSuffix_DiagnosticIsSuppressed()
     {
-        string code = @"
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+        string code =
+            """
 
-[TestClass]
-public class SomeClass
-{
-    [TestMethod]
-    public async Task [|TestMethod|]() { }
-}
-";
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class SomeClass
+            {
+                [TestMethod]
+                public async Task [|TestMethod|]() { }
+            }
+
+            """;
 
         // Verify issue is reported
         await new VerifyCS.Test
@@ -46,17 +49,20 @@ public class SomeClass
 
     public async Task AsyncDataTestMethodWithoutSuffix_DiagnosticIsSuppressed()
     {
-        string code = @"
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+        string code =
+            """
 
-[TestClass]
-public class SomeClass
-{
-    [DataTestMethod, DataRow(0)]
-    public async Task [|TestMethod|](int arg) { }
-}
-";
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class SomeClass
+            {
+                [DataTestMethod, DataRow(0)]
+                public async Task [|TestMethod|](int arg) { }
+            }
+
+            """;
 
         await new VerifyCS.Test
         {
@@ -71,17 +77,20 @@ public class SomeClass
 
     public async Task AsyncTestMethodWithSuffix_NoDiagnostic()
     {
-        string code = @"
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+        string code =
+            """
 
-[TestClass]
-public class SomeClass
-{
-    [TestMethod]
-    public async Task TestMethodAsync() { }
-}
-";
+            using System.Threading.Tasks;
+            using Microsoft.VisualStudio.TestTools.UnitTesting;
+
+            [TestClass]
+            public class SomeClass
+            {
+                [TestMethod]
+                public async Task TestMethodAsync() { }
+            }
+
+            """;
 
         await new VerifyCS.Test
         {
