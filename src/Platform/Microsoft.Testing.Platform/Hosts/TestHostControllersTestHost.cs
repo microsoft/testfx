@@ -72,7 +72,6 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         int currentPID = process.GetCurrentProcess().Id;
         ITestApplicationModuleInfo testApplicationModuleInfo = ServiceProvider.GetTestApplicationModuleInfo();
         ExecutableInfo executableInfo = testApplicationModuleInfo.GetCurrentExecutableInfo();
-        string testApplicationFullPath = testApplicationModuleInfo.GetCurrentTestApplicationFullPath();
         ITelemetryCollector telemetry = ServiceProvider.GetTelemetryCollector();
         ITelemetryInformation telemetryInformation = ServiceProvider.GetTelemetryInformation();
         string? extensionInformation = null;
@@ -203,8 +202,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID}", testHostProcessStartupTime);
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID} '{testHostProcessStartupTime}'");
             await _logger.LogDebugAsync($"Starting test host process");
-            IProcess testHostProcess = process.Start(processStartInfo)
-                ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotStartProcessErrorMessage, processStartInfo.FileName));
+            IProcess testHostProcess = process.Start(processStartInfo);
 
             testHostProcess.Exited += (sender, e) =>
             {

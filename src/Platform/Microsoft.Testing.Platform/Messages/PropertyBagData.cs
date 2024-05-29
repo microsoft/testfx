@@ -33,7 +33,7 @@ public abstract class PropertyBagData(string displayName, string? description) :
                 builder.Append(',');
             }
 
-            builder.Append(' ').Append(property.ToString());
+            builder.Append(' ').Append(property);
         }
 
         if (hasAnyProperty)

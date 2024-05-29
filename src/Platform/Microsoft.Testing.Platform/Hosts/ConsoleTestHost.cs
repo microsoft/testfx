@@ -122,10 +122,7 @@ internal sealed class ConsoleTestHost(
         }
         catch (OperationCanceledException oc) when (oc.CancellationToken == abortRun)
         {
-            if (requestExecuteStop == null)
-            {
-                requestExecuteStop = _clock.UtcNow;
-            }
+            requestExecuteStop ??= _clock.UtcNow;
 
             exitCode = ExitCodes.TestSessionAborted;
             await _logger.LogInformationAsync("Test session cancelled.");
