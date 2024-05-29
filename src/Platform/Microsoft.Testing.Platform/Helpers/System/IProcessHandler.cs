@@ -11,5 +11,5 @@ internal interface IProcessHandler
 
     IProcess GetCurrentProcess();
 
-    IProcess? Start(ProcessStartInfo startInfo);
+    IProcess Start(ProcessStartInfo startInfo);
 }
