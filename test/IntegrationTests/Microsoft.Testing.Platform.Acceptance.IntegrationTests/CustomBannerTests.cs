@@ -111,7 +111,7 @@ public class Program
     }
 }
 
-#pragma warning disable TAEXP001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning disable TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 internal sealed class DummyBannerMessageOwnerCapability : IBannerMessageOwnerCapability
 {
     private readonly IServiceProvider _serviceProvider;
@@ -134,7 +134,7 @@ internal sealed class DummyBannerMessageOwnerCapability : IBannerMessageOwnerCap
         return Task.FromResult(sb.ToString());
     }
 }
-#pragma warning restore TAEXP001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+#pragma warning restore TPEXP // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
 public class DummyTestAdapter : ITestFramework
 {
