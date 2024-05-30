@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace Microsoft.Testing.Platform.Services;
 
-[Experimental("TPEXP", "https://aka.ms/testingplatform/diagnostics#{0}")]
+[Experimental("TPEXP", UrlFormat = "https://aka.ms/testingplatform/diagnostics#{0}")]
 public interface IPlatformInformation
 {
     /// <summary>
