@@ -199,4 +199,7 @@ public static class ServiceProviderExtensions
 
     internal static CommandLineParseResult GetCommandLineParseResult(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ApplicationLoggingState>().CommandLineParseResult;
+
+    internal static IPlatformInformation GetPlatformInformation(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredServiceInternal<IPlatformInformation>();
 }

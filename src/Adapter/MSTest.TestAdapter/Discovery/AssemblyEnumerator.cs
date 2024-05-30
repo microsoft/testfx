@@ -189,14 +189,15 @@ internal class AssemblyEnumerator : MarshalByRefObject
     /// <param name="assemblyFileName">The reflected assembly name.</param>
     /// <param name="discoverInternals">True to discover test classes which are declared internal in
     /// addition to test classes which are declared public.</param>
+    /// <param name="discoveryOption"><see cref="TestDataSourceDiscoveryOption"/> to use when generating tests.</param>
     /// <param name="testIdGenerationStrategy"><see cref="TestIdGenerationStrategy"/> to use when generating TestId.</param>
     /// <returns>a TypeEnumerator instance.</returns>
-    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestIdGenerationStrategy testIdGenerationStrategy)
+    internal virtual TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption, TestIdGenerationStrategy testIdGenerationStrategy)
     {
         var typeValidator = new TypeValidator(ReflectHelper, discoverInternals);
         var testMethodValidator = new TestMethodValidator(ReflectHelper, discoverInternals);
 
-        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, testIdGenerationStrategy);
+        return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, discoveryOption, testIdGenerationStrategy);
     }
 
     private List<UnitTestElement> DiscoverTestsInType(
@@ -220,9 +221,8 @@ internal class AssemblyEnumerator : MarshalByRefObject
         try
         {
             typeFullName = type.FullName;
-            TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, testIdGenerationStrategy);
+            TypeEnumerator testTypeEnumerator = GetTypeEnumerator(type, assemblyFileName, discoverInternals, discoveryOption, testIdGenerationStrategy);
             ICollection<UnitTestElement>? unitTestCases = testTypeEnumerator.Enumerate(out ICollection<string> warningsFromTypeEnumerator);
-
             warningMessages.AddRange(warningsFromTypeEnumerator);
 
             if (unitTestCases != null)
@@ -262,6 +262,18 @@ internal class AssemblyEnumerator : MarshalByRefObject
             return false;
         }
 
+        if (test.TestMethod.DataType == DynamicDataType.None)
+        {
+            return false;
+        }
+
+        // PERF: For perf we started setting DataType in TypeEnumerator, so when it is None we will not reach this line.
+        // But if we do run this code, we still reset it to None, because the code that determines if this is data drive test expects the value to be None
+        // and only sets it when needed.
+        //
+        // If you remove this line and acceptance tests still pass you are okay.
+        test.TestMethod.DataType = DynamicDataType.None;
+
         // NOTE: From this place we don't have any path that would let the user write a message on the TestContext and we don't do
         // anything with what would be printed anyway so we can simply use a simple StringWriter.
         using var writer = new StringWriter();
@@ -274,11 +286,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
     private static bool TryProcessTestDataSourceTests(UnitTestElement test, TestMethodInfo testMethodInfo, List<UnitTestElement> tests)
     {
         MethodInfo methodInfo = testMethodInfo.MethodInfo;
-        IEnumerable<FrameworkITestDataSource>? testDataSources = ReflectHelper.GetAttributes<Attribute>(methodInfo, false)?.OfType<FrameworkITestDataSource>();
-        if (testDataSources == null || !testDataSources.Any())
-        {
-            return false;
-        }
+
+        // We don't have a special method to filter attributes that are not derived from Attribute, so we take all
+        // attributes and filter them. We don't have to care if there is one, because this method is only entered when
+        // there is at least one (we determine this in TypeEnumerator.GetTestFromMethod.
+        IEnumerable<FrameworkITestDataSource>? testDataSources = ReflectHelper.Instance.GetDerivedAttributes<Attribute>(methodInfo, inherit: false).OfType<FrameworkITestDataSource>();
 
         try
         {
@@ -310,9 +322,11 @@ internal class AssemblyEnumerator : MarshalByRefObject
                     throw new ArgumentException(string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DynamicDataIEnumerableEmpty, "GetData", dataSource.GetType().Name));
                 }
             }
-            catch (Exception ex) when (ex is ArgumentException && MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
+            catch (ArgumentException) when (MSTestSettings.CurrentSettings.ConsiderEmptyDataSourceAsInconclusive)
             {
                 UnitTestElement discoveredTest = test.Clone();
+                // Make the test not data driven, because it had no data.
+                discoveredTest.TestMethod.DataType = DynamicDataType.None;
                 discoveredTest.DisplayName = dataSource.GetDisplayName(methodInfo, null) ?? discoveredTest.DisplayName;
                 tests.Add(discoveredTest);
                 continue;
