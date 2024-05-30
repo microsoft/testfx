@@ -32,4 +32,5 @@
     1. [IMessageBus](imessagebus.md)
     1. [ICommandLineOptions](icommandlineoptions.md)
     1. [IOutputDevice](ioutputdevice.md)
+    1. [IPlatformInformation](iplatforminformation.md)
 1. [Code sample](codesample.md)
