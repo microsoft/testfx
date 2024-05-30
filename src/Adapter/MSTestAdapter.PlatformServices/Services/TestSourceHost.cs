@@ -102,14 +102,8 @@ public class TestSourceHost : ITestSourceHost
     /// </summary>
     public void SetupHost()
     {
-#if NETFRAMEWORK || NET
-        List<string> resolutionPaths = GetResolutionPaths(
-            _sourceFileName,
-#if NETFRAMEWORK
-            VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
-#else
-            false);
-#endif
+#if NET
+        List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, false);
 
         if (EqtTrace.IsInfoEnabled)
         {
@@ -125,10 +119,20 @@ public class TestSourceHost : ITestSourceHost
         {
             assemblyResolver.Dispose();
         }
+#elif NETFRAMEWORK
+        List<string> resolutionPaths = GetResolutionPaths(_sourceFileName, VSInstallationUtilities.IsCurrentProcessRunningInPortableMode());
 
-#endif
+        if (EqtTrace.IsInfoEnabled)
+        {
+            EqtTrace.Info("DesktopTestSourceHost.SetupHost(): Creating assembly resolver with resolution paths {0}.", string.Join(",", resolutionPaths));
+        }
 
-#if NETFRAMEWORK
+        // NOTE: These 2 lines are super important, see https://github.com/microsoft/testfx/issues/2922
+        // It's not entirely clear why but not assigning directly the resolver to the field (or/and) disposing the resolver in
+        // case of an error in TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver causes the issue.
+        _parentDomainAssemblyResolver = new AssemblyResolver(resolutionPaths);
+        _ = TryAddSearchDirectoriesSpecifiedInRunSettingsToAssemblyResolver(_parentDomainAssemblyResolver, Path.GetDirectoryName(_sourceFileName)!);
+
         // Case when DisableAppDomain setting is present in runsettings and no child-appdomain needs to be created
         if (!_isAppDomainCreationDisabled)
         {
@@ -149,6 +153,12 @@ public class TestSourceHost : ITestSourceHost
             // Load objectModel before creating assembly resolver otherwise in 3.5 process, we run into a recursive assembly resolution
             // which is trigged by AppContainerUtilities.AttachEventToResolveWinmd method.
             EqtTrace.SetupRemoteEqtTraceListeners(AppDomain);
+
+            // Force loading Microsoft.TestPlatform.CoreUtilities in the new app domain to ensure there is no assembly resolution issue.
+            // For unknown reasons, with MSTest 3.4+ we start to see infinite cycles of assembly resolution of this dll in the new app
+            // domain. In older versions, this was not the case, and the callback was allowing to fully lookup and load the dll before
+            // triggering the next resolution.
+            AppDomain.Load(typeof(EqtTrace).Assembly.GetName());
 
             // Add an assembly resolver in the child app-domain...
             Type assemblyResolverType = typeof(AssemblyResolver);

@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -44,15 +44,15 @@ public class TypeValidatorTests : TestContainer
 
     public void IsValidTestClassShouldReturnFalseForClassesNotHavingTestClassAttributeOrDerivedAttributeTypes()
     {
-        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<UTF.TestClassAttribute>(It.IsAny<Type>(), false)).Returns(false);
+        _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<UTF.TestClassAttribute>(It.IsAny<Type>(), false)).Returns(false);
         Verify(!_typeValidator.IsValidTestClass(typeof(TypeValidatorTests), _warnings));
     }
 
     public void IsValidTestClassShouldReturnTrueForClassesMarkedByAnAttributeDerivedFromTestClass()
     {
-        _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<UTF.TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(false);
+        _mockReflectHelper.Setup(rh => rh.IsNonDerivedAttributeDefined<UTF.TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(false);
         _mockReflectHelper.Setup(
-            rh => rh.HasAttributeDerivedFrom<UTF.TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(true);
+            rh => rh.IsDerivedAttributeDefined<UTF.TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(true);
         Verify(_typeValidator.IsValidTestClass(typeof(TypeValidatorTests), _warnings));
     }
 
@@ -403,7 +403,7 @@ public class TypeValidatorTests : TestContainer
 
     #region private methods
 
-    private void SetupTestClass() => _mockReflectHelper.Setup(rh => rh.IsAttributeDefined<UTF.TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(true);
+    private void SetupTestClass() => _mockReflectHelper.Setup(rh => rh.IsDerivedAttributeDefined<UTF.TestClassAttribute>(It.IsAny<TypeInfo>(), false)).Returns(true);
 
     #endregion
 }

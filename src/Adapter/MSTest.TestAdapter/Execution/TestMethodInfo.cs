@@ -83,12 +83,11 @@ public class TestMethodInfo : ITestMethod
     /// </summary>
     internal TestMethodOptions TestMethodOptions { get; }
 
-    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.GetCustomAttributes(TestMethod, inherit) as Attribute[];
+    public Attribute[]? GetAllAttributes(bool inherit) => ReflectHelper.Instance.GetDerivedAttributes<Attribute>(TestMethod, inherit).ToArray();
 
     public TAttributeType[] GetAttributes<TAttributeType>(bool inherit)
         where TAttributeType : Attribute
-        => ReflectHelper.GetAttributes<TAttributeType>(TestMethod, inherit)
-        ?? [];
+        => ReflectHelper.Instance.GetDerivedAttributes<TAttributeType>(TestMethod, inherit).ToArray();
 
     /// <summary>
     /// Execute test method. Capture failures, handle async and return result.
@@ -464,9 +463,7 @@ public class TestMethodInfo : ITestMethod
                 while (baseTestCleanupQueue.Count > 0 && testCleanupException is null)
                 {
                     testCleanupMethod = baseTestCleanupQueue.Dequeue();
-                    testCleanupException = testCleanupMethod is not null
-                        ? InvokeCleanupMethod(testCleanupMethod, classInstance, baseTestCleanupQueue.Count)
-                        : null;
+                    testCleanupException = InvokeCleanupMethod(testCleanupMethod, classInstance, baseTestCleanupQueue.Count);
                 }
             }
             finally

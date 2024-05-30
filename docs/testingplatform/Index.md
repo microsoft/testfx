@@ -10,6 +10,8 @@
     1. [Available requests](irequest.md)
         1. [Well known TestNodeUpdateMessage.TestNode properties](testnodeupdatemessage.md)
 1. [Capabilities](capabilities.md)
+    1. [ITestFrameworkCapability](itestframeworkcapability.md)
+        1. [IBannerMessageOwnerCapability](ibannermessageownercapability.md)
 1. Extensions
     1. [Introduction](extensionintro.md)
     1. In-process & out-of-process
@@ -32,4 +34,5 @@
     1. [IMessageBus](imessagebus.md)
     1. [ICommandLineOptions](icommandlineoptions.md)
     1. [IOutputDevice](ioutputdevice.md)
+    1. [IPlatformInformation](iplatforminformation.md)
 1. [Code sample](codesample.md)

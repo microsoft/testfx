@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -12,43 +12,55 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableIm
 /// </summary>
 internal sealed class TestableReflectHelper : ReflectHelper
 {
-    /// <summary>
-    /// A dictionary to hold mock custom attributes. The int represents a hash code of
-    /// the Type of custom attribute and the level its applied at :
-    /// MemberTypes.All for assembly level
-    /// MemberTypes.TypeInfo for class level
-    /// MemberTypes.Method for method level.
-    /// </summary>
-    private readonly Dictionary<int, Attribute[]> _customAttributes;
-
     public TestableReflectHelper()
+        : base(new TestableReflectionAccessor())
     {
-        _customAttributes = [];
     }
 
     public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
     {
-        int hashCode = type.FullName.GetHashCode() + memberTypes.GetHashCode();
-        _customAttributes[hashCode] = _customAttributes.TryGetValue(hashCode, out Attribute[] value)
-            ? value.Concat(values).ToArray()
-            : values;
+        var attributeProvider = (TestableReflectionAccessor)NotCachedAttributes;
+        attributeProvider.AddData(type, values, memberTypes);
+    }
+}
+
+internal class TestableReflectionAccessor : INotCachedReflectionAccessor
+{
+    /// <summary>
+    /// A collection to hold mock custom attributes.
+    /// MemberTypes.All for assembly level
+    /// MemberTypes.TypeInfo for class level
+    /// MemberTypes.Method for method level.
+    /// </summary>
+    private readonly List<(Type Type, Attribute Attribute, MemberTypes MemberType)> _data = new();
+
+    public object[] GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit)
+    {
+        var foundAttributes = new List<Attribute>();
+        foreach ((Type Type, Attribute Attribute, MemberTypes MemberType) attributeData in _data)
+        {
+            if (attributeProvider is MethodInfo && (attributeData.MemberType == MemberTypes.Method))
+            {
+                foundAttributes.Add(attributeData.Attribute);
+            }
+            else if (attributeProvider is TypeInfo && (attributeData.MemberType == MemberTypes.TypeInfo))
+            {
+                foundAttributes.Add(attributeData.Attribute);
+            }
+            else if (attributeProvider is Assembly && attributeData.MemberType == MemberTypes.All)
+            {
+                foundAttributes.Add(attributeData.Attribute);
+            }
+        }
+
+        return foundAttributes.ToArray();
     }
 
-    internal override TAttribute[] GetCustomAttributeForAssembly<TAttribute>(MemberInfo memberInfo)
+    internal void AddData(Type type, Attribute[] values, MemberTypes memberTypes)
     {
-        int hashCode = MemberTypes.All.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
-
-        return _customAttributes.TryGetValue(hashCode, out Attribute[] value)
-            ? value.OfType<TAttribute>().ToArray()
-            : [];
-    }
-
-    internal override TAttribute[] GetCustomAttributes<TAttribute>(MemberInfo memberInfo)
-    {
-        int hashCode = memberInfo.MemberType.GetHashCode() + typeof(TAttribute).FullName.GetHashCode();
-
-        return _customAttributes.TryGetValue(hashCode, out Attribute[] value)
-            ? value.OfType<TAttribute>().ToArray()
-            : [];
+        foreach (Attribute attribute in values)
+        {
+            _data.Add((type, attribute, memberTypes));
+        }
     }
 }

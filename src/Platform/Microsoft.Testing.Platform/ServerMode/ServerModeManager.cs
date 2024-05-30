@@ -38,20 +38,14 @@ internal sealed partial class ServerModeManager : IServerModeManager
             {
                 case JsonRpcTcpServer tcpServerCommunicationProtocol:
                     {
-                        if (!serverPort.HasValue)
-                        {
-                            serverPort = tcpServerCommunicationProtocol.Port;
-                        }
+                        serverPort ??= tcpServerCommunicationProtocol.Port;
 
                         break;
                     }
 
                 case JsonRpcTcpServerToSingleClient tcpServerToSingleClientCommunicationProtocol:
                     {
-                        if (!clientPort.HasValue)
-                        {
-                            clientPort = tcpServerToSingleClientCommunicationProtocol.ClientPort;
-                        }
+                        clientPort ??= tcpServerToSingleClientCommunicationProtocol.ClientPort;
 
                         if (RoslynString.IsNullOrEmpty(clientHostName))
                         {

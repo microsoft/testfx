@@ -282,7 +282,7 @@ internal class TypeCache : MarshalByRefObject
 
         TestAssemblyInfo assemblyInfo = GetAssemblyInfo(classType);
 
-        TestClassAttribute? testClassAttribute = ReflectHelper.GetDerivedAttribute<TestClassAttribute>(classType, false);
+        TestClassAttribute? testClassAttribute = ReflectHelper.Instance.GetFirstDerivedAttributeOrDefault<TestClassAttribute>(classType, inherit: false);
         DebugEx.Assert(testClassAttribute is not null, "testClassAttribute is null");
         var classInfo = new TestClassInfo(classType, constructor, testContextProperty, testClassAttribute, assemblyInfo);
 
@@ -298,15 +298,14 @@ internal class TypeCache : MarshalByRefObject
 
         foreach (MethodInfo methodInfo in classType.GetTypeInfo().DeclaredMethods)
         {
-            // Update test initialize/cleanup method
             UpdateInfoIfTestInitializeOrCleanupMethod(classInfo, methodInfo, false, instanceMethods);
 
-            // Update class initialize/cleanup method
             UpdateInfoIfClassInitializeOrCleanupMethod(classInfo, methodInfo, false, ref initAndCleanupMethods);
         }
 
         Type? baseType = classType.BaseType;
-        while (baseType != null)
+        // PERF: Don't inspect object, no test methods or setups can be defined on it.
+        while (baseType != null && baseType != typeof(object))
         {
             foreach (MethodInfo methodInfo in baseType.GetTypeInfo().DeclaredMethods)
             {
@@ -394,8 +393,7 @@ internal class TypeCache : MarshalByRefObject
             {
                 // Only examine classes which are TestClass or derives from TestClass attribute
                 TypeInfo typeInfo = t.GetTypeInfo();
-                if (!_reflectionHelper.IsAttributeDefined<TestClassAttribute>(typeInfo, inherit: true) &&
-                    !_reflectionHelper.HasAttributeDerivedFrom<TestClassAttribute>(typeInfo, true))
+                if (!_reflectionHelper.IsDerivedAttributeDefined<TestClassAttribute>(typeInfo, inherit: true))
                 {
                     continue;
                 }
@@ -418,16 +416,15 @@ internal class TypeCache : MarshalByRefObject
                 {
                     assemblyInfo.AssemblyInitializeMethod = methodInfo;
 
-                    if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+                    TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
+                    if (timeoutAttribute != null)
                     {
-                        if (!methodInfo.HasCorrectTimeout())
+                        if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
                         {
                             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                             throw new TypeInspectionException(message);
                         }
 
-                        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
-                        DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
                         assemblyInfo.AssemblyInitializeMethodTimeoutMilliseconds = timeoutAttribute.Timeout;
                     }
                     else if (MSTestSettings.CurrentSettings.AssemblyInitializeTimeout > 0)
@@ -438,16 +435,15 @@ internal class TypeCache : MarshalByRefObject
                 else if (IsAssemblyOrClassCleanupMethod<AssemblyCleanupAttribute>(methodInfo))
                 {
                     assemblyInfo.AssemblyCleanupMethod = methodInfo;
-                    if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+                    TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
+                    if (timeoutAttribute != null)
                     {
-                        if (!methodInfo.HasCorrectTimeout())
+                        if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
                         {
                             string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                             throw new TypeInspectionException(message);
                         }
 
-                        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
-                        DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
                         assemblyInfo.AssemblyCleanupMethodTimeoutMilliseconds = timeoutAttribute.Timeout;
                     }
                     else if (MSTestSettings.CurrentSettings.AssemblyCleanupTimeout > 0)
@@ -472,7 +468,12 @@ internal class TypeCache : MarshalByRefObject
     private bool IsAssemblyOrClassInitializeMethod<TInitializeAttribute>(MethodInfo methodInfo)
         where TInitializeAttribute : Attribute
     {
-        if (!_reflectionHelper.IsAttributeDefined<TInitializeAttribute>(methodInfo, false))
+        // TODO: this would be inconsistent with the codebase, but potential perf gain, issue: https://github.com/microsoft/testfx/issues/2999
+        // if (!methodInfo.IsStatic)
+        // {
+        //    return false;
+        // }
+        if (!_reflectionHelper.IsNonDerivedAttributeDefined<TInitializeAttribute>(methodInfo, false))
         {
             return false;
         }
@@ -495,7 +496,12 @@ internal class TypeCache : MarshalByRefObject
     private bool IsAssemblyOrClassCleanupMethod<TCleanupAttribute>(MethodInfo methodInfo)
         where TCleanupAttribute : Attribute
     {
-        if (!_reflectionHelper.IsAttributeDefined<TCleanupAttribute>(methodInfo, false))
+        // TODO: this would be inconsistent with the codebase, but potential perf gain, issue: https://github.com/microsoft/testfx/issues/2999
+        // if (!methodInfo.IsStatic)
+        // {
+        //    return false;
+        // }
+        if (!_reflectionHelper.IsNonDerivedAttributeDefined<TCleanupAttribute>(methodInfo, false))
         {
             return false;
         }
@@ -549,16 +555,15 @@ internal class TypeCache : MarshalByRefObject
 
         if (isInitializeMethod)
         {
-            if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
+            if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout())
+                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
                 }
 
-                TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
-                DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
                 classInfo.ClassInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
             }
             else if (MSTestSettings.CurrentSettings.ClassInitializeTimeout > 0)
@@ -568,7 +573,7 @@ internal class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetCustomAttribute<ClassInitializeAttribute>(methodInfo)!
+                if (_reflectionHelper.GetFirstDerivedAttributeOrDefault<ClassInitializeAttribute>(methodInfo, inherit: true)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[0] = methodInfo;
@@ -583,16 +588,15 @@ internal class TypeCache : MarshalByRefObject
 
         if (isCleanupMethod)
         {
-            if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
+            if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout())
+                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
                 }
 
-                TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
-                DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
                 classInfo.ClassCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
             }
             else if (MSTestSettings.CurrentSettings.ClassCleanupTimeout > 0)
@@ -602,7 +606,7 @@ internal class TypeCache : MarshalByRefObject
 
             if (isBase)
             {
-                if (_reflectionHelper.GetCustomAttribute<ClassCleanupAttribute>(methodInfo)!
+                if (_reflectionHelper.GetFirstDerivedAttributeOrDefault<ClassCleanupAttribute>(methodInfo, inherit: true)?
                         .InheritanceBehavior == InheritanceBehavior.BeforeEachDerivedClass)
                 {
                     initAndCleanupMethods[1] = methodInfo;
@@ -629,8 +633,8 @@ internal class TypeCache : MarshalByRefObject
         bool isBase,
         Dictionary<string, string?> instanceMethods)
     {
-        bool hasTestInitialize = _reflectionHelper.IsAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
-        bool hasTestCleanup = _reflectionHelper.IsAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
+        bool hasTestInitialize = _reflectionHelper.IsNonDerivedAttributeDefined<TestInitializeAttribute>(methodInfo, inherit: false);
+        bool hasTestCleanup = _reflectionHelper.IsNonDerivedAttributeDefined<TestCleanupAttribute>(methodInfo, inherit: false);
 
         if (!hasTestCleanup && !hasTestInitialize)
         {
@@ -650,16 +654,15 @@ internal class TypeCache : MarshalByRefObject
 
         if (hasTestInitialize)
         {
-            if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
+            if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout())
+                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
                 }
 
-                TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
-                DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
                 classInfo.TestInitializeMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
             }
             else if (MSTestSettings.CurrentSettings.TestInitializeTimeout > 0)
@@ -682,16 +685,15 @@ internal class TypeCache : MarshalByRefObject
 
         if (hasTestCleanup)
         {
-            if (_reflectionHelper.IsAttributeDefined<TimeoutAttribute>(methodInfo, false))
+            TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
+            if (timeoutAttribute != null)
             {
-                if (!methodInfo.HasCorrectTimeout())
+                if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
                 {
                     string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, methodInfo.DeclaringType!.FullName, methodInfo.Name);
                     throw new TypeInspectionException(message);
                 }
 
-                TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
-                DebugEx.Assert(timeoutAttribute != null, "TimeoutAttribute cannot be null");
                 classInfo.TestCleanupMethodTimeoutMilliseconds.Add(methodInfo, timeoutAttribute.Timeout);
             }
             else if (MSTestSettings.CurrentSettings.TestCleanupTimeout > 0)
@@ -762,7 +764,7 @@ internal class TypeCache : MarshalByRefObject
     private TestMethodAttribute? GetTestMethodAttribute(MethodInfo methodInfo, TestClassInfo testClassInfo)
     {
         // Get the derived TestMethod attribute from reflection
-        TestMethodAttribute? testMethodAttribute = _reflectionHelper.GetDerivedAttribute<TestMethodAttribute>(methodInfo, false);
+        TestMethodAttribute? testMethodAttribute = _reflectionHelper.GetFirstDerivedAttributeOrDefault<TestMethodAttribute>(methodInfo, inherit: false);
 
         // Get the derived TestMethod attribute from Extended TestClass Attribute
         // If the extended TestClass Attribute doesn't have extended TestMethod attribute then base class returns back the original testMethod Attribute
@@ -828,32 +830,25 @@ internal class TypeCache : MarshalByRefObject
 
     private static MethodInfo? GetMethodInfoUsingRuntimeMethods(TestMethod testMethod, TestClassInfo testClassInfo, bool discoverInternals)
     {
-        MethodInfo? testMethodInfo;
+        IEnumerable<MethodInfo> methods = testClassInfo
+            .ClassType
+            .GetRuntimeMethods()
+            .Where(method => method.Name == testMethod.Name &&
+                             method.HasCorrectTestMethodSignature(true, discoverInternals));
 
-        MethodInfo[] methodsInClass = testClassInfo.ClassType.GetRuntimeMethods().ToArray();
-
-        if (testMethod.DeclaringClassFullName != null)
-        {
-            // Only find methods that match the given declaring name.
-            testMethodInfo =
-                Array.Find(
-                    methodsInClass,
-                    method => method.Name.Equals(testMethod.Name, StringComparison.Ordinal)
-                        && method.DeclaringType!.FullName!.Equals(testMethod.DeclaringClassFullName, StringComparison.Ordinal)
-                        && method.HasCorrectTestMethodSignature(true, discoverInternals));
-        }
-        else
+        if (testMethod.DeclaringClassFullName == null)
         {
             // Either the declaring class is the same as the test class, or
             // the declaring class information wasn't passed in the test case.
             // Prioritize the former while maintaining previous behavior for the latter.
             string? className = testClassInfo.ClassType.FullName;
-            testMethodInfo =
-                methodsInClass.Where(method => method.Name.Equals(testMethod.Name, StringComparison.Ordinal) && method.HasCorrectTestMethodSignature(true, discoverInternals))
-                    .OrderByDescending(method => method.DeclaringType!.FullName!.Equals(className, StringComparison.Ordinal)).FirstOrDefault();
+            return methods
+                .OrderByDescending(method => method.DeclaringType!.FullName == className)
+                .FirstOrDefault();
         }
 
-        return testMethodInfo;
+        // Only find methods that match the given declaring name.
+        return methods.FirstOrDefault(method => method.DeclaringType!.FullName == testMethod.DeclaringClassFullName);
     }
 
     /// <summary>
@@ -865,12 +860,12 @@ internal class TypeCache : MarshalByRefObject
     private int GetTestTimeout(MethodInfo methodInfo, TestMethod testMethod)
     {
         DebugEx.Assert(methodInfo != null, "TestMethod should be non-null");
-        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetAttribute<TimeoutAttribute>(methodInfo);
+        TimeoutAttribute? timeoutAttribute = _reflectionHelper.GetFirstNonDerivedAttributeOrDefault<TimeoutAttribute>(methodInfo, inherit: false);
         int globalTimeout = MSTestSettings.CurrentSettings.TestTimeout;
 
         if (timeoutAttribute != null)
         {
-            if (!methodInfo.HasCorrectTimeout())
+            if (!methodInfo.HasCorrectTimeout(timeoutAttribute))
             {
                 string message = string.Format(CultureInfo.CurrentCulture, Resource.UTA_ErrorInvalidTimeout, testMethod.FullClassName, testMethod.Name);
                 throw new TypeInspectionException(message);

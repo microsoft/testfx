@@ -239,8 +239,7 @@ internal sealed class PerRequestServerDataConsumer(IServiceProvider serviceProvi
 
     internal void PopulateTestNodeStatistics(TestNodeUpdateMessage message)
     {
-        if (message.TestNode is null
-            || message.TestNode.Properties.SingleOrDefault<TestNodeStateProperty>() is not { } state)
+        if (message.TestNode?.Properties.SingleOrDefault<TestNodeStateProperty>() is not { } state)
         {
             return;
         }

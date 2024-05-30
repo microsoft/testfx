@@ -58,14 +58,16 @@ public class ParallelExecutionTests : CLITestBase
     public void NothingShouldRunInParallel()
     {
         const string RunSetting =
-        @"<RunSettings>   
-                <MSTest>
-    		        <Parallelize>
-      			        <Workers>4</Workers>
-      			        <Scope>ClassLevel</Scope>
-    		        </Parallelize>
-  	            </MSTest>  
-            </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <Parallelize>
+                  <Workers>4</Workers>
+                  <Scope>ClassLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """;
 
         InvokeVsTestForExecution([DoNotParallelizeTestAssetName], RunSetting);
 

@@ -53,12 +53,14 @@ public class UnitTestRunnerTests : TestContainer
     public void ConstructorShouldPopulateSettings()
     {
         string runSettingsXml =
-             @"<RunSettings>
-                     <MSTest>
-                        <ForcedLegacyMode>True</ForcedLegacyMode>
-                        <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
-                     </MSTest>
-                   </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <ForcedLegacyMode>True</ForcedLegacyMode>
+                <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
+              </MSTest>
+            </RunSettings>
+            """;
 
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
@@ -304,7 +306,7 @@ public class UnitTestRunnerTests : TestContainer
         _testablePlatformServiceProvider.MockFileOperations.Setup(fo => fo.LoadAssembly("A", It.IsAny<bool>()))
             .Returns(Assembly.GetExecutingAssembly());
         mockReflectHelper.Setup(
-            rh => rh.IsAttributeDefined<UTF.AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize"), It.IsAny<bool>()))
+            rh => rh.IsNonDerivedAttributeDefined<UTF.AssemblyInitializeAttribute>(type.GetMethod("AssemblyInitialize"), It.IsAny<bool>()))
             .Returns(true);
 
         int validator = 1;
@@ -323,11 +325,13 @@ public class UnitTestRunnerTests : TestContainer
     private MSTestSettings GetSettingsWithDebugTrace(bool captureDebugTraceValue)
     {
         string runSettingsXml =
-             @"<RunSettings>
-                     <MSTest>
-                        <CaptureTraceOutput>" + captureDebugTraceValue + @"</CaptureTraceOutput>
-                     </MSTest>
-                   </RunSettings>";
+            $"""
+             <RunSettings>
+               <MSTest>
+                 <CaptureTraceOutput>{captureDebugTraceValue}</CaptureTraceOutput>
+               </MSTest>
+             </RunSettings>
+             """;
 
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>

@@ -65,7 +65,7 @@ If the testing framework implements this interface and we can query it at runtim
 * Determine if the testing framework can supply CPU usage data `CanProvidePerTestCPUConsumption = true`
 * Request the testing adapter to activate this mode by invoking the `Enable()` method before the test session commences
 
-The ipotetical code fragment inside the extension could be something like:
+The hypothetical code fragment inside the extension could be something like:
 
 ```cs
 IServiceProvider serviceProvider = ...get service provider...

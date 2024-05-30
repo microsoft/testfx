@@ -7,7 +7,7 @@ namespace Microsoft.Testing.Platform.OutputDevice;
 
 internal interface IPlatformOutputDevice : IExtension, IOutputDevice
 {
-    Task DisplayBannerAsync();
+    Task DisplayBannerAsync(string? bannerMessage);
 
     Task DisplayBeforeSessionStartAsync();
 
