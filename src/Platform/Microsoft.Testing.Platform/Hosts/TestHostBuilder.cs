@@ -503,9 +503,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
         {
             namedPipeClient = new(arguments[0]);
-
-            namedPipeClient.RegisterSerializer<CommandLineOptionMessages>(new CommandLineOptionMessagesSerializer());
-            namedPipeClient.RegisterSerializer<VoidResponse>(new VoidResponseSerializer());
+            namedPipeClient.RegisterAllSerializers();
 
             await namedPipeClient.ConnectAsync(cancellationTokenSource.CancellationToken);
         }
