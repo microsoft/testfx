@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -25,7 +24,6 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 {
 #pragma warning disable SA1310 // Field names should not contain underscore
     private const string TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER = nameof(TESTINGPLATFORM_CONSOLEOUTPUTDEVICE_SKIP_BANNER);
-    private const string BUILDTIME_ATTRIBUTE_NAME = "Microsoft.Testing.Platform.Application.BuildTimeUTC";
 #pragma warning restore SA1310 // Field names should not contain underscore
 
     private readonly List<SessionFileArtifact> _sessionFilesArtifact = [];
@@ -37,6 +35,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private readonly IRuntimeFeature _runtimeFeature;
     private readonly IEnvironment _environment;
     private readonly IProcessHandler _process;
+    private readonly IPlatformInformation _platformInformation;
     private readonly bool _isVSTestMode;
     private readonly bool _isListTests;
     private readonly bool _isServerMode;
@@ -44,7 +43,6 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private readonly ILogger? _logger;
     private readonly FileLoggerProvider? _fileLoggerProvider;
     private readonly bool _underProcessMonitor;
-    private static readonly char[] PlusSign = ['+'];
 
     private int _totalTests;
     private int _totalPassedTests;
@@ -54,12 +52,10 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
     private bool _bannerDisplayed;
     private TestRequestExecutionTimeInfo? _testRequestExecutionTimeInfo;
 
-    public ConsoleOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console, ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process,
-        bool isVSTestMode,
-        bool isListTests,
-        bool isServerMode,
-        int minimumExpectedTest,
-        FileLoggerProvider? fileLoggerProvider)
+    public ConsoleOutputDevice(ITestApplicationCancellationTokenSource testApplicationCancellationTokenSource, IConsole console,
+        ITestApplicationModuleInfo testApplicationModuleInfo, ITestHostControllerInfo testHostControllerInfo, IAsyncMonitor asyncMonitor,
+        IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler process, IPlatformInformation platformInformation,
+        bool isVSTestMode, bool isListTests, bool isServerMode, int minimumExpectedTest, FileLoggerProvider? fileLoggerProvider)
     {
         _testApplicationCancellationTokenSource = testApplicationCancellationTokenSource;
         _console = console;
@@ -68,6 +64,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
         _runtimeFeature = runtimeFeature;
         _environment = environment;
         _process = process;
+        _platformInformation = platformInformation;
         _isVSTestMode = isVSTestMode;
         _isListTests = isListTests;
         _isServerMode = isServerMode;
@@ -126,7 +123,7 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
         }
     }
 
-    public virtual async Task DisplayBannerAsync()
+    public virtual async Task DisplayBannerAsync(string? bannerMessage)
     {
         if (_isVSTestMode)
         {
@@ -142,44 +139,42 @@ internal class ConsoleOutputDevice : IPlatformOutputDevice,
 
                 _bannerDisplayed = true;
 
-                StringBuilder stringBuilder = new();
-                stringBuilder.Append(".NET Testing Platform");
-                if (_runtimeFeature.IsDynamicCodeSupported)
+                if (bannerMessage is not null)
                 {
-                    AssemblyInformationalVersionAttribute? version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-                    if (version is not null)
+                    _console.WriteLine(bannerMessage);
+                }
+                else
+                {
+                    StringBuilder stringBuilder = new();
+                    stringBuilder.Append(_platformInformation.Name);
+
+                    if (_platformInformation.Version is { } version)
                     {
-                        string informationalVersion = version.InformationalVersion;
-                        int index = informationalVersion.LastIndexOfAny(PlusSign);
-                        if (index != -1)
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $" v{version}");
+                        if (_platformInformation.CommitHash is { } commitHash)
                         {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $" v{informationalVersion[..(index + 10)]}");
-                        }
-                        else
-                        {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $" v{informationalVersion}");
-                        }
-
-                        AssemblyMetadataAttribute? buildTime = Assembly.GetExecutingAssembly()
-                            .GetCustomAttributes<AssemblyMetadataAttribute>()
-                            .FirstOrDefault(x => x.Key == BUILDTIME_ATTRIBUTE_NAME);
-
-                        if (buildTime is not null && !RoslynString.IsNullOrEmpty(buildTime.Value))
-                        {
-                            stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildTime.Value})");
+                            stringBuilder.Append(CultureInfo.InvariantCulture, $"+{commitHash[..10]}");
                         }
                     }
 
-                    stringBuilder.Append(" [");
-#if !NETCOREAPP
-                    stringBuilder.Append(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
-#else
-                    stringBuilder.Append(RuntimeInformation.RuntimeIdentifier);
-#endif
-                    stringBuilder.Append(CultureInfo.InvariantCulture, $" - {RuntimeInformation.FrameworkDescription}]");
-                }
+                    if (_platformInformation.BuildDate is { } buildDate)
+                    {
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $" (UTC {buildDate.UtcDateTime})");
+                    }
 
-                _console.WriteLine(stringBuilder.ToString());
+                    if (_runtimeFeature.IsDynamicCodeSupported)
+                    {
+                        stringBuilder.Append(" [");
+#if !NETCOREAPP
+                        stringBuilder.Append(RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant());
+#else
+                        stringBuilder.Append(RuntimeInformation.RuntimeIdentifier);
+#endif
+                        stringBuilder.Append(CultureInfo.InvariantCulture, $" - {RuntimeInformation.FrameworkDescription}]");
+                    }
+
+                    _console.WriteLine(stringBuilder.ToString());
+                }
             }
 
             if (_fileLoggerProvider is not null)

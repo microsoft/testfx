@@ -40,15 +40,15 @@ public class RunSettingsUtilitiesTests : TestContainer
         string settingsXml =
             """
             <?xml version="1.0" encoding="utf-8"?>
-                            <RunSettings>
-                                 <RunConfiguration>
-                                   <ResultsDirectory>.\TestResults</ResultsDirectory>
-                                   <TargetPlatform>x86</TargetPlatform>
-                                   <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
-                                 </RunConfiguration>
-                                 <TestRunParameters>
-                                 </TestRunParameters>
-                            </RunSettings>
+            <RunSettings>
+              <RunConfiguration>
+                <ResultsDirectory>.\TestResults</ResultsDirectory>
+                <TargetPlatform>x86</TargetPlatform>
+                <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
+              </RunConfiguration>
+              <TestRunParameters>
+              </TestRunParameters>
+            </RunSettings>
             """;
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
