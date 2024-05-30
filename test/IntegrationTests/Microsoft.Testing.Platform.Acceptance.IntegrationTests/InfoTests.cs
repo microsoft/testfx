@@ -115,7 +115,7 @@ Built-in command line providers:
         Hidden: False
         Description: The directory where the test results are going to be placed\. If the specified directory doesn't exist, it's created\. The default is TestResults in the directory that contains the test application\.
       --server
-        Arity: 0
+        Arity: 0\.\.1
         Hidden: True
         Description: Enable the server mode\.
 Registered command line providers:
