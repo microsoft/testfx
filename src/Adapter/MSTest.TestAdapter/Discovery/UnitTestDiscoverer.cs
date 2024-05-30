@@ -1,7 +1,6 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Diagnostics;
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Discovery;
@@ -59,17 +58,7 @@ internal class UnitTestDiscoverer
         ITestCaseDiscoverySink discoverySink,
         IDiscoveryContext? discoveryContext)
     {
-        TimeSpan getTests;
-        var sw = Stopwatch.StartNew();
-#if NET6_0_OR_GREATER
-        long beforeDiscovery = GC.GetTotalAllocatedBytes();
-#endif
         ICollection<UnitTestElement>? testElements = _assemblyEnumeratorWrapper.GetTests(source, discoveryContext?.RunSettings, out ICollection<string>? warnings);
-        getTests = sw.Elapsed;
-#if NET6_0_OR_GREATER
-        long afterDiscovery = GC.GetTotalAllocatedBytes();
-#endif
-        sw.Restart();
 
         bool treatDiscoveryWarningsAsErrors = MSTestSettings.CurrentSettings.TreatDiscoveryWarningsAsErrors;
 
@@ -96,14 +85,6 @@ internal class UnitTestDiscoverer
             source);
 
         SendTestCases(source, testElements, discoverySink, discoveryContext, logger);
-        TimeSpan sendOverhead = sw.Elapsed;
-#if NET6_0_OR_GREATER
-        long afterSend = GC.GetTotalAllocatedBytes();
-#endif
-        Console.WriteLine($"discovered: {testElements.Count} tests in {getTests.TotalMilliseconds} ms, sent them in {sendOverhead.TotalMilliseconds} ms, total: {sendOverhead.TotalMilliseconds + getTests.TotalMilliseconds} <<<");
-#if NET6_0_OR_GREATER
-        Console.WriteLine($"discovered: discovery alloc: {(afterDiscovery - beforeDiscovery) / (1024 * 1024)} MB send alloc: {(afterSend - afterDiscovery) / (1024 * 1024)} MB");
-#endif
     }
 
     internal void SendTestCases(string source, IEnumerable<UnitTestElement> testElements, ITestCaseDiscoverySink discoverySink, IDiscoveryContext? discoveryContext, IMessageLogger logger)
