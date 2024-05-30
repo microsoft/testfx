@@ -3,6 +3,6 @@
 
 namespace Microsoft.Testing.Platform.IPC.Models;
 
-internal sealed record class CommandLineOptionMessage(string Name, string Description, string Arity, bool IsHidden, bool IsBuiltIn) : IRequest;
+internal sealed record CommandLineOptionMessage(string Name, string Description, string Arity, bool IsHidden, bool IsBuiltIn) : IRequest;
 
-internal sealed record class CommandLineOptionMessages(string ModuleName, CommandLineOptionMessage[] CommandLineOptionMessageList) : IRequest;
+internal sealed record CommandLineOptionMessages(string ModuleName, CommandLineOptionMessage[] CommandLineOptionMessageList) : IRequest;
