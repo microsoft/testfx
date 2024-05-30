@@ -1,12 +1,12 @@
 <Project>
   <PropertyGroup Label="Version settings">
     <!-- This repo version -->
-    <VersionPrefix>3.4.2</VersionPrefix>
+    <VersionPrefix>3.4.3</VersionPrefix>
     <PreReleaseVersionLabel>preview</PreReleaseVersionLabel>
   </PropertyGroup>
   <PropertyGroup Label="MSTest prod dependencies - darc updated">
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24225.1</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
-    <MicrosoftTestingExtensionsCodeCoverageVersion>17.10.5-preview.24171.5</MicrosoftTestingExtensionsCodeCoverageVersion>
+    <MicrosoftTestingExtensionsCodeCoverageVersion>17.10.4</MicrosoftTestingExtensionsCodeCoverageVersion>
     <MicrosoftTestingPlatformVersion>1.2.1</MicrosoftTestingPlatformVersion>
     <MSTestEngineVersion>1.0.0-alpha.24271.6</MSTestEngineVersion>
   </PropertyGroup>
