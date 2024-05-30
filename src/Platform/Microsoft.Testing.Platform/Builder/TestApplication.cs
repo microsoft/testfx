@@ -76,8 +76,8 @@ public sealed class TestApplication : ITestApplication
     public static async Task<ITestApplicationBuilder> CreateBuilderAsync(string[] args, TestApplicationOptions? testApplicationOptions = null)
     {
         // We get the time to save it in the logs for testcontrollers troubleshooting.
-        SystemClock systemClock = new();
-        DateTimeOffset createBuilderStart = systemClock.UtcNow;
+        TimeProvider systemClock = TimeProvider.System;
+        DateTimeOffset createBuilderStart = systemClock.GetUtcNow();
         string createBuilderEntryTime = createBuilderStart.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
         testApplicationOptions ??= new TestApplicationOptions();
 
@@ -266,7 +266,7 @@ public sealed class TestApplication : ITestApplication
      4 Default(TestResults in the current working folder)
     */
     private static ApplicationLoggingState CreateFileLoggerIfDiagnosticIsEnabled(
-        CommandLineParseResult result, CurrentTestApplicationModuleInfo testApplicationModuleInfo, SystemClock clock,
+        CommandLineParseResult result, CurrentTestApplicationModuleInfo testApplicationModuleInfo, TimeProvider clock,
         SystemEnvironment environment, SystemTask task, SystemConsole console)
     {
         LogLevel logLevel = LogLevel.None;

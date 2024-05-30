@@ -53,7 +53,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
     // We start by one so we can wait all other requests
     private readonly CountdownEvent _requestCounter = new(1);
-    private readonly IClock _clock;
+    private readonly TimeProvider _clock;
 
     // In-flight requests from the client to the server.
     // The client can cancel these requests at any time.
@@ -99,7 +99,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         _messageMonitor = monitorFactory.Create();
 
         _environment = ServiceProvider.GetEnvironment();
-        _clock = ServiceProvider.GetClock();
+        _clock = TimeProvider.System;
 
         _logger = ServiceProvider.GetLoggerFactory().CreateLogger<ServerTestHost>();
         _messageHandlerStopPlusGlobalTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_testApplicationCancellationTokenSource.CancellationToken, _stopMessageHandler.Token);
@@ -440,7 +440,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
     private async Task<ResponseArgsBase> ExecuteRequestAsync(RequestArgsBase args, string method, ServiceProvider perRequestServiceProvider)
     {
-        DateTimeOffset requestStart = _clock.UtcNow;
+        DateTimeOffset requestStart = _clock.GetUtcNow();
         ITestSessionContext perRequestTestSessionContext = perRequestServiceProvider.GetTestSessionContext();
 
         // Verify request cancellation, above the chain the exception will be
@@ -471,7 +471,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         TestHostTestFrameworkInvoker invoker = new(perRequestServiceProvider);
         PerRequestServerDataConsumer testNodeUpdateProcessor = new(perRequestServiceProvider, this, args.RunId, perRequestServiceProvider.GetTask());
 
-        DateTimeOffset adapterLoadStart = _clock.UtcNow;
+        DateTimeOffset adapterLoadStart = _clock.GetUtcNow();
 
         // Build the per request adapter
         ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(
@@ -486,10 +486,10 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
           new MessageBusProxy(),
           method == JsonRpcMethods.TestingDiscoverTests);
 
-        DateTimeOffset adapterLoadStop = _clock.UtcNow;
+        DateTimeOffset adapterLoadStop = _clock.GetUtcNow();
 
         // Reset the stopwatch for the execution
-        DateTimeOffset requestExecuteStart = _clock.UtcNow;
+        DateTimeOffset requestExecuteStart = _clock.GetUtcNow();
         DateTimeOffset? requestExecuteStop = null;
         try
         {
@@ -515,11 +515,11 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             // catch and propagated as correct json rpc error
             perRequestTestSessionContext.CancellationToken.ThrowIfCancellationRequested();
             await SendTestUpdateCompleteAsync(args.RunId);
-            requestExecuteStop = _clock.UtcNow;
+            requestExecuteStop = _clock.GetUtcNow();
         }
         finally
         {
-            requestExecuteStop ??= _clock.UtcNow;
+            requestExecuteStop ??= _clock.GetUtcNow();
 
             // Cleanup all services
             // We skip all services that are "cloned" per call because are reused and will be disposed on shutdown.
@@ -531,7 +531,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
             ((PerRequestTestSessionContext)perRequestTestSessionContext).Dispose();
         }
 
-        DateTimeOffset requestStop = _clock.UtcNow;
+        DateTimeOffset requestStop = _clock.GetUtcNow();
 
         RoslynDebug.Assert(requestExecuteStop != null);
 

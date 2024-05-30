@@ -28,7 +28,7 @@ public class FileLoggerTests : TestBase, IDisposable
         (state, exception) =>
             string.Format(CultureInfo.InvariantCulture, "{0}{1}", state, exception is not null ? $" -- {exception}" : string.Empty);
 
-    private readonly Mock<IClock> _mockClock = new();
+    private readonly Mock<TimeProvider> _mockClock = new();
     private readonly Mock<IConsole> _mockConsole = new();
     private readonly Mock<IFileSystem> _mockFileSystem = new();
     private readonly Mock<IFileStream> _mockStream = new();
@@ -54,7 +54,7 @@ public class FileLoggerTests : TestBase, IDisposable
         using FileLogger fileLogger = new(
             new FileLoggerOptions(tempDirectory.Path, "Test", fileName: null, true),
             LogLevel.Trace,
-            new SystemClock(),
+            TimeProvider.System,
             new SystemTask(),
             new SystemConsole(),
             new SystemFileSystem(),
@@ -66,7 +66,7 @@ public class FileLoggerTests : TestBase, IDisposable
     {
         // First return is to compute the expected file name. It's ok that first time is greater
         // than all following ones.
-        _mockClock.SetupSequence(x => x.UtcNow)
+        _mockClock.SetupSequence(x => x.GetUtcNow())
             .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)))
             .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 13)))
             .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 13)))
@@ -74,7 +74,7 @@ public class FileLoggerTests : TestBase, IDisposable
             .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 16)))
             .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
 
-        string expectedFileName = $"{LogPrefix}_{_mockClock.Object.UtcNow.ToString("MMddHHssfff", CultureInfo.InvariantCulture)}.diag";
+        string expectedFileName = $"{LogPrefix}_{_mockClock.Object.GetUtcNow().ToString("MMddHHssfff", CultureInfo.InvariantCulture)}.diag";
         _mockStream.Setup(x => x.Name).Returns(expectedFileName);
         _mockFileStreamFactory
             .SetupSequence(x => x.Create(It.IsAny<string>(), FileMode.CreateNew, FileAccess.Write, FileShare.Read))
@@ -105,7 +105,7 @@ public class FileLoggerTests : TestBase, IDisposable
         // First return is to compute the expected file name. It's ok that first time is greater
         // than all following ones.
         _mockClock
-            .SetupSequence(x => x.UtcNow)
+            .SetupSequence(x => x.GetUtcNow())
             .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 13)))
             .Returns(new DateTimeOffset(new(2023, 5, 29, 3, 42, 17)));
         _mockFileStreamFactory

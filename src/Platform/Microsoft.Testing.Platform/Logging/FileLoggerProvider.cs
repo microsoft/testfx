@@ -9,7 +9,7 @@ internal sealed class FileLoggerProvider(
     FileLoggerOptions options,
     LogLevel logLevel,
     bool customDirectory,
-    IClock clock,
+    TimeProvider clock,
     ITask task,
     IConsole console,
     IFileSystem fileSystem,
@@ -22,7 +22,7 @@ internal sealed class FileLoggerProvider(
 #endif
 {
     private readonly FileLoggerOptions _options = options;
-    private readonly IClock _clock = clock;
+    private readonly TimeProvider _clock = clock;
     private readonly ITask _task = task;
     private readonly IConsole _console = console;
     private readonly IFileSystem _fileSystem = fileSystem;

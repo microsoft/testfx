@@ -128,8 +128,8 @@ public static class ServiceProviderExtensions
     internal static ITestSessionContext GetTestSessionContext(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITestSessionContext>();
 
-    internal static IClock GetSystemClock(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<IClock>();
+    internal static TimeProvider GetSystemClock(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredServiceInternal<TimeProvider>();
 
     internal static ITask GetTask(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<ITask>();
@@ -149,8 +149,8 @@ public static class ServiceProviderExtensions
     internal static IProcessHandler GetProcessHandler(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<IProcessHandler>();
 
-    internal static IClock GetClock(this IServiceProvider serviceProvider)
-        => serviceProvider.GetRequiredServiceInternal<IClock>();
+    internal static TimeProvider GetClock(this IServiceProvider serviceProvider)
+        => serviceProvider.GetRequiredServiceInternal<TimeProvider>();
 
     internal static BaseMessageBus GetBaseMessageBus(this IServiceProvider serviceProvider)
         => serviceProvider.GetRequiredServiceInternal<BaseMessageBus>();

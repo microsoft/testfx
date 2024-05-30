@@ -29,7 +29,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 {
     private readonly TestHostControllerConfiguration _testHostsInformation;
     private readonly IEnvironment _environment;
-    private readonly IClock _clock;
+    private readonly TimeProvider _clock;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ILogger<TestHostControllersTestHost> _logger;
     private readonly ManualResetEventSlim _waitForPid = new(false);
@@ -39,7 +39,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     private int? _testHostPID;
 
     public TestHostControllersTestHost(TestHostControllerConfiguration testHostsInformation, ServiceProvider serviceProvider, IEnvironment environment,
-        ILoggerFactory loggerFactory, IClock clock)
+        ILoggerFactory loggerFactory, TimeProvider clock)
         : base(serviceProvider)
     {
         _testHostsInformation = testHostsInformation;
@@ -65,7 +65,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
     {
         int exitCode;
         CancellationToken abortRun = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
-        DateTimeOffset consoleRunStart = _clock.UtcNow;
+        DateTimeOffset consoleRunStart = _clock.GetUtcNow();
         var consoleRunStarted = Stopwatch.StartNew();
         IEnvironment environment = ServiceProvider.GetEnvironment();
         IProcessHandler process = ServiceProvider.GetProcessHandler();
@@ -198,7 +198,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             }
 
             // Launch the test host process
-            string testHostProcessStartupTime = _clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
+            string testHostProcessStartupTime = _clock.GetUtcNow().ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture);
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID}", testHostProcessStartupTime);
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID} '{testHostProcessStartupTime}'");
             await _logger.LogDebugAsync($"Starting test host process");
@@ -306,7 +306,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         if (telemetryInformation.IsEnabled)
         {
             ApplicationStateGuard.Ensure(extensionInformation is not null);
-            DateTimeOffset consoleRunStop = _clock.UtcNow;
+            DateTimeOffset consoleRunStop = _clock.GetUtcNow();
             await telemetry.LogEventAsync(TelemetryEvents.TestHostControllersTestHostExitEventName, new Dictionary<string, object>
             {
                 [TelemetryProperties.HostProperties.RunStart] = consoleRunStart,

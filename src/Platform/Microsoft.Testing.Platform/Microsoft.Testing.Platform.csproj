@@ -109,6 +109,7 @@ This package provides the core platform and the .NET implementation of the proto
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Bcl.TimeProvider" />
   </ItemGroup>
   <Target Name="GeneratePlatformVersionSourceFile" AfterTargets="PrepareForBuild">
     <PropertyGroup>

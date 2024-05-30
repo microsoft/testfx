@@ -38,7 +38,7 @@ internal sealed class ConsoleTestHost(
     private static readonly ClientInfo Client = new("testingplatform-console", AppVersion.DefaultSemVer);
 
     private readonly ILogger<ConsoleTestHost> _logger = serviceProvider.GetLoggerFactory().CreateLogger<ConsoleTestHost>();
-    private readonly IClock _clock = serviceProvider.GetClock();
+    private readonly TimeProvider _clock = TimeProvider.System;
     private readonly Func<ServiceProvider,
                       ITestExecutionRequestFactory,
                       ITestFrameworkInvoker,
@@ -59,10 +59,10 @@ internal sealed class ConsoleTestHost(
     protected override async Task<int> InternalRunAsync()
     {
         var consoleRunStarted = Stopwatch.StartNew();
-        DateTimeOffset consoleRunStart = _clock.UtcNow;
+        DateTimeOffset consoleRunStart = _clock.GetUtcNow();
 
         CancellationToken abortRun = ServiceProvider.GetTestApplicationCancellationTokenSource().CancellationToken;
-        DateTimeOffset adapterLoadStart = _clock.UtcNow;
+        DateTimeOffset adapterLoadStart = _clock.GetUtcNow();
 
         // Use user provided filter factory or create console default one.
         ITestExecutionFilterFactory testExecutionFilterFactory = ServiceProvider.GetService<ITestExecutionFilterFactory>()
@@ -91,8 +91,8 @@ internal sealed class ConsoleTestHost(
         string? extensionInformation = null;
         await _logger.LogInformationAsync($"Starting test session '{ServiceProvider.GetTestSessionContext().SessionId}'");
         int exitCode;
-        DateTimeOffset adapterLoadStop = _clock.UtcNow;
-        DateTimeOffset requestExecuteStart = _clock.UtcNow;
+        DateTimeOffset adapterLoadStop = _clock.GetUtcNow();
+        DateTimeOffset requestExecuteStart = _clock.GetUtcNow();
         DateTimeOffset? requestExecuteStop = null;
         try
         {
@@ -105,7 +105,7 @@ internal sealed class ConsoleTestHost(
                 ServiceProvider.GetBaseMessageBus(),
                 testFramework,
                 Client);
-            requestExecuteStop = _clock.UtcNow;
+            requestExecuteStop = _clock.GetUtcNow();
 
             // Get the exit code service to be able to set the exit code
             ITestApplicationProcessExitCode testApplicationResult = ServiceProvider.GetTestApplicationProcessExitCode();
@@ -122,7 +122,7 @@ internal sealed class ConsoleTestHost(
         }
         catch (OperationCanceledException oc) when (oc.CancellationToken == abortRun)
         {
-            requestExecuteStop ??= _clock.UtcNow;
+            requestExecuteStop ??= _clock.GetUtcNow();
 
             exitCode = ExitCodes.TestSessionAborted;
             await _logger.LogInformationAsync("Test session cancelled.");
@@ -135,7 +135,7 @@ internal sealed class ConsoleTestHost(
 
         if (telemetryInformation.IsEnabled)
         {
-            DateTimeOffset consoleRunStop = _clock.UtcNow;
+            DateTimeOffset consoleRunStop = _clock.GetUtcNow();
             Dictionary<string, object> metrics = new()
             {
                 { TelemetryProperties.HostProperties.RunStart, consoleRunStart },

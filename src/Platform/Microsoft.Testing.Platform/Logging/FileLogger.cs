@@ -25,7 +25,7 @@ internal sealed class FileLogger : IDisposable
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly FileLoggerOptions _options;
     private readonly LogLevel _logLevel;
-    private readonly IClock _clock;
+    private readonly TimeProvider _clock;
     private readonly IConsole _console;
     private readonly IFileStream _fileStream;
     private readonly StreamWriter _writer;
@@ -41,7 +41,7 @@ internal sealed class FileLogger : IDisposable
     public FileLogger(
         FileLoggerOptions options,
         LogLevel logLevel,
-        IClock clock,
+        TimeProvider clock,
         ITask task,
         IConsole console,
         IFileSystem fileSystem,
@@ -108,17 +108,17 @@ internal sealed class FileLogger : IDisposable
             return fileStreamFactory.Create(fileName, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
         }
 
-        DateTimeOffset firstTryTime = _clock.UtcNow;
+        DateTimeOffset firstTryTime = _clock.GetUtcNow();
         while (true)
         {
-            if (_clock.UtcNow - firstTryTime > TimeSpan.FromSeconds(3))
+            if (_clock.GetUtcNow() - firstTryTime > TimeSpan.FromSeconds(3))
             {
                 throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotCreateUniqueLogFileErrorMessage, fileName));
             }
 
             try
             {
-                fileName = $"{_options.LogPrefixName}_{_clock.UtcNow.ToString("MMddHHssfff", CultureInfo.InvariantCulture)}.diag";
+                fileName = $"{_options.LogPrefixName}_{_clock.GetUtcNow().ToString("MMddHHssfff", CultureInfo.InvariantCulture)}.diag";
                 return fileStreamFactory.Create(Path.Combine(_options.LogFolder, fileName), FileMode.CreateNew, FileAccess.Write, FileShare.Read);
             }
             catch (IOException)
@@ -156,7 +156,7 @@ internal sealed class FileLogger : IDisposable
 
         try
         {
-            _writer.WriteLine($"[{_clock.UtcNow.ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)} {category} - {logLevel}] {formatter(state, exception)}");
+            _writer.WriteLine($"[{_clock.GetUtcNow().ToString("HH:mm:ss.fff", CultureInfo.InvariantCulture)} {category} - {logLevel}] {formatter(state, exception)}");
         }
         finally
         {
@@ -219,7 +219,7 @@ internal sealed class FileLogger : IDisposable
     }
 
     private string BuildLogEntry<TState>(LogLevel logLevel, TState state, Exception? exception, Func<TState, Exception?, string> formatter, string category)
-        => $"{_clock.UtcNow:O} {category} {logLevel.ToString().ToUpper(CultureInfo.InvariantCulture)} {formatter(state, exception)}";
+        => $"{_clock.GetUtcNow():O} {category} {logLevel.ToString().ToUpper(CultureInfo.InvariantCulture)} {formatter(state, exception)}";
 
     private async Task WriteLogToFileAsync()
     {

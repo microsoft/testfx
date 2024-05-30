@@ -69,8 +69,8 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // ============= SETUP COMMON SERVICE USED IN ALL MODES ===============//
         ApplicationStateGuard.Ensure(TestFramework is not null);
 
-        SystemClock systemClock = new();
-        DateTimeOffset buildBuilderStart = systemClock.UtcNow;
+        TimeProvider systemClock = TimeProvider.System;
+        DateTimeOffset buildBuilderStart = systemClock.GetUtcNow();
 
         // Note: These metrics should be populated with the builder configuration,
         //       and the overall state of the system.
@@ -278,7 +278,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 serviceProvider,
                 mode: TelemetryProperties.ApplicationMode.Tool,
                 metrics: builderMetrics,
-                stop: systemClock.UtcNow);
+                stop: systemClock.GetUtcNow());
 
             return toolsTestHost;
         }
@@ -327,7 +327,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                     serviceProvider,
                     mode: TelemetryProperties.ApplicationMode.TestHostControllers,
                     metrics: builderMetrics,
-                    stop: systemClock.UtcNow);
+                    stop: systemClock.GetUtcNow());
 
                 return testHostControllersTestHost;
             }
@@ -378,7 +378,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 serviceProvider,
                 mode: TelemetryProperties.ApplicationMode.Server,
                 metrics: builderMetrics,
-                stop: systemClock.UtcNow);
+                stop: systemClock.GetUtcNow());
 
             return actualTestHost;
         }
@@ -425,7 +425,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                     ? TelemetryProperties.ApplicationMode.VSTestAdapterMode
                     : TelemetryProperties.ApplicationMode.Console,
                 metrics: builderMetrics,
-                stop: systemClock.UtcNow);
+                stop: systemClock.GetUtcNow());
 #pragma warning restore SA1118 // Parameter should not span multiple lines
 
             return actualTestHost;
