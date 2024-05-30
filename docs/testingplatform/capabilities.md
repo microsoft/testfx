@@ -104,15 +104,3 @@ In conclusion, let's summarize the primary aspects of the capability system:
 * All capabilities should inherit from `ICapability` or an interface that inherits from it, and are exposed through a collection with the `ICapabilities` interface.
 * It aids in the evolution of features without causing breaking changes. If a certain capability is not supported, appropriate action can be taken.
 * The responsibility of designing, shipping, and documenting the usage of a capability lies with the *capability owner*. The testing platform can also *own* a capability in the same way as any other extension.
-
-## Test framework capabilities
-
-The platform exposes a specialized interface named `ITestFrameworkCapability` that is the base of all capabilities exposed for test frameworks. These capabilities are provided when [registering the test framework to the platform](registertestframework.md).
-
-### `IBannerMessageOwnerCapability`
-
-An optional test framework capability that allows the test framework to provide the banner message to the platform. If the message is null or if the capability is not present, the platform will use its default banner message.
-
-This capability implementation allows to abstract away the various conditions that the test framework may need to consider to decide whether or not the banner message should be displayed.
-
-The platform exposes the [`IPlatformInformation` service](iplatforminformation.md) to provide some information about the platform that could be useful when building your custom banner message.
