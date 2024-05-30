@@ -113,8 +113,7 @@ internal class UnitTestRunner : MarshalByRefObject
         try
         {
             using var writer = new ThreadSafeStringWriter(CultureInfo.InvariantCulture, "context");
-            var properties = new Dictionary<string, object?>(testContextProperties);
-            ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, properties);
+            ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, testContextProperties);
             testContext.SetOutcome(UTF.UnitTestOutcome.InProgress);
 
             // Get the testMethod

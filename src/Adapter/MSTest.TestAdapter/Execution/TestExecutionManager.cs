@@ -395,9 +395,14 @@ public class TestExecutionManager
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executing test {0}", unitTestElement.TestMethod.Name);
 
             // Run single test passing test context properties to it.
-            IDictionary<TestProperty, object?> tcmProperties = TcmTestPropertiesProvider.GetTcmProperties(currentTest);
-            Dictionary<string, object?> testContextProperties = GetTestContextProperties(tcmProperties, sourceLevelParameters);
-            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, testContextProperties);
+            int capacity = 15 /* TcmTestPropertiesProvider */
+                + sourceLevelParameters.Count
+                + 4 /* for managed data */;
+            var properties = new Dictionary<string, object?>(capacity);
+
+            TcmTestPropertiesProvider.AddTcmProperties(currentTest, properties);
+            AddSourceLevelParameters(sourceLevelParameters, properties);
+            UnitTestResult[] unitTestResult = testRunner.RunSingleTest(unitTestElement.TestMethod, properties);
 
             PlatformServiceProvider.Instance.AdapterTraceLogger.LogInfo("Executed test {0}", unitTestElement.TestMethod.Name);
 
@@ -413,25 +418,15 @@ public class TestExecutionManager
     /// <param name="tcmProperties">Tcm properties.</param>
     /// <param name="sourceLevelParameters">Source level parameters.</param>
     /// <returns>Test context properties.</returns>
-    private static Dictionary<string, object?> GetTestContextProperties(
-        IDictionary<TestProperty, object?> tcmProperties,
-        IDictionary<string, object> sourceLevelParameters)
+    private static void AddSourceLevelParameters(
+        IDictionary<string, object> sourceLevelParameters,
+        IDictionary<string, object?> properties)
     {
-        var testContextProperties = new Dictionary<string, object?>();
-
-        // Add tcm properties.
-        foreach (KeyValuePair<TestProperty, object?> propertyPair in tcmProperties)
-        {
-            testContextProperties[propertyPair.Key.Id] = propertyPair.Value;
-        }
-
         // Add source level parameters.
         foreach (KeyValuePair<string, object> propertyPair in sourceLevelParameters)
         {
-            testContextProperties[propertyPair.Key] = propertyPair.Value;
+            properties[propertyPair.Key] = propertyPair.Value;
         }
-
-        return testContextProperties;
     }
 
     [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]

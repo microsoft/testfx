@@ -85,13 +85,17 @@ public class TestContextImplementation : TestContext, ITestContext
 
         // Cannot get this type in constructor directly, because all signatures for all platforms need to be the same.
         _threadSafeStringWriter = stringWriter as ThreadSafeStringWriter;
-        _properties = new Dictionary<string, object?>(properties)
-        {
-            [FullyQualifiedTestClassNameLabel] = _testMethod.FullClassName,
-            [ManagedTypeLabel] = _testMethod.ManagedTypeName,
-            [ManagedMethodLabel] = _testMethod.ManagedMethodName,
-            [TestNameLabel] = _testMethod.Name,
-        };
+
+        // PERF: We cannot change the api because it is public, but do not copy the properties yet another time.
+        // When we re-build the collection, the capacity to be what we have plus the 4 properties we are adding.
+        Dictionary<string, object?> props = properties is Dictionary<string, object?> p
+            ? p
+            : new Dictionary<string, object?>(properties.Count + 4);
+        props[FullyQualifiedTestClassNameLabel] = _testMethod.FullClassName;
+        props[ManagedTypeLabel] = _testMethod.ManagedTypeName;
+        props[ManagedMethodLabel] = _testMethod.ManagedMethodName;
+        props[TestNameLabel] = _testMethod.Name;
+        _properties = props;
         _testResultFiles = [];
     }
 
