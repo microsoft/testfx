@@ -452,43 +452,48 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         {
             foreach (CommandLineOption commandLineOption in commandLineOptionProvider.GetCommandLineOptions())
             {
-                string arity = string.Empty;
-
-                if (commandLineOption.Arity == ArgumentArity.Zero)
-                {
-                    arity = "Zero";
-                }
-
-                if (commandLineOption.Arity == ArgumentArity.ZeroOrOne)
-                {
-                    arity = "ZeroOrOne";
-                }
-
-                if (commandLineOption.Arity == ArgumentArity.ZeroOrMore)
-                {
-                    arity = "ZeroOrMore";
-                }
-
-                if (commandLineOption.Arity == ArgumentArity.OneOrMore)
-                {
-                    arity = "OneOrMore";
-                }
-
-                if (commandLineOption.Arity == ArgumentArity.ExactlyOne)
-                {
-                    arity = "ExactlyOne";
-                }
-
                 commandLineHelpOptions.Add(new CommandLineOptionMessage(
                     commandLineOption.Name,
                     commandLineOption.Description,
-                    arity,
+                    GetArity(commandLineOption.Arity),
                     commandLineOption.IsHidden,
                     commandLineOption.IsBuiltIn));
             }
         }
 
         await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationToken);
+    }
+
+    private static string GetArity(ArgumentArity argumentArity)
+    {
+        string arity = string.Empty;
+
+        if (argumentArity == ArgumentArity.Zero)
+        {
+            arity = "Zero";
+        }
+
+        if (argumentArity == ArgumentArity.ZeroOrOne)
+        {
+            arity = "ZeroOrOne";
+        }
+
+        if (argumentArity == ArgumentArity.ZeroOrMore)
+        {
+            arity = "ZeroOrMore";
+        }
+
+        if (argumentArity == ArgumentArity.OneOrMore)
+        {
+            arity = "OneOrMore";
+        }
+
+        if (argumentArity == ArgumentArity.ExactlyOne)
+        {
+            arity = "ExactlyOne";
+        }
+
+        return arity;
     }
 
     private static async Task<NamedPipeClient?> ConnectToDotnetTestPipeIfAvailableAsync(CommandLineHandler commandLineHandler, CTRLPlusCCancellationTokenSource cancellationTokenSource)
