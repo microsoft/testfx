@@ -110,6 +110,9 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         SystemMonitorAsyncFactory systemMonitorAsyncFactory = new();
         serviceProvider.TryAddService(systemMonitorAsyncFactory);
 
+        PlatformInformation platformInformation = new();
+        serviceProvider.AddService(platformInformation);
+
         ILogger? logger = null;
         if (loggingState.FileLoggerProvider is not null)
         {
@@ -196,9 +199,20 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // If command line is not valid we return immediately.
         (bool parseSucceeded, string? validationError) = await commandLineHandler.TryParseAndValidateAsync();
+
+        // Create the test framework capabilities
+        ITestFrameworkCapabilities testFrameworkCapabilities = TestFramework.TestFrameworkCapabilitiesFactory(serviceProvider);
+        if (testFrameworkCapabilities is IAsyncInitializableExtension testFrameworkCapabilitiesAsyncInitializable)
+        {
+            await testFrameworkCapabilitiesAsyncInitializable.InitializeAsync();
+        }
+
+        // Register the test framework capabilities to be used by services
+        serviceProvider.AddService(testFrameworkCapabilities);
+
         if (!loggingState.CommandLineParseResult.HasTool && !parseSucceeded)
         {
-            await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice);
+            await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
             ArgumentGuard.IsNotNull(validationError);
             await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(validationError));
             await commandLineHandler.PrintHelpAsync();
@@ -235,7 +249,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Display banner now because we need capture the output in case of MSBuild integration and we want to forward
         // to file disc also the banner, so at this point we need to have all services and configuration(result directory) built.
-        await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice);
+        await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
 
         // Add global telemetry service.
         // Add at this point or the telemetry banner appearance order will be wrong, we want the testing app banner before the telemetry banner.
@@ -531,37 +545,24 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         }
     }
 
-    private async Task<ITestFramework> BuildTestFrameworkAsync(
-        ServiceProvider serviceProvider,
-        ITestExecutionRequestFactory testExecutionRequestFactory, ITestFrameworkInvoker testExecutionRequestInvoker,
-        ITestExecutionFilterFactory testExecutionFilterFactory, IPlatformOutputDevice platformOutputDisplayService,
-        IEnumerable<IDataConsumer> serverPerCallConsumers,
-        TestFrameworkManager testFrameworkManager,
-        TestHostManager testSessionManager,
-        MessageBusProxy guardMessageBusService,
-        bool isForDiscoveryRequest)
+    private async Task<ITestFramework> BuildTestFrameworkAsync(TestFrameworkBuilderData testFrameworkBuilderData)
     {
         // Add the message bus proxy
-        serviceProvider.AddService(guardMessageBusService);
-
-        // Create the test framework capabilities
-        ITestFrameworkCapabilities testFrameworkCapabilities = testFrameworkManager.TestFrameworkCapabilitiesFactory(serviceProvider);
-        await testFrameworkCapabilities.TryInitializeAsync();
-
-        // Register the test framework capabilities to be used by services
-        serviceProvider.AddService(testFrameworkCapabilities);
+        ServiceProvider serviceProvider = testFrameworkBuilderData.ServiceProvider;
+        serviceProvider.AddService(testFrameworkBuilderData.MessageBusProxy);
 
         // Build and register "common non special" services - we need special treatment because extensions can start to log during the
         // creations and we could lose interesting diagnostic information.
         List<IDataConsumer> dataConsumersBuilder = [];
 
-        await RegisterAsServiceOrConsumerOrBothAsync(platformOutputDisplayService, serviceProvider, dataConsumersBuilder);
-        await RegisterAsServiceOrConsumerOrBothAsync(testExecutionRequestFactory, serviceProvider, dataConsumersBuilder);
-        await RegisterAsServiceOrConsumerOrBothAsync(testExecutionRequestInvoker, serviceProvider, dataConsumersBuilder);
-        await RegisterAsServiceOrConsumerOrBothAsync(testExecutionFilterFactory, serviceProvider, dataConsumersBuilder);
+        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.PlatformOutputDisplayService, serviceProvider, dataConsumersBuilder);
+        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestFactory, serviceProvider, dataConsumersBuilder);
+        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionRequestInvoker, serviceProvider, dataConsumersBuilder);
+        await RegisterAsServiceOrConsumerOrBothAsync(testFrameworkBuilderData.TestExecutionFilterFactory, serviceProvider, dataConsumersBuilder);
 
         // Create the test framework adapter
-        ITestFramework testFramework = testFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
+        ITestFrameworkCapabilities testFrameworkCapabilities = serviceProvider.GetTestFrameworkCapabilities();
+        ITestFramework testFramework = testFrameworkBuilderData.TestFrameworkManager.TestFrameworkFactory(testFrameworkCapabilities, serviceProvider);
         await testFramework.TryInitializeAsync();
 
         serviceProvider.AllowTestAdapterFrameworkRegistration = true;
@@ -581,12 +582,12 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         List<ITestSessionLifetimeHandler> testSessionLifetimeHandlers = [];
 
         // When we run a discovery request we don't want to run any user extensions, the only needed extension is the test adapter that will "discover" tests.
-        if (!isForDiscoveryRequest)
+        if (!testFrameworkBuilderData.IsForDiscoveryRequest)
         {
             // We keep the bag of the already created composite service factory to reuse the instance.
             List<ICompositeExtensionFactory> newBuiltCompositeServices = [];
-            (IExtension Consumer, int RegistrationOrder)[] consumers = await testSessionManager.BuildDataConsumersAsync(serviceProvider, newBuiltCompositeServices);
-            (IExtension TestSessionLifetimeHandler, int RegistrationOrder)[] sessionLifeTimeHandlers = await testSessionManager.BuildTestSessionLifetimeHandleAsync(serviceProvider, newBuiltCompositeServices);
+            (IExtension Consumer, int RegistrationOrder)[] consumers = await testFrameworkBuilderData.TestSessionManager.BuildDataConsumersAsync(serviceProvider, newBuiltCompositeServices);
+            (IExtension TestSessionLifetimeHandler, int RegistrationOrder)[] sessionLifeTimeHandlers = await testFrameworkBuilderData.TestSessionManager.BuildTestSessionLifetimeHandleAsync(serviceProvider, newBuiltCompositeServices);
 
             // Register the test session lifetime handlers for the notifications
             testSessionLifetimeHandlers.AddRange(sessionLifeTimeHandlers.OrderBy(x => x.RegistrationOrder).Select(x => (ITestSessionLifetimeHandler)x.TestSessionLifetimeHandler));
@@ -607,7 +608,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // In server mode where we don't shutdown the process at the end of the run we need a way to use a "per-call" consumer to be able to link the
         // node updates to the correct request id.
-        foreach (IDataConsumer consumerService in serverPerCallConsumers)
+        foreach (IDataConsumer consumerService in testFrameworkBuilderData.ServerPerCallConsumers)
         {
             if (consumerService is ITestSessionLifetimeHandler handler)
             {
@@ -623,7 +624,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         // Register the ITestApplicationResult
         TestApplicationResult testApplicationResult = new(
-            platformOutputDisplayService,
+            testFrameworkBuilderData.PlatformOutputDisplayService,
             serviceProvider.GetTestApplicationCancellationTokenSource(),
             serviceProvider.GetCommandLineOptions(),
             serviceProvider.GetEnvironment());
@@ -645,7 +646,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 serviceProvider.GetEnvironment(),
                 serviceProvider.GetTestApplicationProcessExitCode());
             await concreteMessageBusService.InitAsync();
-            guardMessageBusService.SetBuiltMessageBus(concreteMessageBusService);
+            testFrameworkBuilderData.MessageBusProxy.SetBuiltMessageBus(concreteMessageBusService);
         }
         else
         {
@@ -656,7 +657,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 serviceProvider.GetLoggerFactory(),
                 serviceProvider.GetEnvironment());
             await concreteMessageBusService.InitAsync();
-            guardMessageBusService.SetBuiltMessageBus(concreteMessageBusService);
+            testFrameworkBuilderData.MessageBusProxy.SetBuiltMessageBus(concreteMessageBusService);
         }
 
         return testFramework;
@@ -664,15 +665,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
     protected virtual ConsoleTestHost CreateConsoleTestHost(
         ServiceProvider serviceProvider,
-        Func<ServiceProvider,
-                          ITestExecutionRequestFactory, ITestFrameworkInvoker,
-                          ITestExecutionFilterFactory, IPlatformOutputDevice,
-                          IEnumerable<IDataConsumer>,
-                          TestFrameworkManager,
-                          TestHostManager,
-                          MessageBusProxy,
-                          bool,
-                          Task<ITestFramework>> buildTestFrameworkAsync,
+        Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
         TestFrameworkManager testFrameworkManager,
         TestHostManager testHostManager)
         => new(serviceProvider, buildTestFrameworkAsync, testFrameworkManager, testHostManager);
@@ -722,14 +715,19 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         await AddServiceIfNotSkippedAsync(service, serviceProvider);
     }
 
-    private async Task DisplayBannerIfEnabledAsync(ApplicationLoggingState loggingState, IPlatformOutputDevice platformOutputDevice)
+    private async Task DisplayBannerIfEnabledAsync(ApplicationLoggingState loggingState, IPlatformOutputDevice platformOutputDevice,
+        ITestFrameworkCapabilities testFrameworkCapabilities)
     {
         bool isNoBannerSet = loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.NoBannerOptionKey);
         string? noBannerEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.TESTINGPLATFORM_NOBANNER);
         string? dotnetNoLogoEnvironmentVar = environment.GetEnvironmentVariable(EnvironmentVariableConstants.DOTNET_NOLOGO);
         if (!isNoBannerSet && !(noBannerEnvironmentVar is "1" or "true") && !(dotnetNoLogoEnvironmentVar is "1" or "true"))
         {
-            await platformOutputDevice.DisplayBannerAsync();
+            IBannerMessageOwnerCapability? bannerMessageOwnerCapability = testFrameworkCapabilities.GetCapability<IBannerMessageOwnerCapability>();
+            string? bannerMessage = bannerMessageOwnerCapability is not null
+                ? await bannerMessageOwnerCapability.GetBannerMessageAsync()
+                : null;
+            await platformOutputDevice.DisplayBannerAsync(bannerMessage);
         }
     }
 }

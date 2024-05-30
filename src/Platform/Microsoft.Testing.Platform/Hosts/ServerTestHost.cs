@@ -13,7 +13,6 @@ using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Helpers;
 using Microsoft.Testing.Platform.Logging;
 using Microsoft.Testing.Platform.Messages;
-using Microsoft.Testing.Platform.OutputDevice;
 using Microsoft.Testing.Platform.Requests;
 using Microsoft.Testing.Platform.ServerMode;
 using Microsoft.Testing.Platform.Services;
@@ -25,19 +24,7 @@ namespace Microsoft.Testing.Platform.Hosts;
 internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, IDisposable
 {
     private const string ProtocolVersion = "1.0.0";
-    private readonly Func<
-        ServiceProvider,
-        ITestExecutionRequestFactory,
-        ITestFrameworkInvoker,
-        ITestExecutionFilterFactory,
-        IPlatformOutputDevice,
-        IEnumerable<IDataConsumer>,
-        TestFrameworkManager,
-        TestHostManager,
-        MessageBusProxy,
-        bool,
-        Task<ITestFramework>>
-        _buildTestFrameworkAsync;
+    private readonly Func<TestFrameworkBuilderData, Task<ITestFramework>> _buildTestFrameworkAsync;
 
     private readonly IMessageHandlerFactory _messageHandlerFactory;
     private readonly TestFrameworkManager _testFrameworkManager;
@@ -70,17 +57,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
     public ServerTestHost(
         ServiceProvider serviceProvider,
-        Func<ServiceProvider,
-            ITestExecutionRequestFactory,
-            ITestFrameworkInvoker,
-            ITestExecutionFilterFactory,
-            IPlatformOutputDevice,
-            IEnumerable<IDataConsumer>,
-            TestFrameworkManager,
-            TestHostManager,
-            MessageBusProxy,
-            bool,
-            Task<ITestFramework>> buildTestFrameworkAsync,
+        Func<TestFrameworkBuilderData, Task<ITestFramework>> buildTestFrameworkAsync,
         IMessageHandlerFactory messageHandlerFactory,
         TestFrameworkManager testFrameworkManager,
         TestHostManager testSessionManager)
@@ -114,7 +91,7 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
 
     public bool IsInitialized => _messageHandler is not null;
 
-    protected override bool RunTestApplicationLifecycleCallbacks => true;
+    protected override bool RunTestApplicationLifeCycleCallbacks => true;
 
     private void OnCurrentDomainUnhandledException(object sender, UnhandledExceptionEventArgs e)
         => _logger.LogError($"[ServerTestHost.OnCurrentDomainUnhandledException] {e.ExceptionObject}{_environment.NewLine}IsTerminating: {e.IsTerminating}");
@@ -404,23 +381,14 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
                     _client = new(args.ClientInfo.Name, args.ClientInfo.Version);
                     await _logger.LogInformationAsync($"Connection established with '{_client.Id}', protocol version {_client.Version}");
 
-                    // Get the capabilities of the test framework
-                    ITestFrameworkCapabilities capabilities = _testFrameworkManager.TestFrameworkCapabilitiesFactory(ServiceProvider);
-                    try
-                    {
-                        INamedFeatureCapability? namedFeatureCapability = capabilities.GetCapability<INamedFeatureCapability>();
-                        return new InitializeResponseArgs(
-                            ServerInfo: new ServerInfo("test-anywhere", Version: ProtocolVersion),
-                            Capabilities: new ServerCapabilities(
-                                new ServerTestingCapabilities(
-                                    SupportsDiscovery: true,
-                                    MultiRequestSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.MultiRequestSupport) == true,
-                                    VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true)));
-                    }
-                    finally
-                    {
-                        await DisposeHelper.DisposeAsync(capabilities);
-                    }
+                    INamedFeatureCapability? namedFeatureCapability = ServiceProvider.GetTestFrameworkCapabilities().GetCapability<INamedFeatureCapability>();
+                    return new InitializeResponseArgs(
+                        ServerInfo: new ServerInfo("test-anywhere", Version: ProtocolVersion),
+                        Capabilities: new ServerCapabilities(
+                            new ServerTestingCapabilities(
+                                SupportsDiscovery: true,
+                                MultiRequestSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.MultiRequestSupport) == true,
+                                VSTestProviderSupport: namedFeatureCapability?.IsSupported(JsonRpcStrings.VSTestProviderSupport) == true)));
                 }
 
             case (JsonRpcMethods.TestingDiscoverTests, DiscoverRequestArgs args):
@@ -474,17 +442,17 @@ internal sealed partial class ServerTestHost : CommonTestHost, IServerTestHost, 
         DateTimeOffset adapterLoadStart = _clock.UtcNow;
 
         // Build the per request adapter
-        ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(
-          perRequestServiceProvider,
-          requestFactory,
-          invoker,
-          filterFactory,
-          new ServerModePerCallOutputDevice(),
-          new IDataConsumer[] { testNodeUpdateProcessor },
-          _testFrameworkManager,
-          _testSessionManager,
-          new MessageBusProxy(),
-          method == JsonRpcMethods.TestingDiscoverTests);
+        ITestFramework perRequestTestFramework = await _buildTestFrameworkAsync(new(
+            perRequestServiceProvider,
+            requestFactory,
+            invoker,
+            filterFactory,
+            new ServerModePerCallOutputDevice(),
+            new IDataConsumer[] { testNodeUpdateProcessor },
+            _testFrameworkManager,
+            _testSessionManager,
+            new MessageBusProxy(),
+            method == JsonRpcMethods.TestingDiscoverTests));
 
         DateTimeOffset adapterLoadStop = _clock.UtcNow;
 
