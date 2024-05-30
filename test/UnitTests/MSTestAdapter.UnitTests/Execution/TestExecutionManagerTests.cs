@@ -552,12 +552,15 @@ public class TestExecutionManagerTests : TestContainer
         TestCase testCase2 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
 
         TestCase[] tests = [testCase1, testCase2];
-        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                              <RunConfiguration>
-                                                 <DisableParallelization>true</DisableParallelization>
-                                              </RunConfiguration>
-                                            </RunSettings>");
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml)
+            .Returns(
+                """
+                <RunSettings>
+                  <RunConfiguration>
+                    <DisableParallelization>true</DisableParallelization>
+                  </RunConfiguration>
+                </RunSettings>
+                """);
 
         try
         {
@@ -645,17 +648,19 @@ public class TestExecutionManagerTests : TestContainer
 
         TestCase[] tests = [testCase1, testCase2, testCase3, testCase4];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                              <RunConfiguration>
-                                                  <DisableAppDomain>True</DisableAppDomain>
-                                              </RunConfiguration>
-                                              <MSTest>
-                                                 <Parallelize>
-                                                   <Workers>2</Workers>
-                                                   <Scope>MethodLevel</Scope>
-                                                 </Parallelize>
-                                              </MSTest>
-                                            </RunSettings>");
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <Parallelize>
+                  <Workers>2</Workers>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
 
         try
         {
