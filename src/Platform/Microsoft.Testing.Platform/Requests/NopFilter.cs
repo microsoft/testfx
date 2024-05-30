@@ -5,6 +5,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Microsoft.Testing.Platform.Requests;
 
-[Experimental("TAEXP001")]
+[Experimental("TPEXP")]
 [SuppressMessage("ApiDesign", "RS0016:Add public types and members to the declared API", Justification = "Experimental API")]
 public sealed class NopFilter : ITestExecutionFilter;
