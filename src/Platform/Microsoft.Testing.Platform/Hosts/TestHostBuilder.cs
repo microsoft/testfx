@@ -286,28 +286,28 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
-        NamedPipeClient? sdkNamedPipeClient = await ConnectToDotnetTestPipeIfAvailableAsync(commandLineHandler, testApplicationCancellationTokenSource);
+        NamedPipeClient? sdkPipeClient = await ConnectToDotnetTestPipeIfAvailableAsync(commandLineHandler, testApplicationCancellationTokenSource);
 
         // If --help is invoked we return
         if (commandLineHandler.IsHelpInvoked())
         {
-            if (sdkNamedPipeClient is not null)
+            if (sdkPipeClient is not null)
             {
-                await SendCommandLineOptionsToDotnetTestPipeAsync(sdkNamedPipeClient, commandLineHandler, testApplicationCancellationTokenSource.CancellationToken);
+                await SendCommandLineOptionsToDotnetTestPipeAsync(sdkPipeClient, commandLineHandler, testApplicationCancellationTokenSource.CancellationToken);
             }
             else
             {
                 await commandLineHandler.PrintHelpAsync(toolsInformation.Tools);
             }
 
-            return new InformativeCommandLineTestHost(0, sdkNamedPipeClient);
+            return new InformativeCommandLineTestHost(0, sdkPipeClient);
         }
 
         // If --info is invoked we return
         if (commandLineHandler.IsInfoInvoked())
         {
             await commandLineHandler.PrintInfoAsync(toolsInformation.Tools);
-            return new InformativeCommandLineTestHost(0, sdkNamedPipeClient);
+            return new InformativeCommandLineTestHost(0, sdkPipeClient);
         }
 
         // ======= TEST HOST ORCHESTRATOR ======== //

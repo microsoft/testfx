@@ -6,7 +6,7 @@ using Microsoft.Testing.Platform.IPC;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class InformativeCommandLineTestHost(int returnValue, NamedPipeClient? namedPipeClient = null) : ITestHost, IDisposable
+internal sealed class InformativeCommandLineTestHost(int returnValue, NamedPipeClient? sdkPipeClient = null) : ITestHost, IDisposable
 #if NETCOREAPP
 #pragma warning disable SA1001 // Commas should be spaced correctly
     , IAsyncDisposable
@@ -14,7 +14,7 @@ internal sealed class InformativeCommandLineTestHost(int returnValue, NamedPipeC
 #endif
 {
     private readonly int _returnValue = returnValue;
-    private readonly NamedPipeClient? _namedPipeClient = namedPipeClient;
+    private readonly NamedPipeClient? _namedPipeClient = sdkPipeClient;
 
     public Task<int> RunAsync() => Task.FromResult(_returnValue);
 
