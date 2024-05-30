@@ -28,7 +28,7 @@ internal class PipelinesRunner
                 continue;
             }
 
-            if (!pipeline.OSPlatform.Any(x => RuntimeInformation.IsOSPlatform(x)))
+            if (!pipeline.OSPlatform.Any(RuntimeInformation.IsOSPlatform))
             {
                 WriteConsole($"Skip '{pipeline.PipelineName}', OS expected: '{pipeline.OSPlatform}', current OS: '{RuntimeInformation.OSDescription}'", ConsoleColor.Yellow);
                 continue;

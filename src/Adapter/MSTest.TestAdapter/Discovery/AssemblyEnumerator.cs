@@ -124,7 +124,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
     {
         try
         {
-           return assembly.GetTypes();
+            return assembly.GetTypes();
         }
         catch (ReflectionTypeLoadException ex)
         {

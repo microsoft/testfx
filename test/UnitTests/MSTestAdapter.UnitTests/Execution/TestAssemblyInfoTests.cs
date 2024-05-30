@@ -303,11 +303,7 @@ public class TestAssemblyInfoTests : TestContainer
 
     public void RunAssemblyCleanupShouldThrowTheInnerMostExceptionWhenThereAreMultipleNestedTypeInitializationExceptions()
     {
-        DummyTestClass.AssemblyCleanupMethodBody = () =>
-            // This helper calls inner helper, and the inner helper ctor throws.
-            // We want to see the real exception on screen, and not TypeInitializationException
-            // which has no info about what failed.
-            FailingStaticHelper.DoWork();
+        DummyTestClass.AssemblyCleanupMethodBody = FailingStaticHelper.DoWork;
         _testAssemblyInfo.AssemblyCleanupMethod = typeof(DummyTestClass).GetMethod("AssemblyCleanupMethod");
 
         string actualErrorMessage = _testAssemblyInfo.RunAssemblyCleanup();

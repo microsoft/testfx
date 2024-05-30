@@ -108,7 +108,7 @@ public static class TestsRunWatchDog
             if (fixBaseLine)
             {
                 List<string> tests = new(File.ReadAllLines(BaselineFile));
-                tests.RemoveAll(t => expectedTestsDidNotRun.Contains(t));
+                tests.RemoveAll(expectedTestsDidNotRun.Contains);
                 tests.AddRange(unexpectedRanTests);
                 tests.Sort();
                 File.WriteAllLines(BaselineFile, tests);
