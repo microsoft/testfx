@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Reflection;
 
 #if WIN_UI
@@ -19,6 +20,8 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices;
 /// </summary>
 public class FileOperations : IFileOperations
 {
+    private readonly ConcurrentDictionary<string, Assembly> _assemblyCache = new();
+
 #if WIN_UI
     private readonly bool _isPackaged;
 
@@ -45,11 +48,19 @@ public class FileOperations : IFileOperations
         }
 #endif
         string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(assemblyName);
-        return Assembly.Load(new AssemblyName(fileNameWithoutExtension));
+        Assembly assembly = _assemblyCache.GetOrAdd(fileNameWithoutExtension, fileNameWithoutExtension => Assembly.Load(new AssemblyName(fileNameWithoutExtension)));
+
+        return assembly;
 #elif NETFRAMEWORK
-#pragma warning disable IDE0022 // Use expression body for method
-        return isReflectionOnly ? Assembly.ReflectionOnlyLoadFrom(assemblyName) : Assembly.LoadFrom(assemblyName);
-#pragma warning restore IDE0022 // Use expression body for method
+        if (isReflectionOnly)
+        {
+            return Assembly.ReflectionOnlyLoadFrom(assemblyName);
+        }
+        else
+        {
+            Assembly assembly = _assemblyCache.GetOrAdd(assemblyName, Assembly.LoadFrom);
+            return assembly;
+        }
 #endif
     }
 
