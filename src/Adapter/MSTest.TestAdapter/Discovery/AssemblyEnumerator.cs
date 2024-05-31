@@ -76,7 +76,6 @@ internal class AssemblyEnumerator : MarshalByRefObject
     internal ICollection<UnitTestElement> EnumerateAssembly(string assemblyFileName, out ICollection<string> warnings)
     {
         DebugEx.Assert(!StringEx.IsNullOrWhiteSpace(assemblyFileName), "Invalid assembly file name.");
-
         var warningMessages = new List<string>();
         var tests = new List<UnitTestElement>();
         var fixturesTests = new HashSet<string>();
@@ -170,13 +169,13 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 if (!map.ContainsKey(line))
                 {
                     map.Add(line, null);
-                    errorDetails.AppendLine(line);
+                    _ = errorDetails.AppendLine(line);
                 }
             }
         }
         else
         {
-            errorDetails.AppendLine(ex.Message);
+            _ = errorDetails.AppendLine(ex.Message);
         }
 
         return errorDetails.ToString();
@@ -226,7 +225,15 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 {
                     if (discoveryOption == TestDataSourceDiscoveryOption.DuringDiscovery)
                     {
-                        if (DynamicDataAttached(sourceLevelParameters, test, tests, fixturesTests))
+                        Lazy<TestMethodInfo?> testMethodInfo = GetTestMethodInfo(sourceLevelParameters, test);
+
+                        // Add fixture tests like AssemblyInitialize, AssemblyCleanup, ClassInitialize, ClassCleanup.
+                        if (MSTestSettings.CurrentSettings.FixturesEnabled && testMethodInfo.Value is not null)
+                        {
+                            AddFixtureTests(testMethodInfo.Value, tests, fixturesTests);
+                        }
+
+                        if (DynamicDataAttached(test, testMethodInfo, tests))
                         {
                             continue;
                         }
@@ -248,7 +255,18 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return tests;
     }
 
-    private bool DynamicDataAttached(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test, List<UnitTestElement> tests, HashSet<string> fixturesTests)
+    private Lazy<TestMethodInfo?> GetTestMethodInfo(IDictionary<string, object?> sourceLevelParameters, UnitTestElement test) =>
+        new(() =>
+        {
+            // NOTE: From this place we don't have any path that would let the user write a message on the TestContext and we don't do
+            // anything with what would be printed anyway so we can simply use a simple StringWriter.
+            using var writer = new StringWriter();
+            TestMethod testMethod = test.TestMethod;
+            MSTestAdapter.PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
+            return _typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
+        });
+
+    private static bool DynamicDataAttached(UnitTestElement test, Lazy<TestMethodInfo?> testMethodInfo, List<UnitTestElement> tests)
     {
         // It should always be `true`, but if any part of the chain is obsolete; it might not contain those.
         // Since we depend on those properties, if they don't exist, we bail out early.
@@ -269,78 +287,60 @@ internal class AssemblyEnumerator : MarshalByRefObject
         // If you remove this line and acceptance tests still pass you are okay.
         test.TestMethod.DataType = DynamicDataType.None;
 
-        // NOTE: From this place we don't have any path that would let the user write a message on the TestContext and we don't do
-        // anything with what would be printed anyway so we can simply use a simple StringWriter.
-        using var writer = new StringWriter();
-        TestMethod testMethod = test.TestMethod;
-        MSTestAdapter.PlatformServices.Interface.ITestContext testContext = PlatformServiceProvider.Instance.GetTestContext(testMethod, writer, sourceLevelParameters);
-        TestMethodInfo? testMethodInfo = _typeCache.GetTestMethodInfo(testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
-
-        if (testMethodInfo == null)
-        {
-            return false;
-        }
-
-        // Add non-runnable tests like AssemblyInitialize, AssemblyCleanup, ClassInitialize, ClassCleanup.
-        if (MSTestSettings.CurrentSettings.FixturesEnabled)
-        {
-            AddNonRunnableTests(testMethodInfo, tests, fixturesTests);
-        }
-
-        return TryProcessTestDataSourceTests(test, testMethodInfo, tests);
+        return testMethodInfo.Value != null && TryProcessTestDataSourceTests(test, testMethodInfo.Value, tests);
     }
 
-    private static void AddNonRunnableTests(TestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> nonRunnableTests)
+    private static void AddFixtureTests(TestMethodInfo testMethodInfo, List<UnitTestElement> tests, HashSet<string> fixtureTests)
     {
         string assemblyName = testMethodInfo.Parent.Parent.Assembly.GetName().Name!;
         string assemblyLocation = testMethodInfo.Parent.Parent.Assembly.Location;
         string className = testMethodInfo.Parent.ClassType.Name;
         string classFullName = testMethodInfo.Parent.ClassType.FullName!;
 
-        if (!nonRunnableTests.Contains(assemblyLocation))
+        if (!fixtureTests.Contains(assemblyLocation))
         {
-            _ = nonRunnableTests.Add(assemblyLocation);
+            _ = fixtureTests.Add(assemblyLocation);
 
             if (testMethodInfo.Parent.Parent.AssemblyInitializeMethod is not null)
             {
-                tests.Add(GetAssemblyNonRunnableTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyInitializeFixtureTrait));
+                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.Parent.AssemblyCleanupMethod is not null)
             {
-                tests.Add(GetAssemblyNonRunnableTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyCleanupFixtureTrait));
+                tests.Add(GetAssemblyFixtureTest(testMethodInfo.Parent.Parent.AssemblyCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.AssemblyCleanupFixtureTrait));
             }
         }
 
-        if (!nonRunnableTests.Contains(assemblyLocation + classFullName))
+        if (!fixtureTests.Contains(assemblyLocation + classFullName))
         {
-            _ = nonRunnableTests.Add(assemblyLocation + classFullName);
+            _ = fixtureTests.Add(assemblyLocation + classFullName);
 
             if (testMethodInfo.Parent.ClassInitializeMethod is not null)
             {
-                tests.Add(GetClassNonRunnableTest(testMethodInfo.Parent.ClassInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassInitializeFixtureTrait));
+                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassInitializeMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassInitializeFixtureTrait));
             }
 
             if (testMethodInfo.Parent.ClassCleanupMethod is not null)
             {
-                tests.Add(GetClassNonRunnableTest(testMethodInfo.Parent.ClassCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassCleanupFixtureTrait));
+                tests.Add(GetClassFixtureTest(testMethodInfo.Parent.ClassCleanupMethod, assemblyName, className, classFullName, assemblyLocation, Constants.ClassCleanupFixtureTrait));
             }
         }
 
-        static UnitTestElement GetAssemblyNonRunnableTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
-            string assemblyLocation, string methodType)
+        static UnitTestElement GetAssemblyFixtureTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
+            string assemblyLocation, string fixtureType)
         {
             string methodName = GetMethodName(methodInfo);
             string[] hierarchy = [null!, assemblyName, $"[{Constants.AssemblyFixturesHierarchyName}]", methodName];
-            return GetNonRunnableTest(classFullName, assemblyLocation, methodType, methodName, hierarchy);
+            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
         }
 
-        static UnitTestElement GetClassNonRunnableTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
-            string assemblyLocation, string methodType)
+        static UnitTestElement GetClassFixtureTest(MethodInfo methodInfo, string assemblyName, string className, string classFullName,
+            string assemblyLocation, string fixtureType)
         {
             string methodName = GetMethodName(methodInfo);
             string[] hierarchy = [null!, classFullName, methodName];
-            return GetNonRunnableTest(classFullName, assemblyLocation, methodType, methodName, hierarchy);
+            return GetFixtureTest(classFullName, assemblyLocation, fixtureType, methodName, hierarchy);
         }
 
         static string GetMethodName(MethodInfo methodInfo)
@@ -351,7 +351,7 @@ internal class AssemblyEnumerator : MarshalByRefObject
                 : methodInfo.Name;
         }
 
-        static UnitTestElement GetNonRunnableTest(string classFullName, string assemblyLocation, string methodType, string methodName, string[] hierarchy)
+        static UnitTestElement GetFixtureTest(string classFullName, string assemblyLocation, string methodType, string methodName, string[] hierarchy)
         {
             var method = new TestMethod(classFullName, methodName,
                 hierarchy, methodName, classFullName, assemblyLocation, false,

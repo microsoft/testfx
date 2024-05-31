@@ -199,7 +199,7 @@ public class TestExecutionManager
         if (filterExpression != null
             && !filterExpression.MatchTestCase(test, p => testMethodFilter.PropertyValueProvider(test, p)))
         {
-            // If this is a non runnable test, return true. Non runnable tests are not filtered out and are always available for the status.
+            // If this is a fixture test, return true. Fixture tests are not filtered out and are always available for the status.
             if (test.Traits.Any(t => t.Name == Constants.FixturesTestTrait))
             {
                 return true;
@@ -385,7 +385,7 @@ public class TestExecutionManager
         UnitTestRunner testRunner)
     {
         bool hasAnyRunnableTests = false;
-        var nonRunnableTests = new List<TestCase>();
+        var fixtureTests = new List<TestCase>();
 
         foreach (TestCase currentTest in tests)
         {
@@ -394,11 +394,11 @@ public class TestExecutionManager
                 break;
             }
 
-            // If it is a non-runnable test, add it to the list of non-runnable tests and do not execute it.
+            // If it is a fixture test, add it to the list of fixture tests and do not execute it.
             // It is executed by test itself.
             if (currentTest.Traits.Any(t => t.Name == Constants.FixturesTestTrait))
             {
-                nonRunnableTests.Add(currentTest);
+                fixtureTests.Add(currentTest);
                 continue;
             }
 
@@ -423,12 +423,12 @@ public class TestExecutionManager
             SendTestResults(currentTest, unitTestResult, startTime, endTime, testExecutionRecorder);
         }
 
-        // Once all tests have been executed, update the status of non-runnable tests.
-        foreach (TestCase currentTest in nonRunnableTests)
+        // Once all tests have been executed, update the status of fixture tests.
+        foreach (TestCase currentTest in fixtureTests)
         {
             testExecutionRecorder.RecordStart(currentTest);
 
-            // If there were only non-runnable tests, send an inconclusive result.
+            // If there were only fixture tests, send an inconclusive result.
             if (!hasAnyRunnableTests)
             {
                 var result = new UnitTestResult(ObjectModel.UnitTestOutcome.Inconclusive, null);
@@ -438,11 +438,11 @@ public class TestExecutionManager
 
             Trait trait = currentTest.Traits.First(t => t.Name == Constants.FixturesTestTrait);
             var unitTestElement = currentTest.ToUnitTestElement(source);
-            FixtureTestResult nonRunnableTestResult = testRunner.GetNonRunnableTestMethodResult(unitTestElement.TestMethod, trait.Value);
+            FixtureTestResult fixtureTestResult = testRunner.GetFixtureTestResult(unitTestElement.TestMethod, trait.Value);
 
-            if (nonRunnableTestResult.IsExecuted)
+            if (fixtureTestResult.IsExecuted)
             {
-                var result = new UnitTestResult(nonRunnableTestResult.Outcome, null);
+                var result = new UnitTestResult(fixtureTestResult.Outcome, null);
                 SendTestResults(currentTest, [result], DateTimeOffset.Now, DateTimeOffset.Now, testExecutionRecorder);
             }
         }

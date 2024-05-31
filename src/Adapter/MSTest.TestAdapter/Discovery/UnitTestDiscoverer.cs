@@ -92,7 +92,7 @@ internal class UnitTestDiscoverer
     {
         bool shouldCollectSourceInformation = MSTestSettings.RunConfigurationSettings.CollectSourceInformation;
         bool hasAnyRunnableTests = false;
-        var nonRunnableTests = new List<TestCase>();
+        var fixtureTests = new List<TestCase>();
 
         var navigationSessions = new Dictionary<string, object?>();
         try
@@ -117,10 +117,10 @@ internal class UnitTestDiscoverer
                 // Filter tests based on test case filters
                 if (filterExpression != null && !filterExpression.MatchTestCase(testCase, (p) => TestMethodFilter.PropertyValueProvider(testCase, p)))
                 {
-                    // If test is a non-runnable test, add it to the list of non-runnable tests.
+                    // If test is a fixture test, add it to the list of fixture tests.
                     if (hasFixtureTraits)
                     {
-                        nonRunnableTests.Add(testCase);
+                        fixtureTests.Add(testCase);
                     }
 
                     continue;
@@ -181,10 +181,10 @@ internal class UnitTestDiscoverer
                 discoverySink.SendTestCase(testCase);
             }
 
-            // If there are runnable tests, then add non-runnable tests to the discovery sink.
+            // If there are runnable tests, then add all fixture tests to the discovery sink.
             if (hasAnyRunnableTests)
             {
-                foreach (TestCase testCase in nonRunnableTests)
+                foreach (TestCase testCase in fixtureTests)
                 {
                     discoverySink.SendTestCase(testCase);
                 }

@@ -23,7 +23,7 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution;
 /// </summary>
 internal class UnitTestRunner : MarshalByRefObject
 {
-    private readonly Dictionary<string, TestMethodInfo> _nonRunnableMethods = new();
+    private readonly Dictionary<string, TestMethodInfo> _fixtureTests = new();
 
     /// <summary>
     /// Type cache.
@@ -99,20 +99,20 @@ internal class UnitTestRunner : MarshalByRefObject
             _reflectHelper);
     }
 
-    internal FixtureTestResult GetNonRunnableTestMethodResult(TestMethod testMethod, string nonRunnableMethodType)
+    internal FixtureTestResult GetFixtureTestResult(TestMethod testMethod, string fixtureType)
     {
-        // For the non-runnable methods, we need to return the appropriate result.
-        // Get matching testMethodInfo from the cache and return UnitTestOutcome for the non-runnable test.
-        if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
+        // For the fixture methods, we need to return the appropriate result.
+        // Get matching testMethodInfo from the cache and return UnitTestOutcome for the fixture test.
+        if (_fixtureTests.TryGetValue(testMethod.AssemblyName + testMethod.FullClassName, out TestMethodInfo? testMethodInfo))
         {
-            if (nonRunnableMethodType == Constants.ClassInitializeFixtureTrait)
+            if (fixtureType == Constants.ClassInitializeFixtureTrait)
             {
                 return testMethodInfo.Parent.IsClassInitializeExecuted
                     ? new(true, GetOutcome(testMethodInfo.Parent.ClassInitializationException), testMethodInfo.Parent.ClassInitializationException?.Message)
                     : new(true, ObjectModel.UnitTestOutcome.Inconclusive, null);
             }
 
-            if (nonRunnableMethodType == Constants.ClassCleanupFixtureTrait)
+            if (fixtureType == Constants.ClassCleanupFixtureTrait)
             {
                 return testMethodInfo.Parent.IsClassInitializeExecuted
                 ? new(testMethodInfo.Parent.IsClassInitializeExecuted, GetOutcome(testMethodInfo.Parent.ClassCleanupException), testMethodInfo.Parent.ClassCleanupException?.Message)
@@ -120,13 +120,13 @@ internal class UnitTestRunner : MarshalByRefObject
             }
         }
 
-        if (_nonRunnableMethods.TryGetValue(testMethod.AssemblyName, out testMethodInfo))
+        if (_fixtureTests.TryGetValue(testMethod.AssemblyName, out testMethodInfo))
         {
-            if (nonRunnableMethodType == Constants.AssemblyInitializeFixtureTrait)
+            if (fixtureType == Constants.AssemblyInitializeFixtureTrait)
             {
                 return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyInitializationException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
             }
-            else if (nonRunnableMethodType == Constants.AssemblyCleanupFixtureTrait)
+            else if (fixtureType == Constants.AssemblyCleanupFixtureTrait)
             {
                 return new(true, GetOutcome(testMethodInfo.Parent.Parent.AssemblyCleanupException), testMethodInfo.Parent.Parent.AssemblyInitializationException?.Message);
             }
@@ -183,8 +183,8 @@ internal class UnitTestRunner : MarshalByRefObject
             DebugEx.Assert(testMethodInfo is not null, "testMethodInfo should not be null.");
 
             // Keep track of all non-runnable methods so that we can return the appropriate result at the end.
-            _nonRunnableMethods[testMethod.AssemblyName] = testMethodInfo;
-            _nonRunnableMethods[testMethod.AssemblyName + testMethod.FullClassName] = testMethodInfo;
+            _fixtureTests[testMethod.AssemblyName] = testMethodInfo;
+            _fixtureTests[testMethod.AssemblyName + testMethod.FullClassName] = testMethodInfo;
 
             var testMethodRunner = new TestMethodRunner(testMethodInfo, testMethod, testContext, MSTestSettings.CurrentSettings.CaptureDebugTraces);
             UnitTestResult[] result = testMethodRunner.Execute();
@@ -361,11 +361,11 @@ internal class UnitTestRunner : MarshalByRefObject
 
             lock (testsByClass)
             {
-                testsByClass.Remove(testMethod.UniqueName);
+                _ = testsByClass.Remove(testMethod.UniqueName);
 
                 if (testsByClass.Count == 0)
                 {
-                    _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
+                    _ = _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
                     if (testMethodInfo.Parent.HasExecutableCleanupMethod)
                     {
                         ClassCleanupBehavior cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)
