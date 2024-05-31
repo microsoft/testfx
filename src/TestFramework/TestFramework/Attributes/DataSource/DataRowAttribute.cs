@@ -90,7 +90,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// <summary>
     /// Recursively resolve collections of objects to a proper string representation.
     /// </summary>
-    private string GetObjectString(IEnumerable<object?> enumerable) =>
+    private static string GetObjectString(IEnumerable<object?> enumerable) =>
         string.Join(
             ",",
             enumerable.Select(x =>
