@@ -178,6 +178,20 @@ public class DataRowAttributeTests : TestContainer
         Verify(displayName == "MyMethod ([a,b,c],[1,2,3])");
     }
 
+    public void GetDisplayNameForMultipleArraysOfMultipleItemsValueTypes()
+    {
+        // Arrange
+        var dataRow = new DataRowAttribute(new[] { 1, 2, 3 }, new[] { 4, 5, 6 });
+        var methodInfoMock = new Mock<MethodInfo>();
+        methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
+
+        // Act
+        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+
+        // Assert
+        Verify(displayName == "MyMethod ([1,2,3],[4,5,6])");
+    }
+
     public void GetDisplayNameForMultipleArraysOfArraysOfMultipleItems()
     {
         // Arrange
