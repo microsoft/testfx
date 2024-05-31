@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections;
 using System.Globalization;
 using System.Reflection;
 
@@ -97,6 +98,6 @@ public class DataRowAttribute : Attribute, ITestDataSource
                 x == null
                 ? null
                 : x.GetType().IsArray
-                    ? $"[{GetObjectString((object[])x)}]"
-                    : x));
+                    ? $"[{GetObjectString(((IEnumerable)x).Cast<object>())}]"
+                    : x.ToString()));
 }
