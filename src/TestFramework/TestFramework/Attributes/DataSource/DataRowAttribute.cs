@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -84,6 +84,19 @@ public class DataRowAttribute : Attribute, ITestDataSource
             : data.AsEnumerable();
 
         return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,
-            string.Join(",", displayData));
+            GetObjectString(displayData));
     }
+
+    /// <summary>
+    /// Recursively resolve collections of objects to a proper string representation.
+    /// </summary>
+    private string GetObjectString(IEnumerable<object?> enumerable) =>
+        string.Join(
+            ",",
+            enumerable.Select(x =>
+                x == null
+                ? null
+                : x.GetType().IsArray
+                    ? $"[{GetObjectString((object[])x)}]"
+                    : x));
 }
