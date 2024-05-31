@@ -199,9 +199,15 @@ internal class AssemblyEnumerator : MarshalByRefObject
         return new TypeEnumerator(type, assemblyFileName, ReflectHelper, typeValidator, testMethodValidator, discoveryOption, testIdGenerationStrategy);
     }
 
-    private List<UnitTestElement> DiscoverTestsInType(string assemblyFileName, [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml, Type type,
-        List<string> warningMessages, bool discoverInternals, TestDataSourceDiscoveryOption discoveryOption,
-        TestIdGenerationStrategy testIdGenerationStrategy, HashSet<string> fixturesTests)
+    private List<UnitTestElement> DiscoverTestsInType(
+        string assemblyFileName,
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        Type type,
+        List<string> warningMessages,
+        bool discoverInternals,
+        TestDataSourceDiscoveryOption discoveryOption,
+        TestIdGenerationStrategy testIdGenerationStrategy,
+        HashSet<string> fixturesTests)
     {
         IDictionary<string, object> tempSourceLevelParameters = PlatformServiceProvider.Instance.SettingsProvider.GetProperties(assemblyFileName);
         tempSourceLevelParameters = RunSettingsUtilities.GetTestRunParameters(runSettingsXml)?.ConcatWithOverwrites(tempSourceLevelParameters)

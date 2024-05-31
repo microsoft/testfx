@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Extensions;
@@ -475,6 +476,7 @@ public class TestExecutionManager
         return testContextProperties;
     }
 
+    [SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Justification = "Requirement is to handle errors in user specified run parameters")]
     private void CacheSessionParameters(IRunContext? runContext, ITestExecutionRecorder testExecutionRecorder)
     {
         if (StringEx.IsNullOrEmpty(runContext?.RunSettings?.SettingsXml))

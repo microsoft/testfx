@@ -361,11 +361,10 @@ internal class UnitTestRunner : MarshalByRefObject
 
             lock (testsByClass)
             {
-                _ = testsByClass.Remove(testMethod.UniqueName);
-
+                testsByClass.Remove(testMethod.UniqueName);
                 if (testsByClass.Count == 0)
                 {
-                    _ = _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
+                    _remainingTestsByClass.TryRemove(testMethodInfo.TestClassName, out _);
                     if (testMethodInfo.Parent.HasExecutableCleanupMethod)
                     {
                         ClassCleanupBehavior cleanupLifecycle = _reflectHelper.GetClassCleanupBehavior(testMethodInfo.Parent)
