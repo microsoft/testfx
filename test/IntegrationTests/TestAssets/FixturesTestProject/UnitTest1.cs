@@ -41,6 +41,9 @@ public class UnitTest1
     }
 
     [TestMethod]
+    public void PassingTest() => Assert.IsTrue(true);
+
+    [TestMethod]
     public void Test()
     {
         bool? condition = GetCondition("Test");

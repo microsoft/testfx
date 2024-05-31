@@ -14,6 +14,7 @@ public class FixturesTests : CLITestBase
     private static readonly string ClassInitialize = "FixturesTestProject1.UnitTest1.ClassInitialize(Microsoft.VisualStudio.TestTools.UnitTesting.TestContext)";
     private static readonly string ClassCleanup = "FixturesTestProject1.UnitTest1.ClassCleanup";
     private static readonly string TestMethod = "FixturesTestProject1.UnitTest1.Test";
+    private static readonly string PassingTest = "FixturesTestProject1.UnitTest1.PassingTest";
 
     private readonly string[] _tests = new[]
     {
@@ -22,6 +23,7 @@ public class FixturesTests : CLITestBase
         ClassInitialize,
         ClassCleanup,
         TestMethod,
+        PassingTest,
     };
 
     public void FixturesDisabled_DoesNotReport_FixtureTests()
@@ -30,11 +32,11 @@ public class FixturesTests : CLITestBase
 
         // Discover tests,
         InvokeVsTestForDiscovery([AssetName], runSettings);
-        ValidateDiscoveredTests(TestMethod);
+        ValidateDiscoveredTests([TestMethod, PassingTest]);
 
         // Tests,
         InvokeVsTestForExecution([AssetName], runSettings);
-        ValidatePassedTests(TestMethod);
+        ValidatePassedTests([TestMethod, PassingTest]);
     }
 
     public void FixturesEnabled_DoesReport_FixtureTests()
@@ -58,8 +60,8 @@ public class FixturesTests : CLITestBase
 
         InvokeVsTestForExecution([AssetName], runSettings);
 
-        ValidateFailedTests(false, [AssemblyInitialize, TestMethod]);
         ValidatePassedTests([AssemblyCleanup]);
+        ValidateFailedTests(false, [AssemblyInitialize, TestMethod, PassingTest]);
         ValidateSkippedTests([ClassInitialize, ClassCleanup]);
     }
 
@@ -68,8 +70,9 @@ public class FixturesTests : CLITestBase
         string runSettings = GetRunSettings(true, true, false, true, true, true);
 
         InvokeVsTestForExecution([AssetName], runSettings);
+        ValidatePassedTests([AssemblyInitialize, ClassInitialize, ClassCleanup, PassingTest]);
+        // TestMethod fails because AssemblyCleanup is executed after it and hence it fails.
         ValidateFailedTests(false, [AssemblyCleanup, TestMethod]);
-        ValidatePassedTests([AssemblyInitialize, ClassInitialize, ClassCleanup]);
     }
 
     public void ClassInitialize_OnlyFails_ClassInitialize()
@@ -77,7 +80,7 @@ public class FixturesTests : CLITestBase
         string runSettings = GetRunSettings(true, true, true, false, true, true);
 
         InvokeVsTestForExecution([AssetName], runSettings);
-        ValidateFailedTests(false, [ClassInitialize, TestMethod]);
+        ValidateFailedTests(false, [ClassInitialize, TestMethod, PassingTest]);
         ValidatePassedTests([AssemblyInitialize, AssemblyCleanup, ClassCleanup]);
     }
 
@@ -86,8 +89,53 @@ public class FixturesTests : CLITestBase
         string runSettings = GetRunSettings(true, true, true, true, false, true);
 
         InvokeVsTestForExecution([AssetName], runSettings);
+        ValidatePassedTests([AssemblyInitialize, AssemblyCleanup, ClassInitialize, PassingTest]);
+        // TestMethod fails because ClassCleanup is executed after it and hence it fails.
         ValidateFailedTests(false, [ClassCleanup, TestMethod]);
-        ValidatePassedTests([AssemblyInitialize, AssemblyCleanup, ClassInitialize]);
+    }
+
+    public void RunOnlyFixtures_DoesNot_Run_Fixtures()
+    {
+        string runSettings = GetRunSettings(true, true, true, true, true, true);
+
+        InvokeVsTestForExecution([AssetName], runSettings, testCaseFilter: nameof(AssemblyInitialize));
+        ValidateSkippedTests(AssemblyInitialize);
+        InvokeVsTestForExecution([AssetName], runSettings, testCaseFilter: nameof(AssemblyCleanup));
+        ValidateSkippedTests(AssemblyCleanup);
+        InvokeVsTestForExecution([AssetName], runSettings, testCaseFilter: nameof(ClassInitialize));
+        ValidateSkippedTests(ClassInitialize);
+        InvokeVsTestForExecution([AssetName], runSettings, testCaseFilter: nameof(ClassCleanup));
+        ValidateSkippedTests(ClassCleanup);
+        InvokeVsTestForExecution([AssetName], runSettings, testCaseFilter: "ClassCleanup|AssemblyCleanup");
+        ValidateSkippedTests([AssemblyCleanup, ClassCleanup]);
+    }
+
+    public void RunSingleTest_Runs_Assembly_And_Class_Fixtures()
+    {
+        string runSettings = GetRunSettings(true, true, true, true, true, true);
+
+        InvokeVsTestForExecution([AssetName], runSettings, testCaseFilter: nameof(PassingTest));
+        ValidatePassedTests([AssemblyInitialize, AssemblyCleanup, ClassInitialize, ClassCleanup, PassingTest]);
+    }
+
+    public void RunSingleTest_AssemblyInitialize_Failure_Skips_ClassFixtures()
+    {
+        string runSettings = GetRunSettings(true, false, true, true, true, true);
+
+        InvokeVsTestForExecution([AssetName], runSettings, testCaseFilter: nameof(PassingTest));
+        ValidateFailedTests(false, [AssemblyInitialize, PassingTest]);
+        ValidatePassedTests([AssemblyCleanup]);
+        // Class fixtures are not executed if AssemblyInitialize fails.
+        ValidateSkippedTests([ClassInitialize, ClassCleanup]);
+    }
+
+    public void RunSingleTest_ClassInitialize_Failure_Runs_AssemblyFixtures()
+    {
+        string runSettings = GetRunSettings(true, true, true, false, true, true);
+
+        InvokeVsTestForExecution([AssetName], runSettings, testCaseFilter: nameof(PassingTest));
+        ValidateFailedTests(false, [ClassInitialize, PassingTest]);
+        ValidatePassedTests([AssemblyInitialize, AssemblyCleanup, ClassCleanup]);
     }
 
     private string GetRunSettings(bool fixturesEnabled, bool assemblyInitialize, bool assemblyCleanup, bool classInitialize, bool classCleanup, bool test)
