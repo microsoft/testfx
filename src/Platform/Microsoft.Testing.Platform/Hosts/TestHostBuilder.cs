@@ -469,7 +469,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
                 commandLineHelpOptions.Add(new CommandLineOptionMessage(
                     commandLineOption.Name,
                     commandLineOption.Description,
-                    GetArityName(commandLineOption.Arity),
                     commandLineOption.IsHidden,
                     commandLineOption.IsBuiltIn));
             }
@@ -477,16 +476,6 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
         await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationToken);
     }
-
-    private static string GetArityName(ArgumentArity argumentArity) => argumentArity switch
-    {
-        ArgumentArity arity when arity == ArgumentArity.Zero => "Zero",
-        ArgumentArity arity when arity == ArgumentArity.ZeroOrOne => "ZeroOrOne",
-        ArgumentArity arity when arity == ArgumentArity.ZeroOrMore => "ZeroOrMore",
-        ArgumentArity arity when arity == ArgumentArity.OneOrMore => "OneOrMore",
-        ArgumentArity arity when arity == ArgumentArity.ExactlyOne => "ExactlyOne",
-        _ => throw new ArgumentOutOfRangeException(nameof(argumentArity)),
-    };
 
     private static async Task<NamedPipeClient?> ConnectToDotnetTestPipeIfAvailableAsync(CommandLineHandler commandLineHandler, CTRLPlusCCancellationTokenSource cancellationTokenSource)
     {

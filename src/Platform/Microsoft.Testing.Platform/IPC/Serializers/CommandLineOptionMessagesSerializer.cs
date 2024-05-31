@@ -27,10 +27,6 @@ namespace Microsoft.Testing.Platform.IPC.Serializers;
     |---CommandLineOptionMessageList[1] Description Size---| (4 bytes)
     |---CommandLineOptionMessageList[1] Description Value---| (n bytes)
 
-    |---CommandLineOptionMessageList[2] Arity Id---| 3 (2 bytes)
-    |---CommandLineOptionMessageList[2] Arity Size---| (4 bytes)
-    |---CommandLineOptionMessageList[2] Arity Value---| (n bytes)
-
     |---CommandLineOptionMessageList[3] IsHidden Id---| 4 (2 bytes)
     |---CommandLineOptionMessageList[3] IsHidden Size---| (4 bytes)
     |---CommandLineOptionMessageList[3] IsHidden Value---| (1 byte)
@@ -83,7 +79,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         int length = ReadInt(stream);
         for (int i = 0; i < length; i++)
         {
-            string name = string.Empty, description = string.Empty, arity = string.Empty;
+            string name = string.Empty, description = string.Empty;
             bool isHidden = false, isBuiltIn = false;
 
             int fieldCount = ReadShort(stream);
@@ -103,10 +99,6 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
                         description = ReadString(stream);
                         break;
 
-                    case CommandLineOptionMessageFieldsId.Arity:
-                        arity = ReadString(stream);
-                        break;
-
                     case CommandLineOptionMessageFieldsId.IsHidden:
                         isHidden = ReadBool(stream);
                         break;
@@ -121,7 +113,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
                 }
             }
 
-            commandLineOptionMessages.Add(new CommandLineOptionMessage(name, description, arity, isHidden, isBuiltIn));
+            commandLineOptionMessages.Add(new CommandLineOptionMessage(name, description, isHidden, isBuiltIn));
         }
 
         return commandLineOptionMessages;
@@ -160,7 +152,6 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
             WriteField(stream, CommandLineOptionMessageFieldsId.Name, commandLineOptionMessage.Name);
             WriteField(stream, CommandLineOptionMessageFieldsId.Description, commandLineOptionMessage.Description);
-            WriteField(stream, CommandLineOptionMessageFieldsId.Arity, commandLineOptionMessage.Arity);
             WriteField(stream, CommandLineOptionMessageFieldsId.IsHidden, commandLineOptionMessage.IsHidden);
             WriteField(stream, CommandLineOptionMessageFieldsId.IsBuiltIn, commandLineOptionMessage.IsBuiltIn);
         }
@@ -170,12 +161,13 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
         WriteAtPosition(stream, (int)(stream.Position - before), before - sizeof(int));
     }
 
-    private static ushort GetFieldCount(CommandLineOptionMessages commandLineOptionMessages) => (ushort)((RoslynString.IsNullOrEmpty(commandLineOptionMessages.ModuleName) ? 0 : 1) +
+    private static ushort GetFieldCount(CommandLineOptionMessages commandLineOptionMessages) =>
+        (ushort)((RoslynString.IsNullOrEmpty(commandLineOptionMessages.ModuleName) ? 0 : 1) +
            (commandLineOptionMessages is null ? 0 : 1));
 
-    private static ushort GetFieldCount(CommandLineOptionMessage commandLineOptionMessage) => (ushort)((RoslynString.IsNullOrEmpty(commandLineOptionMessage.Name) ? 0 : 1) +
+    private static ushort GetFieldCount(CommandLineOptionMessage commandLineOptionMessage) =>
+        (ushort)((RoslynString.IsNullOrEmpty(commandLineOptionMessage.Name) ? 0 : 1) +
             (RoslynString.IsNullOrEmpty(commandLineOptionMessage.Description) ? 0 : 1) +
-            (RoslynString.IsNullOrEmpty(commandLineOptionMessage.Arity) ? 0 : 1) +
             2);
 
     private static bool IsNull<T>(T[] items) => items is null || items.Length == 0;
