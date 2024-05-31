@@ -3,6 +3,9 @@
 
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+
+using Microsoft.Testing.Platform.Resources;
 
 namespace Microsoft.Testing.Platform.Helpers;
 
@@ -13,11 +16,13 @@ internal sealed class SystemProcessHandler : IProcessHandler
 
     public IProcess GetProcessById(int pid) => new SystemProcess(Process.GetProcessById(pid));
 
-    public IProcess? Start(ProcessStartInfo startInfo)
+    public IProcess Start(ProcessStartInfo startInfo)
     {
-        var process = Process.Start(startInfo);
-        ApplicationStateGuard.Ensure(process is not null);
+        Process process = Process.Start(startInfo)
+            ?? throw new InvalidOperationException(string.Format(
+                CultureInfo.InvariantCulture,
+                PlatformResources.CannotStartProcessErrorMessage, startInfo.FileName));
         process.EnableRaisingEvents = true;
-        return process is null ? null : (IProcess)new SystemProcess(process);
+        return new SystemProcess(process);
     }
 }

@@ -50,12 +50,14 @@ public class AssemblyEnumeratorTests : TestContainer
     public void ConstructorShouldPopulateSettings()
     {
         string runSettingsXml =
-             @"<RunSettings>
-                     <MSTest>
-                        <ForcedLegacyMode>True</ForcedLegacyMode>
-                        <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
-                     </MSTest>
-                   </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <ForcedLegacyMode>True</ForcedLegacyMode>
+                <SettingsFile>DummyPath\TestSettings1.testsettings</SettingsFile>
+              </MSTest>
+            </RunSettings>
+            """;
 
         _testablePlatformServiceProvider.MockSettingsProvider.Setup(sp => sp.Load(It.IsAny<XmlReader>()))
             .Callback((XmlReader actualReader) =>
@@ -411,13 +413,14 @@ internal sealed class TestableAssemblyEnumerator : AssemblyEnumerator
             reflectHelper.Object,
             typeValidator.Object,
             testMethodValidator.Object,
+            TestDataSourceDiscoveryOption.DuringExecution,
             TestIdGenerationStrategy.FullyQualified);
     }
 
     internal Mock<TypeEnumerator> MockTypeEnumerator { get; set; }
 
     internal override TypeEnumerator GetTypeEnumerator(Type type, string assemblyFileName, bool discoverInternals,
-        TestIdGenerationStrategy testIdGenerationStrategy)
+        TestDataSourceDiscoveryOption discoveryOption, TestIdGenerationStrategy testIdGenerationStrategy)
         => MockTypeEnumerator.Object;
 }
 

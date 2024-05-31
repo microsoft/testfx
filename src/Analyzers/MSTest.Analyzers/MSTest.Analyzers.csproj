@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\RoslynHashCode.cs" Link="RoslynAnalyzerHelpers\RoslynHashCode.cs" />
-    <Compile Include="$(RepoRoot)src\Platform\Microsoft.Testing.Platform\Helpers\SystemPolyfills.cs" Link="Helpers\SystemPolyfills.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +22,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" />
     <PackageReference Include="Microsoft.CodeAnalysis.Common" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

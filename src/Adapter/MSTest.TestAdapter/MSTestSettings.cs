@@ -240,7 +240,7 @@ public class MSTestSettings
     {
         RunConfigurationSettings = RunConfigurationSettings.PopulateSettings(context);
 
-        if (context == null || context.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
+        if (context?.RunSettings == null || StringEx.IsNullOrEmpty(context.RunSettings.SettingsXml))
         {
             // This will contain default adapter settings
             CurrentSettings = new MSTestSettings();
@@ -286,7 +286,9 @@ public class MSTestSettings
     /// <param name="runSettingsXml"> The xml with the settings passed from the test platform. </param>
     /// <param name="settingName"> The name of the adapter settings to fetch - Its either MSTest or MSTestV2. </param>
     /// <returns> The settings if found. Null otherwise. </returns>
-    internal static MSTestSettings? GetSettings(string? runSettingsXml, string settingName)
+    internal static MSTestSettings? GetSettings(
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runSettingsXml))] string? runSettingsXml,
+        string settingName)
     {
         if (StringEx.IsNullOrWhiteSpace(runSettingsXml))
         {
@@ -644,21 +646,17 @@ public class MSTestSettings
         }
 
         // If any of these properties are not set, resort to the defaults.
-        if (!settings.ParallelizationWorkers.HasValue)
-        {
-            settings.ParallelizationWorkers = Environment.ProcessorCount;
-        }
+        settings.ParallelizationWorkers ??= Environment.ProcessorCount;
 
-        if (!settings.ParallelizationScope.HasValue)
-        {
-            settings.ParallelizationScope = ExecutionScope.ClassLevel;
-        }
+        settings.ParallelizationScope ??= ExecutionScope.ClassLevel;
     }
 
     private static bool TryParseEnum<T>(string value, out T result)
         where T : struct, Enum => Enum.TryParse(value, true, out result) && Enum.IsDefined(typeof(T), result);
 
-    private static void SetGlobalSettings(string runsettingsXml, MSTestSettings settings)
+    private static void SetGlobalSettings(
+        [StringSyntax(StringSyntaxAttribute.Xml, nameof(runsettingsXml))] string runsettingsXml,
+        MSTestSettings settings)
     {
         XElement? runConfigElement = XDocument.Parse(runsettingsXml)?.Element("RunSettings")?.Element("RunConfiguration");
 

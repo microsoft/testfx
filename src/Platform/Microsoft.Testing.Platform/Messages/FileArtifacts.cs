@@ -52,7 +52,7 @@ public class FileArtifact : PropertyBagData
                 builder.Append(',');
             }
 
-            builder.Append(' ').Append(property.ToString());
+            builder.Append(' ').Append(property);
         }
 
         if (hasAnyProperty)
@@ -112,7 +112,7 @@ public class SessionFileArtifact : DataWithSessionUid
                 builder.Append(',');
             }
 
-            builder.Append(' ').Append(property.ToString());
+            builder.Append(' ').Append(property);
         }
 
         if (hasAnyProperty)
@@ -177,7 +177,7 @@ public class TestNodeFileArtifact : SessionFileArtifact
                 builder.Append(',');
             }
 
-            builder.Append(' ').Append(property.ToString());
+            builder.Append(' ').Append(property);
         }
 
         if (hasAnyProperty)
@@ -190,7 +190,7 @@ public class TestNodeFileArtifact : SessionFileArtifact
             .Append(", FilePath = ")
             .Append(FileInfo.FullName)
             .Append(", TestNode = ")
-            .Append(TestNode.ToString())
+            .Append(TestNode)
             .Append(" }");
 
         return builder.ToString();

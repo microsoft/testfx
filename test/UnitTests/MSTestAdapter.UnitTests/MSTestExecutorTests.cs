@@ -44,13 +44,15 @@ public class MSTestExecutorTests : TestContainer
         var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
         TestCase[] tests = [testCase];
         string runSettingxml =
-        @"<RunSettings>   
-                    <MSTest>   
-                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                        <ForcedLegacyMode>true</ForcedLegacyMode>    
-                        <IgnoreTestImpact>true</IgnoreTestImpact>  
-                    </MSTest>
-            </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <ForcedLegacyMode>true</ForcedLegacyMode>
+                <IgnoreTestImpact>true</IgnoreTestImpact>
+              </MSTest>
+            </RunSettings>
+            """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         _mstestExecutor.RunTests(tests, _mockRunContext.Object, _mockFrameworkHandle.Object);
@@ -64,13 +66,15 @@ public class MSTestExecutorTests : TestContainer
         var testCase = new TestCase("DummyName", new Uri("executor://MSTestAdapter/v2"), Assembly.GetExecutingAssembly().Location);
         TestCase[] tests = [testCase];
         string runSettingxml =
-        @"<RunSettings>   
-                    <MSTest>   
-                        <Parallelize>
-                          <Scope>Pond</Scope>
-                        </Parallelize>
-                    </MSTest>
-            </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <Parallelize>
+                  <Scope>Pond</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
@@ -86,13 +90,15 @@ public class MSTestExecutorTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingxml =
-        @"<RunSettings>
-                    <MSTest>   
-                        <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
-                        <ForcedLegacyMode>true</ForcedLegacyMode>    
-                        <IgnoreTestImpact>true</IgnoreTestImpact>
-                    </MSTest>
-            </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <SettingsFile>DummyPath\\TestSettings1.testsettings</SettingsFile>
+                <ForcedLegacyMode>true</ForcedLegacyMode>
+                <IgnoreTestImpact>true</IgnoreTestImpact>
+              </MSTest>
+            </RunSettings>
+            """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
@@ -105,13 +111,15 @@ public class MSTestExecutorTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingxml =
-        @"<RunSettings>   
-                    <MSTest>   
-                        <Parallelize>
-                          <Scope>Pond</Scope>
-                        </Parallelize>
-                    </MSTest>
-            </RunSettings>";
+            """
+            <RunSettings>
+              <MSTest>
+                <Parallelize>
+                  <Scope>Pond</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
 
@@ -127,8 +135,10 @@ public class MSTestExecutorTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingxml =
-        @"<RunSettings>
-            </RunSettings>";
+            """
+            <RunSettings>
+            </RunSettings>
+            """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);
@@ -140,11 +150,13 @@ public class MSTestExecutorTests : TestContainer
     {
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
         string runSettingxml =
-        @"<RunSettings>
-                <RunConfiguration>
-                    <CollectSourceInformation>false</CollectSourceInformation>
-                </RunConfiguration>
-            </RunSettings>";
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <CollectSourceInformation>false</CollectSourceInformation>
+              </RunConfiguration>
+            </RunSettings>
+            """;
         _mockRunContext.Setup(dc => dc.RunSettings).Returns(_mockRunSettings.Object);
         _mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingxml);
         _mstestExecutor.RunTests(sources, _mockRunContext.Object, _mockFrameworkHandle.Object);

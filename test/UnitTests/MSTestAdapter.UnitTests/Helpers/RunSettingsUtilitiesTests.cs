@@ -20,14 +20,16 @@ public class RunSettingsUtilitiesTests : TestContainer
     public void GetTestRunParametersReturnsEmptyDictionaryWhenNoTestRunParameters()
     {
         string settingsXml =
-            @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <TargetPlatform>x86</TargetPlatform>
-                       <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
-                     </RunConfiguration>
-                </RunSettings>";
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+               <RunConfiguration>
+                 <ResultsDirectory>.\TestResults</ResultsDirectory>
+                 <TargetPlatform>x86</TargetPlatform>
+                 <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
+               </RunConfiguration>
+            </RunSettings>
+            """;
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
@@ -37,16 +39,18 @@ public class RunSettingsUtilitiesTests : TestContainer
     public void GetTestRunParametersReturnsEmptyDictionaryForEmptyTestRunParametersNode()
     {
         string settingsXml =
-            @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <TargetPlatform>x86</TargetPlatform>
-                       <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
-                     </RunConfiguration>
-                     <TestRunParameters>
-                     </TestRunParameters>
-                </RunSettings>";
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+              <RunConfiguration>
+                <ResultsDirectory>.\TestResults</ResultsDirectory>
+                <TargetPlatform>x86</TargetPlatform>
+                <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
+              </RunConfiguration>
+              <TestRunParameters>
+              </TestRunParameters>
+            </RunSettings>
+            """;
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
@@ -56,17 +60,19 @@ public class RunSettingsUtilitiesTests : TestContainer
     public void GetTestRunParametersReturns1EntryOn1TestRunParameter()
     {
         string settingsXml =
-            @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <TargetPlatform>x86</TargetPlatform>
-                       <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
-                     </RunConfiguration>
-                     <TestRunParameters>
-                        <Parameter name=""webAppUrl"" value=""http://localhost"" />
-                     </TestRunParameters>
-                </RunSettings>";
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+               <RunConfiguration>
+                 <ResultsDirectory>.\TestResults</ResultsDirectory>
+                 <TargetPlatform>x86</TargetPlatform>
+                 <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
+               </RunConfiguration>
+               <TestRunParameters>
+                 <Parameter name="webAppUrl" value="http://localhost" />
+               </TestRunParameters>
+            </RunSettings>
+            """;
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
@@ -80,19 +86,21 @@ public class RunSettingsUtilitiesTests : TestContainer
     public void GetTestRunParametersReturns3EntryOn3TestRunParameter()
     {
         string settingsXml =
-            @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <TargetPlatform>x86</TargetPlatform>
-                       <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
-                     </RunConfiguration>
-                     <TestRunParameters>
-                        <Parameter name=""webAppUrl"" value=""http://localhost"" />
-                        <Parameter name=""webAppUserName"" value=""Admin"" />
-                        <Parameter name=""webAppPassword"" value=""Password"" />
-                     </TestRunParameters>
-                </RunSettings>";
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+              <RunConfiguration>
+                <ResultsDirectory>.\TestResults</ResultsDirectory>
+                <TargetPlatform>x86</TargetPlatform>
+                <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
+              </RunConfiguration>
+              <TestRunParameters>
+                <Parameter name="webAppUrl" value="http://localhost" />
+                <Parameter name="webAppUserName" value="Admin" />
+                <Parameter name="webAppPassword" value="Password" />
+              </TestRunParameters>
+            </RunSettings>
+            """;
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);
@@ -110,17 +118,19 @@ public class RunSettingsUtilitiesTests : TestContainer
     public void GetTestRunParametersThrowsWhenTRPNodeHasAttributes()
     {
         string settingsXml =
-            @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <TargetPlatform>x86</TargetPlatform>
-                       <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
-                     </RunConfiguration>
-                     <TestRunParameters count=""1"">
-                        <Parameter name=""webAppUrl"" value=""http://localhost"" />
-                     </TestRunParameters>
-                </RunSettings>";
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+               <RunConfiguration>
+                 <ResultsDirectory>.\TestResults</ResultsDirectory>
+                 <TargetPlatform>x86</TargetPlatform>
+                 <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
+               </RunConfiguration>
+               <TestRunParameters count="1">
+                 <Parameter name="webAppUrl" value="http://localhost" />
+               </TestRunParameters>
+            </RunSettings>
+            """;
 
         Exception ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
         Verify(ex.GetType() == typeof(SettingsException));
@@ -129,18 +139,20 @@ public class RunSettingsUtilitiesTests : TestContainer
     public void GetTestRunParametersThrowsWhenTRPNodeHasNonParameterTypeChildNodes()
     {
         string settingsXml =
-           @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <TargetPlatform>x86</TargetPlatform>
-                       <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
-                     </RunConfiguration>
-                     <TestRunParameters>
-                        <Parameter name=""webAppUrl"" value=""http://localhost"" />
-                        <TargetPlatform>x86</TargetPlatform>
-                     </TestRunParameters>
-                </RunSettings>";
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+              <RunConfiguration>
+                <ResultsDirectory>.\TestResults</ResultsDirectory>
+                <TargetPlatform>x86</TargetPlatform>
+                <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
+              </RunConfiguration>
+              <TestRunParameters>
+                <Parameter name="webAppUrl" value="http://localhost" />
+                <TargetPlatform>x86</TargetPlatform>
+              </TestRunParameters>
+            </RunSettings>
+            """;
 
         Exception ex = VerifyThrows(() => RunSettingsUtilities.GetTestRunParameters(settingsXml));
         Verify(ex.GetType() == typeof(SettingsException));
@@ -149,17 +161,19 @@ public class RunSettingsUtilitiesTests : TestContainer
     public void GetTestRunParametersIgnoresMalformedKeyValues()
     {
         string settingsXml =
-           @"<?xml version=""1.0"" encoding=""utf-8""?>
-                <RunSettings>
-                     <RunConfiguration>
-                       <ResultsDirectory>.\TestResults</ResultsDirectory>
-                       <TargetPlatform>x86</TargetPlatform>
-                       <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
-                     </RunConfiguration>
-                     <TestRunParameters>
-                        <Parameter name=""webAppUrl"" values=""http://localhost"" />
-                     </TestRunParameters>
-                </RunSettings>";
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <RunSettings>
+               <RunConfiguration>
+                 <ResultsDirectory>.\TestResults</ResultsDirectory>
+                 <TargetPlatform>x86</TargetPlatform>
+                 <TargetFrameworkVersion>Framework40</TargetFrameworkVersion>
+               </RunConfiguration>
+               <TestRunParameters>
+                 <Parameter name="webAppUrl" values="http://localhost" />
+               </TestRunParameters>
+            </RunSettings>
+            """;
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
         Verify(trp is not null);

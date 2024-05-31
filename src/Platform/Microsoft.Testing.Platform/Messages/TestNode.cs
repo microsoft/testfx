@@ -34,7 +34,7 @@ public class TestNode
                 builder.Append(',');
             }
 
-            builder.Append(' ').Append(property.ToString());
+            builder.Append(' ').Append(property);
         }
 
         if (hasAnyProperty)

@@ -259,15 +259,17 @@ public class TestExecutionManagerTests : TestContainer
 
         TestCase[] tests = [testCase];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                            <RunConfiguration>
-                                                <DisableAppDomain>True</DisableAppDomain>
-                                            </RunConfiguration>
-                                            <TestRunParameters>
-                                              <Parameter name=""webAppUrl"" value=""http://localhost"" />
-                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
-                                              </TestRunParameters>
-                                            </RunSettings>");
+            """
+            <RunSettings>
+            <RunConfiguration>
+              <DisableAppDomain>True</DisableAppDomain>
+            </RunConfiguration>
+            <TestRunParameters>
+              <Parameter name="webAppUrl" value="http://localhost" />
+              <Parameter name = "webAppUserName" value="Admin" />
+              </TestRunParameters>
+            </RunSettings>
+            """);
 
         _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
@@ -283,11 +285,13 @@ public class TestExecutionManagerTests : TestContainer
 
         TestCase[] tests = [testCase];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-            @"<RunSettings>
-                <RunConfiguration>
-                    <DisableAppDomain>True</DisableAppDomain>
-                </RunConfiguration>
-            </RunSettings>");
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+            </RunSettings>
+            """);
 
         _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
@@ -313,30 +317,34 @@ public class TestExecutionManagerTests : TestContainer
 
         TestCase[] tests = [testCase];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-            @"<RunSettings>
-                <RunConfiguration>
-                    <DisableAppDomain>True</DisableAppDomain>
-                </RunConfiguration>
-                <TestRunParameters>
-                    <Parameter name=""webAppUrl"" value=""http://localhost"" />
-                    <Parameter name = ""webAppUserName"" value=""Admin"" />
-                </TestRunParameters>
-            </RunSettings>");
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <TestRunParameters>
+                <Parameter name="webAppUrl" value="http://localhost" />
+                <Parameter name = "webAppUserName" value="Admin" />
+              </TestRunParameters>
+            </RunSettings>
+            """);
 
         // Trigger First Run
         _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
 
         // Update runsettings to have different values for similar keys
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-            @"<RunSettings>
-                <RunConfiguration>
-                    <DisableAppDomain>True</DisableAppDomain>
-                </RunConfiguration>
-                <TestRunParameters>
-                    <Parameter name=""webAppUrl"" value=""http://updatedLocalHost"" />
-                    <Parameter name = ""webAppUserName"" value=""Admin"" />
-                </TestRunParameters>
-            </RunSettings>");
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <TestRunParameters>
+                <Parameter name="webAppUrl" value="http://updatedLocalHost" />
+                <Parameter name = "webAppUserName" value="Admin" />
+              </TestRunParameters>
+            </RunSettings>
+            """);
 
         // Trigger another Run
         _testExecutionManager.RunTests(tests, _runContext, _frameworkHandle, new TestRunCancellationToken());
@@ -366,12 +374,14 @@ public class TestExecutionManagerTests : TestContainer
         var sources = new List<string> { Assembly.GetExecutingAssembly().Location };
 
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                            <TestRunParameters>
-                                              <Parameter name=""webAppUrl"" value=""http://localhost"" />
-                                              <Parameter name = ""webAppUserName"" value=""Admin"" />
-                                              </TestRunParameters>
-                                            </RunSettings>");
+            """
+            <RunSettings>
+              <TestRunParameters>
+                <Parameter name="webAppUrl" value="http://localhost" />
+                <Parameter name = "webAppUserName" value="Admin" />
+              </TestRunParameters>
+            </RunSettings>
+            """);
 
         _testExecutionManager.RunTests(sources, _runContext, _frameworkHandle, _cancellationToken);
 
@@ -430,16 +440,18 @@ public class TestExecutionManagerTests : TestContainer
 
         TestCase[] tests = [testCase11, testCase12, testCase21, testCase22];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                              <RunConfiguration>
-                                                  <DisableAppDomain>True</DisableAppDomain>
-                                              </RunConfiguration>
-                                              <MSTest>
-                                                 <Parallelize>
-                                                   <Workers>2</Workers>
-                                                 </Parallelize>
-                                              </MSTest>
-                                            </RunSettings>");
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <Parallelize>
+                  <Workers>2</Workers>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
 
         try
         {
@@ -464,17 +476,19 @@ public class TestExecutionManagerTests : TestContainer
 
         TestCase[] tests = [testCase11, testCase12];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                              <RunConfiguration>
-                                                  <DisableAppDomain>True</DisableAppDomain>
-                                              </RunConfiguration>
-                                              <MSTest>
-                                                 <Parallelize>
-                                                   <Workers>2</Workers>
-                                                   <Scope>MethodLevel</Scope>
-                                                 </Parallelize>
-                                              </MSTest>
-                                            </RunSettings>");
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                 <Parallelize>
+                   <Workers>2</Workers>
+                   <Scope>MethodLevel</Scope>
+                 </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
 
         try
         {
@@ -500,16 +514,18 @@ public class TestExecutionManagerTests : TestContainer
 
         TestCase[] tests = [testCase1, testCase2, testCase3];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                              <RunConfiguration>
-                                                  <DisableAppDomain>True</DisableAppDomain>
-                                              </RunConfiguration>
-                                              <MSTest>
-                                                 <Parallelize>
-                                                   <Workers>3</Workers>
-                                                 </Parallelize>
-                                              </MSTest>
-                                            </RunSettings>");
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <Parallelize>
+                  <Workers>3</Workers>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
 
         try
         {
@@ -536,12 +552,15 @@ public class TestExecutionManagerTests : TestContainer
         TestCase testCase2 = GetTestCase(typeof(DummyTestClassForParallelize), "TestMethod2");
 
         TestCase[] tests = [testCase1, testCase2];
-        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                              <RunConfiguration>
-                                                 <DisableParallelization>true</DisableParallelization>
-                                              </RunConfiguration>
-                                            </RunSettings>");
+        _runContext.MockRunSettings.Setup(rs => rs.SettingsXml)
+            .Returns(
+                """
+                <RunSettings>
+                  <RunConfiguration>
+                    <DisableParallelization>true</DisableParallelization>
+                  </RunConfiguration>
+                </RunSettings>
+                """);
 
         try
         {
@@ -578,14 +597,16 @@ public class TestExecutionManagerTests : TestContainer
 
         TestCase[] tests = [testCase1, testCase2];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                              <MSTest>
-                                                 <Parallelize>
-                                                   <Workers>2</Workers>
-                                                   <Scope>MethodLevel</Scope>
-                                                 </Parallelize>
-                                              </MSTest>
-                                            </RunSettings>");
+            """
+            <RunSettings>
+              <MSTest>
+                <Parallelize>
+                  <Workers>2</Workers>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
 
         try
         {
@@ -627,17 +648,19 @@ public class TestExecutionManagerTests : TestContainer
 
         TestCase[] tests = [testCase1, testCase2, testCase3, testCase4];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                              <RunConfiguration>
-                                                  <DisableAppDomain>True</DisableAppDomain>
-                                              </RunConfiguration>
-                                              <MSTest>
-                                                 <Parallelize>
-                                                   <Workers>2</Workers>
-                                                   <Scope>MethodLevel</Scope>
-                                                 </Parallelize>
-                                              </MSTest>
-                                            </RunSettings>");
+            """
+            <RunSettings>
+              <RunConfiguration>
+                <DisableAppDomain>True</DisableAppDomain>
+              </RunConfiguration>
+              <MSTest>
+                <Parallelize>
+                  <Workers>2</Workers>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
 
         try
         {
@@ -662,14 +685,16 @@ public class TestExecutionManagerTests : TestContainer
 
         TestCase[] tests = [testCase1, testCase2];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                              <MSTest>
-                                                 <Parallelize>
-                                                   <Workers>2</Workers>
-                                                   <Scope>MethodLevel</Scope>
-                                                 </Parallelize>
-                                              </MSTest>
-                                            </RunSettings>");
+            """
+            <RunSettings>
+              <MSTest>
+                <Parallelize>
+                  <Workers>2</Workers>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
 
         try
         {
@@ -716,14 +741,16 @@ public class TestExecutionManagerTests : TestContainer
 
         TestCase[] tests = [testCase1, testCase2, testCase3, testCase4];
         _runContext.MockRunSettings.Setup(rs => rs.SettingsXml).Returns(
-                                     @"<RunSettings>
-                                              <MSTest>
-                                                 <Parallelize>
-                                                   <Workers>3</Workers>
-                                                   <Scope>MethodLevel</Scope>
-                                                 </Parallelize>
-                                              </MSTest>
-                                            </RunSettings>");
+            """
+            <RunSettings>
+              <MSTest>
+                <Parallelize>
+                  <Workers>3</Workers>
+                  <Scope>MethodLevel</Scope>
+                </Parallelize>
+              </MSTest>
+            </RunSettings>
+            """);
 
         try
         {

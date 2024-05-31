@@ -61,32 +61,34 @@ public class SomeClass
 
     public async Task AsyncTestMethodWithSuffix_NoDiagnostic()
     {
-        string code = @"
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+        string code = """
 
-[TestClass]
-public class SomeClass
-{
-    [AssemblyInitialize]
-    public static async Task AssemblyInitializeAsync() { }
+                      using System.Threading.Tasks;
+                      using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-    [AssemblyCleanup]
-    public static async Task AssemblyCleanupAsync() { }
+                      [TestClass]
+                      public class SomeClass
+                      {
+                          [AssemblyInitialize]
+                          public static async Task AssemblyInitializeAsync() { }
 
-    [ClassInitialize]
-    public static async Task ClassInitializeAsync() { }
+                          [AssemblyCleanup]
+                          public static async Task AssemblyCleanupAsync() { }
 
-    [ClassCleanup]
-    public static async Task ClassCleanupAsync() { }
+                          [ClassInitialize]
+                          public static async Task ClassInitializeAsync() { }
 
-    [TestInitialize]
-    public async Task TestInitializeAsync() { }
+                          [ClassCleanup]
+                          public static async Task ClassCleanupAsync() { }
 
-    [TestCleanup]
-    public async Task TestCleanupAsync() { }
-}
-";
+                          [TestInitialize]
+                          public async Task TestInitializeAsync() { }
+
+                          [TestCleanup]
+                          public async Task TestCleanupAsync() { }
+                      }
+
+                      """;
 
         await new VerifyCS.Test
         {

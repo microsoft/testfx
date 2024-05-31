@@ -299,9 +299,9 @@ internal class UnitTestRunner : MarshalByRefObject
 
         string? ignoreMessage = null;
         bool isIgnoreAttributeOnClass =
-            _reflectHelper.IsAttributeDefined<IgnoreAttribute>(testMethodInfo.Parent.ClassType, false);
+            _reflectHelper.IsNonDerivedAttributeDefined<IgnoreAttribute>(testMethodInfo.Parent.ClassType, false);
         bool isIgnoreAttributeOnMethod =
-            _reflectHelper.IsAttributeDefined<IgnoreAttribute>(testMethodInfo.TestMethod, false);
+            _reflectHelper.IsNonDerivedAttributeDefined<IgnoreAttribute>(testMethodInfo.TestMethod, false);
 
         if (isIgnoreAttributeOnClass)
         {
@@ -336,7 +336,7 @@ internal class UnitTestRunner : MarshalByRefObject
             IEnumerable<UnitTestElement> testsToRun,
             ClassCleanupBehavior? lifecycleFromMsTest,
             ClassCleanupBehavior lifecycleFromAssembly,
-            ReflectHelper? reflectHelper = null)
+            ReflectHelper reflectHelper)
         {
             IEnumerable<UnitTestElement> runnableTests = testsToRun.Where(t => t.Traits is null || !t.Traits.Any(t => t.Name == Constants.FixturesTestTrait));
             _remainingTestsByClass =
@@ -346,7 +346,7 @@ internal class UnitTestRunner : MarshalByRefObject
                         g => new HashSet<string>(g.Select(t => t.TestMethod.UniqueName))));
             _lifecycleFromMsTest = lifecycleFromMsTest;
             _lifecycleFromAssembly = lifecycleFromAssembly;
-            _reflectHelper = reflectHelper ?? new ReflectHelper();
+            _reflectHelper = reflectHelper;
         }
 
         public void MarkTestComplete(TestMethodInfo testMethodInfo, TestMethod testMethod, out bool shouldRunEndOfClassCleanup,
