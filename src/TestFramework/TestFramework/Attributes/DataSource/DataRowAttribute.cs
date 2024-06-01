@@ -85,19 +85,26 @@ public class DataRowAttribute : Attribute, ITestDataSource
             : data.AsEnumerable();
 
         return string.Format(CultureInfo.CurrentCulture, FrameworkMessages.DataDrivenResultDisplayName, methodInfo.Name,
-            GetObjectString(displayData));
+            string.Join(",", displayData.Select(GetObjectString)));
     }
 
     /// <summary>
     /// Recursively resolve collections of objects to a proper string representation.
     /// </summary>
-    private static string GetObjectString(IEnumerable<object?> enumerable) =>
-        string.Join(
-            ",",
-            enumerable.Select(x =>
-                x == null
-                ? null
-                : x.GetType().IsArray
-                    ? $"[{GetObjectString(((IEnumerable)x).Cast<object>())}]"
-                    : x.ToString()));
+    private static string? GetObjectString(object? obj)
+    {
+        if (obj == null)
+        {
+            return null;
+        }
+
+        if (!obj.GetType().IsArray)
+        {
+            return obj.ToString();
+        }
+
+        // We need to box the object here so that we can support value types
+        IEnumerable<object> boxedObjectEnumerable = ((IEnumerable)obj).Cast<object>();
+        return $"[{GetObjectString(boxedObjectEnumerable)}]";
+    }
 }
