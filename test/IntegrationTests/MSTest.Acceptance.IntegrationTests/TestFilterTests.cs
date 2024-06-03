@@ -32,6 +32,20 @@ public class TestFilterTests : AcceptanceTestBase
         testHostResult.AssertOutputContains("Passed: 1, Skipped: 0, Total: 1,");
     }
 
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task DiscoverTestsWithFilter_UsingTestProperty_FilteredTests(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree=one --list-tests");
+
+        testHostResult.AssertExitCodeIs(ExitCodes.Success);
+        testHostResult.AssertOutputContains("""
+The following Tests are available:
+Test2
+""");
+    }
+
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
