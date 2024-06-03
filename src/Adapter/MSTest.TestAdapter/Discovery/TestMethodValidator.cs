@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
@@ -48,8 +48,14 @@ internal class TestMethodValidator
     /// <returns> Return true if a method is a valid test method. </returns>
     internal virtual bool IsValidTestMethod(MethodInfo testMethodInfo, Type type, ICollection<string> warnings)
     {
-        if (!_reflectHelper.IsAttributeDefined<TestMethodAttribute>(testMethodInfo, false)
-            && !_reflectHelper.HasAttributeDerivedFrom<TestMethodAttribute>(testMethodInfo, false))
+        // PERF: We are doing caching reflection here, meaning we will cache every method info in the
+        // assembly, this is because when we discover and run we will repeatedly inspect all the methods in the assembly, and this
+        // gives us a better performance.
+        // It would be possible to use non-caching reflection here if we knew that we are only doing discovery that won't be followed by run,
+        // but the difference is quite small, and we don't expect a huge amount of non-test methods in the assembly.
+        //
+        // Also skip all methods coming from object, because they cannot be tests.
+        if (testMethodInfo.DeclaringType == typeof(object) || !_reflectHelper.IsDerivedAttributeDefined<TestMethodAttribute>(testMethodInfo, inherit: false))
         {
             return false;
         }

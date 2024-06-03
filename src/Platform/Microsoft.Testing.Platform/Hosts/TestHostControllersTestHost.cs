@@ -57,7 +57,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
     public string Description => string.Empty;
 
-    protected override bool RunTestApplicationLifecycleCallbacks => false;
+    protected override bool RunTestApplicationLifeCycleCallbacks => false;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 
@@ -80,11 +80,12 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
         try
         {
             string processIdString = process.GetCurrentProcess().Id.ToString(CultureInfo.InvariantCulture);
-            List<string> partialCommandLine = new(executableInfo.Arguments)
-            {
+            List<string> partialCommandLine =
+            [
+                .. executableInfo.Arguments,
                 $"--{PlatformCommandLineProvider.TestHostControllerPIDOptionKey}",
-                processIdString,
-            };
+                processIdString
+            ];
 
             // Prepare the environment variables used by the test host
             string processCorrelationId = Guid.NewGuid().ToString("N");
@@ -119,11 +120,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 #endif
             };
 
-            List<IDataConsumer> dataConsumersBuilder = [];
-            if (_testHostsInformation.DataConsumer.Length > 0)
-            {
-                dataConsumersBuilder.AddRange(_testHostsInformation.DataConsumer);
-            }
+            List<IDataConsumer> dataConsumersBuilder = [.. _testHostsInformation.DataConsumer];
 
             IPlatformOutputDevice? display = ServiceProvider.GetServiceInternal<IPlatformOutputDevice>();
             if (display is IDataConsumer dataConsumerDisplay)
@@ -205,8 +202,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
             processStartInfo.EnvironmentVariables.Add($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID}", testHostProcessStartupTime);
             await _logger.LogDebugAsync($"{EnvironmentVariableConstants.TESTINGPLATFORM_TESTHOSTCONTROLLER_TESTHOSTPROCESSSTARTTIME}_{currentPID} '{testHostProcessStartupTime}'");
             await _logger.LogDebugAsync($"Starting test host process");
-            IProcess testHostProcess = process.Start(processStartInfo)
-                ?? throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, PlatformResources.CannotStartProcessErrorMessage, processStartInfo.FileName));
+            IProcess testHostProcess = process.Start(processStartInfo);
 
             testHostProcess.Exited += (sender, e) =>
             {

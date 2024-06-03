@@ -71,7 +71,7 @@ public class CommandLineHandlerTests : TestBase
         // Assert
         Assert.IsTrue(result);
         _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
     }
 
     public void IsHelpInvoked_HelpOptionSet_ReturnsTrue()
@@ -88,7 +88,7 @@ public class CommandLineHandlerTests : TestBase
         // Assert
         Assert.IsTrue(result);
         _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
     }
 
     public void IsInfoInvoked_InfoOptionSet_ReturnsTrue()
@@ -105,7 +105,7 @@ public class CommandLineHandlerTests : TestBase
         // Assert
         Assert.IsTrue(result);
         _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
     }
 
     public void IsVersionInvoked_VersionOptionSet_ReturnsTrue()
@@ -122,7 +122,7 @@ public class CommandLineHandlerTests : TestBase
         // Assert
         Assert.IsTrue(result);
         _outputDisplayMock.Verify(o => o.DisplayAsync(It.IsAny<IOutputDeviceDataProducer>(), It.IsAny<IOutputDeviceData>()), Times.Never);
-        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(), Times.Never);
+        _outputDisplayMock.Verify(o => o.DisplayBannerAsync(It.IsAny<string?>()), Times.Never);
     }
 
     public void GetOptionValue_OptionExists_ReturnsOptionValue()
