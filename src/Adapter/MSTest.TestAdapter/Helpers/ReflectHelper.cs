@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reflection;
 using System.Security;
@@ -16,11 +17,11 @@ internal class ReflectHelper : MarshalByRefObject
 {
     private static readonly Lazy<ReflectHelper> InstanceValue = new(() => new ReflectHelper(new NotCachedReflectionAccessor()));
 
-    // PERF: This was moved from Dictionary<MemberInfo, Dictionary<string, object>> to Dictionary<ICustomAttributeProvider, Attribute[]>
-    // this allows us to store multiple attributes of the same type if we find them. It also has lower memory footprint, and is faster
+    // PERF: This was moved from Dictionary<MemberInfo, Dictionary<string, object>> to Concurrent<ICustomAttributeProvider, Attribute[]>
+    // storing an array allows us to store multiple attributes of the same type if we find them. It also has lower memory footprint, and is faster
     // when we are going through the whole collection. Giving us overall better perf.
-    private readonly Dictionary<ICustomAttributeProvider, Attribute[]> _inheritedAttributeCache = [];
-    private readonly Dictionary<ICustomAttributeProvider, Attribute[]> _nonInheritedAttributeCache = [];
+    private readonly ConcurrentDictionary<ICustomAttributeProvider, Attribute[]> _inheritedAttributeCache = [];
+    private readonly ConcurrentDictionary<ICustomAttributeProvider, Attribute[]> _nonInheritedAttributeCache = [];
 
     internal /* for tests only */ ReflectHelper(INotCachedReflectionAccessor notCachedAttributeHelper) =>
         NotCachedAttributes = notCachedAttributeHelper ?? new NotCachedReflectionAccessor();
@@ -421,34 +422,29 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>attributes defined.</returns>
     private Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider, bool inherit)
     {
-        if (inherit)
-        {
-            lock (_inheritedAttributeCache)
-            {
-                return GetOrAddAttributes(_inheritedAttributeCache, attributeProvider, inherit: true);
-            }
-        }
-        else
-        {
-            lock (_nonInheritedAttributeCache)
-            {
-                return GetOrAddAttributes(_nonInheritedAttributeCache, attributeProvider, inherit: false);
-            }
-        }
+        return inherit
+            ? GetOrAddAttributes(_inheritedAttributeCache, attributeProvider, inherit: true)
+            : GetOrAddAttributes(_nonInheritedAttributeCache, attributeProvider, inherit: false);
 
         // If the information is cached, then use it otherwise populate the cache using
         // the reflection APIs.
-        Attribute[] GetOrAddAttributes(Dictionary<ICustomAttributeProvider, Attribute[]> cache, ICustomAttributeProvider attributeProvider, bool inherit)
-        {
-            if (cache.TryGetValue(attributeProvider, out Attribute[]? attributes))
-            {
-                return attributes;
-            }
+        Attribute[] GetOrAddAttributes(ConcurrentDictionary<ICustomAttributeProvider, Attribute[]> cache, ICustomAttributeProvider attributeProvider, bool inherit)
+            => cache.GetOrAdd(attributeProvider, GetAttributes);
 
+        Attribute[] GetAttributes(ICustomAttributeProvider key)
+        {
             // Populate the cache
             try
             {
-                attributes = NotCachedAttributes.GetCustomAttributesNotCached(attributeProvider, inherit)?.Cast<Attribute>().ToArray() ?? Array.Empty<Attribute>();
+                object[]? attributes = NotCachedAttributes.GetCustomAttributesNotCached(attributeProvider, inherit);
+                if (attributes is Attribute[] arr)
+                {
+                    return arr;
+                }
+                else
+                {
+                    return attributes?.Cast<Attribute>().ToArray() ?? Array.Empty<Attribute>();
+                }
             }
             catch (Exception ex)
             {
@@ -468,12 +464,6 @@ internal class ReflectHelper : MarshalByRefObject
 
                 return Array.Empty<Attribute>();
             }
-
-            DebugEx.Assert(attributes != null, "attributes should not be null.");
-
-            cache.Add(attributeProvider, attributes);
-
-            return attributes;
         }
     }
 
