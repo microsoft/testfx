@@ -105,6 +105,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
 
         // We need to box the object here so that we can support value types
         IEnumerable<object> boxedObjectEnumerable = ((IEnumerable)obj).Cast<object>();
-        return $"[{GetObjectString(boxedObjectEnumerable)}]";
+        IEnumerable<string?> elementStrings = boxedObjectEnumerable.Select(GetObjectString);
+        return $"[{string.Join(",", elementStrings)}]";
     }
 }
