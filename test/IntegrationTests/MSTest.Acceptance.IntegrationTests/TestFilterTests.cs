@@ -76,6 +76,16 @@ UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
 """);
     }
 
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task RunWithFilter_UsingTestPropertyForPriorityAndTestCategory_NotFiltered(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter TestCategory=category|Priority=1");
+
+        testHostResult.AssertOutputContains("Zero tests ran");
+    }
+
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
@@ -130,7 +140,7 @@ public class TestClass
     public void OwnerTest() { }
 
     [TestMethod]
-    [TestProperty("TestCategory", "one")]
+    [TestProperty("TestCategory", "category")]
     public void TestCategoryTest() { }
 }
 """;
