@@ -97,7 +97,9 @@ stages:
           displayName: 'Install procdump'
           inputs:
             targetType: filePath
-            script: ./eng/install-procdump.ps1
+            filePath: ./eng/install-procdump.ps1
+            failOnStderr: true
+            showWarnings: true
 
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)
