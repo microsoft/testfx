@@ -46,6 +46,36 @@ Test2
 """);
     }
 
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task UsingTestPropertyForOwnerAndPriorityAndTestCategory_TestsFailed(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter tree!~one");
+
+        testHostResult.AssertOutputContains("""
+failed PriorityTest 0ms
+UTA023: TestClass: Cannot define predefined property Priority on method PriorityTest.
+failed OwnerTest 0ms
+UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
+failed TestCategoryTest 0ms
+UTA023: TestClass: Cannot define predefined property TestCategory on method TestCategoryTest.
+""");
+    }
+
+    [ArgumentsProvider(nameof(TargetFrameworks.All), typeof(TargetFrameworks))]
+    public async Task RunWithFilter_UsingTestPropertyForOwner_FilteredButTestsFailed(string currentTfm)
+    {
+        var testHost = TestHost.LocateFrom(_testAssetFixture.TargetAssetPath, AssetName, currentTfm);
+
+        TestHostResult testHostResult = await testHost.ExecuteAsync("--filter owner=testOwner");
+
+        testHostResult.AssertOutputContains("""
+failed OwnerTest 0ms
+UTA023: TestClass: Cannot define predefined property Owner on method OwnerTest.
+""");
+    }
+
     [TestFixture(TestFixtureSharingStrategy.PerTestGroup)]
     public sealed class TestAssetFixture(AcceptanceFixture acceptanceFixture) : TestAssetFixtureBase(acceptanceFixture.NuGetGlobalPackagesFolder)
     {
@@ -88,12 +118,20 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 public class TestClass
 {
     [TestMethod]
-    public void Test1() { }
-
-    [TestMethod]
     [TestProperty("tree", "one")]
     public void Test2() { }
 
+    [TestMethod]
+    [TestProperty("Priority", "1")]
+    public void PriorityTest() { }
+
+    [TestMethod]
+    [TestProperty("Owner", "testOwner")]
+    public void OwnerTest() { }
+
+    [TestMethod]
+    [TestProperty("TestCategory", "one")]
+    public void TestCategoryTest() { }
 }
 """;
     }
