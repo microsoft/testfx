@@ -123,6 +123,9 @@ extends:
                 filePath: './eng/install-windows-sdk.ps1'
                 failOnStderr: true
                 showWarnings: true
+            
+            - script: choco install procdump -y
+              displayName: 'Install procdump'
 
             - script: eng\common\CIBuild.cmd
                 -configuration $(_BuildConfig)
