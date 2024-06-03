@@ -124,8 +124,11 @@ extends:
                 failOnStderr: true
                 showWarnings: true
             
-            - script: choco install procdump -y
+            - task: PowerShell@2
               displayName: 'Install procdump'
+              inputs:
+                targetType: filePath
+                script: ./eng/install-procdump.ps1
 
             - script: eng\common\CIBuild.cmd
                 -configuration $(_BuildConfig)
