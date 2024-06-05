@@ -41,6 +41,7 @@ internal sealed class PlatformOutputDeviceManager : IPlatformOutputDeviceManager
             serviceProvider.GetRuntimeFeature(),
             serviceProvider.GetEnvironment(),
             serviceProvider.GetProcessHandler(),
+            serviceProvider.GetPlatformInformation(),
             loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.VSTestAdapterModeOptionKey),
             loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.DiscoverTestsOptionKey),
             loggingState.CommandLineParseResult.IsOptionSet(PlatformCommandLineProvider.ServerOptionKey),

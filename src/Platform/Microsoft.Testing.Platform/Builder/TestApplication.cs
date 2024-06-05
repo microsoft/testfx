@@ -296,11 +296,7 @@ public sealed class TestApplication : ITestApplication
 
         if (result.TryGetOptionArgumentList(PlatformCommandLineProvider.DiagnosticVerbosityOptionKey, out string[]? verbosity))
         {
-#if NET
-            logLevel = Enum.Parse<LogLevel>(verbosity[0], true);
-#else
-            logLevel = (LogLevel)Enum.Parse(typeof(LogLevel), verbosity[0], true);
-#endif
+            logLevel = EnumPolyfill.Parse<LogLevel>(verbosity[0], true);
         }
 
         // Override the log level if the environment variable is set
