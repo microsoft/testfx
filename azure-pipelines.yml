@@ -92,6 +92,14 @@ stages:
             filePath: './eng/install-windows-sdk.ps1'
             failOnStderr: true
             showWarnings: true
+        
+        - task: PowerShell@2
+          displayName: 'Install procdump'
+          inputs:
+            targetType: filePath
+            filePath: ./eng/install-procdump.ps1
+            failOnStderr: true
+            showWarnings: true
 
         - script: eng\common\CIBuild.cmd
             -configuration $(_BuildConfig)

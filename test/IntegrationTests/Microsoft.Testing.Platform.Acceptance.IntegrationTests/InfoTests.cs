@@ -66,6 +66,10 @@ Built-in command line providers:
         Arity: 1
         Hidden: False
         Description: Define the level of the verbosity for the --diagnostic\. The available values are 'Trace', 'Debug', 'Information', 'Warning', 'Error', and 'Critical'
+      --dotnet-test-pipe
+        Arity: 1
+        Hidden: True
+        Description: dotnet test pipe\.
       --exit-on-process-exit
         Arity: 1
         Hidden: False
@@ -115,7 +119,7 @@ Built-in command line providers:
         Hidden: False
         Description: The directory where the test results are going to be placed\. If the specified directory doesn't exist, it's created\. The default is TestResults in the directory that contains the test application\.
       --server
-        Arity: 0
+        Arity: 0\.\.1
         Hidden: True
         Description: Enable the server mode\.
 Registered command line providers:

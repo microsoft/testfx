@@ -12,6 +12,7 @@ using Microsoft.Testing.Platform.Capabilities.TestFramework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Configurations;
 using Microsoft.Testing.Platform.Extensions;
+using Microsoft.Testing.Platform.Extensions.CommandLine;
 using Microsoft.Testing.Platform.Extensions.TestFramework;
 using Microsoft.Testing.Platform.Extensions.TestHost;
 using Microsoft.Testing.Platform.Extensions.TestHostOrchestrator;
@@ -34,6 +35,8 @@ namespace Microsoft.Testing.Platform.Hosts;
 
 internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFeature, IEnvironment environment, IProcessHandler processHandler, ITestApplicationModuleInfo testApplicationModuleInfo) : ITestHostBuilder
 {
+    private const string ServerOptionValue = "dotnettestcli";
+
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITestApplicationModuleInfo _testApplicationModuleInfo = testApplicationModuleInfo;
 
@@ -297,18 +300,28 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             return toolsTestHost;
         }
 
+        NamedPipeClient? dotnetTestPipeClient = await ConnectToDotnetTestPipeIfAvailableAsync(commandLineHandler, testApplicationCancellationTokenSource);
+
         // If --help is invoked we return
         if (commandLineHandler.IsHelpInvoked())
         {
-            await commandLineHandler.PrintHelpAsync(toolsInformation.Tools);
-            return new InformativeCommandLineTestHost(0);
+            if (dotnetTestPipeClient is not null)
+            {
+                await SendCommandLineOptionsToDotnetTestPipeAsync(dotnetTestPipeClient, commandLineHandler, testApplicationCancellationTokenSource.CancellationToken);
+            }
+            else
+            {
+                await commandLineHandler.PrintHelpAsync(toolsInformation.Tools);
+            }
+
+            return new InformativeCommandLineTestHost(0, dotnetTestPipeClient);
         }
 
         // If --info is invoked we return
         if (commandLineHandler.IsInfoInvoked())
         {
             await commandLineHandler.PrintInfoAsync(toolsInformation.Tools);
-            return new InformativeCommandLineTestHost(0);
+            return new InformativeCommandLineTestHost(0, dotnetTestPipeClient);
         }
 
         // ======= TEST HOST ORCHESTRATOR ======== //
@@ -444,6 +457,44 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
 
             return actualTestHost;
         }
+    }
+
+    private async Task SendCommandLineOptionsToDotnetTestPipeAsync(NamedPipeClient namedPipeClient, CommandLineHandler commandLineHandler, CancellationToken cancellationToken)
+    {
+        List<CommandLineOptionMessage> commandLineHelpOptions = new();
+        foreach (ICommandLineOptionsProvider commandLineOptionProvider in commandLineHandler.CommandLineOptionsProviders)
+        {
+            foreach (CommandLineOption commandLineOption in commandLineOptionProvider.GetCommandLineOptions())
+            {
+                commandLineHelpOptions.Add(new CommandLineOptionMessage(
+                    commandLineOption.Name,
+                    commandLineOption.Description,
+                    commandLineOption.IsHidden,
+                    commandLineOption.IsBuiltIn));
+            }
+        }
+
+        await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationToken);
+    }
+
+    private static async Task<NamedPipeClient?> ConnectToDotnetTestPipeIfAvailableAsync(CommandLineHandler commandLineHandler, CTRLPlusCCancellationTokenSource cancellationTokenSource)
+    {
+        NamedPipeClient? namedPipeClient = null;
+
+        // If we are in server mode and the pipe name is provided
+        // then, we need to connect to the pipe server.
+        if (commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.ServerOptionKey, out string[]? serverArgs) &&
+            serverArgs?.Length == 1 &&
+            serverArgs[0].Equals(ServerOptionValue, StringComparison.Ordinal) &&
+            commandLineHandler.TryGetOptionArgumentList(PlatformCommandLineProvider.DotNetTestPipeOptionKey, out string[]? arguments))
+        {
+            namedPipeClient = new(arguments[0]);
+            namedPipeClient.RegisterAllSerializers();
+
+            await namedPipeClient.ConnectAsync(cancellationTokenSource.CancellationToken);
+        }
+
+        return namedPipeClient;
     }
 
     private static async Task<NamedPipeClient?> ConnectToTestHostProcessMonitorIfAvailableAsync(

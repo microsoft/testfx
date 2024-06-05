@@ -5,6 +5,7 @@ using System.Reflection;
 
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
+using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface;
 using Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.TestableImplementations;
 
 using Moq;
@@ -17,18 +18,21 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests;
 
 public class ReflectHelperTests : TestContainer
 {
-    private readonly TestableReflectHelper _reflectHelper;
+    private readonly ReflectHelper _reflectHelper;
+    private readonly AttributeMockingHelper _attributeMockingHelper;
     private readonly Mock<MethodInfo> _method;
     private readonly TestablePlatformServiceProvider _testablePlatformServiceProvider;
 
     public ReflectHelperTests()
     {
-        _reflectHelper = new TestableReflectHelper();
+        _reflectHelper = new();
         _method = new Mock<MethodInfo>();
         _method.Setup(x => x.MemberType).Returns(MemberTypes.Method);
 
         _testablePlatformServiceProvider = new TestablePlatformServiceProvider();
         _testablePlatformServiceProvider.SetupMockReflectionOperations();
+        _attributeMockingHelper = new(_testablePlatformServiceProvider.MockReflectionOperations);
+
         PlatformServiceProvider.Instance = _testablePlatformServiceProvider;
     }
 
@@ -46,7 +50,7 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtClassLevel()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
 
         string[] expected = ["ClassLevel"];
         string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
@@ -59,10 +63,10 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtAllLevels()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel1"), new UTF.TestCategoryAttribute("AsmLevel2")], MemberTypes.All);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel3")], MemberTypes.All);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel1"), new UTF.TestCategoryAttribute("AsmLevel2")], MemberTypes.All);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel3")], MemberTypes.All);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel")], MemberTypes.TypeInfo);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
 
         string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
         string[] expected = ["MethodLevel", "ClassLevel", "AsmLevel1", "AsmLevel2", "AsmLevel3"];
@@ -75,12 +79,12 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldConcatCustomAttributeOfSameType()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel1")], MemberTypes.All);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel2")], MemberTypes.All);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel1")], MemberTypes.TypeInfo);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel2")], MemberTypes.TypeInfo);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel1")], MemberTypes.Method);
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel2")], MemberTypes.Method);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel1")], MemberTypes.All);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel2")], MemberTypes.All);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel1")], MemberTypes.TypeInfo);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel2")], MemberTypes.TypeInfo);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel1")], MemberTypes.Method);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel2")], MemberTypes.Method);
 
         string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
         string[] expected = ["MethodLevel1", "MethodLevel2", "ClassLevel1", "ClassLevel2", "AsmLevel1", "AsmLevel2"];
@@ -93,7 +97,7 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtAssemblyLevel()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel")], MemberTypes.All);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel")], MemberTypes.All);
 
         string[] expected = ["AsmLevel"];
 
@@ -107,7 +111,7 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeMultipleTestCategoriesAtClassLevel()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel"), new UTF.TestCategoryAttribute("ClassLevel1")], MemberTypes.TypeInfo);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("ClassLevel"), new UTF.TestCategoryAttribute("ClassLevel1")], MemberTypes.TypeInfo);
 
         string[] expected = ["ClassLevel", "ClassLevel1"];
         string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
@@ -120,7 +124,7 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeMultipleTestCategoriesAtAssemblyLevel()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel"), new UTF.TestCategoryAttribute("AsmLevel1")], MemberTypes.All);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("AsmLevel"), new UTF.TestCategoryAttribute("AsmLevel1")], MemberTypes.All);
 
         string[] expected = ["AsmLevel", "AsmLevel1"];
         string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
@@ -132,7 +136,7 @@ public class ReflectHelperTests : TestContainer
     /// </summary>
     public void GetTestCategoryAttributeShouldIncludeTestCategoriesAtMethodLevel()
     {
-        _reflectHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
+        _attributeMockingHelper.SetCustomAttribute(typeof(UTF.TestCategoryBaseAttribute), [new UTF.TestCategoryAttribute("MethodLevel")], MemberTypes.Method);
 
         string[] expected = ["MethodLevel"];
         string[] actual = _reflectHelper.GetTestCategories(_method.Object, typeof(ReflectHelperTests)).ToArray();
@@ -255,6 +259,58 @@ public class ReflectHelperTests : TestContainer
             Returns(attributes);
 
         Verify(!rh.IsNonDerivedAttributeDefined<UTF.TestMethodAttribute>(mockMemberInfo.Object, true));
+    }
+
+    internal class AttributeMockingHelper
+    {
+        public AttributeMockingHelper(Mock<IReflectionOperations> mockReflectionOperations)
+        {
+            _mockReflectionOperations = mockReflectionOperations;
+        }
+
+        /// <summary>
+        /// A collection to hold mock custom attributes.
+        /// MemberTypes.All for assembly level
+        /// MemberTypes.TypeInfo for class level
+        /// MemberTypes.Method for method level.
+        /// </summary>
+        private readonly List<(Type Type, Attribute Attribute, MemberTypes MemberType)> _data = new();
+        private readonly Mock<IReflectionOperations> _mockReflectionOperations;
+
+        public void SetCustomAttribute(Type type, Attribute[] values, MemberTypes memberTypes)
+        {
+            foreach (Attribute attribute in values)
+            {
+                _data.Add((type, attribute, memberTypes));
+            }
+
+            _mockReflectionOperations.Setup(r => r.GetCustomAttributes(It.IsAny<MemberInfo>(), It.IsAny<bool>()))
+                .Returns<ICustomAttributeProvider, bool>(GetCustomAttributesNotCached);
+            _mockReflectionOperations.Setup(r => r.GetCustomAttributes(It.IsAny<Assembly>(), It.IsAny<Type>()))
+                .Returns<ICustomAttributeProvider, Type>((assembly, _) => GetCustomAttributesNotCached(assembly, false));
+        }
+
+        public object[] GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit)
+        {
+            var foundAttributes = new List<Attribute>();
+            foreach ((Type Type, Attribute Attribute, MemberTypes MemberType) attributeData in _data)
+            {
+                if (attributeProvider is MethodInfo && (attributeData.MemberType == MemberTypes.Method))
+                {
+                    foundAttributes.Add(attributeData.Attribute);
+                }
+                else if (attributeProvider is TypeInfo && (attributeData.MemberType == MemberTypes.TypeInfo))
+                {
+                    foundAttributes.Add(attributeData.Attribute);
+                }
+                else if (attributeProvider is Assembly && attributeData.MemberType == MemberTypes.All)
+                {
+                    foundAttributes.Add(attributeData.Attribute);
+                }
+            }
+
+            return foundAttributes.ToArray();
+        }
     }
 }
 
