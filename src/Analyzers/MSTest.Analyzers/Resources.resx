@@ -265,6 +265,15 @@
   <data name="PreferTestInitializeOverConstructorTitle" xml:space="preserve">
     <value>Prefer TestInitialize methods over constructors</value>
   </data>
+  <data name="PublicMethodShouldBeTestMethodAnalyzerDescription" xml:space="preserve">
+    <value>Public methods should be test methods (marked with `[TestMethod]`).</value>
+  </data>
+  <data name="PublicMethodShouldBeTestMethodAnalyzerFormat" xml:space="preserve">
+    <value>Public method '{0}' should be a test method</value>
+  </data>
+  <data name="PublicMethodShouldBeTestMethodAnalyzerTitle" xml:space="preserve">
+    <value>Public methods should be test methods</value>
+  </data>
   <data name="PublicTypeShouldBeTestClassDescription" xml:space="preserve">
     <value>It's considered a good practice to have only test classes marked public in a test project.</value>
   </data>
