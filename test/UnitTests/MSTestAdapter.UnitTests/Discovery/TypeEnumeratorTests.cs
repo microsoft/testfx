@@ -98,6 +98,23 @@ public class TypeEnumeratorTests : TestContainer
 
     public void GetTestsShouldReturnBaseTestMethodsFromAnotherAssemblyByDefault()
     {
+        string runSettingsXml =
+            """
+            <RunSettings>
+              <MSTestV2>
+                <CaptureTraceOutput>true</CaptureTraceOutput>
+                <MapInconclusiveToFailed>false</MapInconclusiveToFailed>
+                <EnableBaseClassTestMethodsFromOtherAssemblies>true</EnableBaseClassTestMethodsFromOtherAssemblies>
+              </MSTestV2>
+            </RunSettings>
+            """;
+
+        var mockRunContext = new Mock<IRunContext>();
+        var mockRunSettings = new Mock<IRunSettings>();
+        mockRunContext.Setup(dc => dc.RunSettings).Returns(mockRunSettings.Object);
+        mockRunSettings.Setup(rs => rs.SettingsXml).Returns(runSettingsXml);
+
+        MSTestSettings.PopulateSettings(mockRunContext.Object);
         SetupTestClassAndTestMethods(isValidTestClass: true, isValidTestMethod: true, isMethodFromSameAssembly: false);
 
         TypeEnumerator typeEnumerator = GetTypeEnumeratorInstance(typeof(DummyDerivedTestClass), Assembly.GetExecutingAssembly().FullName);
