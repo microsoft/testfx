@@ -123,4 +123,7 @@
   <data name="AssemblyInitializeShouldBeValidCodeFix" xml:space="preserve">
     <value>Fix signature</value>
   </data>
+  <data name="FixAssertionArgsOrder" xml:space="preserve">
+    <value>Fix assertion args order</value>
+  </data>
 </root>

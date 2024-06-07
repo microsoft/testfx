@@ -60,6 +60,16 @@ namespace MSTest.Analyzers {
             }
         }
         
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fix assertion args order.
+        /// </summary>
+        internal static string FixAssertionArgsOrder {
+            get {
+                return ResourceManager.GetString("FixAssertionArgsOrder", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Fix signature.
         /// </summary>
