@@ -81,17 +81,17 @@ public class DataExtensibilityTests : CLITestBase
         // Assert
         VerifyE2E.TestsPassed(
             testResults,
-            "CustomTestMethod2 (B)",
-            "CustomTestMethod2 (B)",
-            "CustomTestMethod2 (B)");
+            "CustomTestMethod2 (\"B\")",
+            "CustomTestMethod2 (\"B\")",
+            "CustomTestMethod2 (\"B\")");
 
         VerifyE2E.TestsFailed(
             testResults,
-            "CustomTestMethod2 (A)",
-            "CustomTestMethod2 (A)",
-            "CustomTestMethod2 (A)",
-            "CustomTestMethod2 (C)",
-            "CustomTestMethod2 (C)",
-            "CustomTestMethod2 (C)");
+            "CustomTestMethod2 (\"A)\"",
+            "CustomTestMethod2 (\"A\")",
+            "CustomTestMethod2 (\"A\")",
+            "CustomTestMethod2 (\"C\")",
+            "CustomTestMethod2 (\"C\")",
+            "CustomTestMethod2 (\"C\")");
     }
 }

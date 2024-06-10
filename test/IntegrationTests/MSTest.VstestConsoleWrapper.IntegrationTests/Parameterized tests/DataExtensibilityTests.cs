@@ -65,17 +65,17 @@ public class DataExtensibilityTests : CLITestBase
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "FullyQualifiedName~CustomTestExTests.CustomTestMethod2");
 
         ValidatePassedTests(
-            "CustomTestMethod2 (B)",
-            "CustomTestMethod2 (B)",
-            "CustomTestMethod2 (B)");
+            "CustomTestMethod2 (\"B\")",
+            "CustomTestMethod2 (\"B\")",
+            "CustomTestMethod2 (\"B\")");
         ValidateFailedTestsCount(6);
         ValidateFailedTestsContain(
             true,
-            "CustomTestMethod2 (A)",
-            "CustomTestMethod2 (A)",
-            "CustomTestMethod2 (A)",
-            "CustomTestMethod2 (C)",
-            "CustomTestMethod2 (C)",
-            "CustomTestMethod2 (C)");
+            "CustomTestMethod2 (\"A\")",
+            "CustomTestMethod2 (\"A\")",
+            "CustomTestMethod2 (\"A\")",
+            "CustomTestMethod2 (\"C\")",
+            "CustomTestMethod2 (\"C\")",
+            "CustomTestMethod2 (\"C\")");
     }
 }
