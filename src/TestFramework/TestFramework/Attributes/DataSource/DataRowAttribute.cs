@@ -95,15 +95,24 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// </summary>
     private static string? GetObjectString(object? obj)
     {
-        if (obj == null)
+        if (TestIdGenerationStrategy != TestIdGenerationStrategy.FullyQualified)
         {
-            return null;
+            return obj?.ToString();
         }
 
-        if (TestIdGenerationStrategy != TestIdGenerationStrategy.FullyQualified
-            || !obj.GetType().IsArray)
+        if (obj == null)
         {
-            return obj.ToString();
+            return "null";
+        }
+
+        if (!obj.GetType().IsArray)
+        {
+            return obj switch
+            {
+                string s => $"\"{s}\"",
+                char c => $"'{c}'",
+                _ => obj.ToString(),
+            };
         }
 
         // We need to box the object here so that we can support value types

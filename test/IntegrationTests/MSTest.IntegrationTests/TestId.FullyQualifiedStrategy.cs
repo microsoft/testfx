@@ -45,10 +45,10 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            "DataRowStringTests ()",
-            "DataRowStringTests ()",
-            "DataRowStringTests ( )",
-            "DataRowStringTests (  )");
+            "DataRowStringTests (null)",
+            "DataRowStringTests (\"\")",
+            "DataRowStringTests (\" \")",
+            "DataRowStringTests (\"  \")");
 
         // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
