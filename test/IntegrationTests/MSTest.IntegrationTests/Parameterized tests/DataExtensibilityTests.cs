@@ -87,7 +87,7 @@ public class DataExtensibilityTests : CLITestBase
 
         VerifyE2E.TestsFailed(
             testResults,
-            "CustomTestMethod2 (\"A)\"",
+            "CustomTestMethod2 (\"A\")",
             "CustomTestMethod2 (\"A\")",
             "CustomTestMethod2 (\"A\")",
             "CustomTestMethod2 (\"C\")",
