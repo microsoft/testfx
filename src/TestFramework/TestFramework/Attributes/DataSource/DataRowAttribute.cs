@@ -112,14 +112,12 @@ public class DataRowAttribute : Attribute, ITestDataSource
 
         if (!obj.GetType().IsArray)
         {
-            string? str = obj.ToString();
-
-            if (obj is not string)
+            if (obj is string s)
             {
-                return str;
+                return string.IsNullOrEmpty(s) ? EmptyStringWithQuotationMarks : s;
             }
 
-            return string.IsNullOrEmpty(str) ? EmptyStringWithQuotationMarks : str;
+            return obj.ToString();
         }
 
         // We need to box the object here so that we can support value types
