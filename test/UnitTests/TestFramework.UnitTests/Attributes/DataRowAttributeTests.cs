@@ -1,4 +1,4 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reflection;
@@ -13,6 +13,11 @@ namespace Microsoft.VisualStudio.TestPlatform.TestFramework.UnitTests.Attributes
 
 public class DataRowAttributeTests : TestContainer
 {
+    public DataRowAttributeTests()
+    {
+        DataRowAttribute.TestIdGenerationStrategy = TestIdGenerationStrategy.FullyQualified;
+    }
+
     public void DefaultConstructorSetsEmptyArrayPassed()
     {
         var dataRow = new DataRowAttribute();
@@ -120,7 +125,7 @@ public class DataRowAttributeTests : TestContainer
         string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
-        Verify(displayName == "MyMethod (System.String[])");
+        Verify(displayName == "MyMethod ([a])");
     }
 
     public void GetDisplayName_AfterOverriding_GetsTheNewDisplayName()
@@ -147,7 +152,7 @@ public class DataRowAttributeTests : TestContainer
         string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
-        Verify(displayName == "MyMethod (System.String[])");
+        Verify(displayName == "MyMethod ([a,b,c])");
     }
 
     public void GetDisplayNameForMultipleArraysOfOneItem()
@@ -161,7 +166,7 @@ public class DataRowAttributeTests : TestContainer
         string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
-        Verify(displayName == "MyMethod (System.String[],System.String[])");
+        Verify(displayName == "MyMethod ([a],[1])");
     }
 
     public void GetDisplayNameForMultipleArraysOfMultipleItems()
@@ -175,7 +180,35 @@ public class DataRowAttributeTests : TestContainer
         string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
-        Verify(displayName == "MyMethod (System.String[],System.String[])");
+        Verify(displayName == "MyMethod ([a,b,c],[1,2,3])");
+    }
+
+    public void GetDisplayNameForMultipleArraysOfMultipleItemsValueTypes()
+    {
+        // Arrange
+        var dataRow = new DataRowAttribute(new[] { 1, 2, 3 }, new[] { 4, 5, 6 });
+        var methodInfoMock = new Mock<MethodInfo>();
+        methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
+
+        // Act
+        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+
+        // Assert
+        Verify(displayName == "MyMethod ([1,2,3],[4,5,6])");
+    }
+
+    public void GetDisplayNameForMultipleArraysOfArraysOfMultipleItems()
+    {
+        // Arrange
+        var dataRow = new DataRowAttribute(new[] { new[] { "a", "b", "c" }, new[] { "d", "e", "f" }, new[] { "g", "h", "i" } }, new[] { new[] { "1", "2", "3" }, new[] { "4", "5", "6" }, new[] { "7", "8", "9" } });
+        var methodInfoMock = new Mock<MethodInfo>();
+        methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
+
+        // Act
+        string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
+
+        // Assert
+        Verify(displayName == "MyMethod ([[a,b,c],[d,e,f],[g,h,i]],[[1,2,3],[4,5,6],[7,8,9]])");
     }
 
     private class DummyDataRowAttribute : DataRowAttribute

@@ -8,7 +8,7 @@
     <MicrosoftDotNetBuildTasksTemplatingPackageVersion>8.0.0-beta.24270.4</MicrosoftDotNetBuildTasksTemplatingPackageVersion>
     <MicrosoftTestingExtensionsCodeCoverageVersion>17.12.0-preview.24281.3</MicrosoftTestingExtensionsCodeCoverageVersion>
     <!-- comment to facilitate merge conflicts -->
-    <MicrosoftTestingPlatformVersion>1.3.0-preview.24306.4</MicrosoftTestingPlatformVersion>
-    <MSTestEngineVersion>1.0.0-alpha.24306.4</MSTestEngineVersion>
+    <MicrosoftTestingPlatformVersion>1.3.0-preview.24310.6</MicrosoftTestingPlatformVersion>
+    <MSTestEngineVersion>1.0.0-alpha.24310.6</MSTestEngineVersion>
   </PropertyGroup>
 </Project>
