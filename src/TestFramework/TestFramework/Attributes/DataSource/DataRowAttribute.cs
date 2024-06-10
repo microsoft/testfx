@@ -111,7 +111,7 @@ public class DataRowAttribute : Attribute, ITestDataSource
             {
                 string s => $"\"{s}\"",
                 char c => $"'{c}'",
-                _ => obj.ToString()
+                _ => obj.ToString(),
             };
         }
 
