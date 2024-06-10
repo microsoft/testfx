@@ -37,5 +37,9 @@ Below is the equivalent project configuration when not using MSTest.Sdk
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
   </ItemGroup>
 
+  <ItemGroup>
+      <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+
 </Project>
 -->

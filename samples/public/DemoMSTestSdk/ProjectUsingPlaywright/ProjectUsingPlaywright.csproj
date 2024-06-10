@@ -1,18 +1,16 @@
 <Project Sdk="MSTest.Sdk">
-<!--
-Alternatively, if you don't want to use the `global.json` file for versions, you can specify the version of the MSTest.Sdk package here.
-<Project Sdk="MSTest.Sdk/<version>">
--->
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-
+    <IsPackable>false</IsPackable>
     <!-- By default, MSTest Sdk uses MSTest runner -->
+    <EnablePlaywright>true</EnablePlaywright>
   </PropertyGroup>
 
 </Project>
+
 
 <!--
 Below is the equivalent project configuration when not using MSTest.Sdk
@@ -23,8 +21,9 @@ Below is the equivalent project configuration when not using MSTest.Sdk
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
 
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
@@ -33,9 +32,9 @@ Below is the equivalent project configuration when not using MSTest.Sdk
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(VSTestVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(CodeCoverageVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
-    <PackageReference Include="MSTest.Analyzers" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestVersion)" />
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestVersion)" />
+    <PackageReference Include="Microsoft.Playwright.MSTest" Version="$(PlaywrightVersion)" />
   </ItemGroup>
 
   <ItemGroup>

@@ -444,7 +444,7 @@ public class TestExecutionManager
 
         try
         {
-            Dictionary<string, object> testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
+            Dictionary<string, object>? testRunParameters = RunSettingsUtilities.GetTestRunParameters(runContext.RunSettings.SettingsXml);
             if (testRunParameters != null)
             {
                 // Clear sessionParameters to prevent key collisions of test run parameters in case
