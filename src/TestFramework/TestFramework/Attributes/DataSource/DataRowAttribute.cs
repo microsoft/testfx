@@ -49,6 +49,8 @@ public class DataRowAttribute : Attribute, ITestDataSource
         Data = data ?? [null];
     }
 
+    protected internal static TestIdGenerationStrategy TestIdGenerationStrategy { get; internal set; }
+
     /// <summary>
     /// Gets data for calling test method.
     /// </summary>
@@ -98,7 +100,8 @@ public class DataRowAttribute : Attribute, ITestDataSource
             return null;
         }
 
-        if (!obj.GetType().IsArray)
+        if (TestIdGenerationStrategy != TestIdGenerationStrategy.FullyQualified
+            || !obj.GetType().IsArray)
         {
             return obj.ToString();
         }
