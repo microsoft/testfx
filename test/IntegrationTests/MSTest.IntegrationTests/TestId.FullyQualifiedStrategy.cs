@@ -45,8 +45,8 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            "DataRowStringTests ()",
-            "DataRowStringTests ()",
+            "DataRowStringTests (null)",
+            "DataRowStringTests (\"\")",
             "DataRowStringTests ( )",
             "DataRowStringTests (  )");
 
