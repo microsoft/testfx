@@ -200,7 +200,7 @@ public class DataRowAttributeTests : TestContainer
     public void GetDisplayNameForMultipleArraysOfArraysOfMultipleItems()
     {
         // Arrange
-        var dataRow = new DataRowAttribute(new[] { new[] { "a", "b", "c" }, new[] { "d", "e", "f" }, new[] { "g", "h", "i" } }, new[] { "kl", "mn", "op" }, new[] { new[] { "1", "2", "3" }, new[] { "4", "5", "6" }, new[] { "7", "8", "9" } });
+        var dataRow = new DataRowAttribute(new[] { new[] { "a", "b", "c" }, new[] { "d", "e", "f" }, new[] { "gh", "ij", "kl" } }, new[] { 'm', 'n', 'o' }, new[] { new[] { "1", "2", "3" }, new[] { "4", "5", "6" }, new[] { "7", "8", "9" } });
         var methodInfoMock = new Mock<MethodInfo>();
         methodInfoMock.SetupGet(x => x.Name).Returns("MyMethod");
 
@@ -208,7 +208,7 @@ public class DataRowAttributeTests : TestContainer
         string displayName = dataRow.GetDisplayName(methodInfoMock.Object, dataRow.Data);
 
         // Assert
-        Verify(displayName == "MyMethod ([[\"a\",\"b\",\"c\"],[\"d\",\"e\",\"f\"],[\"g\",\"h\",\"i\"]],[\"kl\",\"mn\",\"op\"],[[\"1\",\"2\",\"3\"],[\"4\",\"5\",\"6\"],[\"7\",\"8\",\"9\"]])");
+        Verify(displayName == "MyMethod ([[\"a\",\"b\",\"c\"],[\"d\",\"e\",\"f\"],[\"gh\",\"ij\",\"kl\"]],['m','n','o'],[[\"1\",\"2\",\"3\"],[\"4\",\"5\",\"6\"],[\"7\",\"8\",\"9\"]])");
     }
 
     private class DummyDataRowAttribute : DataRowAttribute

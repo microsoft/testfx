@@ -47,8 +47,8 @@ public partial class TestId : CLITestBase
             testResults,
             "DataRowStringTests (null)",
             "DataRowStringTests (\"\")",
-            "DataRowStringTests ( )",
-            "DataRowStringTests (  )");
+            "DataRowStringTests (\" \")",
+            "DataRowStringTests (\"  \")");
 
         // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();
