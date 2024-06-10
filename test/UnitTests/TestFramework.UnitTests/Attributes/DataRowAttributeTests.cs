@@ -89,13 +89,13 @@ public class DataRowAttributeTests : TestContainer
         string[] data2 = ["First", null, "Second"];
 
         string displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data);
-        Verify(displayName == "DataRowTestMethod (First,Second,)");
+        Verify(displayName == "DataRowTestMethod (First,Second,null)");
 
         displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data1);
-        Verify(displayName == "DataRowTestMethod (,First,Second)");
+        Verify(displayName == "DataRowTestMethod (null,First,Second)");
 
         displayName = dataRowAttribute.GetDisplayName(testMethodInfo, data2);
-        Verify(displayName == "DataRowTestMethod (First,,Second)");
+        Verify(displayName == "DataRowTestMethod (First,null,Second)");
     }
 
     public void GetDisplayNameShouldReturnSpecifiedDisplayName()

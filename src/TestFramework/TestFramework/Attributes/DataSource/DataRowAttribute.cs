@@ -14,6 +14,11 @@ namespace Microsoft.VisualStudio.TestTools.UnitTesting;
 public class DataRowAttribute : Attribute, ITestDataSource
 {
     /// <summary>
+    /// String inlining for empty string with quotation marks.
+    /// </summary>
+    private static readonly string EmptyStringWithQuotationMarks = "\"\"";
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="DataRowAttribute"/> class.
     /// </summary>
     public DataRowAttribute()
@@ -95,15 +100,26 @@ public class DataRowAttribute : Attribute, ITestDataSource
     /// </summary>
     private static string? GetObjectString(object? obj)
     {
-        if (obj == null)
+        if (TestIdGenerationStrategy != TestIdGenerationStrategy.FullyQualified)
         {
-            return null;
+            return obj?.ToString();
         }
 
-        if (TestIdGenerationStrategy != TestIdGenerationStrategy.FullyQualified
-            || !obj.GetType().IsArray)
+        if (obj == null)
         {
-            return obj.ToString();
+            return "null";
+        }
+
+        if (!obj.GetType().IsArray)
+        {
+            string? str = obj.ToString();
+
+            if (obj is not string)
+            {
+                return str;
+            }
+
+            return string.IsNullOrEmpty(str) ? EmptyStringWithQuotationMarks : str;
         }
 
         // We need to box the object here so that we can support value types
