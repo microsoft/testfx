@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
 
   <!-- SDK top import -->
   <Import Project="Sdk.props" Sdk="MSBuild.Sdk.Extras" Condition=" '$(OS)' == 'Windows_NT' " />
@@ -97,6 +97,9 @@
       <Compile Include="$(Compile);$(IntermediateOutputPath)/MSTestVersion.cs" />
     </ItemGroup>
   </Target>
+  <ItemGroup>
+    <Compile Remove="Discovery\FixturesVisibility.cs" />
+  </ItemGroup>
 
   <!-- Version templating -->
   <ItemGroup>

@@ -1,3 +1,2 @@
 ﻿#nullable enable
-Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Execution.TestAssemblyInfo.AssemblyCleanupException.get -> System.Exception?
 Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.MSTestSettings.FixturesEnabled.get -> bool
