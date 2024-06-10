@@ -10,14 +10,13 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTestAdapter.UnitTests.Helpers;
 
 public class RunSettingsUtilitiesTests : TestContainer
 {
-    public void GetTestRunParametersReturnsEmptyDictionaryOnNullRunSettings()
+    public void GetTestRunParametersReturnsNullOnNullRunSettings()
     {
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(null);
-        Verify(trp is not null);
-        Verify(trp.Count == 0);
+        Verify(trp is null);
     }
 
-    public void GetTestRunParametersReturnsEmptyDictionaryWhenNoTestRunParameters()
+    public void GetTestRunParametersReturnsNullWhenNoTestRunParameters()
     {
         string settingsXml =
             """
@@ -32,8 +31,7 @@ public class RunSettingsUtilitiesTests : TestContainer
             """;
 
         Dictionary<string, object> trp = RunSettingsUtilities.GetTestRunParameters(settingsXml);
-        Verify(trp is not null);
-        Verify(trp.Count == 0);
+        Verify(trp is null);
     }
 
     public void GetTestRunParametersReturnsEmptyDictionaryForEmptyTestRunParametersNode()

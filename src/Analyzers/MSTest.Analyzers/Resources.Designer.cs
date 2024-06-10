@@ -443,6 +443,33 @@ namespace MSTest.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Public methods should be test methods (marked with `[TestMethod]`)..
+        /// </summary>
+        internal static string PublicMethodShouldBeTestMethodAnalyzerDescription {
+            get {
+                return ResourceManager.GetString("PublicMethodShouldBeTestMethodAnalyzerDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Public method &apos;{0}&apos; should be a test method.
+        /// </summary>
+        internal static string PublicMethodShouldBeTestMethodAnalyzerFormat {
+            get {
+                return ResourceManager.GetString("PublicMethodShouldBeTestMethodAnalyzerFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Public methods should be test methods.
+        /// </summary>
+        internal static string PublicMethodShouldBeTestMethodAnalyzerTitle {
+            get {
+                return ResourceManager.GetString("PublicMethodShouldBeTestMethodAnalyzerTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to It&apos;s considered a good practice to have only test classes marked public in a test project..
         /// </summary>
         internal static string PublicTypeShouldBeTestClassDescription {

@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Reflection;
 using System.Security;
@@ -14,27 +15,23 @@ namespace Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.Helpers;
 
 internal class ReflectHelper : MarshalByRefObject
 {
-    private static readonly Lazy<ReflectHelper> InstanceValue = new(() => new ReflectHelper(new NotCachedReflectionAccessor()));
+#pragma warning disable RS0030 // Do not use banned APIs
+    private static readonly Lazy<ReflectHelper> InstanceValue = new(() => new());
+#pragma warning restore RS0030 // Do not use banned APIs
 
-    // PERF: This was moved from Dictionary<MemberInfo, Dictionary<string, object>> to Dictionary<ICustomAttributeProvider, Attribute[]>
-    // this allows us to store multiple attributes of the same type if we find them. It also has lower memory footprint, and is faster
+    // PERF: This was moved from Dictionary<MemberInfo, Dictionary<string, object>> to Concurrent<ICustomAttributeProvider, Attribute[]>
+    // storing an array allows us to store multiple attributes of the same type if we find them. It also has lower memory footprint, and is faster
     // when we are going through the whole collection. Giving us overall better perf.
-    private readonly Dictionary<ICustomAttributeProvider, Attribute[]> _inheritedAttributeCache = [];
-    private readonly Dictionary<ICustomAttributeProvider, Attribute[]> _nonInheritedAttributeCache = [];
-
-    internal /* for tests only */ ReflectHelper(INotCachedReflectionAccessor notCachedAttributeHelper) =>
-        NotCachedAttributes = notCachedAttributeHelper ?? new NotCachedReflectionAccessor();
+    private readonly ConcurrentDictionary<ICustomAttributeProvider, Attribute[]> _inheritedAttributeCache = [];
+    private readonly ConcurrentDictionary<ICustomAttributeProvider, Attribute[]> _nonInheritedAttributeCache = [];
 
     internal /* for tests only, because of Moq */ ReflectHelper()
-        : this(new NotCachedReflectionAccessor())
     {
     }
 
     private readonly AttributeComparer _attributeComparer = new();
 
     public static ReflectHelper Instance => InstanceValue.Value;
-
-    public INotCachedReflectionAccessor NotCachedAttributes { get; }
 
     /// <summary>
     /// Checks to see if a member or type is decorated with the given attribute. The type is checked exactly. If attribute is derived (inherits from) a class, e.g. [MyTestClass] from [TestClass] it won't match if you look for [TestClass]. The inherit parameter does not impact this checking.
@@ -421,34 +418,28 @@ internal class ReflectHelper : MarshalByRefObject
     /// <returns>attributes defined.</returns>
     private Attribute[] GetCustomAttributesCached(ICustomAttributeProvider attributeProvider, bool inherit)
     {
-        if (inherit)
-        {
-            lock (_inheritedAttributeCache)
-            {
-                return GetOrAddAttributes(_inheritedAttributeCache, attributeProvider, inherit: true);
-            }
-        }
-        else
-        {
-            lock (_nonInheritedAttributeCache)
-            {
-                return GetOrAddAttributes(_nonInheritedAttributeCache, attributeProvider, inherit: false);
-            }
-        }
-
         // If the information is cached, then use it otherwise populate the cache using
         // the reflection APIs.
-        Attribute[] GetOrAddAttributes(Dictionary<ICustomAttributeProvider, Attribute[]> cache, ICustomAttributeProvider attributeProvider, bool inherit)
-        {
-            if (cache.TryGetValue(attributeProvider, out Attribute[]? attributes))
-            {
-                return attributes;
-            }
+        return inherit
+            ? _inheritedAttributeCache.GetOrAdd(attributeProvider, GetAttributesInheriting)
+            : _nonInheritedAttributeCache.GetOrAdd(attributeProvider, GetAttributesNonInheriting);
 
+        // We are avoiding func allocation here.
+        static Attribute[] GetAttributesInheriting(ICustomAttributeProvider key)
+            => GetAttributes(key, inherit: true);
+
+        static Attribute[] GetAttributesNonInheriting(ICustomAttributeProvider key)
+            => GetAttributes(key, inherit: false);
+
+        static Attribute[] GetAttributes(ICustomAttributeProvider attributeProvider, bool inherit)
+        {
             // Populate the cache
             try
             {
-                attributes = NotCachedAttributes.GetCustomAttributesNotCached(attributeProvider, inherit)?.Cast<Attribute>().ToArray() ?? Array.Empty<Attribute>();
+                object[]? attributes = NotCachedReflectionAccessor.GetCustomAttributesNotCached(attributeProvider, inherit);
+                return attributes is Attribute[] arr
+                    ? arr
+                    : attributes?.Cast<Attribute>().ToArray() ?? Array.Empty<Attribute>();
             }
             catch (Exception ex)
             {
@@ -468,12 +459,6 @@ internal class ReflectHelper : MarshalByRefObject
 
                 return Array.Empty<Attribute>();
             }
-
-            DebugEx.Assert(attributes != null, "attributes should not be null.");
-
-            cache.Add(attributeProvider, attributes);
-
-            return attributes;
         }
     }
 
@@ -494,15 +479,15 @@ internal class ReflectHelper : MarshalByRefObject
     /// <summary>
     /// Reflection helper that is accessing Reflection directly, and won't cache the results.
     /// </summary>
-    internal class NotCachedReflectionAccessor : INotCachedReflectionAccessor
+    internal static class NotCachedReflectionAccessor
     {
         /// <summary>
-        /// Get custom attributes on a member without cache.
+        /// Get custom attributes on a member without cache. Be CAREFUL where you use this, repeatedly accessing reflection without caching the results degrades the performance.
         /// </summary>
         /// <param name="attributeProvider">Member for which attributes needs to be retrieved.</param>
         /// <param name="inherit">If inherited type of attribute.</param>
         /// <returns>All attributes of give type on member.</returns>
-        public object[]? GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit)
+        public static object[]? GetCustomAttributesNotCached(ICustomAttributeProvider attributeProvider, bool inherit)
         {
             object[] attributesArray = attributeProvider is MemberInfo memberInfo
                 ? PlatformServiceProvider.Instance.ReflectionOperations.GetCustomAttributes(memberInfo, inherit)

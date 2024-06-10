@@ -386,6 +386,11 @@
         <target state="translated">列出可用的測試。</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestPipe">
+        <source>dotnet test pipe.</source>
+        <target state="translated">dotnet 測試管道。</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>

@@ -20,10 +20,6 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string DiagnosticOutputDirectoryOptionKey = "diagnostic-output-directory";
     public const string DiagnosticVerbosityOptionKey = "diagnostic-verbosity";
     public const string DiagnosticFileLoggerSynchronousWriteOptionKey = "diagnostic-filelogger-synchronouswrite";
-    public const string ServerOptionKey = "server";
-    public const string PortOptionKey = "port";
-    public const string ClientPortOptionKey = "client-port";
-    public const string ClientHostOptionKey = "client-host";
     public const string VSTestAdapterModeOptionKey = "internal-vstest-adapter";
     public const string NoBannerOptionKey = "no-banner";
     public const string SkipBuildersNumberCheckOptionKey = "internal-testingplatform-skipbuildercheck";
@@ -33,6 +29,12 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
     public const string MinimumExpectedTestsOptionKey = "minimum-expected-tests";
     public const string TestHostControllerPIDOptionKey = "internal-testhostcontroller-pid";
     public const string ExitOnProcessExitOptionKey = "exit-on-process-exit";
+
+    public const string ServerOptionKey = "server";
+    public const string PortOptionKey = "port";
+    public const string ClientPortOptionKey = "client-port";
+    public const string ClientHostOptionKey = "client-host";
+    public const string DotNetTestPipeOptionKey = "dotnet-test-pipe";
 
     private static readonly string[] VerbosityOptions = ["Trace", "Debug", "Information", "Warning", "Error", "Critical"];
 
@@ -55,7 +57,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(ExitOnProcessExitOptionKey, PlatformResources.PlatformCommandLineExitOnProcessExitOptionDescription, ArgumentArity.ExactlyOne, false, isBuiltIn: true),
 
         // Hidden options
-        new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
+        new(ServerOptionKey, PlatformResources.PlatformCommandLineServerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
         new(PortOptionKey, PlatformResources.PlatformCommandLinePortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(ClientPortOptionKey, PlatformResources.PlatformCommandLineClientPortOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
         new(ClientHostOptionKey, PlatformResources.PlatformCommandLineClientHostOptionDescription, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
@@ -63,6 +65,7 @@ internal sealed class PlatformCommandLineProvider : ICommandLineOptionsProvider
         new(VSTestAdapterModeOptionKey, PlatformResources.PlatformCommandLineVSTestAdapterModeOptionDescription, ArgumentArity.Zero, true, isBuiltIn: true),
         new(NoBannerOptionKey, PlatformResources.PlatformCommandLineNoBannerOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
         new(TestHostControllerPIDOptionKey, PlatformResources.PlatformCommandLineTestHostControllerPIDOptionDescription, ArgumentArity.ZeroOrOne, true, isBuiltIn: true),
+        new(DotNetTestPipeOptionKey, PlatformResources.PlatformCommandLineDotnetTestPipe, ArgumentArity.ExactlyOne, true, isBuiltIn: true),
     };
 
     /// <inheritdoc />

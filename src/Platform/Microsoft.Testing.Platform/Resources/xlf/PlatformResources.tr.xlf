@@ -386,6 +386,11 @@
         <target state="translated">Kullanılabilir testleri listeler.</target>
         <note />
       </trans-unit>
+      <trans-unit id="PlatformCommandLineDotnetTestPipe">
+        <source>dotnet test pipe.</source>
+        <target state="translated">dotnet test kanalı.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">
         <source>Invalid PID '{0}'
 {1}</source>
