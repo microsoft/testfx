@@ -22,11 +22,11 @@ public class DataRowTests : CLITestBase
         // Assert
         VerifyE2E.TestsPassed(
             testResults,
-            "DataRowTestMethod (BaseString1)",
-            "DataRowTestMethod (BaseString2)",
-            "DataRowTestMethod (BaseString3)",
-            "DataRowTestMethod (DerivedString1)",
-            "DataRowTestMethod (DerivedString2)");
+            "DataRowTestMethod (\"BaseString1\")",
+            "DataRowTestMethod (\"BaseString2\")",
+            "DataRowTestMethod (\"BaseString3\")",
+            "DataRowTestMethod (\"DerivedString1\")",
+            "DataRowTestMethod (\"DerivedString2\")");
     }
 
     public void ExecuteOnlyDerivedClassDataRowsWhenItOverridesBaseClassDataRows_SimpleDataRows()
@@ -41,8 +41,8 @@ public class DataRowTests : CLITestBase
         // Assert
         VerifyE2E.TestsPassed(
             testResults,
-            "DataRowTestMethod (DerivedString1)",
-            "DataRowTestMethod (DerivedString2)");
+            "DataRowTestMethod (\"DerivedString1\")",
+            "DataRowTestMethod (\"DerivedString2\")");
     }
 
     public void DataRowsExecuteWithRequiredAndOptionalParameters()
@@ -58,8 +58,8 @@ public class DataRowTests : CLITestBase
         VerifyE2E.TestsPassed(
             testResults,
             "DataRowTestMethodWithSomeOptionalParameters (123)",
-            "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString1)",
-            "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString2,DerivedOptionalString3)");
+            "DataRowTestMethodWithSomeOptionalParameters (123,\"DerivedOptionalString1\")",
+            "DataRowTestMethodWithSomeOptionalParameters (123,\"DerivedOptionalString2\",\"DerivedOptionalString3\")");
     }
 
     public void DataRowsExecuteWithParamsArrayParameter()
@@ -75,9 +75,9 @@ public class DataRowTests : CLITestBase
         VerifyE2E.TestsPassed(
             testResults,
             "DataRowTestMethodWithParamsParameters (2)",
-            "DataRowTestMethodWithParamsParameters (2,DerivedSingleParamsArg)",
-            "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2)",
-            "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2,DerivedParamsArg3)");
+            "DataRowTestMethodWithParamsParameters (2,\"DerivedSingleParamsArg\")",
+            "DataRowTestMethodWithParamsParameters (2,\"DerivedParamsArg1\",\"DerivedParamsArg2\")",
+            "DataRowTestMethodWithParamsParameters (2,\"DerivedParamsArg1\",\"DerivedParamsArg2\",\"DerivedParamsArg3\")");
     }
 
     public void DataRowsFailWhenInvalidArgumentsProvided()
@@ -94,7 +94,7 @@ public class DataRowTests : CLITestBase
             testResults,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
-            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
+            "DataRowTestMethodFailsWithInvalidArguments (2,\"DerivedRequiredArgument\",\"DerivedOptionalArgument\",\"DerivedExtraArgument\")");
     }
 
     public void DataRowsShouldSerializeDoublesProperly()
@@ -125,7 +125,7 @@ public class DataRowTests : CLITestBase
         // Assert
         VerifyE2E.TestsPassed(
             testResults,
-            "DataRowTestMixed (10,10,10,10,10,10,10,10)");
+            "DataRowTestMixed (10,10,10,10,10,10,10,\"10\")");
     }
 
     public void DataRowsShouldSerializeEnumsProperly()
@@ -276,21 +276,21 @@ public class DataRowTests : CLITestBase
             "DataRow1 (20)",
             "DataRow1 (30)",
             "DataRow1 (40)",
-            "DataRow2 (10,String parameter,True,False)",
-            "DataRow2 (20,String parameter,True,False)",
-            "DataRow2 (30,String parameter,True,False)",
-            "DataRow2 (40,String parameter,True,False)",
+            "DataRow2 (10,\"String parameter\",True,False)",
+            "DataRow2 (20,\"String parameter\",True,False)",
+            "DataRow2 (30,\"String parameter\",True,False)",
+            "DataRow2 (40,\"String parameter\",True,False)",
             "DataRowTestDouble (10.01,20.01)",
             "DataRowTestDouble (10.02,20.02)",
-            "DataRowTestMixed (1,10,10,10,10,10,10,10,10)",
-            "DataRowTestMixed (2,10,10,10,10,10,10,10,10)",
-            "DataRowTestMixed (3,10,10,10,10,10,10,10,10)",
-            "DataRowTestMixed (4,10,10,10,10,10,10,10,10)",
-            "NullValueInData (john.doe@example.com,abc123,null)",
-            "NullValueInData (john.doe@example.com,abc123,/unit/test)",
+            "DataRowTestMixed (1,10,10,10,10,10,10,10,\"10\")",
+            "DataRowTestMixed (2,10,10,10,10,10,10,10,\"10\")",
+            "DataRowTestMixed (3,10,10,10,10,10,10,10,\"10\")",
+            "DataRowTestMixed (4,10,10,10,10,10,10,10,\"10\")",
+            "NullValueInData (\"john.doe@example.com\",\"abc123\",null)",
+            "NullValueInData (\"john.doe@example.com\",\"abc123\",\"/unit/test\")",
             "NullValue (null)",
             "OneStringArray ([\"\"])",
-            "TwoStringArrays ([\"\"],[1.4,message])",
+            "TwoStringArrays ([\"\"],[\"1.4\",\"message\"])",
             "OneObjectArray ([\"\",1])",
             "TwoObjectArrays ([\"\",1],[3])",
             "ThreeObjectArrays ([1],[2],[3])",
@@ -313,6 +313,6 @@ public class DataRowTests : CLITestBase
             testResults,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
-            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
+            "DataRowTestMethodFailsWithInvalidArguments (2,\"DerivedRequiredArgument\",\"DerivedOptionalArgument\",\"DerivedExtraArgument\")");
     }
 }

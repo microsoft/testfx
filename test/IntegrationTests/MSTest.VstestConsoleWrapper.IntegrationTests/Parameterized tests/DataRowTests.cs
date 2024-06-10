@@ -14,11 +14,11 @@ public class DataRowTests : CLITestBase
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "TestCategory~DataRowSimple");
 
         ValidatePassedTestsContain(
-            "DataRowTestMethod (BaseString1)",
-            "DataRowTestMethod (BaseString2)",
-            "DataRowTestMethod (BaseString3)",
-            "DataRowTestMethod (DerivedString1)",
-            "DataRowTestMethod (DerivedString2)");
+            "DataRowTestMethod (\"BaseString1\")",
+            "DataRowTestMethod (\"BaseString2\")",
+            "DataRowTestMethod (\"BaseString3\")",
+            "DataRowTestMethod (\"DerivedString1\")",
+            "DataRowTestMethod (\"DerivedString2\")");
 
         // 3 tests of BaseClass.DataRowTestMethod - 3 data row results and no parent result
         // 2 tests of DerivedClass.DataRowTestMethod - 2 data row results and no parent result
@@ -41,8 +41,8 @@ public class DataRowTests : CLITestBase
         InvokeVsTestForExecution([TestAssetName], testCaseFilter: "FullyQualifiedName~DerivedClass&TestCategory~DataRowSimple");
 
         ValidatePassedTestsContain(
-            "DataRowTestMethod (DerivedString1)",
-            "DataRowTestMethod (DerivedString2)");
+            "DataRowTestMethod (\"DerivedString1\")",
+            "DataRowTestMethod (\"DerivedString2\")");
 
         // 2 tests of DerivedClass.DataRowTestMethod - 2 datarow result and no parent result
         ValidatePassedTestsCount(2);
@@ -54,8 +54,8 @@ public class DataRowTests : CLITestBase
 
         ValidatePassedTestsContain(
             "DataRowTestMethodWithSomeOptionalParameters (123)",
-            "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString1)",
-            "DataRowTestMethodWithSomeOptionalParameters (123,DerivedOptionalString2,DerivedOptionalString3)");
+            "DataRowTestMethodWithSomeOptionalParameters (123,\"DerivedOptionalString1\")",
+            "DataRowTestMethodWithSomeOptionalParameters (123,\"DerivedOptionalString2\",\"DerivedOptionalString3\")");
 
         // 3 tests of DerivedClass.DataRowTestMethodWithSomeOptionalParameters - 3 datarow result and no parent result
         ValidatePassedTestsCount(3);
@@ -68,8 +68,8 @@ public class DataRowTests : CLITestBase
         ValidatePassedTestsContain(
             "DataRowTestMethodWithAllOptionalParameters ()",
             "DataRowTestMethodWithAllOptionalParameters (123)",
-            "DataRowTestMethodWithAllOptionalParameters (123,DerivedOptionalString4)",
-            "DataRowTestMethodWithAllOptionalParameters (123,DerivedOptionalString5,DerivedOptionalString6)");
+            "DataRowTestMethodWithAllOptionalParameters (123,\"DerivedOptionalString4\")",
+            "DataRowTestMethodWithAllOptionalParameters (123,\"DerivedOptionalString5\",\"DerivedOptionalString6\")");
 
         // 4 tests of DerivedClass.DataRowTestMethodWithAllOptionalParameters - 4 datarow result and no parent result
         ValidatePassedTestsCount(4);
@@ -81,9 +81,9 @@ public class DataRowTests : CLITestBase
 
         ValidatePassedTestsContain(
             "DataRowTestMethodWithParamsParameters (2)",
-            "DataRowTestMethodWithParamsParameters (2,DerivedSingleParamsArg)",
-            "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2)",
-            "DataRowTestMethodWithParamsParameters (2,DerivedParamsArg1,DerivedParamsArg2,DerivedParamsArg3)");
+            "DataRowTestMethodWithParamsParameters (2,\"DerivedSingleParamsArg\")",
+            "DataRowTestMethodWithParamsParameters (2,\"DerivedParamsArg1\",\"DerivedParamsArg2\")",
+            "DataRowTestMethodWithParamsParameters (2,\"DerivedParamsArg1\",\"DerivedParamsArg2\",\"DerivedParamsArg3\")");
 
         // 4 tests of DerivedClass.DataRowTestMethodWithParamsParameters - 4 datarow result and no parent result
         ValidatePassedTestsCount(4);
@@ -97,7 +97,7 @@ public class DataRowTests : CLITestBase
             false,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
-            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
+            "DataRowTestMethodFailsWithInvalidArguments (2,\"DerivedRequiredArgument\",\"DerivedOptionalArgument\",\"DerivedExtraArgument\")");
 
         // 3 tests of DerivedClass.DataRowTestMethodFailsWithInvalidArguments - 3 datarow result and no parent result
         ValidateFailedTestsCount(3);
@@ -204,21 +204,21 @@ public class DataRowTests : CLITestBase
             "DataRow1 (20)",
             "DataRow1 (30)",
             "DataRow1 (40)",
-            "DataRow2 (10,String parameter,True,False)",
-            "DataRow2 (20,String parameter,True,False)",
-            "DataRow2 (30,String parameter,True,False)",
-            "DataRow2 (40,String parameter,True,False)",
+            "DataRow2 (10,\"String parameter\",True,False)",
+            "DataRow2 (20,\"String parameter\",True,False)",
+            "DataRow2 (30,\"String parameter\",True,False)",
+            "DataRow2 (40,\"String parameter\",True,False)",
             "DataRowTestDouble (10.01,20.01)",
             "DataRowTestDouble (10.02,20.02)",
-            "DataRowTestMixed (1,10,10,10,10,10,10,10,10)",
-            "DataRowTestMixed (2,10,10,10,10,10,10,10,10)",
-            "DataRowTestMixed (3,10,10,10,10,10,10,10,10)",
-            "DataRowTestMixed (4,10,10,10,10,10,10,10,10)",
-            "NullValueInData (john.doe@example.com,abc123,null)",
-            "NullValueInData (john.doe@example.com,abc123,/unit/test)",
+            "DataRowTestMixed (1,10,10,10,10,10,10,10,\"10\")",
+            "DataRowTestMixed (2,10,10,10,10,10,10,10,\"10\")",
+            "DataRowTestMixed (3,10,10,10,10,10,10,10,\"10\")",
+            "DataRowTestMixed (4,10,10,10,10,10,10,10,\"10\")",
+            "NullValueInData (\"john.doe@example.com\",\"abc123\",null)",
+            "NullValueInData (\"john.doe@example.com\",\"abc123\",\"/unit/test\")",
             "NullValue (null)",
             "OneStringArray ([\"\"])",
-            "TwoStringArrays ([\"\"],[1.4,message])",
+            "TwoStringArrays ([\"\"],[\"1.4\",\"message\"])",
             "OneObjectArray ([\"\",1])",
             "TwoObjectArrays ([\"\",1],[3])",
             "ThreeObjectArrays ([1],[2],[3])",
@@ -241,6 +241,6 @@ public class DataRowTests : CLITestBase
             false,
             "DataRowTestMethodFailsWithInvalidArguments ()",
             "DataRowTestMethodFailsWithInvalidArguments (2)",
-            "DataRowTestMethodFailsWithInvalidArguments (2,DerivedRequiredArgument,DerivedOptionalArgument,DerivedExtraArgument)");
+            "DataRowTestMethodFailsWithInvalidArguments (2,\"DerivedRequiredArgument\",\"DerivedOptionalArgument\",\"DerivedExtraArgument\")");
     }
 }
