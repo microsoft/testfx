@@ -259,6 +259,21 @@
         <target state="translated">Preferir métodos TestInitialize em vez de construtores</target>
         <note />
       </trans-unit>
+      <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerDescription">
+        <source>Public methods should be test methods (marked with `[TestMethod]`).</source>
+        <target state="new">Public methods should be test methods (marked with `[TestMethod]`).</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerFormat">
+        <source>Public method '{0}' should be a test method</source>
+        <target state="new">Public method '{0}' should be a test method</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="PublicMethodShouldBeTestMethodAnalyzerTitle">
+        <source>Public methods should be test methods</source>
+        <target state="new">Public methods should be test methods</target>
+        <note />
+      </trans-unit>
       <trans-unit id="PublicTypeShouldBeTestClassDescription">
         <source>It's considered a good practice to have only test classes marked public in a test project.</source>
         <target state="translated">É considerado uma boa prática ter somente classes de teste marcadas como públicas em um projeto de teste.</target>

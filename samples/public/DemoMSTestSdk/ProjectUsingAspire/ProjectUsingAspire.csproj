@@ -1,22 +1,18 @@
 <Project Sdk="MSTest.Sdk">
-<!--
-Alternatively, if you don't want to use the `global.json` file for versions, you can specify the version of the MSTest.Sdk package here.
-<Project Sdk="MSTest.Sdk/<version>">
--->
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-
+    <IsPackable>false</IsPackable>
     <!-- By default, MSTest Sdk uses MSTest runner -->
+    <EnableAspireTesting>true</EnableAspireTesting>
   </PropertyGroup>
 
 </Project>
 
 <!--
 Below is the equivalent project configuration when not using MSTest.Sdk
-
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -24,12 +20,13 @@ Below is the equivalent project configuration when not using MSTest.Sdk
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-
+    <IsTestProject>true</IsTestProject>
     <EnableMSTestRunner>true</EnableMSTestRunner>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Testing" Version="$(AspireTestingVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(VSTestVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" Version="$(CodeCoverageVersion)" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(TestingPlatformVersion)" />
@@ -39,7 +36,8 @@ Below is the equivalent project configuration when not using MSTest.Sdk
   </ItemGroup>
 
   <ItemGroup>
-      <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+    <Using Include="Aspire.Hosting.Testing" />
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
   </ItemGroup>
 
 </Project>
