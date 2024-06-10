@@ -20,12 +20,20 @@ internal abstract class BaseSerializer
     protected static string ReadString(Stream stream)
     {
         Span<byte> len = stackalloc byte[sizeof(int)];
-        stream.Read(len);
+#if NET7_0_OR_GREATER
+        stream.ReadExactly(len);
+#else
+        _ = stream.Read(len);
+#endif
         int stringLen = BitConverter.ToInt32(len);
         byte[] bytes = ArrayPool<byte>.Shared.Rent(stringLen);
         try
         {
-            stream.Read(bytes, 0, stringLen);
+#if NET7_0_OR_GREATER
+            stream.ReadExactly(bytes, 0, stringLen);
+#else
+            _ = stream.Read(bytes, 0, stringLen);
+#endif
             return Encoding.UTF8.GetString(bytes, 0, stringLen);
         }
         finally
@@ -109,14 +117,22 @@ internal abstract class BaseSerializer
     protected static int ReadInt(Stream stream)
     {
         Span<byte> bytes = stackalloc byte[sizeof(int)];
-        stream.Read(bytes);
+#if NET7_0_OR_GREATER
+        stream.ReadExactly(bytes);
+#else
+        _ = stream.Read(bytes);
+#endif
         return BitConverter.ToInt32(bytes);
     }
 
     protected static long ReadLong(Stream stream)
     {
         Span<byte> bytes = stackalloc byte[sizeof(long)];
-        stream.Read(bytes);
+#if NET7_0_OR_GREATER
+        stream.ReadExactly(bytes);
+#else
+        _ = stream.Read(bytes);
+#endif
         return BitConverter.ToInt64(bytes);
     }
 
@@ -138,10 +154,18 @@ internal abstract class BaseSerializer
     protected static string ReadString(Stream stream)
     {
         byte[] len = new byte[sizeof(int)];
-        stream.Read(len, 0, len.Length);
+#if NET7_0_OR_GREATER
+        stream.ReadExactly(len, 0, len.Length);
+#else
+        _ = stream.Read(len, 0, len.Length);
+#endif
         int length = BitConverter.ToInt32(len, 0);
         byte[] bytes = new byte[length];
-        stream.Read(bytes, 0, bytes.Length);
+#if NET7_0_OR_GREATER
+        stream.ReadExactly(bytes, 0, bytes.Length);
+#else
+        _ = stream.Read(bytes, 0, bytes.Length);
+#endif
         return Encoding.UTF8.GetString(bytes);
     }
 
@@ -177,7 +201,11 @@ internal abstract class BaseSerializer
     protected static int ReadInt(Stream stream)
     {
         byte[] bytes = new byte[sizeof(int)];
-        stream.Read(bytes, 0, bytes.Length);
+#if NET7_0_OR_GREATER
+        stream.ReadExactly(bytes, 0, bytes.Length);
+#else
+        _ = stream.Read(bytes, 0, bytes.Length);
+#endif
         return BitConverter.ToInt32(bytes, 0);
     }
 
@@ -196,7 +224,11 @@ internal abstract class BaseSerializer
     protected static long ReadLong(Stream stream)
     {
         byte[] bytes = new byte[sizeof(long)];
-        stream.Read(bytes, 0, bytes.Length);
+#if NET7_0_OR_GREATER
+        stream.ReadExactly(bytes, 0, bytes.Length);
+#else
+        _ = stream.Read(bytes, 0, bytes.Length);
+#endif
         return BitConverter.ToInt64(bytes, 0);
     }
 
