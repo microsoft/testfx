@@ -37,19 +37,36 @@ public sealed class PublicMethodShouldBeTestMethodAnalyzer : DiagnosticAnalyzer
         context.EnableConcurrentExecution();
         context.RegisterCompilationStartAction(context =>
         {
-            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol))
+            if (context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestMethodAttribute, out INamedTypeSymbol? testMethodAttributeSymbol)
+                && context.Compilation.TryGetOrCreateTypeByMetadataName(WellKnownTypeNames.MicrosoftVisualStudioTestToolsUnitTestingTestClassAttribute, out INamedTypeSymbol? testClassAttributeSymbol))
             {
                 context.RegisterSymbolAction(
-                    context => AnalyzeSymbol(context, testMethodAttributeSymbol),
+                    context => AnalyzeSymbol(context, testMethodAttributeSymbol, testClassAttributeSymbol),
                     SymbolKind.Method);
             }
         });
     }
 
-    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol)
+    private static void AnalyzeSymbol(SymbolAnalysisContext context, INamedTypeSymbol testMethodAttributeSymbol, INamedTypeSymbol testClassAttributeSymbol)
     {
         var methodSymbol = (IMethodSymbol)context.Symbol;
         if (methodSymbol.GetResultantVisibility() != SymbolVisibility.Public)
+        {
+            return;
+        }
+
+        INamedTypeSymbol containingTypeSymbol = context.Symbol.ContainingType;
+        bool isTestClass = false;
+        foreach (AttributeData classAttribute in containingTypeSymbol.GetAttributes())
+        {
+            if (classAttribute.AttributeClass.Inherits(testClassAttributeSymbol))
+            {
+                isTestClass = true;
+                break;
+            }
+        }
+
+        if (!isTestClass)
         {
             return;
         }
