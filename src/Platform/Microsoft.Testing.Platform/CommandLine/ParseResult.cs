@@ -91,7 +91,7 @@ internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Opt
     {
         optionName = optionName.Trim(OptionPrefix);
         var result = Options.Where(x => x.Option == optionName);
-        if (!result.Any())
+        if (result.Any())
         {
             arguments = result.SelectMany(x => x.Arguments).ToArray();
             return true;
