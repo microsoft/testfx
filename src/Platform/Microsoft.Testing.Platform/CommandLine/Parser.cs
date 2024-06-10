@@ -127,7 +127,7 @@ internal static class CommandLineParser
             if (delimiterIndex == -1)
             {
                 currentArg = null;
-                currentOption = arg;
+                currentOption = arg.Length;
                 return;
             }
 
