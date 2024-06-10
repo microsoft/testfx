@@ -90,7 +90,7 @@ internal sealed class CommandLineParseResult(string? toolName, IReadOnlyList<Opt
     public bool TryGetOptionArgumentList(string optionName, [NotNullWhen(true)] out string[]? arguments)
     {
         optionName = optionName.Trim(OptionPrefix);
-        var result = Options.Where(x => x.Option == optionName);
+        IEnumerable<OptionRecord> result = Options.Where(x => x.Option == optionName);
         if (result.Any())
         {
             arguments = result.SelectMany(x => x.Arguments).ToArray();

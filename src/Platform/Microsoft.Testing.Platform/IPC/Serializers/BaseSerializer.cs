@@ -139,14 +139,22 @@ internal abstract class BaseSerializer
     protected static ushort ReadShort(Stream stream)
     {
         Span<byte> bytes = stackalloc byte[sizeof(ushort)];
-        stream.Read(bytes);
+#if NET7_0_OR_GREATER
+        stream.ReadExactly(bytes);
+#else
+        _ = stream.Read(bytes);
+#endif
         return BitConverter.ToUInt16(bytes);
     }
 
     protected static bool ReadBool(Stream stream)
     {
         Span<byte> bytes = stackalloc byte[sizeof(bool)];
-        stream.Read(bytes);
+#if NET7_0_OR_GREATER
+        stream.ReadExactly(bytes);
+#else
+        _ = stream.Read(bytes);
+#endif
         return BitConverter.ToBoolean(bytes);
     }
 
@@ -154,18 +162,11 @@ internal abstract class BaseSerializer
     protected static string ReadString(Stream stream)
     {
         byte[] len = new byte[sizeof(int)];
-#if NET7_0_OR_GREATER
-        stream.ReadExactly(len, 0, len.Length);
-#else
         _ = stream.Read(len, 0, len.Length);
-#endif
         int length = BitConverter.ToInt32(len, 0);
         byte[] bytes = new byte[length];
-#if NET7_0_OR_GREATER
-        stream.ReadExactly(bytes, 0, bytes.Length);
-#else
         _ = stream.Read(bytes, 0, bytes.Length);
-#endif
+
         return Encoding.UTF8.GetString(bytes);
     }
 
@@ -201,11 +202,7 @@ internal abstract class BaseSerializer
     protected static int ReadInt(Stream stream)
     {
         byte[] bytes = new byte[sizeof(int)];
-#if NET7_0_OR_GREATER
-        stream.ReadExactly(bytes, 0, bytes.Length);
-#else
         _ = stream.Read(bytes, 0, bytes.Length);
-#endif
         return BitConverter.ToInt32(bytes, 0);
     }
 
@@ -224,18 +221,14 @@ internal abstract class BaseSerializer
     protected static long ReadLong(Stream stream)
     {
         byte[] bytes = new byte[sizeof(long)];
-#if NET7_0_OR_GREATER
-        stream.ReadExactly(bytes, 0, bytes.Length);
-#else
         _ = stream.Read(bytes, 0, bytes.Length);
-#endif
         return BitConverter.ToInt64(bytes, 0);
     }
 
     protected static ushort ReadShort(Stream stream)
     {
         byte[] bytes = new byte[sizeof(ushort)];
-        stream.Read(bytes, 0, bytes.Length);
+        _ = stream.Read(bytes, 0, bytes.Length);
         return BitConverter.ToUInt16(bytes, 0);
     }
 
@@ -248,7 +241,7 @@ internal abstract class BaseSerializer
     protected static bool ReadBool(Stream stream)
     {
         byte[] bytes = new byte[sizeof(bool)];
-        stream.Read(bytes, 0, bytes.Length);
+        _ = stream.Read(bytes, 0, bytes.Length);
         return BitConverter.ToBoolean(bytes, 0);
     }
 #endif
