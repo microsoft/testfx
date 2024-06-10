@@ -21,7 +21,7 @@ internal class ServerModePerCallOutputDevice : IPlatformOutputDevice
 
     public Task DisplayAsync(IOutputDeviceDataProducer producer, IOutputDeviceData data) => Task.CompletedTask;
 
-    public Task DisplayBannerAsync() => Task.CompletedTask;
+    public Task DisplayBannerAsync(string? bannerMessage) => Task.CompletedTask;
 
     public Task DisplayBeforeSessionStartAsync() => Task.CompletedTask;
 

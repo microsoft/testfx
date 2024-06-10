@@ -24,9 +24,9 @@ public partial class TestId : CLITestBase
         VerifyE2E.FailedTestCount(testResults, 0);
         VerifyE2E.TestsPassed(
             testResults,
-            "DataRowArraysTests (0,System.Int32[])",
-            "DataRowArraysTests (0,System.Int32[])",
-            "DataRowArraysTests (0,System.Int32[])");
+            "DataRowArraysTests (0,[])",
+            "DataRowArraysTests (0,[0])",
+            "DataRowArraysTests (0,[0,0,0])");
 
         // We cannot assert the expected ID as it is path dependent
         testResults.Select(x => x.TestCase.Id.ToString()).Should().OnlyHaveUniqueItems();

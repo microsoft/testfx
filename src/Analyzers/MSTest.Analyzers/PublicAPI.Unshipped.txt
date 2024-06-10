@@ -33,6 +33,8 @@ MSTest.Analyzers.PreferTestCleanupOverDisposeAnalyzer
 MSTest.Analyzers.PreferTestCleanupOverDisposeAnalyzer.PreferTestCleanupOverDisposeAnalyzer() -> void
 MSTest.Analyzers.PreferTestInitializeOverConstructorAnalyzer
 MSTest.Analyzers.PreferTestInitializeOverConstructorAnalyzer.PreferTestInitializeOverConstructorAnalyzer() -> void
+MSTest.Analyzers.PublicMethodShouldBeTestMethodAnalyzer
+MSTest.Analyzers.PublicMethodShouldBeTestMethodAnalyzer.PublicMethodShouldBeTestMethodAnalyzer() -> void
 MSTest.Analyzers.PublicTypeShouldBeTestClassAnalyzer
 MSTest.Analyzers.PublicTypeShouldBeTestClassAnalyzer.PublicTypeShouldBeTestClassAnalyzer() -> void
 MSTest.Analyzers.TestClassShouldBeValidAnalyzer
@@ -87,6 +89,8 @@ override MSTest.Analyzers.PreferTestCleanupOverDisposeAnalyzer.Initialize(Micros
 override MSTest.Analyzers.PreferTestCleanupOverDisposeAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PreferTestInitializeOverConstructorAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.PreferTestInitializeOverConstructorAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
+override MSTest.Analyzers.PublicMethodShouldBeTestMethodAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
+override MSTest.Analyzers.PublicMethodShouldBeTestMethodAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.PublicTypeShouldBeTestClassAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void
 override MSTest.Analyzers.PublicTypeShouldBeTestClassAnalyzer.SupportedDiagnostics.get -> System.Collections.Immutable.ImmutableArray<Microsoft.CodeAnalysis.DiagnosticDescriptor!>
 override MSTest.Analyzers.TestClassShouldBeValidAnalyzer.Initialize(Microsoft.CodeAnalysis.Diagnostics.AnalysisContext! context) -> void

@@ -57,7 +57,7 @@ internal sealed class TestHostControllersTestHost : CommonTestHost, ITestHost, I
 
     public string Description => string.Empty;
 
-    protected override bool RunTestApplicationLifecycleCallbacks => false;
+    protected override bool RunTestApplicationLifeCycleCallbacks => false;
 
     public Task<bool> IsEnabledAsync() => Task.FromResult(false);
 
