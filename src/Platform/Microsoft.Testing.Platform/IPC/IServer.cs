@@ -5,9 +5,9 @@ namespace Microsoft.Testing.Platform.IPC;
 
 internal interface IServer : INamedPipeBase,
 #if NETCOREAPP
-IAsyncDisposable,
+    IAsyncDisposable,
 #endif
-IDisposable
+    IDisposable
 {
     PipeNameDescription PipeName { get; }
 
