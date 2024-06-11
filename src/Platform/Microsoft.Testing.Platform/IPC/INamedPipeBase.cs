@@ -5,5 +5,5 @@ namespace Microsoft.Testing.Platform.IPC;
 
 internal interface INamedPipeBase
 {
-    void RegisterSerializer<T>(INamedPipeSerializer namedPipeSerializer);
+    void RegisterSerializer(INamedPipeSerializer namedPipeSerializer, Type type);
 }
