@@ -5,9 +5,9 @@ namespace Microsoft.Testing.Platform.IPC;
 
 internal interface IClient :
 #if NETCOREAPP
-IAsyncDisposable,
+    IAsyncDisposable,
 #endif
-IDisposable
+    IDisposable
 {
     bool IsConnected { get; }
 
