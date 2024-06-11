@@ -474,7 +474,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
             }
         }
 
-        await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(Path.GetFileName(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath()), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationToken);
+        await namedPipeClient.RequestReplyAsync<CommandLineOptionMessages, VoidResponse>(new CommandLineOptionMessages(_testApplicationModuleInfo.GetCurrentTestApplicationFullPath(), commandLineHelpOptions.OrderBy(option => option.Name).ToArray()), cancellationToken);
     }
 
     private static async Task<NamedPipeClient?> ConnectToDotnetTestPipeIfAvailableAsync(CommandLineHandler commandLineHandler, CTRLPlusCCancellationTokenSource cancellationTokenSource)
