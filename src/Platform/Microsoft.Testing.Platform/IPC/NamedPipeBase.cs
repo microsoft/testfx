@@ -25,11 +25,7 @@ internal abstract class NamedPipeBase
             ? (INamedPipeSerializer)serializer
             : throw new ArgumentException(string.Format(
                 CultureInfo.InvariantCulture,
-#if PLATFORM_MSBUILD
-                "No serializer registered with ID '{0}'",
-#else
                 PlatformResources.NoSerializerRegisteredWithIdErrorMessage,
-#endif
                 id));
 
     protected INamedPipeSerializer GetSerializer(Type type)
@@ -37,10 +33,6 @@ internal abstract class NamedPipeBase
             ? (INamedPipeSerializer)serializer
             : throw new ArgumentException(string.Format(
                 CultureInfo.InvariantCulture,
-#if PLATFORM_MSBUILD
-                "No serializer registered with type '{0}'",
-#else
                 PlatformResources.NoSerializerRegisteredWithTypeErrorMessage,
-#endif
                 type));
 }
