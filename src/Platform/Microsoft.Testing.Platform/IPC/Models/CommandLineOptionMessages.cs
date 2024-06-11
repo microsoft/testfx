@@ -5,4 +5,4 @@ namespace Microsoft.Testing.Platform.IPC.Models;
 
 internal sealed record CommandLineOptionMessage(string Name, string Description, bool IsHidden, bool IsBuiltIn) : IRequest;
 
-internal sealed record CommandLineOptionMessages(string ModuleName, CommandLineOptionMessage[] CommandLineOptionMessageList) : IRequest;
+internal sealed record CommandLineOptionMessages(string ModulePath, CommandLineOptionMessage[] CommandLineOptionMessageList) : IRequest;

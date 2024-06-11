@@ -54,7 +54,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
             switch (fieldId)
             {
-                case CommandLineOptionMessagesFieldsId.ModuleName:
+                case CommandLineOptionMessagesFieldsId.ModulePath:
                     moduleName = ReadString(stream);
                     break;
 
@@ -127,7 +127,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
 
         WriteShort(stream, GetFieldCount(commandLineOptionMessages));
 
-        WriteField(stream, CommandLineOptionMessagesFieldsId.ModuleName, commandLineOptionMessages.ModuleName);
+        WriteField(stream, CommandLineOptionMessagesFieldsId.ModulePath, commandLineOptionMessages.ModulePath);
         WriteCommandLineOptionMessagesPayload(stream, commandLineOptionMessages.CommandLineOptionMessageList);
     }
 
@@ -162,7 +162,7 @@ internal sealed class CommandLineOptionMessagesSerializer : BaseSerializer, INam
     }
 
     private static ushort GetFieldCount(CommandLineOptionMessages commandLineOptionMessages) =>
-        (ushort)((RoslynString.IsNullOrEmpty(commandLineOptionMessages.ModuleName) ? 0 : 1) +
+        (ushort)((RoslynString.IsNullOrEmpty(commandLineOptionMessages.ModulePath) ? 0 : 1) +
            (commandLineOptionMessages is null ? 0 : 1));
 
     private static ushort GetFieldCount(CommandLineOptionMessage commandLineOptionMessage) =>

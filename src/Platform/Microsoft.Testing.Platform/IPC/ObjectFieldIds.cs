@@ -9,7 +9,7 @@ namespace Microsoft.Testing.Platform.IPC;
 // We can add new properties with new ids, but we CANNOT change the existing ids (to support backwards compatibility).
 internal static class CommandLineOptionMessagesFieldsId
 {
-    internal const int ModuleName = 1;
+    internal const int ModulePath = 1;
     internal const int CommandLineOptionMessageList = 2;
 }
 
