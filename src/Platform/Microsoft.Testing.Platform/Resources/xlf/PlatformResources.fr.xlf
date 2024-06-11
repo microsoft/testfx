@@ -388,7 +388,7 @@
       </trans-unit>
       <trans-unit id="PlatformCommandLineDotnetTestPipe">
         <source>dotnet test pipe.</source>
-        <target state="new">dotnet test pipe.</target>
+        <target state="translated">canal de test dotnet.</target>
         <note />
       </trans-unit>
       <trans-unit id="PlatformCommandLineExitOnProcessExitInvalidDependentProcess">

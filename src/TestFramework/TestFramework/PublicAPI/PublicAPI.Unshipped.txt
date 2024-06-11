@@ -1,1 +1,2 @@
 ﻿#nullable enable
+static Microsoft.VisualStudio.TestTools.UnitTesting.DataRowAttribute.TestIdGenerationStrategy.get -> Microsoft.VisualStudio.TestTools.UnitTesting.TestIdGenerationStrategy

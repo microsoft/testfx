@@ -436,7 +436,7 @@ public class TestMethodRunnerTests : TestContainer
         UnitTestResult[] results = testMethodRunner.RunTestMethod();
 
         Verify(results.Length == 1);
-        Verify(results[0].DisplayName == "DummyTestMethod (2,DummyString)");
+        Verify(results[0].DisplayName == "DummyTestMethod (2,\"DummyString\")");
     }
 
     public void RunTestMethodShouldSetResultFilesIfPresentForDataDrivenTests()
