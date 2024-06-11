@@ -18,9 +18,11 @@ using Microsoft.Testing.Platform.Tools;
 
 namespace Microsoft.Testing.Platform.CommandLine;
 
-internal sealed class CommandLineHandler(string[] args, CommandLineParseResult parseResult, ICommandLineOptionsProvider[] extensionsCommandLineOptionsProviders,
-    ICommandLineOptionsProvider[] systemCommandLineOptionsProviders, ITestApplicationModuleInfo testApplicationModuleInfo, IRuntimeFeature runtimeFeature,
-    IPlatformOutputDevice platformOutputDevice, IEnvironment environment, IProcessHandler process) : ICommandLineHandler, ICommandLineOptions, IOutputDeviceDataProducer
+internal sealed class CommandLineHandler(string[] args, CommandLineParseResult parseResult,
+    ICommandLineOptionsProvider[] extensionsCommandLineOptionsProviders, ICommandLineOptionsProvider[] systemCommandLineOptionsProviders,
+    ITestApplicationModuleInfo testApplicationModuleInfo, IRuntimeFeature runtimeFeature, IPlatformOutputDevice platformOutputDevice,
+    IEnvironment environment, IProcessHandler process)
+    : ICommandLineHandler, ICommandLineOptions, IOutputDeviceDataProducer
 {
     private static readonly TextOutputDeviceData EmptyText = new(string.Empty);
 

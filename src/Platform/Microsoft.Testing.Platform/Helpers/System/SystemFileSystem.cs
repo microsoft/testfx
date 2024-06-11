@@ -11,9 +11,9 @@ internal sealed class SystemFileSystem : IFileSystem
 
     public void Move(string sourceFileName, string destFileName) => File.Move(sourceFileName, destFileName);
 
-    public Stream NewFileStream(string path, FileMode mode) => new FileStream(path, mode);
+    public IFileStream NewFileStream(string path, FileMode mode) => new SystemFileStream(path, mode);
 
-    public Stream NewFileStream(string path, FileMode mode, FileAccess access) => new FileStream(path, mode, access);
+    public IFileStream NewFileStream(string path, FileMode mode, FileAccess access) => new SystemFileStream(path, mode, access);
 
     public string ReadAllText(string path) => File.ReadAllText(path);
 }
