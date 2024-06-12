@@ -157,7 +157,7 @@ Registered command line providers:
       --settings
         Arity: 1
         Hidden: False
-        Description: The path, relative or absolute, to the \.runsettings file\.For more information and examples on how to configure test run, see https://learn\.microsoft\.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
+        Description: The path, relative or absolute, to the \.runsettings file\. For more information and examples on how to configure test run, see https://learn\.microsoft\.com/visualstudio/test/configure-unit-tests-by-using-a-dot-runsettings-file#the-runsettings-file
       --filter
         Arity: 1
         Hidden: False
