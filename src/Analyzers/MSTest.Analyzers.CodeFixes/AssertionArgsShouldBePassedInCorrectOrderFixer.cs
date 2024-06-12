@@ -34,7 +34,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
         Diagnostic diagnostic = context.Diagnostics[0];
         TextSpan diagnosticSpan = diagnostic.Location.SourceSpan;
 
-       
+        SyntaxNode root = await context.Document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
         if (root.FindNode(diagnosticSpan) is not InvocationExpressionSyntax invocationExpr)
         {
             return;
