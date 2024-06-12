@@ -150,9 +150,8 @@ stages:
 
         - ${{ if eq(parameters.SkipTests, False) }}:
           # --ci is allowing to import some environment variables and some required configurations
-          # --nobl avoids overwriting build binlog with binlog from tests
           - script: |
               chmod +x ./test.sh
-              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest --nobl /p:FastAcceptanceTest=true
+              ./test.sh --configuration $(_BuildConfig) --ci --test --integrationTest /p:FastAcceptanceTest=true
             name: Test
             displayName: Tests
