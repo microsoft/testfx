@@ -92,10 +92,10 @@ public sealed class IPCTests : TestBase
         Queue<BaseMessage> receivedMessages = new();
         PipeNameDescription pipeNameDescription = NamedPipeServer.GetPipeName(Guid.NewGuid().ToString("N"));
         NamedPipeClient namedPipeClient = new(pipeNameDescription.Name);
-        namedPipeClient.RegisterSerializer<VoidResponse>(new VoidResponseSerializer());
-        namedPipeClient.RegisterSerializer<TextMessage>(new TextMessageSerializer());
-        namedPipeClient.RegisterSerializer<IntMessage>(new IntMessageSerializer());
-        namedPipeClient.RegisterSerializer<LongMessage>(new LongMessageSerializer());
+        namedPipeClient.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+        namedPipeClient.RegisterSerializer(new TextMessageSerializer(), typeof(TextMessage));
+        namedPipeClient.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
+        namedPipeClient.RegisterSerializer(new LongMessageSerializer(), typeof(LongMessage));
 
         ManualResetEventSlim manualResetEventSlim = new(false);
         var clientConnected = Task.Run(async () =>
@@ -133,10 +133,10 @@ public sealed class IPCTests : TestBase
             new Mock<ILogger>().Object,
             new SystemTask(),
             CancellationToken.None);
-        singleConnectionNamedPipeServer.RegisterSerializer<VoidResponse>(new VoidResponseSerializer());
-        singleConnectionNamedPipeServer.RegisterSerializer<TextMessage>(new TextMessageSerializer());
-        singleConnectionNamedPipeServer.RegisterSerializer<IntMessage>(new IntMessageSerializer());
-        singleConnectionNamedPipeServer.RegisterSerializer<LongMessage>(new LongMessageSerializer());
+        singleConnectionNamedPipeServer.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+        singleConnectionNamedPipeServer.RegisterSerializer(new TextMessageSerializer(), typeof(TextMessage));
+        singleConnectionNamedPipeServer.RegisterSerializer(new IntMessageSerializer(), typeof(IntMessage));
+        singleConnectionNamedPipeServer.RegisterSerializer(new LongMessageSerializer(), typeof(LongMessage));
         await singleConnectionNamedPipeServer.WaitConnectionAsync(CancellationToken.None);
         manualResetEventSlim.Wait();
 
