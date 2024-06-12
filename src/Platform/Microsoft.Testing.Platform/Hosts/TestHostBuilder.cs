@@ -201,7 +201,7 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         CommandLineHandler commandLineHandler = await ((CommandLineManager)CommandLine).BuildAsync(args, platformOutputDevice, loggingState.CommandLineParseResult);
 
         // If command line is not valid we return immediately.
-        (bool parseSucceeded, string? validationError) = await commandLineHandler.TryParseAndValidateAsync();
+        bool hasValidCommandLineOptions = await commandLineHandler.ValidateAsync();
 
         // Create the test framework capabilities
         ITestFrameworkCapabilities testFrameworkCapabilities = TestFramework.TestFrameworkCapabilitiesFactory(serviceProvider);
@@ -213,11 +213,10 @@ internal class TestHostBuilder(IFileSystem fileSystem, IRuntimeFeature runtimeFe
         // Register the test framework capabilities to be used by services
         serviceProvider.AddService(testFrameworkCapabilities);
 
-        if (!loggingState.CommandLineParseResult.HasTool && !parseSucceeded)
+        if (!loggingState.CommandLineParseResult.HasTool && !hasValidCommandLineOptions)
         {
             await DisplayBannerIfEnabledAsync(loggingState, platformOutputDevice, testFrameworkCapabilities);
-            ArgumentGuard.IsNotNull(validationError);
-            await platformOutputDevice.DisplayAsync(commandLineHandler, FormattedTextOutputDeviceDataBuilder.CreateRedConsoleColorText(validationError));
+            await commandLineHandler.DisplayValidationErrorAsync();
             await commandLineHandler.PrintHelpAsync();
             return new InformativeCommandLineTestHost(ExitCodes.InvalidCommandLine);
         }
