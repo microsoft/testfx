@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// Ignore Spelling: Arity
 using Microsoft.Testing.Internal.Framework;
 using Microsoft.Testing.Platform.CommandLine;
 using Microsoft.Testing.Platform.Extensions;
@@ -51,7 +52,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
@@ -67,7 +68,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
@@ -86,7 +87,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
@@ -105,7 +106,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
@@ -124,7 +125,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsFalse(result);
@@ -139,7 +140,7 @@ public class ArgumentArityTests : TestBase
             _extensionCommandLineOptionsProviders, _systemCommandLineOptionsProviders, _testApplicationModuleInfoMock.Object, _runtimeFeatureMock.Object, _outputDisplayMock.Object, _environmentMock.Object, _processHandlerMock.Object);
 
         // Act
-        (bool result, _) = await commandLineHandler.TryParseAndValidateAsync();
+        bool result = await commandLineHandler.ValidateAsync();
 
         // Assert
         Assert.IsTrue(result);

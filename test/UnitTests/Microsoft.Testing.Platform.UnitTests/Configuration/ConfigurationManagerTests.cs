@@ -33,7 +33,7 @@ public class ConfigurationManagerTests : TestBase
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
-            .Returns(new MemoryStream(Encoding.UTF8.GetBytes(jsonFileConfig)));
+            .Returns(new MemoryFileStream(Encoding.UTF8.GetBytes(jsonFileConfig)));
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() => new JsonConfigurationSource(testApplicationModuleInfo, fileSystem.Object, null));
@@ -62,7 +62,7 @@ public class ConfigurationManagerTests : TestBase
     {
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
-        fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open)).Returns(new MemoryStream(Encoding.UTF8.GetBytes(string.Empty)));
+        fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open)).Returns(new MemoryFileStream(Encoding.UTF8.GetBytes(string.Empty)));
         CurrentTestApplicationModuleInfo testApplicationModuleInfo = new(new SystemEnvironment(), new SystemProcessHandler());
         ConfigurationManager configurationManager = new(fileSystem.Object, testApplicationModuleInfo);
         configurationManager.AddConfigurationSource(() =>
@@ -78,9 +78,9 @@ public class ConfigurationManagerTests : TestBase
         Mock<IFileSystem> fileSystem = new();
         fileSystem.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open))
-            .Returns(new MemoryStream(bytes));
+            .Returns(new MemoryFileStream(bytes));
         fileSystem.Setup(x => x.NewFileStream(It.IsAny<string>(), FileMode.Open, FileAccess.Read))
-            .Returns(new MemoryStream(bytes));
+            .Returns(new MemoryFileStream(bytes));
 
         Mock<ILogger> loggerMock = new();
         loggerMock.Setup(x => x.IsEnabled(LogLevel.Trace)).Returns(true);
@@ -136,23 +136,45 @@ public class ConfigurationManagerTests : TestBase
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => configurationManager.BuildAsync(null));
     }
-}
 
-internal class FakeConfigurationSource : IConfigurationSource, IAsyncInitializableExtension
-{
-    public string Uid => nameof(FakeConfigurationSource);
+    private class FakeConfigurationSource : IConfigurationSource, IAsyncInitializableExtension
+    {
+        public string Uid => nameof(FakeConfigurationSource);
 
-    public string Version => "1.0.0";
+        public string Version => "1.0.0";
 
-    public string DisplayName => nameof(FakeConfigurationSource);
+        public string DisplayName => nameof(FakeConfigurationSource);
 
-    public string Description => nameof(FakeConfigurationSource);
+        public string Description => nameof(FakeConfigurationSource);
 
-    public required IConfigurationProvider ConfigurationProvider { get; set; }
+        public required IConfigurationProvider ConfigurationProvider { get; set; }
 
-    public IConfigurationProvider Build() => ConfigurationProvider;
+        public IConfigurationProvider Build() => ConfigurationProvider;
 
-    public Task InitializeAsync() => Task.CompletedTask;
+        public Task InitializeAsync() => Task.CompletedTask;
 
-    public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+        public Task<bool> IsEnabledAsync() => Task.FromResult(true);
+    }
+
+    private class MemoryFileStream : IFileStream
+    {
+        private readonly MemoryStream _stream;
+
+        public MemoryFileStream(byte[] bytes)
+        {
+            _stream = new MemoryStream(bytes);
+        }
+
+        Stream IFileStream.Stream => _stream;
+
+        string IFileStream.Name => string.Empty;
+
+        void IDisposable.Dispose()
+            => _stream.Dispose();
+
+#if NETCOREAPP
+        ValueTask IAsyncDisposable.DisposeAsync()
+            => _stream.DisposeAsync();
+#endif
+    }
 }

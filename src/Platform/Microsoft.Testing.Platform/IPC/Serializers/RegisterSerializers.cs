@@ -18,9 +18,9 @@ internal static class RegisterSerializers
 {
     public static void RegisterAllSerializers(this NamedPipeBase namedPipeBase)
     {
-        namedPipeBase.RegisterSerializer<VoidResponse>(new VoidResponseSerializer());
-        namedPipeBase.RegisterSerializer<TestHostProcessExitRequest>(new TestHostProcessExitRequestSerializer());
-        namedPipeBase.RegisterSerializer<TestHostProcessPIDRequest>(new TestHostProcessPIDRequestSerializer());
-        namedPipeBase.RegisterSerializer<CommandLineOptionMessages>(new CommandLineOptionMessagesSerializer());
+        namedPipeBase.RegisterSerializer(new VoidResponseSerializer(), typeof(VoidResponse));
+        namedPipeBase.RegisterSerializer(new TestHostProcessExitRequestSerializer(), typeof(TestHostProcessExitRequest));
+        namedPipeBase.RegisterSerializer(new TestHostProcessPIDRequestSerializer(), typeof(TestHostProcessPIDRequest));
+        namedPipeBase.RegisterSerializer(new CommandLineOptionMessagesSerializer(), typeof(CommandLineOptionMessages));
     }
 }
