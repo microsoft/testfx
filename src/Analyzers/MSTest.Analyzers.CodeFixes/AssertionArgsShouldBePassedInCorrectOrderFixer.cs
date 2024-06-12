@@ -44,13 +44,13 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
             context.RegisterCodeFix(
                 CodeAction.Create(
                     CodeFixResources.FixAssertionArgsOrder,
-                    ct => SwapArgumentsAsync(context.Document, root, invocationExpr, ct),
+                    ct => SwapArgumentsAsync(context.Document, invocationExpr, ct),
                     nameof(AssertionArgsShouldBePassedInCorrectOrderFixer)),
                 context.Diagnostics);
         }
     }
 
-    private async Task<Document> SwapArgumentsAsync(Document document, SyntaxNode root, InvocationExpressionSyntax invocationExpr, CancellationToken cancellationToken)
+    private static async Task<Document> SwapArgumentsAsync(Document document, InvocationExpressionSyntax invocationExpr, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -65,6 +65,7 @@ public sealed class AssertionArgsShouldBePassedInCorrectOrderFixer : CodeFixProv
         });
 
         InvocationExpressionSyntax newInvocationExpr = invocationExpr.WithArgumentList(SyntaxFactory.ArgumentList(newArgumentList));
+        SyntaxNode root = await document.GetRequiredSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
         SyntaxNode newRoot = root.ReplaceNode(invocationExpr, newInvocationExpr);
 
         return document.WithSyntaxRoot(newRoot);
